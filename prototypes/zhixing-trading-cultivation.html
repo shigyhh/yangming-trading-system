@@ -1,0 +1,2724 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>知行合一交易修行系统 · 原型</title>
+    <style>
+      :root {
+        --bg: #05070a;
+        --ink: #0b1017;
+        --ink-2: #101720;
+        --ink-3: #18212c;
+        --panel: rgba(18, 25, 34, 0.88);
+        --panel-soft: rgba(255, 255, 255, 0.045);
+        --line: rgba(215, 176, 91, 0.3);
+        --line-soft: rgba(215, 176, 91, 0.16);
+        --gold: #d8b25a;
+        --gold-2: #f3d985;
+        --jade: #4ec7b7;
+        --jade-2: #6fc17c;
+        --red: #ff6259;
+        --text: #f5eedf;
+        --muted: #9b9586;
+        --dim: #6e695e;
+        --shadow: 0 30px 80px rgba(0, 0, 0, 0.48);
+        --serif: "Songti SC", "Noto Serif SC", "STSong", serif;
+        --sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+        --mono: "SFMono-Regular", Menlo, Consolas, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        color: var(--text);
+        background:
+          radial-gradient(circle at 22% 14%, rgba(216, 178, 90, 0.08), transparent 28rem),
+          radial-gradient(circle at 84% 88%, rgba(78, 199, 183, 0.08), transparent 26rem),
+          var(--bg);
+        font-family: var(--sans);
+      }
+
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+      }
+
+      button {
+        border: 0;
+        cursor: pointer;
+        transition:
+          transform 0.16s ease,
+          border-color 0.16s ease,
+          background 0.16s ease,
+          color 0.16s ease,
+          opacity 0.16s ease;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      button:active {
+        transform: scale(0.985);
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.52;
+        transform: none;
+      }
+
+      .studio {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: clamp(24px, 6vw, 96px);
+        padding: 34px 24px;
+      }
+
+      .brief {
+        width: min(390px, 34vw);
+      }
+
+      .brief .mark {
+        width: 70px;
+        height: 70px;
+        border-radius: 22px;
+        display: grid;
+        place-items: center;
+        margin-bottom: 30px;
+        color: var(--gold-2);
+        border: 1px solid var(--line);
+        background: linear-gradient(145deg, #18212c, #0b1118);
+        font: 700 34px/1 var(--serif);
+      }
+
+      .brief small {
+        display: block;
+        margin-bottom: 18px;
+        color: var(--dim);
+        letter-spacing: 0.5em;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .brief h1 {
+        margin: 0;
+        font: 700 clamp(34px, 4vw, 56px) / 1.18 var(--serif);
+        letter-spacing: 0.05em;
+      }
+
+      .brief p {
+        margin: 20px 0 28px;
+        color: var(--muted);
+        font-size: 16px;
+        line-height: 1.9;
+      }
+
+      .brief ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .brief li {
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 13px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        color: var(--dim);
+        font-size: 14px;
+      }
+
+      .brief li strong {
+        color: var(--text);
+        font-weight: 700;
+      }
+
+      .phone {
+        position: relative;
+        width: 420px;
+        height: 884px;
+        flex: 0 0 auto;
+        border-radius: 54px;
+        padding: 14px;
+        background: #1d222c;
+        box-shadow:
+          0 0 0 2px #313642,
+          0 0 0 8px #151922,
+          var(--shadow);
+      }
+
+      .notch {
+        position: absolute;
+        z-index: 12;
+        top: 14px;
+        left: 50%;
+        width: 150px;
+        height: 36px;
+        transform: translateX(-50%);
+        border-radius: 0 0 22px 22px;
+        background: #1c202a;
+      }
+
+      .device {
+        position: relative;
+        height: 100%;
+        overflow: hidden;
+        border-radius: 43px;
+        background:
+          linear-gradient(145deg, rgba(255, 255, 255, 0.035), transparent 20%),
+          radial-gradient(circle at 92% 5%, rgba(216, 178, 90, 0.08), transparent 18rem),
+          #0b1118;
+      }
+
+      .device::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.035;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      }
+
+      .status {
+        position: absolute;
+        z-index: 15;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 28px;
+        font: 700 14px/1 var(--mono);
+        color: var(--text);
+      }
+
+      .signal {
+        display: flex;
+        align-items: flex-end;
+        gap: 3px;
+      }
+
+      .signal i {
+        width: 4px;
+        border-radius: 2px;
+        background: var(--text);
+        opacity: 0.9;
+      }
+
+      .signal i:nth-child(1) { height: 7px; }
+      .signal i:nth-child(2) { height: 10px; }
+      .signal i:nth-child(3) { height: 13px; }
+      .signal i:nth-child(4) { height: 16px; }
+
+      .battery {
+        width: 24px;
+        height: 12px;
+        margin-left: 9px;
+        border: 1.8px solid var(--text);
+        border-radius: 4px;
+        position: relative;
+      }
+
+      .battery::after {
+        content: "";
+        position: absolute;
+        right: -4px;
+        top: 3px;
+        width: 2px;
+        height: 5px;
+        border-radius: 1px;
+        background: var(--text);
+      }
+
+      .battery i {
+        display: block;
+        width: 68%;
+        height: 100%;
+        border-radius: 2px;
+        background: var(--jade-2);
+      }
+
+      .screen {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        display: none;
+        overflow-y: auto;
+        padding: 84px 18px 104px;
+        scrollbar-width: none;
+      }
+
+      .screen::-webkit-scrollbar {
+        display: none;
+      }
+
+      .screen.active {
+        display: block;
+        animation: enter 0.28s ease both;
+      }
+
+      @keyframes enter {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .login-screen {
+        display: none;
+        min-height: 100%;
+        padding: 110px 32px 36px;
+      }
+
+      .login-screen.active {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .login-logo {
+        width: 78px;
+        height: 78px;
+        border-radius: 24px;
+        display: grid;
+        place-items: center;
+        margin-bottom: 30px;
+        color: var(--gold-2);
+        border: 1px solid var(--line);
+        background: linear-gradient(145deg, #18212c, #0b1118);
+        box-shadow: 0 0 48px rgba(216, 178, 90, 0.16);
+        font: 700 42px/1 var(--serif);
+      }
+
+      .login-screen h2,
+      .screen h2 {
+        margin: 0;
+        font: 700 36px/1.22 var(--serif);
+        letter-spacing: 0.03em;
+      }
+
+      .login-screen p {
+        margin: 14px 0 30px;
+        color: var(--muted);
+        line-height: 1.85;
+        font-size: 15px;
+      }
+
+      .field {
+        margin-top: 18px;
+      }
+
+      .field label,
+      .section-label {
+        display: block;
+        color: var(--gold);
+        letter-spacing: 0.18em;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .input-line {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 13px 0;
+        border-bottom: 1px solid var(--line-soft);
+      }
+
+      .input-line input {
+        min-width: 0;
+        width: 100%;
+        border: 0;
+        outline: 0;
+        color: var(--text);
+        background: transparent;
+        font-size: 18px;
+      }
+
+      .input-line span {
+        color: var(--muted);
+        font-family: var(--mono);
+      }
+
+      .primary {
+        width: 100%;
+        height: 56px;
+        border-radius: 18px;
+        margin-top: 26px;
+        color: #1b1408;
+        background: linear-gradient(180deg, #f2d27a, #d1a640);
+        box-shadow: 0 18px 38px rgba(216, 178, 90, 0.22);
+        font-size: 17px;
+        font-weight: 800;
+        letter-spacing: 0.16em;
+      }
+
+      .primary:active,
+      .pill-btn:active,
+      .small-gold:active {
+        box-shadow: 0 8px 24px rgba(216, 178, 90, 0.18);
+      }
+
+      .ghost {
+        color: var(--text);
+        background: var(--panel-soft);
+        border: 1px solid var(--line-soft);
+      }
+
+      .entry-vows {
+        display: grid;
+        gap: 10px;
+        margin-top: 22px;
+      }
+
+      .check-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 52px;
+        padding: 13px 14px;
+        color: var(--muted);
+        border: 1px solid var(--line-soft);
+        border-radius: 16px;
+        background: var(--panel-soft);
+      }
+
+      .check-row input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .box {
+        width: 22px;
+        height: 22px;
+        flex: 0 0 auto;
+        border: 2px solid rgba(216, 178, 90, 0.58);
+        border-radius: 7px;
+      }
+
+      .check-row input:checked + .box {
+        background:
+          linear-gradient(135deg, transparent 42%, #1b1408 42% 52%, transparent 52%),
+          linear-gradient(45deg, transparent 44%, #1b1408 44% 54%, transparent 54%),
+          var(--gold);
+        border-color: var(--gold);
+      }
+
+      .topline {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .pretitle {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--gold);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.42em;
+      }
+
+      .seal {
+        width: 54px;
+        height: 54px;
+        border-radius: 18px;
+        display: grid;
+        place-items: center;
+        color: var(--gold-2);
+        border: 1px solid var(--line);
+        background: rgba(20, 27, 36, 0.9);
+        font: 700 28px/1 var(--serif);
+      }
+
+      .card {
+        border: 1px solid var(--line-soft);
+        border-radius: 24px;
+        background: linear-gradient(145deg, rgba(25, 34, 45, 0.88), rgba(10, 15, 22, 0.84));
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+      }
+
+      .index-card {
+        margin-top: 20px;
+        padding: 20px;
+        border-color: rgba(216, 178, 90, 0.38);
+      }
+
+      .index-card .row {
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+      }
+
+      .score {
+        font: 800 60px/0.92 var(--serif);
+        color: var(--gold-2);
+        letter-spacing: -0.04em;
+      }
+
+      .score small {
+        margin-left: 4px;
+        color: var(--dim);
+        font: 500 18px/1 var(--sans);
+      }
+
+      .score-delta {
+        margin-top: 10px;
+        color: var(--jade-2);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .curve {
+        width: 172px;
+        height: 88px;
+        flex: 0 0 auto;
+      }
+
+      .curve text {
+        fill: var(--muted);
+        font: 10px var(--mono);
+      }
+
+      .curve .today {
+        fill: var(--gold-2);
+      }
+
+      .section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 28px 0 13px;
+      }
+
+      .section-head h3 {
+        margin: 0;
+        font: 700 24px/1.2 var(--serif);
+      }
+
+      .section-head span {
+        color: var(--gold);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .mood-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin-top: 15px;
+      }
+
+      .mood-btn {
+        min-height: 86px;
+        color: var(--muted);
+        border: 1px solid var(--line-soft);
+        border-radius: 20px;
+        background: var(--panel-soft);
+      }
+
+      .mood-btn strong {
+        display: block;
+        color: var(--text);
+        font: 700 22px/1.1 var(--serif);
+      }
+
+      .mood-btn span {
+        display: block;
+        margin-top: 7px;
+        font-size: 12px;
+      }
+
+      .mood-btn.selected {
+        color: var(--gold-2);
+        border-color: rgba(216, 178, 90, 0.65);
+        background: rgba(216, 178, 90, 0.12);
+      }
+
+      .vow-card {
+        margin-top: 16px;
+        padding: 18px;
+      }
+
+      .vow-card strong {
+        display: block;
+        font: 700 20px/1.35 var(--serif);
+      }
+
+      .vow-card p {
+        margin: 9px 0 0;
+        color: var(--muted);
+        line-height: 1.65;
+        font-size: 13px;
+      }
+
+      .loop-card {
+        margin-top: 14px;
+        padding: 17px;
+      }
+
+      .loop-steps {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin-top: 14px;
+      }
+
+      .loop-step {
+        min-height: 74px;
+        padding: 10px 8px;
+        text-align: center;
+        border: 1px solid var(--line-soft);
+        border-radius: 15px;
+        background: rgba(255, 255, 255, 0.035);
+      }
+
+      .loop-step strong {
+        display: block;
+        color: var(--gold-2);
+        font: 700 17px/1.1 var(--serif);
+      }
+
+      .loop-step span {
+        display: block;
+        margin-top: 7px;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.35;
+      }
+
+      .live-card {
+        margin-top: 14px;
+        padding: 18px;
+        border-color: rgba(78, 199, 183, 0.28);
+      }
+
+      .live-card h4 {
+        margin: 8px 0 10px;
+        font: 700 20px/1.35 var(--serif);
+      }
+
+      .talk-list {
+        display: grid;
+        gap: 10px;
+        margin: 14px 0 0;
+      }
+
+      .talk-item {
+        display: grid;
+        grid-template-columns: 28px 1fr;
+        gap: 10px;
+        color: var(--muted);
+        line-height: 1.58;
+        font-size: 13px;
+      }
+
+      .talk-item b {
+        display: grid;
+        place-items: center;
+        height: 28px;
+        color: var(--gold-2);
+        border: 1px solid var(--line-soft);
+        border-radius: 9px;
+        font: 800 12px/1 var(--mono);
+      }
+
+      .talk-item strong {
+        color: var(--text);
+      }
+
+      .content-grid {
+        display: grid;
+        gap: 11px;
+        margin-top: 14px;
+      }
+
+      .content-card {
+        padding: 15px;
+      }
+
+      .content-card strong {
+        display: block;
+        font: 700 17px/1.3 var(--serif);
+      }
+
+      .content-card p {
+        margin: 7px 0 0;
+        color: var(--muted);
+        line-height: 1.62;
+        font-size: 12px;
+      }
+
+      .coach-script {
+        margin-top: 14px;
+        padding: 17px;
+        color: var(--text);
+        line-height: 1.78;
+        font-size: 14px;
+      }
+
+      .coach-script em {
+        color: var(--gold-2);
+        font-style: normal;
+      }
+
+      .task-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .task {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-height: 78px;
+        padding: 16px;
+        text-align: left;
+        color: var(--text);
+      }
+
+      .task .tick {
+        width: 28px;
+        height: 28px;
+        flex: 0 0 auto;
+        border: 2px solid rgba(216, 178, 90, 0.58);
+        border-radius: 9px;
+      }
+
+      .task.done .tick {
+        background: var(--gold);
+        border-color: var(--gold);
+        position: relative;
+      }
+
+      .task.done .tick::after {
+        content: "";
+        position: absolute;
+        left: 8px;
+        top: 4px;
+        width: 8px;
+        height: 15px;
+        border: solid #1b1408;
+        border-width: 0 3px 3px 0;
+        transform: rotate(42deg);
+      }
+
+      .task div {
+        flex: 1;
+      }
+
+      .task strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 16px;
+      }
+
+      .task small {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .task b {
+        color: var(--gold-2);
+        font: 800 16px/1 var(--mono);
+      }
+
+      .cultivation-card {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 16px;
+        margin-top: 12px;
+        padding: 20px;
+      }
+
+      .flame {
+        width: 54px;
+        height: 54px;
+        border-radius: 18px;
+        display: grid;
+        place-items: center;
+        color: var(--gold-2);
+        background: rgba(216, 178, 90, 0.12);
+        font: 800 28px/1 var(--serif);
+      }
+
+      .cultivation-card .days {
+        color: var(--gold-2);
+        font: 800 44px/1 var(--mono);
+      }
+
+      .pill-btn {
+        min-height: 42px;
+        padding: 0 18px;
+        color: #1b1408;
+        border-radius: 16px;
+        background: linear-gradient(180deg, #eed17c, #cba243);
+        font-weight: 800;
+      }
+
+      .history-btn {
+        height: 40px;
+        padding: 0 16px;
+        color: var(--gold-2);
+        border: 1px solid rgba(216, 178, 90, 0.5);
+        border-radius: 14px;
+        background: transparent;
+        font-weight: 700;
+      }
+
+      .compare-card {
+        overflow: hidden;
+        margin-top: 14px;
+        border-color: rgba(216, 178, 90, 0.38);
+      }
+
+      .compare-head,
+      .compare-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .compare-head > div,
+      .compare-row > div {
+        padding: 15px 16px;
+      }
+
+      .compare-head {
+        text-align: center;
+        font-weight: 800;
+        color: var(--gold-2);
+        background: rgba(216, 178, 90, 0.045);
+      }
+
+      .compare-head > div:last-child,
+      .compare-row > div:last-child {
+        border-left: 1px solid var(--line-soft);
+      }
+
+      .compare-row {
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .compare-row label {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      select,
+      textarea,
+      .mini-input {
+        width: 100%;
+        color: var(--text);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        outline: 0;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.045);
+      }
+
+      select,
+      .mini-input {
+        height: 42px;
+        padding: 0 10px;
+      }
+
+      textarea {
+        min-height: 72px;
+        padding: 10px;
+        resize: vertical;
+        line-height: 1.55;
+      }
+
+      .result-strip {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .metric {
+        min-height: 72px;
+        padding: 13px;
+      }
+
+      .metric span {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .metric strong {
+        display: block;
+        margin-top: 6px;
+        color: var(--gold-2);
+        font: 800 20px/1.1 var(--serif);
+      }
+
+      .master-card {
+        display: grid;
+        grid-template-columns: 66px 1fr;
+        gap: 16px;
+        margin-top: 14px;
+        padding: 16px;
+      }
+
+      .portrait {
+        width: 66px;
+        height: 66px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        background: rgba(216, 178, 90, 0.08);
+      }
+
+      .portrait img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .master-card h4 {
+        margin: 0 0 8px;
+        color: var(--gold-2);
+        font: 700 18px/1.2 var(--serif);
+      }
+
+      .master-card p {
+        margin: 0;
+        color: var(--text);
+        line-height: 1.75;
+        font-size: 14px;
+      }
+
+      .master-card em {
+        color: var(--gold-2);
+        font-style: normal;
+      }
+
+      .subtabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 18px;
+      }
+
+      .subtabs button {
+        height: 44px;
+        border-radius: 14px;
+        color: var(--muted);
+        border: 1px solid var(--line-soft);
+        background: var(--panel-soft);
+        font-weight: 800;
+      }
+
+      .subtabs button.active {
+        color: #1b1408;
+        background: var(--gold);
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .practice-card {
+        margin-top: 16px;
+        padding: 18px;
+      }
+
+      .assessment-card {
+        margin-top: 16px;
+        padding: 18px;
+      }
+
+      .assessment-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 14px;
+      }
+
+      .assessment-head strong {
+        display: block;
+        color: var(--text);
+        font: 700 20px/1.35 var(--serif);
+      }
+
+      .status-chip {
+        flex: 0 0 auto;
+        min-height: 30px;
+        padding: 7px 10px;
+        color: var(--gold-2);
+        border: 1px solid rgba(216, 178, 90, 0.35);
+        border-radius: 999px;
+        background: rgba(216, 178, 90, 0.08);
+        font: 800 11px/1 var(--mono);
+      }
+
+      .question-card {
+        margin-top: 13px;
+        padding: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.035);
+      }
+
+      .question-card strong {
+        display: block;
+        color: var(--text);
+        font-size: 14px;
+        line-height: 1.55;
+      }
+
+      .option-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 9px;
+        margin-top: 11px;
+      }
+
+      .option-row button {
+        min-height: 42px;
+        color: var(--muted);
+        border: 1px solid var(--line-soft);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.04);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .option-row button.selected {
+        color: #1b1408;
+        border-color: transparent;
+        background: linear-gradient(180deg, #efd47d, #cba445);
+      }
+
+      .assessment-result {
+        margin-top: 13px;
+        padding: 14px;
+        border: 1px solid rgba(78, 199, 183, 0.28);
+        border-radius: 18px;
+        background: rgba(78, 199, 183, 0.08);
+        color: var(--muted);
+        line-height: 1.65;
+        font-size: 13px;
+      }
+
+      .assessment-result strong {
+        color: var(--gold-2);
+      }
+
+      .kline {
+        position: relative;
+        height: 232px;
+        margin-top: 14px;
+        overflow: hidden;
+        border: 1px solid rgba(216, 178, 90, 0.18);
+        border-radius: 20px;
+        background: rgba(0, 0, 0, 0.2);
+      }
+
+      .kline svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      .choice-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-top: 14px;
+      }
+
+      .choice {
+        min-height: 82px;
+        border: 1px solid rgba(216, 178, 90, 0.28);
+        border-radius: 20px;
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.04);
+        font-weight: 800;
+      }
+
+      .choice span {
+        display: block;
+        margin-top: 5px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .choice.good {
+        color: var(--jade);
+        border-color: rgba(78, 199, 183, 0.48);
+      }
+
+      .choice.risky {
+        color: var(--red);
+        border-color: rgba(255, 98, 89, 0.48);
+      }
+
+      .replay-meta {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 9px;
+        margin-top: 14px;
+      }
+
+      .replay-meta div {
+        min-height: 62px;
+        padding: 11px 10px;
+        border: 1px solid var(--line-soft);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.035);
+      }
+
+      .replay-meta span {
+        display: block;
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .replay-meta strong {
+        display: block;
+        margin-top: 5px;
+        color: var(--gold-2);
+        font: 800 16px/1.1 var(--mono);
+      }
+
+      .decision-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 9px;
+        margin-top: 14px;
+      }
+
+      .decision {
+        min-height: 70px;
+        border: 1px solid rgba(216, 178, 90, 0.28);
+        border-radius: 18px;
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.04);
+        font-weight: 800;
+      }
+
+      .decision span {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 600;
+      }
+
+      .decision.buy {
+        color: var(--red);
+        border-color: rgba(255, 98, 89, 0.45);
+      }
+
+      .decision.sell {
+        color: var(--jade);
+        border-color: rgba(78, 199, 183, 0.42);
+      }
+
+      .replay-controls {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .replay-controls button {
+        height: 44px;
+        border-radius: 14px;
+        font-weight: 800;
+      }
+
+      .small-gold {
+        color: #1b1408;
+        background: linear-gradient(180deg, #f2d27a, #d1a640);
+      }
+
+      .identity-line {
+        display: none;
+        margin-top: 12px;
+        padding: 12px 14px;
+        color: var(--muted);
+        border: 1px solid rgba(78, 199, 183, 0.28);
+        border-radius: 15px;
+        background: rgba(78, 199, 183, 0.08);
+        font-size: 12px;
+        line-height: 1.55;
+      }
+
+      .identity-line.show {
+        display: block;
+      }
+
+      .feedback {
+        display: none;
+        margin-top: 13px;
+        padding: 15px;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .feedback.show {
+        display: block;
+      }
+
+      .feedback strong {
+        color: var(--gold-2);
+      }
+
+      .train-list {
+        display: grid;
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .train-item {
+        display: grid;
+        grid-template-columns: 54px 1fr auto;
+        gap: 14px;
+        align-items: center;
+        min-height: 86px;
+        padding: 15px;
+        color: var(--text);
+        text-align: left;
+      }
+
+      .train-icon {
+        width: 54px;
+        height: 54px;
+        border-radius: 17px;
+        display: grid;
+        place-items: center;
+        color: var(--gold-2);
+        border: 1px solid var(--line-soft);
+        background: rgba(255, 255, 255, 0.045);
+      }
+
+      .train-item strong {
+        display: block;
+        font: 700 18px/1.2 var(--serif);
+      }
+
+      .train-item small {
+        display: block;
+        margin-top: 5px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .profile-card {
+        display: grid;
+        grid-template-columns: 70px 1fr auto;
+        align-items: center;
+        gap: 14px;
+        margin-top: 16px;
+        padding: 17px;
+      }
+
+      .profile-card h3 {
+        margin: 0;
+        font: 700 24px/1.22 var(--serif);
+      }
+
+      .profile-card p {
+        margin: 7px 0 0;
+        color: var(--muted);
+        line-height: 1.45;
+      }
+
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        margin-top: 14px;
+        overflow: hidden;
+      }
+
+      .stat-grid div {
+        min-height: 92px;
+        padding: 18px 8px;
+        text-align: center;
+      }
+
+      .stat-grid div + div {
+        border-left: 1px solid var(--line-soft);
+      }
+
+      .stat-grid strong {
+        color: var(--gold-2);
+        font: 800 28px/1 var(--mono);
+      }
+
+      .stat-grid span {
+        display: block;
+        margin-top: 9px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .menu {
+        margin-top: 16px;
+        padding: 6px 18px;
+      }
+
+      .menu button {
+        width: 100%;
+        min-height: 62px;
+        display: grid;
+        grid-template-columns: 28px 1fr auto;
+        align-items: center;
+        gap: 14px;
+        color: var(--text);
+        background: transparent;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        text-align: left;
+      }
+
+      .menu button:last-child {
+        border-bottom: 0;
+      }
+
+      .menu svg,
+      .nav svg,
+      .inline-icon {
+        width: 22px;
+        height: 22px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.9;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .menu .arr {
+        color: var(--dim);
+      }
+
+      .nav {
+        position: absolute;
+        z-index: 20;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 88px;
+        display: none;
+        grid-template-columns: repeat(4, 1fr);
+        padding: 8px 12px 24px;
+        border-top: 1px solid var(--line-soft);
+        background: rgba(8, 12, 17, 0.88);
+        backdrop-filter: blur(18px);
+      }
+
+      .nav.show {
+        display: grid;
+      }
+
+      .nav button {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        color: var(--dim);
+        background: transparent;
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .nav button.active {
+        color: var(--gold-2);
+      }
+
+      .toast {
+        position: absolute;
+        z-index: 30;
+        left: 50%;
+        bottom: 102px;
+        max-width: calc(100% - 42px);
+        transform: translateX(-50%) translateY(16px);
+        padding: 12px 18px;
+        color: var(--text);
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(11, 16, 23, 0.96);
+        opacity: 0;
+        pointer-events: none;
+        transition: 0.25s ease;
+        white-space: nowrap;
+        font-size: 13px;
+      }
+
+      .toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+
+      .sheet-backdrop {
+        position: absolute;
+        z-index: 28;
+        inset: 0;
+        display: none;
+        align-items: flex-end;
+        background: rgba(2, 4, 7, 0.62);
+        backdrop-filter: blur(10px);
+      }
+
+      .sheet-backdrop.show {
+        display: flex;
+      }
+
+      .sheet {
+        width: 100%;
+        max-height: 78%;
+        overflow: hidden;
+        border-top: 1px solid rgba(216, 178, 90, 0.32);
+        border-radius: 28px 28px 0 0;
+        background:
+          radial-gradient(circle at 90% 0%, rgba(216, 178, 90, 0.12), transparent 16rem),
+          linear-gradient(145deg, rgba(23, 31, 42, 0.98), rgba(8, 13, 19, 0.98));
+        box-shadow: 0 -24px 70px rgba(0, 0, 0, 0.52);
+        animation: sheetIn 0.22s ease both;
+      }
+
+      @keyframes sheetIn {
+        from { transform: translateY(18px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+
+      .sheet-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 18px 18px 12px;
+      }
+
+      .sheet-title {
+        margin: 0;
+        font: 700 22px/1.25 var(--serif);
+      }
+
+      .sheet-close {
+        width: 38px;
+        height: 38px;
+        color: var(--muted);
+        border: 1px solid var(--line-soft);
+        border-radius: 13px;
+        background: rgba(255, 255, 255, 0.04);
+        font-size: 22px;
+        line-height: 1;
+      }
+
+      .sheet-body {
+        max-height: calc(78vh - 122px);
+        overflow-y: auto;
+        padding: 0 18px 18px;
+        scrollbar-width: none;
+      }
+
+      .sheet-body::-webkit-scrollbar {
+        display: none;
+      }
+
+      .sheet-footer {
+        padding: 0 18px 18px;
+      }
+
+      .sheet-footer .primary {
+        margin-top: 0;
+        height: 50px;
+      }
+
+      .sheet-grid {
+        display: grid;
+        gap: 11px;
+      }
+
+      .sheet-item {
+        padding: 14px;
+        border: 1px solid var(--line-soft);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .sheet-item strong {
+        display: block;
+        color: var(--text);
+        font: 700 16px/1.35 var(--serif);
+      }
+
+      .sheet-item p,
+      .sheet-item small {
+        display: block;
+        margin: 6px 0 0;
+        color: var(--muted);
+        line-height: 1.65;
+        font-size: 12px;
+      }
+
+      .sheet-item em {
+        color: var(--gold-2);
+        font-style: normal;
+      }
+
+      .tag-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .tag {
+        padding: 7px 10px;
+        color: var(--gold-2);
+        border: 1px solid rgba(216, 178, 90, 0.3);
+        border-radius: 999px;
+        background: rgba(216, 178, 90, 0.07);
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .sheet-choice {
+        width: 100%;
+        min-height: 50px;
+        padding: 0 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        color: var(--text);
+        border: 1px solid var(--line-soft);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.04);
+        text-align: left;
+        font-weight: 800;
+      }
+
+      .sheet-choice span {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .diary-textarea {
+        min-height: 116px;
+        margin-top: 10px;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      .tiny {
+        color: var(--dim);
+        font-size: 11px;
+        line-height: 1.7;
+      }
+
+      .back-btn {
+        width: 46px;
+        height: 46px;
+        border-radius: 16px;
+        color: var(--text);
+        border: 1px solid var(--line-soft);
+        background: var(--panel-soft);
+      }
+
+      @media (max-width: 860px) {
+        .studio {
+          min-height: 100vh;
+          padding: 0;
+        }
+
+        .brief {
+          display: none;
+        }
+
+        .phone {
+          width: 100vw;
+          height: 100vh;
+          padding: 0;
+          border-radius: 0;
+          box-shadow: none;
+          background: transparent;
+        }
+
+        .device {
+          border-radius: 0;
+        }
+
+        .screen {
+          padding-left: 14px;
+          padding-right: 14px;
+        }
+
+        .notch {
+          display: none;
+        }
+      }
+
+      @media (min-width: 861px) and (max-height: 760px) {
+        .studio {
+          height: 100vh;
+          overflow: hidden;
+          align-items: flex-start;
+          padding-top: 20px;
+        }
+
+        .phone {
+          zoom: 0.76;
+        }
+
+        .brief {
+          zoom: 0.92;
+        }
+      }
+
+      @media (min-width: 861px) and (min-height: 761px) and (max-height: 920px) {
+        .studio {
+          height: 100vh;
+          overflow: hidden;
+          align-items: flex-start;
+          padding-top: 24px;
+        }
+
+        .phone {
+          zoom: 0.9;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="studio">
+      <aside class="brief" aria-hidden="true">
+        <div class="mark">知</div>
+        <small>PROTOTYPE</small>
+        <h1>知行合一<br />交易修行系统</h1>
+        <p>这版把“心境”升级为一套修行路径：立志、照心、立计划、事上磨练、省察克治，最后沉淀成知行合一指数。</p>
+        <ul>
+          <li><strong>立志</strong><span>交易戒律契约</span></li>
+          <li><strong>照心</strong><span>开盘前心境识别</span></li>
+          <li><strong>知行</strong><span>计划与实际对照</span></li>
+          <li><strong>磨练</strong><span>K线纪律情境训练</span></li>
+          <li><strong>省察</strong><span>AI师父点拨</span></li>
+        </ul>
+      </aside>
+
+      <main class="phone" aria-label="知行合一交易修行系统原型">
+        <div class="notch"></div>
+        <div class="device">
+          <div class="status">
+            <span>9:41</span>
+            <span style="display:flex;align-items:center">
+              <span class="signal"><i></i><i></i><i></i><i></i></span>
+              <span class="battery"><i></i></span>
+            </span>
+          </div>
+
+          <section class="login-screen active" id="loginScreen">
+            <div class="login-logo">知</div>
+            <h2>知行合一<br />交易修行系统</h2>
+            <p>不预测行情，不推荐股票。只训练一件事：让交易者说过的计划，成为盘中的行动。</p>
+
+            <div class="field">
+              <label>手机号</label>
+              <div class="input-line">
+                <span>+86</span>
+                <input id="phoneInput" inputmode="numeric" maxlength="11" placeholder="请输入手机号" value="13900005599" />
+              </div>
+            </div>
+
+            <div class="entry-vows">
+              <label class="check-row">
+                <input type="checkbox" checked />
+                <span class="box"></span>
+                <span>我承诺：无计划，不开仓。</span>
+              </label>
+              <label class="check-row">
+                <input type="checkbox" checked />
+                <span class="box"></span>
+                <span>我承诺：触发止损，不移动。</span>
+              </label>
+              <label class="check-row">
+                <input type="checkbox" />
+                <span class="box"></span>
+                <span>我承诺：情绪失控，先离场。</span>
+              </label>
+            </div>
+
+            <button class="primary" id="enterBtn">立志入院</button>
+            <p class="tiny" style="margin-top:18px;text-align:center">演示原型：数据保存在本页状态中。</p>
+          </section>
+
+          <section class="screen" id="homeScreen">
+            <div class="topline">
+              <div>
+                <span class="pretitle">今日 · 周四</span>
+                <h2>心正，<br />行方能正</h2>
+              </div>
+              <div class="seal">知</div>
+            </div>
+
+            <div class="index-card card">
+              <div class="row">
+                <div>
+                  <span class="section-label">知行合一指数</span>
+                  <div class="score"><span data-score>76</span><small>/100</small></div>
+                  <div class="score-delta" data-delta>较昨日 +8</div>
+                </div>
+                <svg class="curve" viewBox="0 0 180 92" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="fillCurve" x1="0" x2="0" y1="0" y2="1">
+                      <stop stop-color="#4ec7b7" stop-opacity=".35" />
+                      <stop offset="1" stop-color="#4ec7b7" stop-opacity="0" />
+                    </linearGradient>
+                  </defs>
+                  <path id="curveArea" d="M8 70 L34 62 L60 48 L86 56 L112 42 L138 50 L164 34 L164 78 L8 78 Z" fill="url(#fillCurve)" />
+                  <path id="curveLine" d="M8 70 L34 62 L60 48 L86 56 L112 42 L138 50 L164 34" fill="none" stroke="#7ccf85" stroke-width="2" />
+                  <g id="curveDots"></g>
+                  <text x="2" y="90">五</text><text x="31" y="90">六</text><text x="58" y="90">日</text><text x="86" y="90">一</text><text x="112" y="90">二</text><text x="139" y="90">三</text><text class="today" x="162" y="90">今</text>
+                </svg>
+              </div>
+            </div>
+
+            <div class="section-head">
+              <h3>开盘照心</h3>
+              <span id="moodState">平静</span>
+            </div>
+            <div class="mood-grid">
+              <button class="mood-btn selected" data-mood="平静"><strong>静</strong><span>平静</span></button>
+              <button class="mood-btn" data-mood="急躁"><strong>急</strong><span>急躁</span></button>
+              <button class="mood-btn" data-mood="焦虑"><strong>惧</strong><span>焦虑</span></button>
+              <button class="mood-btn" data-mood="贪婪"><strong>贪</strong><span>贪婪</span></button>
+            </div>
+
+            <div class="vow-card card">
+              <span class="section-label">今日戒律</span>
+              <strong>无计划，不开仓；有计划，必守界。</strong>
+              <p>今日只看一件事：盘中动作是否忠于开仓前写下的计划。</p>
+            </div>
+
+            <div class="loop-card card">
+              <span class="section-label">心学交易闭环</span>
+              <div class="loop-steps">
+                <div class="loop-step"><strong>立志</strong><span>先定交易戒律</span></div>
+                <div class="loop-step"><strong>照心</strong><span>识别贪怕急执</span></div>
+                <div class="loop-step"><strong>知行</strong><span>计划对照实际</span></div>
+                <div class="loop-step"><strong>省察</strong><span>明日只克一念</span></div>
+              </div>
+            </div>
+
+            <div class="live-card card">
+              <span class="section-label">今日直播可讲</span>
+              <h4>为什么股民懂止损，却总是做不到？</h4>
+              <div class="talk-list">
+                <div class="talk-item"><b>01</b><span><strong>痛点开场：</strong>亏损不是从跌破止损开始，而是从你第一次移动止损开始。</span></div>
+                <div class="talk-item"><b>02</b><span><strong>心学解释：</strong>知而不行，不是真知。盘中破功，说明“私欲”暂时替你下了单。</span></div>
+                <div class="talk-item"><b>03</b><span><strong>产品动作：</strong>开仓前写下止损位，平仓后系统比对实际行为，生成知行合一指数。</span></div>
+              </div>
+            </div>
+
+            <div class="section-head">
+              <h3>今日修行</h3>
+              <span id="taskCount">0/3 完成</span>
+            </div>
+            <div class="task-list" id="taskList"></div>
+
+            <div class="section-head">
+              <h3>连续打卡</h3>
+              <span id="checkinHint">今日未打卡</span>
+            </div>
+            <div class="cultivation-card card">
+              <div class="flame">省</div>
+              <div>
+                <div><span class="days" id="streakDays">12</span><span class="muted"> 天</span></div>
+                <div class="muted">省察克治连续记录</div>
+              </div>
+              <button class="pill-btn" id="checkinBtn">打卡</button>
+            </div>
+          </section>
+
+          <section class="screen" id="zhixingScreen">
+            <div class="topline">
+              <div>
+                <span class="pretitle">知行 · 今日对照</span>
+                <h2>说过的计划，<br />是否成为行动</h2>
+              </div>
+              <button class="history-btn" id="historyBtn">历史</button>
+            </div>
+
+            <div class="index-card card">
+              <div class="row">
+                <div>
+                  <span class="section-label">知行合一指数</span>
+                  <div class="score"><span data-score>76</span><small>/100</small></div>
+                  <div class="score-delta" data-delta>较昨日 +8</div>
+                </div>
+                <svg class="curve" viewBox="0 0 180 92" aria-hidden="true">
+                  <path d="M8 70 L34 62 L60 48 L86 56 L112 42 L138 50 L164 34 L164 78 L8 78 Z" fill="rgba(78,199,183,.16)" />
+                  <path id="curveLine2" d="M8 70 L34 62 L60 48 L86 56 L112 42 L138 50 L164 34" fill="none" stroke="#7ccf85" stroke-width="2" />
+                  <g id="curveDots2"></g>
+                  <text x="2" y="90">五</text><text x="31" y="90">六</text><text x="58" y="90">日</text><text x="86" y="90">一</text><text x="112" y="90">二</text><text x="139" y="90">三</text><text class="today" x="162" y="90">今</text>
+                </svg>
+              </div>
+            </div>
+
+            <div class="compare-card card">
+              <div class="compare-head">
+                <div>开仓前所知</div>
+                <div>平仓后所行</div>
+              </div>
+              <div class="compare-row">
+                <div>
+                  <label>计划方向</label>
+                  <select id="planDirection">
+                    <option>做多</option>
+                    <option>做空</option>
+                    <option>观望</option>
+                  </select>
+                </div>
+                <div>
+                  <label>实际方向</label>
+                  <select id="actualDirection">
+                    <option>做多</option>
+                    <option>做空</option>
+                    <option>观望</option>
+                  </select>
+                </div>
+              </div>
+              <div class="compare-row">
+                <div>
+                  <label>计划止损</label>
+                  <input class="mini-input" id="planStop" value="3185点" />
+                </div>
+                <div>
+                  <label>止损执行</label>
+                  <select id="stopBehavior">
+                    <option>按计划执行</option>
+                    <option selected>提前移动止损</option>
+                    <option>没有设置止损</option>
+                  </select>
+                </div>
+              </div>
+              <div class="compare-row">
+                <div>
+                  <label>计划仓位</label>
+                  <select id="planPosition">
+                    <option>1成</option>
+                    <option>2成</option>
+                    <option selected>3成</option>
+                    <option>5成</option>
+                  </select>
+                </div>
+                <div>
+                  <label>实际仓位</label>
+                  <select id="actualPosition">
+                    <option>1成</option>
+                    <option>2成</option>
+                    <option>3成</option>
+                    <option selected>5成</option>
+                  </select>
+                </div>
+              </div>
+              <div class="compare-row">
+                <div>
+                  <label>入场理由</label>
+                  <textarea id="planReason">突破压力位，量能放大，等待回踩确认。</textarea>
+                </div>
+                <div>
+                  <label>实际触发</label>
+                  <select id="emotionTrigger">
+                    <option>平静执行</option>
+                    <option selected>急躁追入</option>
+                    <option>贪婪加仓</option>
+                    <option>害怕错过</option>
+                    <option>想回本</option>
+                  </select>
+                </div>
+              </div>
+              <div class="compare-row">
+                <div>
+                  <label>计划退出</label>
+                  <textarea id="planExit">跌破止损位立刻退出；到3250减仓一半。</textarea>
+                </div>
+                <div>
+                  <label>实际退出</label>
+                  <select id="exitBehavior">
+                    <option>按计划退出</option>
+                    <option>提前兑现</option>
+                    <option>扛单不退</option>
+                    <option selected>盘中加仓后平仓</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="result-strip">
+              <div class="metric card"><span>纪律违背</span><strong id="breachMetric">2项</strong></div>
+              <div class="metric card"><span>情绪触发</span><strong id="triggerMetric">急躁</strong></div>
+              <div class="metric card"><span>本次扣分</span><strong id="deductMetric">-12</strong></div>
+            </div>
+
+            <button class="primary" id="reflectBtn">完成省察</button>
+
+            <div class="master-card card">
+              <div class="portrait">
+                <img src="../web-mvp/assets/yangming-portrait.jpg" alt="阳明师父" />
+              </div>
+              <div>
+                <h4>师父点拨</h4>
+                <p id="masterAdvice">今日两处违背：一是止损随心所动，二是急涨时加仓。行情涨时最考验心境，越急越要守定力。明日只守一条：<em>无计划，不开仓；有计划，必守界。</em></p>
+              </div>
+            </div>
+            <div class="coach-script card">
+              <span class="section-label">直播复盘话术</span>
+              <p>“各位记住，交易系统不是让你每天多做一笔，而是让你少做那一笔会后悔的单。今天你赚了但破戒，知行指数也会扣分；今天你亏了但守住计划，系统反而会给你加分。因为我们训练的不是一笔输赢，而是长期稳定的交易人格。”</p>
+              <p><em>今日追问：</em>你今天亏钱，是行情的问题，还是你违背了开仓前的自己？</p>
+            </div>
+            <p class="tiny" style="text-align:center;margin:16px 0 0">每日省察，是修心克己的开始。本系统仅用于交易行为训练与教育。</p>
+          </section>
+
+          <section class="screen" id="trainScreen">
+            <div class="topline">
+              <div>
+                <span class="pretitle">事上磨练</span>
+                <h2>在模拟里犯错，<br />在实盘里成熟</h2>
+              </div>
+              <div class="seal">练</div>
+            </div>
+
+            <div class="subtabs">
+              <button class="active" id="disciplineTab">匿名回放</button>
+              <button id="assessmentTab">人格测评</button>
+            </div>
+
+            <div class="practice-card card" id="practicePanel">
+              <span class="section-label">匿名历史片段 · 逐根复盘</span>
+              <p class="muted" style="line-height:1.65;margin:12px 0 0">真实历史K线已隐去股票名、代码和日期。系统按你的测评结果加权抽到这段急拉后分歧片段，训练点不是预测涨跌，而是每一根K线出现时能否守住计划。</p>
+              <div class="replay-meta">
+                <div><span>片段编号</span><strong id="segmentId">A-047</strong></div>
+                <div><span>回放进度</span><strong id="replayProgress">8/18</strong></div>
+                <div><span>纪律得分</span><strong id="replayScore">70</strong></div>
+              </div>
+              <div class="kline" id="klineBox"></div>
+              <div class="decision-grid">
+                <button class="decision buy" data-decision="buy">买入<span>此刻进场</span></button>
+                <button class="decision sell" data-decision="sell">卖出<span>先控风险</span></button>
+                <button class="decision hold" data-decision="hold">观望<span>继续等计划</span></button>
+              </div>
+              <div class="replay-controls">
+                <button class="ghost" id="nextBarBtn">放出下一根</button>
+                <button class="small-gold" id="revealBtn">揭晓片段</button>
+              </div>
+              <div class="feedback card" id="trainingFeedback"></div>
+              <div class="identity-line" id="segmentIdentity"></div>
+              <div class="identity-line show">
+                <strong>数据更新：</strong>正式版后端每日收盘后增量补齐A股日K离线库；AkShare、mootdx作为补充数据源，训练接口只读取匿名缓存片段。
+              </div>
+              <p class="tiny" style="text-align:center;margin:14px 0 0">仅做盘面复盘和交易纪律训练。训练前匿名，训练后可选择揭晓历史片段，不构成任何投资建议。</p>
+            </div>
+
+            <div class="assessment-card card hidden" id="assessmentPanel">
+              <div class="assessment-head">
+                <div>
+                  <span class="section-label">九型交易人格 · 快速测评</span>
+                  <strong>3题先定位今日训练方向</strong>
+                </div>
+                <span class="status-chip" id="assessmentProgress">0/3</span>
+              </div>
+              <div id="assessmentQuestions"></div>
+              <div class="assessment-result hidden" id="assessmentResult"></div>
+              <button class="primary" id="finishAssessmentBtn">生成训练权重</button>
+            </div>
+
+            <div class="train-list">
+              <button class="train-item card" data-go="zhixing">
+                <span class="train-icon">
+                  <svg class="inline-icon" viewBox="0 0 24 24"><path d="M4 19V5m0 14h16M8 16l3-4 3 2 5-7" /></svg>
+                </span>
+                <span><strong>开仓计划卡</strong><small>先写出场，再谈入场</small></span>
+                <span class="muted">进入</span>
+              </button>
+              <button class="train-item card" data-action="open-assessment">
+                <span class="train-icon">
+                  <svg class="inline-icon" viewBox="0 0 24 24"><path d="M12 3v18M5 8h14M7 16h10M4 21h16" /></svg>
+                </span>
+                <span><strong>九型交易人格测评</strong><small>测评结果会加权匹配训练片段</small></span>
+                <span class="muted">驱动出题</span>
+              </button>
+              <button class="train-item card" data-action="diary">
+                <span class="train-icon">
+                  <svg class="inline-icon" viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h16" /></svg>
+                </span>
+                <span><strong>省察日记</strong><small>记录今天哪一笔被私欲带跑</small></span>
+                <span class="muted">写入</span>
+              </button>
+            </div>
+
+            <div class="section-head">
+              <h3>7天直播内容</h3>
+              <span>可连续讲</span>
+            </div>
+            <div class="content-grid">
+              <div class="content-card card"><strong>第1天：无计划，不开仓</strong><p>讲“立志”。让用户写下第一条戒律：入场前必须先写出场。</p></div>
+              <div class="content-card card"><strong>第2天：移动止损，是心先动了</strong><p>讲“知行裂缝”。用止损位变化解释贪、怕、侥幸。</p></div>
+              <div class="content-card card"><strong>第3天：怕错过，就是被行情牵着走</strong><p>讲“致良知”。识别 FOMO，不把热闹当机会。</p></div>
+              <div class="content-card card"><strong>第4天：赚钱破戒，也要扣分</strong><p>讲产品核心：系统不奖励侥幸盈利，只奖励纪律执行。</p></div>
+              <div class="content-card card"><strong>第5天：亏钱守戒，也是在进步</strong><p>讲“事上磨练”。一次守住计划，比一次猜对更重要。</p></div>
+              <div class="content-card card"><strong>第6天：复盘不是找理由，是找私欲</strong><p>讲“省察克治”。每天只克一个最常犯动作。</p></div>
+              <div class="content-card card"><strong>第7天：用指数看见自己的变化</strong><p>讲“知行合一指数”。把长期稳定，变成可追踪曲线。</p></div>
+            </div>
+          </section>
+
+          <section class="screen" id="meScreen">
+            <div>
+              <span class="pretitle">我的修行</span>
+              <h2>修行者 · 第7型</h2>
+            </div>
+
+            <div class="profile-card card">
+              <div class="seal">知</div>
+              <div>
+                <h3 id="userPhoneMasked">139****5599</h3>
+                <p id="profileSubtitle">段位「筑基」 · 主修克治急躁</p>
+              </div>
+              <button class="back-btn" title="设置" id="settingsBtn">
+                <svg class="inline-icon" viewBox="0 0 24 24"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z" /><path d="M4 12h2m12 0h2M12 4v2m0 12v2M6.3 6.3l1.4 1.4m8.6 8.6 1.4 1.4m0-11.4-1.4 1.4m-8.6 8.6-1.4 1.4" /></svg>
+              </button>
+            </div>
+
+            <div class="stat-grid card">
+              <div><strong data-score>76</strong><span>知行指数</span></div>
+              <div><strong id="meStreak">12</strong><span>连续省察</span></div>
+              <div><strong id="mePoints">155</strong><span>修心积分</span></div>
+            </div>
+
+            <div class="menu card">
+              <button data-go="zhixing">
+                <svg viewBox="0 0 24 24"><path d="M4 19V5m0 14h16M8 16l3-4 3 2 5-7" /></svg>
+                <span>知行合一历史</span><span class="arr">›</span>
+              </button>
+              <button data-action="contract">
+                <svg viewBox="0 0 24 24"><path d="M6 4h12v16H6z" /><path d="M9 8h6M9 12h6M9 16h3" /></svg>
+                <span>交易戒律契约</span><span class="arr">›</span>
+              </button>
+              <button data-action="ai-report">
+                <svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4Z" /><path d="m9 12 2 2 4-5" /></svg>
+                <span>AI人格报告</span><span class="arr">›</span>
+              </button>
+              <button data-go="train">
+                <svg viewBox="0 0 24 24"><path d="M4 18h16M6 14l4-4 3 3 5-7" /></svg>
+                <span>事上磨练记录</span><span class="arr">›</span>
+              </button>
+              <button id="logoutBtn">
+                <svg viewBox="0 0 24 24"><path d="M10 7 5 12l5 5" /><path d="M5 12h12" /><path d="M14 5h5v14h-5" /></svg>
+                <span>退出登录</span><span class="arr">›</span>
+              </button>
+            </div>
+          </section>
+
+          <nav class="nav" id="tabbar" aria-label="主导航">
+            <button data-tab="home" class="active">
+              <svg viewBox="0 0 24 24"><path d="M4 11 12 4l8 7v9H4z" /><path d="M9 20v-6h6v6" /></svg>
+              今日
+            </button>
+            <button data-tab="zhixing">
+              <svg viewBox="0 0 24 24"><path d="M4 19V5m0 14h16M8 16l3-4 3 2 5-7" /></svg>
+              知行
+            </button>
+            <button data-tab="train">
+              <svg viewBox="0 0 24 24"><path d="M4 18h16M6 14l4-4 3 3 5-7" /><path d="M18 6h2v2" /></svg>
+              训练
+            </button>
+            <button data-tab="me">
+              <svg viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" /><path d="M5 21a7 7 0 0 1 14 0" /></svg>
+              我的
+            </button>
+          </nav>
+
+          <div class="toast" id="toast"></div>
+          <div class="sheet-backdrop" id="sheetBackdrop" aria-hidden="true">
+            <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+              <div class="sheet-head">
+                <h3 class="sheet-title" id="sheetTitle">详情</h3>
+                <button class="sheet-close" id="sheetCloseBtn" aria-label="关闭">×</button>
+              </div>
+              <div class="sheet-body" id="sheetBody"></div>
+              <div class="sheet-footer">
+                <button class="primary" id="sheetPrimaryBtn">我知道了</button>
+              </div>
+            </section>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      const $ = (selector) => document.querySelector(selector);
+      const $$ = (selector) => [...document.querySelectorAll(selector)];
+
+      const state = {
+        score: 76,
+        points: 155,
+        streak: 12,
+        checkedIn: false,
+        mood: "平静",
+        phone: "13900005599",
+        reflectedToday: false,
+        settings: {
+          theme: "黑金心学",
+          dataMode: "收盘后增量更新",
+          revealMode: "训练后可揭晓"
+        },
+        vows: ["无计划，不开仓", "触发止损，不移动"],
+        diary: "",
+        assessment: {
+          answers: [null, null, null],
+          type: "第7型 · 活跃型",
+          focus: "FOMO/追高"
+        },
+        history: [
+          { score: 58, title: "第1天：记录一次FOMO冲动", note: "急涨时想追入，最后选择观望。", delta: "+6" },
+          { score: 62, title: "第2天：移动止损复盘", note: "发现自己亏损时会和规则讨价还价。", delta: "+4" },
+          { score: 70, title: "第3天：亏钱但守戒", note: "止损执行，虽然亏损但动作干净。", delta: "+8" },
+          { score: 66, title: "第4天：赚钱破戒", note: "盘中临时加仓，指数扣分。", delta: "-4" },
+          { score: 76, title: "今日：知行对照", note: "继续训练触线即退。", delta: "+8" }
+        ],
+        tasks: [
+          { title: "开盘前照心", desc: "记录此刻贪、怕、急、惧", points: 10, done: true },
+          { title: "写下开仓计划", desc: "没有出场，不谈入场", points: 25, done: false, go: "zhixing" },
+          { title: "完成一次省察", desc: "对照所知与所行", points: 30, done: false, go: "zhixing" }
+        ],
+        curve: [58, 62, 70, 66, 72, 68, 76],
+        replay: {
+          index: 8,
+          score: 70,
+          decisions: [],
+          revealed: false,
+          anonymousId: "A-047",
+          hiddenIdentity: "某新能源龙头 · 高波动急拉回落片段",
+          weightReason: "测评显示 FOMO/追高倾向，系统加权抽取“急速拉升后分歧”训练段。",
+          candles: [
+            [100, 104, 98, 106], [104, 101, 99, 107], [101, 97, 95, 103], [97, 105, 94, 106],
+            [105, 110, 103, 112], [110, 113, 108, 116], [113, 121, 112, 124], [121, 129, 119, 132],
+            [129, 126, 123, 133], [126, 131, 124, 134], [131, 127, 125, 136], [127, 119, 116, 130],
+            [119, 112, 109, 121], [112, 115, 108, 117], [115, 106, 104, 116], [106, 101, 98, 109],
+            [101, 99, 96, 104], [99, 103, 97, 105]
+          ]
+        }
+      };
+
+      let toastTimer;
+
+      function toast(message) {
+        const node = $("#toast");
+        node.textContent = message;
+        node.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => node.classList.remove("show"), 2100);
+      }
+
+      function maskPhone(phone) {
+        const text = String(phone || "");
+        return text.length === 11 ? `${text.slice(0, 3)}****${text.slice(7)}` : "知行同修";
+      }
+
+      function showSheet(title, body, primaryText = "我知道了", onPrimary = closeSheet) {
+        $("#sheetTitle").textContent = title;
+        $("#sheetBody").innerHTML = body;
+        $("#sheetPrimaryBtn").textContent = primaryText;
+        $("#sheetPrimaryBtn").onclick = onPrimary;
+        $("#sheetBackdrop").classList.add("show");
+        $("#sheetBackdrop").setAttribute("aria-hidden", "false");
+      }
+
+      function closeSheet() {
+        $("#sheetBackdrop").classList.remove("show");
+        $("#sheetBackdrop").setAttribute("aria-hidden", "true");
+      }
+
+      function renderHistorySheet() {
+        const body = `
+          <div class="sheet-grid">
+            ${state.history.map((item, index) => `
+              <div class="sheet-item">
+                <strong>${index + 1}. ${item.title}</strong>
+                <p>${item.note}</p>
+                <div class="tag-row">
+                  <span class="tag">知行指数 ${item.score}</span>
+                  <span class="tag">变化 ${item.delta}</span>
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        `;
+        showSheet("知行历史", body, "回到今日");
+      }
+
+      function renderContractSheet() {
+        const vows = [
+          "无计划，不开仓",
+          "没有止损位，不开仓",
+          "触发止损，不移动",
+          "情绪失控，先离场",
+          "亏损后，不加仓赌回本"
+        ];
+        const body = `
+          <div class="sheet-grid">
+            <div class="sheet-item">
+              <strong>交易戒律契约</strong>
+              <p>契约不是给别人看的，是盘中私欲起来时，提醒自己先回到规则。</p>
+            </div>
+            ${vows.map((vow) => `
+              <button class="sheet-choice" data-vow="${vow}">
+                ${vow}
+                <span>${state.vows.includes(vow) ? "已立" : "点击立戒"}</span>
+              </button>
+            `).join("")}
+          </div>
+        `;
+        showSheet("戒律契约", body, "保存契约", () => {
+          toast(`已保存 ${state.vows.length} 条戒律`);
+          closeSheet();
+        });
+      }
+
+      function renderAiReportSheet() {
+        const body = `
+          <div class="sheet-grid">
+            <div class="sheet-item">
+              <strong>${state.assessment.type}</strong>
+              <p>主问题：<em>${state.assessment.focus}</em>。你对机会敏感，但急拉时容易把“热闹”误认为“确认”。</p>
+              <div class="tag-row">
+                <span class="tag">知行指数 ${state.score}</span>
+                <span class="tag">连续省察 ${state.streak}天</span>
+                <span class="tag">训练权重：急拉分歧</span>
+              </div>
+            </div>
+            <div class="sheet-item">
+              <strong>AI师父诊断</strong>
+              <p>你不缺判断，缺的是临盘前3秒的停顿。接下来7天，只练“急涨不追，回踩再看”。</p>
+            </div>
+            <div class="sheet-item">
+              <strong>今日只克一念</strong>
+              <p>怕错过一起，先停手。真正属于你的机会，不会靠冲动才能抓住。</p>
+            </div>
+          </div>
+        `;
+        showSheet("AI人格报告", body, "生成今日训练计划", () => {
+          showTab("train");
+          closeSheet();
+          toast("已按报告切换到专属训练");
+        });
+      }
+
+      function renderSettingsSheet() {
+        const body = `
+          <div class="sheet-grid">
+            <div class="sheet-item">
+              <strong>体验设置</strong>
+              <p>这些设置都会影响训练反馈，不是摆设。</p>
+            </div>
+            <button class="sheet-choice" data-setting="dataMode" data-value="收盘后增量更新">
+              数据更新
+              <span>${state.settings.dataMode}</span>
+            </button>
+            <button class="sheet-choice" data-setting="dataMode" data-value="盘中30/60分钟K">
+              盘中训练
+              <span>切换为分钟K方案</span>
+            </button>
+            <button class="sheet-choice" data-setting="revealMode" data-value="训练后可揭晓">
+              揭晓策略
+              <span>${state.settings.revealMode}</span>
+            </button>
+            <button class="sheet-choice" data-setting="revealMode" data-value="始终不揭晓">
+              隐私优先
+              <span>只看匿名盘面</span>
+            </button>
+          </div>
+        `;
+        showSheet("设置", body, "完成设置");
+      }
+
+      function renderDiarySheet() {
+        const body = `
+          <div class="sheet-grid">
+            <div class="sheet-item">
+              <strong>省察日记</strong>
+              <p>今天哪一笔不是行情打败你，而是私欲带跑你？</p>
+              <textarea class="diary-textarea" id="diaryInput">${state.diary || "今天急拉时想追进去，真正起作用的是怕错过，不是计划确认。"}</textarea>
+            </div>
+            <div class="sheet-item">
+              <strong>明日克治</strong>
+              <p>只练一条：急躁出现时，先观望一根K线。</p>
+            </div>
+          </div>
+        `;
+        showSheet("省察日记", body, "写入今日省察", () => {
+          state.diary = $("#diaryInput")?.value || "";
+          state.points += 12;
+          updateScores();
+          closeSheet();
+          toast("省察日记已写入 +12");
+        });
+      }
+
+      function renderAssessment() {
+        const questions = [
+          {
+            text: "看到一段K线快速拉升，你第一反应更像哪一种？",
+            options: ["怕错过，想追", "等回踩确认"]
+          },
+          {
+            text: "价格跌破你原先的止损位时，你更常做什么？",
+            options: ["再等等看", "按计划离场"]
+          },
+          {
+            text: "连续亏损后，你最容易出现哪种念头？",
+            options: ["加仓扳回", "停手复盘"]
+          }
+        ];
+        const answered = state.assessment.answers.filter(Boolean).length;
+        $("#assessmentProgress").textContent = `${answered}/3`;
+        $("#finishAssessmentBtn").disabled = answered < questions.length;
+        $("#assessmentQuestions").innerHTML = questions.map((question, qIndex) => `
+          <div class="question-card">
+            <strong>${qIndex + 1}. ${question.text}</strong>
+            <div class="option-row">
+              ${question.options.map((option) => `
+                <button data-question="${qIndex}" data-answer="${option}" class="${state.assessment.answers[qIndex] === option ? "selected" : ""}">${option}</button>
+              `).join("")}
+            </div>
+          </div>
+        `).join("");
+      }
+
+      function showTab(tab) {
+        const map = {
+          home: "homeScreen",
+          zhixing: "zhixingScreen",
+          train: "trainScreen",
+          me: "meScreen"
+        };
+        $$(".screen").forEach((screen) => screen.classList.remove("active"));
+        $("#" + map[tab]).classList.add("active");
+        $("#" + map[tab]).scrollTop = 0;
+        $$("#tabbar button").forEach((button) => button.classList.toggle("active", button.dataset.tab === tab));
+        $("#tabbar").classList.add("show");
+      }
+
+      function updateScores() {
+        $$("[data-score]").forEach((node) => {
+          node.textContent = state.score;
+        });
+        const delta = state.score - 68;
+        $$("[data-delta]").forEach((node) => {
+          node.textContent = `较昨日 ${delta >= 0 ? "+" : ""}${delta}`;
+        });
+        $("#mePoints").textContent = state.points;
+        $("#meStreak").textContent = state.streak;
+        drawCurve("curveDots", "curveLine");
+        drawCurve("curveDots2", "curveLine2");
+      }
+
+      function drawCurve(dotId, lineId) {
+        const values = state.curve;
+        const xs = [8, 34, 60, 86, 112, 138, 164];
+        const min = 50;
+        const max = 86;
+        const y = (value) => 78 - ((value - min) / (max - min)) * 54;
+        const points = values.map((value, index) => `${xs[index]} ${y(value).toFixed(1)}`).join(" L");
+        const line = $("#" + lineId);
+        if (line) line.setAttribute("d", `M${points}`);
+        const dots = $("#" + dotId);
+        if (!dots) return;
+        dots.innerHTML = values.map((value, index) => {
+          const cls = index === values.length - 1 ? "today" : "";
+          return `<circle class="${cls}" cx="${xs[index]}" cy="${y(value).toFixed(1)}" r="4.2" fill="${index === values.length - 1 ? "#f3d985" : "#d8b25a"}"></circle>`;
+        }).join("");
+      }
+
+      function renderTasks() {
+        const list = $("#taskList");
+        const doneCount = state.tasks.filter((task) => task.done).length;
+        $("#taskCount").textContent = `${doneCount}/3 完成`;
+        list.innerHTML = state.tasks.map((task, index) => `
+          <button class="task card ${task.done ? "done" : ""}" data-task="${index}">
+            <span class="tick"></span>
+            <div><strong>${task.title}</strong><small>${task.desc}</small></div>
+            <b>+${task.points}</b>
+          </button>
+        `).join("");
+      }
+
+      function completeTask(index) {
+        const task = state.tasks[index];
+        if (!task || task.done) return;
+        task.done = true;
+        state.points += task.points;
+        renderTasks();
+        updateScores();
+        toast(`修心积分 +${task.points}`);
+        if (task.go) showTab(task.go);
+      }
+
+      function calculateZhixing() {
+        const directionMatch = $("#planDirection").value === $("#actualDirection").value;
+        const stopBehavior = $("#stopBehavior").value;
+        const positionMatch = $("#planPosition").value === $("#actualPosition").value;
+        const trigger = $("#emotionTrigger").value;
+        const exitBehavior = $("#exitBehavior").value;
+        const planStop = $("#planStop").value.trim();
+        const planReason = $("#planReason").value.trim();
+        const planExit = $("#planExit").value.trim();
+
+        if (!planStop || !planReason || !planExit) {
+          toast("计划、止损和退出条件要写完整");
+          return;
+        }
+
+        let score = 48;
+        if (directionMatch) score += 15;
+        if (stopBehavior === "按计划执行") score += 18;
+        if (positionMatch) score += 14;
+        if (trigger === "平静执行") score += 13;
+        if (exitBehavior === "按计划退出") score += 16;
+        if (stopBehavior === "没有设置止损") score -= 12;
+        if (trigger.includes("贪婪") || trigger.includes("急躁") || trigger.includes("害怕")) score -= 6;
+        if (exitBehavior.includes("加仓") || exitBehavior.includes("扛单")) score -= 8;
+
+        score = Math.max(18, Math.min(96, score));
+        const previous = state.curve[state.curve.length - 1];
+        state.score = score;
+        state.curve[state.curve.length - 1] = score;
+        if (!state.reflectedToday) {
+          state.points += 30;
+          state.reflectedToday = true;
+        }
+
+        const breaches = [
+          !directionMatch && "方向偏离",
+          stopBehavior !== "按计划执行" && "止损违背",
+          !positionMatch && "仓位违背",
+          trigger !== "平静执行" && "情绪触发",
+          exitBehavior !== "按计划退出" && "退出偏离"
+        ].filter(Boolean);
+
+        $("#breachMetric").textContent = `${breaches.length}项`;
+        $("#triggerMetric").textContent = trigger.replace("执行", "");
+        $("#deductMetric").textContent = `${score - previous >= 0 ? "+" : ""}${score - previous}`;
+        $("#masterAdvice").innerHTML = buildAdvice(score, breaches, trigger);
+        state.history.push({
+          score,
+          title: `今日省察：${breaches.length ? breaches[0] : "计划基本一致"}`,
+          note: `${trigger}；${stopBehavior}；${exitBehavior}。`,
+          delta: `${score - previous >= 0 ? "+" : ""}${score - previous}`
+        });
+        if (state.history.length > 8) state.history.shift();
+        state.tasks[1].done = true;
+        state.tasks[2].done = true;
+        renderTasks();
+        updateScores();
+        toast("省察完成，知行指数已更新");
+      }
+
+      function buildAdvice(score, breaches, trigger) {
+        if (score >= 84) {
+          return `今日所行大体不离所知。真正的进步不是赚亏，而是临盘仍能守界。明日继续只守一条：<em>先写出场，再谈入场。</em>`;
+        }
+        if (score >= 65) {
+          return `今日已有克制，但仍有${breaches.length || 1}处裂缝。${trigger}出现时，判断容易披上“理由”的外衣。明日只守一条：<em>触线即退，不与自己辩论。</em>`;
+        }
+        return `今日不是行情难，而是心先乱。若${trigger}在前，计划就会退后。明日不求多做，只求一件事：<em>情绪未平，不开第一笔。</em>`;
+      }
+
+      function drawKline() {
+        const replay = state.replay;
+        const data = replay.candles;
+        const visibleCount = Math.min(replay.index, data.length);
+        const width = 330;
+        const height = 214;
+        const allValues = data.flatMap((item) => [item[0], item[1], item[2], item[3]]);
+        const min = Math.min(...allValues) - 4;
+        const max = Math.max(...allValues) + 4;
+        const y = (value) => height - ((value - min) / (max - min)) * 174 - 20;
+        const gap = width / data.length;
+        const candles = data.map((d, i) => {
+          const [open, close, low, high] = d;
+          const visible = i < visibleCount || replay.revealed;
+          const color = close >= open ? "#39b978" : "#f45a5a";
+          const cx = i * gap + gap / 2 + 4;
+          const top = y(Math.max(open, close));
+          const bottom = y(Math.min(open, close));
+          if (!visible) {
+            return `<rect x="${cx - 6}" y="24" width="12" height="166" rx="5" fill="rgba(255,255,255,.045)"/>`;
+          }
+          const opacity = i < visibleCount ? ".9" : ".28";
+          return `
+            <line x1="${cx}" y1="${y(high)}" x2="${cx}" y2="${y(low)}" stroke="${color}" stroke-width="2" opacity="${opacity}"/>
+            <rect x="${cx - 6}" y="${top}" width="12" height="${Math.max(4, bottom - top)}" rx="1" fill="${color}" opacity="${opacity}"/>
+          `;
+        }).join("");
+        const cursorX = Math.min(visibleCount, data.length) * gap + 4;
+        $("#klineBox").innerHTML = `
+          <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
+            <path d="M0 178 H330 M0 132 H330 M0 86 H330 M0 40 H330" stroke="rgba(255,255,255,.045)" />
+            ${candles}
+            <line x1="${cursorX}" y1="18" x2="${cursorX}" y2="198" stroke="#d8b25a" stroke-dasharray="4 5" opacity=".7"/>
+            <text x="${Math.min(cursorX + 6, 250)}" y="36" fill="#d8b25a" font-size="12">${replay.revealed ? "全段复盘" : "当前决策点"}</text>
+          </svg>
+        `;
+        $("#segmentId").textContent = replay.anonymousId;
+        $("#replayProgress").textContent = `${visibleCount}/${data.length}`;
+        $("#replayScore").textContent = replay.score;
+        $("#revealBtn").textContent = replay.revealed ? "已揭晓" : "揭晓片段";
+        $("#nextBarBtn").textContent = visibleCount >= data.length ? "回放完成" : "放出下一根";
+      }
+
+      function chooseTraining(decision) {
+        const replay = state.replay;
+        const feedback = $("#trainingFeedback");
+        const stage = replay.index;
+        let delta = 0;
+        let message = "";
+
+        if (stage <= 10 && decision === "buy") {
+          delta = -8;
+          message = `<strong>心魔识别：怕错过。</strong>急拉后立刻买入，容易把“热闹”误认为“机会”。这一根训练的是：计划没有出现，手就不能先动。`;
+        } else if (stage <= 10 && decision === "hold") {
+          delta = 8;
+          message = `<strong>纪律得分 +8。</strong>急速拉升时你选择观望，说明你没有让FOMO替你下单。继续等计划条件出现。`;
+        } else if (stage >= 12 && decision === "sell") {
+          delta = 7;
+          message = `<strong>风险控制 +7。</strong>分歧放大后先控风险，是在事上磨练“承认不确定”。`;
+        } else if (stage >= 12 && decision === "buy") {
+          delta = -6;
+          message = `<strong>追高复发。</strong>回落段还想买回，常见于“想证明刚才没错”。请记下这一念。`;
+        } else {
+          delta = 2;
+          message = `<strong>已记录选择。</strong>这一根不是考你猜对，而是记录你在不确定中是否还能守住开盘前的计划。`;
+        }
+
+        replay.score = Math.max(20, Math.min(96, replay.score + delta));
+        replay.decisions.push({ bar: stage, decision, delta });
+        state.points += Math.max(0, delta);
+        feedback.classList.add("show");
+        feedback.innerHTML = `${message}<br><span class="muted">测评加权：${replay.weightReason}</span>`;
+        state.score = Math.max(18, Math.min(96, state.score + Math.round(delta / 3)));
+        state.curve[state.curve.length - 1] = state.score;
+        state.tasks[1].done = true;
+        renderTasks();
+        drawKline();
+        updateScores();
+        toast(delta >= 0 ? `纪律得分 +${delta}` : `纪律扣分 ${delta}`);
+      }
+
+      function nextReplayBar() {
+        const replay = state.replay;
+        if (replay.index >= replay.candles.length) {
+          showSegmentIdentity();
+          return;
+        }
+        replay.index += 1;
+        drawKline();
+        $("#trainingFeedback").classList.add("show");
+        $("#trainingFeedback").innerHTML = `<strong>第 ${replay.index} 根已放出。</strong>继续做买入、卖出或观望决策。每一根K线，都是一次照见自己冲动的机会。`;
+      }
+
+      function showSegmentIdentity() {
+        const replay = state.replay;
+        replay.revealed = true;
+        const node = $("#segmentIdentity");
+        node.classList.add("show");
+        node.innerHTML = `<strong>训练后揭晓：</strong>${replay.hiddenIdentity}。正式版可配置为“不揭晓 / 训练后揭晓 / 老师直播复盘时揭晓”。`;
+        drawKline();
+        toast("历史片段已揭晓");
+      }
+
+      function switchTrainingMode(mode) {
+        const assessmentMode = mode === "assessment";
+        $("#assessmentTab").classList.toggle("active", assessmentMode);
+        $("#disciplineTab").classList.toggle("active", !assessmentMode);
+        $("#assessmentPanel").classList.toggle("hidden", !assessmentMode);
+        $("#practicePanel").classList.toggle("hidden", assessmentMode);
+        if (assessmentMode) renderAssessment();
+      }
+
+      function finishAssessment() {
+        const answers = state.assessment.answers;
+        if (answers.some((answer) => !answer)) {
+          toast("先完成3题，再生成权重");
+          return;
+        }
+        const fomo = answers.filter((answer) => /追|加仓|扳回|等等/.test(answer)).length;
+        if (fomo >= 2) {
+          state.assessment.type = "第7型 · 活跃型";
+          state.assessment.focus = "FOMO/追高";
+          state.replay.weightReason = "测评显示 FOMO/追高倾向，系统加权抽取“急速拉升后分歧”训练段。";
+          $("#profileSubtitle").textContent = "段位「筑基」 · 主修克治怕错过";
+        } else {
+          state.assessment.type = "平衡型 · 守纪律";
+          state.assessment.focus = "计划执行";
+          state.replay.weightReason = "测评显示纪律基础较好，系统加权抽取“复杂震荡中守计划”训练段。";
+          $("#profileSubtitle").textContent = "段位「筑基」 · 主修稳定执行";
+        }
+        state.points += 18;
+        $("#assessmentResult").classList.remove("hidden");
+        $("#assessmentResult").innerHTML = `<strong>${state.assessment.type}</strong><br>训练权重已切到：${state.assessment.focus}。下一轮匿名K线会优先匹配你的高风险场景。`;
+        updateScores();
+        drawKline();
+        toast("测评完成，训练权重已更新 +18");
+      }
+
+      function bindEvents() {
+        $("#enterBtn").addEventListener("click", () => {
+          const phone = $("#phoneInput").value.trim();
+          const vowCount = $$(".entry-vows input:checked").length;
+          if (!/^1\d{10}$/.test(phone)) {
+            toast("请输入11位手机号");
+            return;
+          }
+          if (vowCount < 2) {
+            toast("至少立下两条交易戒律");
+            return;
+          }
+          state.phone = phone;
+          $("#userPhoneMasked").textContent = maskPhone(phone);
+          $("#loginScreen").classList.remove("active");
+          showTab("home");
+          toast("立志完成，今日从照心开始");
+        });
+
+        $("#logoutBtn").addEventListener("click", () => {
+          $$(".screen").forEach((screen) => screen.classList.remove("active"));
+          $("#tabbar").classList.remove("show");
+          $("#loginScreen").classList.add("active");
+          toast("已退出演示账号");
+        });
+
+        $$("#tabbar button").forEach((button) => {
+          button.addEventListener("click", () => showTab(button.dataset.tab));
+        });
+
+        $$(".mood-btn").forEach((button) => {
+          button.addEventListener("click", () => {
+            $$(".mood-btn").forEach((item) => item.classList.remove("selected"));
+            button.classList.add("selected");
+            state.mood = button.dataset.mood;
+            $("#moodState").textContent = state.mood;
+            state.tasks[0].done = true;
+            renderTasks();
+            toast(`已照见今日心境：${state.mood}`);
+          });
+        });
+
+        $("#taskList").addEventListener("click", (event) => {
+          const task = event.target.closest("[data-task]");
+          if (!task) return;
+          completeTask(Number(task.dataset.task));
+        });
+
+        $("#checkinBtn").addEventListener("click", () => {
+          if (state.checkedIn) {
+            toast("今日已打卡，明日再省");
+            return;
+          }
+          state.checkedIn = true;
+          state.streak += 1;
+          state.points += 20;
+          $("#streakDays").textContent = state.streak;
+          $("#checkinHint").textContent = "今日已打卡";
+          $("#checkinBtn").textContent = "已打卡";
+          updateScores();
+          toast("省察打卡 +20");
+        });
+
+        $("#reflectBtn").addEventListener("click", calculateZhixing);
+        $("#historyBtn").addEventListener("click", renderHistorySheet);
+        $("#settingsBtn").addEventListener("click", renderSettingsSheet);
+
+        $$(".decision").forEach((button) => {
+          button.addEventListener("click", () => chooseTraining(button.dataset.decision));
+        });
+
+        $("#nextBarBtn").addEventListener("click", nextReplayBar);
+        $("#revealBtn").addEventListener("click", showSegmentIdentity);
+
+        $$("[data-go]").forEach((button) => {
+          button.addEventListener("click", () => showTab(button.dataset.go));
+        });
+
+        $$("[data-action]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const action = button.dataset.action;
+            if (action === "open-assessment") {
+              showTab("train");
+              switchTrainingMode("assessment");
+            }
+            if (action === "diary") renderDiarySheet();
+            if (action === "contract") renderContractSheet();
+            if (action === "ai-report") renderAiReportSheet();
+          });
+        });
+
+        $("#disciplineTab").addEventListener("click", () => switchTrainingMode("practice"));
+        $("#assessmentTab").addEventListener("click", () => switchTrainingMode("assessment"));
+
+        $("#assessmentQuestions").addEventListener("click", (event) => {
+          const option = event.target.closest("[data-question]");
+          if (!option) return;
+          state.assessment.answers[Number(option.dataset.question)] = option.dataset.answer;
+          renderAssessment();
+        });
+
+        $("#finishAssessmentBtn").addEventListener("click", finishAssessment);
+
+        $("#sheetCloseBtn").addEventListener("click", closeSheet);
+        $("#sheetBackdrop").addEventListener("click", (event) => {
+          if (event.target.id === "sheetBackdrop") closeSheet();
+        });
+        $("#sheetBody").addEventListener("click", (event) => {
+          const vowButton = event.target.closest("[data-vow]");
+          if (vowButton) {
+            const vow = vowButton.dataset.vow;
+            if (state.vows.includes(vow)) {
+              state.vows = state.vows.filter((item) => item !== vow);
+            } else {
+              state.vows.push(vow);
+            }
+            renderContractSheet();
+            return;
+          }
+
+          const settingButton = event.target.closest("[data-setting]");
+          if (settingButton) {
+            state.settings[settingButton.dataset.setting] = settingButton.dataset.value;
+            renderSettingsSheet();
+            toast("设置已更新");
+          }
+        });
+      }
+
+      renderTasks();
+      renderAssessment();
+      drawKline();
+      updateScores();
+      bindEvents();
+    </script>
+  </body>
+</html>

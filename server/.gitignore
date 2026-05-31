@@ -1,0 +1,4 @@
+data/runtime/*.json
+.env
+.env.*
+!.env.example

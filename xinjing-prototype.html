@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>心境 · 交易修心训练 · 原型</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0c0f14; --ink2:#141922; --panel:rgba(255,255,255,.045);
+    --panel2:rgba(255,255,255,.07); --line:rgba(216,178,90,.16);
+    --gold:#d8b25a; --gold-hi:#f2d68a; --gold-dim:rgba(216,178,90,.55);
+    --up:#e5484d; --down:#34a06a; --jade:#3aa99b;
+    --text:#ece4d2; --muted:#857f6e; --muted2:#5c574a;
+    --serif:'Noto Serif SC',serif; --sans:'Noto Sans SC',sans-serif;
+    --mono:'JetBrains Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{
+    font-family:var(--sans); background:#05070a; color:var(--text);
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:32px 16px; gap:40px; flex-wrap:wrap;
+    background-image:radial-gradient(900px 500px at 20% -10%,rgba(216,178,90,.07),transparent),
+                     radial-gradient(700px 500px at 90% 110%,rgba(58,169,155,.06),transparent);
+  }
+  .stage-note{ max-width:300px; color:var(--muted); font-size:13px; line-height:1.9; align-self:center }
+  .stage-note h1{ font-family:var(--serif); color:var(--gold); font-size:26px; font-weight:600; margin-bottom:6px; letter-spacing:2px }
+  .stage-note .sub{ color:var(--muted2); font-size:12px; letter-spacing:3px; margin-bottom:20px }
+  .stage-note ul{ list-style:none } .stage-note li{ padding:5px 0; border-bottom:1px solid rgba(255,255,255,.04) }
+  .stage-note li b{ color:var(--text); font-weight:500 }
+
+  /* phone frame */
+  .phone{
+    width:380px; height:812px; border-radius:46px; position:relative;
+    background:linear-gradient(160deg,var(--ink2),var(--ink));
+    box-shadow:0 0 0 11px #1c1f25, 0 0 0 13px #2c2f36, 0 50px 90px -20px rgba(0,0,0,.8),
+               inset 0 1px 0 rgba(255,255,255,.05);
+    overflow:hidden;
+  }
+  .notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:150px;height:30px;background:#1c1f25;border-radius:0 0 18px 18px;z-index:60}
+  .status{position:absolute;top:0;left:0;right:0;height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 26px;font-size:13px;font-weight:600;z-index:55;color:var(--text);font-family:var(--mono)}
+  .status .right{display:flex;gap:6px;align-items:center;font-size:12px}
+
+  .viewport{position:absolute;inset:0;border-radius:46px;overflow:hidden}
+  .screen{position:absolute;inset:0;padding:54px 0 0;overflow-y:auto;overflow-x:hidden;opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .35s ease,transform .35s ease;-webkit-overflow-scrolling:touch}
+  .screen::-webkit-scrollbar{display:none}
+  .screen.active{opacity:1;pointer-events:auto;transform:none}
+  .pad{padding:0 22px}
+  .scroll-pad{padding-bottom:108px}
+
+  /* shared */
+  .eyebrow{font-size:11px;letter-spacing:4px;color:var(--gold-dim);text-transform:uppercase;font-weight:600}
+  .h-title{font-family:var(--serif);font-size:25px;font-weight:600;letter-spacing:1px;margin-top:4px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:22px;backdrop-filter:blur(6px)}
+  .btn{display:flex;align-items:center;justify-content:center;gap:8px;border:none;cursor:pointer;font-family:var(--sans);font-weight:500;border-radius:16px;transition:transform .15s,filter .2s,opacity .2s}
+  .btn:active{transform:scale(.97)}
+  .btn-gold{background:linear-gradient(120deg,var(--gold),#caa047);color:#1a140a;font-weight:700;box-shadow:0 8px 24px -8px rgba(216,178,90,.6)}
+  .btn-ghost{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+  .btn-block{width:100%;height:54px;font-size:16px}
+  .muted{color:var(--muted)} .gold{color:var(--gold)}
+  .grain{position:absolute;inset:0;pointer-events:none;opacity:.035;z-index:40;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+  /* ===== LOGIN ===== */
+  #s-login{padding-top:0;background:radial-gradient(700px 420px at 50% 0%,rgba(216,178,90,.1),transparent 70%)}
+  .login-wrap{min-height:100%;display:flex;flex-direction:column;justify-content:center;padding:0 34px}
+  .brand-mark{width:74px;height:74px;border-radius:22px;background:linear-gradient(140deg,#1d2330,#11151d);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;margin-bottom:28px;box-shadow:0 0 40px -10px rgba(216,178,90,.4)}
+  .brand-mark span{font-family:var(--serif);font-size:38px;color:var(--gold);font-weight:700}
+  .login-title{font-family:var(--serif);font-size:34px;font-weight:700;letter-spacing:4px;line-height:1.2}
+  .login-sub{color:var(--muted);font-size:14px;margin-top:10px;letter-spacing:1px;line-height:1.7}
+  .field{margin-top:22px}
+  .field label{font-size:12px;color:var(--gold-dim);letter-spacing:2px}
+  .input-line{display:flex;align-items:center;gap:10px;margin-top:8px;border-bottom:1px solid var(--line);padding:12px 2px}
+  .input-line input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:18px;font-family:var(--sans);letter-spacing:1px}
+  .input-line .pfx{color:var(--muted);font-family:var(--mono);font-size:15px}
+  .code-btn{background:none;border:1px solid var(--line);color:var(--gold);border-radius:20px;padding:8px 14px;font-size:13px;cursor:pointer;white-space:nowrap;transition:.2s}
+  .code-btn:disabled{color:var(--muted2);border-color:rgba(255,255,255,.06);cursor:default}
+  .agree{display:flex;gap:9px;align-items:flex-start;margin-top:26px;font-size:12px;color:var(--muted);line-height:1.6}
+  .cbox{width:18px;height:18px;border:1px solid var(--gold-dim);border-radius:6px;flex-shrink:0;margin-top:1px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;color:#1a140a;transition:.2s}
+  .cbox.on{background:var(--gold);border-color:var(--gold)}
+
+  /* ===== HOME ===== */
+  .greet{display:flex;justify-content:space-between;align-items:flex-start}
+  .ava{width:46px;height:46px;border-radius:14px;background:linear-gradient(140deg,#2a3142,#161b24);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:var(--serif);color:var(--gold);font-size:20px}
+  .mood-row{display:flex;gap:9px;margin-top:16px}
+  .mood{flex:1;aspect-ratio:1;border-radius:16px;background:var(--panel);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;transition:.2s;font-size:22px}
+  .mood span{font-size:11px;color:var(--muted)}
+  .mood.sel{background:rgba(216,178,90,.12);border-color:var(--gold)}
+
+  /* daily card flip */
+  .deck{margin-top:20px;perspective:1400px}
+  .flip{position:relative;height:188px;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.4,.2,.2,1);cursor:pointer}
+  .flip.done{transform:rotateY(180deg)}
+  .face{position:absolute;inset:0;border-radius:24px;backface-visibility:hidden;overflow:hidden;padding:22px;display:flex;flex-direction:column;justify-content:space-between}
+  .face.front{background:linear-gradient(135deg,#2a2417,#15130c);border:1px solid var(--gold-dim);box-shadow:inset 0 0 60px -20px rgba(216,178,90,.5)}
+  .face.back{background:linear-gradient(145deg,#161d20,#0e1316);border:1px solid var(--line);transform:rotateY(180deg);justify-content:center}
+  .seal{position:absolute;top:18px;right:18px;width:42px;height:42px;border-radius:50%;border:1px dashed var(--gold-dim);display:flex;align-items:center;justify-content:center;font-family:var(--serif);color:var(--gold);font-size:18px}
+  .card-quote{font-family:var(--serif);font-size:20px;line-height:1.6;font-weight:600}
+  .card-tap{font-size:12px;color:var(--gold-dim);letter-spacing:2px}
+  .card-lesson-k{font-size:11px;letter-spacing:3px;color:var(--jade);margin-bottom:10px}
+  .card-lesson{font-family:var(--serif);font-size:16px;line-height:1.85}
+
+  /* tasks */
+  .sec-head{display:flex;justify-content:space-between;align-items:center;margin:26px 0 12px}
+  .sec-head h3{font-family:var(--serif);font-size:18px;font-weight:600}
+  .sec-head .more{font-size:12px;color:var(--gold-dim)}
+  .task{display:flex;align-items:center;gap:14px;padding:15px 16px;border-radius:16px;background:var(--panel);border:1px solid var(--line);margin-bottom:10px;cursor:pointer;transition:.2s}
+  .task.done{opacity:.55}
+  .tk-check{width:24px;height:24px;border-radius:8px;border:1.5px solid var(--gold-dim);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:#1a140a;transition:.2s}
+  .task.done .tk-check{background:var(--gold);border-color:var(--gold)}
+  .tk-body{flex:1}.tk-body .t{font-size:15px;font-weight:500}.task.done .t{text-decoration:line-through}
+  .tk-body .d{font-size:11px;color:var(--muted);margin-top:2px}
+  .tk-pts{font-family:var(--mono);font-size:12px;color:var(--gold);background:rgba(216,178,90,.1);padding:4px 9px;border-radius:9px}
+
+  /* streak / checkin */
+  .streak{margin-top:14px;padding:20px;border-radius:22px;background:linear-gradient(135deg,rgba(58,169,155,.12),rgba(216,178,90,.06));border:1px solid var(--line);display:flex;align-items:center;gap:18px}
+  .flame{font-size:40px}
+  .streak .big{font-family:var(--mono);font-size:30px;font-weight:600;color:var(--gold-hi);line-height:1}
+  .streak .lbl{font-size:12px;color:var(--muted);margin-top:4px}
+  .dots{display:flex;gap:6px;margin-top:10px}
+  .dot{width:13px;height:13px;border-radius:50%;background:rgba(255,255,255,.08)}
+  .dot.on{background:var(--jade);box-shadow:0 0 8px rgba(58,169,155,.6)}
+
+  /* ===== TRAIN tab ===== */
+  .feat{display:flex;gap:14px;align-items:center;padding:18px;border-radius:20px;background:var(--panel);border:1px solid var(--line);margin-bottom:12px;cursor:pointer;transition:.2s;position:relative;overflow:hidden}
+  .feat:active{transform:scale(.98)}
+  .feat .ic{width:50px;height:50px;border-radius:15px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px;background:linear-gradient(140deg,#222a36,#141922);border:1px solid var(--line)}
+  .feat .ft{flex:1}.feat .ft .n{font-family:var(--serif);font-size:17px;font-weight:600}.feat .ft .dd{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.5}
+  .feat .arr{color:var(--gold-dim);font-size:18px}
+  .feat .badge{position:absolute;top:12px;right:14px;font-size:10px;color:var(--up);background:rgba(229,72,77,.14);padding:2px 7px;border-radius:8px}
+
+  /* ===== K-LINE ===== */
+  .topbar{display:flex;align-items:center;gap:14px;padding:0 22px;height:52px;position:absolute;top:46px;left:0;right:0;z-index:50}
+  .back{width:38px;height:38px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;color:var(--text)}
+  .topbar .tt{font-family:var(--serif);font-size:18px;font-weight:600}
+  .has-top{padding-top:106px}
+  .kpi-row{display:flex;gap:10px;margin-bottom:16px}
+  .kpi{flex:1;padding:13px;border-radius:15px;background:var(--panel);border:1px solid var(--line);text-align:center}
+  .kpi .v{font-family:var(--mono);font-size:21px;font-weight:600;color:var(--gold-hi)}
+  .kpi .l{font-size:11px;color:var(--muted);margin-top:3px}
+  .chart{height:240px;border-radius:18px;background:linear-gradient(180deg,#0d1117,#0a0d12);border:1px solid var(--line);position:relative;overflow:hidden;padding:8px}
+  .chart .veil{position:absolute;top:0;right:0;bottom:0;width:56px;background:linear-gradient(90deg,transparent,rgba(216,178,90,.07));border-left:1px dashed var(--gold-dim);display:flex;align-items:center;justify-content:center;color:var(--gold-dim);font-size:11px;writing-mode:vertical-rl;letter-spacing:3px}
+  .predict{display:flex;gap:12px;margin-top:18px}
+  .pbtn{flex:1;height:62px;border-radius:18px;border:1px solid;font-family:var(--serif);font-size:18px;font-weight:600;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:.2s;background:none}
+  .pbtn small{font-size:11px;font-weight:400;font-family:var(--sans)}
+  .pbtn.up{color:var(--up);border-color:rgba(229,72,77,.5)} .pbtn.up:active{background:rgba(229,72,77,.12)}
+  .pbtn.down{color:var(--down);border-color:rgba(52,160,106,.5)} .pbtn.down:active{background:rgba(52,160,106,.12)}
+  .verdict{margin-top:16px;padding:18px;border-radius:18px;text-align:center;display:none}
+  .verdict.show{display:block;animation:pop .4s}
+  @keyframes pop{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}
+  .verdict .vh{font-family:var(--serif);font-size:22px;font-weight:700}
+  .verdict .vd{font-size:13px;margin-top:8px;line-height:1.7;color:var(--muted)}
+  .disclaim{font-size:10px;color:var(--muted2);text-align:center;margin-top:18px;line-height:1.6;letter-spacing:.5px}
+
+  /* ===== ENNEAGRAM TEST ===== */
+  .progbar{height:5px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;margin:18px 0}
+  .progbar i{display:block;height:100%;background:linear-gradient(90deg,var(--jade),var(--gold));transition:width .4s;border-radius:3px}
+  .q-num{font-family:var(--mono);font-size:13px;color:var(--gold-dim)}
+  .q-text{font-family:var(--serif);font-size:23px;line-height:1.6;font-weight:600;margin:14px 0 24px;min-height:110px}
+  .opt{padding:18px;border-radius:16px;background:var(--panel);border:1px solid var(--line);margin-bottom:12px;cursor:pointer;font-size:15px;line-height:1.5;transition:.2s;display:flex;gap:12px;align-items:center}
+  .opt:active{transform:scale(.98)} .opt:hover{border-color:var(--gold-dim)}
+  .opt .oc{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--gold-dim);flex-shrink:0;font-family:var(--mono);font-size:12px;display:flex;align-items:center;justify-content:center;color:var(--gold-dim)}
+
+  /* result / AI report */
+  .type-hero{text-align:center;padding:30px 0 10px}
+  .type-ring{width:120px;height:120px;border-radius:50%;margin:0 auto 18px;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:54px;font-weight:700;color:var(--gold-hi);background:radial-gradient(circle,rgba(216,178,90,.18),transparent 70%);border:1px solid var(--gold-dim);box-shadow:0 0 50px -12px rgba(216,178,90,.5)}
+  .type-name{font-family:var(--serif);font-size:26px;font-weight:700}
+  .type-tag{font-size:13px;color:var(--jade);letter-spacing:2px;margin-top:6px}
+  .bar-item{margin-bottom:16px}
+  .bar-item .bl{display:flex;justify-content:space-between;font-size:13px;margin-bottom:7px}
+  .bar-item .bl .pv{font-family:var(--mono);color:var(--gold)}
+  .bar-track{height:8px;border-radius:5px;background:rgba(255,255,255,.07);overflow:hidden}
+  .bar-track i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,var(--jade),var(--gold-hi));width:0;transition:width 1s cubic-bezier(.3,.8,.3,1)}
+  .ai-stream{font-size:14px;line-height:1.95;color:var(--text)}
+  .ai-stream .cursor{display:inline-block;width:8px;height:16px;background:var(--gold);vertical-align:-2px;animation:blink 1s steps(2) infinite}
+  @keyframes blink{50%{opacity:0}}
+  .ai-think{display:flex;gap:8px;align-items:center;color:var(--gold-dim);font-size:13px;padding:6px 0}
+  .ai-think .d{width:7px;height:7px;border-radius:50%;background:var(--gold);animation:bnc 1s infinite}
+  .ai-think .d:nth-child(2){animation-delay:.15s}.ai-think .d:nth-child(3){animation-delay:.3s}
+  @keyframes bnc{0%,80%,100%{transform:scale(.5);opacity:.4}40%{transform:scale(1);opacity:1}}
+  .chip{display:inline-block;font-size:12px;padding:6px 12px;border-radius:20px;background:var(--panel2);border:1px solid var(--line);margin:0 6px 8px 0}
+  .chip.up{color:var(--up);border-color:rgba(229,72,77,.4)} .chip.risk{color:var(--gold);border-color:var(--gold-dim)}
+
+  /* ===== ME tab ===== */
+  .me-head{display:flex;align-items:center;gap:16px;padding:18px;border-radius:22px;background:linear-gradient(135deg,rgba(216,178,90,.1),transparent);border:1px solid var(--line)}
+  .me-head .ava{width:64px;height:64px;border-radius:18px;font-size:26px}
+  .me-name{font-family:var(--serif);font-size:21px;font-weight:600}
+  .me-sub{font-size:12px;color:var(--muted);margin-top:4px}
+  .stat3{display:flex;margin-top:14px}
+  .stat3 .s{flex:1;text-align:center;padding:14px 0}
+  .stat3 .s+.s{border-left:1px solid var(--line)}
+  .stat3 .v{font-family:var(--mono);font-size:22px;color:var(--gold-hi);font-weight:600}
+  .stat3 .l{font-size:11px;color:var(--muted);margin-top:3px}
+  .menu .mi{display:flex;align-items:center;gap:14px;padding:16px 4px;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;font-size:15px}
+  .menu .mi .mic{font-size:20px;width:24px;text-align:center}
+  .menu .mi .arr{margin-left:auto;color:var(--muted2)}
+
+  /* ===== TAB BAR ===== */
+  .tabbar{position:absolute;bottom:0;left:0;right:0;height:84px;background:rgba(12,15,20,.86);backdrop-filter:blur(20px);border-top:1px solid var(--line);display:flex;padding:8px 12px 26px;z-index:50}
+  .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;color:var(--muted2);transition:.2s;font-size:11px}
+  .tab .ti{font-size:21px;line-height:1}
+  .tab.on{color:var(--gold)}
+  .tabbar.hidden{display:none}
+
+  .toast{position:absolute;bottom:104px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(20,25,34,.97);border:1px solid var(--gold-dim);color:var(--text);padding:12px 22px;border-radius:30px;font-size:13px;z-index:90;opacity:0;transition:.3s;white-space:nowrap;box-shadow:0 10px 30px -10px rgba(0,0,0,.7)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div class="stage-note">
+  <div class="sub">PROTOTYPE · 可交互演示</div>
+  <h1>心 境</h1>
+  <p style="margin:0 0 18px">交易者的修心训练小程序 — 把情绪管理、人格认知和盘面训练做成每日可坚持的习惯。</p>
+  <ul>
+    <li><b>短信登录</b> · 真实倒计时 + 验证</li>
+    <li><b>每日修心卡</b> · 点击翻面领取</li>
+    <li><b>训练任务</b> · 勾选累计积分</li>
+    <li><b>训练打卡</b> · 连续天数 +1</li>
+    <li><b>K线训练</b> · 看涨/看跌实时判分</li>
+    <li><b>九型人格测评</b> · 答题出类型</li>
+    <li><b>AI人格分析</b> · 生成专属报告</li>
+  </ul>
+  <p style="margin-top:18px;color:var(--muted2);font-size:11px">→ 右侧手机里点点看,全部能跑。<br>确认风格后我转成微信小程序代码。</p>
+</div>
+
+<div class="phone">
+  <div class="notch"></div>
+  <div class="status">
+    <span>9:41</span>
+    <span class="right">📶 &nbsp;🔋</span>
+  </div>
+  <div class="viewport">
+
+    <!-- ============ LOGIN ============ -->
+    <section class="screen active" id="s-login">
+      <div class="login-wrap">
+        <div class="brand-mark"><span>境</span></div>
+        <div class="login-title">心 境</div>
+        <div class="login-sub">先稳住心，再读懂盘。<br>欢迎回来，交易修行者。</div>
+
+        <div class="field">
+          <label>手机号</label>
+          <div class="input-line">
+            <span class="pfx">+86</span>
+            <input id="phone" type="tel" maxlength="11" placeholder="请输入手机号" inputmode="numeric">
+          </div>
+        </div>
+        <div class="field">
+          <label>验证码</label>
+          <div class="input-line">
+            <input id="code" type="tel" maxlength="6" placeholder="6位短信验证码" inputmode="numeric">
+            <button class="code-btn" id="codeBtn" onclick="sendCode()">获取验证码</button>
+          </div>
+        </div>
+
+        <div class="agree">
+          <div class="cbox" id="agree" onclick="this.classList.toggle('on')"></div>
+          <span>我已阅读并同意 <span class="gold">《用户协议》</span> 与 <span class="gold">《隐私政策》</span></span>
+        </div>
+
+        <button class="btn btn-gold btn-block" style="margin-top:30px" onclick="doLogin()">登 录</button>
+        <p style="text-align:center;color:var(--muted2);font-size:11px;margin-top:18px">演示用 · 验证码会显示在提示里</p>
+      </div>
+    </section>
+
+    <!-- ============ HOME / 今日 ============ -->
+    <section class="screen" id="s-home">
+      <div class="pad scroll-pad">
+        <div class="greet">
+          <div>
+            <div class="eyebrow">今日 · 周四</div>
+            <div class="h-title">心稳，方能盘稳</div>
+          </div>
+          <div class="ava">境</div>
+        </div>
+
+        <div style="font-size:13px;color:var(--muted);margin-top:18px">开盘前，先记录此刻的心境</div>
+        <div class="mood-row">
+          <div class="mood" onclick="pickMood(this)">😌<span>平静</span></div>
+          <div class="mood" onclick="pickMood(this)">🔥<span>急躁</span></div>
+          <div class="mood" onclick="pickMood(this)">😰<span>焦虑</span></div>
+          <div class="mood" onclick="pickMood(this)">🤑<span>贪婪</span></div>
+        </div>
+
+        <div class="sec-head"><h3>每日修心卡</h3><span class="more" id="cardStatus">点击翻面 →</span></div>
+        <div class="deck">
+          <div class="flip" id="flip" onclick="flipCard()">
+            <div class="face front">
+              <div class="seal">境</div>
+              <div class="card-tap">DAY 12 · 今日修心</div>
+              <div class="card-quote">轻点卡面<br>领取今日心法</div>
+              <div class="card-tap">TAP TO REVEAL</div>
+            </div>
+            <div class="face back">
+              <div class="card-lesson-k">第十二课 · 止损是修行</div>
+              <div class="card-quote" style="font-size:21px">「认错不丢人，<br>扛单才致命。」</div>
+              <div class="card-lesson" style="color:var(--muted);font-size:13px;margin-top:14px;font-family:var(--sans)">设定止损不是认输，而是把命运从情绪手里夺回来。今日练习：每一笔，先想清楚最坏能亏多少。</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sec-head"><h3>今日训练任务</h3><span class="more" id="taskProg">0/3 完成</span></div>
+        <div id="taskList"></div>
+
+        <div class="sec-head"><h3>训练打卡</h3></div>
+        <div class="streak">
+          <div class="flame">🔥</div>
+          <div style="flex:1">
+            <div class="big"><span id="streakN">11</span> <span style="font-size:14px;color:var(--muted)">天</span></div>
+            <div class="lbl">连续修心打卡</div>
+            <div class="dots" id="dots"></div>
+          </div>
+          <button class="btn btn-gold" id="checkinBtn" style="height:44px;padding:0 18px;font-size:14px" onclick="checkin()">打卡</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TRAIN / 训练 ============ -->
+    <section class="screen" id="s-train">
+      <div class="pad scroll-pad">
+        <div class="eyebrow">TRAINING · 训练场</div>
+        <div class="h-title">在模拟里犯错，<br>在实盘里成熟</div>
+
+        <div style="margin-top:24px"></div>
+        <div class="feat" onclick="startKline()">
+          <div class="ic">📈</div>
+          <div class="ft"><div class="n">K线训练</div><div class="dd">遮住下一根 · 锻炼盘感与纪律</div></div>
+          <div class="badge">HOT</div>
+          <div class="arr">›</div>
+        </div>
+        <div class="feat" onclick="goTab('test')">
+          <div class="ic">🧭</div>
+          <div class="ft"><div class="n">九型人格测评</div><div class="dd">找到你的交易性格盲区</div></div>
+          <div class="arr">›</div>
+        </div>
+        <div class="feat" onclick="goAI()">
+          <div class="ic">🤖</div>
+          <div class="ft"><div class="n">AI人格分析</div><div class="dd">结合答题与盘面行为生成报告</div></div>
+          <div class="arr">›</div>
+        </div>
+        <div class="feat" onclick="goTab('home')">
+          <div class="ic">🗂️</div>
+          <div class="ft"><div class="n">训练任务 / 打卡</div><div class="dd">每日小目标，积分换段位</div></div>
+          <div class="arr">›</div>
+        </div>
+
+        <div class="card" style="margin-top:20px;padding:20px">
+          <div class="eyebrow">本周训练量</div>
+          <div style="display:flex;gap:6px;align-items:flex-end;height:90px;margin-top:16px">
+            <div style="flex:1;background:linear-gradient(var(--jade),transparent);height:40%;border-radius:6px 6px 0 0"></div>
+            <div style="flex:1;background:linear-gradient(var(--jade),transparent);height:70%;border-radius:6px 6px 0 0"></div>
+            <div style="flex:1;background:linear-gradient(var(--jade),transparent);height:55%;border-radius:6px 6px 0 0"></div>
+            <div style="flex:1;background:linear-gradient(var(--gold),transparent);height:95%;border-radius:6px 6px 0 0"></div>
+            <div style="flex:1;background:linear-gradient(var(--jade),transparent);height:60%;border-radius:6px 6px 0 0"></div>
+            <div style="flex:1;background:linear-gradient(var(--jade),transparent);height:80%;border-radius:6px 6px 0 0"></div>
+            <div style="flex:1;background:rgba(255,255,255,.08);height:30%;border-radius:6px 6px 0 0"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted2);margin-top:8px;font-family:var(--mono)"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ K-LINE detail ============ -->
+    <section class="screen" id="s-kline">
+      <div class="topbar">
+        <div class="back" onclick="goTab('train')">‹</div>
+        <div class="tt">K线训练</div>
+      </div>
+      <div class="pad has-top scroll-pad">
+        <div class="kpi-row">
+          <div class="kpi"><div class="v" id="kAcc">--%</div><div class="l">准确率</div></div>
+          <div class="kpi"><div class="v" id="kStreak">0</div><div class="l">连对</div></div>
+          <div class="kpi"><div class="v" id="kRound">1</div><div class="l">第几局</div></div>
+        </div>
+        <div class="eyebrow" style="margin-bottom:10px">题目 · 下一根会怎么走？</div>
+        <div class="chart" id="chart"><div class="veil">下一根?</div></div>
+        <div class="predict">
+          <button class="pbtn up" onclick="guess('up')">看涨 ▲<small>red · 收高</small></button>
+          <button class="pbtn down" onclick="guess('down')">看跌 ▼<small>green · 收低</small></button>
+        </div>
+        <div class="verdict card" id="verdict"></div>
+        <div class="disclaim">本功能为盘感与交易心理训练，使用模拟随机数据，不构成任何投资建议。</div>
+      </div>
+    </section>
+
+    <!-- ============ TEST / 九型测评 ============ -->
+    <section class="screen" id="s-test">
+      <div class="pad scroll-pad" id="testIntro">
+        <div class="eyebrow">ENNEAGRAM · 九型人格</div>
+        <div class="h-title">你的交易性格，<br>藏着盈亏的根源</div>
+        <div class="card" style="margin-top:24px;padding:24px">
+          <div class="card-lesson-k">关于本测评</div>
+          <p style="font-size:14px;line-height:1.9;color:var(--muted)">8 道情境题，约 2 分钟。我们把九型人格映射到交易行为上 —— 帮你看清自己最容易在哪种情绪里亏钱：是过度自信、害怕错过，还是迟迟不肯止损。</p>
+          <div style="margin-top:16px">
+            <span class="chip">🧭 8题</span><span class="chip">⏱ 2分钟</span><span class="chip risk">🔓 解锁AI分析</span>
+          </div>
+        </div>
+        <button class="btn btn-gold btn-block" style="margin-top:24px" onclick="startTest()">开始测评</button>
+      </div>
+
+      <div class="pad scroll-pad" id="testQ" style="display:none">
+        <div class="topbar" style="position:static;padding:0;height:auto;margin-bottom:6px">
+          <div class="back" onclick="quitTest()">‹</div>
+          <span class="q-num" id="qnum">01 / 08</span>
+        </div>
+        <div class="progbar"><i id="prog" style="width:12%"></i></div>
+        <div class="q-text" id="qtext"></div>
+        <div id="qopts"></div>
+      </div>
+    </section>
+
+    <!-- ============ RESULT + AI ============ -->
+    <section class="screen" id="s-ai">
+      <div class="topbar">
+        <div class="back" onclick="goTab('test')">‹</div>
+        <div class="tt">AI 人格分析</div>
+      </div>
+      <div class="pad has-top scroll-pad">
+        <div class="type-hero">
+          <div class="type-ring" id="typeNum">7</div>
+          <div class="type-name" id="typeName">第7型 · 活跃型</div>
+          <div class="type-tag" id="typeTag">FOMO型交易者 · 怕错过</div>
+        </div>
+
+        <div class="card" style="padding:22px;margin-top:6px">
+          <div class="card-lesson-k">交易性格画像</div>
+          <div style="margin-top:18px">
+            <div class="bar-item"><div class="bl"><span>冲动入场倾向</span><span class="pv" data-v="82">82%</span></div><div class="bar-track"><i data-w="82"></i></div></div>
+            <div class="bar-item"><div class="bl"><span>追涨杀跌(FOMO)</span><span class="pv" data-v="76">76%</span></div><div class="bar-track"><i data-w="76"></i></div></div>
+            <div class="bar-item"><div class="bl"><span>止损执行力</span><span class="pv" data-v="38">38%</span></div><div class="bar-track"><i data-w="38"></i></div></div>
+            <div class="bar-item"><div class="bl"><span>盈利耐心持有</span><span class="pv" data-v="29">29%</span></div><div class="bar-track"><i data-w="29"></i></div></div>
+          </div>
+        </div>
+
+        <div class="card" style="padding:22px;margin-top:14px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+            <span style="font-size:18px">🤖</span>
+            <span class="card-lesson-k" style="margin:0">AI 教练 · 专属诊断</span>
+          </div>
+          <div class="ai-stream" id="aiStream"></div>
+        </div>
+
+        <div style="margin-top:14px">
+          <span class="chip up">⚠️ 高频交易</span>
+          <span class="chip up">⚠️ 不设止损</span>
+          <span class="chip risk">💡 适合机械化规则</span>
+          <span class="chip risk">💡 减少盯盘</span>
+        </div>
+
+        <button class="btn btn-gold btn-block" style="margin-top:22px" onclick="goTab('home')">生成今日专属训练计划</button>
+        <div class="disclaim">分析基于你的测评与训练行为,仅用于自我认知与心理训练参考。</div>
+      </div>
+    </section>
+
+    <!-- ============ ME / 我的 ============ -->
+    <section class="screen" id="s-me">
+      <div class="pad scroll-pad">
+        <div class="eyebrow">PROFILE · 我的</div>
+        <div class="me-head" style="margin-top:12px">
+          <div class="ava">境</div>
+          <div style="flex:1">
+            <div class="me-name">修行者 · <span id="meType">第7型</span></div>
+            <div class="me-sub" id="mePhone">已绑定手机 · 段位「筑基」</div>
+          </div>
+          <div class="back" style="background:none;border:none;font-size:18px">⚙️</div>
+        </div>
+        <div class="card stat3" style="margin-top:14px">
+          <div class="s"><div class="v" id="mePts">120</div><div class="l">修心积分</div></div>
+          <div class="s"><div class="v" id="meDays">11</div><div class="l">连续打卡</div></div>
+          <div class="s"><div class="v" id="meAcc">--%</div><div class="l">盘感准确率</div></div>
+        </div>
+
+        <div class="card" style="margin-top:16px;padding:6px 18px" class="menu">
+          <div class="menu">
+            <div class="mi" onclick="goAI()"><span class="mic">🤖</span>我的AI人格报告<span class="arr">›</span></div>
+            <div class="mi" onclick="startKline()"><span class="mic">📈</span>K线训练记录<span class="arr">›</span></div>
+            <div class="mi" onclick="goTab('test')"><span class="mic">🧭</span>重新测评九型人格<span class="arr">›</span></div>
+            <div class="mi"><span class="mic">📜</span>修心卡收藏 (11)<span class="arr">›</span></div>
+            <div class="mi"><span class="mic">🏅</span>段位与成就<span class="arr">›</span></div>
+            <div class="mi" style="border:none" onclick="logout()"><span class="mic">↩️</span>退出登录<span class="arr">›</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /viewport -->
+
+  <!-- TAB BAR -->
+  <div class="tabbar hidden" id="tabbar">
+    <div class="tab" data-t="home" onclick="goTab('home')"><span class="ti">☷</span>今日</div>
+    <div class="tab" data-t="train" onclick="goTab('train')"><span class="ti">⚐</span>训练</div>
+    <div class="tab" data-t="test" onclick="goTab('test')"><span class="ti">☯</span>测评</div>
+    <div class="tab" data-t="me" onclick="goTab('me')"><span class="ti">◈</span>我的</div>
+  </div>
+
+  <div class="grain"></div>
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+let toastT;
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2200);}
+function show(id){$$('.screen').forEach(s=>s.classList.remove('active'));$('#'+id).classList.add('active');$('#'+id).scrollTop=0;}
+
+/* tab nav */
+const TAB_SCREENS={home:'s-home',train:'s-train',test:'s-test',me:'s-me'};
+function goTab(t){
+  show(TAB_SCREENS[t]); $('#tabbar').classList.remove('hidden');
+  $$('.tab').forEach(x=>x.classList.toggle('on',x.dataset.t===t));
+}
+function startKline(){show('s-kline');$('#tabbar').classList.add('hidden');newKlineRound();}
+function goAI(){show('s-ai');$('#tabbar').classList.add('hidden');runAI();}
+
+/* ---------- LOGIN ---------- */
+let codeTimer;
+function sendCode(){
+  const p=$('#phone').value.trim();
+  if(!/^1\d{10}$/.test(p)){toast('请输入正确的11位手机号');return;}
+  const btn=$('#codeBtn'); let n=60; btn.disabled=true;
+  const fake=Math.floor(100000+Math.random()*900000);
+  toast('验证码已发送：'+fake+'（演示）');
+  $('#code').value='';
+  btn.textContent=n+'s后重发';
+  codeTimer=setInterval(()=>{n--;btn.textContent=n+'s后重发';if(n<=0){clearInterval(codeTimer);btn.disabled=false;btn.textContent='重新获取';}},1000);
+}
+function doLogin(){
+  const p=$('#phone').value.trim(), c=$('#code').value.trim();
+  if(!/^1\d{10}$/.test(p)){toast('请输入正确的手机号');return;}
+  if(c.length<6){toast('请输入6位验证码');return;}
+  if(!$('#agree').classList.contains('on')){toast('请先勾选并同意协议');return;}
+  $('#mePhone').textContent='已绑定 '+p.slice(0,3)+'****'+p.slice(7)+' · 段位「筑基」';
+  toast('登录成功，欢迎回来');
+  setTimeout(()=>goTab('home'),500);
+}
+function logout(){ if(codeTimer)clearInterval(codeTimer); show('s-login'); $('#tabbar').classList.add('hidden'); }
+
+/* ---------- HOME ---------- */
+function pickMood(el){$$('.mood').forEach(m=>m.classList.remove('sel'));el.classList.add('sel');toast('已记录今日心境');}
+let cardFlipped=false;
+function flipCard(){ if(cardFlipped)return; cardFlipped=true; $('#flip').classList.add('done'); $('#cardStatus').textContent='今日已领取 ✓'; addPts(10,'修心卡 +10'); }
+
+const TASKS=[
+  {t:'晨间复盘昨日交易情绪',d:'记录至少一次情绪触发点',p:20},
+  {t:'完成 1 局 K线训练',d:'锻炼盘感，不带钱进场',p:30},
+  {t:'写下今日的「不操作」清单',d:'明确哪些行情不碰',p:15},
+];
+let taskDone=0;
+function renderTasks(){
+  const box=$('#taskList'); box.innerHTML='';
+  TASKS.forEach((tk,i)=>{
+    const d=document.createElement('div'); d.className='task'+(tk.ok?' done':'');
+    d.innerHTML=`<div class="tk-check">${tk.ok?'✓':''}</div><div class="tk-body"><div class="t">${tk.t}</div><div class="d">${tk.d}</div></div><div class="tk-pts">+${tk.p}</div>`;
+    d.onclick=()=>{ if(tk.ok)return; tk.ok=true; taskDone++; renderTasks(); addPts(tk.p,'任务完成 +'+tk.p); $('#taskProg').textContent=taskDone+'/3 完成'; if(taskDone===3)setTimeout(()=>toast('🎉 今日任务全部完成！'),400); };
+    box.appendChild(d);
+  });
+}
+let checkedIn=false, streak=11;
+function renderDots(){const box=$('#dots');box.innerHTML='';for(let i=0;i<7;i++){const d=document.createElement('div');d.className='dot'+(i<(checkedIn?6:5)?' on':'');box.appendChild(d);}}
+function checkin(){
+  if(checkedIn){toast('今日已打卡，明天见 🌙');return;}
+  checkedIn=true; streak++; $('#streakN').textContent=streak; $('#meDays').textContent=streak;
+  $('#checkinBtn').textContent='已打卡'; $('#checkinBtn').style.opacity='.6';
+  renderDots(); addPts(25,'打卡 +25 · 连续'+streak+'天');
+}
+let pts=120;
+function addPts(n,msg){pts+=n;$('#mePts').textContent=pts;toast(msg);}
+
+/* ---------- K-LINE TRAINING ---------- */
+let kRound=0,kRight=0,kWrong=0,kHotStreak=0,kAnswer=null,answered=false;
+function genCandles(){
+  const arr=[]; let price=100;
+  for(let i=0;i<14;i++){
+    const o=price, ch=(Math.random()-0.48)*6, c=+(o+ch).toFixed(2);
+    const h=Math.max(o,c)+Math.random()*2, l=Math.min(o,c)-Math.random()*2;
+    arr.push({o,c,h,l,up:c>=o}); price=c;
+  }
+  // hidden next candle
+  const o=price, ch=(Math.random()-0.5)*7, c=+(o+ch).toFixed(2);
+  const next={o,c,h:Math.max(o,c)+Math.random()*2,l:Math.min(o,c)-Math.random()*2,up:c>=o};
+  return {arr,next};
+}
+let kData;
+function drawChart(showNext){
+  const data=showNext?[...kData.arr,kData.next]:kData.arr;
+  const all=data.flatMap(d=>[d.h,d.l]); const max=Math.max(...all),min=Math.min(...all),rng=(max-min)||1;
+  const W=312,H=224,n=15,cw=W/n,bw=cw*0.56;
+  const y=v=>H-((v-min)/rng)*(H-20)-10;
+  let svg=`<svg width="100%" height="100%" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">`;
+  data.forEach((d,i)=>{
+    const cx=i*cw+cw/2, col=d.up?'#e5484d':'#34a06a';
+    const isNext=showNext&&i===14;
+    const op=isNext?'1':'.92';
+    svg+=`<line x1="${cx}" y1="${y(d.h)}" x2="${cx}" y2="${y(d.l)}" stroke="${col}" stroke-width="1.4" opacity="${op}"/>`;
+    const top=y(Math.max(d.o,d.c)),bot=y(Math.min(d.o,d.c));
+    svg+=`<rect x="${cx-bw/2}" y="${top}" width="${bw}" height="${Math.max(bot-top,1.5)}" fill="${col}" opacity="${op}" ${isNext?'stroke="#f2d68a" stroke-width="1.2"':''}/>`;
+  });
+  svg+='</svg>';
+  $('#chart').innerHTML=svg+(showNext?'':'<div class="veil">下一根?</div>');
+}
+function newKlineRound(){
+  kRound++; answered=false; kData=genCandles();
+  $('#kRound').textContent=kRound;
+  $('#verdict').classList.remove('show');
+  $$('.pbtn').forEach(b=>b.style.opacity='1');
+  drawChart(false);
+  updateKpi();
+}
+function updateKpi(){
+  const total=kRight+kWrong;
+  const acc=total?Math.round(kRight/total*100):0;
+  $('#kAcc').textContent=total?acc+'%':'--%';
+  $('#kStreak').textContent=kHotStreak;
+  $('#meAcc').textContent=total?acc+'%':'--%';
+}
+function guess(dir){
+  if(answered)return; answered=true;
+  const correct=kData.next.up?'up':'down';
+  const win=dir===correct;
+  if(win){kRight++;kHotStreak++;} else {kWrong++;kHotStreak=0;}
+  $$('.pbtn').forEach(b=>b.style.opacity='.4');
+  drawChart(true); updateKpi();
+  const v=$('#verdict');
+  const pct=Math.abs(((kData.next.c-kData.next.o)/kData.next.o*100)).toFixed(2);
+  v.innerHTML = win
+    ? `<div class="vh" style="color:var(--down)">✓ 判断正确</div><div class="vd">下一根${correct==='up'?'收涨':'收跌'} ${pct}%。盘感不错——但记住：连对也别上头，纪律比预测重要。</div><button class="btn btn-gold btn-block" style="margin-top:14px;height:46px" onclick="newKlineRound()">下一局 →</button>`
+    : `<div class="vh" style="color:var(--up)">✗ 判断失误</div><div class="vd">下一根实际${correct==='up'?'收涨':'收跌'} ${pct}%。猜错很正常,真正的功夫是错了之后不报复性加仓。深呼吸,继续。</div><button class="btn btn-gold btn-block" style="margin-top:14px;height:46px" onclick="newKlineRound()">下一局 →</button>`;
+  v.classList.add('show');
+  if(win&&kHotStreak>=3)setTimeout(()=>toast('🔥 连对'+kHotStreak+'局！'),300);
+}
+
+/* ---------- ENNEAGRAM TEST ---------- */
+const QUESTIONS=[
+  {q:'看到一只票快速拉升时，你的第一反应是？',a:['赶紧追，怕错过这波',' 先看为什么涨，再决定','和我无关，按计划走']},
+  {q:'一笔单子亏了10%，没设止损，你会？',a:['再扛扛，说不定能回本','立刻认错出局','加仓摊低成本']},
+  {q:'连续盈利三天后，你倾向于？',a:['加大仓位，状态正好','保持原节奏','落袋为安，先休息']},
+  {q:'别人都在讨论的热门题材，你？',a:['必须参与，不然焦虑','研究后觉得不合适就放弃','基本不看群里消息']},
+  {q:'盘中频繁看手机的频率是？',a:['几乎一直盯着','设了价位提醒才看','一天看一两次']},
+  {q:'交易计划和盘中冲动冲突时，谁赢？',a:['多数时候冲动赢','五五开','基本按计划']},
+  {q:'回顾亏损时，你更常想的是？',a:['运气太差 / 庄家针对我','哪一步我可以做得更好','已经接受，向前看']},
+  {q:'理想中的交易状态是？',a:['刺激、能抓住每个机会','稳定、可复制的盈利','清净、少操作少烦恼']},
+];
+let qi=0, scoreImpulse=0;
+function startTest(){qi=0;scoreImpulse=0;$('#testIntro').style.display='none';$('#testQ').style.display='block';$('#tabbar').classList.add('hidden');renderQ();}
+function quitTest(){$('#testQ').style.display='none';$('#testIntro').style.display='block';goTab('test');}
+function renderQ(){
+  const Q=QUESTIONS[qi];
+  $('#qnum').textContent=String(qi+1).padStart(2,'0')+' / 08';
+  $('#prog').style.width=((qi+1)/8*100)+'%';
+  $('#qtext').textContent=Q.q;
+  const box=$('#qopts'); box.innerHTML='';
+  Q.a.forEach((opt,idx)=>{
+    const d=document.createElement('div'); d.className='opt';
+    d.innerHTML=`<div class="oc">${String.fromCharCode(65+idx)}</div><div>${opt}</div>`;
+    d.onclick=()=>{ if(idx===0)scoreImpulse+=2; else if(idx===1)scoreImpulse+=0; qi++; if(qi<8)renderQ(); else finishTest(); };
+    box.appendChild(d);
+  });
+  $('#testQ').scrollTop=0;
+}
+function finishTest(){ goAI(); }
+
+/* ---------- AI ANALYSIS ---------- */
+function runAI(){
+  // animate bars
+  setTimeout(()=>{ $$('.bar-track i').forEach(i=>i.style.width=i.dataset.w+'%'); },300);
+  // stream text
+  const text="你属于典型的「FOMO型」交易者——精力旺盛、对机会高度敏感，但也最容易被「怕错过」的情绪牵着走。\n\n我注意到几个关键信号：你的冲动入场倾向偏高，而止损执行力明显偏弱。这意味着你常常凭兴奋进场，却很难在错误时果断离场。盈利时你也坐不住，容易过早兑现，把大行情做成小波段。\n\n这不是性格缺陷，而是你需要外部规则来约束内在的活力。\n\n给你的三条心法：\n① 入场前先写出场——没有止损位不开仓；\n② 把盯盘时间压缩到固定时段，远离即时刺激；\n③ 用机械化的交易系统代替临场判断,让纪律替情绪做决定。\n\n坚持21天的修心打卡,我们会持续追踪你的行为变化。";
+  const el=$('#aiStream'); el.innerHTML='<div class="ai-think"><span class="d"></span><span class="d"></span><span class="d"></span> AI教练正在分析你的答题与盘面行为…</div>';
+  setTimeout(()=>{
+    el.innerHTML=''; let i=0;
+    const cur=document.createElement('span'); cur.className='cursor';
+    function type(){
+      if(i<text.length){
+        const ch=text[i++];
+        if(ch==='\n'){el.insertBefore(document.createElement('br'),cur);}
+        else{ const s=document.createTextNode(ch); el.insertBefore(s,cur); }
+        setTimeout(type, ch==='\n'?80:18);
+      } else { cur.remove(); }
+    }
+    el.appendChild(cur); type();
+  },1400);
+}
+
+/* ---------- init ---------- */
+renderTasks(); renderDots();
+</script>
+</body>
+</html>

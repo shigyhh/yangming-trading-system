@@ -1,0 +1,115 @@
+<view class="page-shell">
+  <view class="page-content">
+    <text class="eyebrow">TRAINING · 事上练</text>
+    <view class="page-title">每日修心<br />事上练</view>
+    <view class="page-subtitle">{{result ? type + '专属路径' : '未照见时使用通用事上练；完成照见后会自动匹配路径。'}}</view>
+
+    <view class="mind-bridge card" bindtap="goMind">
+      <view class="mind-seal">{{mind ? mind.glyph : '照'}}</view>
+      <view class="mind-copy">
+        <text>{{mind ? '今日照心 · ' + mind.name : '先做开盘照心'}}</text>
+        <view>{{mindTask || '开盘前先看见此刻之心，再进入今日修行。'}}</view>
+      </view>
+      <view class="mind-axis">{{indexFocus}}</view>
+    </view>
+
+    <view wx:if="{{!result}}" class="pre-card card">
+      <view>建议先照见人格</view>
+      <text>照见后，事上练会按你的主导人格切换触发场景和克治动作。</text>
+      <button class="secondary-btn" bindtap="goAssessment">去照见</button>
+    </view>
+
+    <view class="training-card card">
+      <view class="training-head">
+        <view>
+          <text>{{plan.stage}}</text>
+          <view>{{type}}</view>
+        </view>
+        <view class="progress-ring">
+          <text>{{progress}}%</text>
+          <view>完成</view>
+        </view>
+      </view>
+
+      <view class="archive-ribbon">
+        <text>当前主修</text>
+        <view>{{stagePlan.stageName}}</view>
+        <text>当前心贼</text>
+        <view>{{stagePlan.heartThief}}</view>
+        <text>人格戒律</text>
+        <view>{{stagePlan.commandment}}</view>
+        <text>今日事上练</text>
+        <view>{{stagePlan.training}}</view>
+      </view>
+
+      <view class="training-field">
+        <text>触发场景</text>
+        <view>{{plan.triggerScene}}</view>
+      </view>
+
+      <view class="compare-grid">
+        <view>
+        <text>旧习气</text>
+        <view>{{plan.oldReaction}}</view>
+      </view>
+      <view>
+          <text>克治动作</text>
+        <view>{{plan.newReaction}}</view>
+      </view>
+      </view>
+
+      <view class="training-field jade">
+        <text>今日事上练</text>
+        <view>{{plan.microTraining}}</view>
+      </view>
+
+      <view class="training-field">
+        <text>收盘省察</text>
+        <view>{{plan.review}}</view>
+      </view>
+
+      <view class="quote">“{{plan.quote}}”</view>
+    </view>
+
+    <view class="section-title">
+      <view>三步打卡</view>
+      <text>{{completed ? '已完成' : progress + '%'}}</text>
+    </view>
+
+    <view class="step-list">
+      <button
+        wx:for="{{steps}}"
+        wx:key="id"
+        class="step-card card {{item.done ? 'done' : ''}}"
+        data-id="{{item.id}}"
+        bindtap="toggleStep"
+      >
+        <view class="check">{{item.done ? '✓' : ''}}</view>
+        <view>
+          <text>{{item.title}}</text>
+          <text>{{item.subtitle}}</text>
+        </view>
+      </button>
+    </view>
+
+    <view class="reflection-card card">
+      <text>省察一句</text>
+      <textarea
+        class="textarea-field"
+        maxlength="80"
+        placeholder="例：今天急躁起来时，我先停住了十秒。"
+        value="{{reflection}}"
+        bindinput="inputReflection"
+      />
+      <button class="secondary-btn" bindtap="saveReflection">保存省察</button>
+    </view>
+
+    <view class="split-actions">
+      <button class="ghost-btn" bindtap="goReview">去省察</button>
+      <button class="primary-btn" bindtap="completeDay">{{completed ? '去收盘省察' : '完成今日事上练'}}</button>
+    </view>
+
+    <compliance-notice />
+  </view>
+  <bottom-tab-bar active="stages" />
+</view>

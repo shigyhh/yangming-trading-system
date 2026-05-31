@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZHIXING · A mind-training practice for traders, from the Wang Yangming school</title>
+<meta name="description" content="ZHIXING is a mind-training practice for traders, drawn from 500 years of the Wang Yangming school of Chinese philosophy. We don't train your strategy. We train the one who executes it.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=JetBrains+Mono:wght@400;500&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.1.0/style.css">
+<style>
+  :root{
+    --ink:#0c0805; --ink-2:#15100a; --ink-3:#1f1812;
+    --paper:#ece2cd; --paper-dim:#b6ab90; --paper-mute:#857a64; --paper-fade:#5a513f;
+    --cinnabar:#c44a3a; --cinnabar-hi:#e07764; --cinnabar-dim:rgba(196,74,58,.4);
+    --gold:#caa055; --gold-hi:#e2c182; --jade:#6e8f80;
+    --line:rgba(236,226,205,.12); --line-2:rgba(236,226,205,.06);
+    --line-ink:rgba(12,8,5,.14);
+    --display:'Cormorant Garamond',serif;
+    --body:'Newsreader',serif;
+    --mono:'JetBrains Mono',monospace;
+    --brush:'Ma Shan Zheng','LXGW WenKai',serif;
+    --kai:'LXGW WenKai','Kaiti SC','KaiTi','STKaiti',serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:var(--body); color:var(--paper); background:var(--ink);
+    font-size:17px; line-height:1.6; -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  /* paper grain texture */
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:200; opacity:.045;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    mix-blend-mode:overlay;
+  }
+  /* warm ink atmosphere */
+  body::after{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:-1;
+    background:
+      radial-gradient(1100px 700px at 15% 0%, rgba(196,74,58,.10), transparent 60%),
+      radial-gradient(900px 600px at 95% 30%, rgba(202,160,85,.07), transparent 60%),
+      radial-gradient(800px 700px at 50% 110%, rgba(110,143,128,.06), transparent 60%);
+  }
+
+  a{color:inherit; text-decoration:none}
+  ::selection{background:var(--cinnabar); color:var(--paper)}
+
+  /* utility */
+  .wrap{max-width:1180px; margin:0 auto; padding:0 36px}
+  .narrow{max-width:780px; margin:0 auto; padding:0 36px}
+  .eyebrow{font-family:var(--mono); font-size:11px; letter-spacing:.32em; text-transform:uppercase; color:var(--cinnabar-hi); font-weight:500}
+  .roman{font-family:var(--display); font-style:italic; font-size:18px; color:var(--gold); letter-spacing:.18em}
+  .zh-inline{font-family:var(--kai); color:var(--paper-dim); font-weight:400}
+  .zh-brush{font-family:var(--brush); color:var(--cinnabar-hi)}
+
+  /* seal motif */
+  .seal{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:46px; height:46px; background:var(--cinnabar); color:var(--paper);
+    font-family:var(--brush); font-size:22px; line-height:1;
+    border-radius:5px; letter-spacing:-2px;
+    box-shadow:0 0 0 1px rgba(12,8,5,.3) inset, 0 4px 14px -4px rgba(196,74,58,.5);
+  }
+  .seal.lg{width:64px; height:64px; font-size:30px; border-radius:7px}
+  .seal.flat{width:38px; height:38px; font-size:18px; border-radius:4px}
+
+  /* ===== NAVIGATION ===== */
+  nav.top{
+    position:fixed; top:0; left:0; right:0; z-index:100;
+    padding:22px 36px; display:flex; align-items:center; justify-content:space-between;
+    background:linear-gradient(180deg, rgba(12,8,5,.85), rgba(12,8,5,.0));
+    backdrop-filter:blur(8px);
+  }
+  nav.top.solid{background:rgba(12,8,5,.92); border-bottom:1px solid var(--line)}
+  .brand{display:flex; align-items:center; gap:12px}
+  .brand .seal{width:34px; height:34px; font-size:16px; border-radius:4px}
+  .brand .bm{font-family:var(--display); font-size:22px; letter-spacing:.36em; font-weight:600}
+  .brand .bm i{font-family:var(--kai); font-size:14px; letter-spacing:0; color:var(--paper-dim); font-style:normal; margin-left:10px; font-weight:400}
+  nav.top ul{list-style:none; display:flex; gap:34px; align-items:center}
+  nav.top ul a{font-family:var(--mono); font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--paper-dim); transition:color .25s}
+  nav.top ul a:hover{color:var(--cinnabar-hi)}
+  nav.top .cta{padding:9px 18px; border:1px solid var(--paper-dim); border-radius:2px; font-family:var(--mono); font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--paper); transition:.25s}
+  nav.top .cta:hover{background:var(--cinnabar); border-color:var(--cinnabar); color:var(--paper)}
+  @media (max-width:760px){nav.top ul li:not(.keep){display:none}}
+
+  /* ===== HERO ===== */
+  .hero{
+    min-height:100vh; padding:140px 36px 120px; position:relative;
+    display:flex; flex-direction:column; justify-content:center;
+    max-width:1180px; margin:0 auto;
+  }
+  .hero .top-line{display:flex; align-items:center; gap:18px; margin-bottom:60px}
+  .hero .top-line .ln{flex:1; height:1px; background:var(--line); max-width:200px}
+  .hero h1{
+    font-family:var(--display); font-weight:500;
+    font-size:clamp(56px, 9.5vw, 132px); line-height:.97; letter-spacing:-.02em;
+    margin-bottom:28px;
+  }
+  .hero h1 em{font-style:italic; color:var(--cinnabar-hi); font-weight:500}
+  .hero h1 .nl{display:block}
+  .hero .sub{
+    font-family:var(--body); font-size:21px; line-height:1.55; max-width:620px;
+    color:var(--paper-dim); font-weight:400; margin-top:30px;
+  }
+  .hero .sub b{color:var(--paper); font-weight:500}
+  .hero .ctas{margin-top:54px; display:flex; gap:18px; flex-wrap:wrap}
+  .btn-primary{
+    padding:18px 32px; background:var(--cinnabar); color:var(--paper);
+    font-family:var(--mono); font-size:12px; letter-spacing:.26em; text-transform:uppercase;
+    border:none; border-radius:1px; cursor:pointer; transition:.25s;
+    box-shadow:0 10px 30px -10px rgba(196,74,58,.6);
+  }
+  .btn-primary:hover{background:var(--cinnabar-hi); transform:translateY(-2px); box-shadow:0 14px 36px -10px rgba(196,74,58,.7)}
+  .btn-ghost{
+    padding:18px 32px; background:transparent; color:var(--paper); border:1px solid var(--paper-dim);
+    font-family:var(--mono); font-size:12px; letter-spacing:.26em; text-transform:uppercase;
+    cursor:pointer; transition:.25s; border-radius:1px;
+  }
+  .btn-ghost:hover{border-color:var(--paper); background:rgba(236,226,205,.05)}
+
+  /* hero vertical marginalia */
+  .hero-side{
+    position:absolute; right:36px; top:50%; transform:translateY(-50%);
+    writing-mode:vertical-rl; font-family:var(--brush); color:var(--cinnabar);
+    font-size:24px; letter-spacing:.4em; opacity:.45;
+  }
+  @media (max-width:900px){.hero-side{display:none}}
+
+  /* hero footer scroll cue */
+  .hero-foot{
+    margin-top:80px; display:flex; justify-content:space-between; align-items:end;
+    color:var(--paper-mute); font-family:var(--mono); font-size:11px; letter-spacing:.22em; text-transform:uppercase;
+  }
+  .hero-foot .right{font-family:var(--kai); font-size:13px; letter-spacing:.18em; color:var(--paper-dim); text-transform:none}
+
+  /* ===== SECTION SCAFFOLD ===== */
+  section{padding:140px 0; position:relative}
+  section .head{margin-bottom:64px}
+  section .head .num{display:flex; align-items:center; gap:18px; margin-bottom:24px}
+  section .head .num .ln{width:80px; height:1px; background:var(--cinnabar)}
+  section h2{
+    font-family:var(--display); font-weight:500;
+    font-size:clamp(40px, 5.5vw, 72px); line-height:1.06; letter-spacing:-.015em;
+  }
+  section h2 em{font-style:italic; color:var(--cinnabar-hi)}
+  section h2 .nl{display:block}
+  section .lead{
+    font-size:20px; line-height:1.65; color:var(--paper-dim); max-width:680px; margin-top:24px;
+    font-family:var(--body);
+  }
+  section .body p{margin-top:20px; color:var(--paper-dim)}
+  section .body p:first-child{margin-top:0}
+  section .body b{color:var(--paper); font-weight:500}
+
+  /* pull quote */
+  .pull{
+    margin:60px 0; padding:36px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+    font-family:var(--display); font-style:italic; font-size:32px; line-height:1.35; color:var(--paper);
+    letter-spacing:-.005em;
+  }
+  .pull cite{display:block; margin-top:18px; font-style:normal; font-family:var(--mono); font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--paper-mute)}
+
+  /* ===== SECTION I · ORIGIN ===== */
+  #origin h2 .zh{font-family:var(--kai); font-size:.38em; color:var(--paper-dim); letter-spacing:.1em; display:block; margin-top:10px; font-weight:400}
+
+  /* ===== SECTION II · GAP ===== */
+  #gap{position:relative}
+  #gap::before{
+    content:""; position:absolute; left:0; right:0; top:0; height:1px;
+    background:linear-gradient(90deg, transparent, var(--line) 20%, var(--line) 80%, transparent);
+  }
+  .gap-grid{display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:start; margin-top:60px}
+  @media (max-width:900px){.gap-grid{grid-template-columns:1fr; gap:40px}}
+  .gap-grid .col p{font-size:18px; line-height:1.7; color:var(--paper-dim); margin-bottom:24px}
+  .gap-grid .col p b{color:var(--paper)}
+  .gap-grid .col .tag{font-family:var(--mono); font-size:11px; letter-spacing:.22em; color:var(--cinnabar-hi); text-transform:uppercase; margin-bottom:14px}
+
+  /* ===== SECTION III · SIX GATES (inverted, paper) ===== */
+  #gates{background:var(--paper); color:var(--ink-2); padding:160px 0}
+  #gates .eyebrow{color:var(--cinnabar)}
+  #gates h2{color:var(--ink)}
+  #gates h2 em{color:var(--cinnabar)}
+  #gates .lead{color:var(--paper-fade)}
+  #gates .head .num .ln{background:var(--cinnabar)}
+  #gates .roman{color:var(--cinnabar)}
+  .gates{margin-top:60px; border-top:1px solid var(--line-ink)}
+  .gate{
+    display:grid; grid-template-columns:90px 1fr 380px; gap:48px;
+    padding:48px 0; border-bottom:1px solid var(--line-ink); position:relative;
+    transition:background .3s;
+  }
+  .gate:hover{background:rgba(196,74,58,.04)}
+  @media (max-width:900px){.gate{grid-template-columns:60px 1fr; gap:24px} .gate .train{grid-column:1/-1; margin-top:8px}}
+  .gate .stamp{position:relative}
+  .gate .stamp .seal{width:64px; height:64px; font-size:30px}
+  .gate .stamp .rn{display:block; margin-top:14px; font-family:var(--display); font-style:italic; font-size:18px; color:var(--cinnabar); letter-spacing:.15em}
+  .gate .main h3{
+    font-family:var(--display); font-weight:500; font-size:42px; line-height:1.05; letter-spacing:-.01em; color:var(--ink);
+  }
+  .gate .main h3 em{font-style:italic; color:var(--cinnabar)}
+  .gate .main .pinyin{font-family:var(--display); font-style:italic; font-size:16px; color:var(--paper-fade); margin-top:6px; letter-spacing:.04em}
+  .gate .main .zh-line{font-family:var(--brush); font-size:34px; color:var(--cinnabar); margin-top:16px; letter-spacing:.1em; line-height:1}
+  .gate .main .essence{font-size:17px; line-height:1.65; color:var(--paper-fade); margin-top:18px; max-width:520px}
+  .gate .train .tt{font-family:var(--mono); font-size:10px; letter-spacing:.28em; color:var(--cinnabar); text-transform:uppercase; margin-bottom:14px}
+  .gate .train ul{list-style:none}
+  .gate .train li{padding:9px 0; font-size:15px; color:var(--ink-2); border-bottom:1px solid var(--line-ink); display:flex; gap:14px; align-items:baseline}
+  .gate .train li:last-child{border:none}
+  .gate .train li::before{content:"·"; color:var(--cinnabar); font-weight:700; font-size:18px}
+  .gates-foot{margin-top:48px; font-family:var(--display); font-style:italic; font-size:20px; color:var(--paper-fade); text-align:center}
+
+  /* ===== SECTION IV · THREE INSTRUMENTS ===== */
+  #instruments .three{
+    display:grid; grid-template-columns:repeat(3, 1fr); gap:32px; margin-top:60px;
+  }
+  @media (max-width:900px){#instruments .three{grid-template-columns:1fr}}
+  .inst{
+    padding:40px 32px; border:1px solid var(--line); position:relative;
+    background:linear-gradient(180deg, rgba(236,226,205,.025), transparent);
+    transition:.3s; min-height:340px; display:flex; flex-direction:column;
+  }
+  .inst:hover{border-color:var(--cinnabar-dim); transform:translateY(-3px)}
+  .inst .n{font-family:var(--display); font-style:italic; font-size:18px; color:var(--cinnabar-hi); letter-spacing:.18em; margin-bottom:32px}
+  .inst h3{font-family:var(--display); font-weight:500; font-size:30px; line-height:1.15; letter-spacing:-.01em}
+  .inst h3 em{font-style:italic; color:var(--cinnabar-hi)}
+  .inst .zh{font-family:var(--brush); font-size:22px; color:var(--cinnabar-hi); margin-top:8px; letter-spacing:.1em}
+  .inst p{font-size:15px; line-height:1.7; color:var(--paper-dim); margin-top:18px; flex:1}
+
+  /* ===== SECTION V · COACH ===== */
+  #coach .demo{
+    margin-top:60px; padding:44px; border:1px solid var(--line);
+    background:linear-gradient(160deg, rgba(196,74,58,.05), rgba(202,160,85,.02));
+    border-radius:2px; position:relative;
+  }
+  .demo .from{font-family:var(--mono); font-size:10px; letter-spacing:.28em; text-transform:uppercase; color:var(--paper-mute); margin-bottom:10px}
+  .demo .user{font-family:var(--display); font-style:italic; font-size:24px; line-height:1.4; color:var(--paper); padding-left:18px; border-left:2px solid var(--paper-dim); margin-bottom:36px}
+  .demo .ai-from{color:var(--cinnabar-hi)}
+  .demo .ai-block{padding-left:18px; border-left:2px solid var(--cinnabar)}
+  .demo .row{display:flex; gap:14px; align-items:baseline; padding:8px 0; font-size:15px; line-height:1.5}
+  .demo .row .k{font-family:var(--mono); font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--paper-mute); min-width:140px; flex-shrink:0}
+  .demo .row .v{color:var(--paper)}
+  .demo .row .v .zh{font-family:var(--kai); color:var(--paper-dim); margin-left:8px; font-size:14px}
+  .demo .row.act{margin-top:14px; padding-top:14px; border-top:1px solid var(--line)}
+  .demo .row.act .v{color:var(--cinnabar-hi); font-family:var(--display); font-style:italic; font-size:18px; line-height:1.4}
+  .coach-coda{margin-top:46px; font-family:var(--display); font-style:italic; font-size:22px; line-height:1.5; color:var(--paper-dim); max-width:680px}
+  .coach-coda b{color:var(--paper); font-weight:500; font-style:normal}
+
+  /* ===== SECTION VI · VOWS ===== */
+  #vows{padding:160px 0; background:var(--ink-2)}
+  #vows .head{margin-bottom:80px}
+  .vows-list{margin-top:0}
+  .vow{
+    padding:42px 0; border-top:1px solid var(--line); display:grid;
+    grid-template-columns:80px 1fr 80px; gap:24px; align-items:center;
+  }
+  .vow:last-child{border-bottom:1px solid var(--line)}
+  .vow .n{font-family:var(--display); font-style:italic; font-size:42px; color:var(--cinnabar); font-weight:500}
+  .vow .t{
+    font-family:var(--display); font-weight:500;
+    font-size:clamp(28px, 4vw, 42px); line-height:1.15; letter-spacing:-.01em;
+    color:var(--paper);
+  }
+  .vow .t em{font-style:italic; color:var(--cinnabar-hi)}
+  .vow .mark{justify-self:end; font-family:var(--brush); font-size:32px; color:var(--cinnabar); opacity:.6}
+  .vows-coda{margin-top:60px; text-align:center; font-family:var(--display); font-style:italic; font-size:22px; color:var(--paper-dim)}
+
+  /* ===== CLOSING ===== */
+  #begin{padding:180px 36px 140px; text-align:center; position:relative; max-width:920px; margin:0 auto}
+  #begin .zh-big{font-family:var(--brush); font-size:clamp(64px, 10vw, 110px); color:var(--cinnabar); letter-spacing:.15em; line-height:1; margin-bottom:24px}
+  #begin h2{font-family:var(--display); font-weight:500; font-size:clamp(38px, 5vw, 60px); line-height:1.1; letter-spacing:-.015em}
+  #begin h2 em{font-style:italic; color:var(--cinnabar-hi)}
+  #begin .p{font-family:var(--body); font-size:20px; color:var(--paper-dim); margin-top:30px; line-height:1.6; max-width:580px; margin-left:auto; margin-right:auto}
+  #begin form{margin-top:56px; display:flex; gap:0; max-width:520px; margin-left:auto; margin-right:auto; border:1px solid var(--paper-dim); border-radius:1px}
+  #begin input{flex:1; padding:18px 22px; background:transparent; border:none; outline:none; color:var(--paper); font-family:var(--body); font-size:16px}
+  #begin input::placeholder{color:var(--paper-mute)}
+  #begin button{padding:0 26px; background:var(--cinnabar); color:var(--paper); border:none; font-family:var(--mono); font-size:11px; letter-spacing:.26em; text-transform:uppercase; cursor:pointer; transition:.25s}
+  #begin button:hover{background:var(--cinnabar-hi)}
+  #begin .fine{margin-top:18px; font-family:var(--mono); font-size:11px; letter-spacing:.18em; color:var(--paper-mute); text-transform:uppercase}
+
+  /* ===== FOOTER ===== */
+  footer{padding:100px 36px 50px; border-top:1px solid var(--line); background:var(--ink)}
+  footer .grid{display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr; gap:48px; max-width:1180px; margin:0 auto}
+  @media (max-width:900px){footer .grid{grid-template-columns:1fr 1fr}}
+  footer .col h4{font-family:var(--mono); font-size:11px; letter-spacing:.26em; text-transform:uppercase; color:var(--cinnabar-hi); margin-bottom:18px; font-weight:500}
+  footer .col ul{list-style:none}
+  footer .col li{padding:7px 0; font-size:14px; color:var(--paper-dim); transition:.2s; cursor:pointer}
+  footer .col li:hover{color:var(--cinnabar-hi)}
+  footer .brand-col p{font-size:14px; color:var(--paper-mute); line-height:1.65; margin-top:18px; max-width:280px; font-family:var(--body); font-style:italic}
+  footer .legal{max-width:1180px; margin:80px auto 0; padding-top:36px; border-top:1px solid var(--line); font-size:11px; line-height:1.85; color:var(--paper-mute); font-family:var(--mono); letter-spacing:.04em}
+  footer .legal .b{display:flex; justify-content:space-between; align-items:center; margin-top:22px; flex-wrap:wrap; gap:14px}
+  footer .legal .b span{letter-spacing:.18em; text-transform:uppercase}
+
+  /* scroll reveal */
+  .reveal{opacity:0; transform:translateY(28px); transition:opacity 1s cubic-bezier(.2,.7,.2,1), transform 1s cubic-bezier(.2,.7,.2,1)}
+  .reveal.in{opacity:1; transform:none}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="top" id="nav">
+  <a href="#" class="brand">
+    <div class="seal">知行</div>
+    <div class="bm">ZHIXING <i>知行</i></div>
+  </a>
+  <ul>
+    <li><a href="#origin">Origin</a></li>
+    <li><a href="#gates">Six Gates</a></li>
+    <li><a href="#coach">Coach</a></li>
+    <li><a href="#vows">Manifesto</a></li>
+    <li class="keep"><a href="#begin" class="cta">Begin the Practice</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="top-line">
+    <span class="eyebrow">A practice from the Wang Yangming school · 阳明心学</span>
+    <span class="ln"></span>
+    <span class="roman">EST. MMXXVI</span>
+  </div>
+
+  <h1>
+    <span class="nl">Where <em>knowing</em></span>
+    <span class="nl">becomes <em>doing</em>.</span>
+  </h1>
+
+  <p class="sub">
+    <b>ZHIXING</b> is a mind-training practice for traders, drawn from five hundred years of Chinese philosophy. We don't train your strategy. We train <em>the one who executes it</em>.
+  </p>
+
+  <div class="ctas">
+    <button class="btn-primary" onclick="document.getElementById('begin').scrollIntoView()">Begin the Practice ›</button>
+    <button class="btn-ghost" onclick="document.getElementById('vows').scrollIntoView()">Read the Manifesto</button>
+  </div>
+
+  <div class="hero-foot">
+    <span>Scroll · 下</span>
+    <span class="right">知之真切笃实处　即是行</span>
+  </div>
+
+  <div class="hero-side">知 · 行 · 合 · 一</div>
+</header>
+
+<!-- I · ORIGIN -->
+<section id="origin">
+  <div class="narrow">
+    <div class="head reveal">
+      <div class="num"><span class="ln"></span><span class="roman">I.</span><span class="eyebrow">The Origin</span></div>
+      <h2>
+        Five centuries ago,<br>
+        a philosopher told his students:<br>
+        <em>don't sit on cushions.</em><br>
+        Polish yourself on <em>real affairs</em>.
+      </h2>
+    </div>
+
+    <div class="body reveal">
+      <p style="font-size:19px">Wang Yangming (1472–1529) founded the <span class="zh-inline">心学</span> — the School of Mind — at a time when most Eastern philosophy lived in monasteries. He insisted on the opposite: that the self can only be refined through real engagement with the world. He called this <span class="zh-inline">事上磨练</span> — <em>polishing on affairs</em>.</p>
+
+      <p>Wang Yangming was no recluse. He was a general, a governor, a man who quelled rebellions while writing letters about how to extend the innate knowing of the heart. His students didn't meditate their way to wisdom. They <b>did things</b>, and let the doing teach them.</p>
+
+      <div class="pull">"The market is the most demanding affair of our time."<cite>— A modern reading of 事上磨练</cite></div>
+
+      <p>Trading is not a problem of information. It is a problem of self. Wang Yangming saw this five hundred years before Bloomberg terminals existed, before crypto, before the chart on your phone. His school is built precisely for the person who keeps making the same mistake — and knows it.</p>
+
+      <p><b>ZHIXING is that school, redrawn for the trader.</b></p>
+    </div>
+  </div>
+</section>
+
+<!-- II · THE GAP -->
+<section id="gap">
+  <div class="wrap">
+    <div class="head reveal">
+      <div class="num"><span class="ln"></span><span class="roman">II.</span><span class="eyebrow">The Gap</span></div>
+      <h2>
+        Your strategy<br>
+        <em>was trained.</em><br>
+        You weren't.
+      </h2>
+    </div>
+
+    <div class="gap-grid">
+      <div class="col reveal">
+        <div class="tag">What you learned</div>
+        <p>You studied charts. You learned position sizing. You read every book on technical analysis. You back-tested. You journaled. You built a system that, on paper, works.</p>
+        <p>And still — at the moment of execution — something else takes over.</p>
+      </div>
+      <div class="col reveal">
+        <div class="tag">What still happens</div>
+        <p>You chase a top you swore you wouldn't. You hold a loser past your stop. You revenge-trade twenty minutes after a defeat. You watch yourself do these things, and the watching does not stop them.</p>
+        <p>This is not a flaw in your strategy. It is the <b>untrained one</b> inside you. <b>ZHIXING is the practice that trains the one inside.</b></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- III · SIX GATES -->
+<section id="gates">
+  <div class="wrap">
+    <div class="head reveal">
+      <div class="num"><span class="ln"></span><span class="roman">III.</span><span class="eyebrow">The Path</span></div>
+      <h2>Six Gates. <em>六关.</em><br>A complete path.</h2>
+      <p class="lead">From the first vow you make as a trader, to the lifelong cultivation that mature traders return to daily. Each gate is a discrete practice with its own training, its own measurement, and its own seal.</p>
+    </div>
+
+    <div class="gates">
+      <article class="gate reveal">
+        <div class="stamp"><div class="seal">志</div><span class="rn">I.</span></div>
+        <div class="main">
+          <h3>Setting the <em>Will</em></h3>
+          <div class="pinyin">Lìzhì</div>
+          <div class="zh-line">立志</div>
+          <p class="essence">The trader's covenant. Before the market is permitted to test you, your rules must already exist — written, signed, and immovable.</p>
+        </div>
+        <div class="train">
+          <div class="tt">Training</div>
+          <ul><li>No stop, no entry.</li><li>Position size precedes the trade.</li><li>The plan is older than the impulse.</li></ul>
+        </div>
+      </article>
+
+      <article class="gate reveal">
+        <div class="stamp"><div class="seal">照</div><span class="rn">II.</span></div>
+        <div class="main">
+          <h3>Illuminating the <em>Heart</em></h3>
+          <div class="pinyin">Zhàoxīn</div>
+          <div class="zh-line">照心</div>
+          <p class="essence">See the affliction before it moves your hand. Five recur in every trader. Naming them is the first form of mastery.</p>
+        </div>
+        <div class="train">
+          <div class="tt">The Five Afflictions</div>
+          <ul><li>Greed · 贪</li><li>Fear · 惧</li><li>Haste · 急</li><li>Anger · 怒</li><li>Fatigue · 疲</li></ul>
+        </div>
+      </article>
+
+      <article class="gate reveal">
+        <div class="stamp"><div class="seal">磨</div><span class="rn">III.</span></div>
+        <div class="main">
+          <h3>Polishing on <em>Affairs</em></h3>
+          <div class="pinyin">Shì shàng mó</div>
+          <div class="zh-line">事上磨</div>
+          <p class="essence">Where most strategies die. The classroom is the chart in motion. Bar-by-bar, decision-by-decision, the gap between plan and act narrows.</p>
+        </div>
+        <div class="train">
+          <div class="tt">Training</div>
+          <ul><li>Cutting losses on time.</li><li>Not chasing rallies.</li><li>Not holding losers.</li></ul>
+        </div>
+      </article>
+
+      <article class="gate reveal">
+        <div class="stamp"><div class="seal">破</div><span class="rn">IV.</span></div>
+        <div class="main">
+          <h3>Breaking the <em>Mind Thief</em></h3>
+          <div class="pinyin">Pò xīnzéi</div>
+          <div class="zh-line">破心贼</div>
+          <p class="essence" style="font-style:italic; color:var(--ink-2)">"To defeat the bandits in the mountains is easy. To defeat the thieves in the mind is hard." — Wang Yangming</p>
+          <p class="essence">Each trader carries one dominant pattern. Identify it. Train against it. Dissolve it.</p>
+        </div>
+        <div class="train">
+          <div class="tt">The Three Thieves</div>
+          <ul><li>The Gambler · 赌徒</li><li>The Impulsive · 冲动</li><li>The Hostage · 扛单</li></ul>
+        </div>
+      </article>
+
+      <article class="gate reveal">
+        <div class="stamp"><div class="seal">合</div><span class="rn">V.</span></div>
+        <div class="main">
+          <h3>Unity of <em>Knowing &amp; Doing</em></h3>
+          <div class="pinyin">Zhīxíng héyī</div>
+          <div class="zh-line">知行合一</div>
+          <p class="essence">The signature teaching of the school, and the signature metric of this practice. When the distance between your plan and your action approaches zero, you have arrived here.</p>
+        </div>
+        <div class="train">
+          <div class="tt">Measurement</div>
+          <ul><li>Streak of clean execution.</li><li>No plan changes mid-trade.</li><li>The ZHIXING Index ≥ 80, sustained.</li></ul>
+        </div>
+      </article>
+
+      <article class="gate reveal">
+        <div class="stamp"><div class="seal">良</div><span class="rn">VI.</span></div>
+        <div class="main">
+          <h3>Extending the <em>Innate Knowing</em></h3>
+          <div class="pinyin">Zhì liángzhī</div>
+          <div class="zh-line">致良知</div>
+          <p class="essence">Not a final destination. An infinite practice. The mature trader does not graduate from this gate — they return to it daily, lifelong, advancing only in degree.</p>
+        </div>
+        <div class="train">
+          <div class="tt">Lifelong</div>
+          <ul><li>Self-led reflection.</li><li>Awareness without correction.</li><li>The practice becomes the person.</li></ul>
+        </div>
+      </article>
+    </div>
+
+    <p class="gates-foot reveal">A gate is not a level. A gate is a door you keep walking through.</p>
+  </div>
+</section>
+
+<!-- IV · INSTRUMENTS -->
+<section id="instruments">
+  <div class="wrap">
+    <div class="head reveal">
+      <div class="num"><span class="ln"></span><span class="roman">IV.</span><span class="eyebrow">The Instruments</span></div>
+      <h2>Three instruments<br>of the <em>practice</em>.</h2>
+    </div>
+
+    <div class="three">
+      <div class="inst reveal">
+        <div class="n">I.</div>
+        <h3>Daily <em>Heart Witness</em></h3>
+        <div class="zh">心证</div>
+        <p>Three hundred and sixty-five days of structured cultivation. One precept, one witness, one training, one reflection — for each day of the year. A scripture written for the trader who never had one.</p>
+      </div>
+      <div class="inst reveal">
+        <div class="n">II.</div>
+        <h3>K-Line <em>Replay</em></h3>
+        <div class="zh">复盘训练</div>
+        <p>Bar-by-bar replay on real historical markets, names hidden, dates removed. Decisions in slow motion, weighted toward the gate you are working through. The chart becomes a dojo.</p>
+      </div>
+      <div class="inst reveal">
+        <div class="n">III.</div>
+        <h3>Observatory <em>Coach</em></h3>
+        <div class="zh">观心教练</div>
+        <p>Tell it what happened. It identifies the thief. It routes you to the precise training. Not a conversation — a diagnosis. The next section shows what we mean.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- V · COACH -->
+<section id="coach">
+  <div class="narrow">
+    <div class="head reveal">
+      <div class="num"><span class="ln"></span><span class="roman">V.</span><span class="eyebrow">A different kind of AI</span></div>
+      <h2>Not a chatbot.<br><em>A diagnostician.</em></h2>
+      <p class="lead">You do not need another AI to chat with. You need one that looks at what just happened, names the precise inner pattern that moved your hand, and assigns the single training that addresses it.</p>
+    </div>
+
+    <div class="demo reveal">
+      <div class="from">You wrote</div>
+      <div class="user">"I cut my loss. Then I bought back in twenty minutes later. Same trade. Worse price."</div>
+
+      <div class="from ai-from">Observatory Coach replied</div>
+      <div class="ai-block">
+        <div class="row"><span class="k">Mind thief</span><span class="v">The Impulsive<span class="zh">· 冲动型</span></span></div>
+        <div class="row"><span class="k">Active affliction</span><span class="v">Haste<span class="zh">· 急</span></span></div>
+        <div class="row"><span class="k">Return to</span><span class="v">Gate III · Polishing on Affairs<span class="zh">· 事上磨</span></span></div>
+        <div class="row act"><span class="k">Today's only practice</span><span class="v">After any stop-out, no new trade for thirty minutes. Walk. Note one sentence about what you felt. Then — if the original plan still holds — you may return.</span></div>
+      </div>
+    </div>
+
+    <p class="coach-coda reveal">
+      The Coach does not predict prices. It does not recommend trades. It does not have opinions about the market. <b>It has opinions about you</b> — and it earns them, slowly, from your own history.
+    </p>
+  </div>
+</section>
+
+<!-- VI · VOWS -->
+<section id="vows">
+  <div class="narrow">
+    <div class="head reveal">
+      <div class="num"><span class="ln"></span><span class="roman">VI.</span><span class="eyebrow">The Manifesto</span></div>
+      <h2>Three vows.<br>What we will <em>never do</em>.</h2>
+    </div>
+
+    <div class="vows-list">
+      <div class="vow reveal">
+        <div class="n">i.</div>
+        <div class="t">We will not <em>recommend trades</em>.</div>
+        <div class="mark">不</div>
+      </div>
+      <div class="vow reveal">
+        <div class="n">ii.</div>
+        <div class="t">We will not <em>predict prices</em>.</div>
+        <div class="mark">不</div>
+      </div>
+      <div class="vow reveal">
+        <div class="n">iii.</div>
+        <div class="t">We will not sell <em>certainty, speed,</em><br>or the dream of getting rich without becoming wiser.</div>
+        <div class="mark">不</div>
+      </div>
+    </div>
+
+    <p class="vows-coda reveal">These are not constraints. They are the practice.</p>
+  </div>
+</section>
+
+<!-- CLOSING -->
+<section id="begin">
+  <div class="reveal">
+    <div class="zh-big">知行合一</div>
+    <h2>Where <em>knowing</em><br>becomes <em>doing</em>.</h2>
+    <p class="p">The path is open. Enter your email and we'll send you the first of three hundred and sixty-five Daily Heart Witnesses — and a quiet note when the practice opens.</p>
+    <form onsubmit="event.preventDefault(); this.querySelector('input').value=''; alert('Thank you. The first witness is on its way.')">
+      <input type="email" placeholder="your@email.com" required>
+      <button type="submit">Begin ›</button>
+    </form>
+    <p class="fine">No spam. Practice notes, occasionally.</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="grid">
+    <div class="col brand-col">
+      <a class="brand" href="#"><div class="seal">知行</div><div class="bm">ZHIXING <i>知行</i></div></a>
+      <p>Wang Yangming's school of mind, redrawn for the modern trader. A practice, not a product.</p>
+    </div>
+    <div class="col">
+      <h4>The Practice</h4>
+      <ul><li>Six Gates</li><li>Daily Heart Witness</li><li>K-Line Replay</li><li>Observatory Coach</li></ul>
+    </div>
+    <div class="col">
+      <h4>Read</h4>
+      <ul><li>The Manifesto</li><li>The 500-Year Story</li><li>Founder's Note</li><li>Journal</li></ul>
+    </div>
+    <div class="col">
+      <h4>Connect</h4>
+      <ul><li>Twitter / X</li><li>Discord · 同修</li><li>YouTube</li><li>Substack</li></ul>
+    </div>
+  </div>
+  <div class="legal">
+    ZHIXING is a mind-training and educational platform. Nothing on this site constitutes investment advice, a securities recommendation, real-time market data, or trade execution. We do not solicit the purchase or sale of any financial instrument. Simulated or historical performance is not indicative of future results. Trading carries risk; cultivation of mind does not eliminate it.
+    <div class="b">
+      <span>© MMXXVI · ZHIXING · All rights reserved.</span>
+      <span>Disclaimer · Terms · Privacy</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // nav solid on scroll
+  const nav = document.getElementById('nav');
+  addEventListener('scroll', () => { nav.classList.toggle('solid', scrollY > 40); });
+
+  // scroll reveal
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+</body>
+</html>

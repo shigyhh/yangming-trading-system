@@ -1,0 +1,8 @@
+<button class="action-card card {{tone}}" bindtap="tapAction">
+  <view class="copy">
+    <text class="eyebrow">{{eyebrow}}</text>
+    <view class="title">{{title}}</view>
+    <text class="subtitle">{{subtitle}}</text>
+  </view>
+  <view class="arrow">{{actionText}}</view>
+</button>

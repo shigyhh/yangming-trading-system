@@ -1,0 +1,18 @@
+<view class="insight card">
+  <view class="insight-head">
+    <view>
+      <text class="label">今日心证</text>
+      <view class="status">{{status}}</view>
+    </view>
+    <view class="score">
+      <text>{{score}}</text>
+      <text>知行分</text>
+    </view>
+  </view>
+  <view class="quote">{{reflection}}</view>
+  <view class="action">
+    <text>今日事上练</text>
+    <view>{{action}}</view>
+  </view>
+  <button class="primary-btn" bindtap="startTraining">进入今日事上练</button>
+</view>

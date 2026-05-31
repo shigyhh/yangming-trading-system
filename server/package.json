@@ -1,0 +1,21 @@
+{
+  "name": "trading-personality-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node src/index.js",
+    "start": "node src/index.js",
+    "generate:questions": "node scripts/generate-question-bank.mjs",
+    "import:questions": "node scripts/import-question-bank.mjs",
+    "generate:kline": "node scripts/generate-kline-bank.mjs",
+    "cache:ashare": "node scripts/cache-ashare-market-data.mjs",
+    "cache:akshare": "python3 scripts/sync-akshare-offline.py",
+    "update:ashare": "node scripts/cache-ashare-market-data.mjs --limit all --timeframes 101 --delay 300 --incremental --summary-only",
+    "test:smoke": "node scripts/smoke-test.mjs",
+    "check": "node --check src/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

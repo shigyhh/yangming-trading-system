@@ -1,0 +1,379 @@
+.score-card {
+  margin-top: 32rpx;
+  padding: 30rpx;
+}
+
+.score-card > view,
+.score-card slider {
+  position: relative;
+  z-index: 1;
+}
+
+.score-card > view {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+
+.score-card text {
+  color: #58c2ad;
+  font-size: 24rpx;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.score-card view view {
+  color: #f1d27d;
+  font-size: 60rpx;
+  font-weight: 900;
+}
+
+.field-list {
+  display: grid;
+  gap: 16rpx;
+}
+
+.field-card {
+  padding: 22rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18rpx;
+}
+
+.field-label,
+.yesno {
+  position: relative;
+  z-index: 1;
+}
+
+.field-label {
+  color: #fff6e6;
+  font-size: 29rpx;
+  font-weight: 800;
+}
+
+.yesno {
+  display: flex;
+  gap: 10rpx;
+  flex: 0 0 auto;
+}
+
+.yesno button,
+.emotion-grid button {
+  min-width: 76rpx;
+  height: 56rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 999rpx;
+  color: rgba(247, 239, 223, 0.58);
+  border: 1rpx solid rgba(247, 239, 223, 0.12);
+  background: rgba(255, 255, 255, 0.045);
+  font-size: 24rpx;
+  font-weight: 800;
+}
+
+.yesno button.active,
+.emotion-grid button.active {
+  color: #11140f;
+  border-color: rgba(241, 210, 125, 0.78);
+  background: linear-gradient(180deg, #f1d27d, #c99d4c);
+}
+
+.emotion-card,
+.correction-card,
+.ai-review-card,
+.ai-replay-card {
+  margin-top: 24rpx;
+  padding: 26rpx;
+}
+
+.emotion-card > text,
+.correction-card > text,
+.emotion-grid,
+.correction-card textarea,
+.ai-head,
+.ai-main,
+.ai-line,
+.ai-tags,
+.replay-head,
+.replay-field,
+.evidence-grid,
+.replay-prescription {
+  position: relative;
+  z-index: 1;
+}
+
+.emotion-card > text,
+.correction-card > text {
+  display: block;
+  margin-bottom: 18rpx;
+  color: #b49355;
+  font-size: 24rpx;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.emotion-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14rpx;
+}
+
+.emotion-grid button {
+  width: 100%;
+}
+
+.ai-review-card {
+  overflow: hidden;
+}
+
+.ai-review-card::after {
+  content: "";
+  position: absolute;
+  right: -80rpx;
+  top: -80rpx;
+  width: 260rpx;
+  height: 260rpx;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(241, 210, 125, 0.16), transparent 68%);
+  animation: cardBreath 5s ease-in-out infinite;
+}
+
+.ai-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18rpx;
+}
+
+.ai-head text {
+  display: block;
+  color: #58c2ad;
+  font-size: 23rpx;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.ai-head view view {
+  margin-top: 10rpx;
+  color: #fff6e6;
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", serif;
+  font-size: 42rpx;
+  font-weight: 900;
+}
+
+.ai-seal {
+  width: 76rpx;
+  height: 76rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 24rpx;
+  color: #f1d27d;
+  border: 1rpx solid rgba(201, 157, 76, 0.42);
+  background: rgba(201, 157, 76, 0.1);
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", serif;
+  font-size: 38rpx;
+  font-weight: 900;
+}
+
+.ai-main {
+  margin-top: 24rpx;
+  padding: 24rpx 0;
+  border-top: 1rpx solid rgba(241, 210, 125, 0.14);
+  border-bottom: 1rpx solid rgba(241, 210, 125, 0.14);
+}
+
+.ai-main text,
+.ai-line text {
+  display: block;
+  color: #b49355;
+  font-size: 22rpx;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.ai-main view {
+  margin-top: 10rpx;
+  color: #f1d27d;
+  font-family: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", serif;
+  font-size: 44rpx;
+  line-height: 1.35;
+  font-weight: 900;
+}
+
+.ai-line {
+  margin-top: 22rpx;
+}
+
+.ai-line view {
+  margin-top: 10rpx;
+  color: rgba(247, 239, 223, 0.78);
+  font-size: 27rpx;
+  line-height: 1.58;
+}
+
+.ai-tags {
+  margin-top: 24rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.ai-tags text {
+  padding: 10rpx 16rpx;
+  border-radius: 999rpx;
+  color: rgba(247, 239, 223, 0.62);
+  border: 1rpx solid rgba(247, 239, 223, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 22rpx;
+  font-weight: 800;
+}
+
+.ai-replay-card {
+  border-color: rgba(88, 194, 173, 0.28);
+}
+
+.replay-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 18rpx;
+  align-items: flex-start;
+}
+
+.replay-head text {
+  display: block;
+  color: #58c2ad;
+  font-size: 23rpx;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.replay-head view view {
+  margin-top: 10rpx;
+  color: #fff6e6;
+  font-family: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", serif;
+  font-size: 38rpx;
+  line-height: 1.35;
+  font-weight: 900;
+}
+
+.replay-head > view:last-child {
+  width: 66rpx;
+  height: 66rpx;
+  flex: 0 0 66rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #06110f;
+  background: #58c2ad;
+  font-size: 28rpx;
+  font-weight: 900;
+}
+
+.replay-field {
+  margin-top: 24rpx;
+}
+
+.replay-field text,
+.replay-prescription > text:first-child {
+  display: block;
+  color: #b49355;
+  font-size: 22rpx;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.replay-field view {
+  margin-top: 10rpx;
+  color: rgba(247, 239, 223, 0.78);
+  font-size: 27rpx;
+  line-height: 1.58;
+}
+
+.evidence-grid {
+  margin-top: 24rpx;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14rpx;
+}
+
+.evidence-grid > view {
+  min-height: 104rpx;
+  padding: 18rpx;
+  border-radius: 18rpx;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.evidence-grid > view.weak {
+  border: 1rpx solid rgba(241, 210, 125, 0.28);
+  background: rgba(201, 157, 76, 0.08);
+}
+
+.evidence-grid text {
+  display: block;
+  color: rgba(247, 239, 223, 0.48);
+  font-size: 21rpx;
+  font-weight: 800;
+}
+
+.evidence-grid view view {
+  margin-top: 10rpx;
+  color: #fff6e6;
+  font-size: 28rpx;
+  font-weight: 900;
+}
+
+.replay-prescription {
+  margin-top: 24rpx;
+  padding: 24rpx;
+  border-radius: 20rpx;
+  border: 1rpx solid rgba(88, 194, 173, 0.26);
+  background: rgba(88, 194, 173, 0.08);
+}
+
+.replay-prescription view {
+  margin-top: 12rpx;
+  color: #fff6e6;
+  font-family: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", serif;
+  font-size: 31rpx;
+  line-height: 1.56;
+  font-weight: 800;
+}
+
+.replay-prescription > text:last-child {
+  display: block;
+  margin-top: 14rpx;
+  color: rgba(247, 239, 223, 0.52);
+  font-size: 23rpx;
+  line-height: 1.5;
+}
+
+@keyframes cardBreath {
+  0%,
+  100% {
+    opacity: 0.58;
+    transform: scale(0.96);
+  }
+
+  50% {
+    opacity: 0.92;
+    transform: scale(1.04);
+  }
+}
+
+@media (max-width: 340px) {
+  .field-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .yesno {
+    width: 100%;
+  }
+
+  .yesno button {
+    flex: 1;
+  }
+}

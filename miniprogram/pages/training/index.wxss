@@ -1,0 +1,308 @@
+.pre-card {
+  margin-top: 28rpx;
+  padding: 26rpx;
+}
+
+.mind-bridge {
+  margin-top: 30rpx;
+  padding: 28rpx;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 20rpx;
+  align-items: center;
+}
+
+.mind-seal,
+.mind-copy,
+.mind-axis {
+  position: relative;
+  z-index: 1;
+}
+
+.mind-seal {
+  width: 76rpx;
+  height: 76rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 24rpx;
+  color: #f1d27d;
+  border: 1rpx solid rgba(201, 157, 76, 0.42);
+  background: rgba(201, 157, 76, 0.1);
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", serif;
+  font-size: 38rpx;
+  font-weight: 900;
+}
+
+.mind-copy text {
+  display: block;
+  color: #f1d27d;
+  font-size: 22rpx;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.mind-copy view {
+  margin-top: 10rpx;
+  color: rgba(247, 239, 223, 0.7);
+  font-size: 26rpx;
+  line-height: 1.55;
+}
+
+.mind-axis {
+  min-width: 98rpx;
+  height: 50rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 999rpx;
+  color: rgba(247, 239, 223, 0.6);
+  border: 1rpx solid rgba(247, 239, 223, 0.1);
+  font-size: 20rpx;
+  font-weight: 800;
+}
+
+.pre-card view,
+.pre-card text,
+.pre-card button {
+  position: relative;
+  z-index: 1;
+}
+
+.pre-card view {
+  color: #fff6e6;
+  font-size: 32rpx;
+  font-weight: 800;
+}
+
+.pre-card text {
+  display: block;
+  margin: 12rpx 0 22rpx;
+  color: rgba(247, 239, 223, 0.62);
+  font-size: 25rpx;
+  line-height: 1.58;
+}
+
+.training-card {
+  margin-top: 28rpx;
+  padding: 30rpx;
+}
+
+.training-head {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.training-head text {
+  color: #58c2ad;
+  font-size: 24rpx;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.training-head view view {
+  margin-top: 12rpx;
+  color: #fff6e6;
+  font-family: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", serif;
+  font-size: 46rpx;
+  font-weight: 700;
+}
+
+.progress-ring {
+  width: 126rpx;
+  height: 126rpx;
+  flex: 0 0 126rpx;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  border-radius: 50%;
+  border: 1rpx solid rgba(201, 157, 76, 0.42);
+  background: rgba(201, 157, 76, 0.1);
+}
+
+.progress-ring text {
+  color: #f1d27d;
+  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-size: 34rpx;
+  font-weight: 900;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.progress-ring view {
+  color: rgba(247, 239, 223, 0.5);
+  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  font-size: 20rpx;
+}
+
+.training-field,
+.quote,
+.compare-grid,
+.archive-ribbon {
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 340px) {
+  .training-card {
+    padding: 26rpx;
+  }
+
+  .training-head view view {
+    font-size: 40rpx;
+  }
+
+  .compare-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.training-field {
+  margin-top: 26rpx;
+  padding: 24rpx;
+  border-radius: 18rpx;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.archive-ribbon {
+  margin-top: 28rpx;
+  padding: 24rpx 0;
+  border-top: 1rpx solid rgba(241, 210, 125, 0.16);
+  border-bottom: 1rpx solid rgba(241, 210, 125, 0.16);
+}
+
+.archive-ribbon text {
+  display: block;
+  color: #b49355;
+  font-size: 22rpx;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.archive-ribbon view {
+  margin: 10rpx 0 20rpx;
+  color: rgba(247, 239, 223, 0.82);
+  font-family: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", serif;
+  font-size: 30rpx;
+  line-height: 1.56;
+  font-weight: 700;
+}
+
+.archive-ribbon view:last-child {
+  margin-bottom: 0;
+}
+
+.training-field text,
+.compare-grid text,
+.reflection-card > text {
+  display: block;
+  margin-bottom: 12rpx;
+  color: #b49355;
+  font-size: 23rpx;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.training-field.jade text {
+  color: #58c2ad;
+}
+
+.training-field view,
+.compare-grid view view {
+  color: rgba(247, 239, 223, 0.78);
+  font-size: 27rpx;
+  line-height: 1.58;
+}
+
+.compare-grid {
+  margin-top: 22rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16rpx;
+}
+
+.compare-grid > view {
+  min-height: 180rpx;
+  padding: 22rpx;
+  border-radius: 18rpx;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.quote {
+  margin-top: 26rpx;
+  color: #f1d27d;
+  font-family: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", serif;
+  font-size: 30rpx;
+  line-height: 1.6;
+}
+
+.step-list {
+  display: grid;
+  gap: 18rpx;
+}
+
+.step-card {
+  width: 100%;
+  min-height: 124rpx;
+  padding: 22rpx;
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  text-align: left;
+}
+
+.step-card .check,
+.step-card > view:last-child {
+  position: relative;
+  z-index: 1;
+}
+
+.check {
+  width: 54rpx;
+  height: 54rpx;
+  flex: 0 0 54rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 16rpx;
+  border: 2rpx solid rgba(201, 157, 76, 0.56);
+  color: #11140f;
+  font-size: 30rpx;
+  font-weight: 900;
+}
+
+.step-card.done .check {
+  background: #f1d27d;
+}
+
+.step-card text:first-child {
+  display: block;
+  color: #fff6e6;
+  font-size: 30rpx;
+  font-weight: 900;
+}
+
+.step-card text:last-child {
+  display: block;
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.56);
+  font-size: 24rpx;
+  line-height: 1.45;
+}
+
+.reflection-card {
+  margin-top: 24rpx;
+  padding: 26rpx;
+}
+
+.reflection-card > text,
+.reflection-card textarea,
+.reflection-card button {
+  position: relative;
+  z-index: 1;
+}
+
+.reflection-card button {
+  margin-top: 18rpx;
+}

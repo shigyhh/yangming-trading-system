@@ -1,0 +1,134 @@
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+  min-height: calc(150rpx + env(safe-area-inset-bottom));
+  padding: 18rpx 22rpx 0;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  border-top: 1rpx solid rgba(194, 145, 65, 0.075);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(218, 178, 86, 0.055), transparent 56%),
+    linear-gradient(180deg, rgba(8, 14, 13, 0.86), rgba(5, 9, 8, 0.98));
+  backdrop-filter: blur(26rpx);
+}
+
+.tab {
+  position: relative;
+  min-width: 0;
+  display: grid;
+  justify-items: center;
+  gap: 7rpx;
+  color: rgba(247, 239, 223, 0.32);
+  font-size: 20rpx;
+  font-weight: 600;
+  transition: transform 0.16s ease, opacity 0.16s ease;
+}
+
+.tab:active {
+  transform: translateY(2rpx);
+}
+
+.mark {
+  position: relative;
+  overflow: hidden;
+  width: 48rpx;
+  height: 48rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 16rpx;
+  color: currentColor;
+  border: 1rpx solid rgba(194, 145, 65, 0.055);
+  background:
+    linear-gradient(180deg, rgba(255, 247, 231, 0.025), rgba(0, 0, 0, 0.08)),
+    rgba(255, 255, 255, 0.01);
+  box-shadow:
+    inset 0 1rpx 0 rgba(255, 247, 231, 0.052),
+    inset 0 -5rpx 9rpx rgba(0, 0, 0, 0.16);
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", "STSong", serif;
+  font-size: 26rpx;
+  font-weight: 500;
+}
+
+.mark::before,
+.mark::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.mark::before {
+  inset: 1rpx;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 48%, rgba(0, 0, 0, 0.1));
+}
+
+.mark::after {
+  top: -30%;
+  bottom: -30%;
+  left: -70%;
+  width: 42%;
+  opacity: 0;
+  background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+  transform: skewX(-18deg) translateX(-130%);
+}
+
+.tab:active .mark::after {
+  display: none;
+}
+
+.tab.active {
+  color: #dab256;
+}
+
+.tab.active .mark {
+  color: rgba(255, 239, 207, 0.92);
+  border-color: rgba(154, 73, 48, 0.5);
+  background:
+    linear-gradient(180deg, rgba(255, 230, 196, 0.08), rgba(0, 0, 0, 0.1)),
+    radial-gradient(circle, rgba(154, 73, 48, 0.3), rgba(84, 28, 22, 0.13)),
+    rgba(218, 178, 86, 0.06);
+  box-shadow:
+    inset 0 2rpx 0 rgba(255, 230, 196, 0.13),
+    inset 0 -6rpx 10rpx rgba(70, 21, 15, 0.2),
+    0 8rpx 18rpx rgba(154, 73, 48, 0.1);
+}
+
+.safe-bottom {
+  grid-column: 1 / -1;
+  height: env(safe-area-inset-bottom);
+}
+
+@keyframes tabLightSweep {
+  from {
+    opacity: 0;
+    transform: skewX(-18deg) translateX(-130%);
+  }
+  30% {
+    opacity: 0.8;
+  }
+  to {
+    opacity: 0;
+    transform: skewX(-18deg) translateX(360%);
+  }
+}
+
+@media (max-width: 340px) {
+  .tabbar {
+    min-height: calc(142rpx + env(safe-area-inset-bottom));
+    padding-left: 14rpx;
+    padding-right: 14rpx;
+  }
+
+  .tab {
+    font-size: 19rpx;
+  }
+
+  .mark {
+    width: 44rpx;
+    height: 44rpx;
+    font-size: 24rpx;
+  }
+}

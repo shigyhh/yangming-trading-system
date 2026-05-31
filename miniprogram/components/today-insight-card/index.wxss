@@ -1,0 +1,87 @@
+.insight {
+  padding: 30rpx;
+}
+
+.insight-head {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+
+.label {
+  color: #b49355;
+  font-size: 23rpx;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+
+.status {
+  margin-top: 12rpx;
+  color: #fff6e6;
+  font-family: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", serif;
+  font-size: 50rpx;
+  font-weight: 700;
+}
+
+.score {
+  width: 126rpx;
+  height: 126rpx;
+  flex: 0 0 126rpx;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  border-radius: 50%;
+  border: 1rpx solid rgba(201, 157, 76, 0.4);
+  background: rgba(201, 157, 76, 0.1);
+}
+
+.score text:first-child {
+  color: #f1d27d;
+  font-size: 42rpx;
+  font-weight: 900;
+}
+
+.score text:last-child {
+  color: rgba(247, 239, 223, 0.52);
+  font-size: 20rpx;
+}
+
+.quote {
+  position: relative;
+  z-index: 1;
+  margin-top: 28rpx;
+  color: rgba(247, 239, 223, 0.82);
+  font-size: 30rpx;
+  line-height: 1.62;
+}
+
+.action {
+  position: relative;
+  z-index: 1;
+  margin: 28rpx 0;
+  padding: 24rpx;
+  border-radius: 18rpx;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.action text {
+  display: block;
+  margin-bottom: 10rpx;
+  color: #58c2ad;
+  font-size: 24rpx;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.action view {
+  color: rgba(247, 239, 223, 0.72);
+  font-size: 26rpx;
+  line-height: 1.55;
+}
+
+.primary-btn {
+  position: relative;
+  z-index: 1;
+}

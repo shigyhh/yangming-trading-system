@@ -1,0 +1,42 @@
+<view class="page-shell">
+  <view class="page-content">
+    <text class="eyebrow">CONTENT · 365</text>
+    <view class="page-title">365天<br />修行内容库</view>
+    <view class="page-subtitle">这里不是课程堆叠，而是每日心证、戒律、事上练、省察的内容源。小程序、直播、视频号和AI观心教练都从这里长出来。</view>
+
+    <view class="content-card card">
+      <view class="content-id">{{current.id}}</view>
+      <view class="content-title">{{current.title}}</view>
+      <view class="stage-pill">{{current.stageTitle}} · {{current.stageCore}}</view>
+
+      <view class="content-block">
+        <text>心证</text>
+        <view>{{current.heartProof}}</view>
+      </view>
+      <view class="content-block">
+        <text>戒律</text>
+        <view>{{current.commandment}}</view>
+      </view>
+      <view class="content-block">
+        <text>事上练</text>
+        <view>{{current.training}}</view>
+      </view>
+      <view class="content-block">
+        <text>省察</text>
+        <view>{{current.review}}</view>
+      </view>
+    </view>
+
+    <view class="split-actions">
+      <button class="ghost-btn" bindtap="prevDay">上一日</button>
+      <button class="secondary-btn" bindtap="nextDay">下一日</button>
+    </view>
+    <view class="split-actions">
+      <button class="ghost-btn" bindtap="goStages">看六大关卡</button>
+      <button class="primary-btn" bindtap="copyContent">复制今日内容</button>
+    </view>
+
+    <compliance-notice />
+  </view>
+  <bottom-tab-bar active="home" />
+</view>

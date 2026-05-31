@@ -1,0 +1,69 @@
+{
+  "version": "kline_scene_pool_v1",
+  "scenes": [
+    {
+      "id": "rush_chase",
+      "title": "急拉追高",
+      "theme": "一念动处",
+      "text": "快速拉升后追入，高位承受回落。",
+      "image": "assets/kline-scenes/S01_急拉追高.jpg",
+      "tags": ["冲动型", "致良知关", "追涨冲动"]
+    },
+    {
+      "id": "high_divergence",
+      "title": "高位分歧",
+      "theme": "分歧不妄动",
+      "text": "高位放量滞涨，先辨明再行动。",
+      "image": "assets/kline-scenes/S02_高位分歧.jpg",
+      "tags": ["完美型", "从众型", "高位分歧"]
+    },
+    {
+      "id": "break_hold",
+      "title": "破位不走",
+      "theme": "边界已破",
+      "text": "跌破计划位却迟迟不走。",
+      "image": "assets/kline-scenes/S03_破位不走.jpg",
+      "tags": ["扛单型", "破心中贼", "破位执行"]
+    },
+    {
+      "id": "fear_cut",
+      "title": "恐惧割肉",
+      "theme": "惧念夺主",
+      "text": "低位急跌后恐惧卖出。",
+      "image": "assets/kline-scenes/S04_恐惧割肉.jpg",
+      "tags": ["焦虑型", "心即理", "低位恐惧"]
+    },
+    {
+      "id": "shake_trade",
+      "title": "震荡乱做",
+      "theme": "心随境转",
+      "text": "区间震荡中反复进出。",
+      "image": "assets/kline-scenes/S05_震荡乱做.jpg",
+      "tags": ["拖延型", "知行合一", "频繁交易"]
+    },
+    {
+      "id": "pullback",
+      "title": "缩量回踩",
+      "theme": "等待确认",
+      "text": "突破后缩量回踩，守规则等确认。",
+      "image": "assets/kline-scenes/S06_缩量回踩.jpg",
+      "tags": ["平衡型", "系统纪律", "等待确认"]
+    },
+    {
+      "id": "breakout_confirm",
+      "title": "突破确认",
+      "theme": "信号成形",
+      "text": "突破后回踩确认再行动。",
+      "image": "assets/kline-scenes/S07_突破确认.jpg",
+      "tags": ["平衡型", "事上磨", "信号确认"]
+    },
+    {
+      "id": "false_breakout",
+      "title": "假突破",
+      "theme": "不被表象牵走",
+      "text": "突破未能站稳，及时回到规则。",
+      "image": "assets/kline-scenes/S08_假突破.jpg",
+      "tags": ["偏执型", "赌徒型", "假突破"]
+    }
+  ]
+}

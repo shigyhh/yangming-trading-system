@@ -1,0 +1,26 @@
+{
+  "pages": [
+    "pages/home/index",
+    "pages/mind/index",
+    "pages/assessment/index",
+    "pages/report/index",
+    "pages/training/index",
+    "pages/zhixing-index/index",
+    "pages/stages/index",
+    "pages/zhixing-growth/index",
+    "pages/content365/index",
+    "pages/review/index",
+    "pages/growth/index",
+    "pages/dojo/index",
+    "pages/profile/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "阳明心学交易系统",
+    "navigationBarBackgroundColor": "#07100e",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#07100e",
+    "backgroundTextStyle": "light"
+  },
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents"
+}

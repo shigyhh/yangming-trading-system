@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "九型照见",
+  "usingComponents": {
+    "compliance-notice": "../../components/compliance-notice/index",
+    "bottom-tab-bar": "../../components/bottom-tab-bar/index"
+  }
+}

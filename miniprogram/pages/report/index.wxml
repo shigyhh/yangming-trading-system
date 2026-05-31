@@ -1,0 +1,76 @@
+<view class="page-shell">
+  <view class="page-content">
+    <text class="eyebrow">PERSONALITY · 观心</text>
+    <view class="page-title">九型人格<br />心证</view>
+    <view class="page-subtitle">不是评判你，而是照见惯性动作，把它转成每日修行。</view>
+
+    <block wx:if="{{hasResult}}">
+      <view class="hero-report card">
+        <view class="ring">
+          <text>{{result.intensity}}</text>
+          <view>显现度</view>
+        </view>
+        <view class="report-title">{{result.primary}}</view>
+        <view class="report-subtitle">{{stagePlan.stageName}}</view>
+        <view class="secondary">次人格：{{result.secondary}}</view>
+      </view>
+
+      <view class="stage-path-card card">
+        <text>第一阶段 · 照见所得</text>
+        <view class="path-focus">{{stagePlan.heartThief}}</view>
+        <view class="path-copy">{{stagePlan.commandment}}</view>
+        <view class="path-copy muted-copy">{{stagePlan.training}}</view>
+      </view>
+
+      <view class="core-output-card card">
+        <view wx:for="{{coreOutputs}}" wx:key="label" class="core-output-row">
+          <text>{{item.label}}</text>
+          <view>{{item.value}}</view>
+        </view>
+      </view>
+
+      <view class="section-title">
+        <view>人格心证</view>
+        <text>修行路径</text>
+      </view>
+
+      <view class="report-list">
+        <view wx:for="{{reportBlocks}}" wx:key="title" class="report-block card">
+          <text>{{item.title}}</text>
+          <view>{{item.content}}</view>
+        </view>
+      </view>
+
+      <view class="path-card card">
+        <text>推荐事上练路径</text>
+        <view class="path-row">
+          <view wx:for="{{path}}" wx:key="*this" class="path-step">
+            <view>{{index + 1}}</view>
+            <text>{{item}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="split-actions">
+        <button class="secondary-btn" bindtap="saveReport">收藏心证</button>
+        <button class="primary-btn" bindtap="goTraining">开始事上练</button>
+      </view>
+      <view class="split-actions">
+        <button class="ghost-btn" bindtap="goAssessment">重新照见</button>
+        <button class="ghost-btn" bindtap="goStages">看六大关卡</button>
+      </view>
+      <view class="single-action">
+        <button class="ghost-btn" bindtap="goIndex">看知行指数</button>
+      </view>
+    </block>
+
+    <view wx:else class="empty-report card">
+      <view>还没有人格心证</view>
+      <text>先完成九型人格照见，再生成专属事上练路径。</text>
+      <button class="primary-btn" bindtap="goAssessment">开始照见</button>
+    </view>
+
+    <compliance-notice />
+  </view>
+  <bottom-tab-bar active="assessment" />
+</view>

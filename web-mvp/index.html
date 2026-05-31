@@ -1,0 +1,1190 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="阳明心学交易系统：东方哲学、AI 与交易行为训练。不荐股、不喊单、不承诺收益。" />
+    <title>阳明心学交易系统｜交易人格测评与知行训练</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23275c46'/%3E%3Ctext x='32' y='41' font-size='28' text-anchor='middle' fill='white' font-family='serif'%3E知%3C/text%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="./styles.css?v=20260528-forum" />
+  </head>
+  <body>
+    <section id="authGate" class="auth-gate yangming-home" aria-label="阳明心学交易系统官网首页">
+      <canvas id="zenWebglCanvas" class="zen-webgl-canvas" aria-hidden="true"></canvas>
+      <div class="ink-particles" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <div class="breathing-field" aria-hidden="true">
+        <span class="breath-light light-one"></span>
+        <span class="breath-light light-two"></span>
+        <span class="breath-light light-three"></span>
+        <span class="ink-wash wash-one"></span>
+        <span class="ink-wash wash-two"></span>
+      </div>
+      <div class="shan-shui-flow" aria-hidden="true">
+        <svg viewBox="0 0 1440 620" preserveAspectRatio="none">
+          <path class="mountain mountain-back" d="M0 620V392c92-44 151-26 220-96 67-68 108-146 198-96 65 36 92 128 171 98 73-28 96-124 184-139 98-16 134 118 239 100 72-12 103-87 186-76 88 11 119 98 242 54v383H0Z" />
+          <path class="mountain mountain-front" d="M0 620V464c88-46 170-25 244-62 84-42 121-126 221-89 74 28 82 105 177 91 103-16 123-111 229-117 121-6 150 92 271 85 96-6 168-78 298-44v292H0Z" />
+          <path class="water-line water-a" d="M-70 518C128 476 240 552 424 510s306-64 506-28 334 9 580-50" />
+          <path class="water-line water-b" d="M-90 560C132 522 272 592 472 548s330-62 516-26 306 20 542-36" />
+          <path class="water-line water-c" d="M-60 596C178 556 310 612 520 584s330-34 506-8 286 12 490-26" />
+        </svg>
+      </div>
+      <button id="ambientSoundToggle" class="ambient-sound-toggle" type="button" aria-pressed="false">
+        <span>环境音</span>
+        <strong>关</strong>
+      </button>
+      <div class="scroll-spine" aria-hidden="true">
+        <span>卷首</span>
+        <i></i>
+        <span>入院</span>
+        <i></i>
+        <span>修行</span>
+        <i></i>
+        <span>边界</span>
+      </div>
+
+      <nav class="home-nav" aria-label="官网导航">
+        <a class="home-brand" href="#homeHero" aria-label="阳明心学交易系统">
+          <span class="home-brand-mark">心</span>
+          <span>
+            <strong>阳明心学交易系统</strong>
+            <em>知行合一 · 交易修行</em>
+          </span>
+        </a>
+        <div class="home-nav-links">
+          <a href="#assessmentEntry">人格测评</a>
+          <a href="#trainingSystem">训练体系</a>
+          <a href="#personaModules">九型人格</a>
+          <a href="#riskBoundary">合规边界</a>
+        </div>
+        <a class="home-nav-cta" href="#assessmentEntry">开始测评</a>
+      </nav>
+
+      <section id="homeHero" class="home-hero">
+        <div class="home-hero-copy">
+          <span class="scroll-chapter">卷一 · 照见此心</span>
+          <div class="home-pill">东方哲学 × AI × 交易行为训练</div>
+          <h1>心不静，<br />交易必乱。</h1>
+          <p>这不是一个预测行情的网站，而是一套帮助交易者照见自己、重建纪律、训练执行的心学系统。</p>
+          <div class="home-hero-actions">
+            <a class="home-btn primary" href="#assessmentEntry">进入交易人格测评</a>
+            <a class="home-btn ghost" href="#trainingSystem">查看训练体系</a>
+          </div>
+        </div>
+
+        <div class="home-orbit-card" aria-label="今日心证">
+          <div class="orbit-card-head">
+            <div>
+              <span>今日心证</span>
+              <strong>知而未行</strong>
+            </div>
+            <em>AI 内观</em>
+          </div>
+          <div class="mind-proof-card">
+            <span>临盘照见</span>
+            <p>明知不可追，见涨仍动心。</p>
+          </div>
+          <div class="orbit-mini-grid">
+            <div><span>心学关卡</span><strong>事上练</strong></div>
+            <div><span>今日动作</span><strong>停十秒</strong></div>
+          </div>
+          <div class="ai-mind-system">
+            <span>AI 观心系统</span>
+            <strong>触发 · 念头 · 动作 · 复测</strong>
+            <div aria-hidden="true">
+              <i></i><i></i><i></i><i></i>
+            </div>
+          </div>
+          <svg class="hero-candles" viewBox="0 0 760 260" aria-hidden="true">
+            <path d="M0 202 C 120 170, 160 216, 260 180 S 420 130, 520 170 S 650 235, 760 158" />
+            <g>
+              <line x1="40" x2="40" y1="148" y2="170" /><rect x="32" y="156" width="16" height="22" rx="2" class="up" />
+              <line x1="88" x2="88" y1="126" y2="148" /><rect x="80" y="138" width="16" height="22" rx="2" class="up" />
+              <line x1="136" x2="136" y1="118" y2="176" /><rect x="128" y="152" width="16" height="10" rx="2" class="down" />
+              <line x1="184" x2="184" y1="134" y2="159" /><rect x="176" y="142" width="16" height="22" rx="2" class="up" />
+              <line x1="232" x2="232" y1="102" y2="130" /><rect x="224" y="112" width="16" height="32" rx="2" class="up" />
+              <line x1="280" x2="280" y1="82" y2="138" /><rect x="272" y="112" width="16" height="12" rx="2" class="down" />
+              <line x1="328" x2="328" y1="104" y2="124" /><rect x="320" y="108" width="16" height="22" rx="2" class="up" />
+              <line x1="376" x2="376" y1="72" y2="132" /><rect x="368" y="108" width="16" height="8" rx="2" class="down" />
+              <line x1="424" x2="424" y1="88" y2="152" /><rect x="416" y="120" width="16" height="22" rx="2" class="down" />
+              <line x1="472" x2="472" y1="116" y2="142" /><rect x="464" y="124" width="16" height="22" rx="2" class="up" />
+              <line x1="520" x2="520" y1="94" y2="134" /><rect x="512" y="102" width="16" height="26" rx="2" class="up" />
+              <line x1="568" x2="568" y1="66" y2="114" /><rect x="560" y="76" width="16" height="28" rx="2" class="up" />
+              <line x1="616" x2="616" y1="44" y2="108" /><rect x="608" y="78" width="16" height="14" rx="2" class="down" />
+              <line x1="664" x2="664" y1="62" y2="122" /><rect x="656" y="96" width="16" height="14" rx="2" class="down" />
+              <line x1="712" x2="712" y1="80" y2="106" /><rect x="704" y="88" width="16" height="24" rx="2" class="up" />
+            </g>
+          </svg>
+        </div>
+      </section>
+
+      <section id="assessmentEntry" class="home-section assessment-entry" aria-label="交易人格测评入口">
+        <div class="home-section-head">
+          <span class="scroll-chapter">卷二 · 入院问心</span>
+          <span>ASSESSMENT</span>
+          <h2>先照见交易之心，再修交易之行。</h2>
+          <p>为了保存你的照心报告，请绑定手机号。报告、复测变化和训练记录会留在同一个个人档案里。</p>
+        </div>
+
+        <div id="assessmentCeremony" class="assessment-ceremony">
+          <div class="assessment-ceremony-copy">
+            <span>照心仪式入口</span>
+            <h3>刚刚你看见的是九种交易反应。</h3>
+            <h3>现在，看见你的那一种。</h3>
+            <p>这不是测试你对不对。是看见你在行情波动时，最先被什么牵动。</p>
+          </div>
+          <button id="beginCeremonyBtn" class="primary-action assessment-ceremony-btn">开始照心 →</button>
+          <p class="assessment-privacy-note">你的答案仅用于生成个人报告与训练建议。</p>
+        </div>
+
+        <div id="assessmentAuthPanel" class="auth-panel" hidden>
+        <div class="assistant-card">
+          <div class="assistant-title">
+            <span>入院助理</span>
+            <strong>先添加，再测评</strong>
+          </div>
+          <div id="assistantQrFrame" class="assistant-qr-frame">
+            <img
+              id="assistantQrImg"
+              class="assistant-qr-img"
+              src="./assets/assistant-qrs/入院助理01.jpg"
+              alt="助理二维码"
+              decoding="async"
+              onerror="document.getElementById('assistantQrFrame')?.classList.add('qr-missing')"
+            />
+            <div class="assistant-qr-placeholder">
+              <strong>助理二维码待配置</strong>
+              <span>放入真实微信二维码后自动显示</span>
+            </div>
+          </div>
+          <div id="assistantQrLabel" class="assistant-qr-label">入院助理 01</div>
+          <p>请使用微信扫码添加助理，回复「测评」领取专属入口。正式上线时替换为你的企微或个人微信二维码。</p>
+          <div class="assistant-tags">
+            <span>报告找回</span>
+            <span>训练提醒</span>
+            <span>人工承接</span>
+          </div>
+        </div>
+
+        <div class="login-card">
+          <div class="login-heading">
+            <span>照心留档</span>
+            <h2>保存你的照心报告</h2>
+            <p>报告、复测变化和训练记录会归到这个手机号。不会公开你的个人答案。</p>
+          </div>
+
+          <div class="auth-tabs auth-tabs-compact" role="tablist" aria-label="留档方式">
+            <button class="auth-tab active" data-auth-tab="phone">手机号</button>
+            <button class="auth-tab" data-auth-tab="invite">邀请码</button>
+          </div>
+
+          <div id="wechatAuthPanel" class="auth-form" data-auth-panel="wechat" hidden>
+            <button id="wechatLoginBtn" class="wechat-login-btn">微信授权保存</button>
+            <div class="security-tip">手机微信内会走公众号授权，电脑浏览器会走开放平台扫码登录。请先在微信后台配置授权域名。</div>
+          </div>
+
+          <div id="phoneAuthPanel" class="auth-form active" data-auth-panel="phone">
+            <label>
+              <span>用于保存报告的手机号</span>
+              <input id="loginPhoneInput" type="tel" placeholder="填写手机号，保存照心报告" autocomplete="tel" />
+            </label>
+            <div class="code-row">
+              <label>
+                <span>验证码</span>
+                <input id="loginCodeInput" type="text" inputmode="numeric" maxlength="8" placeholder="6 位验证码" autocomplete="one-time-code" />
+              </label>
+              <button id="sendCodeBtn" class="secondary-action">获取验证码</button>
+            </div>
+            <button id="phoneLoginBtn" class="primary-action auth-submit">保存并开始照心 →</button>
+            <div class="security-tip">验证码仅用于确认是你本人，5 分钟有效，同一手机号 60 秒内不能重复发送。</div>
+          </div>
+
+          <div id="inviteAuthPanel" class="auth-form" data-auth-panel="invite">
+            <label>
+              <span>邀请码</span>
+              <input id="inviteCodeInput" type="text" placeholder="请输入老师或助理发放的邀请码" />
+            </label>
+            <button id="inviteLoginBtn" class="primary-action auth-submit">验证进入</button>
+          </div>
+
+          <div class="auth-safety-row" hidden>
+            <span>限流</span>
+            <span>登录态</span>
+            <span>防批量提交</span>
+            <span>报告留存</span>
+          </div>
+          <div id="authStatus" class="auth-status" aria-live="polite"></div>
+        </div>
+      </div>
+      </section>
+
+      <section id="trainingSystem" class="home-section training-home-section" aria-label="知行合一训练体系">
+        <div class="home-section-head split">
+          <div>
+            <span class="scroll-chapter">卷三 · 事上磨炼</span>
+            <span>SYSTEM STRUCTURE</span>
+            <h2>不是教你预测，而是训练你执行。</h2>
+          </div>
+          <p>系统将交易行为拆成触发、念头、反应、规则、复盘五层，让每一笔训练都成为一次省察克治。</p>
+        </div>
+        <div class="home-feature-grid">
+          <article>
+            <span>01</span>
+            <strong>交易人格测评</strong>
+            <p>识别冲动、扛单、焦虑、从众等九种反应模式。</p>
+          </article>
+          <article>
+            <span>02</span>
+            <strong>知行合一训练</strong>
+            <p>把知道的规则，训练成临盘能执行的动作。</p>
+          </article>
+          <article>
+            <span>03</span>
+            <strong>K线意象系统</strong>
+            <p>K线只作为心念波动的训练场景，不展示具体股票。</p>
+          </article>
+          <article>
+            <span>04</span>
+            <strong>复测变化闭环</strong>
+            <p>通过训练记录和复测变化，看到惯性是否真的下降。</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="personaModules" class="home-section persona-home-section" aria-label="九型交易人格模块">
+        <div class="persona-home-shell">
+          <div class="home-section-head">
+            <span class="scroll-chapter">卷四 · 九念归类</span>
+            <span>NINE PATTERNS</span>
+            <h2>九型交易人格，不是标签，是训练入口。</h2>
+          </div>
+          <div class="persona-module-grid">
+            <span>追涨</span>
+            <span>扛单</span>
+            <span>止损</span>
+            <span>空仓</span>
+            <span>报复交易</span>
+            <span>浮盈回吐</span>
+            <span>临盘改计划</span>
+            <span>连续亏损</span>
+            <span>盈利后膨胀</span>
+          </div>
+          <div class="practice-path-grid">
+            <article><span>测一念</span><strong>识别当下交易反应</strong></article>
+            <article><span>立一规</span><strong>把纪律写成行为边界</strong></article>
+            <article><span>练一事</span><strong>用每日训练重塑执行</strong></article>
+          </div>
+        </div>
+      </section>
+
+      <section id="riskBoundary" class="home-section risk-home-section" aria-label="风险教育与合规声明">
+        <div>
+          <span class="scroll-chapter">卷五 · 知止有定</span>
+          <span>RISK EDUCATION</span>
+          <h2>风险教育先于交易动作。</h2>
+        </div>
+        <p>平台只提供交易认知、行为训练、人格测评和复盘工具，不提供任何具体股票建议、买卖点建议、收益预测或代客决策。</p>
+        <strong>本系统仅用于交易认知、行为训练与风险教育；不荐股、不喊单、不承诺收益。</strong>
+      </section>
+
+      <section class="home-final-cta" aria-label="进入测评或加入训练营">
+        <span>知行合一，从看见自己开始。</span>
+        <div>
+          <a class="home-btn primary" href="#assessmentEntry">进入测评</a>
+          <a class="home-btn ghost" href="#assessmentEntry">加入训练营</a>
+        </div>
+      </section>
+
+      <footer class="home-footer">
+        本系统仅用于交易认知、行为训练与风险教育；不荐股、不喊单、不承诺收益。
+      </footer>
+
+    </section>
+
+    <div id="appShell" class="app-shell" hidden>
+      <aside class="side-rail">
+        <div class="brand-block">
+          <img src="./assets/yangming-portrait.jpg" alt="阳明心学交易系统" width="70" height="70" decoding="async" />
+          <div>
+            <strong>知行老何</strong>
+            <span>知行合一交易人格院</span>
+          </div>
+        </div>
+
+        <div class="user-badge">
+          <span>当前学员</span>
+          <strong id="currentUserName">未登录</strong>
+          <button id="logoutBtn" type="button">退出</button>
+        </div>
+
+        <div class="rail-seal" aria-hidden="true">
+          <span>格</span>
+          <span>物</span>
+          <span>致</span>
+          <span>知</span>
+        </div>
+
+        <nav class="step-list" aria-label="测评流程">
+          <button class="step-item active" data-step-link="setup">
+            <span>01</span>
+            <strong>测前静场</strong>
+          </button>
+          <button class="step-item" data-step-link="answer" disabled>
+            <span>02</span>
+            <strong>起心动念</strong>
+          </button>
+          <button class="step-item" data-step-link="result" disabled>
+            <span>03</span>
+            <strong>照心报告</strong>
+          </button>
+        </nav>
+
+        <div class="rail-quote">
+          <span>心上用功</span>
+          <strong>破山中贼易，破心中贼难。</strong>
+        </div>
+
+        <div class="rail-note">
+          <strong>合规边界</strong>
+          <span>本系统仅用于交易认知、行为训练与风险教育；不荐股、不喊单、不承诺收益。</span>
+        </div>
+      </aside>
+
+      <main class="main-panel">
+        <section class="top-strip">
+          <div class="hero-copy">
+            <span class="hero-kicker">阳明心学交易人格内观</span>
+            <h1>九种交易人格 AI 测评</h1>
+            <p>先照见交易之心，再修交易之行。每一次作答，都是把市场中的自己看清楚。</p>
+            <div class="discipline-line" aria-label="心学路径">
+              <span>格物</span>
+              <span>致知</span>
+              <span>诚意</span>
+              <span>正心</span>
+              <span>知行合一</span>
+            </div>
+          </div>
+          <div class="hero-portrait" aria-hidden="true">
+            <img src="./assets/yangming-portrait.jpg" alt="" width="160" height="190" decoding="async" />
+          </div>
+        </section>
+
+        <section id="setupView" class="view active">
+          <div class="daily-grid">
+            <section class="practice-panel daily-ritual-panel">
+              <div class="panel-title">每日修心</div>
+              <h2>今日先正心，再看盘</h2>
+              <p id="dailyQuote">此心不动，随机而动。今日先守住一个动作。</p>
+              <div class="habit-metrics">
+                <div>
+                  <strong id="streakDays">0</strong>
+                  <span>连续日课</span>
+                </div>
+                <div>
+                  <strong id="practicePoints">0</strong>
+                  <span>修行值</span>
+                </div>
+                <div>
+                  <strong id="totalPracticeDays">0</strong>
+                  <span>累计天数</span>
+                </div>
+              </div>
+              <div id="weeklyCheckins" class="weekly-checkins" aria-label="近七日修行"></div>
+              <button id="dailyCheckInBtn" class="primary-action">今日签到</button>
+            </section>
+
+            <section class="practice-panel kline-panel">
+              <div class="panel-title">知行K线训练台</div>
+              <div class="kline-head">
+                <div>
+                  <h2 id="klineScenarioTitle">双盲K线回放训练</h2>
+                  <p id="klineScenarioPrompt">隐藏股票名称与历史区间，每点一次买入、卖出、观望，就推进一根真实历史K线。</p>
+                </div>
+                <strong id="klineScoreBadge">0%</strong>
+              </div>
+
+              <div class="kline-game-strip">
+                <span id="klineRoundLabel">第30 / 150根</span>
+                <span id="klinePersonaTag">双盲训练</span>
+              </div>
+              <div id="klineMarketMeta" class="kline-market-meta">过往真实A股数据 · 已隐藏股票名称与K线区间 · 逐根推进复盘训练</div>
+
+              <div class="mind-axis-panel" aria-label="六大心性关卡">
+                <div class="mind-axis-head">
+                  <span>通用修心课</span>
+                  <strong id="mindAxisActiveName">致良知关</strong>
+                </div>
+                <p class="training-system-note">所有学员都会练的底层能力：先稳心，再做交易动作。</p>
+                <div id="mindAxisGrid" class="mind-axis-grid"></div>
+                <div id="mindAxisDetail" class="mind-axis-detail"></div>
+                <div class="mind-axis-current">
+                  <span id="mindAxisLesson">下单前先照见这一念。</span>
+                  <strong id="mindAxisAction">下一步：先等一根K线。</strong>
+                </div>
+              </div>
+
+              <div class="personality-training-panel" aria-label="九型人格专属关卡">
+                <div class="personality-training-head">
+                  <span>测评后专属课</span>
+                  <strong id="personalityTrainingActiveName">测评后自动推荐</strong>
+                </div>
+                <p class="training-system-note">根据主人格自动推荐，专门纠正你最容易重复亏钱的模式。</p>
+                <div id="personalityTrainingGrid" class="personality-training-grid"></div>
+                <div id="personalityTrainingDetail" class="personality-training-detail"></div>
+              </div>
+
+              <div id="klineScenePoolCard" class="kline-scene-pool-card" aria-label="K线场景图池"></div>
+
+              <div class="kline-trading-toolbar" aria-label="K线训练盘工具栏">
+                <div class="kline-timeframes" aria-label="周期切换">
+                  <button data-kline-timeframe="30">30分钟</button>
+                  <button data-kline-timeframe="60">60分钟</button>
+                  <button class="active" data-kline-timeframe="101">日K</button>
+                  <button data-kline-timeframe="102">周K</button>
+                  <button data-kline-timeframe="103">月K</button>
+                </div>
+                <div class="kline-indicators" aria-label="指标切换">
+                  <button class="active" data-kline-indicator="ma">MA</button>
+                  <button class="active" data-kline-indicator="boll">BOLL</button>
+                  <button class="active" data-kline-indicator="vol">VOL</button>
+                  <button class="active" data-kline-indicator="macd">MACD</button>
+                  <button class="active" data-kline-indicator="kdj">KDJ</button>
+                  <button data-kline-indicator="rsi">RSI</button>
+                </div>
+              </div>
+              <div id="klineChart" class="kline-chart" aria-label="模拟K线图"></div>
+
+              <div class="kline-actions">
+                <button data-kline-decision="买入">买入</button>
+                <button data-kline-decision="卖出">卖出</button>
+                <button data-kline-decision="观望">观望</button>
+              </div>
+              <div id="klineFeedbackCard" class="kline-feedback-card" hidden></div>
+              <p id="klineInsight" class="practice-insight">点击买入、卖出、观望推进下一根K线。每一步都会反馈这次操作带来的盘面结果。</p>
+
+              <div class="kline-mode-row" aria-label="K线训练模块">
+                <button class="active" data-kline-module="blind">双盲训练</button>
+                <span>先专注双盲A股历史回放</span>
+              </div>
+              <div class="kline-mode-row compact" aria-label="K线训练设置">
+                <button class="active" data-kline-setting="autoSell">自动卖出</button>
+                <button class="active" data-kline-setting="splitPosition">分仓模式</button>
+                <button class="active" data-kline-setting="t1Rule">T+1</button>
+                <button class="active" data-kline-setting="tradeCost">成本</button>
+              </div>
+              <div class="kline-rule-strip" aria-label="复盘训练规则">
+                <span>盲盒抽取</span>
+                <span>T+1纪律</span>
+                <span>成本计入</span>
+                <span>结束报告</span>
+              </div>
+
+              <div class="kline-stats kline-game-stats">
+                <div><strong id="klineAccountValue">100000</strong><span>模拟账户</span></div>
+                <div><strong id="klinePositionValue">0%</strong><span>当前仓位</span></div>
+                <div><strong id="klineProfitValue">0.00%</strong><span>当前盈亏</span></div>
+                <div><strong id="klineDrawdownValue">0.00%</strong><span>最大回撤</span></div>
+                <div><strong id="klinePracticeCount">0</strong><span>操作次数</span></div>
+                <div><strong id="klineQuestionBankCount">150</strong><span>本轮K线</span></div>
+              </div>
+              <div class="kline-level-bar">
+                <span id="klineDailyQuota">今日3题剩余3</span>
+                <span id="klineStageLabel">每日三问</span>
+              </div>
+              <div id="klineStageChips" class="stage-chips" aria-label="K线练习关卡"></div>
+
+              <div class="kline-mind-check" aria-label="盘中一念自查">
+                <span>此刻一念</span>
+                <button data-mind-check="想追涨">想追涨</button>
+                <button data-mind-check="想扛单">想扛单</button>
+                <button data-mind-check="怕错过">怕错过</button>
+                <button data-mind-check="想听别人意见">想听别人意见</button>
+              </div>
+
+              <button id="nextKlineBtn" class="secondary-action">换一段K线</button>
+              <div id="klineReviewCard" class="kline-review-card" hidden></div>
+            </section>
+
+            <section class="practice-panel influence-panel" hidden>
+              <div class="panel-title">知行同修指数</div>
+              <h2 id="influenceScore">0</h2>
+              <p>每一位新加入的朋友，都是一起事上练、一起正心的同修。</p>
+              <div class="invite-box">
+                <span>专属邀请码</span>
+                <strong id="inviteCodeValue">登录后生成</strong>
+              </div>
+              <div class="influence-stats">
+                <div><strong id="partnersCount">0</strong><span>同修</span></div>
+                <div><strong id="partnerReports">0</strong><span>报告</span></div>
+                <div><strong id="personalImpactIndex">0.0000</strong><span>同修指数</span></div>
+              </div>
+              <button id="copyInviteBtn" class="secondary-action">复制邀请文案</button>
+            </section>
+
+            <section class="practice-panel leaderboard-panel" hidden>
+              <div class="panel-title">临盘修行榜</div>
+              <h2>今日不是比收益，是比知行合一</h2>
+              <div class="leaderboard-tabs" aria-label="排行榜周期">
+                <button class="active" data-leaderboard-period="week">周榜</button>
+                <button data-leaderboard-period="month">月榜</button>
+                <button data-leaderboard-period="all">总榜</button>
+              </div>
+              <div id="leaderboardList" class="leaderboard-list"></div>
+              <button id="quickPracticeBtn" class="secondary-action">27题快测</button>
+            </section>
+          </div>
+
+          <section class="kline-lab-panel" aria-label="知行K线训练台" hidden>
+            <div class="kline-lab-hero">
+              <div class="kline-lab-copy">
+                <div class="panel-title">知行合一训练系统</div>
+                <h2>知行K线训练台</h2>
+                <p>
+                  不是让股民猜涨跌，而是在真实K线片段里练等待、止损、分仓、复盘和临盘一念。
+                  每一次选择，都记录为心性训练数据。
+                </p>
+                <div class="kline-lab-tags" aria-label="训练模式">
+                  <span>多品种</span>
+                  <span>多周期</span>
+                  <span>模拟交易</span>
+                  <span>心性复盘</span>
+                </div>
+                <div class="kline-lab-actions">
+                  <button id="enterKlineLabBtn" class="primary-action">进入今日关卡</button>
+                  <button id="refreshKlineLabBtn" class="secondary-action">随机换题</button>
+                </div>
+              </div>
+
+              <div class="kline-terminal" aria-label="K线训练驾驶舱">
+                <div class="terminal-top">
+                  <span>一念实战盘</span>
+                  <strong id="klineLabInstrument">沪深A股 · 15分钟</strong>
+                </div>
+                <div class="terminal-chart" aria-hidden="true">
+                  <i style="--h:44%;--y:36%;--c:#2f6c51"></i>
+                  <i style="--h:62%;--y:24%;--c:#93413a"></i>
+                  <i style="--h:50%;--y:30%;--c:#93413a"></i>
+                  <i style="--h:72%;--y:16%;--c:#2f6c51"></i>
+                  <i style="--h:68%;--y:20%;--c:#93413a"></i>
+                  <i style="--h:40%;--y:38%;--c:#2f6c51"></i>
+                  <i style="--h:78%;--y:12%;--c:#93413a"></i>
+                  <i style="--h:55%;--y:26%;--c:#2f6c51"></i>
+                  <i style="--h:84%;--y:8%;--c:#93413a"></i>
+                  <i style="--h:64%;--y:22%;--c:#2f6c51"></i>
+                  <span class="terminal-risk-line">计划失效线</span>
+                </div>
+                <div class="terminal-controls">
+                  <span>日K</span>
+                  <span class="active">15分</span>
+                  <span>5分</span>
+                  <span>复盘</span>
+                </div>
+                <div class="terminal-readout">
+                  <div>
+                    <strong id="klineLabTotal">1500</strong>
+                    <span>训练关卡</span>
+                  </div>
+                  <div>
+                    <strong id="klineLabPoints">0</strong>
+                    <span>修行积分</span>
+                  </div>
+                  <div>
+                    <strong>0%</strong>
+                    <span>荐股内容</span>
+                  </div>
+                </div>
+                <p id="klineLabReminder">临盘第一问：这一笔是计划，还是情绪？</p>
+              </div>
+            </div>
+
+            <div class="kline-feature-grid" aria-label="K线训练能力">
+              <article role="button" tabindex="0">
+                <span>01</span>
+                <h3>多品种K线训练</h3>
+                <p>股票、指数、期货、美股、港股、可转债等训练入口预留，先用历史片段练行为。</p>
+              </article>
+              <article role="button" tabindex="0">
+                <span>02</span>
+                <h3>多周期切换</h3>
+                <p>日K、60分、30分、15分、5分切换训练，适配短线、波段和复盘场景。</p>
+              </article>
+              <article role="button" tabindex="0">
+                <span>03</span>
+                <h3>专业交易模拟</h3>
+                <p>分仓、等待、止损、加仓、空仓焦虑等动作都进入模拟账户和纪律评分。</p>
+              </article>
+              <article role="button" tabindex="0">
+                <span>04</span>
+                <h3>格物画线工具</h3>
+                <p>趋势线、支撑压制、失效线、关键K线标记，训练用户先定义计划再行动。</p>
+              </article>
+              <article role="button" tabindex="0">
+                <span>05</span>
+                <h3>指标辅助训练</h3>
+                <p>MACD、EMA、BOLL、RSI、ATR等只做辅助观察，不替代交易纪律。</p>
+              </article>
+              <article role="button" tabindex="0">
+                <span>06</span>
+                <h3>一念筹码观察</h3>
+                <p>观察成本区、放量、缩量和情绪拥挤，不把“主力故事”当成买卖理由。</p>
+              </article>
+              <article role="button" tabindex="0">
+                <span>07</span>
+                <h3>同修临盘赛</h3>
+                <p>周榜、月榜、连胜榜不比收益，主要比计划执行、止损纪律和复盘完成度。</p>
+              </article>
+              <article role="button" tabindex="0">
+                <span>08</span>
+                <h3>致知复盘分析</h3>
+                <p>每次选择自动沉淀错因：冲动、扛单、焦虑、从众、赌徒心态，一眼看见惯性。</p>
+              </article>
+              <article role="button" tabindex="0">
+                <span>09</span>
+                <h3>知行成长报表</h3>
+                <p>记录连续训练、人格变化、风险场景和稳定交易人格指数，形成长期回访理由。</p>
+              </article>
+              <article role="button" tabindex="0">
+                <span>10</span>
+                <h3>碎片时间训练</h3>
+                <p>每日3题、直播间引流、社群打卡都能快速进入，客户每天都有回来理由。</p>
+              </article>
+              <article role="button" tabindex="0">
+                <span>11</span>
+                <h3>零风险实战演练</h3>
+                <p>先在模拟盘练“事上磨”，避免把真实本金拿去验证未成型的交易人格。</p>
+              </article>
+              <article role="button" tabindex="0">
+                <span>12</span>
+                <h3>高手经验学习</h3>
+                <p>后续可沉淀优秀复盘案例，让用户看见高手怎么等、怎么错、怎么改。</p>
+              </article>
+            </div>
+          </section>
+
+          <div class="setup-grid">
+            <div class="work-surface">
+              <div class="section-heading">
+                <span>入场仪式</span>
+                <h2>选择本次问心题量</h2>
+              </div>
+              <p class="ceremony-copy">交易的重复错误，往往不是行情问题，而是心性模式在盘面上的显影。</p>
+
+              <div class="scoring-guide" aria-label="量化作答参考">
+                <div class="guide-head">
+                  <strong>作答参考</strong>
+                  <span>请按真实频率作答：按最近 3 个月，或最近 10 次类似交易场景来判断，不按理想中的自己作答。</span>
+                </div>
+                <div class="guide-scale">
+                  <span><strong>1</strong><b>几乎从不</b><em>0%-10%</em></span>
+                  <span><strong>2</strong><b>偶尔</b><em>10%-30%</em></span>
+                  <span><strong>3</strong><b>有时</b><em>30%-60%</em></span>
+                  <span><strong>4</strong><b>经常</b><em>60%-80%</em></span>
+                  <span><strong>5</strong><b>常态</b><em>80%-100%</em></span>
+                </div>
+              </div>
+
+              <div class="version-control" role="group" aria-label="选择题量">
+                <button class="version-btn selected" data-version="12">
+                  <strong>12题</strong>
+                  <span>约 3 分钟 · 每题 4 个内心独白</span>
+                </button>
+              </div>
+
+              <div class="field-grid" hidden>
+                <label>
+                  <span>昵称</span>
+                  <input id="nicknameInput" type="text" value="微信学员" autocomplete="name" />
+                </label>
+                <label>
+                  <span>来源渠道</span>
+                  <select id="channelInput">
+                    <option>网页体验</option>
+                    <option>直播间</option>
+                    <option>短视频</option>
+                    <option>私域社群</option>
+                    <option>体验课</option>
+                    <option>线下沙龙</option>
+                  </select>
+                </label>
+              </div>
+
+              <div class="action-row">
+                <button id="startBtn" class="primary-action">进入测前静场</button>
+                <button id="demoBtn" class="secondary-action">样例预览</button>
+              </div>
+            </div>
+
+            <div class="insight-panel">
+              <div class="panel-title">人格罗盘</div>
+              <div class="stat-grid">
+                <div>
+                  <strong id="totalQuestionsStat">动态</strong>
+                  <span>抽题方式</span>
+                </div>
+                <div>
+                  <strong>9</strong>
+                  <span>人格维度</span>
+                </div>
+                <div>
+                  <strong>36</strong>
+                  <span>子维度</span>
+                </div>
+                <div>
+                  <strong>100</strong>
+                  <span>每子维度</span>
+                </div>
+              </div>
+              <div class="mini-chart" id="dimensionPreview"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="precheckView" class="view">
+          <div class="precheck-surface">
+            <span class="precheck-kicker">测前静场</span>
+            <h2>开始之前，请回想最近一次：</h2>
+            <p>你想追、想逃、想证明、想补救的交易瞬间。</p>
+            <div class="precheck-divider"></div>
+            <p>接下来的选择，不需要正确。</p>
+            <p>只需要像你。</p>
+            <button id="precheckReadyBtn" class="primary-action">我准备好了 →</button>
+          </div>
+        </section>
+
+        <section id="answerView" class="view">
+          <div class="answer-layout">
+            <div class="question-surface">
+              <div class="progress-row">
+                <span id="questionIndex">第 1 / 45 题</span>
+                <div class="progress-track">
+                  <div id="progressBar" class="progress-bar"></div>
+                </div>
+              </div>
+
+              <div class="question-meta">
+                <span id="questionType">冲动型</span>
+                <span id="questionSub">追涨冲动</span>
+              </div>
+
+              <h2 id="questionText">题目加载中</h2>
+
+              <p class="score-hint">不问你是什么人，只看行情出现时，你心里最先冒出的那一句。</p>
+
+              <div class="score-options scene-options" id="scoreOptions" role="radiogroup" aria-label="内心独白选项"></div>
+
+              <div class="answer-actions">
+                <button id="prevBtn" class="secondary-action">上一题</button>
+                <button id="nextBtn" class="primary-action">继续观照</button>
+              </div>
+            </div>
+
+            <div class="answer-side">
+              <div class="panel-title">实时进度</div>
+              <div class="answer-count">
+                <strong id="answeredCount">0</strong>
+                <span id="answerTotal">/ 45</span>
+              </div>
+              <div id="typeCoverage" class="coverage-list"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="generatingView" class="view">
+          <div class="generating-surface">
+            <span class="precheck-kicker">报告生成中</span>
+            <h2>AI 正在整理你反复出现的那一句。</h2>
+            <div class="generating-lines" aria-label="报告生成进度">
+              <span>你的触发点</span>
+              <span>你的主反应</span>
+              <span>你的失守动作</span>
+              <span>你的训练方向</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="resultView" class="view">
+          <div class="result-grid">
+            <div class="result-main">
+              <div class="result-header">
+                <div>
+                  <span>知行诊断</span>
+                  <h2 id="mainTypeTitle">主人格</h2>
+                </div>
+                <strong id="riskBadge">风险等级</strong>
+              </div>
+
+              <div class="summary-row">
+                <div>
+                  <span>主人格</span>
+                  <strong id="mainTypeValue">-</strong>
+                </div>
+                <div>
+                  <span>副人格</span>
+                  <strong id="subTypeValue">-</strong>
+                </div>
+                <div>
+                  <span>训练营</span>
+                  <strong id="campValue">-</strong>
+                </div>
+              </div>
+
+              <section class="result-visual-summary" aria-label="测评结果总览">
+                <div class="result-focus-card">
+                  <span>当前最明显的交易惯性</span>
+                  <div id="mainTypeGauge" class="main-type-gauge" style="--score: 0%">
+                    <strong id="mainTypePercent">0%</strong>
+                  </div>
+                  <h3 id="mainTypePattern">完成测评后生成画像</h3>
+                  <p id="mainTypeRiskText">系统会把你的主要亏损场景、行为惯性和训练方向整理成一眼能看懂的结果。</p>
+                </div>
+
+                <div class="result-risk-panel">
+                  <div class="panel-title">风险排行</div>
+                  <div id="topRiskList" class="top-risk-list"></div>
+                </div>
+              </section>
+
+              <section class="result-insight-grid" aria-label="关键结论">
+                <article>
+                  <span>最容易亏钱的场景</span>
+                  <strong id="lossSceneValue">-</strong>
+                </article>
+                <article>
+                  <span>最该先训练的动作</span>
+                  <strong id="trainingAbilityValue">-</strong>
+                </article>
+                <article>
+                  <span>阳明提醒</span>
+                  <strong id="yangmingReminderValue">-</strong>
+                </article>
+              </section>
+
+              <section class="training-forecast-panel" aria-label="训练预期反馈">
+                <div class="training-forecast-head">
+                  <div>
+                    <span>训练预期反馈</span>
+                    <h3 id="forecastTitle">按你的画像生成训练路径</h3>
+                  </div>
+                  <strong id="forecastTarget">先练 7 天</strong>
+                </div>
+                <div id="forecastTimeline" class="forecast-timeline"></div>
+                <div class="forecast-effect-grid">
+                  <article>
+                    <span>预计改善</span>
+                    <strong id="forecastPrimaryEffect">-</strong>
+                  </article>
+                  <article>
+                    <span>观察指标</span>
+                    <strong id="forecastMetric">-</strong>
+                  </article>
+                  <article>
+                    <span>复测目标</span>
+                    <strong id="forecastRetestGoal">-</strong>
+                  </article>
+                </div>
+                <p class="forecast-note">这是训练方向反馈，不是收益承诺。真实变化以后续复测、训练完成度和复盘记录为准。</p>
+              </section>
+
+              <section class="training-loop-panel" aria-label="训练完成度与复测趋势">
+                <div class="training-loop-head">
+                  <div>
+                    <span>训练闭环</span>
+                    <h3>训练完成度 → 复测变化</h3>
+                  </div>
+                  <strong id="loopProgressBadge">0%</strong>
+                </div>
+                <div class="loop-metrics">
+                  <article>
+                    <span>累计训练</span>
+                    <strong id="loopPracticeCount">0 局</strong>
+                  </article>
+                  <article>
+                    <span>今日进度</span>
+                    <strong id="loopTodayQuota">0 / 3</strong>
+                  </article>
+                  <article>
+                    <span>复测变化</span>
+                    <strong id="loopRetestDelta">待复测</strong>
+                  </article>
+                </div>
+                <div class="loop-chart-wrap">
+                  <div class="loop-chart-head">
+                    <span id="loopTrendTitle">主人格趋势</span>
+                    <em id="loopTrendHint">完成第二次测评后显示变化</em>
+                  </div>
+                  <div id="loopTrendChart" class="loop-trend-chart"></div>
+                </div>
+              </section>
+
+              <section class="retest-report-card" aria-label="复测变化报告卡">
+                <div class="retest-report-head">
+                  <div>
+                    <span>复测变化报告卡</span>
+                    <h3 id="retestReportTitle">建立本次基准</h3>
+                  </div>
+                  <strong id="retestReportBadge">待复测</strong>
+                </div>
+                <p id="retestReportSummary">连续训练后，这里会对比冲动、扛单、焦虑、从众等关键风险维度。</p>
+                <div class="retest-snapshot-grid">
+                  <article>
+                    <span>改善维度</span>
+                    <strong id="retestImprovedCount">0</strong>
+                  </article>
+                  <article>
+                    <span>反弹维度</span>
+                    <strong id="retestWorsenedCount">0</strong>
+                  </article>
+                  <article>
+                    <span>训练匹配</span>
+                    <strong id="retestTrainingMatch">待验证</strong>
+                  </article>
+                </div>
+                <div id="retestDimensionList" class="retest-dimension-list"></div>
+                <div id="retestNextAction" class="retest-next-action">先完成每日三局训练，7天后复测看变化。</div>
+              </section>
+
+              <div class="score-legend" aria-label="分数解读">
+                <span><strong>0-45</strong>轻微</span>
+                <span><strong>46-61</strong>明显</span>
+                <span><strong>62-77</strong>重点训练</span>
+                <span><strong>78+</strong>优先处理</span>
+              </div>
+              <div class="score-board" id="scoreBoard" aria-label="九型分数分布"></div>
+              <div class="report-section-title">详细诊断报告</div>
+              <article class="report-box" id="reportBox"></article>
+
+              <section class="growth-loop-panel" aria-label="测评后的知行路径">
+                <div class="panel-title">知行闭环</div>
+                <h3>测评照见自己 → 分享影响同修 → 每日训练巩固 → 复测看到变化</h3>
+                <div class="growth-loop-steps">
+                  <div>
+                    <strong>01</strong>
+                    <span>照见自己</span>
+                    <p id="loopSelfText">完成本次交易人格画像。</p>
+                  </div>
+                  <div>
+                    <strong>02</strong>
+                    <span>影响同修</span>
+                    <p>复制专属文案，让朋友也完成一次问心测评。</p>
+                  </div>
+                  <div>
+                    <strong>03</strong>
+                    <span>每日训练</span>
+                    <p>每天3道A股历史K线，练买入、卖出、观望和复盘。</p>
+                  </div>
+                  <div>
+                    <strong>04</strong>
+                    <span>复测变化</span>
+                    <p>7天后复测，看冲动、扛单、焦虑是否下降。</p>
+                  </div>
+                </div>
+                <div class="aftercare-grid" aria-label="测评后训练承接">
+                  <article>
+                    <span>专属训练</span>
+                    <strong id="personaTrainingTitle">完成测评后生成</strong>
+                    <p id="personaTrainingText">系统会按主人格匹配今日K线训练重点。</p>
+                  </article>
+                  <article>
+                    <span>每日三局</span>
+                    <strong id="dailyTrainingTitle">0 / 3</strong>
+                    <p id="dailyTrainingText">每天三段历史K线，练买入、卖出、观望与复盘。</p>
+                  </article>
+                  <article>
+                    <span>复测变化</span>
+                    <strong id="retestChangeTitle">7天后查看</strong>
+                    <p id="retestChangeText">先建立本次基准，连续训练后再看人格分数变化。</p>
+                  </article>
+                </div>
+                <div class="share-card">
+                  <div>
+                    <span>我的传习码</span>
+                    <strong id="resultInviteCode">登录后生成</strong>
+                  </div>
+                  <p id="sharePreview">完成测评后，这里会生成可转发给同修的分享文案。</p>
+                </div>
+                <section class="assistant-handoff-card" aria-label="助教承接摘要">
+                  <div class="assistant-handoff-head">
+                    <div>
+                      <span>助教承接摘要</span>
+                      <strong id="handoffPriority">待评估</strong>
+                    </div>
+                    <em id="handoffConversion">完成测评后生成</em>
+                  </div>
+                  <div class="handoff-grid">
+                    <article>
+                      <span>承接重点</span>
+                      <strong id="handoffFocus">-</strong>
+                    </article>
+                    <article>
+                      <span>推荐动作</span>
+                      <strong id="handoffAction">-</strong>
+                    </article>
+                  </div>
+                  <p id="handoffScript">完成测评后，系统会生成助教可直接跟进的话术。</p>
+                </section>
+                <div class="action-row">
+                  <button id="copyShareCardBtn" class="primary-action">复制分享文案</button>
+                  <button id="copyAssistantSummaryBtn" class="secondary-action">复制助教摘要</button>
+                  <button id="startResultTrainingBtn" class="secondary-action">开始今日K线训练</button>
+                  <button id="startRetestBtn" class="secondary-action">7天后复测入口</button>
+                </div>
+              </section>
+
+              <div class="action-row">
+                <button id="restartBtn" class="secondary-action">重新测评</button>
+                <button id="copyReportBtn" class="primary-action">复制报告</button>
+                <button id="exportJsonBtn" class="secondary-action">导出JSON</button>
+              </div>
+            </div>
+
+            <aside class="integration-panel">
+              <div class="panel-title">接口配置</div>
+              <label>
+                <span>后端 API 地址</span>
+                <input id="apiBaseUrlInput" type="url" placeholder="http://localhost:8787" />
+              </label>
+              <label class="toggle-row">
+                <span>
+                  启用专业测评模式
+                  <em>关闭后使用本机演示模式</em>
+                </span>
+                <input id="useBackendInput" type="checkbox" />
+              </label>
+              <label>
+                <span>Coze 工作流 B 地址</span>
+                <input id="cozeUrlInput" type="url" placeholder="https://..." />
+              </label>
+              <label>
+                <span>飞书 Webhook 地址</span>
+                <input id="feishuUrlInput" type="url" placeholder="https://..." />
+              </label>
+              <div class="integration-actions">
+                <button id="saveConfigBtn" class="secondary-action">保存配置</button>
+                <button id="callCozeBtn" class="primary-action">调用Coze报告</button>
+                <button id="sendFeishuBtn" class="secondary-action">发送飞书</button>
+              </div>
+              <div class="payload-preview">
+                <span>提交给 Coze 的 answers JSON</span>
+                <pre id="payloadPreview">{}</pre>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="knowledge-forum" aria-label="知行学堂">
+          <div class="forum-head">
+            <div>
+              <span>知行学堂</span>
+              <h2>心学、交易认知与股票基础</h2>
+              <p>这里做知识普及、训练复盘和同修问答，不荐股、不喊单、不承诺收益。</p>
+            </div>
+            <button id="openForumComposerBtn" class="secondary-action" type="button">发布提问 / 复盘</button>
+          </div>
+
+          <div class="forum-toolbar">
+            <div id="forumCategoryTabs" class="forum-category-tabs" aria-label="论坛栏目"></div>
+            <label class="forum-search">
+              <span>搜索</span>
+              <input id="forumSearchInput" type="search" placeholder="心学、K线、仓位、止损..." />
+            </label>
+          </div>
+
+          <div class="forum-layout">
+            <div id="forumPostList" class="forum-post-list" aria-live="polite"></div>
+            <article id="forumPostDetail" class="forum-post-detail"></article>
+          </div>
+
+          <form id="forumComposer" class="forum-composer" hidden>
+            <div class="forum-composer-head">
+              <div>
+                <span>发起讨论</span>
+                <strong>把问题留下，助教和同修才能承接。</strong>
+              </div>
+              <button id="cancelForumPostBtn" type="button" class="secondary-action">收起</button>
+            </div>
+            <div class="forum-form-grid">
+              <label>
+                <span>栏目</span>
+                <select id="forumPostCategory">
+                  <option value="qa">同修问答</option>
+                  <option value="mind">心学入门</option>
+                  <option value="trading_mind">交易认知</option>
+                  <option value="stock_basics">股票基础</option>
+                  <option value="kline_review">K线复盘</option>
+                  <option value="risk">风险教育</option>
+                </select>
+              </label>
+              <label>
+                <span>标题</span>
+                <input id="forumPostTitle" type="text" maxlength="60" placeholder="比如：我总是追高，应该先练哪一步？" />
+              </label>
+            </div>
+            <label>
+              <span>内容</span>
+              <textarea id="forumPostContent" rows="5" maxlength="4000" placeholder="写清楚场景、当时的想法、做了什么动作，以及想请助教或同修帮你看什么。"></textarea>
+            </label>
+            <div class="forum-composer-actions">
+              <input id="forumPostTags" type="text" placeholder="标签，可选：冲动、仓位、K线复盘" />
+              <button class="primary-action" type="submit">发布</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="vision-index" aria-label="愿景指数">
+          <div class="vision-copy">
+            <span>长期愿景</span>
+            <h2>影响 1 亿股民，建立稳定交易人格</h2>
+            <p>
+              我们不承诺收益，也不替用户预测行情。我们要做的是用 AI 测评、行为觉察和心学训练，
+              帮普通股民看见自己的交易惯性，建立可复盘、可训练、可长期坚持的交易人格。
+            </p>
+          </div>
+
+          <div class="index-dashboard">
+            <div class="index-head">
+              <div>
+                <span>稳定交易人格指数</span>
+                <strong id="impactIndexValue">0.0000%</strong>
+              </div>
+              <em id="impactIndexCount">0 / 100,000,000</em>
+            </div>
+            <div class="index-track" aria-hidden="true">
+              <div id="impactIndexBar" class="index-fill"></div>
+            </div>
+
+            <div class="impact-stats">
+              <div>
+                <strong id="impactReports">0</strong>
+                <span>份诊断报告</span>
+              </div>
+              <div>
+                <strong id="impactRegistrations">0</strong>
+                <span>注册学员</span>
+              </div>
+              <div>
+                <strong id="impactAssessments">0</strong>
+                <span>完成测评</span>
+              </div>
+              <div>
+                <strong id="impactAssistants">0</strong>
+                <span>助理承接</span>
+              </div>
+            </div>
+
+            <div id="impactChart" class="impact-chart" aria-label="指数图"></div>
+            <p class="index-note">当前为 MVP 展示数据与本地体验数据叠加；正式版将接入数据库实时统计。</p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="toast" class="toast" role="status"></div>
+
+    <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.min.js"></script>
+    <script src="./app.js?v=20260528-forum"></script>
+  </body>
+</html>

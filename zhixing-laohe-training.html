@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>知行老何 · 阳明心学交易训练</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.1.0/style.css">
+<style>
+  :root{
+    --paper:#f3ebdd; --paper-2:#ece1cf; --paper-deep:#e6d8c1;
+    --ink:#26221b; --ink-soft:#4c443a; --muted:#8a7f6b; --muted-2:#b3a892;
+    --cinnabar:#a8332a; --cinnabar-soft:#c1574c; --seal:#9d2b22;
+    --up:#a8332a; --down:#3c6e57;
+    --bronze:#8a6d33; --jade:#3c6e57;
+    --line:rgba(38,34,27,.14); --line-2:rgba(38,34,27,.08);
+    --kai:'LXGW WenKai','Kaiti SC','KaiTi','STKaiti','楷体',serif;
+    --brush:'Ma Shan Zheng','LXGW WenKai','STKaiti','楷体',cursive;
+    --song:'Noto Serif SC',serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{font-family:var(--kai);color:var(--ink);background:#1a1714;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px 16px;gap:44px;flex-wrap:wrap;
+    background-image:radial-gradient(800px 600px at 15% 0%,rgba(120,90,40,.18),transparent),radial-gradient(700px 600px at 100% 100%,rgba(60,80,70,.15),transparent)}
+  .stage{max-width:280px;color:#cdbfa3;align-self:center;font-size:13px;line-height:2}
+  .stage .seal-lg{width:60px;height:60px;background:var(--seal);border-radius:7px;display:flex;align-items:center;justify-content:center;color:#f3ebdd;font-family:var(--brush);font-size:30px;line-height:1;letter-spacing:-2px;box-shadow:0 6px 20px -6px rgba(157,43,34,.7);margin-bottom:18px;flex-wrap:wrap;padding:6px}
+  .stage h1{font-family:var(--brush);font-size:30px;color:#e8dcc4;letter-spacing:3px;margin-bottom:4px}
+  .stage .sub{color:#9c8e74;font-size:12px;letter-spacing:4px;margin-bottom:20px}
+  .stage ul{list-style:none;margin-top:6px} .stage li{padding:6px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+  .stage li b{color:#e8dcc4;font-weight:400}
+  .stage .note{color:#7d715b;font-size:11px;margin-top:18px;line-height:1.8}
+
+  .phone{width:382px;height:814px;border-radius:46px;position:relative;background:#0f0d0b;box-shadow:0 0 0 11px #221d18,0 0 0 13px #34291f,0 50px 90px -20px rgba(0,0,0,.85);overflow:hidden}
+  .notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:148px;height:30px;background:#221d18;border-radius:0 0 18px 18px;z-index:60}
+  .status{position:absolute;top:0;left:0;right:0;height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 26px;font-size:13px;font-weight:600;z-index:55;color:var(--ink);font-family:var(--song)}
+  .viewport{position:absolute;inset:0;border-radius:46px;overflow:hidden;background:var(--paper);background-image:linear-gradient(rgba(38,34,27,.018) 1px,transparent 1px);background-size:100% 30px}
+  .viewport::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;opacity:.5;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.06'/%3E%3C/svg%3E")}
+
+  .screen{position:absolute;inset:0;padding:54px 0 0;overflow-y:auto;overflow-x:hidden;opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .4s,transform .4s;z-index:2}
+  .screen::-webkit-scrollbar{display:none}
+  .screen.active{opacity:1;pointer-events:auto;transform:none}
+  .pad{padding:0 24px} .scroll-pad{padding-bottom:108px}
+
+  .eyebrow{font-family:var(--song);font-size:11px;letter-spacing:5px;color:var(--cinnabar);font-weight:500}
+  .h1{font-family:var(--brush);font-size:30px;line-height:1.35;letter-spacing:2px;margin-top:6px;color:var(--ink)}
+  .seal{background:var(--seal);color:var(--paper);font-family:var(--brush);border-radius:6px;display:inline-flex;align-items:center;justify-content:center}
+  .card{background:rgba(255,255,255,.42);border:1px solid var(--line);border-radius:18px}
+  .btn{display:flex;align-items:center;justify-content:center;gap:8px;border:none;cursor:pointer;font-family:var(--kai);border-radius:14px;transition:transform .15s,filter .2s,opacity .2s;font-size:16px}
+  .btn:active{transform:scale(.97)}
+  .btn-ink{background:var(--ink);color:var(--paper);box-shadow:0 8px 22px -8px rgba(38,34,27,.6)}
+  .btn-cinnabar{background:var(--cinnabar);color:#fbf3e6;box-shadow:0 8px 22px -8px rgba(168,51,42,.6)}
+  .btn-ghost{background:rgba(255,255,255,.4);color:var(--ink);border:1px solid var(--line)}
+  .btn-block{width:100%;height:54px}
+  .muted{color:var(--muted)}
+
+  .rule{display:flex;align-items:center;gap:12px;margin:26px 0 14px}
+  .rule h3{font-family:var(--brush);font-size:20px;letter-spacing:2px;white-space:nowrap}
+  .rule .ln{flex:1;height:1px;background:var(--line)}
+  .rule .more{font-family:var(--song);font-size:12px;color:var(--cinnabar)}
+
+  /* 立志 */
+  #s-intro{padding-top:0;display:flex}
+  .intro{min-height:100%;width:100%;display:flex;flex-direction:column;justify-content:center;padding:0 36px;text-align:center;position:relative}
+  .intro .seal-brand{width:88px;height:88px;margin:0 auto 22px;font-size:42px;line-height:.9;padding:10px;flex-wrap:wrap;letter-spacing:-2px;box-shadow:0 10px 30px -8px rgba(157,43,34,.6)}
+  .intro h1{font-family:var(--brush);font-size:40px;letter-spacing:6px;line-height:1.2}
+  .intro .tag{font-family:var(--song);color:var(--muted);font-size:13px;letter-spacing:4px;margin-top:10px}
+  .vow{margin-top:32px;text-align:left;background:rgba(255,255,255,.4);border:1px solid var(--line);border-radius:16px;padding:22px}
+  .vow .vt{font-family:var(--brush);font-size:18px;letter-spacing:2px;color:var(--cinnabar);margin-bottom:14px;text-align:center}
+  .vow .v{display:flex;gap:11px;align-items:flex-start;padding:9px 0;font-size:15px;line-height:1.6;color:var(--ink-soft)}
+  .vow .v i{color:var(--cinnabar);font-family:var(--brush);font-size:17px;font-style:normal;flex-shrink:0}
+  .sign{display:flex;gap:9px;align-items:center;justify-content:center;margin-top:24px;font-size:14px;color:var(--muted)}
+  .cbox{width:20px;height:20px;border:1.5px solid var(--cinnabar);border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--paper);transition:.2s}
+  .cbox.on{background:var(--cinnabar)}
+
+  /* home */
+  .top{display:flex;justify-content:space-between;align-items:flex-start}
+  .ava{width:46px;height:46px;border-radius:10px;font-size:22px;line-height:1;padding:5px;flex-wrap:wrap;letter-spacing:-3px}
+  .zhixing{margin-top:18px;display:flex;align-items:center;gap:16px;padding:16px 18px;border-radius:16px;background:linear-gradient(120deg,rgba(168,51,42,.1),rgba(60,110,87,.08));border:1px solid var(--line)}
+  .zhixing .ring{width:58px;height:58px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--song);font-weight:700;font-size:20px;color:var(--cinnabar);background:conic-gradient(var(--cinnabar) 0 78%,rgba(38,34,27,.1) 78% 100%);position:relative}
+  .zhixing .ring::before{content:"";position:absolute;inset:5px;border-radius:50%;background:var(--paper)}
+  .zhixing .ring span{position:relative;z-index:2}
+  .zhixing .zt{font-family:var(--brush);font-size:17px;letter-spacing:1px}
+  .zhixing .zd{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.5}
+
+  .deck{perspective:1400px;margin-top:4px}
+  .flip{position:relative;height:182px;transform-style:preserve-3d;transition:transform .75s cubic-bezier(.4,.2,.2,1);cursor:pointer}
+  .flip.done{transform:rotateY(180deg)}
+  .face{position:absolute;inset:0;border-radius:18px;backface-visibility:hidden;overflow:hidden;padding:22px;display:flex;flex-direction:column;justify-content:space-between}
+  .face.front{background:linear-gradient(140deg,#efe3cd,#e4d3b6);border:1px solid var(--bronze)}
+  .face.back{background:linear-gradient(140deg,#262219,#3a3225);color:#efe3cd;border:1px solid #4a3f2c;transform:rotateY(180deg);justify-content:center}
+  .face .scorner{position:absolute;top:16px;right:16px;width:40px;height:40px;font-size:18px;padding:5px;flex-wrap:wrap;letter-spacing:-2px;line-height:.9}
+  .face .day{font-family:var(--song);font-size:11px;letter-spacing:3px;color:var(--muted)}
+  .face.back .day{color:#b3a276}
+  .face .q{font-family:var(--brush);font-size:24px;line-height:1.5;letter-spacing:1px}
+  .face .tap{font-family:var(--song);font-size:11px;letter-spacing:2px;color:var(--cinnabar)}
+  .face.back .lesson{font-size:13px;line-height:1.85;color:#cdbf9f;margin-top:12px}
+
+  .task{display:flex;align-items:center;gap:14px;padding:15px 16px;border-radius:14px;background:rgba(255,255,255,.42);border:1px solid var(--line);margin-bottom:10px;cursor:pointer;transition:.2s}
+  .task.done{opacity:.5}
+  .tk-check{width:24px;height:24px;border-radius:7px;border:1.5px solid var(--cinnabar);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--paper);transition:.2s;font-size:13px}
+  .task.done .tk-check{background:var(--cinnabar)}
+  .tk .t{font-size:15px} .task.done .t{text-decoration:line-through}
+  .tk .d{font-size:11px;color:var(--muted);margin-top:2px}
+  .tk{flex:1}
+  .tk-pt{font-family:var(--song);font-size:12px;color:var(--cinnabar)}
+
+  .streak{display:flex;align-items:center;gap:16px;padding:18px;border-radius:16px;background:rgba(255,255,255,.42);border:1px solid var(--line)}
+  .streak .big{font-family:var(--song);font-size:30px;font-weight:700;color:var(--cinnabar);line-height:1}
+  .streak .lbl{font-size:12px;color:var(--muted);margin-top:3px}
+  .dots{display:flex;gap:5px;margin-top:9px}
+  .dot{width:12px;height:12px;border-radius:50%;background:rgba(38,34,27,.12)}
+  .dot.on{background:var(--jade)}
+
+  .enter-train{margin-top:14px;border-radius:18px;background:linear-gradient(135deg,var(--ink),#3a3225);color:#efe3cd;padding:22px;cursor:pointer;position:relative;overflow:hidden;transition:.2s}
+  .enter-train:active{transform:scale(.98)}
+  .enter-train .bg{position:absolute;right:-10px;bottom:-20px;font-family:var(--brush);font-size:120px;opacity:.08;line-height:1}
+  .enter-train .et{font-family:var(--brush);font-size:24px;letter-spacing:2px}
+  .enter-train .ed{font-size:13px;color:#c9bb9c;margin-top:6px}
+  .enter-train .go{margin-top:14px;display:inline-flex;align-items:center;gap:6px;font-family:var(--song);font-size:13px;color:#e9c98f}
+
+  /* 测评 */
+  .progbar{height:5px;border-radius:3px;background:rgba(38,34,27,.1);overflow:hidden;margin:18px 0}
+  .progbar i{display:block;height:100%;background:linear-gradient(90deg,var(--jade),var(--cinnabar));transition:width .4s;border-radius:3px}
+  .q-num{font-family:var(--song);font-size:13px;color:var(--cinnabar)}
+  .q-text{font-family:var(--brush);font-size:23px;line-height:1.6;letter-spacing:1px;margin:14px 0 22px;min-height:96px}
+  .opt{padding:17px;border-radius:14px;background:rgba(255,255,255,.42);border:1px solid var(--line);margin-bottom:12px;cursor:pointer;font-size:15px;line-height:1.5;transition:.2s;display:flex;gap:12px;align-items:center}
+  .opt:active{transform:scale(.98)} .opt:hover{border-color:var(--cinnabar-soft)}
+  .opt .oc{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--cinnabar);flex-shrink:0;font-family:var(--song);font-size:12px;display:flex;align-items:center;justify-content:center;color:var(--cinnabar)}
+  .type-hero{text-align:center;padding:24px 0 6px}
+  .type-ring{width:108px;height:108px;border-radius:50%;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-family:var(--brush);font-size:50px;color:var(--cinnabar);background:radial-gradient(circle,rgba(168,51,42,.14),transparent 70%);border:1px solid var(--cinnabar-soft);box-shadow:0 0 40px -12px rgba(168,51,42,.5)}
+  .type-name{font-family:var(--brush);font-size:26px;letter-spacing:2px}
+  .type-sub{font-family:var(--song);font-size:13px;color:var(--jade);letter-spacing:2px;margin-top:6px}
+
+  /* K线训练 / 复盘 */
+  .topbar{position:absolute;top:46px;left:0;right:0;height:52px;display:flex;align-items:center;gap:14px;padding:0 24px;z-index:50}
+  .back{width:38px;height:38px;border-radius:11px;background:rgba(255,255,255,.5);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;color:var(--ink)}
+  .topbar .tt{font-family:var(--brush);font-size:20px;letter-spacing:2px}
+  .has-top{padding-top:106px}
+  .kpi-row{display:flex;gap:10px;margin-bottom:14px}
+  .kpi{flex:1;padding:13px;border-radius:14px;background:rgba(255,255,255,.42);border:1px solid var(--line);text-align:center}
+  .kpi .v{font-family:var(--song);font-size:20px;font-weight:700;color:var(--cinnabar)}
+  .kpi .l{font-size:11px;color:var(--muted);margin-top:3px}
+  .seg-banner{display:flex;align-items:center;justify-content:space-between;padding:11px 15px;border-radius:12px;background:rgba(168,51,42,.07);border:1px solid var(--line);margin-bottom:12px;font-size:13px}
+  .seg-banner .sl{font-family:var(--brush);font-size:16px;letter-spacing:1px}
+  .seg-banner .sr{font-family:var(--song);font-size:12px;color:var(--cinnabar)}
+  .chart{height:226px;border-radius:14px;background:linear-gradient(180deg,#fbf5e8,#f1e7d3);border:1px solid var(--line);position:relative;overflow:hidden;padding:8px}
+  .posbar{margin-top:12px;padding:13px 16px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.42);display:flex;align-items:center;justify-content:space-between;font-size:14px}
+  .posbar .pl{font-family:var(--brush);font-size:16px;letter-spacing:1px}
+  .posbar .pr{font-family:var(--song);font-weight:600}
+  .actionbar{display:flex;gap:12px;margin-top:14px}
+  .act{flex:1;height:62px;border-radius:14px;border:1.5px solid;font-family:var(--brush);font-size:21px;letter-spacing:2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;background:rgba(255,255,255,.32);transition:.2s}
+  .act small{font-family:var(--song);font-size:11px;letter-spacing:0}
+  .act:active{transform:scale(.97)}
+  .act.buy{color:var(--up);border-color:var(--up)} .act.buy:active{background:rgba(168,51,42,.1)}
+  .act.sell{color:var(--down);border-color:var(--down)} .act.sell:active{background:rgba(60,110,87,.1)}
+  .act.wait{color:var(--ink-soft);border-color:var(--line)} .act.wait:active{background:rgba(38,34,27,.05)}
+  .summary{margin-top:16px;padding:20px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.5);display:none}
+  .summary.show{display:block;animation:pop .4s}
+  @keyframes pop{from{opacity:0;transform:scale(.93)}to{opacity:1;transform:none}}
+  .summary .sh{font-family:var(--brush);font-size:24px;letter-spacing:2px;text-align:center}
+  .summary .srow{display:flex;margin:16px 0}
+  .summary .srow .c{flex:1;text-align:center}.summary .srow .c+.c{border-left:1px solid var(--line)}
+  .summary .srow .v{font-family:var(--song);font-size:22px;font-weight:700}
+  .summary .srow .l{font-size:11px;color:var(--muted);margin-top:3px}
+  .he-say{padding:16px;border-radius:12px;background:rgba(168,51,42,.06);border:1px solid var(--line);font-size:14px;line-height:1.85;color:var(--ink-soft);position:relative}
+  .he-say .who{font-family:var(--brush);color:var(--cinnabar);font-size:15px;margin-bottom:6px}
+  .disclaim{font-family:var(--song);font-size:10px;color:var(--muted-2);text-align:center;margin-top:16px;line-height:1.7}
+
+  /* 省察 */
+  .prompt-card{padding:22px;border-radius:16px;background:linear-gradient(135deg,rgba(255,255,255,.5),rgba(255,255,255,.3));border:1px solid var(--line)}
+  .prompt-card .pq{font-family:var(--brush);font-size:20px;line-height:1.55;letter-spacing:1px}
+  .ta{width:100%;margin-top:14px;min-height:96px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.55);padding:14px;font-family:var(--kai);font-size:15px;color:var(--ink);resize:none;outline:none;line-height:1.7}
+  .ta::placeholder{color:var(--muted-2)}
+  .mood-row{display:flex;gap:9px;margin-top:14px}
+  .mood{flex:1;padding:11px 0;border-radius:12px;background:rgba(255,255,255,.45);border:1px solid var(--line);text-align:center;cursor:pointer;font-size:22px;transition:.2s}
+  .mood span{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+  .mood.sel{background:rgba(168,51,42,.1);border-color:var(--cinnabar)}
+  .log{padding:16px;border-radius:14px;background:rgba(255,255,255,.4);border:1px solid var(--line);margin-bottom:10px}
+  .log .ld{font-family:var(--song);font-size:11px;color:var(--cinnabar);letter-spacing:1px}
+  .log .lt{font-size:14px;line-height:1.7;margin-top:6px;color:var(--ink-soft)}
+
+  /* 修行 */
+  .me-head{display:flex;align-items:center;gap:16px;padding:18px;border-radius:16px;background:linear-gradient(135deg,rgba(168,51,42,.08),transparent);border:1px solid var(--line)}
+  .me-head .ava{width:62px;height:62px;font-size:26px;border-radius:14px;padding:7px}
+  .me-name{font-family:var(--brush);font-size:22px;letter-spacing:1px}
+  .me-sub{font-size:12px;color:var(--muted);margin-top:4px}
+  .rank{margin-top:16px;padding:20px;border-radius:16px;background:rgba(255,255,255,.42);border:1px solid var(--line)}
+  .rank-track{display:flex;align-items:center;margin-top:18px}
+  .rstep{flex:1;text-align:center;position:relative}
+  .rstep .d{width:30px;height:30px;border-radius:50%;margin:0 auto;background:rgba(38,34,27,.1);display:flex;align-items:center;justify-content:center;font-family:var(--brush);font-size:14px;color:var(--muted);position:relative;z-index:2}
+  .rstep.on .d{background:var(--cinnabar);color:var(--paper)}
+  .rstep.cur .d{box-shadow:0 0 0 4px rgba(168,51,42,.2)}
+  .rstep .ll{font-size:11px;margin-top:7px;color:var(--muted)}
+  .rstep.on .ll{color:var(--ink)}
+  .rstep::before{content:"";position:absolute;top:15px;left:-50%;width:100%;height:2px;background:rgba(38,34,27,.1);z-index:1}
+  .rstep:first-child::before{display:none}
+  .rstep.on::before{background:var(--cinnabar)}
+  .curve{margin-top:16px;padding:20px;border-radius:16px;background:rgba(255,255,255,.42);border:1px solid var(--line)}
+  .stat3{display:flex;margin-top:16px}
+  .stat3 .s{flex:1;text-align:center} .stat3 .s+.s{border-left:1px solid var(--line)}
+  .stat3 .v{font-family:var(--song);font-size:22px;font-weight:700;color:var(--cinnabar)}
+  .stat3 .l{font-size:11px;color:var(--muted);margin-top:3px}
+
+  .tabbar{position:absolute;bottom:0;left:0;right:0;height:84px;background:rgba(243,235,221,.92);backdrop-filter:blur(16px);border-top:1px solid var(--line);display:flex;padding:8px 14px 26px;z-index:50}
+  .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;color:var(--muted);transition:.2s;font-family:var(--kai);font-size:12px}
+  .tab .ti{font-family:var(--brush);font-size:20px;line-height:1}
+  .tab.on{color:var(--cinnabar)}
+  .tabbar.hidden{display:none}
+
+  .toast{position:absolute;bottom:104px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--ink);color:var(--paper);padding:12px 22px;border-radius:24px;font-size:14px;z-index:90;opacity:0;transition:.3s;white-space:nowrap;box-shadow:0 10px 28px -8px rgba(0,0,0,.5)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="seal seal-lg">知行</div>
+  <h1>知行老何</h1>
+  <div class="sub">阳明心学 · 交易训练</div>
+  <p style="color:#b8aa8e">只做一件事：在事上磨练，把<b>知</b>与<b>行</b>合一。不荐股、不带单、不接实时行情。</p>
+  <ul>
+    <li><b>立志</b> · 入门立交易戒律</li>
+    <li><b>心性测评</b> · 判出你的软肋</li>
+    <li><b>复盘训练</b> · 真实盘面逐根回放</li>
+    <li><b>加权出题</b> · 专打你的弱点</li>
+    <li><b>省察</b> · 每日复盘反省</li>
+    <li><b>修行段位</b> · 知行合一曲线</li>
+  </ul>
+  <p class="note">→ 右侧手机里全部可点。<br>进「训练」先测评，再逐根复盘。<br>把官网 index.html 传我，配色调成一致。</p>
+</div>
+
+<div class="phone">
+  <div class="notch"></div>
+  <div class="status"><span>9:41</span><span>📶 🔋</span></div>
+  <div class="viewport">
+
+    <!-- 立志 -->
+    <section class="screen active" id="s-intro">
+      <div class="intro">
+        <div class="seal seal-brand">知行</div>
+        <h1>知行合一</h1>
+        <div class="tag">未有知而不行者　知而不行　只是未知</div>
+        <div class="vow">
+          <div class="vt">入门 · 立志</div>
+          <div class="v"><i>一</i>未设止损，绝不开仓。</div>
+          <div class="v"><i>二</i>计划之外，绝不加仓。</div>
+          <div class="v"><i>三</i>盈亏之时，先观己心。</div>
+          <div class="v"><i>四</i>每日省察，知行渐合。</div>
+        </div>
+        <div class="sign">
+          <div class="cbox" id="vow" onclick="this.classList.toggle('on')">✓</div>
+          <span>我愿立此志，日日在事上磨练</span>
+        </div>
+        <button class="btn btn-cinnabar btn-block" style="margin-top:26px" onclick="enterApp()">立志 · 进入训练</button>
+      </div>
+    </section>
+
+    <!-- 今日 -->
+    <section class="screen" id="s-home">
+      <div class="pad scroll-pad">
+        <div class="top">
+          <div><div class="eyebrow">今日 · 修行第十二日</div><div class="h1">心定，则盘定</div></div>
+          <div class="seal ava">知行</div>
+        </div>
+        <div class="zhixing">
+          <div class="ring"><span>78</span></div>
+          <div><div class="zt">知行合一指数 · 78</div><div class="zd">你说的与你做的，正在靠拢。本周止损执行 +12%。</div></div>
+        </div>
+        <div class="rule"><h3>每日修心卡</h3><div class="ln"></div><span class="more" id="cardStatus">轻点翻面 →</span></div>
+        <div class="deck">
+          <div class="flip" id="flip" onclick="flipCard()">
+            <div class="face front">
+              <div class="seal scorner">何</div>
+              <div class="day">第十二课 · 致良知</div>
+              <div class="q">轻点卡面<br>领今日心法</div>
+              <div class="tap">TAP TO REVEAL</div>
+            </div>
+            <div class="face back">
+              <div class="seal scorner">何</div>
+              <div class="day">老何说 · 止损是修行</div>
+              <div class="q" style="font-size:21px">「认错不丢人，<br>扛单才致命。」</div>
+              <div class="lesson">扛单时那一念不甘，正是私欲遮了良知。止损不是认输，是把命运从情绪手里夺回。今日练习：每笔单子，先问最坏亏多少。</div>
+            </div>
+          </div>
+        </div>
+        <div class="rule"><h3>今日训练</h3><div class="ln"></div><span class="more" id="taskProg">0/3 完成</span></div>
+        <div id="taskList"></div>
+        <div class="rule"><h3>训练打卡</h3><div class="ln"></div></div>
+        <div class="streak">
+          <div style="font-size:34px">🔥</div>
+          <div style="flex:1"><div class="big"><span id="streakN">11</span><span style="font-size:14px;color:var(--muted)"> 日</span></div><div class="lbl">连续在事上磨练</div><div class="dots" id="dots"></div></div>
+          <button class="btn btn-cinnabar" id="checkinBtn" style="height:44px;padding:0 18px;font-size:15px" onclick="checkin()">打卡</button>
+        </div>
+        <div class="rule"><h3>盘面训练</h3><div class="ln"></div></div>
+        <div class="enter-train" onclick="startTrain()">
+          <div class="bg">炼</div>
+          <div class="et">复盘训练</div>
+          <div class="ed">真实历史盘面 · 逐根回放 · 在买卖之间练知行</div>
+          <div class="go">进入道场 ›</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 心性测评 -->
+    <section class="screen" id="s-test">
+      <div class="topbar"><div class="back" onclick="goTab('home')">‹</div><div class="tt">心性测评</div></div>
+      <div class="pad has-top scroll-pad" id="testIntro">
+        <div class="eyebrow">省察 · 知己</div>
+        <div class="h1">先识自己的<br>那点私欲</div>
+        <div class="card" style="margin-top:20px;padding:22px">
+          <p style="font-size:15px;line-height:1.95;color:var(--ink-soft)">四问，约一分钟。我们把你最容易犯的交易心病找出来——是<b style="color:var(--cinnabar)">追高</b>、<b style="color:var(--cinnabar)">扛单</b>、<b style="color:var(--cinnabar)">手痒</b>，还是<b style="color:var(--cinnabar)">怯场</b>。之后的复盘训练，会专门多出能戳中你软肋的盘面。</p>
+        </div>
+        <button class="btn btn-cinnabar btn-block" style="margin-top:22px" onclick="beginTest()">开始测心</button>
+      </div>
+      <div class="pad has-top scroll-pad" id="testQ" style="display:none">
+        <span class="q-num" id="qnum">第一问 / 共四问</span>
+        <div class="progbar"><i id="prog" style="width:25%"></i></div>
+        <div class="q-text" id="qtext"></div>
+        <div id="qopts"></div>
+      </div>
+      <div class="pad has-top scroll-pad" id="testResult" style="display:none">
+        <div class="type-hero">
+          <div class="type-ring" id="typeChar">追</div>
+          <div class="type-name" id="typeName">追高型</div>
+          <div class="type-sub" id="typeSub">怕错过 · FOMO</div>
+        </div>
+        <div class="he-say" style="margin-top:8px">
+          <div class="who">老何说</div>
+          <span id="typeHeart"></span>
+        </div>
+        <button class="btn btn-cinnabar btn-block" style="margin-top:22px" onclick="startReplay()">开始针对训练 ›</button>
+        <p style="text-align:center;font-size:12px;color:var(--muted);margin-top:14px">训练盘面将按你的心性加权出题</p>
+      </div>
+    </section>
+
+    <!-- 复盘训练 -->
+    <section class="screen" id="s-kline">
+      <div class="topbar"><div class="back" onclick="goTab('home')">‹</div><div class="tt">复盘训练</div></div>
+      <div class="pad has-top scroll-pad">
+        <div class="kpi-row">
+          <div class="kpi"><div class="v" id="kRet">0.0%</div><div class="l">累计训练收益</div></div>
+          <div class="kpi"><div class="v" id="kRounds">0</div><div class="l">训练局数</div></div>
+          <div class="kpi"><div class="v" id="kDisc">100</div><div class="l">纪律分</div></div>
+        </div>
+        <div class="seg-banner">
+          <span class="sl" id="segLabel">急拉见顶</span>
+          <span class="sr" id="segNote">第 9 / 28 根</span>
+        </div>
+        <div class="chart" id="chart"></div>
+        <div class="posbar"><span class="pl" id="posL">空仓</span><span class="pr" id="posR">观望中</span></div>
+        <div class="actionbar" id="actionBar"></div>
+        <div class="summary" id="summary"></div>
+        <div class="disclaim">真实历史盘面 · 隐去名称代码 · 模拟复盘训练，不接入实时行情，不构成任何投资建议，亦不推荐任何标的。</div>
+      </div>
+    </section>
+
+    <!-- 省察 -->
+    <section class="screen" id="s-review">
+      <div class="pad scroll-pad">
+        <div class="eyebrow">省察克治 · 每日复盘</div>
+        <div class="h1">日省吾心</div>
+        <div class="prompt-card" style="margin-top:18px">
+          <div class="pq">今日交易中，哪一念<br>被私欲带跑了？</div>
+          <textarea class="ta" id="reviewText" placeholder="如实写下，无需修饰。看见，即是修正的开始。"></textarea>
+          <div class="mood-row">
+            <div class="mood" onclick="pickMood(this)">😌<span>平静</span></div>
+            <div class="mood" onclick="pickMood(this)">🔥<span>急躁</span></div>
+            <div class="mood" onclick="pickMood(this)">😰<span>焦虑</span></div>
+            <div class="mood" onclick="pickMood(this)">🤑<span>贪婪</span></div>
+          </div>
+          <button class="btn btn-ink btn-block" style="margin-top:16px;height:50px" onclick="saveReview()">记下此刻 · +15</button>
+        </div>
+        <div class="rule"><h3>往日省察</h3><div class="ln"></div></div>
+        <div id="logList"></div>
+      </div>
+    </section>
+
+    <!-- 修行 -->
+    <section class="screen" id="s-me">
+      <div class="pad scroll-pad">
+        <div class="eyebrow">我的修行</div>
+        <div class="me-head" style="margin-top:12px">
+          <div class="seal ava">知行</div>
+          <div style="flex:1">
+            <div class="me-name">修行者 · 老何门下</div>
+            <div class="me-sub" id="ptsLine">修心积分 120 · 段位「知行」</div>
+            <div class="me-sub" id="meTypeLine">心性 · 尚未测评</div>
+          </div>
+        </div>
+        <div class="rank">
+          <div class="eyebrow" style="color:var(--bronze)">修行段位</div>
+          <div class="rank-track">
+            <div class="rstep on"><div class="d">志</div><div class="ll">立志</div></div>
+            <div class="rstep on"><div class="d">基</div><div class="ll">筑基</div></div>
+            <div class="rstep on cur"><div class="d">行</div><div class="ll">知行</div></div>
+            <div class="rstep"><div class="d">良</div><div class="ll">致良知</div></div>
+          </div>
+          <p style="font-size:13px;color:var(--muted);margin-top:16px;line-height:1.7">距「致良知」尚需 <b style="color:var(--cinnabar);font-family:var(--song)">38</b> 日连续训练。知之真切笃实处，即是行。</p>
+        </div>
+        <div class="curve">
+          <div class="eyebrow" style="color:var(--bronze)">知行合一曲线 · 近30日</div>
+          <div id="curveBox" style="margin-top:14px"></div>
+          <div class="stat3">
+            <div class="s"><div class="v" id="meZhixing">78</div><div class="l">知行指数</div></div>
+            <div class="s"><div class="v" id="meDays">11</div><div class="l">连续打卡</div></div>
+            <div class="s"><div class="v" id="meDisc2">100</div><div class="l">纪律分</div></div>
+          </div>
+        </div>
+        <button class="btn btn-ghost btn-block" style="margin-top:18px;height:50px" onclick="retakeTest()">重新测评心性</button>
+        <button class="btn btn-ghost btn-block" style="margin-top:12px;height:50px" onclick="resetIntro()">重温立志 · 戒律</button>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="tabbar hidden" id="tabbar">
+    <div class="tab" data-t="home" onclick="goTab('home')"><span class="ti">日</span>今日</div>
+    <div class="tab" data-t="kline" onclick="startTrain()"><span class="ti">炼</span>训练</div>
+    <div class="tab" data-t="review" onclick="goTab('review')"><span class="ti">省</span>省察</div>
+    <div class="tab" data-t="me" onclick="goTab('me')"><span class="ti">修</span>修行</div>
+  </div>
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s);
+let toastT;
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2300);}
+function show(id){$$('.screen').forEach(s=>s.classList.remove('active'));const el=$('#'+id);el.classList.add('active');el.scrollTop=0;}
+const TAB={home:'s-home',review:'s-review',me:'s-me'};
+function goTab(t){show(TAB[t]||'s-home');$('#tabbar').classList.remove('hidden');$$('.tab').forEach(x=>x.classList.toggle('on',x.dataset.t===t));}
+
+function enterApp(){if(!$('#vow').classList.contains('on')){toast('请先立志，勾选戒律');return;}toast('志已立，入事上磨练');setTimeout(()=>goTab('home'),450);}
+function resetIntro(){show('s-intro');$('#tabbar').classList.add('hidden');}
+
+let pts=120;
+function addPts(n,m){pts+=n;$('#ptsLine').textContent='修心积分 '+pts+' · 段位「知行」';toast(m);}
+
+let flipped=false;
+function flipCard(){if(flipped)return;flipped=true;$('#flip').classList.add('done');$('#cardStatus').textContent='今日已领 ✓';addPts(10,'修心卡 +10');}
+
+const TASKS=[
+  {t:'晨间观心 · 记录此刻心境',d:'开盘前先识良知与私欲',p:15},
+  {t:'完成一局复盘训练',d:'不带钱进场，只练知行',p:30},
+  {t:'写下今日「不操作」清单',d:'明确哪些行情不碰',p:15},
+];
+let done=0;
+function renderTasks(){const b=$('#taskList');b.innerHTML='';TASKS.forEach(tk=>{const d=document.createElement('div');d.className='task'+(tk.ok?' done':'');d.innerHTML='<div class="tk-check">'+(tk.ok?'✓':'')+'</div><div class="tk"><div class="t">'+tk.t+'</div><div class="d">'+tk.d+'</div></div><div class="tk-pt">+'+tk.p+'</div>';d.onclick=()=>{if(tk.ok)return;tk.ok=true;done++;renderTasks();$('#taskProg').textContent=done+'/3 完成';addPts(tk.p,'事上磨练 +'+tk.p);if(done===3)setTimeout(()=>toast('🎉 今日训练圆满'),400);};b.appendChild(d);});}
+
+let checked=false,streak=11;
+function renderDots(){const b=$('#dots');b.innerHTML='';for(let i=0;i<7;i++){const d=document.createElement('div');d.className='dot'+(i<(checked?6:5)?' on':'');b.appendChild(d);}}
+function checkin(){if(checked){toast('今日已打卡，明日再会');return;}checked=true;streak++;$('#streakN').textContent=streak;$('#meDays').textContent=streak;$('#checkinBtn').textContent='已打卡';$('#checkinBtn').style.opacity='.55';renderDots();addPts(25,'打卡 +25 · 连续'+streak+'日');}
+
+/* ===== 心性测评 ===== */
+const TYPES={
+  chase:{char:'追',name:'追高型',sub:'怕错过 · FOMO',trap:'rally_top',heart:'你最容易在急涨时追进去——那一念兴奋，正是私欲遮了良知。高处不胜寒，宁可错过，不可追错。接下来的盘面，会多给你急拉见顶的局，专练你这只手。'},
+  hold:{char:'执',name:'扛单型',sub:'不肯认错 · 死扛',trap:'grind_down',heart:'你最大的心病是亏了不肯走——扛单不是坚持，是怕认错的私欲。止损是修行：认错不丢人，扛单才致命。往后多给你阴跌不止的局，练你那一刀。'},
+  itch:{char:'躁',name:'手痒型',sub:'过度交易 · 不安',trap:'choppy',heart:'你的手比心快，横盘里也总想做点什么。越是震荡越要不动心，观望也是一种纪律。往后多给你磨人的横盘，练你的「忍」。'},
+  fear:{char:'怯',name:'怯场型',sub:'过度观望 · 不敢',trap:'uptrend',heart:'你常常看对了却不敢上——知而不行，只是未知。该出手时不出手，也是一种贪（贪一个永不会亏的完美点）。往后多给你稳步上行的趋势，练你的「敢」。'},
+};
+const QUESTIONS=[
+  {q:'看到一只标的快速拉升，你最可能：',a:[['马上追进，怕踏空','chase'],['在场内继续扛着不动','hold'],['反复进出做几把','itch'],['觉得太高，迟迟不敢上','fear']]},
+  {q:'一笔单子开始亏损，你：',a:[['先扛扛，等它回来','hold'],['立刻找别的机会想补回','itch'],['盯着发慌，不敢动','fear'],['已经去追下一个热点','chase']]},
+  {q:'一段横盘震荡行情，你：',a:[['手痒，总想做点什么','itch'],['怕错过突破，频频试单','chase'],['干脆不看，等趋势明朗','fear'],['拿着旧单死扛不动','hold']]},
+  {q:'大涨一波后回调，你：',a:[['舍不得平，盼再创新高','hold'],['立刻抄底想再赚一把','itch'],['之前没敢上，现在更不敢','fear'],['追着反弹进场','chase']]},
+];
+let qi=0,tally={chase:0,hold:0,itch:0,fear:0},userType=null;
+function startTrain(){ if(!userType){ show('s-test'); $('#tabbar').classList.add('hidden'); $('#testIntro').style.display='block'; $('#testQ').style.display='none'; $('#testResult').style.display='none'; } else { startReplay(); } }
+function retakeTest(){ userType=null; startTrain(); }
+function beginTest(){qi=0;tally={chase:0,hold:0,itch:0,fear:0};$('#testIntro').style.display='none';$('#testResult').style.display='none';$('#testQ').style.display='block';renderQ();}
+function renderQ(){const Q=QUESTIONS[qi];const cn=['第一问','第二问','第三问','第四问'][qi];$('#qnum').textContent=cn+' / 共四问';$('#prog').style.width=((qi+1)/4*100)+'%';$('#qtext').textContent=Q.q;const box=$('#qopts');box.innerHTML='';Q.a.forEach((o,idx)=>{const d=document.createElement('div');d.className='opt';d.innerHTML='<div class="oc">'+'甲乙丙丁'[idx]+'</div><div>'+o[0]+'</div>';d.onclick=()=>{tally[o[1]]++;qi++;if(qi<4)renderQ();else finishTest();};box.appendChild(d);});$('#s-test').scrollTop=0;}
+function finishTest(){let best='chase',bv=-1;for(const k in tally){if(tally[k]>bv){bv=tally[k];best=k;}}userType=TYPES[best];$('#testQ').style.display='none';$('#testResult').style.display='block';$('#typeChar').textContent=userType.char;$('#typeName').textContent=userType.name;$('#typeSub').textContent=userType.sub;$('#typeHeart').textContent=userType.heart;$('#meTypeLine').textContent='心性 · '+userType.name+'（'+userType.sub+'）';$('#s-test').scrollTop=0;}
+
+/* ===== 复盘训练（逐根回放） ===== */
+const TRAP={
+  rally_top:{label:'急拉见顶',note:'一波急涨之后……'},
+  grind_down:{label:'阴跌不止',note:'缓缓下行的折磨'},
+  choppy:{label:'横盘磨人',note:'来回拉锯的震荡'},
+  uptrend:{label:'稳步上行',note:'温和向上的趋势'},
+};
+const TOTAL=28, WARM=9;
+let seg,revealed,holding,entry,minHeld,trades,chased,finished;
+let cumRet=0,rounds=0,disc=100;
+
+function genSegment(trap){let c=100;const bars=[];for(let i=0;i<TOTAL;i++){let drift,vol;if(trap==='rally_top'){if(i<16){drift=0.95;vol=1.1;}else{drift=-1.7;vol=2.1;}}else if(trap==='grind_down'){drift=-0.75;vol=1.1;}else if(trap==='choppy'){drift=(100-c)*0.15;vol=1.5;}else{drift=0.85;vol=1.0;}const o=c;c=+(o+drift+(Math.random()-0.5)*vol*2).toFixed(2);if(c<5)c=5;const h=Math.max(o,c)+Math.random()*1.2,l=Math.min(o,c)-Math.random()*1.2;bars.push({o,c,h,l,up:c>=o});}return bars;}
+
+function drawChart(){const max=Math.max(...seg.map(b=>b.h)),min=Math.min(...seg.map(b=>b.l)),rng=(max-min)||1;const W=312,H=210,cw=W/TOTAL,bw=cw*0.56,y=v=>H-((v-min)/rng)*(H-16)-8;let s='<svg width="100%" height="100%" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none">';for(let i=0;i<revealed;i++){const d=seg[i],cx=i*cw+cw/2,col=d.up?'#a8332a':'#3c6e57',isLast=i===revealed-1;s+='<line x1="'+cx+'" y1="'+y(d.h)+'" x2="'+cx+'" y2="'+y(d.l)+'" stroke="'+col+'" stroke-width="1.3"/>';const top=y(Math.max(d.o,d.c)),bot=y(Math.min(d.o,d.c));s+='<rect x="'+(cx-bw/2)+'" y="'+top+'" width="'+bw+'" height="'+Math.max(bot-top,1.5)+'" fill="'+col+'" '+(isLast?'stroke="#26221b" stroke-width="1"':'')+'/>';}
+  // 现价标线
+  if(revealed>0){const cur=seg[revealed-1].c;const yy=y(cur);s+='<line x1="0" y1="'+yy+'" x2="'+(revealed*cw)+'" y2="'+yy+'" stroke="#8a6d33" stroke-width="0.8" stroke-dasharray="3 3" opacity="0.7"/>';}
+  s+='</svg>';
+  // 未来遮罩
+  const veilLeft=(revealed/TOTAL*100);
+  let veil='';
+  if(revealed<TOTAL){veil='<div style="position:absolute;top:0;bottom:0;right:0;left:'+veilLeft+'%;background:rgba(168,51,42,.05);border-left:1px dashed #c1574c;display:flex;align-items:center;justify-content:center;color:#a8332a;font-family:var(--song);font-size:11px;writing-mode:vertical-rl;letter-spacing:3px">未来</div>';}
+  $('#chart').innerHTML=s+veil;}
+
+function startReplay(){show('s-kline');$('#tabbar').classList.add('hidden');newRound();}
+function newRound(){
+  const traps=['rally_top','grind_down','choppy','uptrend'];
+  let trap=(userType&&Math.random()<0.7)?userType.trap:traps[Math.floor(Math.random()*4)];
+  seg=genSegment(trap);seg.trap=trap;
+  revealed=WARM;holding=false;entry=0;minHeld=0;trades=[];chased=false;finished=false;
+  $('#segLabel').textContent=TRAP[trap].label;
+  $('#summary').classList.remove('show');
+  updateKpi();drawChart();renderState();
+}
+function renderState(){
+  $('#segNote').textContent='第 '+revealed+' / '+TOTAL+' 根';
+  const cur=seg[revealed-1].c;
+  const pl=$('#posL'),pr=$('#posR'),bar=$('#actionBar');
+  if(holding){const ur=(cur-entry)/entry*100;pl.textContent='持仓中';pl.style.color=ur>=0?'var(--up)':'var(--down)';pr.innerHTML='成本 '+entry.toFixed(2)+'　现价 '+cur.toFixed(2)+'　<span style="color:'+(ur>=0?'var(--up)':'var(--down)')+'">'+(ur>=0?'+':'')+ur.toFixed(1)+'%</span>';
+    bar.innerHTML='<div class="act sell" onclick="act(\'sell\')">卖出<small>平仓 · 收</small></div><div class="act wait" onclick="act(\'hold\')">持有<small>继续 · 下一根</small></div>';
+  }else{pl.textContent='空仓';pl.style.color='var(--ink)';pr.textContent='观望中';
+    bar.innerHTML='<div class="act buy" onclick="act(\'buy\')">买入<small>做多 · 开仓</small></div><div class="act wait" onclick="act(\'wait\')">观望<small>不动 · 下一根</small></div>';
+  }
+}
+function act(kind){
+  if(finished)return;
+  const idx=revealed-1,cur=seg[idx].c;
+  if(kind==='buy'&&!holding){holding=true;entry=cur;minHeld=0;const prev=seg[idx-1];if(prev&&(cur-prev.c)/prev.c>0.03)chased=true;}
+  else if(kind==='sell'&&holding){trades.push({ret:(cur-entry)/entry*100,minHeld});holding=false;}
+  if(revealed>=TOTAL){finalize();return;}
+  revealed++;
+  if(holding){const ur=(seg[revealed-1].c-entry)/entry*100;if(ur<minHeld)minHeld=ur;}
+  drawChart();renderState();
+}
+function updateKpi(){$('#kRet').textContent=(cumRet>=0?'+':'')+cumRet.toFixed(1)+'%';$('#kRounds').textContent=rounds;$('#kDisc').textContent=disc;$('#meDisc2').textContent=disc;}
+function finalize(){
+  finished=true;
+  if(holding){const last=seg[TOTAL-1].c;trades.push({ret:(last-entry)/entry*100,minHeld});holding=false;}
+  const realized=trades.reduce((s,t)=>s+t.ret,0);
+  cumRet+=realized;rounds++;
+  const heldLong=trades.some(t=>t.minHeld<-10&&t.ret<-6);
+  const over=trades.length>=5;
+  const none=trades.length===0;
+  let dd=0,say='';
+  if(heldLong){dd=-6;const worst=Math.min.apply(null,trades.map(t=>t.minHeld));say='这一局你扛单了——浮亏一度到 '+worst.toFixed(1)+'%，仍不肯认错。扛单不是坚持，是怕认错的私欲。下一局，到位就走，先斩后奏地保护本金。';}
+  else if(chased){dd=-3;say='你在急涨之后追了进去。那一念兴奋骗了你——高处不胜寒。盘感再好，也不如一条「不追」的纪律。';}
+  else if(over){dd=-4;say=trades.length+' 次进出，手比心快。越是磨人的盘，越要不动心；观望，本身就是一种交易。';}
+  else if(none){say='全程空仓。若是该出手的趋势没敢上，是知而不行；若是震荡里忍住了手，则是难得的定力。你属于哪一种，自己最清楚。';}
+  else if(realized>0){dd=3;say='守住了纪律，落袋为安。知行渐合，这一局是真在事上磨练。';}
+  else{dd=1;say='小亏离场，无妨。错而能止、错后不报复加仓，已经是进步。';}
+  disc=Math.max(0,Math.min(100,disc+dd));
+  updateKpi();
+  const col=realized>=0?'var(--up)':'var(--down)';
+  $('#summary').innerHTML='<div class="sh">本局复盘</div><div class="srow"><div class="c"><div class="v" style="color:'+col+'">'+(realized>=0?'+':'')+realized.toFixed(1)+'%</div><div class="l">本局收益</div></div><div class="c"><div class="v">'+trades.length+'</div><div class="l">交易次数</div></div><div class="c"><div class="v" style="color:'+(dd>=0?'var(--down)':'var(--up)')+'">'+(dd>=0?'+':'')+dd+'</div><div class="l">纪律分</div></div></div><div class="he-say"><div class="who">老何说</div>'+say+'</div><button class="btn btn-cinnabar btn-block" style="margin-top:16px;height:48px" onclick="newRound()">下一局 ›</button>';
+  $('#summary').classList.add('show');
+  $('#actionBar').innerHTML='';
+  $('#posL').textContent='本局结束';$('#posL').style.color='var(--muted)';$('#posR').textContent='已复盘';
+}
+
+/* 省察 */
+let curMood='';
+function pickMood(el){$$('.mood').forEach(m=>m.classList.remove('sel'));el.classList.add('sel');curMood=el.querySelector('span').textContent;}
+const LOGS=[{d:'昨日 · 急躁',t:'追了一个已经涨上去的位置，明知不该追，手却先动了。知行未合。'}];
+function renderLogs(){const b=$('#logList');b.innerHTML='';LOGS.forEach(l=>{const d=document.createElement('div');d.className='log';d.innerHTML='<div class="ld">'+l.d+'</div><div class="lt">'+l.t+'</div>';b.appendChild(d);});}
+function saveReview(){const t=$('#reviewText').value.trim();if(!t){toast('如实写下一句也好');return;}LOGS.unshift({d:'今日'+(curMood?' · '+curMood:''),t});renderLogs();$('#reviewText').value='';$$('.mood').forEach(m=>m.classList.remove('sel'));curMood='';addPts(15,'省察 +15 · 见即是修');}
+
+/* 知行曲线 */
+function drawCurve(){const W=300,H=84,p=[40,46,42,55,52,60,58,66,63,70,68,74,72,78],max=85,min=35,y=v=>H-((v-min)/(max-min))*(H-14)-7,x=i=>i/(p.length-1)*W;let path='';p.forEach((v,i)=>path+=(i?'L':'M')+x(i).toFixed(1)+' '+y(v).toFixed(1)+' ');$('#curveBox').innerHTML='<svg width="100%" height="'+H+'" viewBox="0 0 '+W+' '+H+'"><path d="'+path+'" fill="none" stroke="#a8332a" stroke-width="2" stroke-linecap="round"/><path d="'+path+'L'+W+' '+H+'L0 '+H+'Z" fill="url(#g)" opacity=".15"/><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a8332a"/><stop offset="1" stop-color="#a8332a" stop-opacity="0"/></linearGradient></defs></svg>';}
+
+renderTasks();renderDots();renderLogs();drawCurve();
+</script>
+</body>
+</html>

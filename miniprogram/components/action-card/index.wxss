@@ -1,0 +1,108 @@
+.action-card {
+  position: relative;
+  width: 100%;
+  min-height: 164rpx;
+  padding: 26rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18rpx;
+  text-align: left;
+  box-shadow:
+    inset 0 2rpx 0 rgba(255, 255, 255, 0.12),
+    inset 0 -12rpx 22rpx rgba(0, 0, 0, 0.22),
+    0 20rpx 42rpx rgba(0, 0, 0, 0.16);
+}
+
+.action-card::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  top: -38%;
+  bottom: -38%;
+  left: -70%;
+  width: 42%;
+  border: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transform: skewX(-18deg) translateX(-135%);
+}
+
+.action-card:active::after {
+  animation: actionCardSweep 0.46s ease-out both;
+}
+
+.copy {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.eyebrow {
+  color: #58c2ad;
+  font-size: 21rpx;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.title {
+  margin-top: 10rpx;
+  color: #fff6e6;
+  font-family: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", serif;
+  font-size: 36rpx;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.subtitle {
+  display: block;
+  margin-top: 10rpx;
+  color: rgba(247, 239, 223, 0.58);
+  font-size: 24rpx;
+  line-height: 1.45;
+}
+
+.arrow {
+  position: relative;
+  z-index: 3;
+  flex: 0 0 auto;
+  min-width: 96rpx;
+  min-height: 58rpx;
+  padding: 0 18rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 999rpx;
+  color: #11140f;
+  background: linear-gradient(180deg, #f1d27d, #c99d4c);
+  box-shadow:
+    inset 0 2rpx 0 rgba(255, 255, 255, 0.34),
+    inset 0 -7rpx 10rpx rgba(92, 58, 18, 0.28),
+    0 8rpx 18rpx rgba(201, 157, 76, 0.14);
+  font-size: 24rpx;
+  font-weight: 900;
+}
+
+.action-card.jade .arrow {
+  color: #06110f;
+  background: linear-gradient(180deg, #74d6c5, #42a996);
+}
+
+.action-card.red .arrow {
+  color: #fff6e6;
+  background: linear-gradient(180deg, #c65a4a, #8f342d);
+}
+
+@keyframes actionCardSweep {
+  from {
+    opacity: 0;
+    transform: skewX(-18deg) translateX(-135%);
+  }
+  30% {
+    opacity: 0.82;
+  }
+  to {
+    opacity: 0;
+    transform: skewX(-18deg) translateX(430%);
+  }
+}

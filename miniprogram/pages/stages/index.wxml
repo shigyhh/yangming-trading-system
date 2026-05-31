@@ -1,0 +1,104 @@
+<view class="page-shell">
+  <view class="page-content">
+    <text class="eyebrow">STAGES · 修行关卡</text>
+    <view class="page-title">六大关卡<br />修行系统</view>
+    <view class="page-subtitle">照见人格之后，不急着堆功能，而是看清：今天该修哪一关、破哪一个心中之贼、守哪一条戒律。</view>
+
+    <view class="axis-card card">
+      <text>第二阶段 · 系统灵魂</text>
+      <view class="axis-flow">
+        <view wx:for="{{stageOverview}}" wx:key="key">
+          <text>{{item.title}}</text>
+          <view>{{item.core}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="current-card card">
+      <view class="stage-no">个人境界 · {{currentStage.seal}}印</view>
+      <view class="current-title">{{currentStage.title}}</view>
+      <view class="current-subtitle">个人境界代表长期修行进度，首页 Day 主题代表今天所修内容，两者可以不同。</view>
+      <view class="current-core">核心：{{currentStage.core}}</view>
+      <view class="current-subtitle">{{currentStage.subtitle}}</view>
+      <view class="current-meta">
+        <view>
+          <text>{{currentStage.progress || 0}}%</text>
+          <view>关卡进度</view>
+        </view>
+        <view>
+          <text>{{stageState.completedCount}}/{{stageState.totalCount}}</text>
+          <view>已完成</view>
+        </view>
+      </view>
+      <view class="stage-bar"><view style="width: {{currentStage.progress || 0}}%;"></view></view>
+      <view class="commandment">
+        <text>当前心贼</text>
+        <view>{{stageState.heartThief || '待照见'}}</view>
+        <text>今日戒律</text>
+        <view>{{stageState.currentCommandment || '先立志，再行动。'}}</view>
+        <text>本关事上练</text>
+        <view class="training-tags">
+          <text wx:for="{{currentStage.trainingFocus}}" wx:key="*this">{{item}}</text>
+        </view>
+        <text>过关条件</text>
+        <view>{{currentStage.passingRule}}</view>
+        <text>升级标准</text>
+        <view>{{currentStage.upgradeCondition}}</view>
+      </view>
+      <button class="primary-btn" bindtap="goCurrent">{{currentStage.action || '进入今日修行'}}</button>
+    </view>
+
+    <view class="section-title">
+      <view>关卡进度</view>
+      <text>{{stageState.overall}}%</text>
+    </view>
+
+    <view class="stage-list">
+      <button
+        wx:for="{{stages}}"
+        wx:key="key"
+        class="stage-card card {{item.completed ? 'done' : ''}} {{!item.unlocked ? 'locked' : ''}}"
+        data-index="{{index}}"
+        bindtap="goStage"
+      >
+        <view class="stage-index">{{item.seal}}</view>
+        <view class="stage-main">
+          <view class="stage-head">
+            <text>{{item.title}}</text>
+            <text>{{item.status}}</text>
+          </view>
+          <view class="stage-core">核心：{{item.core}}</view>
+          <view class="stage-copy">{{item.subtitle}}</view>
+          <view class="stage-evidence">
+          <text>完成依据</text>
+            <text wx:for="{{item.completionEvidence}}" wx:key="*this">{{item}}</text>
+          </view>
+          <view class="stage-rule">
+            <text>过关</text>
+            <view>{{item.passingRule}}</view>
+          </view>
+          <view class="stage-tags">
+            <text wx:for="{{item.trainingFocus}}" wx:key="*this">{{item}}</text>
+          </view>
+          <view class="stage-bar small"><view style="width: {{item.progress}}%;"></view></view>
+          <view class="stage-progress">{{item.progressText}}</view>
+        </view>
+      </button>
+    </view>
+
+    <view class="goal-card card">
+      <text>个人境界目标</text>
+      <view>{{stageState.currentGoal}}</view>
+      <text>人格照见</text>
+      <view>{{stageState.personalityType}} · {{personalityPlan.stageName}}</view>
+    </view>
+
+    <view class="split-actions">
+      <button class="ghost-btn" bindtap="goRecord">知行成长记录</button>
+      <button class="secondary-btn" bindtap="goCurrent">继续个人境界</button>
+    </view>
+
+    <compliance-notice />
+  </view>
+  <bottom-tab-bar active="stages" />
+</view>

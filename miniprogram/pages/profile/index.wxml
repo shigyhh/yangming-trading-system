@@ -1,0 +1,81 @@
+<view class="page-shell">
+  <view class="page-content">
+    <text class="eyebrow">PROFILE · 我的</text>
+
+    <view class="profile-card card">
+      <view class="avatar">心</view>
+      <view class="profile-main">
+        <view>{{profile.nickname || '修行者'}}</view>
+        <text>{{profile.growth_level || profile.stage || '立志'}} · {{result ? result.primary : '未照见'}}</text>
+      </view>
+    </view>
+
+    <view class="profile-stats card">
+      <view>
+        <text>{{profile.points || 0}}</text>
+        <view>知行积分</view>
+      </view>
+      <view>
+        <text>{{continuity.currentStreak}}</text>
+        <view>连续打卡</view>
+      </view>
+      <view>
+        <text>{{reviewSaved ? '已省' : '待省'}}</text>
+        <view>今日省察</view>
+      </view>
+    </view>
+
+    <view class="growth-card card" bindtap="tapMenu" data-key="growth">
+      <view class="growth-head">
+        <view>
+          <text>修行成长树</text>
+          <view>{{growth.activeGate.name}} · {{growth.stateLabel}}</view>
+        </view>
+        <text>{{growth.overall}}</text>
+      </view>
+      <view class="growth-bar"><view style="width: {{growth.overall}}%;"></view></view>
+      <view class="growth-next">下一步：{{growth.nextAction}} · {{continuity.milestone.label}}还差{{continuity.milestone.remaining}}日</view>
+    </view>
+
+    <view class="sync-card card">
+      <view class="sync-head">
+        <view>
+          <text>后端同步</text>
+          <view>{{syncStatus.message || '未同步'}}{{authUser ? ' · ' + authUser.nickname : ''}}</view>
+        </view>
+        <text class="{{syncStatus.ok ? 'ok' : 'warn'}}">{{syncStatus.ok ? '已连接' : '本地优先'}}</text>
+      </view>
+      <label class="form-label">后端地址</label>
+      <input class="input-field" value="{{apiBase}}" bindinput="inputApiBase" placeholder="http://电脑局域网IP:8787" />
+      <view class="sync-actions">
+        <button class="ghost-btn" bindtap="saveApiBase">保存地址</button>
+        <button class="secondary-btn" bindtap="pullNow">拉取</button>
+        <button class="primary-btn" bindtap="syncNow">同步</button>
+      </view>
+      <text class="sync-tip">开发者工具可用 127.0.0.1；手机真机预览请改成电脑局域网 IP，并确认后端服务已启动。</text>
+    </view>
+
+    <view class="section-title">
+      <view>我的闭环</view>
+      <text>留存路径</text>
+    </view>
+
+    <view class="menu-list card">
+      <button wx:for="{{menu}}" wx:key="key" class="menu-row" data-key="{{item.key}}" bindtap="tapMenu">
+        <view>
+          <text>{{item.title}}</text>
+          <text>{{item.subtitle}}</text>
+        </view>
+        <text class="chevron">进入</text>
+      </button>
+    </view>
+
+    <view class="mission-card card">
+      <text>小程序定位</text>
+      <view>每日修行器：照见、事上练、省察、留存、私域转化。官网负责建立世界观，小程序负责让用户每天完成一个真实动作。</view>
+    </view>
+
+    <compliance-notice />
+  </view>
+  <bottom-tab-bar active="profile" />
+</view>

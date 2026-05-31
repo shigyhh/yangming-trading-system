@@ -1,0 +1,299 @@
+.profile-card {
+  margin-top: 30rpx;
+  padding: 30rpx;
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+}
+
+.avatar,
+.profile-main {
+  position: relative;
+  z-index: 1;
+}
+
+.avatar {
+  width: 112rpx;
+  height: 112rpx;
+  flex: 0 0 112rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 28rpx;
+  color: #f1d27d;
+  border: 1rpx solid rgba(201, 157, 76, 0.42);
+  background: rgba(201, 157, 76, 0.1);
+  font-family: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", serif;
+  font-size: 54rpx;
+  font-weight: 700;
+}
+
+.profile-main view {
+  color: #fff6e6;
+  font-family: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", serif;
+  font-size: 42rpx;
+  font-weight: 700;
+}
+
+.profile-main text {
+  display: block;
+  margin-top: 10rpx;
+  color: rgba(247, 239, 223, 0.58);
+  font-size: 24rpx;
+}
+
+.profile-stats {
+  margin-top: 22rpx;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.profile-stats > view {
+  position: relative;
+  z-index: 1;
+  min-height: 136rpx;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8rpx;
+  border-right: 1rpx solid rgba(201, 157, 76, 0.18);
+}
+
+.profile-stats > view:last-child {
+  border-right: 0;
+}
+
+.profile-stats text {
+  color: #f1d27d;
+  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-size: 38rpx;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.profile-stats view view {
+  color: rgba(247, 239, 223, 0.5);
+  font-size: 22rpx;
+  font-weight: 700;
+}
+
+.growth-card {
+  margin-top: 22rpx;
+  padding: 26rpx;
+}
+
+.growth-head,
+.growth-bar,
+.growth-next {
+  position: relative;
+  z-index: 1;
+}
+
+.growth-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20rpx;
+}
+
+.growth-head view text {
+  display: block;
+  color: #58c2ad;
+  font-size: 23rpx;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.growth-head view view {
+  margin-top: 10rpx;
+  color: #fff6e6;
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", serif;
+  font-size: 38rpx;
+  font-weight: 900;
+}
+
+.growth-head > text {
+  color: #f1d27d;
+  font-size: 44rpx;
+  font-weight: 900;
+}
+
+.growth-bar {
+  height: 10rpx;
+  margin-top: 22rpx;
+  overflow: hidden;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.growth-bar view {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(88, 194, 173, 0.9), rgba(246, 216, 134, 0.96));
+}
+
+.growth-next {
+  margin-top: 14rpx;
+  color: rgba(247, 239, 223, 0.56);
+  font-size: 23rpx;
+  line-height: 1.5;
+}
+
+.sync-card {
+  margin-top: 22rpx;
+  padding: 26rpx;
+}
+
+.sync-head,
+.sync-card label,
+.sync-card input,
+.sync-actions,
+.sync-tip {
+  position: relative;
+  z-index: 1;
+}
+
+.sync-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18rpx;
+}
+
+.sync-head view text {
+  color: #58c2ad;
+  font-size: 23rpx;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.sync-head view view {
+  margin-top: 10rpx;
+  color: #fff6e6;
+  font-size: 27rpx;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.sync-head > text {
+  min-width: 104rpx;
+  height: 48rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 999rpx;
+  font-size: 22rpx;
+  font-weight: 900;
+}
+
+.sync-head > text.ok {
+  color: #06110f;
+  background: #58c2ad;
+}
+
+.sync-head > text.warn {
+  color: #f1d27d;
+  border: 1rpx solid rgba(201, 157, 76, 0.4);
+}
+
+.sync-actions {
+  margin-top: 18rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12rpx;
+}
+
+@media (max-width: 340px) {
+  .sync-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .sync-actions .ghost-btn,
+  .sync-actions .secondary-btn,
+  .sync-actions .primary-btn {
+    min-height: 76rpx;
+  }
+}
+
+.sync-actions .ghost-btn,
+.sync-actions .secondary-btn,
+.sync-actions .primary-btn {
+  min-height: 78rpx;
+  padding: 0 12rpx;
+  font-size: 25rpx;
+}
+
+.sync-tip {
+  display: block;
+  margin-top: 16rpx;
+  color: rgba(247, 239, 223, 0.5);
+  font-size: 22rpx;
+  line-height: 1.55;
+}
+
+.menu-list {
+  padding: 8rpx 0;
+}
+
+.menu-row {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-height: 112rpx;
+  padding: 20rpx 26rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18rpx;
+  text-align: left;
+  border-bottom: 1rpx solid rgba(247, 239, 223, 0.08);
+}
+
+.menu-row:last-child {
+  border-bottom: 0;
+}
+
+.menu-row view text:first-child {
+  display: block;
+  color: #fff6e6;
+  font-size: 29rpx;
+  font-weight: 900;
+}
+
+.menu-row view text:last-child {
+  display: block;
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.5);
+  font-size: 23rpx;
+  line-height: 1.42;
+}
+
+.chevron {
+  flex: 0 0 auto;
+  color: #b49355;
+  font-size: 23rpx;
+  font-weight: 800;
+}
+
+.mission-card {
+  margin-top: 24rpx;
+  padding: 26rpx;
+}
+
+.mission-card text,
+.mission-card view {
+  position: relative;
+  z-index: 1;
+}
+
+.mission-card text {
+  color: #58c2ad;
+  font-size: 24rpx;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.mission-card view {
+  margin-top: 14rpx;
+  color: rgba(247, 239, 223, 0.68);
+  font-size: 26rpx;
+  line-height: 1.7;
+}

@@ -1,0 +1,81 @@
+<view class="index-shell">
+  <view class="index-bg mist"></view>
+  <view class="index-bg grain"></view>
+
+  <view class="index-content">
+    <view class="head">
+      <view class="seal">一</view>
+      <view>
+        <text>知行指数</text>
+        <view>不看外物，只看今日是否守住自己</view>
+      </view>
+    </view>
+
+    <view class="score-orb">
+      <view class="orb-light"></view>
+      <text>{{index.total}}</text>
+      <view>{{index.stateLabel}} · {{growthLevel.current.name || '观己'}}</view>
+    </view>
+
+    <view class="binding-card">
+      <view>
+        <text>人格绑定</text>
+        <view>{{index.personality.type || '待识别'}}</view>
+      </view>
+      <view>
+        <text>主修关卡</text>
+        <view>{{index.mainStage.name || '待开启'}}</view>
+      </view>
+      <view>
+        <text>成长进度</text>
+        <view>{{index.mainStage.progress || 0}}%</view>
+      </view>
+    </view>
+
+    <view class="dimension-list">
+      <view wx:for="{{index.dimensions}}" wx:key="key" class="dimension">
+        <view class="dimension-head">
+          <text>{{item.name}}</text>
+          <text>{{item.score}}</text>
+        </view>
+        <view class="bar"><view style="width: {{item.score}}%;"></view></view>
+        <view class="hint">{{item.hint}}</view>
+      </view>
+    </view>
+
+    <view class="next-scroll">
+      <view class="gold-thread"></view>
+      <text>下一步只做一件事</text>
+      <button
+        wx:for="{{actions}}"
+        wx:key="label"
+        data-url="{{item.url}}"
+        bindtap="goAction"
+      >{{item.label}}</button>
+    </view>
+
+    <view class="review-entry" data-url="/pages/review/index" bindtap="goAction">
+      <text>心性省察入口</text>
+      <view>收盘后记录：今天最大的情绪、最想冲动的瞬间、有没有破戒。</view>
+    </view>
+
+    <view class="review-entry growth-entry" data-url="/pages/growth/index" bindtap="goAction">
+      <text>修行成长树</text>
+      <view>把立志、照心、知行、事上练、省察、致良知六关连成可见进度。</view>
+    </view>
+
+    <view class="review-entry" bindtap="goStages">
+      <text>六大关卡系统</text>
+      <view>看见当前关卡、已完成关卡、未解锁关卡和今日修行目标。</view>
+    </view>
+
+    <view class="review-entry" bindtap="goRecord">
+      <text>知行成长记录</text>
+      <view>沉淀近7天、近30天知行指数，以及当前修行成长阶段。</view>
+    </view>
+
+    <compliance-notice compact="{{true}}" />
+  </view>
+
+  <bottom-tab-bar active="index" />
+</view>

@@ -1,0 +1,56 @@
+/* 阳明心学交易小程序视觉令牌，可按需复制到 app.wxss */
+
+.font-title {
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", "STSong", serif;
+}
+
+.font-body {
+  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+}
+
+.font-section {
+  font-family: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", serif;
+}
+
+.font-number {
+  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.font-english {
+  font-family: "Inter", "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+}
+
+.surface-deep {
+  background:
+    radial-gradient(circle at 70% 16%, rgba(211, 168, 79, 0.12), transparent 25%),
+    radial-gradient(circle at 14% 78%, rgba(57, 91, 86, 0.12), transparent 34%),
+    linear-gradient(180deg, #0b1118 0%, #070d11 42%, #030606 100%);
+}
+
+.surface-glass {
+  border: 1rpx solid rgba(241, 210, 125, 0.14);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.018)),
+    rgba(8, 13, 12, 0.58);
+  box-shadow:
+    inset 0 1rpx 0 rgba(255, 255, 255, 0.075),
+    0 30rpx 80rpx rgba(0, 0, 0, 0.16);
+  backdrop-filter: blur(28rpx);
+}
+
+.gold-line {
+  background: linear-gradient(90deg, transparent, rgba(241, 210, 125, 0.68), transparent);
+}
+
+.button-primary-gold {
+  height: 88rpx;
+  border-radius: 999rpx;
+  color: #11130d;
+  background: linear-gradient(105deg, rgba(255, 245, 205, 0.96), rgba(227, 181, 82, 0.96), rgba(255, 238, 181, 0.96));
+  background-size: 200% 100%;
+  box-shadow:
+    0 24rpx 54rpx rgba(201, 157, 76, 0.24),
+    inset 0 1rpx 0 rgba(255, 255, 255, 0.48);
+}

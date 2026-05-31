@@ -1,0 +1,4 @@
+<view class="compliance {{compact ? 'compact' : ''}}">
+  <view class="seal">界</view>
+  <text>{{text}}</text>
+</view>

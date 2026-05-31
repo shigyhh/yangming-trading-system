@@ -1,0 +1,166 @@
+.progress-card {
+  margin-top: 32rpx;
+  padding: 26rpx;
+}
+
+.progress-head {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #f1d27d;
+  font-size: 24rpx;
+  font-weight: 800;
+}
+
+.progress-head button {
+  min-width: 92rpx;
+  height: 52rpx;
+  border-radius: 999rpx;
+  color: rgba(247, 239, 223, 0.72);
+  border: 1rpx solid rgba(247, 239, 223, 0.12);
+  font-size: 22rpx;
+}
+
+.bar {
+  position: relative;
+  z-index: 1;
+  height: 12rpx;
+  margin-top: 24rpx;
+  overflow: hidden;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.bar view {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #58c2ad, #f1d27d);
+}
+
+.dimension {
+  position: relative;
+  z-index: 1;
+  margin-top: 18rpx;
+  color: rgba(247, 239, 223, 0.58);
+  font-size: 24rpx;
+}
+
+.question-card {
+  margin-top: 24rpx;
+  padding: 34rpx 28rpx 30rpx;
+}
+
+.question-mark {
+  position: relative;
+  z-index: 1;
+  width: 72rpx;
+  height: 72rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 20rpx;
+  color: #f1d27d;
+  border: 1rpx solid rgba(201, 157, 76, 0.38);
+  background: rgba(201, 157, 76, 0.1);
+  font-family: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", serif;
+  font-size: 34rpx;
+  font-weight: 700;
+}
+
+.question-text {
+  position: relative;
+  z-index: 1;
+  margin-top: 24rpx;
+  color: #fff6e6;
+  font-family: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", serif;
+  font-size: 40rpx;
+  line-height: 1.48;
+  font-weight: 700;
+}
+
+@media (max-width: 340px) {
+  .question-card {
+    padding-left: 24rpx;
+    padding-right: 24rpx;
+  }
+
+  .question-text {
+    font-size: 36rpx;
+  }
+
+  .option {
+    min-height: 84rpx;
+    font-size: 26rpx;
+  }
+}
+
+.options {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 18rpx;
+  margin-top: 30rpx;
+}
+
+.option {
+  width: 100%;
+  min-height: 92rpx;
+  padding: 0 22rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 18rpx;
+  color: rgba(247, 239, 223, 0.76);
+  border: 1rpx solid rgba(247, 239, 223, 0.12);
+  background: rgba(255, 255, 255, 0.045);
+  font-size: 28rpx;
+  font-weight: 800;
+}
+
+.option view {
+  width: 44rpx;
+  height: 44rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: rgba(247, 239, 223, 0.48);
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 22rpx;
+}
+
+.option.selected {
+  color: #11140f;
+  border-color: rgba(241, 210, 125, 0.78);
+  background: linear-gradient(180deg, #f1d27d, #c99d4c);
+}
+
+.option.selected view {
+  color: #11140f;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.assessment-note {
+  margin-top: 28rpx;
+  padding: 26rpx;
+}
+
+.assessment-note text,
+.assessment-note view {
+  position: relative;
+  z-index: 1;
+}
+
+.assessment-note text {
+  color: #58c2ad;
+  font-size: 24rpx;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.assessment-note view {
+  margin-top: 14rpx;
+  color: rgba(247, 239, 223, 0.62);
+  font-size: 25rpx;
+  line-height: 1.7;
+}

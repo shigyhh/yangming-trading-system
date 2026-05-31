@@ -1,0 +1,180 @@
+<view class="ritual-shell {{posterMode ? 'poster-open' : ''}}" bindtap="createRipple">
+  <view class="mist-layer"></view>
+  <view class="grain-layer"></view>
+  <view class="ink-mountains">
+    <view class="mountain mountain-a"></view>
+    <view class="mountain mountain-b"></view>
+    <view class="mountain mountain-c"></view>
+  </view>
+  <view wx:if="{{ripple}}" class="mind-ripple" style="left: {{ripple.x}}px; top: {{ripple.y}}px;"></view>
+
+  <view class="ritual-content">
+    <view class="scene scene-edict edict-hero">
+      <view class="edict-bg edict-bg-glow"></view>
+      <view class="edict-bg edict-bg-mountain"></view>
+      <view class="edict-bg edict-bg-grain"></view>
+
+      <view class="edict-header">
+        <view class="brand-seal">知</view>
+        <view class="brand-copy">
+          <view class="brand-title">阳明心学交易系统</view>
+          <view class="brand-subtitle">每日一页 · 照见本心</view>
+        </view>
+      </view>
+
+      <view class="edict-scroll" bindlongpress="openPosterMode">
+        <view class="edict-kicker">
+          <text>{{heroView.dayLabel}}</text>
+          <text>{{heroView.todayStageLabel}}</text>
+        </view>
+        <view class="edict-label">今日心证</view>
+        <view class="edict-main">
+          <text wx:for="{{heroView.heartProofLines}}" wx:key="*this">{{item}}</text>
+        </view>
+        <view data-noripple="1" class="edict-footnote" bindtap="openPosterMode">长按收为今日心证</view>
+      </view>
+    </view>
+
+    <view class="scene scene-oath {{ritualProgress.ready ? 'ready' : ''}}">
+      <view class="scene-ordinal">第二幕 · 立誓</view>
+      <view class="vow-head">
+        <view>
+          <view class="section-label">今日戒律</view>
+          <view class="commandment-text">{{dailyContent.commandment}}</view>
+        </view>
+        <text>{{ritualProgress.statusText}}</text>
+      </view>
+      <view class="vow-hint">{{ritualProgress.hint}}</view>
+      <view class="vow-list">
+        <button
+          wx:for="{{vows}}"
+          wx:key="key"
+          data-key="{{item.key}}"
+          data-noripple="1"
+          class="vow-row {{item.checked ? 'checked' : ''}} {{sealEffectKey === item.key ? 'sealing' : ''}}"
+          bindtap="toggleVow"
+        >
+          <view class="seal-imprint"></view>
+          <view class="seal-mark">
+            <text>{{item.seal}}</text>
+          </view>
+          <view wx:if="{{sealEffectKey === item.key}}" class="falling-seal">{{item.seal}}印</view>
+          <view class="vow-copy">
+            <text>{{item.text}}</text>
+            <view>{{item.statusText}}</view>
+          </view>
+        </button>
+      </view>
+    </view>
+
+    <view class="scene scene-practice {{ritualProgress.ready ? 'ready' : ''}} {{homeRitualState.cardDone ? 'card-done' : ''}}">
+      <view class="scene-ordinal">第三幕 · 入事</view>
+      <view class="primary-task-label">{{primaryTaskLabel}}</view>
+      <view class="primary-task-text">{{primaryTaskText}}</view>
+      <button data-noripple="1" class="ritual-primary" bindtap="handleTodayAction">{{buttonText}}</button>
+      <view class="local-note">{{ritualProgress.localNote}}</view>
+      <view data-noripple="1" class="heart-card-teaser {{ritualProgress.ready ? 'ready' : ''}} {{homeRitualState.cardDone ? 'done' : ''}}" bindtap="previewHeartCard">
+        <view class="teaser-copy">
+          <view class="teaser-kicker">{{ritualProgress.cardKicker}}</view>
+          <view class="teaser-title">{{ritualProgress.cardTitle}}</view>
+          <text>{{ritualProgress.cardCopy}}</text>
+        </view>
+        <view class="mini-heart-card">
+          <view class="mini-card-line"></view>
+          <text class="mini-card-day">{{shareCard.dayId}}</text>
+          <view class="mini-card-proof">{{shareCard.heartProof}}</view>
+          <view class="mini-card-meta">{{shareCard.rankName}} · {{shareCard.streakText}}</view>
+          <view class="mini-card-seal">{{shareCard.stageSeal.seal}}</view>
+          <view class="mini-card-qr">
+            <view
+              wx:for="{{qrBlocks}}"
+              wx:key="key"
+              class="{{item.active ? 'active' : ''}}"
+            ></view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="scene scene-companion {{homeRitualState.completed ? 'closed' : ''}}">
+      <view class="scene-ordinal">第四幕 · 归卷</view>
+      <view class="section-label">同行</view>
+      <view class="companion-title">{{companionView.unityLine}}</view>
+      <view class="companion-note">{{companionView.whisper}}</view>
+      <view class="companion-quiet-card">
+        <view class="lamp-field">
+          <view
+            wx:for="{{companionView.lamps}}"
+            wx:key="key"
+            class="lamp-dot {{item.active ? 'active' : ''}}"
+          ></view>
+        </view>
+        <view class="companion-metrics">
+          <view>
+            <text>{{companionView.stageMates}}</text>
+            <view>同修{{companionView.stageShort}}</view>
+          </view>
+          <view>
+            <text>{{companionView.oathMates}}</text>
+            <view>同守一戒</view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="entry-panel sync-entry-panel">
+      <label class="phone-field">
+        <text>手机号 · 可稍后补充</text>
+        <input
+          data-noripple="1"
+          type="number"
+          maxlength="11"
+          value="{{phone}}"
+          placeholder="用于同步修行记录"
+          placeholder-class="input-placeholder"
+          bindinput="inputPhone"
+        />
+      </label>
+      <view class="entry-note">数据仅用于本页状态记录</view>
+    </view>
+  </view>
+
+  <view wx:if="{{posterMode}}" class="edict-poster-mode" catchtap="closePosterMode" catchtouchmove="noop">
+    <view class="poster-bg poster-glow"></view>
+    <view class="poster-bg poster-mountain"></view>
+    <view class="poster-bg poster-grain"></view>
+
+    <view class="poster-header">
+      <view class="poster-seal">知</view>
+      <view>
+        <view class="poster-brand">阳明心学交易系统</view>
+        <view class="poster-subtitle">每日一页 · 照见本心</view>
+      </view>
+    </view>
+
+    <view class="poster-edict">
+      <view class="poster-line"></view>
+      <view class="poster-kicker">
+        <text>{{heroView.dayLabel}}</text>
+        <text>{{heroView.todayStageLabel}}</text>
+      </view>
+      <view class="poster-label">今日心证</view>
+      <view class="poster-proof">
+        <text wx:for="{{heroView.heartProofLines}}" wx:key="*this">{{item}}</text>
+      </view>
+      <view class="poster-line bottom"></view>
+    </view>
+
+    <view class="poster-footer">
+      <view class="poster-footer-seal">{{shareCard.stageSeal.seal}}</view>
+      <view>
+        <view>不预测行情，不推荐股票。</view>
+        <view>只训练知行合一。</view>
+      </view>
+    </view>
+  </view>
+
+  <canvas type="2d" id="heartCardCanvas" class="heart-card-canvas"></canvas>
+
+  <bottom-tab-bar wx:if="{{!posterMode}}" active="home" />
+</view>

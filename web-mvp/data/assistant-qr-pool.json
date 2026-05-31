@@ -1,0 +1,14 @@
+[
+  {
+    "id": "assistant-01",
+    "name": "入院助理 01",
+    "src": "./assets/assistant-qrs/入院助理01.jpg",
+    "enabled": true
+  },
+  {
+    "id": "assistant-02",
+    "name": "入院助理 02",
+    "src": "./assets/assistant-qrs/入院助理02.jpg",
+    "enabled": true
+  }
+]

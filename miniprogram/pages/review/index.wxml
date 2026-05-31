@@ -1,0 +1,149 @@
+<view class="page-shell">
+  <view class="page-content">
+    <text class="eyebrow">REVIEW · 省察</text>
+    <view class="page-title">收盘省察<br />知行合一</view>
+    <view class="page-subtitle">省察不评价结果，只照见今天的知与行是否一致。</view>
+
+    <view class="score-card card">
+      <view>
+        <text>今日知行合一分数</text>
+        <view>{{form.score}}</view>
+      </view>
+      <slider
+        min="20"
+        max="100"
+        step="1"
+        value="{{form.score}}"
+        activeColor="#f1d27d"
+        backgroundColor="rgba(255,255,255,.12)"
+        bindchange="changeScore"
+      />
+    </view>
+
+    <view class="section-title">
+      <view>知行省察</view>
+      <text>{{saved ? '已保存' : '待填写'}}</text>
+    </view>
+
+    <view class="field-list">
+      <view wx:for="{{fields}}" wx:key="key" class="field-card card">
+        <view class="field-label">{{item.label}}</view>
+        <view class="yesno">
+          <button
+            class="{{item.value ? 'active' : ''}}"
+            data-key="{{item.key}}"
+            data-value="true"
+            bindtap="setBoolean"
+          >是</button>
+          <button
+            class="{{!item.value ? 'active' : ''}}"
+            data-key="{{item.key}}"
+            data-value="false"
+            bindtap="setBoolean"
+          >否</button>
+        </view>
+      </view>
+    </view>
+
+    <view class="emotion-card card">
+      <text>下单前心境</text>
+      <view class="emotion-grid">
+        <button
+          wx:for="{{emotions}}"
+          wx:key="*this"
+          class="{{form.emotion === item ? 'active' : ''}}"
+          data-emotion="{{item}}"
+          bindtap="selectEmotion"
+        >{{item}}</button>
+      </view>
+    </view>
+
+    <view class="correction-card card">
+      <text>明日克治动作</text>
+      <textarea
+        class="textarea-field"
+        maxlength="120"
+        placeholder="例：开盘前三十分钟不做计划外动作。"
+        value="{{form.correction}}"
+        bindinput="inputCorrection"
+      />
+    </view>
+
+    <view class="ai-review-card card">
+      <view class="ai-head">
+        <view>
+          <text>AI省察</text>
+          <view>{{aiReflection.state}}</view>
+        </view>
+        <view class="ai-seal">省</view>
+      </view>
+
+      <view class="ai-main">
+        <text>今日心贼</text>
+        <view>{{aiReflection.heartThief}}</view>
+      </view>
+
+      <view class="ai-line">
+        <text>根因照见</text>
+        <view>{{aiReflection.root}}</view>
+      </view>
+      <view class="ai-line">
+        <text>追问一句</text>
+        <view>{{aiReflection.question}}</view>
+      </view>
+      <view class="ai-line">
+        <text>明日事上练</text>
+        <view>{{aiReflection.practice}}</view>
+      </view>
+
+      <view class="ai-tags">
+        <text wx:for="{{aiReflection.tags}}" wx:key="*this">{{item}}</text>
+      </view>
+    </view>
+
+    <view class="ai-replay-card card">
+      <view class="replay-head">
+        <view>
+        <text>AI心证</text>
+          <view>{{aiReplay.title}}</view>
+        </view>
+        <view>{{aiReplay.scoreLabel}}</view>
+      </view>
+
+      <view class="replay-field">
+        <text>知行差距</text>
+        <view>{{aiReplay.deviation}}</view>
+      </view>
+
+      <view class="evidence-grid">
+        <view wx:for="{{aiReplay.evidence}}" wx:key="label" class="{{item.weak ? 'weak' : ''}}">
+          <text>{{item.label}}</text>
+          <view>{{item.value}}</view>
+        </view>
+      </view>
+
+      <view class="replay-field">
+        <text>事上练状态</text>
+        <view>{{aiReplay.trainingState}}</view>
+      </view>
+      <view class="replay-field">
+        <text>指数影响</text>
+        <view>{{aiReplay.indexImpact}}</view>
+      </view>
+      <view class="replay-prescription">
+        <text>明日处方</text>
+        <view>{{aiReplay.prescription}}</view>
+        <text>{{aiReplay.closing}}</text>
+      </view>
+    </view>
+
+    <view class="split-actions">
+      <button class="secondary-btn" bindtap="copySummary">复制省察</button>
+      <button class="primary-btn" bindtap="saveReview">保存省察</button>
+    </view>
+    <button class="ghost-btn single-action" bindtap="goTraining">回到事上练</button>
+
+    <compliance-notice />
+  </view>
+  <bottom-tab-bar active="review" />
+</view>

@@ -1,0 +1,583 @@
+.growth-shell {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  padding: calc(48rpx + env(safe-area-inset-top)) 48rpx calc(170rpx + env(safe-area-inset-bottom));
+  color: #f7efdf;
+  background:
+    radial-gradient(circle at 24% 6%, rgba(88, 194, 173, 0.12), transparent 30%),
+    radial-gradient(circle at 78% 14%, rgba(211, 168, 79, 0.12), transparent 28%),
+    linear-gradient(180deg, #0a1116 0%, #07100f 50%, #030606 100%);
+  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+}
+
+.growth-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.mist {
+  opacity: 0.64;
+  background:
+    radial-gradient(ellipse at 48% 18%, rgba(255, 246, 226, 0.052), transparent 42%),
+    linear-gradient(112deg, transparent 12%, rgba(255, 255, 255, 0.026) 46%, transparent 78%);
+}
+
+.grain {
+  opacity: 0.08;
+  background:
+    linear-gradient(90deg, rgba(241, 210, 125, 0.05) 1rpx, transparent 1rpx),
+    linear-gradient(180deg, rgba(241, 210, 125, 0.035) 1rpx, transparent 1rpx);
+  background-size: 92rpx 92rpx;
+  animation: grainDrift 24s linear infinite;
+}
+
+.growth-content {
+  position: relative;
+  z-index: 2;
+  animation: riseIn 0.78s cubic-bezier(0.19, 1, 0.22, 1) both;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 22rpx;
+}
+
+.seal {
+  width: 82rpx;
+  height: 82rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 24rpx;
+  color: #f6d886;
+  border: 1rpx solid rgba(241, 210, 125, 0.36);
+  background: rgba(255, 255, 255, 0.045);
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", serif;
+  font-size: 42rpx;
+  font-weight: 900;
+}
+
+.head text {
+  color: #fff7e7;
+  font-size: 30rpx;
+  font-weight: 900;
+}
+
+.head view view {
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.46);
+  font-size: 22rpx;
+}
+
+.tree-orb {
+  position: relative;
+  width: 304rpx;
+  height: 304rpx;
+  margin: 66rpx auto 46rpx;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  border-radius: 50%;
+  border: 1rpx solid rgba(241, 210, 125, 0.34);
+  background:
+    radial-gradient(circle, rgba(88, 194, 173, 0.12), rgba(241, 210, 125, 0.12) 48%, rgba(255, 255, 255, 0.024) 66%, transparent 74%);
+}
+
+.orb-light {
+  position: absolute;
+  inset: -36rpx;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(241, 210, 125, 0.16), transparent 68%);
+  animation: breath 6.8s ease-in-out infinite;
+}
+
+.tree-orb text {
+  position: relative;
+  z-index: 1;
+  color: #f6d886;
+  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-size: 90rpx;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.tree-orb view:last-child {
+  position: relative;
+  z-index: 1;
+  color: rgba(247, 239, 223, 0.62);
+  font-size: 25rpx;
+  font-weight: 900;
+}
+
+.active-scroll {
+  position: relative;
+  padding: 32rpx 28rpx;
+  overflow: hidden;
+  border-radius: 30rpx;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.052), rgba(255, 255, 255, 0.016)),
+    rgba(8, 13, 12, 0.52);
+}
+
+.gold-thread {
+  position: absolute;
+  left: 28rpx;
+  right: 28rpx;
+  top: 0;
+  height: 1rpx;
+  background: linear-gradient(90deg, transparent, rgba(241, 210, 125, 0.68), transparent);
+  animation: threadFlow 4.8s ease-in-out infinite;
+}
+
+.active-scroll > text:first-child {
+  display: block;
+  color: #58c2ad;
+  font-size: 22rpx;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+}
+
+.active-scroll > view {
+  margin-top: 12rpx;
+  color: #fff7e7;
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", serif;
+  font-size: 48rpx;
+  font-weight: 900;
+}
+
+.active-scroll > text:nth-child(4) {
+  display: block;
+  margin-top: 12rpx;
+  color: rgba(247, 239, 223, 0.6);
+  font-size: 25rpx;
+  line-height: 1.6;
+}
+
+.active-scroll button,
+.primary-action,
+.ghost-action {
+  width: 100%;
+  height: 84rpx;
+  margin-top: 24rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 999rpx;
+  font-size: 27rpx;
+  font-weight: 900;
+}
+
+.active-scroll button,
+.primary-action {
+  color: #11130d;
+  background: linear-gradient(105deg, rgba(255, 245, 205, 0.96), rgba(227, 181, 82, 0.96), rgba(255, 238, 181, 0.96));
+}
+
+.stats-row {
+  margin-top: 24rpx;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-radius: 24rpx;
+  border: 1rpx solid rgba(241, 210, 125, 0.14);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.stats-row > view {
+  min-height: 116rpx;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8rpx;
+  border-right: 1rpx solid rgba(241, 210, 125, 0.1);
+}
+
+.stats-row > view:last-child {
+  border-right: 0;
+}
+
+.stats-row text {
+  color: #f6d886;
+  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-size: 34rpx;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.stats-row view view {
+  color: rgba(247, 239, 223, 0.46);
+  font-size: 21rpx;
+  font-weight: 800;
+}
+
+.continuity-card,
+.records-card,
+.milestone-card {
+  margin-top: 24rpx;
+  padding: 28rpx;
+  border-radius: 30rpx;
+  border: 1rpx solid rgba(88, 194, 173, 0.2);
+  background:
+    linear-gradient(145deg, rgba(88, 194, 173, 0.07), rgba(255, 255, 255, 0.018)),
+    rgba(8, 13, 12, 0.42);
+}
+
+.records-card,
+.milestone-card {
+  border-color: rgba(241, 210, 125, 0.16);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.052), rgba(255, 255, 255, 0.016)),
+    rgba(8, 13, 12, 0.48);
+}
+
+.continuity-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 18rpx;
+}
+
+.continuity-head view text {
+  display: block;
+  color: #58c2ad;
+  font-size: 22rpx;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.continuity-head view view {
+  margin-top: 10rpx;
+  color: #fff7e7;
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", serif;
+  font-size: 38rpx;
+  font-weight: 900;
+}
+
+.continuity-head > text {
+  min-width: 132rpx;
+  height: 52rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 999rpx;
+  color: #06110f;
+  background: #58c2ad;
+  font-size: 22rpx;
+  font-weight: 900;
+}
+
+.continuity-copy {
+  margin-top: 16rpx;
+  color: rgba(247, 239, 223, 0.58);
+  font-size: 24rpx;
+  line-height: 1.6;
+}
+
+.day-strip {
+  margin-top: 24rpx;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10rpx;
+}
+
+.record-grid {
+  margin-top: 24rpx;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14rpx;
+}
+
+.record-cell {
+  min-height: 142rpx;
+  padding: 20rpx;
+  border-radius: 22rpx;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.record-cell text {
+  color: #f6d886;
+  font-size: 36rpx;
+  font-weight: 900;
+}
+
+.record-cell view:first-of-type {
+  margin-top: 8rpx;
+  color: #fff7e7;
+  font-size: 24rpx;
+  font-weight: 900;
+}
+
+.record-cell view:last-child {
+  margin-top: 10rpx;
+  color: rgba(247, 239, 223, 0.48);
+  font-size: 21rpx;
+  line-height: 1.42;
+}
+
+.milestone-list {
+  margin-top: 24rpx;
+  display: grid;
+  gap: 14rpx;
+}
+
+.milestone-row {
+  min-height: 96rpx;
+  padding: 18rpx;
+  display: grid;
+  grid-template-columns: 56rpx 1fr auto;
+  gap: 18rpx;
+  align-items: center;
+  border-radius: 22rpx;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.milestone-row.unlocked {
+  border: 1rpx solid rgba(241, 210, 125, 0.24);
+  background: rgba(201, 157, 76, 0.08);
+}
+
+.milestone-row > view:first-child {
+  width: 56rpx;
+  height: 56rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 18rpx;
+  color: #f6d886;
+  border: 1rpx solid rgba(241, 210, 125, 0.24);
+  font-size: 22rpx;
+  font-weight: 900;
+}
+
+.milestone-row > view:nth-child(2) text:first-child {
+  display: block;
+  color: #fff7e7;
+  font-size: 25rpx;
+  font-weight: 900;
+}
+
+.milestone-row > view:nth-child(2) text:last-child {
+  display: block;
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.48);
+  font-size: 21rpx;
+  line-height: 1.4;
+}
+
+.milestone-row > text {
+  color: rgba(88, 194, 173, 0.86);
+  font-size: 21rpx;
+  font-weight: 900;
+}
+
+.day-node {
+  min-height: 132rpx;
+  padding: 12rpx 6rpx;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 8rpx;
+  border-radius: 18rpx;
+  border: 1rpx solid rgba(247, 239, 223, 0.08);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.day-node.done {
+  border-color: rgba(241, 210, 125, 0.26);
+  background: rgba(201, 157, 76, 0.08);
+}
+
+.day-node.full {
+  border-color: rgba(88, 194, 173, 0.34);
+  background: rgba(88, 194, 173, 0.08);
+}
+
+.day-node > text {
+  color: rgba(247, 239, 223, 0.52);
+  font-size: 18rpx;
+  font-weight: 800;
+}
+
+.day-node > view {
+  color: #f6d886;
+  font-size: 20rpx;
+  font-weight: 900;
+}
+
+.mini-dots {
+  display: flex;
+  gap: 4rpx;
+}
+
+.mini-dots text {
+  width: 28rpx;
+  height: 28rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: rgba(247, 239, 223, 0.34);
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 16rpx;
+  font-weight: 900;
+}
+
+.mini-dots text.on {
+  color: #06110f;
+  background: #f6d886;
+}
+
+.gate-list {
+  margin-top: 34rpx;
+  display: grid;
+  gap: 18rpx;
+}
+
+.gate-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 18rpx;
+  align-items: center;
+  padding: 24rpx;
+  border-radius: 26rpx;
+  border: 1rpx solid rgba(241, 210, 125, 0.14);
+  background: rgba(255, 255, 255, 0.036);
+}
+
+.gate-card.done {
+  border-color: rgba(88, 194, 173, 0.28);
+  background: rgba(88, 194, 173, 0.06);
+}
+
+.gate-index {
+  width: 54rpx;
+  height: 54rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 18rpx;
+  color: #f6d886;
+  border: 1rpx solid rgba(241, 210, 125, 0.28);
+  font-size: 24rpx;
+  font-weight: 900;
+}
+
+.gate-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.gate-title text:first-child {
+  color: #58c2ad;
+  font-size: 22rpx;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.gate-title text:last-child {
+  color: rgba(247, 239, 223, 0.48);
+  font-size: 21rpx;
+  font-weight: 800;
+}
+
+.gate-name {
+  margin-top: 8rpx;
+  color: #fff7e7;
+  font-size: 31rpx;
+  font-weight: 900;
+}
+
+.gate-subtitle {
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.52);
+  font-size: 23rpx;
+  line-height: 1.48;
+}
+
+.gate-bar {
+  height: 8rpx;
+  margin-top: 16rpx;
+  overflow: hidden;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.gate-bar view {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(88, 194, 173, 0.9), rgba(246, 216, 134, 0.96));
+}
+
+.gate-progress {
+  color: #f6d886;
+  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-size: 30rpx;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.bottom-actions {
+  margin-top: 30rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16rpx;
+}
+
+.ghost-action {
+  color: rgba(247, 239, 223, 0.82);
+  border: 1rpx solid rgba(247, 239, 223, 0.14);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+@media (max-width: 340px) {
+  .growth-shell {
+    padding-left: 34rpx;
+    padding-right: 34rpx;
+  }
+
+  .gate-card {
+    grid-template-columns: 1fr;
+  }
+
+  .gate-index,
+  .gate-progress {
+    display: none;
+  }
+
+  .bottom-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .record-grid,
+  .milestone-row {
+    grid-template-columns: 1fr;
+  }
+
+  .day-strip {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(32rpx) scale(0.985);
+    filter: blur(8rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes grainDrift {
+  from { background-position: 0 0; }
+  to { background-position: 92rpx 184rpx; }
+}
+
+@keyframes breath {
+  0%, 100% { opacity: 0.14; transform: scale(0.96); }
+  50% { opacity: 0.28; transform: scale(1.06); }
+}
+
+@keyframes threadFlow {
+  0%, 100% { opacity: 0.28; transform: scaleX(0.76); }
+  50% { opacity: 0.9; transform: scaleX(1); }
+}

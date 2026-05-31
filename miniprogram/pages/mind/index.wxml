@@ -1,0 +1,114 @@
+<view class="mind-shell" bindtap="createRipple">
+  <view class="mind-bg mist"></view>
+  <view class="mind-bg grain"></view>
+  <view class="mind-bg halo"></view>
+  <view wx:if="{{ripple}}" class="mind-ripple" style="left: {{ripple.x}}px; top: {{ripple.y}}px;"></view>
+
+  <view class="mind-content">
+    <view class="mind-head">
+      <view class="seal">照</view>
+      <view>
+        <text>开盘照心</text>
+        <view>AI 观心仪 · 今日第一关</view>
+      </view>
+    </view>
+
+    <view class="hero">
+      <text>OPENING MIND</text>
+      <view>不是预测市场，<br />是在市场中照见自己。</view>
+    </view>
+
+    <view class="mind-instrument">
+      <view class="instrument-line"></view>
+      <view class="instrument-status">
+        <text>MIND SCAN</text>
+        <view>{{scanText}}</view>
+      </view>
+
+      <view class="ring ring-a"></view>
+      <view class="ring ring-b"></view>
+      <view class="ring ring-c"></view>
+
+      <button
+        wx:for="{{nodes}}"
+        wx:key="key"
+        data-key="{{item.key}}"
+        data-noripple="1"
+        class="orbit-node {{item.nodeClass}} {{item.active ? 'active' : ''}}"
+        bindtap="selectMind"
+      >
+        <text>{{item.glyph}}</text>
+        <view>{{item.name}}</view>
+      </button>
+
+      <view class="instrument-core">
+        <view class="core-glow"></view>
+        <view class="core-glyph">{{ritual.glyph}}</view>
+        <view class="core-name">{{ritual.name}}</view>
+        <view class="core-subtitle">{{ritual.subtitle}}</view>
+        <view class="wave">
+          <view wx:for="{{waveBars}}" wx:key="*this" style="height: {{item}}rpx;"></view>
+        </view>
+      </view>
+    </view>
+
+    <view class="breath-panel">
+      <view>
+        <text>三息观心</text>
+        <view>{{breathText}}</view>
+      </view>
+      <view class="breath-dots">
+        <i class="{{breathStep >= 1 ? 'active' : ''}}"></i>
+        <i class="{{breathStep >= 2 ? 'active' : ''}}"></i>
+        <i class="{{breathStep >= 3 ? 'active' : ''}}"></i>
+      </view>
+      <button data-noripple="1" bindtap="startBreath">{{breathActive ? '观心中' : '开始三息'}}</button>
+    </view>
+
+    <view class="ritual-scroll">
+      <view class="scroll-line"></view>
+      <view class="ritual-glyph">{{ritual.glyph}}</view>
+      <view class="ritual-title">今日心境 · {{ritual.name}}</view>
+      <view class="ritual-subtitle">{{ritual.subtitle}}</view>
+
+      <view class="ritual-list">
+        <view class="ritual-item main">
+          <text>今日戒律</text>
+          <view>{{ritual.discipline}}</view>
+        </view>
+        <view class="ritual-item">
+          <text>今日禁忌</text>
+          <view>{{ritual.taboo}}</view>
+        </view>
+        <view class="ritual-item">
+          <text>今日只练一件事</text>
+          <view>{{ritual.practice}}</view>
+        </view>
+        <view class="ritual-item">
+          <text>今日仓位边界</text>
+          <view>{{ritual.position}}</view>
+        </view>
+        <view class="ritual-item">
+          <text>今日知行提醒</text>
+          <view>{{ritual.reminder}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="loop-strip">
+      <view wx:for="{{loop}}" wx:key="key" class="{{item.key === 'mind' ? 'current' : ''}}">
+        <text>{{item.name}}</text>
+      </view>
+    </view>
+
+    <view class="actions">
+      <button data-noripple="1" class="secondary" bindtap="saveMind">{{saved ? '今日已照见' : '生成今日观心'}}</button>
+      <button data-noripple="1" class="primary" bindtap="goTraining">{{nextButtonText}}</button>
+    </view>
+
+    <view class="review-link" bindtap="goReview">收盘后回到这里，做一次省察克治</view>
+    <compliance-notice compact="{{true}}" />
+  </view>
+
+  <bottom-tab-bar active="mind" />
+</view>

@@ -1,0 +1,283 @@
+.index-shell {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  padding: calc(48rpx + env(safe-area-inset-top)) 48rpx calc(170rpx + env(safe-area-inset-bottom));
+  color: #f7efdf;
+  background:
+    radial-gradient(circle at 70% 8%, rgba(211, 168, 79, 0.12), transparent 28%),
+    linear-gradient(180deg, #0b1118 0%, #070d11 45%, #030606 100%);
+  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+}
+
+.index-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.mist {
+  opacity: 0.62;
+  background:
+    radial-gradient(ellipse at 44% 18%, rgba(255, 246, 226, 0.055), transparent 42%),
+    linear-gradient(110deg, transparent 16%, rgba(255, 255, 255, 0.024) 44%, transparent 76%);
+}
+
+.grain {
+  opacity: 0.08;
+  background:
+    linear-gradient(90deg, rgba(241, 210, 125, 0.05) 1rpx, transparent 1rpx),
+    linear-gradient(180deg, rgba(241, 210, 125, 0.035) 1rpx, transparent 1rpx);
+  background-size: 92rpx 92rpx;
+  animation: grainDrift 24s linear infinite;
+}
+
+.index-content {
+  position: relative;
+  z-index: 2;
+  animation: riseIn 0.78s cubic-bezier(0.19, 1, 0.22, 1) both;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 22rpx;
+}
+
+.seal {
+  width: 82rpx;
+  height: 82rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 24rpx;
+  color: #f6d886;
+  border: 1rpx solid rgba(241, 210, 125, 0.36);
+  background: rgba(255, 255, 255, 0.045);
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", serif;
+  font-size: 42rpx;
+  font-weight: 900;
+}
+
+.head text {
+  color: #fff7e7;
+  font-size: 30rpx;
+  font-weight: 900;
+}
+
+.head view view {
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.46);
+  font-size: 22rpx;
+}
+
+.score-orb {
+  position: relative;
+  width: 330rpx;
+  height: 330rpx;
+  margin: 82rpx auto 58rpx;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  border-radius: 50%;
+  border: 1rpx solid rgba(241, 210, 125, 0.34);
+  background:
+    radial-gradient(circle, rgba(241, 210, 125, 0.16), rgba(255, 255, 255, 0.025) 62%, transparent 72%);
+}
+
+.orb-light {
+  position: absolute;
+  inset: -36rpx;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(241, 210, 125, 0.16), transparent 68%);
+  animation: breath 6.8s ease-in-out infinite;
+}
+
+.score-orb text {
+  position: relative;
+  z-index: 1;
+  color: #f6d886;
+  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-size: 96rpx;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.score-orb view:last-child {
+  position: relative;
+  z-index: 1;
+  color: rgba(247, 239, 223, 0.62);
+  font-size: 26rpx;
+  font-weight: 900;
+}
+
+.binding-card {
+  margin: -20rpx 0 48rpx;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  overflow: hidden;
+  border-radius: 28rpx;
+  border: 1rpx solid rgba(241, 210, 125, 0.12);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.014)),
+    rgba(8, 13, 12, 0.36);
+}
+
+.binding-card > view {
+  min-width: 0;
+  padding: 24rpx 18rpx;
+  border-right: 1rpx solid rgba(255, 255, 255, 0.07);
+}
+
+.binding-card > view:last-child {
+  border-right: 0;
+}
+
+.binding-card text {
+  display: block;
+  color: rgba(247, 239, 223, 0.42);
+  font-size: 20rpx;
+  font-weight: 800;
+}
+
+.binding-card view view {
+  margin-top: 10rpx;
+  color: #f6d886;
+  font-size: 24rpx;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
+.dimension-list {
+  display: grid;
+  gap: 30rpx;
+}
+
+.dimension {
+  padding-bottom: 26rpx;
+  border-bottom: 1rpx solid rgba(255, 255, 255, 0.07);
+}
+
+.dimension-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+
+.dimension-head text:first-child {
+  color: #fff7e7;
+  font-size: 29rpx;
+  font-weight: 900;
+}
+
+.dimension-head text:last-child {
+  color: #f6d886;
+  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-size: 30rpx;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.bar {
+  height: 10rpx;
+  margin-top: 18rpx;
+  overflow: hidden;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.bar view {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(85, 174, 158, 0.86), rgba(246, 216, 134, 0.96));
+}
+
+.hint {
+  margin-top: 12rpx;
+  color: rgba(247, 239, 223, 0.42);
+  font-size: 22rpx;
+}
+
+.next-scroll,
+.review-entry {
+  position: relative;
+  margin-top: 48rpx;
+  padding: 32rpx 28rpx;
+  overflow: hidden;
+  border-radius: 30rpx;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.052), rgba(255, 255, 255, 0.016)),
+    rgba(8, 13, 12, 0.48);
+}
+
+.gold-thread {
+  position: absolute;
+  left: 28rpx;
+  right: 28rpx;
+  top: 0;
+  height: 1rpx;
+  background: linear-gradient(90deg, transparent, rgba(241, 210, 125, 0.68), transparent);
+  animation: threadFlow 4.8s ease-in-out infinite;
+}
+
+.next-scroll > text,
+.review-entry > text {
+  display: block;
+  color: #f6d886;
+  font-size: 22rpx;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+}
+
+.next-scroll button {
+  width: 100%;
+  height: 80rpx;
+  margin-top: 22rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 999rpx;
+  color: #11130d;
+  background: linear-gradient(105deg, rgba(255, 245, 205, 0.96), rgba(227, 181, 82, 0.96), rgba(255, 238, 181, 0.96));
+  font-size: 27rpx;
+  font-weight: 900;
+}
+
+.review-entry {
+  margin-top: 24rpx;
+  background: transparent;
+  border: 1rpx solid rgba(241, 210, 125, 0.12);
+}
+
+.review-entry view {
+  margin-top: 16rpx;
+  color: rgba(247, 239, 223, 0.52);
+  font-size: 25rpx;
+  line-height: 1.7;
+}
+
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(32rpx) scale(0.985);
+    filter: blur(8rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes grainDrift {
+  from { background-position: 0 0; }
+  to { background-position: 92rpx 184rpx; }
+}
+
+@keyframes breath {
+  0%, 100% { opacity: 0.14; transform: scale(0.96); }
+  50% { opacity: 0.28; transform: scale(1.06); }
+}
+
+@keyframes threadFlow {
+  0%, 100% { opacity: 0.28; transform: scaleX(0.76); }
+  50% { opacity: 0.9; transform: scaleX(1); }
+}

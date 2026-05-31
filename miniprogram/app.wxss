@@ -1,0 +1,397 @@
+@font-face {
+  font-family: "ZX-LXGW";
+  src: url("./assets/fonts/LXGWWenKai-Zhixing.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "ZX-Harmony";
+  src: url("./assets/fonts/HarmonyOS-SansSC-Regular-Zhixing.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "ZX-Harmony";
+  src: url("./assets/fonts/HarmonyOS-SansSC-Medium-Zhixing.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "ZX-Harmony";
+  src: url("./assets/fonts/HarmonyOS-SansSC-Bold-Zhixing.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+page {
+  min-height: 100%;
+  color: #f7efdf;
+  background:
+    radial-gradient(circle at 78% -10%, rgba(201, 157, 76, 0.16), transparent 34%),
+    linear-gradient(180deg, #07100e 0%, #0b1413 48%, #111816 100%);
+  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  letter-spacing: 0;
+}
+
+view,
+text,
+button,
+input,
+textarea,
+slider {
+  box-sizing: border-box;
+}
+
+button {
+  position: relative;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  line-height: 1.2;
+  box-shadow:
+    inset 0 1rpx 0 rgba(255, 255, 255, 0.08),
+    inset 0 -4rpx 8rpx rgba(0, 0, 0, 0.1);
+  transition: transform 0.16s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.16s ease, filter 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+}
+
+button::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 1rpx;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0.26;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.03) 38%, transparent 62%, rgba(0, 0, 0, 0.08));
+}
+
+button::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  top: -42%;
+  bottom: -42%;
+  left: -72%;
+  width: 46%;
+  border: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+  transform: skewX(-18deg) translateX(-135%);
+}
+
+button:active {
+  transform: translateY(2rpx) scale(0.994);
+  filter: brightness(0.96);
+  box-shadow:
+    inset 0 1rpx 0 rgba(255, 255, 255, 0.1),
+    inset 0 -4rpx 8rpx rgba(0, 0, 0, 0.22),
+    0 5rpx 12rpx rgba(0, 0, 0, 0.16);
+}
+
+button:active::after {
+  opacity: 1;
+  animation: buttonLightSweep 0.46s ease-out both;
+}
+
+button[disabled] {
+  filter: none;
+  box-shadow:
+    inset 0 1rpx 0 rgba(255, 255, 255, 0.08),
+    inset 0 -4rpx 8rpx rgba(0, 0, 0, 0.12);
+}
+
+button[disabled]::after {
+  display: none;
+}
+
+button > view,
+button > text,
+button > image {
+  position: relative;
+  z-index: 2;
+}
+
+.page-shell {
+  min-height: 100vh;
+  padding: calc(32rpx + env(safe-area-inset-top)) 32rpx calc(170rpx + env(safe-area-inset-bottom));
+  position: relative;
+}
+
+.page-shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.12;
+  background:
+    linear-gradient(90deg, rgba(246, 224, 170, 0.05) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(246, 224, 170, 0.035) 1px, transparent 1px);
+  background-size: 72rpx 72rpx;
+}
+
+.page-content {
+  position: relative;
+  z-index: 1;
+}
+
+.eyebrow {
+  display: block;
+  color: #b49355;
+  font-family: "Inter", "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  font-size: 22rpx;
+  font-weight: 800;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+.page-title {
+  margin-top: 18rpx;
+  color: #fff6e6;
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", "STSong", serif;
+  font-size: 56rpx;
+  font-weight: 500;
+  line-height: 1.18;
+}
+
+.page-subtitle {
+  margin-top: 18rpx;
+  color: rgba(247, 239, 223, 0.68);
+  font-size: 28rpx;
+  line-height: 1.72;
+}
+
+.section-title {
+  margin: 42rpx 0 22rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+  color: #fff6e6;
+  font-family: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", serif;
+  font-size: 42rpx;
+  font-weight: 600;
+}
+
+.section-title text:last-child {
+  color: #b49355;
+  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.card {
+  position: relative;
+  overflow: hidden;
+  border: 1rpx solid rgba(201, 157, 76, 0.34);
+  border-radius: 22rpx;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)),
+    rgba(18, 28, 27, 0.86);
+  box-shadow: 0 28rpx 70rpx rgba(0, 0, 0, 0.24);
+}
+
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.08), transparent 36%);
+}
+
+.primary-btn,
+.secondary-btn,
+.ghost-btn {
+  min-height: 92rpx;
+  padding: 0 30rpx;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  font-size: 30rpx;
+  font-weight: 800;
+  box-shadow:
+    inset 0 1rpx 0 rgba(255, 255, 255, 0.12),
+    inset 0 -6rpx 12rpx rgba(0, 0, 0, 0.14),
+    0 10rpx 24rpx rgba(0, 0, 0, 0.1);
+}
+
+.primary-btn {
+  color: #11140f;
+  background:
+    linear-gradient(180deg, rgba(255, 247, 207, 0.56), transparent 34%),
+    linear-gradient(92deg, rgba(255, 255, 255, 0.16), transparent 24%, transparent 72%, rgba(99, 61, 18, 0.12)),
+    linear-gradient(180deg, #f1d27d 0%, #d7ac50 58%, #b88436 100%);
+  box-shadow:
+    inset 0 3rpx 0 rgba(255, 255, 255, 0.38),
+    inset 0 -12rpx 18rpx rgba(92, 55, 14, 0.28),
+    0 16rpx 34rpx rgba(201, 157, 76, 0.18),
+    0 4rpx 0 rgba(98, 66, 24, 0.26);
+}
+
+.secondary-btn {
+  color: #f6e0aa;
+  border: 1rpx solid rgba(201, 157, 76, 0.5);
+  background: rgba(201, 157, 76, 0.1);
+  box-shadow:
+    inset 0 2rpx 0 rgba(255, 255, 255, 0.12),
+    inset 0 -10rpx 16rpx rgba(0, 0, 0, 0.2),
+    0 12rpx 28rpx rgba(0, 0, 0, 0.14);
+}
+
+.ghost-btn {
+  color: rgba(247, 239, 223, 0.82);
+  border: 1rpx solid rgba(247, 239, 223, 0.14);
+  background: rgba(255, 255, 255, 0.045);
+  box-shadow:
+    inset 0 2rpx 0 rgba(255, 255, 255, 0.1),
+    inset 0 -8rpx 14rpx rgba(0, 0, 0, 0.18),
+    0 10rpx 24rpx rgba(0, 0, 0, 0.12);
+}
+
+.primary-btn[disabled],
+.secondary-btn[disabled],
+.ghost-btn[disabled] {
+  opacity: 0.45;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48rpx;
+  padding: 0 18rpx;
+  border-radius: 999rpx;
+  color: #f6e0aa;
+  border: 1rpx solid rgba(201, 157, 76, 0.38);
+  background: rgba(201, 157, 76, 0.1);
+  font-size: 22rpx;
+  font-weight: 800;
+}
+
+.muted {
+  color: rgba(247, 239, 223, 0.58);
+}
+
+.form-label {
+  display: block;
+  margin: 28rpx 0 12rpx;
+  color: #b49355;
+  font-size: 24rpx;
+  font-weight: 800;
+}
+
+.input-field,
+.textarea-field {
+  width: 100%;
+  border: 1rpx solid rgba(201, 157, 76, 0.28);
+  border-radius: 18rpx;
+  color: #fff6e6;
+  background: rgba(255, 255, 255, 0.045);
+  font-size: 28rpx;
+}
+
+.input-field {
+  height: 88rpx;
+  padding: 0 24rpx;
+}
+
+.textarea-field {
+  min-height: 176rpx;
+  padding: 22rpx 24rpx;
+  line-height: 1.55;
+}
+
+.split-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18rpx;
+  margin-top: 28rpx;
+}
+
+.single-action {
+  margin-top: 28rpx;
+}
+
+.safe-bottom {
+  height: env(safe-area-inset-bottom);
+}
+
+@keyframes buttonLightSweep {
+  from {
+    opacity: 0;
+    transform: skewX(-18deg) translateX(-135%);
+  }
+  28% {
+    opacity: 0.9;
+  }
+  to {
+    opacity: 0;
+    transform: skewX(-18deg) translateX(430%);
+  }
+}
+
+@media (max-width: 340px) {
+  .page-shell {
+    padding-left: 26rpx;
+    padding-right: 26rpx;
+  }
+
+  .page-title {
+    font-size: 52rpx;
+  }
+
+  .page-subtitle {
+    font-size: 26rpx;
+  }
+
+  .section-title {
+    font-size: 38rpx;
+  }
+
+  .primary-btn,
+  .secondary-btn,
+  .ghost-btn {
+    min-height: 86rpx;
+    font-size: 27rpx;
+  }
+}
+
+.font-brand,
+.font-heart-proof,
+.font-commandment,
+.font-stage,
+.font-personality {
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", "STSong", serif;
+  font-weight: 500;
+}
+
+.font-section {
+  font-family: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", serif;
+  font-weight: 600;
+}
+
+.font-body,
+.font-ai,
+.font-panel {
+  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+}
+
+.font-number {
+  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}

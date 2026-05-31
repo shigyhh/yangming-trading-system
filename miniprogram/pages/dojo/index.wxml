@@ -1,0 +1,187 @@
+<view class="dojo-shell">
+  <view class="dojo-bg mist"></view>
+  <view class="dojo-bg grain"></view>
+
+  <view class="dojo-content">
+    <view class="head">
+      <view class="seal">场</view>
+      <view>
+        <text>修行道场</text>
+        <view>同修、观心、档案、排行</view>
+      </view>
+    </view>
+
+    <view class="dojo-hero">
+      <view class="gold-thread"></view>
+      <text>COMPANION · 同修系统</text>
+      <view>今日 {{companion.todayCount.value}} 位同修正在修行</view>
+      <view class="dojo-subcopy">{{companion.todayCount.note}}</view>
+      <button bindtap="copyInvite">复制道场码</button>
+    </view>
+
+    <view class="companion-stats">
+      <view wx:for="{{companion.todayStats}}" wx:key="key">
+        <text>{{item.value}}{{item.unit}}</text>
+        <view>{{item.label}}</view>
+      </view>
+    </view>
+
+    <view class="reflection-wall">
+      <view class="card-head">
+        <view>
+          <text>今日省察墙</text>
+          <view>只记录照心、省察和成长，不讨论外部刺激</view>
+        </view>
+        <text>省</text>
+      </view>
+      <view class="reflection-list">
+        <view wx:for="{{companion.reflectionWall}}" wx:key="text" class="reflection-row">
+          <view>
+            <text>{{item.name}}</text>
+            <text>{{item.stage}}</text>
+          </view>
+          <view>{{item.text}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="tribe-card">
+      <view class="card-head">
+        <view>
+          <text>人格部落</text>
+          <view>找到和你修同一类心贼的同修</view>
+        </view>
+        <text>同行</text>
+      </view>
+      <view class="tribe-list">
+        <view wx:for="{{companion.personalityTribes}}" wx:key="type" class="tribe-row {{item.active ? 'active' : ''}}">
+          <view>
+            <text>{{item.name}}</text>
+            <text>{{item.type}} · {{item.stage}} · {{item.heartThief}}</text>
+          </view>
+          <view>
+            <text>{{item.memberCount}}</text>
+            <text>{{item.status}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="mentor-card">
+      <view class="card-head">
+        <view>
+          <text>双导师体系</text>
+          <view>道统导师：{{dojo.relation.spiritualMentor.name}} · {{dojo.relation.spiritualMentor.role}}</view>
+        </view>
+        <text>{{dojo.joined ? '已入' : '待入'}}</text>
+      </view>
+      <view class="mentor-note">{{dojo.relation.spiritualMentor.note}}</view>
+      <view class="human-mentor">
+        <view>
+          <text>真人带练</text>
+          <view>{{dojo.joined ? dojo.relation.humanMentor.role + '：' + dojo.relation.humanMentor.code : '选择修行营教练或助教'}}</view>
+        </view>
+        <text>{{dojo.relation.humanMentor.status}}</text>
+      </view>
+      <view class="role-switch">
+        <button
+          wx:for="{{dojo.mentorRoles}}"
+          wx:key="key"
+          class="{{selectedMentorRole === item.key ? 'active' : ''}}"
+          data-role="{{item.key}}"
+          bindtap="selectMentorRole"
+        >{{item.label}}</button>
+      </view>
+      <view class="mentor-scope">{{dojo.relation.humanMentor.scope}}</view>
+      <input class="dojo-input" value="{{mentorCode}}" bindinput="inputMentor" placeholder="输入 ZX 开头道场码" />
+      <button class="dojo-secondary" bindtap="joinMentor">加入同修道场</button>
+      <view class="mentor-privacy">{{dojo.relation.privacy}}</view>
+    </view>
+
+    <view class="task-card">
+      <view class="card-head">
+        <view>
+          <text>今日共修</text>
+          <view>{{dojo.task.title}}</view>
+        </view>
+        <text>{{dojo.task.completed ? '已成' : dojo.task.accepted ? '修行中' : '待领'}}</text>
+      </view>
+      <view class="discipline">{{dojo.task.discipline}}</view>
+      <view class="task-action">{{dojo.task.action}}</view>
+      <view class="task-actions">
+        <button class="dojo-ghost" bindtap="acceptTask">领取</button>
+        <button class="dojo-primary" bindtap="completeTask">完成</button>
+      </view>
+    </view>
+
+    <view class="assistant-card">
+      <view class="card-head">
+        <view>
+          <text>AI观心助手</text>
+          <view>写下此刻一念，系统只做追问和稳心</view>
+        </view>
+        <text>观</text>
+      </view>
+      <textarea class="dojo-textarea" maxlength="80" value="{{assistantInput}}" bindinput="inputAssistant" placeholder="例：我现在很急，怕错过。" />
+      <button class="dojo-primary" bindtap="askAssistant">问观心助手</button>
+      <view wx:if="{{assistantReply}}" class="assistant-reply">
+        <text>{{assistantReply.title}}</text>
+        <view>{{assistantReply.content}}</view>
+        <view>{{assistantReply.question}}</view>
+        <view>{{assistantReply.prescription}}</view>
+      </view>
+    </view>
+
+    <view class="archive-card" bindtap="goArchive">
+      <view>
+        <text>交易人格档案</text>
+        <view>查看你的惯性动作、对应戒律和每日事上练路径。</view>
+      </view>
+      <text>进入</text>
+    </view>
+
+    <view class="leaderboard-card">
+      <view class="card-head">
+        <view>
+          <text>知行成长榜</text>
+          <view>只看修行、连修、省察和成长，不看外部结果</view>
+        </view>
+        <text>成长</text>
+      </view>
+      <view class="rank-list">
+        <view wx:for="{{companion.growthBoard}}" wx:key="name" class="rank-row {{item.me ? 'me' : ''}}">
+          <text>{{item.rank}}</text>
+          <view>
+            <text>{{item.name}}</text>
+            <text>{{item.tag}}</text>
+          </view>
+          <text>{{item.score}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="story-card">
+      <view class="card-head">
+        <view>
+          <text>同修故事库</text>
+          <view>看见别人如何从旧反应走向新动作</view>
+        </view>
+        <text>故事</text>
+      </view>
+      <view class="story-list">
+        <view wx:for="{{companion.storyLibrary}}" wx:key="title" class="story-row">
+          <text>{{item.title}}</text>
+          <view>{{item.tribe}} · {{item.stage}}</view>
+          <view>{{item.summary}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="companion-guard">{{companion.guardrailText}}</view>
+
+    <button class="growth-link" bindtap="goGrowth">回到修行成长树</button>
+    <compliance-notice compact="{{true}}" />
+  </view>
+
+  <bottom-tab-bar active="index" />
+</view>

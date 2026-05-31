@@ -1,0 +1,211 @@
+.level-card {
+  margin-top: 34rpx;
+  padding: 34rpx 30rpx;
+}
+
+.level-card > view,
+.require-card > text,
+.require-card > view,
+.chart-card > view,
+.trend-card > view,
+.record-list > view {
+  position: relative;
+  z-index: 1;
+}
+
+.level-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24rpx;
+}
+
+.level-head text:first-child {
+  color: #b49355;
+  font-size: 22rpx;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+}
+
+.level-head view view {
+  margin-top: 14rpx;
+  color: #fff6e6;
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", "STSong", serif;
+  font-size: 54rpx;
+  font-weight: 500;
+}
+
+.level-head > text {
+  color: #f1d27d;
+  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-size: 72rpx;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.level-copy {
+  margin-top: 16rpx;
+  color: rgba(247, 239, 223, 0.62);
+  font-size: 26rpx;
+}
+
+.stage-bar {
+  height: 10rpx;
+  margin-top: 28rpx;
+  overflow: hidden;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.stage-bar view {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(85, 174, 158, 0.86), rgba(241, 210, 125, 0.96));
+}
+
+.require-list {
+  margin-top: 22rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16rpx;
+}
+
+.require-card {
+  padding: 24rpx 22rpx;
+}
+
+.require-card text {
+  color: rgba(247, 239, 223, 0.54);
+  font-size: 22rpx;
+}
+
+.require-card view {
+  margin-top: 10rpx;
+  color: #f1d27d;
+  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-size: 30rpx;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-card {
+  padding: 28rpx 18rpx 24rpx;
+}
+
+.curve-caption {
+  position: relative;
+  z-index: 1;
+  margin: 0 10rpx 24rpx;
+  color: rgba(247, 239, 223, 0.56);
+  font-size: 24rpx;
+  line-height: 1.56;
+}
+
+.bar-chart {
+  min-height: 260rpx;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  align-items: end;
+  gap: 14rpx;
+}
+
+.bar-item {
+  min-width: 0;
+  display: grid;
+  justify-items: center;
+  gap: 10rpx;
+}
+
+.bar-track {
+  width: 34rpx;
+  height: 170rpx;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.bar-track view {
+  width: 100%;
+  min-height: 12rpx;
+  border-radius: inherit;
+  background: linear-gradient(180deg, #f1d27d, rgba(85, 174, 158, 0.86));
+}
+
+.bar-item.baseline .bar-track view {
+  opacity: 0.72;
+  background: linear-gradient(180deg, rgba(241, 210, 125, 0.72), rgba(255, 255, 255, 0.16));
+}
+
+.bar-item text {
+  color: #f1d27d;
+  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-size: 22rpx;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.bar-item view:last-child {
+  color: rgba(247, 239, 223, 0.42);
+  font-size: 19rpx;
+}
+
+.trend-card {
+  padding: 28rpx 10rpx;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  text-align: center;
+}
+
+.trend-card text {
+  color: #f1d27d;
+  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-size: 42rpx;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.trend-card view view {
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.5);
+  font-size: 22rpx;
+}
+
+.record-list {
+  margin-top: 24rpx;
+  padding: 8rpx 28rpx;
+}
+
+.record-row {
+  min-height: 108rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24rpx;
+  border-bottom: 1rpx solid rgba(255, 255, 255, 0.07);
+}
+
+.record-row:last-child {
+  border-bottom: 0;
+}
+
+.record-row view text {
+  color: #fff6e6;
+  font-size: 27rpx;
+  font-weight: 900;
+}
+
+.record-row view view {
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.5);
+  font-size: 22rpx;
+}
+
+.record-row > text {
+  color: #f1d27d;
+  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-size: 36rpx;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}

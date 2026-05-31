@@ -1,0 +1,128 @@
+<view class="growth-shell">
+  <view class="growth-bg mist"></view>
+  <view class="growth-bg grain"></view>
+
+  <view class="growth-content">
+    <view class="head">
+      <view class="seal">树</view>
+      <view>
+        <text>修行成长树</text>
+        <view>看见自己正在往哪一关修</view>
+      </view>
+    </view>
+
+    <view class="tree-orb">
+      <view class="orb-light"></view>
+      <text>{{growth.overall}}</text>
+      <view>{{growth.stateLabel}}</view>
+    </view>
+
+    <view class="active-scroll">
+      <view class="gold-thread"></view>
+      <text>当前关口</text>
+      <view>{{growth.activeGate.name}}</view>
+      <text>{{growth.activeGate.subtitle}}</text>
+      <button bindtap="goNext">{{growth.nextAction}}</button>
+    </view>
+
+    <view class="stats-row">
+      <view>
+        <text>{{growth.completedCount}}/{{growth.totalCount}}</text>
+        <view>关卡</view>
+      </view>
+      <view>
+        <text>{{continuity.currentStreak}}</text>
+        <view>连修</view>
+      </view>
+      <view>
+        <text>{{continuity.todayProgressText}}</text>
+        <view>今日</view>
+      </view>
+    </view>
+
+    <view class="continuity-card">
+      <view class="continuity-head">
+        <view>
+          <text>连续修行系统</text>
+          <view>{{continuity.stateLabel}}</view>
+        </view>
+        <text>{{continuity.milestone.label}}</text>
+      </view>
+      <view class="continuity-copy">{{continuity.nextText}} 距离下一阶还差 {{continuity.milestone.remaining}} 日。</view>
+      <view class="continuity-copy">道场共修：{{growth.dojoTaskCompleted ? '今日已反哺事上磨关' : growth.dojoTaskAccepted ? '已领取，完成后反哺成长树' : '待领取共修任务'}}</view>
+      <view class="day-strip">
+        <view wx:for="{{recentDays}}" wx:key="dayKey" class="day-node {{item.completed ? 'done' : ''}} {{item.score >= 3 ? 'full' : ''}}">
+          <text>{{item.label}}</text>
+          <view>{{item.status}}</view>
+          <view class="mini-dots">
+            <text class="{{item.mind ? 'on' : ''}}">照</text>
+            <text class="{{item.training ? 'on' : ''}}">练</text>
+            <text class="{{item.review ? 'on' : ''}}">省</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="records-card">
+      <view class="continuity-head">
+        <view>
+          <text>修行成长记录</text>
+          <view>每一次照心、事上练、省察都会留下痕迹</view>
+        </view>
+        <text>{{growth.unlockedMilestoneCount}}阶</text>
+      </view>
+      <view class="record-grid">
+        <view wx:for="{{growth.growthRecords}}" wx:key="key" class="record-cell">
+          <text>{{item.value}}{{item.unit}}</text>
+          <view>{{item.label}}</view>
+          <view>{{item.note}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="milestone-card">
+      <view class="continuity-head">
+        <view>
+          <text>修行里程碑</text>
+          <view>从独修到成势，从成势到守一</view>
+        </view>
+        <text>{{continuity.milestone.remaining}}日</text>
+      </view>
+      <view class="milestone-list">
+        <view wx:for="{{continuity.milestones}}" wx:key="day" class="milestone-row {{item.unlocked ? 'unlocked' : ''}}">
+          <view>{{item.day}}</view>
+          <view>
+            <text>{{item.title}}</text>
+            <text>{{item.meaning}}</text>
+          </view>
+          <text>{{item.unlocked ? '已达成' : '待修'}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="gate-list">
+      <view wx:for="{{gates}}" wx:key="key" class="gate-card {{item.status === '已通关' ? 'done' : ''}}">
+        <view class="gate-index">{{index + 1}}</view>
+        <view class="gate-main">
+          <view class="gate-title">
+            <text>{{item.name}}</text>
+            <text>{{item.status}}</text>
+          </view>
+          <view class="gate-name">{{item.title}}</view>
+          <view class="gate-subtitle">{{item.subtitle}}</view>
+          <view class="gate-bar"><view style="width: {{item.progress}}%;"></view></view>
+        </view>
+        <view class="gate-progress">{{item.progress}}</view>
+      </view>
+    </view>
+
+    <view class="bottom-actions">
+      <button class="ghost-action" bindtap="goIndex">看知行指数</button>
+      <button class="primary-action" bindtap="goDojo">进入修行道场</button>
+    </view>
+
+    <compliance-notice compact="{{true}}" />
+  </view>
+
+  <bottom-tab-bar active="index" />
+</view>

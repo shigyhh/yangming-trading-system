@@ -1,0 +1,80 @@
+<view class="page-shell">
+  <view class="page-content">
+    <text class="eyebrow">ZHIXING · 成长记录</text>
+    <view class="page-title">知行成长<br />记录</view>
+    <view class="page-subtitle">用户的核心目标不是看外在结果，而是看：今天是否比昨天更能让计划成为行动。</view>
+
+    <view class="level-card card">
+      <view class="level-head">
+        <view>
+          <text>当前成长阶段</text>
+          <view>{{growthLevel.current.name || '观己'}}</view>
+        </view>
+        <text>{{latest ? latest.total : 0}}</text>
+      </view>
+      <view class="level-copy">{{growthLevel.nextText}}</view>
+      <view class="stage-bar"><view style="width: {{growthLevel.progress || 0}}%;"></view></view>
+    </view>
+
+    <view class="require-list">
+      <view wx:for="{{requirements}}" wx:key="label" class="require-card card">
+        <text>{{item.label}}</text>
+        <view>{{item.current}} / {{item.target}}</view>
+      </view>
+    </view>
+
+    <view class="section-title">
+      <view>第三阶段 · 成长曲线</view>
+      <text>{{recordState.weekTrend.label}}</text>
+    </view>
+
+    <view class="chart-card card">
+      <view class="curve-caption">61 · 65 · 68 · 72 · 75，是用户能看见自己在长出来的地方。</view>
+      <view class="bar-chart">
+        <view wx:for="{{weekDays}}" wx:key="dayKey" class="bar-item {{item.baseline ? 'baseline' : ''}}">
+          <view class="bar-track"><view style="height: {{item.total}}%;"></view></view>
+          <text>{{item.total}}</text>
+          <view>{{item.label}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-title">
+      <view>近30天趋势</view>
+      <text>{{recordState.monthTrend.label}}</text>
+    </view>
+
+    <view class="trend-card card">
+      <view>
+        <text>{{recordState.monthTrend.average || 0}}</text>
+        <view>30日均值</view>
+      </view>
+      <view>
+        <text>{{recordState.monthTrend.delta || 0}}</text>
+        <view>趋势变化</view>
+      </view>
+      <view>
+        <text>{{records.length}}</text>
+        <view>记录天数</view>
+      </view>
+    </view>
+
+    <view class="record-list card">
+      <view wx:for="{{records}}" wx:key="dayKey" class="record-row">
+        <view>
+          <text>{{item.dayKey}}</text>
+          <view>{{item.stateLabel}} · {{item.growthLevel}}</view>
+        </view>
+        <text>{{item.total}}</text>
+      </view>
+    </view>
+
+    <view class="split-actions">
+      <button class="ghost-btn" bindtap="goIndex">回知行指数</button>
+      <button class="secondary-btn" bindtap="goStages">看六大关卡</button>
+    </view>
+
+    <compliance-notice />
+  </view>
+  <bottom-tab-bar active="index" />
+</view>

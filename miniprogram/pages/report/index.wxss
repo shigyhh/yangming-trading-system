@@ -1,0 +1,254 @@
+.hero-report {
+  margin-top: 32rpx;
+  padding: 40rpx 28rpx;
+  display: grid;
+  justify-items: center;
+  text-align: center;
+}
+
+.ring,
+.report-title,
+.report-subtitle,
+.secondary {
+  position: relative;
+  z-index: 1;
+}
+
+.ring {
+  width: 188rpx;
+  height: 188rpx;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  border-radius: 50%;
+  border: 2rpx solid rgba(201, 157, 76, 0.5);
+  background: radial-gradient(circle, rgba(241, 210, 125, 0.14), rgba(255, 255, 255, 0.03) 64%);
+}
+
+.ring text {
+  color: #f1d27d;
+  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-size: 56rpx;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.ring view {
+  color: rgba(247, 239, 223, 0.55);
+  font-size: 21rpx;
+  font-weight: 800;
+}
+
+.report-title {
+  margin-top: 28rpx;
+  color: #fff6e6;
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", "STSong", serif;
+  font-size: 52rpx;
+  font-weight: 900;
+}
+
+.report-subtitle {
+  margin-top: 12rpx;
+  color: #58c2ad;
+  font-size: 27rpx;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.secondary {
+  margin-top: 16rpx;
+  color: rgba(247, 239, 223, 0.58);
+  font-size: 24rpx;
+}
+
+.report-list {
+  display: grid;
+  gap: 0;
+  border-top: 1rpx solid rgba(255, 255, 255, 0.07);
+}
+
+.report-block {
+  padding: 30rpx 0;
+  border-bottom: 1rpx solid rgba(255, 255, 255, 0.07);
+}
+
+.report-block text,
+.report-block view,
+.path-card text,
+.path-row {
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 340px) {
+  .ring {
+    width: 168rpx;
+    height: 168rpx;
+  }
+
+  .report-title {
+    font-size: 48rpx;
+  }
+
+  .path-row {
+    gap: 10rpx;
+  }
+
+  .path-step {
+    min-height: 126rpx;
+  }
+}
+
+.report-block text,
+.path-card > text {
+  color: #f1d27d;
+  font-size: 24rpx;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.report-block view {
+  margin-top: 14rpx;
+  color: rgba(247, 239, 223, 0.78);
+  font-size: 28rpx;
+  line-height: 1.62;
+}
+
+.path-card {
+  margin-top: 24rpx;
+  padding: 28rpx;
+}
+
+.stage-path-card {
+  margin-top: 24rpx;
+  padding: 30rpx 28rpx;
+}
+
+.core-output-card {
+  margin-top: 22rpx;
+  padding: 8rpx 28rpx;
+}
+
+.stage-path-card text,
+.stage-path-card view,
+.core-output-row text,
+.core-output-row view {
+  position: relative;
+  z-index: 1;
+}
+
+.stage-path-card > text {
+  color: #f1d27d;
+  font-size: 24rpx;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.path-focus {
+  margin-top: 18rpx;
+  color: #fff6e6;
+  font-family: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", serif;
+  font-size: 42rpx;
+  font-weight: 800;
+}
+
+.path-copy {
+  margin-top: 14rpx;
+  color: rgba(247, 239, 223, 0.78);
+  font-size: 27rpx;
+  line-height: 1.62;
+}
+
+.muted-copy {
+  color: rgba(247, 239, 223, 0.56);
+}
+
+.core-output-row {
+  min-height: 104rpx;
+  display: grid;
+  grid-template-columns: 180rpx 1fr;
+  align-items: center;
+  gap: 22rpx;
+  border-bottom: 1rpx solid rgba(255, 255, 255, 0.07);
+}
+
+.core-output-row:last-child {
+  border-bottom: 0;
+}
+
+.core-output-row text {
+  color: #b49355;
+  font-size: 22rpx;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.core-output-row view {
+  color: #fff6e6;
+  font-size: 28rpx;
+  line-height: 1.52;
+  font-weight: 800;
+}
+
+.path-row {
+  margin-top: 24rpx;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14rpx;
+}
+
+.path-step {
+  min-height: 136rpx;
+  padding: 20rpx 10rpx;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 10rpx;
+  border-radius: 18rpx;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.path-step view {
+  width: 42rpx;
+  height: 42rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #11140f;
+  background: #f1d27d;
+  font-size: 22rpx;
+  font-weight: 900;
+}
+
+.path-step text {
+  color: #fff6e6;
+  font-size: 24rpx;
+  text-align: center;
+}
+
+.empty-report {
+  margin-top: 34rpx;
+  padding: 34rpx;
+}
+
+.empty-report view,
+.empty-report text,
+.empty-report button {
+  position: relative;
+  z-index: 1;
+}
+
+.empty-report view {
+  color: #fff6e6;
+  font-family: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", serif;
+  font-size: 42rpx;
+  font-weight: 700;
+}
+
+.empty-report text {
+  display: block;
+  margin: 18rpx 0 28rpx;
+  color: rgba(247, 239, 223, 0.62);
+  font-size: 26rpx;
+  line-height: 1.62;
+}
