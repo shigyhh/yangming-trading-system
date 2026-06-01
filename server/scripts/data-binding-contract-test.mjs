@@ -57,6 +57,7 @@ test("data binding service stores assessment, training, kline and retest in runt
       day: 1,
       title: "停十秒",
       note: "今日只练下单前暂停。",
+      checkIn: "preparing_trade",
       cultivationText: "今天看见了一次怕错过。"
     }
   });
@@ -64,9 +65,12 @@ test("data binding service stores assessment, training, kline and retest in runt
     user,
     record: {
       day: 1,
+      sceneKey: "fast_rise_no_plan",
+      reactionKey: "fear_missing",
       scene: "急拉",
       reaction: "想追",
-      disciplineAction: "先停十秒，再复核计划"
+      disciplineAction: "先停十秒，再复核计划",
+      feedback: "今天先练写下进场理由。"
     }
   });
   const retest = await saveRetestResultBinding({ user, report: retestReport });
@@ -113,9 +117,12 @@ test("data binding service stores assessment, training, kline and retest in runt
   assert.equal(assessment.report.trainingPrescription7Days.length, 7);
   assert.equal(assessment.admin_user.assistantSummary.priority, "优先承接");
   assert.equal(training.record.day, 1);
+  assert.equal(training.record.check_in, "preparing_trade");
   assert.equal(mergedTraining.user.id, user.userId);
   assert.ok(mergedTraining.user.merged_ids.includes("web-local-merge-001"));
   assert.equal(kline.record.scene, "急拉");
+  assert.equal(kline.record.reaction_key, "fear_missing");
+  assert.equal(kline.record.feedback, "今天先练写下进场理由。");
   assert.equal(retest.comparison[0].delta, -18);
   assert.equal(handoff.assistant.status, "已承接");
   assert.equal(handoff.assistant.owner, "助教明远");

@@ -39,6 +39,7 @@
         <text>今日观心问题</text>
         <view>{{trainingDay.reflectionQuestion}}</view>
       </view>
+      <button class="secondary-btn kline-entry-btn" bindtap="goKlineMind">进入 K 线历史训练</button>
       <button wx:if="{{training7View.canRetest}}" class="secondary-btn" bindtap="goRetest">开始复测</button>
     </view>
 

@@ -17,14 +17,19 @@ export type PracticeMetric = {
 }
 
 export type PracticeRecordStatus = "completed" | "missed"
+export type PracticeCheckInStatus = "preparing_trade" | "observe_only" | "already_traded"
 
 export type KLineTrainingRecord = {
+  sceneKey?: string
+  reactionKey?: string
   scene: string
   reaction: string
   disciplineAction: string
+  feedback?: string
 }
 
 export type DailyPracticeEntry = {
+  checkIn: PracticeCheckInStatus
   cultivationText: string
   klineRecord?: KLineTrainingRecord
 }
@@ -60,6 +65,7 @@ export type PracticeChangeState = {
     actions?: string[]
     status?: PracticeRecordStatus
     recordedAt?: string
+    checkIn?: PracticeCheckInStatus
     cultivationText?: string
     klineRecord?: KLineTrainingRecord
   }>
@@ -300,6 +306,7 @@ export function advancePracticeChange(
       actions: practice.actions,
       status,
       recordedAt: new Date().toISOString(),
+      checkIn: entry?.checkIn,
       cultivationText: entry?.cultivationText,
       klineRecord: entry?.klineRecord,
     },

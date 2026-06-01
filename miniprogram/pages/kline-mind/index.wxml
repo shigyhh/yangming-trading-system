@@ -1,0 +1,245 @@
+<view class="page-shell kline-page">
+  <view class="ink-depth"></view>
+  <view class="page-content">
+    <view class="kline-hero">
+      <view class="hero-topline">
+        <text>K LINE MIND</text>
+        <view>{{savedRecord && savedRecord.completed ? '已观心' : '待观心'}}</view>
+      </view>
+
+      <view class="page-title">K 线历史观心</view>
+      <view class="page-subtitle">接入 A 股、港股、美股、期货、数字货币真实历史 OHLCV；不做实时行情，不做操作功能，只把历史波动用于边界、念头与知行合一训练。</view>
+
+      <view class="hero-meta">
+        <view>
+          <text>今日</text>
+          <view>Day {{session.day}} · {{trainingDay.title}}</view>
+        </view>
+        <view>
+          <text>人格处方</text>
+          <view>{{session.personalityType}}</view>
+        </view>
+        <view>
+          <text>主修关口</text>
+          <view>{{session.stageGate.order}} · {{session.stageGate.name}}</view>
+        </view>
+      </view>
+
+      <view class="market-rail">
+        <button
+          wx:for="{{session.marketOptions}}"
+          wx:key="key"
+          class="market-chip {{item.selected ? 'active' : ''}}"
+          data-market="{{item.key}}"
+          bindtap="selectMarket"
+        >
+          <text>{{item.name}}</text>
+          <view>{{item.rhythm}}</view>
+        </button>
+      </view>
+
+      <view class="timeframe-rail">
+        <button
+          wx:for="{{session.timeframeOptions}}"
+          wx:key="key"
+          class="timeframe-chip {{item.selected ? 'active' : ''}}"
+          data-timeframe="{{item.key}}"
+          bindtap="selectTimeframe"
+        >
+          {{item.label}}
+        </button>
+      </view>
+    </view>
+
+    <view class="mind-wave card">
+      <view class="wave-head">
+        <view>
+          <text>{{session.market.name}} · {{session.market.triggerLabel}}</text>
+          <view>{{session.subtitle}}</view>
+        </view>
+        <text>{{session.stageGate.seal}}</text>
+      </view>
+
+      <view class="sim-meta">
+        <view>
+          <text>市场节奏</text>
+          <view>{{session.market.rhythm}} · {{session.market.rule}}</view>
+        </view>
+        <view>
+          <text>数据状态</text>
+          <view>{{session.dataStatusText}} · {{session.market.defaultSymbol}}</view>
+        </view>
+      </view>
+
+      <view wx:if="{{session.hasHistoricalData}}" class="wave-board">
+        <button
+          wx:for="{{session.candles}}"
+          wx:key="key"
+          class="mind-candle {{item.tone}} {{item.focus ? 'focus' : ''}} {{item.selected ? 'selected' : ''}}"
+          data-key="{{item.key}}"
+          bindtap="selectCandle"
+        >
+          <view class="wick" style="{{item.wickStyle}}"></view>
+          <view class="body" style="{{item.bodyStyle}}"></view>
+          <view class="volume" style="{{item.volumeStyle}}"></view>
+          <text wx:if="{{item.label}}">{{item.label}}</text>
+        </button>
+      </view>
+      <view wx:else class="history-empty">
+        <view>历史数据未载入</view>
+        <text>请先同步真实历史数据；未载入前不展示合成片段。</text>
+      </view>
+
+      <view class="wave-question">
+        <text>今日观心</text>
+        <view>{{session.hasHistoricalData ? session.prompt : session.marketQuestion}}</view>
+        <text class="guardrail">{{session.marketGuardrail}}</text>
+      </view>
+    </view>
+
+    <view class="method-card card">
+      <view class="section-kicker">TRAINING SYSTEM</view>
+      <view class="method-title">训练方法详解</view>
+      <view class="method-list">
+        <view wx:for="{{session.trainingMethods}}" wx:key="key" class="method-row {{item.key === 'firecracker' ? 'firecracker' : ''}}">
+          <view class="method-index">{{index + 1}}</view>
+          <view class="method-copy">
+            <text>{{item.title}}</text>
+            <view>{{item.subtitle}}</view>
+            <view class="method-focus">{{item.focus}}</view>
+            <view class="method-steps">
+              <text wx:for="{{item.steps}}" wx:for-item="step" wx:key="*this">{{step}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="practice-card card">
+      <view class="section-kicker">MIND RECORD</view>
+      <view class="practice-title">这一刻，先看见自己</view>
+
+      <view class="field-block">
+        <text>第一反应</text>
+        <view class="option-grid">
+          <button
+            wx:for="{{session.reactionOptions}}"
+            wx:key="*this"
+            class="option-pill {{form.firstReaction === item ? 'active' : ''}}"
+            data-field="firstReaction"
+            data-value="{{item}}"
+            bindtap="selectOption"
+          >
+            <text>{{item}}</text>
+          </button>
+        </view>
+      </view>
+
+      <view class="field-block">
+        <text>身体感受</text>
+        <view class="option-grid compact">
+          <button
+            wx:for="{{session.bodyOptions}}"
+            wx:key="*this"
+            class="option-pill seal {{form.bodySignal === item ? 'active' : ''}}"
+            data-field="bodySignal"
+            data-value="{{item}}"
+            bindtap="selectOption"
+          >
+            <text>{{item}}</text>
+          </button>
+        </view>
+      </view>
+
+      <view class="field-block">
+        <text>守界动作</text>
+        <view class="option-grid boundary">
+          <button
+            wx:for="{{session.boundaryOptions}}"
+            wx:key="*this"
+            class="option-pill {{form.boundaryChoice === item ? 'active' : ''}}"
+            data-field="boundaryChoice"
+            data-value="{{item}}"
+            bindtap="selectOption"
+          >
+            <text>{{item}}</text>
+          </button>
+        </view>
+      </view>
+
+      <view class="field-block">
+        <text>今日照见一句话</text>
+        <textarea
+          class="insight-textarea"
+          maxlength="96"
+          placeholder="例：我看见自己不是在看图形，而是在急着缓解不安。"
+          value="{{form.insightLine}}"
+          bindinput="inputInsight"
+        />
+      </view>
+
+      <button class="primary-btn save-btn" bindtap="saveRecord">{{savedRecord && savedRecord.completed ? '更新训练记录' : '完成 K 线训练记录'}}</button>
+    </view>
+
+    <view class="prescription-card card">
+      <view class="section-kicker">PERSONAL PATH</view>
+      <view class="prescription-title">{{session.prescription.title}}</view>
+      <view class="drill-card">
+        <text>九型专练动作</text>
+        <view>{{session.personalityDrill.targetScene}}</view>
+        <view>{{session.personalityDrill.drillAction}}</view>
+        <view>{{session.personalityDrill.reviewPrompt}}</view>
+      </view>
+      <view class="prescription-grid">
+        <view>
+          <text>当前心贼</text>
+          <view>{{session.prescription.heartThief}}</view>
+        </view>
+        <view>
+          <text>最易被牵动处</text>
+          <view>{{session.prescription.watchPoint}}</view>
+        </view>
+        <view>
+          <text>第一问</text>
+          <view>{{session.prescription.firstQuestion}}</view>
+        </view>
+        <view>
+          <text>今日克治</text>
+          <view>{{session.prescription.boundaryPractice}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="gate-card card">
+      <view class="section-kicker">SIX GATES</view>
+      <view class="gate-title">六大关口训练地图</view>
+      <view class="gate-list">
+        <view wx:for="{{session.gates}}" wx:key="key" class="gate-row {{item.active ? 'active' : ''}}">
+          <view class="gate-seal">{{item.seal}}</view>
+          <view>
+            <text>{{item.order}} · {{item.name}} · {{item.title}}</text>
+            <view>{{item.trainingAction}}</view>
+            <view class="gate-check">{{item.passCheck}}</view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{savedRecord && savedRecord.completed}}" class="completion-card card">
+      <view>
+        <text>今日观心完成度</text>
+        <view>{{savedRecord.score}}</view>
+      </view>
+      <text>这个数值只衡量觉察、守界、记录完整度，不关联外在结果。</text>
+    </view>
+
+    <view class="split-actions">
+      <button class="ghost-btn" bindtap="goTraining">回到 7 天训练</button>
+      <button wx:if="{{training7View.canRetest}}" class="secondary-btn" bindtap="goRetest">进入复测</button>
+      <button wx:else class="secondary-btn" bindtap="goReport">查看人格报告</button>
+    </view>
+
+    <compliance-notice />
+  </view>
+  <bottom-tab-bar active="mind" />
+</view>

@@ -2,7 +2,7 @@ const TASKS = [
   { id: "opening_check", key: "opening_check", title: "完成开盘照心", completed: false },
   { id: "intraday_boundary", key: "intraday_boundary", title: "记录盘中守界", completed: false },
   { id: "reaction_record", key: "reaction_record", title: "记录一次交易反应", completed: false },
-  { id: "daily_practice", key: "daily_practice", title: "完成今日事上练", completed: false },
+  { id: "daily_practice", key: "daily_practice", title: "完成 K 线历史训练", completed: false },
   { id: "closing_review", key: "closing_review", title: "完成收盘省察", completed: false }
 ];
 
@@ -109,6 +109,8 @@ function mergeTodayRecord(state = {}, context = {}) {
   if (context.training && context.training.completed) currentTasks.daily_practice = true;
   if (context.training && context.training.steps && context.training.steps.trigger) currentTasks.kline = true;
   if (context.training && context.training.completed) currentTasks.checkin = true;
+  if (context.klineMindRecord && context.klineMindRecord.completed) currentTasks.daily_practice = true;
+  if (context.klineMindRecord && context.klineMindRecord.completed) currentTasks.kline = true;
 
   records[currentDay] = Object.assign({}, currentRecord, {
     tasks: currentTasks,

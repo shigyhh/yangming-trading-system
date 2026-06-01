@@ -10,6 +10,7 @@ const {
   getZhixingScoreState,
   getTodayReaction,
   getTodayIntradayBoundaryRecord,
+  getTodayKlineMindRecord,
   getTraining7State,
   saveTraining7State,
   saveMindProfile,
@@ -49,7 +50,8 @@ Page({
       reactionRecord: getTodayReaction(),
       intradayBoundaryRecord: getTodayIntradayBoundaryRecord(),
       review: todayReview,
-      training
+      training,
+      klineMindRecord: getTodayKlineMindRecord()
     });
     const continuity = buildContinuityState({
       profile,

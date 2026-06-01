@@ -86,6 +86,7 @@ export async function syncTrainingRecordBinding({
       actions: record.actions,
       status: record.status,
       recordedAt: record.recordedAt,
+      checkIn: record.checkIn,
       cultivationText: record.cultivationText,
     },
     source: "web-next",

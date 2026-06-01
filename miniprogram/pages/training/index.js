@@ -12,6 +12,7 @@ const {
   getTodayHeartCard,
   getTodayReaction,
   getTodayIntradayBoundaryRecord,
+  getTodayKlineMindRecord,
   getTraining7State,
   saveTraining7State,
   saveTraining7Task,
@@ -76,7 +77,8 @@ Page({
       reactionRecord: getTodayReaction(),
       intradayBoundaryRecord: getTodayIntradayBoundaryRecord(),
       review: getTodayReview(),
-      training: state
+      training: state,
+      klineMindRecord: getTodayKlineMindRecord()
     });
     const trainingDay = training7View.today;
 
@@ -199,6 +201,10 @@ Page({
 
   goIndex() {
     wx.redirectTo({ url: "/pages/zhixing-index/index" });
+  },
+
+  goKlineMind() {
+    wx.redirectTo({ url: "/pages/kline-mind/index" });
   },
 
   selectTrainingDay(e) {

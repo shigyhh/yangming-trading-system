@@ -18,6 +18,7 @@ import { consumeWechatAuthCode, createWechatAuthUrl } from "../services/wechatAu
 import { advanceZhixingReplaySession, finishZhixingReplaySession, getZhixingReplaySession, listZhixingReplayResults, startZhixingReplaySession, submitZhixingReplayDecision } from "../services/zhixingReplay.js";
 import { generateShareCardBinding, getAdminUserFromBindings, getDataBindingUserSummary, getInviteSourceStatsBinding, getRetestComparisonBinding, getShareCardBinding, getUserReportBinding, listAdminUsersFromBindings, saveAssessmentReportBinding, saveKLineRecordBinding, saveRetestResultBinding, saveTrainingRecordBinding, syncAssistantSummaryToFeishuBinding, updateAssistantHandoffBinding } from "../services/dataBinding.js";
 import { getGlobalReflectionToday, listGlobalReflectionChoices, submitGlobalReflectionVote } from "../services/globalReflection.js";
+import { buildHistoricalKlineSlice, getHistoricalKlineRules, listHistoricalKlineCatalog, listHistoricalKlineInstruments, revealHistoricalKlineSlice } from "../services/historicalKline.js";
 
 export async function route(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
@@ -60,6 +61,11 @@ export async function route(req, res) {
         kline_practice_levels: "GET /api/v1/kline-practice/levels?user_id=xxx",
         kline_practice_stats: "GET /api/v1/kline-practice/stats",
         kline_practice_leaderboard: "GET /api/v1/kline-practice/leaderboard?period=week|month|all",
+        kline_history_catalog: "GET /api/v1/kline-history/catalog",
+        kline_history_instruments: "GET /api/v1/kline-history/instruments?market=cn_equity&timeframe=1d",
+        kline_history_rules: "GET /api/v1/kline-history/rules?market=cn_equity",
+        kline_history_slice: "GET /api/v1/kline-history/slice?market=cn_equity&symbol=600519&timeframe=1d&blind=1",
+        kline_history_reveal: "GET /api/v1/kline-history/reveal?token=xxx",
         zhixing_replay_start: "POST /api/v1/zhixing-replay/start",
         zhixing_replay_session: "GET /api/v1/zhixing-replay/:session_id",
         zhixing_replay_decision: "POST /api/v1/zhixing-replay/:session_id/decision",
@@ -640,6 +646,49 @@ export async function route(req, res) {
     return sendJson(res, 200, { ok: true, ...result });
   }
 
+  if (req.method === "GET" && pathname === "/api/v1/kline-history/catalog") {
+    return sendJson(res, 200, { ok: true, ...listHistoricalKlineCatalog() });
+  }
+
+  if (req.method === "GET" && pathname === "/api/v1/kline-history/instruments") {
+    const result = await listHistoricalKlineInstruments({
+      marketKey: url.searchParams.get("market") || url.searchParams.get("market_key") || "",
+      timeframeKey: url.searchParams.get("timeframe") || url.searchParams.get("timeframe_key") || url.searchParams.get("klt") || "",
+      limit: url.searchParams.get("limit") || 50
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/v1/kline-history/rules") {
+    const result = getHistoricalKlineRules({
+      marketKey: url.searchParams.get("market") || url.searchParams.get("market_key") || ""
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/v1/kline-history/slice") {
+    const result = await buildHistoricalKlineSlice({
+      marketKey: url.searchParams.get("market") || url.searchParams.get("market_key") || "",
+      symbol: url.searchParams.get("symbol") || url.searchParams.get("code") || url.searchParams.get("instrument") || "",
+      timeframeKey: url.searchParams.get("timeframe") || url.searchParams.get("timeframe_key") || url.searchParams.get("klt") || "",
+      adjustmentMode: url.searchParams.get("adjustment") || url.searchParams.get("adjustment_mode") || url.searchParams.get("fq") || "",
+      windowSize: url.searchParams.get("window") || url.searchParams.get("window_size") || "",
+      mode: url.searchParams.get("mode") || "step_replay",
+      personalityType: url.searchParams.get("personality_type") || "",
+      gateKey: url.searchParams.get("gate") || url.searchParams.get("gate_key") || "",
+      blind: getBooleanParam(url, "blind", true),
+      seed: url.searchParams.get("seed") || "",
+      startDate: url.searchParams.get("start_date") || url.searchParams.get("start") || "",
+      endDate: url.searchParams.get("end_date") || url.searchParams.get("end") || ""
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/v1/kline-history/reveal") {
+    const result = revealHistoricalKlineSlice(url.searchParams.get("token") || "");
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
   if (req.method === "POST" && pathname === "/api/v1/kline-practice/submit") {
     const auth = await authenticateRequest(req);
     const body = await readJson(req);
@@ -833,6 +882,12 @@ function getPublicOrigin(req) {
   if (config.publicBaseUrl) return config.publicBaseUrl.replace(/\/$/, "");
   const proto = req.headers["x-forwarded-proto"] || "http";
   return `${proto}://${req.headers.host}`;
+}
+
+function getBooleanParam(url, key, fallback = false) {
+  if (!url.searchParams.has(key)) return fallback;
+  const value = String(url.searchParams.get(key) || "").toLowerCase();
+  return ["1", "true", "yes", "on"].includes(value);
 }
 
 function maskPhone(phone) {

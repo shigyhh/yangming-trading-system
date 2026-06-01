@@ -8,6 +8,10 @@ const requiredModelTokens = [
   "KLineTrainingRecord",
   "DailyPracticeEntry",
   "PracticeRiskRadarSnapshot",
+  "PracticeCheckInStatus",
+  "checkIn",
+  "sceneKey",
+  "reactionKey",
   "baselineReport",
   "retestReport",
   "compareRiskRadarSnapshots",
@@ -15,7 +19,12 @@ const requiredModelTokens = [
 ]
 const requiredPageTokens = [
   "每日修行文字记录",
+  "今日签到",
   "K 线心念训练记录",
+  "价格快速拉升",
+  "今天哪一念最容易带走你",
+  "变化证据",
+  "buildPreviewAssessmentReport",
   "复测风险雷达",
   "cultivationText",
   "klineRecord",

@@ -28,6 +28,10 @@ test("share card and invite source MVP use shared API and compliant copy", async
     "GET /api/v1/admin/invite-sources",
     "邀请码渠道统计",
     "生成照见分享卡",
+    "shareCardContent",
+    "buildShareCardConclusion",
+    "preview-sprint8",
+    "分享卡预览",
     "不做收益归因或裂变排行",
   ].forEach((token) => {
     assert.equal(source.includes(token), true, `missing token: ${token}`)

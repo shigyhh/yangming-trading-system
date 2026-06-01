@@ -21,8 +21,10 @@ import {
   getPracticePrescription,
   reconcilePracticeChangeWithReport,
   type PracticeChangeState,
+  type PracticeCheckInStatus,
   type PracticeMetric,
 } from "@/features/assessment/practice-change"
+import { buildPreviewAssessmentReport } from "@/features/assessment/preview-report"
 import type { AssessmentReport } from "@/features/assessment/report"
 import { assessmentStorageKeys, clearAssessmentDraft, getStorage, setStorage } from "@/features/assessment/storage"
 import { syncTrainingRecordBinding } from "@/features/data-binding/api-client"
@@ -48,6 +50,56 @@ function getStrongestChange(metrics: PracticeMetric[]) {
   return [...metrics].sort((a, b) => getMetricDelta(b) - getMetricDelta(a))[0]
 }
 
+const checkInOptions: Array<{ value: PracticeCheckInStatus; label: string; description: string }> = [
+  { value: "preparing_trade", label: "准备交易", description: "今天可能会执行计划内动作。" },
+  { value: "observe_only", label: "只观察", description: "今天先看念头，不急着行动。" },
+  { value: "already_traded", label: "已经交易过", description: "回看刚才是谁在替我行动。" },
+]
+
+const checkInLabels: Record<PracticeCheckInStatus, string> = {
+  preparing_trade: "准备交易",
+  observe_only: "只观察",
+  already_traded: "已经交易过",
+}
+
+const klineMindOptions = [
+  {
+    key: "fear_missing",
+    label: "怕错过",
+    reaction: "怕错过，想立刻跟上",
+    action: "先停十秒，写出是否在原计划内。",
+    feedback: "今天先练：看到快速拉升，先不行动，写下进场理由。",
+  },
+  {
+    key: "want_chase",
+    label: "想追进去",
+    reaction: "想追进去，用动作压住焦虑",
+    action: "把手从按钮上拿开，复核一条入场条件。",
+    feedback: "今天先练：把想追的冲动命名，再回到一条条件。",
+  },
+  {
+    key: "wait_pullback",
+    label: "想等回撤",
+    reaction: "想等回撤，但心里仍被波动牵住",
+    action: "写下等待的条件，条件未到只观察。",
+    feedback: "今天先练：等待不是拖延，而是让条件替你行动。",
+  },
+  {
+    key: "ask_others",
+    label: "想问别人",
+    reaction: "想把判断交给外部声音",
+    action: "先写自己的判断，再看外部信息。",
+    feedback: "今天先练：外声出现前，先留下自己的第一判断。",
+  },
+  {
+    key: "abandon_plan",
+    label: "想放弃计划",
+    reaction: "想临时放弃原计划",
+    action: "只比较计划条件，不给情绪补故事。",
+    feedback: "今天先练：计划可以复盘后调整，不在情绪峰值处改。",
+  },
+]
+
 export default function PracticeChangePage() {
   const router = useRouter()
   const [report, setReport] = useState<AssessmentReport | null>(null)
@@ -55,26 +107,30 @@ export default function PracticeChangePage() {
   const [sealDropped, setSealDropped] = useState(false)
   const [holdingSeal, setHoldingSeal] = useState(false)
   const [cultivationText, setCultivationText] = useState("")
-  const [klineScene, setKlineScene] = useState("")
-  const [klineReaction, setKlineReaction] = useState("")
-  const [klineAction, setKlineAction] = useState("")
+  const [dailyCheckIn, setDailyCheckIn] = useState<PracticeCheckInStatus | "">("")
+  const [klineChoice, setKlineChoice] = useState("")
   const [recordMessage, setRecordMessage] = useState("")
+  const [isPreview, setIsPreview] = useState(false)
   const sealHoldTimerRef = useRef<number | null>(null)
   const prescription = useMemo(() => getPracticePrescription(report), [report])
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      const savedReport = getStorage<AssessmentReport | null>(assessmentStorageKeys.report, null)
+      const previewMode = new URLSearchParams(window.location.search).get("preview") === "1"
+      const savedReport = previewMode
+        ? buildPreviewAssessmentReport()
+        : getStorage<AssessmentReport | null>(assessmentStorageKeys.report, null)
       if (!savedReport) return
+      setIsPreview(previewMode)
 
       const savedPractice = getStorage<PracticeChangeState | null>(assessmentStorageKeys.practiceChange, null)
-      const nextPractice = savedPractice
+      const nextPractice = !previewMode && savedPractice
         ? reconcilePracticeChangeWithReport(savedPractice, savedReport)
         : createPracticeChange(savedReport)
 
       setReport(savedReport)
       setPractice(nextPractice)
-      setStorage(assessmentStorageKeys.practiceChange, nextPractice)
+      if (!previewMode) setStorage(assessmentStorageKeys.practiceChange, nextPractice)
     }, 0)
 
     return () => window.clearTimeout(timer)
@@ -82,39 +138,47 @@ export default function PracticeChangePage() {
 
   const recordToday = () => {
     if (!practice || !canRecordPracticeToday(practice)) return
-    const cleanCultivationText = cultivationText.trim().slice(0, 180)
-    const cleanKlineScene = klineScene.trim().slice(0, 80)
-    const cleanKlineReaction = klineReaction.trim().slice(0, 120)
-    const cleanKlineAction = klineAction.trim().slice(0, 120)
+    const cleanCultivationText = cultivationText.trim().slice(0, 120)
+    const selectedKlineMind = klineMindOptions.find((option) => option.key === klineChoice)
 
-    if (!cleanCultivationText) {
-      setRecordMessage("先写一句今日修行记录，再落印。")
+    if (!dailyCheckIn) {
+      setRecordMessage("先完成今日签到，再落印。")
       return
     }
 
-    const hasKlineRecord = Boolean(cleanKlineScene || cleanKlineReaction || cleanKlineAction)
+    if (!selectedKlineMind) {
+      setRecordMessage("先选出 K 线场景里最容易带走你的一念。")
+      return
+    }
+
+    if (!cleanCultivationText) {
+      setRecordMessage("写一句每日一省，再落印。")
+      return
+    }
+
     const nextPractice = advancePracticeChange(practice, "completed", {
+      checkIn: dailyCheckIn,
       cultivationText: cleanCultivationText,
-      klineRecord: hasKlineRecord
-        ? {
-            scene: cleanKlineScene || "未填写场景",
-            reaction: cleanKlineReaction || "已觉察，未展开",
-            disciplineAction: cleanKlineAction || "先停一息，再复盘",
-          }
-        : undefined,
+      klineRecord: {
+        sceneKey: "fast_rise_no_plan",
+        reactionKey: selectedKlineMind.key,
+        scene: "价格快速拉升，原本没有计划进场。",
+        reaction: selectedKlineMind.reaction,
+        disciplineAction: selectedKlineMind.action,
+        feedback: selectedKlineMind.feedback,
+      },
     })
     setPractice(nextPractice)
-    setStorage(assessmentStorageKeys.practiceChange, nextPractice)
+    if (!isPreview) setStorage(assessmentStorageKeys.practiceChange, nextPractice)
     const syncedRecord = nextPractice.records.find((record) => record.day === nextPractice.day)
-    if (syncedRecord) {
+    if (syncedRecord && !isPreview) {
       void syncTrainingRecordBinding({ practiceState: nextPractice, record: syncedRecord })
     }
     setSealDropped(true)
-    setRecordMessage("今日训练已记录。")
+    setRecordMessage(isPreview ? "预览训练已记录，不写入数据链。" : "今日训练已记录。")
     setCultivationText("")
-    setKlineScene("")
-    setKlineReaction("")
-    setKlineAction("")
+    setDailyCheckIn("")
+    setKlineChoice("")
   }
 
   const clearSealHold = () => {
@@ -125,8 +189,18 @@ export default function PracticeChangePage() {
 
   const startSealHold = () => {
     if (!practice || !canRecordPracticeToday(practice)) return
+    if (!dailyCheckIn) {
+      setRecordMessage("先完成今日签到，再落印。")
+      return
+    }
+
+    if (!klineChoice) {
+      setRecordMessage("先选出 K 线场景里最容易带走你的一念。")
+      return
+    }
+
     if (!cultivationText.trim()) {
-      setRecordMessage("先写一句今日修行记录，再落印。")
+      setRecordMessage("写一句每日一省，再落印。")
       return
     }
 
@@ -177,11 +251,18 @@ export default function PracticeChangePage() {
   const showSeal = sealDropped || (!canRecordToday && practice.day > 0)
   const radarComparison = compareRiskRadarSnapshots(practice.baselineReport, practice.retestReport)
   const hasRetestComparison = radarComparison.length > 0
+  const selectedKlineMind = klineMindOptions.find((option) => option.key === klineChoice)
+  const klineRecordCount = practice.records.filter((record) => record.klineRecord).length
+  const evidenceSummary = practice.day === 0
+    ? "证据还没开始。完成第一日训练后，这里会开始记录签到、K 线心念和复盘文字。"
+    : strongestChange
+      ? `过去 7 天，你已完成 ${practiceCounts.completed} 次训练，其中 ${klineRecordCount} 次记录了 K 线心念。目前最明显的变化是${strongestChange.label}${getChangeLabel(strongestChange)}。`
+      : `过去 7 天，你已完成 ${practiceCounts.completed} 次训练，其中 ${klineRecordCount} 次记录了 K 线心念。变化正在积累。`
 
   return (
     <AssessmentShell className="py-5">
       <div className="practice-change flex flex-col">
-        <StatusPill>今日修行</StatusPill>
+        <StatusPill>{isPreview ? "训练预览" : "今日修行"}</StatusPill>
         <h1 className="mt-8 font-story text-[clamp(2.25rem,10vw,3.45rem)] font-light leading-[1.3] tracking-[.1em]">
           今天只修
           <br />
@@ -192,6 +273,23 @@ export default function PracticeChangePage() {
           <br />
           是把照见落到一个动作里。
         </p>
+
+        <GlassPanel className="mt-8">
+          <p className="font-function text-xs font-semibold tracking-[.18em] text-[#b49d5d]">变化证据</p>
+          <h2 className="mt-4 font-story text-2xl font-light leading-[1.5] tracking-[.08em]">
+            练完要留下证据，
+            <br />
+            复测才看得见变化。
+          </h2>
+          <p className="mt-4 font-function text-sm leading-7 text-[rgba(220,212,195,.56)]">
+            {evidenceSummary}
+          </p>
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            <EvidencePill label="训练进度" value={`${practice.day} / 7 日`} />
+            <EvidencePill label="K 线心念" value={`${klineRecordCount} 次`} />
+            <EvidencePill label="复测状态" value={hasRetestComparison ? "已对比" : isSevenDaysComplete ? "可复测" : "训练中"} />
+          </div>
+        </GlassPanel>
 
         <GlassPanel className="mt-8">
           <p className="font-function text-xs font-semibold tracking-[.18em] text-[#b49d5d]">今日事上练</p>
@@ -212,48 +310,68 @@ export default function PracticeChangePage() {
             </div>
           ) : null}
           <div className="mt-6 grid gap-3">
-            <label className="grid gap-2">
-              <span className="font-function text-xs font-semibold tracking-[.16em] text-[rgba(180,157,93,.72)]">
-                每日修行文字记录
-              </span>
-              <textarea
-                value={cultivationText}
-                onChange={(event) => setCultivationText(event.target.value)}
-                maxLength={180}
-                disabled={!canRecordToday}
-                placeholder="今天我照见到的一念是……"
-                className="min-h-24 resize-none rounded-[8px] border border-[rgba(172,146,83,.16)] bg-black/20 px-4 py-3 font-function text-sm leading-7 text-[rgba(242,235,220,.82)] outline-none transition placeholder:text-[rgba(220,212,195,.26)] focus:border-[rgba(180,157,93,.42)] disabled:opacity-50"
-              />
-            </label>
+            <div className="grid gap-3 rounded-[8px] border border-[rgba(172,146,83,.12)] bg-white/[.025] p-4">
+              <p className="font-function text-xs font-semibold tracking-[.16em] text-[rgba(180,157,93,.72)]">
+                今日签到
+              </p>
+              <div className="grid gap-2">
+                {checkInOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    disabled={!canRecordToday}
+                    onClick={() => setDailyCheckIn(option.value)}
+                    className={`practice-choice ${dailyCheckIn === option.value ? "is-selected" : ""}`}
+                  >
+                    <span>{option.label}</span>
+                    <em>{option.description}</em>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="grid gap-3 rounded-[8px] border border-[rgba(172,146,83,.12)] bg-white/[.025] p-4">
               <p className="font-function text-xs font-semibold tracking-[.16em] text-[rgba(180,157,93,.72)]">
                 K 线心念训练记录
               </p>
-              <input
-                value={klineScene}
-                onChange={(event) => setKlineScene(event.target.value)}
-                maxLength={80}
-                disabled={!canRecordToday}
-                placeholder="场景：急拉、回撤、震荡、破位……"
-                className="h-11 rounded-[8px] border border-[rgba(172,146,83,.14)] bg-black/20 px-3 font-function text-sm text-[rgba(242,235,220,.82)] outline-none placeholder:text-[rgba(220,212,195,.26)] focus:border-[rgba(180,157,93,.42)] disabled:opacity-50"
-              />
-              <textarea
-                value={klineReaction}
-                onChange={(event) => setKlineReaction(event.target.value)}
-                maxLength={120}
-                disabled={!canRecordToday}
-                placeholder="第一反应：想追、想逃、想扛、想证明……"
-                className="min-h-20 resize-none rounded-[8px] border border-[rgba(172,146,83,.14)] bg-black/20 px-3 py-3 font-function text-sm leading-7 text-[rgba(242,235,220,.82)] outline-none placeholder:text-[rgba(220,212,195,.26)] focus:border-[rgba(180,157,93,.42)] disabled:opacity-50"
-              />
-              <textarea
-                value={klineAction}
-                onChange={(event) => setKlineAction(event.target.value)}
-                maxLength={120}
-                disabled={!canRecordToday}
-                placeholder="训练动作：停十秒、复核计划、只记录不加动作……"
-                className="min-h-20 resize-none rounded-[8px] border border-[rgba(172,146,83,.14)] bg-black/20 px-3 py-3 font-function text-sm leading-7 text-[rgba(242,235,220,.82)] outline-none placeholder:text-[rgba(220,212,195,.26)] focus:border-[rgba(180,157,93,.42)] disabled:opacity-50"
-              />
+              <p className="font-story text-[1.02rem] font-light leading-8 tracking-[.045em] text-[rgba(242,235,220,.72)]">
+                价格快速拉升，你原本没有计划进场。此刻最容易出现哪一念？
+              </p>
+              <div className="grid gap-2">
+                {klineMindOptions.map((option) => (
+                  <button
+                    key={option.key}
+                    type="button"
+                    disabled={!canRecordToday}
+                    onClick={() => setKlineChoice(option.key)}
+                    className={`practice-choice ${klineChoice === option.key ? "is-selected" : ""}`}
+                  >
+                    <span>{option.label}</span>
+                    <em>{option.action}</em>
+                  </button>
+                ))}
+              </div>
+              {selectedKlineMind ? (
+                <p className="rounded-[8px] border border-[rgba(95,132,117,.16)] bg-[rgba(95,132,117,.06)] px-3 py-2 font-function text-xs leading-6 text-[rgba(220,212,195,.56)]">
+                  {selectedKlineMind.feedback}
+                </p>
+              ) : null}
             </div>
+
+            <label className="grid gap-2">
+              <span className="font-function text-xs font-semibold tracking-[.16em] text-[rgba(180,157,93,.72)]">
+                每日一省 · 每日修行文字记录
+              </span>
+              <textarea
+                value={cultivationText}
+                onChange={(event) => setCultivationText(event.target.value)}
+                maxLength={120}
+                disabled={!canRecordToday}
+                placeholder="今天哪一念最容易带走你？写一句即可。"
+                className="min-h-24 resize-none rounded-[8px] border border-[rgba(172,146,83,.16)] bg-black/20 px-4 py-3 font-function text-sm leading-7 text-[rgba(242,235,220,.82)] outline-none transition placeholder:text-[rgba(220,212,195,.26)] focus:border-[rgba(180,157,93,.42)] disabled:opacity-50"
+              />
+            </label>
+
             {recordMessage ? (
               <p className="font-function text-xs leading-6 tracking-[.06em] text-[rgba(216,183,111,.76)]">
                 {recordMessage}
@@ -407,6 +525,7 @@ export default function PracticeChangePage() {
                   </p>
                   <p className="mt-2 font-function text-xs tracking-[.1em] text-[rgba(180,157,93,.58)]">
                     {(record.status ?? "completed") === "completed" ? "已完成" : "未完成"}
+                    {record.checkIn ? ` · 签到：${checkInLabels[record.checkIn]}` : ""}
                   </p>
                   <p className="mt-2 font-function text-sm leading-7 text-[rgba(220,212,195,.5)]">{record.note}</p>
                   {record.cultivationText ? (
@@ -419,6 +538,7 @@ export default function PracticeChangePage() {
                       <span>K 线场景：{record.klineRecord.scene}</span>
                       <span>第一反应：{record.klineRecord.reaction}</span>
                       <span>训练动作：{record.klineRecord.disciplineAction}</span>
+                      {record.klineRecord.feedback ? <span>系统反馈：{record.klineRecord.feedback}</span> : null}
                     </div>
                   ) : null}
                   {record.actions?.length ? (
@@ -479,6 +599,59 @@ export default function PracticeChangePage() {
 
         .practice-action-steps li::marker {
           color: rgba(180, 157, 93, 0.72);
+        }
+
+        .practice-choice {
+          display: grid;
+          gap: 0.3rem;
+          width: 100%;
+          border: 1px solid rgba(172, 146, 83, 0.12);
+          border-radius: 8px;
+          background: rgba(0, 0, 0, 0.14);
+          padding: 0.82rem 0.9rem;
+          text-align: left;
+          transition:
+            border-color 220ms ease,
+            background 220ms ease,
+            transform 220ms ease,
+            opacity 220ms ease;
+        }
+
+        .practice-choice:disabled {
+          cursor: default;
+          opacity: 0.56;
+        }
+
+        .practice-choice:not(:disabled) {
+          cursor: pointer;
+        }
+
+        .practice-choice:not(:disabled):active {
+          transform: scale(0.992);
+        }
+
+        .practice-choice.is-selected {
+          border-color: rgba(216, 183, 111, 0.42);
+          background:
+            radial-gradient(circle at 14% 0%, rgba(216, 183, 111, 0.1), transparent 10rem),
+            rgba(216, 183, 111, 0.055);
+        }
+
+        .practice-choice span {
+          font-family: var(--font-function);
+          font-size: 0.92rem;
+          font-weight: 600;
+          letter-spacing: 0.06em;
+          color: rgba(242, 235, 220, 0.78);
+        }
+
+        .practice-choice em {
+          font-family: var(--font-function);
+          font-size: 0.78rem;
+          font-style: normal;
+          line-height: 1.7;
+          letter-spacing: 0.03em;
+          color: rgba(220, 212, 195, 0.42);
         }
 
         .liangzhi-hold-button {
@@ -684,5 +857,14 @@ export default function PracticeChangePage() {
         }
       `}</style>
     </AssessmentShell>
+  )
+}
+
+function EvidencePill({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[8px] border border-[rgba(172,146,83,.12)] bg-white/[.025] px-4 py-3">
+      <p className="font-function text-xs tracking-[.14em] text-[rgba(220,212,195,.4)]">{label}</p>
+      <p className="mt-2 font-story text-xl font-light tracking-[.08em] text-[rgba(242,235,220,.78)]">{value}</p>
+    </div>
   )
 }

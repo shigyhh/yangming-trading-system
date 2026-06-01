@@ -84,9 +84,12 @@ export async function saveKLineRecordBinding({ user = {}, record = {}, source = 
     id: crypto.randomUUID(),
     day: Number(record.day || 0),
     recorded_at: record.recordedAt || now,
+    scene_key: cleanText(record.sceneKey || record.scene_key || "", 40),
+    reaction_key: cleanText(record.reactionKey || record.reaction_key || "", 40),
     scene: cleanText(record.scene || "未填写场景", 80),
     reaction: cleanText(record.reaction || "已觉察，未展开", 120),
     discipline_action: cleanText(record.disciplineAction || record.discipline_action || "先停一息，再复盘", 120),
+    feedback: cleanText(record.feedback || "", 180),
     source
   };
 
@@ -683,6 +686,7 @@ function normalizeTrainingRecord(record, fallbackTime) {
     actions: Array.isArray(record.actions) ? record.actions.map((item) => cleanText(item, 120)).slice(0, 8) : [],
     status: record.status === "missed" ? "missed" : "completed",
     recorded_at: record.recordedAt || record.recorded_at || fallbackTime,
+    check_in: cleanText(record.checkIn || record.check_in || "", 40),
     cultivation_text: cleanText(record.cultivationText || record.cultivation_text || "", 220)
   };
 }
@@ -829,12 +833,15 @@ function latestIso(left = "", right = "") {
 }
 
 function toAdminTrainingRecord(record) {
+  const checkIn = formatPracticeCheckIn(record.check_in);
+  const reflection = record.cultivation_text || record.note || "已记录今日觉察。";
+
   return {
     day: `第 ${record.day} 天`,
     date: record.date_key || String(record.recorded_at || "").slice(0, 10),
     status: record.status === "completed" ? "已完成" : "未完成",
     action: record.title,
-    reflection: record.cultivation_text || record.note || "已记录今日觉察。"
+    reflection: checkIn ? `签到：${checkIn}；${reflection}` : reflection
   };
 }
 
@@ -844,8 +851,17 @@ function toAdminKLineRecord(record) {
     date: String(record.recorded_at || "").slice(0, 10),
     scene: record.scene || "未填写场景",
     reaction: record.reaction || "已觉察，未展开",
-    disciplineAction: record.discipline_action || "先停一息，再复盘"
+    disciplineAction: record.feedback
+      ? `${record.discipline_action || "先停一息，再复盘"}；${record.feedback}`
+      : record.discipline_action || "先停一息，再复盘"
   };
+}
+
+function formatPracticeCheckIn(value) {
+  if (value === "preparing_trade") return "准备交易";
+  if (value === "observe_only") return "只观察";
+  if (value === "already_traded") return "已经交易过";
+  return "";
 }
 
 function toAdminRetestComparison(item) {

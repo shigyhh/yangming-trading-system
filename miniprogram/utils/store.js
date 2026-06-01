@@ -25,7 +25,9 @@ const {
   YM_COMPANION_MIRRORS,
   YM_GROUP_PRACTICE,
   YM_LESSON_WATCH_RECORDS,
-  YM_SUBSCRIPTION_STATE
+  YM_SUBSCRIPTION_STATE,
+  YM_KLINE_MIND_RECORDS,
+  YM_KLINE_HISTORY_CACHE
 } = require("../core/storage-keys");
 const REVIEW_KEY = YM_CLOSING_REVIEW;
 const MIND_KEY = YM_OPENING_CHECK;
@@ -172,6 +174,7 @@ function rebindLocalRecords(profile) {
   bindRecordMap(REACTION_KEY, userBinding);
   bindRecordMap(THREE_SEALS_KEY, userBinding);
   bindRecordMap(YM_INTRADAY_BOUNDARY_RECORDS, userBinding);
+  bindRecordMap(YM_KLINE_MIND_RECORDS, userBinding);
   write(ZHIXING_SCORE_KEY, Object.assign({}, zhixing, {
     latest: bindRecord(zhixing.latest, userBinding),
     records: Object.keys(zhixing.records || {}).reduce((next, key) => {
@@ -490,6 +493,77 @@ function saveTodayIntradayBoundaryRecord(record) {
   }));
   records[todayKey()] = nextRecord;
   write(YM_INTRADAY_BOUNDARY_RECORDS, records);
+  return nextRecord;
+}
+
+function getKlineMindRecords() {
+  return read(YM_KLINE_MIND_RECORDS, {});
+}
+
+function getKlineHistoryCache() {
+  return read(YM_KLINE_HISTORY_CACHE, {
+    cn_equity: {},
+    hk_equity: {},
+    us_equity: {},
+    futures: {},
+    crypto: {},
+    updatedAt: null
+  });
+}
+
+function saveKlineHistorySlice(marketKey, timeframeKey, slice) {
+  const market = String(marketKey || "cn_equity");
+  const timeframe = String(timeframeKey || "1d");
+  const cache = getKlineHistoryCache();
+  const marketCache = Object.assign({}, cache[market] || {});
+  marketCache[timeframe] = Object.assign({}, slice || {}, {
+    marketKey: market,
+    timeframeKey: timeframe,
+    source: (slice || {}).source || "historical_api",
+    updatedAt: Date.now()
+  });
+  const next = Object.assign({}, cache, {
+    [market]: marketCache,
+    updatedAt: Date.now()
+  });
+  return write(YM_KLINE_HISTORY_CACHE, next);
+}
+
+function getTodayKlineMindRecord() {
+  return getKlineMindRecords()[todayKey()] || {
+    date: todayKey(),
+    day: 1,
+    scenarioId: "",
+    scenarioTitle: "",
+    marketKey: "cn_equity",
+    marketName: "A股",
+    timeframeKey: "1d",
+    dataSource: "",
+    symbol: "",
+    personalityType: "",
+    stageKey: "",
+    stageName: "",
+    selectedCandleKey: "",
+    firstReaction: "",
+    bodySignal: "",
+    boundaryChoice: "",
+    insightLine: "",
+    score: 0,
+    completed: false,
+    updatedAt: null
+  };
+}
+
+function saveTodayKlineMindRecord(record) {
+  const records = getKlineMindRecords();
+  const current = getTodayKlineMindRecord();
+  const nextRecord = withUserBinding(Object.assign({}, current, record || {}, {
+    date: todayKey(),
+    completed: !!((record || {}).completed),
+    updatedAt: Date.now()
+  }));
+  records[todayKey()] = nextRecord;
+  write(YM_KLINE_MIND_RECORDS, records);
   return nextRecord;
 }
 
@@ -896,6 +970,7 @@ function clearMockMvpState() {
     YM_CLOSING_REVIEW,
     YM_ZHIXING_SCORE,
     YM_TRAINING_PROGRESS,
+    YM_KLINE_HISTORY_CACHE,
     YM_SHARE_CARDS,
     YM_INVITE_EVENTS,
     YM_LESSON_RESERVATIONS,
@@ -904,6 +979,7 @@ function clearMockMvpState() {
     YM_GROUP_PRACTICE,
     YM_LESSON_WATCH_RECORDS,
     YM_SUBSCRIPTION_STATE,
+    YM_KLINE_MIND_RECORDS,
     TRAINING_KEY,
     DAILY_LOOP_KEY,
     HEART_CARD_KEY,
@@ -968,6 +1044,8 @@ function collectLocalState() {
     three_seals_records: getThreeSealsRecords(),
     opening_check_records: getOpeningCheckRecords(),
     intraday_boundary_records: getIntradayBoundaryRecords(),
+    kline_mind_records: getKlineMindRecords(),
+    kline_history_cache: getKlineHistoryCache(),
     closing_review_records: getClosingReviewRecords(),
     share_cards: getShareCardState(),
     invite_events: getInviteEvents(),
@@ -1009,6 +1087,8 @@ function applyRemoteState(remoteState = {}) {
   if (remoteState.three_seals_records && typeof remoteState.three_seals_records === "object") write(THREE_SEALS_KEY, remoteState.three_seals_records);
   if (remoteState.opening_check_records && typeof remoteState.opening_check_records === "object") write(MIND_KEY, remoteState.opening_check_records);
   if (remoteState.intraday_boundary_records && typeof remoteState.intraday_boundary_records === "object") write(YM_INTRADAY_BOUNDARY_RECORDS, remoteState.intraday_boundary_records);
+  if (remoteState.kline_mind_records && typeof remoteState.kline_mind_records === "object") write(YM_KLINE_MIND_RECORDS, remoteState.kline_mind_records);
+  if (remoteState.kline_history_cache && typeof remoteState.kline_history_cache === "object") write(YM_KLINE_HISTORY_CACHE, remoteState.kline_history_cache);
   if (remoteState.closing_review_records && typeof remoteState.closing_review_records === "object") write(REVIEW_KEY, remoteState.closing_review_records);
   if (remoteState.share_cards && typeof remoteState.share_cards === "object") write(YM_SHARE_CARDS, remoteState.share_cards);
   if (Array.isArray(remoteState.invite_events)) write(YM_INVITE_EVENTS, remoteState.invite_events);
@@ -1088,6 +1168,11 @@ module.exports = {
   getIntradayBoundaryRecords,
   getTodayIntradayBoundaryRecord,
   saveTodayIntradayBoundaryRecord,
+  getKlineHistoryCache,
+  saveKlineHistorySlice,
+  getKlineMindRecords,
+  getTodayKlineMindRecord,
+  saveTodayKlineMindRecord,
   getTraining7State,
   saveTraining7State,
   saveTraining7Task,

@@ -13,6 +13,8 @@ const YM_COMPANION_MIRRORS = "ym_companion_mirrors";
 const YM_GROUP_PRACTICE = "ym_group_practice";
 const YM_LESSON_WATCH_RECORDS = "ym_lesson_watch_records";
 const YM_SUBSCRIPTION_STATE = "ym_subscription_state";
+const YM_KLINE_MIND_RECORDS = "ym_kline_mind_records";
+const YM_KLINE_HISTORY_CACHE = "ym_kline_history_cache";
 
 module.exports = {
   YM_DAILY_THREE_SEALS,
@@ -29,5 +31,7 @@ module.exports = {
   YM_COMPANION_MIRRORS,
   YM_GROUP_PRACTICE,
   YM_LESSON_WATCH_RECORDS,
-  YM_SUBSCRIPTION_STATE
+  YM_SUBSCRIPTION_STATE,
+  YM_KLINE_MIND_RECORDS,
+  YM_KLINE_HISTORY_CACHE
 };

@@ -11,6 +11,7 @@
     "pages/classroom/index",
     "pages/lesson-detail/index",
     "pages/intraday-boundary/index",
+    "pages/kline-mind/index",
     "pages/share-card/index",
     "pages/content365/index",
     "pages/review/index",

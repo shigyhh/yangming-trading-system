@@ -100,15 +100,19 @@ export type DataBindingTrainingRecord = {
   actions?: string[]
   status?: "completed" | "missed"
   recordedAt?: string
+  checkIn?: "preparing_trade" | "observe_only" | "already_traded" | string
   cultivationText?: string
 }
 
 export type DataBindingKLineRecord = {
   day?: number
   recordedAt?: string
+  sceneKey?: string
+  reactionKey?: string
   scene: string
   reaction: string
   disciplineAction: string
+  feedback?: string
 }
 
 export type DataBindingRetestComparison = {

@@ -4,6 +4,14 @@ const {
   getProfile,
   saveSyncStatus
 } = require("./store");
+const {
+  buildAssessmentBindingPayload,
+  buildRetestBindingPayload,
+  shouldSyncRetest,
+  buildTrainingBindingPayload,
+  buildKLineBindingPayload,
+  buildShareCardBindingPayload
+} = require("./data-binding-adapter");
 
 const API_BASE_KEY = "zhixing_api_base";
 const AUTH_KEY = "zhixing_api_auth";
@@ -176,67 +184,72 @@ async function syncCheckIn(note = "") {
 async function syncAssessmentReport(report = null) {
   const auth = await ensureAuth();
   const state = collectLocalState();
-  return request({
-    path: `/api/v1/users/${auth.user.id}/assessment-report`,
+  const payload = buildAssessmentBindingPayload({ auth, state, report: report || state.assessment_result });
+  const result = await request({
+    path: "/api/v1/data-binding/assessment-report",
     method: "POST",
     token: auth.access_token,
-    data: {
-      source_channel: "微信小程序MVP",
-      report: report || state.assessment_result,
-      assessment_history: state.assessment_history,
-      user_binding: state.user_binding,
-      retest_snapshots: state.retest_snapshots,
-      companion_mirrors: state.companion_mirrors,
-      subscription_state: state.subscription_state
-    }
+    data: payload
   });
+
+  if (shouldSyncRetest(state)) {
+    const boundUserId = (result.user && result.user.id) || payload.user.userId || auth.user.id;
+    request({
+      path: `/api/v1/data-binding/users/${encodeURIComponent(boundUserId)}/retests`,
+      method: "POST",
+      token: auth.access_token,
+      data: buildRetestBindingPayload({ auth, state, report: report || state.assessment_result })
+    }).catch(() => {});
+  }
+
+  return result;
 }
 
 async function syncTrainingProgress(progress = null) {
   const auth = await ensureAuth();
   const state = collectLocalState();
-  return request({
-    path: `/api/v1/users/${auth.user.id}/training-progress`,
+  const trainingPayload = buildTrainingBindingPayload({ auth, state, progress });
+  if (!trainingPayload) {
+    return { ok: true, skipped: true, reason: "暂无训练记录" };
+  }
+
+  const result = await request({
+    path: `/api/v1/data-binding/users/${encodeURIComponent(trainingPayload.user.userId)}/training-records`,
     method: "POST",
     token: auth.access_token,
-    data: {
-      source_channel: "微信小程序MVP",
-      progress: progress || {
-        training7_state: state.training7_state,
-        three_seals_records: state.three_seals_records,
-        opening_check_records: state.opening_check_records,
-        intraday_boundary_records: state.intraday_boundary_records,
-        closing_review_records: state.closing_review_records,
-        zhixing_score: state.zhixing_score,
-        retest_snapshots: state.retest_snapshots,
-        group_practice: state.group_practice,
-        lesson_watch_records: state.lesson_watch_records,
-        subscription_state: state.subscription_state
-      },
-      user_binding: state.user_binding
-    }
+    data: trainingPayload
   });
+
+  const klinePayload = buildKLineBindingPayload({
+    auth,
+    state,
+    progress: trainingPayload.practiceState,
+    trainingRecord: trainingPayload.record
+  });
+
+  if (klinePayload) {
+    request({
+      path: `/api/v1/data-binding/users/${encodeURIComponent(klinePayload.user.userId)}/kline-records`,
+      method: "POST",
+      token: auth.access_token,
+      data: klinePayload
+    }).catch(() => {});
+  }
+
+  return result;
 }
 
 async function syncShareAttribution(event = null) {
   const auth = await ensureAuth();
   const state = collectLocalState();
+  const payload = buildShareCardBindingPayload({ auth, state, event });
   return request({
-    path: `/api/v1/users/${auth.user.id}/share-attribution`,
+    path: `/api/v1/data-binding/users/${encodeURIComponent(payload.user.userId)}/share-card`,
     method: "POST",
     token: auth.access_token,
     data: {
-      source_channel: "微信小程序MVP",
-      event,
-      invite_events: state.invite_events,
-      invite_funnel: state.invite_funnel,
-      share_cards: state.share_cards,
-      companion_mirrors: state.companion_mirrors,
-      group_practice: state.group_practice,
-      lesson_reservations: state.lesson_reservations,
-      lesson_watch_records: state.lesson_watch_records,
-      subscription_state: state.subscription_state,
-      user_binding: state.user_binding
+      channel: payload.channel,
+      source_channel: payload.source_channel
     }
   });
 }

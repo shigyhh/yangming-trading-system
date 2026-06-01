@@ -16,6 +16,7 @@ const {
   getTodayReaction,
   saveTodayReaction,
   getTodayIntradayBoundaryRecord,
+  getTodayKlineMindRecord,
   getTraining7State,
   saveTraining7Task,
   getTodayThreeSeals,
@@ -171,7 +172,7 @@ function buildHomeRitualState({
       cardCopy: "完成事上练、省察与知行校准后，今日心证卡才算落成。",
       oathStatusText: "三印已成",
       oathHint: "今日戒已立，可以入今日一事。",
-      route: "/pages/training/index",
+      route: "/pages/kline-mind/index",
       completed: false,
       cardDone: false
     };
@@ -697,7 +698,7 @@ function buildTodayStages({ mind = null, intradayBoundaryRecord = null, review =
   ];
 }
 
-function buildHeroTasks({ reactionRecord = null, training = {}, dailyContent = {}, training7View = {} } = {}) {
+function buildHeroTasks({ reactionRecord = null, training = {}, dailyContent = {}, training7View = {}, klineMindRecord = null } = {}) {
   const trainingDay = training7View.today || {};
   const sevenDayTasks = Array.isArray(trainingDay.tasks) ? trainingDay.tasks : [];
   if (sevenDayTasks.length) {
@@ -721,9 +722,9 @@ function buildHeroTasks({ reactionRecord = null, training = {}, dailyContent = {
       },
       {
         key: "kline",
-        title: "完成一次 K 线观心",
-        status: steps.trigger || training.completed ? "已完成" : "待完成",
-        done: !!(steps.trigger || training.completed)
+        title: "完成一次 K 线历史训练",
+        status: steps.trigger || training.completed || (klineMindRecord && klineMindRecord.completed) ? "已完成" : "待完成",
+        done: !!(steps.trigger || training.completed || (klineMindRecord && klineMindRecord.completed))
       },
       {
         key: "checkin",
@@ -838,6 +839,7 @@ Page({
     const todayHeartCard = getTodayHeartCard();
     const reactionRecord = getTodayReaction();
     const intradayBoundaryRecord = getTodayIntradayBoundaryRecord();
+    const klineMindRecord = getTodayKlineMindRecord();
     const syncStatus = getSyncStatus();
     const retentionState = getRetentionState();
     const continuity = buildContinuityState({
@@ -876,6 +878,7 @@ Page({
       training,
       reactionRecord,
       intradayBoundaryRecord,
+      klineMindRecord,
       review: todayReview
     });
     const heroView = buildHeroView(dailyContent, training7View);
@@ -940,7 +943,7 @@ Page({
       assessment
     });
     const reportBridge = buildReportBridge(assessment, syncStatus);
-    const heroTasks = buildHeroTasks({ reactionRecord, training, dailyContent, training7View });
+    const heroTasks = buildHeroTasks({ reactionRecord, training, dailyContent, training7View, klineMindRecord });
     this.setData({
       phone: stored.phone || profile.phone || "",
       vows: buildVows(checkedMap),
@@ -1057,7 +1060,8 @@ Page({
       reactionRecord: record,
       intradayBoundaryRecord: getTodayIntradayBoundaryRecord(),
       review: getTodayReview(),
-      training: getTodayTraining()
+      training: getTodayTraining(),
+      klineMindRecord: getTodayKlineMindRecord()
     });
     syncLocalState({ silent: true }).catch(() => {});
     syncTrainingProgress().catch(() => {});
@@ -1068,7 +1072,8 @@ Page({
         reactionRecord: record,
         training: getTodayTraining(),
         dailyContent: this.data.dailyContent,
-        training7View
+        training7View,
+        klineMindRecord: getTodayKlineMindRecord()
       }),
       training7View,
       training7Summary: buildTraining7Summary(training7View),
@@ -1095,7 +1100,8 @@ Page({
       reactionRecord: getTodayReaction(),
       intradayBoundaryRecord: getTodayIntradayBoundaryRecord(),
       review: getTodayReview(),
-      training: getTodayTraining()
+      training: getTodayTraining(),
+      klineMindRecord: getTodayKlineMindRecord()
     });
     syncLocalState({ silent: true }).catch(() => {});
     syncTrainingProgress().catch(() => {});
@@ -1114,7 +1120,8 @@ Page({
         reactionRecord: getTodayReaction(),
         training: getTodayTraining(),
         dailyContent: this.data.dailyContent,
-        training7View
+        training7View,
+        klineMindRecord: getTodayKlineMindRecord()
       })
     });
   },
@@ -1380,7 +1387,7 @@ Page({
   },
 
   goTrainingDay() {
-    wx.redirectTo({ url: "/pages/training/index" });
+    wx.redirectTo({ url: "/pages/kline-mind/index" });
   },
 
   handleHeroTask(e) {
@@ -1398,7 +1405,7 @@ Page({
       return;
     }
     if (key === "kline" || key === "daily_practice") {
-      wx.redirectTo({ url: "/pages/training/index" });
+      wx.redirectTo({ url: "/pages/kline-mind/index" });
       return;
     }
     if (key === "closing_review") {
