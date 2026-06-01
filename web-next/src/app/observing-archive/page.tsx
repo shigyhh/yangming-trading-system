@@ -93,6 +93,7 @@ export default function ObservingArchivePage() {
   const lastSyncAt = getStorage<string>(assessmentStorageKeys.dataBindingLastSyncAt, "")
   const trainingRecordCount = remoteSummary?.training_records.length ?? practice?.records.length ?? 0
   const klineRecordCount = remoteSummary?.kline_records.length ?? practice?.records.filter((record) => Boolean(record.klineRecord)).length ?? 0
+  const tradeReviewCount = remoteSummary?.trade_reviews.length ?? 0
   const retestComparisonCount = remoteSummary?.retest_comparison.length
     ?? compareRiskRadarSnapshots(practice?.baselineReport, practice?.retestReport).length
   const dataSourceLabel = remoteSummary
@@ -142,49 +143,50 @@ export default function ObservingArchivePage() {
 
         <section className="archive-dashboard-grid mt-6">
           <GlassPanel className="archive-panel archive-user-card">
-          <p className="font-function text-xs font-semibold tracking-[.18em] text-[#b49d5d]">用户中心</p>
-          <div className="mt-5 grid gap-3">
-            <ArchiveMeta label="账号" value={bindingUser?.nickname || profile?.nickname || "体验学员"} />
-            <ArchiveMeta label="手机号" value={bindingUser?.phone || profile?.maskedPhone || "未留存"} />
-            <ArchiveMeta label="用户 ID" value={bindingUser?.id || profile?.userId || "等待生成"} />
-            <ArchiveMeta label="邀请码来源" value={bindingUser?.invite_source || profile?.inviteSource || "web-next"} />
-            <ArchiveMeta label="数据来源" value={dataSourceLabel} />
-            <ArchiveMeta label="最近同步" value={latestBindingTime ? formatArchiveTime(latestBindingTime) : "等待首次同步"} />
-          </div>
+            <p className="font-function text-xs font-semibold tracking-[.18em] text-[#b49d5d]">用户中心</p>
+            <div className="mt-5 grid gap-3">
+              <ArchiveMeta label="账号" value={bindingUser?.nickname || profile?.nickname || "体验学员"} />
+              <ArchiveMeta label="手机号" value={bindingUser?.phone || profile?.maskedPhone || "未留存"} />
+              <ArchiveMeta label="用户 ID" value={bindingUser?.id || profile?.userId || "等待生成"} />
+              <ArchiveMeta label="邀请码来源" value={bindingUser?.invite_source || profile?.inviteSource || "web-next"} />
+              <ArchiveMeta label="数据来源" value={dataSourceLabel} />
+              <ArchiveMeta label="最近同步" value={latestBindingTime ? formatArchiveTime(latestBindingTime) : "等待首次同步"} />
+            </div>
           </GlassPanel>
 
           <GlassPanel className="archive-panel archive-proof-card">
-          <p className="font-function text-xs font-semibold tracking-[.18em] text-[#b49d5d]">今日心证</p>
-          {report ? (
-            <>
-              <h2 className="mt-4 font-story text-3xl font-light leading-[1.45] tracking-[.08em]">
-                {primaryTypeLabel}交易者
-              </h2>
-              <p className="mt-4 font-story text-[1.08rem] font-light leading-9 tracking-[.04em] text-[rgba(220,212,195,.62)]">
-                {report.primaryType.summary}
+            <p className="font-function text-xs font-semibold tracking-[.18em] text-[#b49d5d]">今日心证</p>
+            {report ? (
+              <>
+                <h2 className="mt-4 font-story text-3xl font-light leading-[1.45] tracking-[.08em]">
+                  {primaryTypeLabel}交易者
+                </h2>
+                <p className="mt-4 font-story text-[1.08rem] font-light leading-9 tracking-[.04em] text-[rgba(220,212,195,.62)]">
+                  {report.primaryType.summary}
+                </p>
+              </>
+            ) : (
+              <p className="mt-4 font-story text-2xl font-light leading-[1.55] tracking-[.08em]">
+                暂无心证。
               </p>
-            </>
-          ) : (
-            <p className="mt-4 font-story text-2xl font-light leading-[1.55] tracking-[.08em]">
-              暂无心证。
-            </p>
-          )}
+            )}
           </GlassPanel>
 
           <GlassPanel className="archive-panel archive-loop-card">
-          <p className="font-function text-xs font-semibold tracking-[.18em] text-[#b49d5d]">数据闭环</p>
-          <div className="mt-5 grid gap-3 md:grid-cols-2">
-            <ArchiveMeta label="测评报告" value={reportBindingLabel} />
-            <ArchiveMeta label="训练记录" value={`${trainingRecordCount} 条`} />
-            <ArchiveMeta label="K 线心念记录" value={`${klineRecordCount} 条`} />
-            <ArchiveMeta label="复测雷达" value={retestComparisonCount ? `${retestComparisonCount} 项变化` : "等待复测"} />
-            <ArchiveMeta label="助教承接" value={assistantBindingLabel} />
-            <ArchiveMeta label="分享卡片" value={shareCardBindingLabel} />
-            <ArchiveMeta label="飞书同步" value={feishuBindingLabel} />
-          </div>
-          <p className="mt-4 font-function text-xs leading-6 text-[rgba(220,212,195,.46)]">
-            server 未启动时，本页继续读取本机记录；server 启动后，测评、训练、复测、邀请码、助教摘要与分享卡会进入同一份用户数据绑定结构。
-          </p>
+            <p className="font-function text-xs font-semibold tracking-[.18em] text-[#b49d5d]">数据闭环</p>
+            <div className="mt-5 grid gap-3 md:grid-cols-2">
+              <ArchiveMeta label="测评报告" value={reportBindingLabel} />
+              <ArchiveMeta label="训练记录" value={`${trainingRecordCount} 条`} />
+              <ArchiveMeta label="K 线心念记录" value={`${klineRecordCount} 条`} />
+              <ArchiveMeta label="真实交易复盘" value={`${tradeReviewCount} 条`} />
+              <ArchiveMeta label="复测雷达" value={retestComparisonCount ? `${retestComparisonCount} 项变化` : "等待复测"} />
+              <ArchiveMeta label="助教承接" value={assistantBindingLabel} />
+              <ArchiveMeta label="分享卡片" value={shareCardBindingLabel} />
+              <ArchiveMeta label="飞书同步" value={feishuBindingLabel} />
+            </div>
+            <p className="mt-4 font-function text-xs leading-6 text-[rgba(220,212,195,.46)]">
+              server 未启动时，本页继续读取本机记录；server 启动后，测评、训练、复测、邀请码、助教摘要与分享卡会进入同一份用户数据绑定结构。
+            </p>
           </GlassPanel>
 
           <GlassPanel className="archive-panel archive-change-card">
@@ -228,6 +230,9 @@ export default function ObservingArchivePage() {
           <h2 className="mt-4 font-story text-2xl font-light leading-[1.5] tracking-[.08em]">
             把今日心证继续沉淀成可复看的证据。
           </h2>
+          <SecondaryLink href="/trade-review" className="mt-3 w-full">
+            记录一次真实交易复盘 →
+          </SecondaryLink>
           <SecondaryLink href="/share-card" className="mt-3 w-full">
             生成照见分享卡 →
           </SecondaryLink>
@@ -308,6 +313,13 @@ export default function ObservingArchivePage() {
 
           .archive-actions-card {
             grid-column: span 12;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .archive-title {
+            font-size: clamp(2.65rem, 13vw, 3.6rem);
+            line-height: 1.18;
           }
         }
 

@@ -29,8 +29,17 @@
   line-height: 1.65;
 }
 
-.intro-card button {
+.intro-actions {
+  position: relative;
+  z-index: 1;
   margin-top: 22rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14rpx;
+}
+
+.intro-actions button {
+  margin-top: 0;
 }
 
 .filter-card > text {

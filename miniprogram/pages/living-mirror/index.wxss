@@ -1,0 +1,227 @@
+.mirror-hero,
+.change-card,
+.reminder-card,
+.recent-card,
+.assistant-card {
+  margin-top: 28rpx;
+  padding: 30rpx;
+}
+
+.mirror-hero text,
+.mirror-hero view,
+.change-card text,
+.change-card view,
+.reminder-card text,
+.reminder-card view,
+.reminder-card button,
+.recent-card text,
+.recent-card view,
+.recent-card button,
+.assistant-card text,
+.assistant-card view,
+.assistant-card button {
+  position: relative;
+  z-index: 1;
+}
+
+.mirror-hero {
+  min-height: 360rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.lake-glow {
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  top: 64rpx;
+  height: 220rpx;
+  border-radius: 50%;
+  opacity: 0.7;
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(216, 183, 111, 0.18), transparent 58%),
+    radial-gradient(ellipse at 50% 70%, rgba(95, 132, 117, 0.18), transparent 72%);
+  filter: blur(2rpx);
+}
+
+.mirror-label,
+.card-head text {
+  display: block;
+  color: #f1d27d;
+  font-size: 24rpx;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.mirror-name {
+  margin-top: 18rpx;
+  color: #fff6e6;
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", serif;
+  font-size: 64rpx;
+  line-height: 1.15;
+}
+
+.mirror-count {
+  margin-top: 14rpx;
+  color: rgba(247, 239, 223, 0.5);
+  font-size: 24rpx;
+}
+
+.thief-line {
+  margin-top: 30rpx;
+  padding: 20rpx;
+  border-radius: 22rpx;
+  border: 1rpx solid rgba(241, 210, 125, 0.12);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.thief-line text {
+  display: block;
+  color: #b49355;
+  font-size: 21rpx;
+  font-weight: 900;
+}
+
+.thief-line view {
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.9);
+  font-size: 30rpx;
+  font-weight: 900;
+}
+
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18rpx;
+}
+
+.card-head view {
+  color: rgba(247, 239, 223, 0.46);
+  font-size: 22rpx;
+  line-height: 1.45;
+  text-align: right;
+}
+
+.change-row {
+  margin-top: 18rpx;
+  padding: 20rpx 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 20rpx;
+  align-items: center;
+  border-bottom: 1rpx solid rgba(241, 210, 125, 0.08);
+}
+
+.change-row text {
+  color: rgba(247, 239, 223, 0.84);
+  font-size: 28rpx;
+  font-weight: 900;
+}
+
+.change-row view {
+  color: rgba(247, 239, 223, 0.58);
+  font-size: 26rpx;
+  font-weight: 900;
+}
+
+.change-row view.down,
+.change-row view.up {
+  color: #73d6bd;
+}
+
+.change-row view.warn {
+  color: #f1d27d;
+}
+
+.reminder-line {
+  margin-top: 22rpx;
+  color: rgba(247, 239, 223, 0.72);
+  font-size: 25rpx;
+  line-height: 1.62;
+}
+
+.training-line {
+  margin-top: 16rpx;
+  color: #fff6e6;
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", serif;
+  font-size: 34rpx;
+  line-height: 1.45;
+}
+
+.reminder-card button,
+.assistant-card button {
+  margin-top: 24rpx;
+}
+
+.recent-row {
+  width: 100%;
+  min-height: 84rpx;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  color: rgba(247, 239, 223, 0.78);
+  border-bottom: 1rpx solid rgba(241, 210, 125, 0.08);
+  background: transparent;
+  font-size: 25rpx;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.recent-row::before,
+.recent-row::after {
+  display: none;
+}
+
+.empty-text {
+  margin-top: 20rpx;
+  color: rgba(247, 239, 223, 0.52);
+  font-size: 24rpx;
+  line-height: 1.6;
+}
+
+.assistant-grid {
+  margin-top: 20rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12rpx;
+}
+
+.assistant-grid > view {
+  padding: 18rpx;
+  border-radius: 18rpx;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.assistant-grid text {
+  display: block;
+  color: #b49355;
+  font-size: 20rpx;
+  font-weight: 900;
+}
+
+.assistant-grid view view {
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.82);
+  font-size: 24rpx;
+  line-height: 1.45;
+  font-weight: 800;
+}
+
+.assistant-script {
+  margin-top: 18rpx;
+  color: rgba(247, 239, 223, 0.72);
+  font-size: 24rpx;
+  line-height: 1.6;
+}
+
+@media (max-width: 340px) {
+  .assistant-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mirror-name {
+    font-size: 56rpx;
+  }
+}

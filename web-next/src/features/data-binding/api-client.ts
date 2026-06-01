@@ -2,14 +2,22 @@
 
 import type {
   DataBindingAssessmentPayload,
+  DataBindingAssessmentResponse,
+  DataBindingKLineResponse,
   DataBindingKLinePayload,
   DataBindingRetestComparison,
   DataBindingRetestPayload,
+  DataBindingRetestResponse,
   DataBindingShareCardResponse,
+  DataBindingTradeReviewPayload,
+  DataBindingTradeReviewResponse,
   DataBindingTrainingPayload,
+  DataBindingTrainingResponse,
   DataBindingUserProfile,
   DataBindingUserSummaryResponse,
 } from "../../../../packages/contracts/data-binding"
+
+import type { TradeReview } from "../../../../packages/contracts/living-mirror"
 
 import type { PracticeChangeState } from "@/features/assessment/practice-change"
 import type { AssessmentAnswer, AssessmentReport } from "@/features/assessment/report"
@@ -64,7 +72,7 @@ export async function syncAssessmentReportBinding({
     source: "web-next",
   }
 
-  return requestJson("/api/v1/data-binding/assessment-report", payload)
+  return requestJson<DataBindingAssessmentPayload, DataBindingAssessmentResponse>("/api/v1/data-binding/assessment-report", payload)
 }
 
 export async function syncTrainingRecordBinding({
@@ -91,7 +99,10 @@ export async function syncTrainingRecordBinding({
     },
     source: "web-next",
   }
-  const trainingResult = await requestJson(`/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/training-records`, payload)
+  const trainingResult = await requestJson<DataBindingTrainingPayload, DataBindingTrainingResponse>(
+    `/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/training-records`,
+    payload,
+  )
 
   if (record.klineRecord) {
     const klinePayload: DataBindingKLinePayload = {
@@ -103,7 +114,10 @@ export async function syncTrainingRecordBinding({
       },
       source: "web-next",
     }
-    await requestJson(`/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/kline-records`, klinePayload)
+    await requestJson<DataBindingKLinePayload, DataBindingKLineResponse>(
+      `/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/kline-records`,
+      klinePayload,
+    )
   }
 
   return trainingResult
@@ -124,7 +138,24 @@ export async function syncRetestResultBinding({
     source: "web-next",
   }
 
-  return requestJson(`/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/retests`, payload)
+  return requestJson<DataBindingRetestPayload, DataBindingRetestResponse>(
+    `/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/retests`,
+    payload,
+  )
+}
+
+export async function syncTradeReviewBinding(review: Partial<TradeReview>) {
+  const user = getDataBindingUserProfile()
+  const payload: DataBindingTradeReviewPayload = {
+    user,
+    review: review as TradeReview,
+    source: "web-next",
+  }
+
+  return requestJson<DataBindingTradeReviewPayload, DataBindingTradeReviewResponse>(
+    `/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/trade-reviews`,
+    payload,
+  )
 }
 
 export async function fetchDataBindingSummary() {

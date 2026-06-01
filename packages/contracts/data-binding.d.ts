@@ -1,3 +1,5 @@
+import type { AssistantHandoff, LivingMirrorStats, MirrorArchive, MirrorReport, TradeReview } from "./living-mirror"
+
 export type DataBindingRiskRadarItem = {
   key: string
   label: string
@@ -234,6 +236,48 @@ export type DataBindingRetestPayload = {
   source?: "web-next" | "miniprogram" | "admin" | string
 }
 
+export type DataBindingTradeReviewPayload = {
+  user: DataBindingUserProfile
+  review: TradeReview
+  source?: "web-next" | "miniprogram" | "admin" | string
+}
+
+export type DataBindingAssessmentResponse = {
+  user: DataBindingPublicUser
+  report: DataBindingAssessmentReport
+  mirror_report: MirrorReport
+  living_mirror_stats: LivingMirrorStats
+  admin_user: DataBindingAdminUser
+}
+
+export type DataBindingTrainingResponse = {
+  user: DataBindingPublicUser
+  record: DataBindingTrainingRecord
+  living_mirror_stats: LivingMirrorStats
+  admin_user: DataBindingAdminUser
+}
+
+export type DataBindingKLineResponse = {
+  user: DataBindingPublicUser
+  record: DataBindingKLineRecord
+  living_mirror_stats: LivingMirrorStats
+  admin_user: DataBindingAdminUser
+}
+
+export type DataBindingRetestResponse = {
+  user: DataBindingPublicUser
+  retest: {
+    id: string
+    saved_at: string
+    source: string
+    report: DataBindingAssessmentReport
+    comparison: DataBindingRetestComparison[]
+  }
+  comparison: DataBindingRetestComparison[]
+  living_mirror_stats: LivingMirrorStats
+  admin_user: DataBindingAdminUser
+}
+
 export type DataBindingShareCardPayload = {
   channel?: string
   source_channel?: string
@@ -242,8 +286,11 @@ export type DataBindingShareCardPayload = {
 export type DataBindingUserSummaryResponse = {
   user: DataBindingPublicUser
   report: DataBindingAssessmentReport | null
+  mirror_report: MirrorReport | null
   training_records: DataBindingTrainingRecord[]
   kline_records: DataBindingKLineRecord[]
+  trade_reviews: TradeReview[]
+  living_mirror_stats: LivingMirrorStats | null
   retests: Array<{
     id: string
     saved_at: string
@@ -256,6 +303,7 @@ export type DataBindingUserSummaryResponse = {
   feishu_sync: DataBindingFeishuSyncState | null
   share_card: DataBindingShareCard | null
   admin_user?: DataBindingAdminUser
+  mirror_archive?: MirrorArchive
 }
 
 export type DataBindingFeishuSyncResponse = {
@@ -313,9 +361,28 @@ export type DataBindingAdminUser = {
   assistantSummary?: DataBindingAssistantSummary | null
   feishuSync?: DataBindingFeishuSyncState | null
   shareCard?: DataBindingShareCard | null
+  mirrorReport?: MirrorReport | null
+  livingMirrorStats?: LivingMirrorStats | null
+  tradeReviews?: Array<{
+    id: string
+    tradeDate: string
+    detectedMirror: string
+    strongestThought: string
+    reviewText: string
+    behaviorTags: string[]
+    createdAt: string
+  }>
+  assistantHandoff?: AssistantHandoff | null
   trainingRecords: DataBindingAdminTrainingRecord[]
   klineRecords: DataBindingAdminKLineRecord[]
   retestComparisons: DataBindingAdminRetestComparison[]
+}
+
+export type DataBindingTradeReviewResponse = {
+  user: DataBindingPublicUser
+  review: TradeReview
+  living_mirror_stats: LivingMirrorStats
+  admin_user: DataBindingAdminUser
 }
 
 export type DataBindingShareCardResponse = {

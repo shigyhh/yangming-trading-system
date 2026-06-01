@@ -16,7 +16,7 @@ import { getI18nBundle, listSupportedLocales } from "../services/i18n.js";
 import { getQuestionBankStats } from "../services/questionBank.js";
 import { consumeWechatAuthCode, createWechatAuthUrl } from "../services/wechatAuth.js";
 import { advanceZhixingReplaySession, finishZhixingReplaySession, getZhixingReplaySession, listZhixingReplayResults, startZhixingReplaySession, submitZhixingReplayDecision } from "../services/zhixingReplay.js";
-import { generateShareCardBinding, getAdminUserFromBindings, getDataBindingUserSummary, getInviteSourceStatsBinding, getRetestComparisonBinding, getShareCardBinding, getUserReportBinding, listAdminUsersFromBindings, saveAssessmentReportBinding, saveKLineRecordBinding, saveRetestResultBinding, saveTrainingRecordBinding, syncAssistantSummaryToFeishuBinding, updateAssistantHandoffBinding } from "../services/dataBinding.js";
+import { generateShareCardBinding, getAdminUserFromBindings, getDataBindingUserSummary, getInviteSourceStatsBinding, getRetestComparisonBinding, getShareCardBinding, getUserReportBinding, listAdminUsersFromBindings, saveAssessmentReportBinding, saveKLineRecordBinding, saveRetestResultBinding, saveTradeReviewBinding, saveTrainingRecordBinding, syncAssistantSummaryToFeishuBinding, updateAssistantHandoffBinding } from "../services/dataBinding.js";
 import { getGlobalReflectionToday, listGlobalReflectionChoices, submitGlobalReflectionVote } from "../services/globalReflection.js";
 import { buildHistoricalKlineSlice, downloadHistoricalKline, getHistoricalKlineRules, listHistoricalKlineCatalog, listHistoricalKlineInstruments, revealHistoricalKlineSlice } from "../services/historicalKline.js";
 
@@ -82,6 +82,7 @@ export async function route(req, res) {
         data_binding_user_report: "GET /api/v1/data-binding/users/:user_id/report",
         data_binding_training_record: "POST /api/v1/data-binding/users/:user_id/training-records",
         data_binding_kline_record: "POST /api/v1/data-binding/users/:user_id/kline-records",
+        data_binding_trade_review: "POST /api/v1/data-binding/users/:user_id/trade-reviews",
         data_binding_retest: "POST /api/v1/data-binding/users/:user_id/retests",
         data_binding_retest_comparison: "GET /api/v1/data-binding/users/:user_id/retest-comparison",
         data_binding_user_summary: "GET /api/v1/data-binding/users/:user_id/summary",
@@ -247,6 +248,17 @@ export async function route(req, res) {
     const result = await saveKLineRecordBinding({
       user: { ...(body.user || {}), userId: dataBindingKlineMatch[1] },
       record: body.record,
+      source: body.source || body.source_channel || "api"
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const dataBindingTradeReviewMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/trade-reviews$/);
+  if (req.method === "POST" && dataBindingTradeReviewMatch) {
+    const body = await readJson(req);
+    const result = await saveTradeReviewBinding({
+      user: { ...(body.user || {}), userId: dataBindingTradeReviewMatch[1] },
+      review: body.review,
       source: body.source || body.source_channel || "api"
     });
     return sendJson(res, 200, { ok: true, ...result });

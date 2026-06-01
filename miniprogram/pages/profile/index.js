@@ -27,6 +27,8 @@ const {
   getSubscriptionView,
   saveSubscriptionPlan,
   getMockUserProfile,
+  getLivingMirrorStats,
+  getAssistantHandoff,
   clearMockMvpState,
   todayKey
 } = require("../../utils/store");
@@ -87,6 +89,8 @@ Page({
     retestSnapshots: {},
     subscriptionView: getSubscriptionView(),
     mockUserProfile: getMockUserProfile(),
+    livingMirrorStats: getLivingMirrorStats(),
+    assistantHandoff: getAssistantHandoff(),
     shareMoments: buildShareMomentEntries(),
     menu: []
   },
@@ -104,6 +108,7 @@ Page({
     const auth = getAuthSession();
     const zhixingScoreState = getZhixingScoreState();
     const dailyContent = getTodayContent();
+    const livingMirrorStats = getLivingMirrorStats();
     const retentionState = getRetentionState();
     const loopState = getDailyLoopState();
     const today = todayKey();
@@ -160,6 +165,8 @@ Page({
       retestSnapshots: getRetestSnapshotState(),
       subscriptionView: getSubscriptionView(),
       mockUserProfile: getMockUserProfile(),
+      livingMirrorStats,
+      assistantHandoff: getAssistantHandoff(),
       shareMoments: buildShareMomentEntries(),
       menu: [
         { key: "report", title: "交易人格心证", subtitle: result ? `${result.primary} · ${result.secondary}` : "完成照见后生成" },

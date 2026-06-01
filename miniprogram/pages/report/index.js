@@ -274,6 +274,10 @@ Page({
     wx.navigateTo({ url: "/pages/kline-simulator/index" });
   },
 
+  goTradeReview() {
+    wx.navigateTo({ url: "/pages/trade-review/index" });
+  },
+
   saveReport() {
     updateProfile({
       reportSavedAt: Date.now(),

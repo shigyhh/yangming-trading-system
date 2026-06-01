@@ -24,8 +24,8 @@ function CycleMirrorContent() {
   }, [])
 
   return (
-    <AssessmentShell className="py-5">
-      <div className="cycle-mirror-page flex flex-col">
+    <AssessmentShell className="py-5 md:py-7" contentWidth="wide">
+      <div className="cycle-mirror-page mx-auto flex w-full max-w-[1280px] flex-col">
         <CycleMirror key={mirrorId} initialMirrorId={mirrorId} onMirrorChange={persistMirrorSignal} />
         <div className="mt-3">
           <Link href="/assessment" className="cycle-back-link">
@@ -83,7 +83,7 @@ function CycleMirrorContent() {
 
 export default function CycleMirrorPage() {
   return (
-    <Suspense fallback={<AssessmentShell className="py-5"><StatusPill>正在进入循环之镜</StatusPill></AssessmentShell>}>
+    <Suspense fallback={<AssessmentShell className="py-5" contentWidth="wide"><StatusPill>正在进入循环之镜</StatusPill></AssessmentShell>}>
       <CycleMirrorContent />
     </Suspense>
   )

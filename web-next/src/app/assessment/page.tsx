@@ -189,8 +189,8 @@ export default function AssessmentPage() {
   }
 
   return (
-    <AssessmentShell className="py-5">
-      <div className={cn("assessment-one-thought flex flex-col", isCompactQuestion && "is-compact")}>
+    <AssessmentShell className="py-5 md:py-7" contentWidth="wide">
+      <div className={cn("assessment-one-thought mx-auto flex w-full max-w-[1180px] flex-col", isCompactQuestion && "is-compact")}>
         <div
           ref={questionTopRef}
           className="flex scroll-mt-5 items-center justify-between gap-3 font-function text-xs tracking-[.08em] text-[rgba(220,212,195,.46)]"
@@ -314,6 +314,31 @@ export default function AssessmentPage() {
           .thought-action-bar {
             isolation: isolate;
           }
+
+        @media (min-width: 960px) {
+          .assessment-one-thought {
+            min-height: calc(100svh - 3.5rem);
+          }
+
+          .thought-stage {
+            display: grid;
+            grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
+            gap: clamp(1.5rem, 4vw, 3rem);
+            align-items: center;
+            min-height: 300px;
+          }
+
+          .thought-question {
+            margin-top: 0;
+            border-left: 1px solid rgba(172, 146, 83, 0.13);
+            padding-left: clamp(1.5rem, 3vw, 2.4rem);
+          }
+
+          .thought-action-bar {
+            width: min(100%, 560px);
+            margin-left: auto;
+          }
+        }
 
         .thought-action-bar::before {
           content: "";

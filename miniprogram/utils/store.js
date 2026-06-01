@@ -34,7 +34,10 @@ const {
   YM_KLINE_SESSION_RECORDS,
   YM_KLINE_REVIEW_REPORTS,
   YM_KLINE_MIRROR_CHALLENGES,
-  YM_ANONYMOUS_REACTION_STATS
+  YM_ANONYMOUS_REACTION_STATS,
+  YM_TRADE_REVIEW_RECORDS,
+  YM_LIVING_MIRROR_STATS,
+  YM_ASSISTANT_HANDOFF
 } = require("../core/storage-keys");
 const REVIEW_KEY = YM_CLOSING_REVIEW;
 const MIND_KEY = YM_OPENING_CHECK;
@@ -45,6 +48,7 @@ const { normalizePhone, isValidPhone, maskPhone, buildUserBinding } = require(".
 const { buildRiskSnapshot } = require("../modules/retest-change/index");
 const { buildCompanionMirror } = require("../modules/companion-mirror/index");
 const { buildSubscriptionPatch, buildSubscriptionView } = require("../modules/subscription/index");
+const { buildLivingMirrorStats } = require("../modules/trade-review/index");
 
 function todayKey() {
   const now = new Date();
@@ -661,6 +665,42 @@ function getAnonymousReactionStats() {
   return read(YM_ANONYMOUS_REACTION_STATS, {});
 }
 
+function getTradeReviewRecords() {
+  return read(YM_TRADE_REVIEW_RECORDS, {
+    latest: null,
+    records: []
+  });
+}
+
+function getLivingMirrorStats() {
+  return read(YM_LIVING_MIRROR_STATS, buildLivingMirrorStats(getTradeReviewRecords()));
+}
+
+function getAssistantHandoff() {
+  const stats = getLivingMirrorStats();
+  return read(YM_ASSISTANT_HANDOFF, (stats || {}).assistantHandoff || {});
+}
+
+function saveLivingMirrorStatsFromReviews(tradeReviewState) {
+  const stats = write(YM_LIVING_MIRROR_STATS, buildLivingMirrorStats(tradeReviewState || getTradeReviewRecords()));
+  write(YM_ASSISTANT_HANDOFF, (stats || {}).assistantHandoff || {});
+  return stats;
+}
+
+function saveTradeReviewRecord(record) {
+  const state = getTradeReviewRecords();
+  const nextRecord = withUserBinding(Object.assign({}, record || {}, {
+    updatedAt: Date.now()
+  }));
+  const records = (state.records || []).filter((item) => item.id !== nextRecord.id).concat(nextRecord).slice(-60);
+  const nextState = write(YM_TRADE_REVIEW_RECORDS, {
+    latest: nextRecord,
+    records
+  });
+  saveLivingMirrorStatsFromReviews(nextState);
+  return nextState;
+}
+
 function getTraining7State() {
   return read(TRAINING7_KEY, {
     currentDay: 1,
@@ -1135,10 +1175,16 @@ function clearAssessment() {
 }
 
 function collectLocalState() {
+  const profile = getProfile();
+  const userBinding = getUserBinding();
+  const mirrorReport = getAssessmentResult();
+  const tradeReview = getTradeReviewRecords();
+  const livingMirrorStats = getLivingMirrorStats();
+  const assistantHandoff = getAssistantHandoff();
   return {
-    profile: getProfile(),
-    user_binding: getUserBinding(),
-    assessment_result: getAssessmentResult(),
+    profile,
+    user_binding: userBinding,
+    assessment_result: mirrorReport,
     assessment_history: getAssessmentHistory(),
     assessment_answers: getAssessmentAnswers(),
     mind_profile: getMindProfile(),
@@ -1156,6 +1202,9 @@ function collectLocalState() {
     kline_review_reports: getKlineReviewReports(),
     kline_mirror_challenges: getKlineMirrorChallenges(),
     anonymous_reaction_stats: getAnonymousReactionStats(),
+    trade_review_records: tradeReview,
+    living_mirror_stats: livingMirrorStats,
+    assistant_handoff: assistantHandoff,
     closing_review_records: getClosingReviewRecords(),
     share_cards: getShareCardState(),
     invite_events: getInviteEvents(),
@@ -1176,13 +1225,36 @@ function collectLocalState() {
     dojo_state: getDojoState(),
     client_meta: {
       source: "wechat_miniprogram_mvp",
+      role: "daily_practice_companion",
       updated_at: Date.now()
+    },
+    shared_entities: {
+      User: {
+        profile,
+        userBinding
+      },
+      MirrorReport: mirrorReport,
+      TradeReview: tradeReview,
+      LivingMirrorStats: livingMirrorStats,
+      AssistantHandoff: assistantHandoff
     }
   };
 }
 
 function applyRemoteState(remoteState = {}) {
   if (!remoteState || typeof remoteState !== "object") return collectLocalState();
+  const sharedEntities = remoteState.shared_entities || {};
+  if (sharedEntities.User && typeof sharedEntities.User === "object") {
+    if (sharedEntities.User.profile) write(PROFILE_KEY, Object.assign({}, ensureProfile(), sharedEntities.User.profile));
+    if (sharedEntities.User.userBinding && sharedEntities.User.userBinding.phone) bindPhone(sharedEntities.User.userBinding.phone);
+  }
+  if (sharedEntities.MirrorReport && typeof sharedEntities.MirrorReport === "object") write(ASSESSMENT_KEY, sharedEntities.MirrorReport);
+  if (sharedEntities.TradeReview && typeof sharedEntities.TradeReview === "object") {
+    write(YM_TRADE_REVIEW_RECORDS, sharedEntities.TradeReview);
+    saveLivingMirrorStatsFromReviews(sharedEntities.TradeReview);
+  }
+  if (sharedEntities.LivingMirrorStats && typeof sharedEntities.LivingMirrorStats === "object") write(YM_LIVING_MIRROR_STATS, sharedEntities.LivingMirrorStats);
+  if (sharedEntities.AssistantHandoff && typeof sharedEntities.AssistantHandoff === "object") write(YM_ASSISTANT_HANDOFF, sharedEntities.AssistantHandoff);
   if (remoteState.profile) write(PROFILE_KEY, Object.assign({}, ensureProfile(), remoteState.profile));
   if (remoteState.user_binding && remoteState.user_binding.phone) bindPhone(remoteState.user_binding.phone);
   if (remoteState.user_binding && remoteState.user_binding.inviteSource) saveInviteSource(remoteState.user_binding.inviteSource);
@@ -1204,6 +1276,12 @@ function applyRemoteState(remoteState = {}) {
   if (remoteState.kline_review_reports && typeof remoteState.kline_review_reports === "object") write(YM_KLINE_REVIEW_REPORTS, remoteState.kline_review_reports);
   if (remoteState.kline_mirror_challenges && typeof remoteState.kline_mirror_challenges === "object") write(YM_KLINE_MIRROR_CHALLENGES, remoteState.kline_mirror_challenges);
   if (remoteState.anonymous_reaction_stats && typeof remoteState.anonymous_reaction_stats === "object") write(YM_ANONYMOUS_REACTION_STATS, remoteState.anonymous_reaction_stats);
+  if (remoteState.trade_review_records && typeof remoteState.trade_review_records === "object") {
+    write(YM_TRADE_REVIEW_RECORDS, remoteState.trade_review_records);
+    saveLivingMirrorStatsFromReviews(remoteState.trade_review_records);
+  }
+  if (remoteState.living_mirror_stats && typeof remoteState.living_mirror_stats === "object") write(YM_LIVING_MIRROR_STATS, remoteState.living_mirror_stats);
+  if (remoteState.assistant_handoff && typeof remoteState.assistant_handoff === "object") write(YM_ASSISTANT_HANDOFF, remoteState.assistant_handoff);
   if (remoteState.closing_review_records && typeof remoteState.closing_review_records === "object") write(REVIEW_KEY, remoteState.closing_review_records);
   if (remoteState.share_cards && typeof remoteState.share_cards === "object") write(YM_SHARE_CARDS, remoteState.share_cards);
   if (Array.isArray(remoteState.invite_events)) write(YM_INVITE_EVENTS, remoteState.invite_events);
@@ -1294,6 +1372,11 @@ module.exports = {
   getKlineMirrorChallenges,
   saveKlineMirrorChallenge,
   getAnonymousReactionStats,
+  getTradeReviewRecords,
+  saveTradeReviewRecord,
+  getLivingMirrorStats,
+  getAssistantHandoff,
+  saveLivingMirrorStatsFromReviews,
   getKlineMindRecords,
   getTodayKlineMindRecord,
   saveTodayKlineMindRecord,

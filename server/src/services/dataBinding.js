@@ -11,6 +11,30 @@ let dataBindingLoading = null;
 
 const forbiddenPhrases = ["推荐买入", "推荐卖出", "必赚", "稳赚", "收益保证", "喊单", "抄底", "逃顶"];
 const assistantStatuses = new Set(["待承接", "已承接", "待复盘", "已完成"]);
+const livingMirrorSchemaVersion = "living_mirror_v1";
+const mirrorNames = ["追涨之镜", "扛单之镜", "幻想之镜", "赌性之镜", "从众之镜", "犹疑之镜", "拖延之镜", "焦虑之镜", "良知之镜"];
+const mirrorKeyByName = {
+  追涨之镜: "chasing",
+  扛单之镜: "holding_loss",
+  幻想之镜: "fantasy",
+  赌性之镜: "gambling",
+  从众之镜: "following",
+  犹疑之镜: "hesitation",
+  拖延之镜: "procrastination",
+  焦虑之镜: "anxiety",
+  良知之镜: "conscience"
+};
+const legacyTypeMirrorMap = {
+  冲动型: "追涨之镜",
+  扛单型: "扛单之镜",
+  完美型: "犹疑之镜",
+  赌徒型: "赌性之镜",
+  从众型: "从众之镜",
+  偏执型: "幻想之镜",
+  拖延型: "拖延之镜",
+  焦虑型: "焦虑之镜",
+  平衡型: "良知之镜"
+};
 
 export async function saveAssessmentReportBinding({ user = {}, report = {}, answers = [], questionOrder = [], source = "api" }) {
   await ensureDataBindingLoaded();
@@ -31,6 +55,8 @@ export async function saveAssessmentReportBinding({ user = {}, report = {}, answ
     question_order: Array.isArray(questionOrder) ? questionOrder.slice(0, 80) : [],
     report: normalizedReport
   };
+  record.mirror_report = buildMirrorReportFromAssessment(normalizedReport, record);
+  refreshLivingMirrorState(record);
   record.assistant_summary = buildAssistantSummary(record, normalizedReport);
   record.updated_at = now;
 
@@ -43,6 +69,8 @@ export async function saveAssessmentReportBinding({ user = {}, report = {}, answ
   return {
     user: publicUser(record),
     report: normalizedReport,
+    mirror_report: record.mirror_report,
+    living_mirror_stats: record.living_mirror_stats,
     admin_user: toAdminUser(record)
   };
 }
@@ -65,12 +93,14 @@ export async function saveTrainingRecordBinding({ user = {}, record = {}, practi
   nextRecords.sort((a, b) => Number(a.day) - Number(b.day));
   userRecord.training_records = nextRecords;
   userRecord.practice_state = practiceState || userRecord.practice_state;
+  refreshLivingMirrorState(userRecord);
   userRecord.updated_at = now;
   await persistDataBindingUsers();
 
   return {
     user: publicUser(userRecord),
     record: trainingRecord,
+    living_mirror_stats: userRecord.living_mirror_stats,
     admin_user: toAdminUser(userRecord)
   };
 }
@@ -98,12 +128,14 @@ export async function saveKLineRecordBinding({ user = {}, record = {}, source = 
   };
 
   userRecord.kline_records.push(klineRecord);
+  refreshLivingMirrorState(userRecord);
   userRecord.updated_at = now;
   await persistDataBindingUsers();
 
   return {
     user: publicUser(userRecord),
     record: klineRecord,
+    living_mirror_stats: userRecord.living_mirror_stats,
     admin_user: toAdminUser(userRecord)
   };
 }
@@ -123,12 +155,35 @@ export async function saveRetestResultBinding({ user = {}, report = {}, comparis
     comparison: radarComparison,
     source
   });
+  refreshLivingMirrorState(userRecord);
   await persistDataBindingUsers();
 
   return {
     user: publicUser(userRecord),
     retest: userRecord.retests[userRecord.retests.length - 1],
     comparison: radarComparison,
+    living_mirror_stats: userRecord.living_mirror_stats,
+    admin_user: toAdminUser(userRecord)
+  };
+}
+
+export async function saveTradeReviewBinding({ user = {}, review = {}, source = "api" }) {
+  await ensureDataBindingLoaded();
+  const profile = normalizeUserProfile(user);
+  const userRecord = ensureUser(profile);
+  const now = new Date().toISOString();
+  const tradeReview = normalizeTradeReview(review, userRecord, now, source);
+
+  userRecord.trade_reviews = mergeById(userRecord.trade_reviews, [tradeReview])
+    .sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
+  refreshLivingMirrorState(userRecord);
+  userRecord.updated_at = now;
+  await persistDataBindingUsers();
+
+  return {
+    user: publicUser(userRecord),
+    review: tradeReview,
+    living_mirror_stats: userRecord.living_mirror_stats,
     admin_user: toAdminUser(userRecord)
   };
 }
@@ -148,14 +203,18 @@ export async function getDataBindingUserSummary(userId) {
   return {
     user: publicUser(record),
     report: record.assessment?.report || null,
+    mirror_report: record.mirror_report || null,
     training_records: record.training_records,
     kline_records: record.kline_records,
+    trade_reviews: record.trade_reviews || [],
+    living_mirror_stats: record.living_mirror_stats || null,
     retests: record.retests,
     retest_comparison: getLatestRetestComparison(record),
     assistant_summary: record.assistant_summary || null,
     feishu_sync: record.feishu_sync || null,
     share_card: record.share_card || null,
-    admin_user: toAdminUser(record)
+    admin_user: toAdminUser(record),
+    mirror_archive: buildMirrorArchive(record)
   };
 }
 
@@ -330,6 +389,7 @@ async function ensureDataBindingLoaded() {
     if (Array.isArray(storedUsers) && storedUsers.length > 0) {
       storedUsers.forEach((record) => {
         const normalized = normalizePersistedUserRecord(record);
+        refreshLivingMirrorState(normalized, { updateTrend: false });
         if (normalized.id) users.set(normalized.id, normalized);
       });
     } else {
@@ -368,6 +428,9 @@ function normalizePersistedUserRecord(record) {
     training_records: Array.isArray(record?.training_records) ? record.training_records : [],
     kline_records: Array.isArray(record?.kline_records) ? record.kline_records : [],
     retests: Array.isArray(record?.retests) ? record.retests : [],
+    mirror_report: record?.mirror_report || null,
+    trade_reviews: Array.isArray(record?.trade_reviews) ? record.trade_reviews : [],
+    living_mirror_stats: record?.living_mirror_stats || null,
     practice_state: record?.practice_state || null,
     assistant: normalizeAssistant(record?.assistant),
     assistant_summary: record?.assistant_summary || null,
@@ -443,6 +506,9 @@ function ensureUser(profile) {
     training_records: [],
     kline_records: [],
     retests: [],
+    mirror_report: null,
+    trade_reviews: [],
+    living_mirror_stats: null,
     practice_state: null,
     assistant: {
       status: "待承接",
@@ -486,11 +552,15 @@ function mergeUserRecords(canonical, incoming) {
   canonical.kline_records = mergeById(canonical.kline_records, incoming.kline_records);
   canonical.retests = mergeById(canonical.retests, incoming.retests)
     .sort((a, b) => new Date(a.saved_at || 0).getTime() - new Date(b.saved_at || 0).getTime());
+  canonical.mirror_report = chooseLatestByTime(canonical.mirror_report, incoming.mirror_report, "createdAt");
+  canonical.trade_reviews = mergeById(canonical.trade_reviews, incoming.trade_reviews)
+    .sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
   canonical.practice_state = canonical.practice_state || incoming.practice_state;
   canonical.assistant = chooseAssistant(canonical.assistant, incoming.assistant);
   canonical.assistant_summary = chooseLatestByTime(canonical.assistant_summary, incoming.assistant_summary, "created_at");
   canonical.feishu_sync = chooseLatestByTime(canonical.feishu_sync, incoming.feishu_sync, "synced_at");
   canonical.share_card = canonical.share_card || incoming.share_card;
+  refreshLivingMirrorState(canonical);
   canonical.updated_at = latestIso(canonical.updated_at, incoming.updated_at) || new Date().toISOString();
   return canonical;
 }
@@ -695,6 +765,41 @@ function normalizeTrainingRecord(record, fallbackTime) {
   };
 }
 
+function normalizeTradeReview(review, userRecord, fallbackTime, source) {
+  const buyReason = cleanText(review.buyReason || review.buy_reason || "", 260);
+  const sellReason = cleanText(review.sellReason || review.sell_reason || "", 260);
+  const strongestThought = cleanText(review.strongestThought || review.strongest_thought || "", 180);
+  const detectedMirror = normalizeMirrorName(
+    review.detectedMirror || review.detected_mirror || inferMirrorName([strongestThought, buyReason, sellReason], userRecord.mirror_report?.mainMirror || "追涨之镜")
+  );
+  const detectedThieves = normalizeThieves(review.detectedThieves || review.detected_thieves, [strongestThought, detectedMirror]);
+  const behaviorTags = Array.isArray(review.behaviorTags || review.behavior_tags)
+    ? (review.behaviorTags || review.behavior_tags).map((item) => cleanText(item, 40)).filter(Boolean).slice(0, 8)
+    : buildBehaviorTags({ detectedMirror, strongestThought });
+  const reviewText = cleanText(
+    review.reviewText || review.review_text || buildTradeReviewText({ detectedMirror, detectedThieves, strongestThought }),
+    320
+  );
+
+  return {
+    id: String(review.id || crypto.randomUUID()),
+    userId: userRecord.id,
+    imageUrl: cleanText(review.imageUrl || review.image_url || "", 240),
+    tradeDate: cleanText(review.tradeDate || review.trade_date || fallbackTime.slice(0, 10), 40),
+    symbolMasked: cleanText(review.symbolMasked || review.symbol_masked || maskTradeSymbol(review.symbol || review.symbol_raw || ""), 40),
+    marketType: cleanText(review.marketType || review.market_type || "other", 40),
+    buyReason,
+    sellReason,
+    strongestThought,
+    detectedMirror,
+    detectedThieves,
+    behaviorTags,
+    reviewText,
+    createdAt: review.createdAt || review.created_at || fallbackTime,
+    source
+  };
+}
+
 function normalizeRadarComparison(item) {
   const before = clampPercent(item.before);
   const after = clampPercent(item.after);
@@ -705,6 +810,299 @@ function normalizeRadarComparison(item) {
     after,
     delta: Number.isFinite(Number(item.delta)) ? Number(item.delta) : after - before
   };
+}
+
+function buildMirrorReportFromAssessment(report, record = {}) {
+  if (!report) return null;
+  const mainMirror = inferMirrorName([
+    report.primaryType?.label,
+    report.primaryPersonality?.label,
+    report.firstThought,
+    report.firstThoughtDisplay,
+    getStrongestRisk(report)?.label
+  ], "追涨之镜");
+  const subMirror = inferSecondaryMirror(report, mainMirror);
+  const thieves = normalizeThieves([], [
+    report.firstThought,
+    report.firstThoughtDisplay,
+    mainMirror,
+    getStrongestRisk(report)?.label
+  ]);
+
+  return {
+    id: cleanText(report.reportId || `MIR-${crypto.randomUUID()}`, 80),
+    userId: cleanText(record.id || report.userId || "", 80),
+    schemaVersion: livingMirrorSchemaVersion,
+    verdict: cleanText(report.conclusion || `你照见的是${mainMirror}，先从一个可执行动作开始训练。`, 180),
+    mainMirror,
+    subMirror,
+    thieves,
+    riskRadar: (report.riskRadar || []).map((item) => ({
+      key: String(item.key || item.label || crypto.randomUUID()),
+      label: cleanText(item.label || item.key || "风险项", 40),
+      value: clampPercent(item.value),
+      mirror: inferMirrorName([item.label, item.description, item.key], mainMirror),
+      note: cleanText(item.description || "", 160)
+    })),
+    typicalLoop: buildTypicalLoop(report, mainMirror),
+    sevenDayPrescription: buildSevenDayPrescription(report, mainMirror),
+    campSuggestion: {
+      level: getStrongestRisk(report)?.value >= 70 ? "assistant_followup" : "self_practice",
+      title: cleanText(report.campSuggestion?.name || `${mainMirror}七日修行`, 80),
+      reason: cleanText(report.campSuggestion?.reason || "根据当前主镜推荐七日训练路径。", 160),
+      focus: cleanText(report.campSuggestion?.focus || report.trainingDirection || "照见第一念、记录触发、复盘动作。", 160)
+    },
+    complianceNotice: "本报告用于交易心理觉察与训练，不构成投资建议",
+    createdAt: report.createdAt || new Date().toISOString()
+  };
+}
+
+function buildTypicalLoop(report, mainMirror) {
+  const trigger = report.emotionalTriggers?.[0];
+  return [
+    `触发：${cleanText(trigger?.description || "交易场景中出现第一念。", 90)}`,
+    `真实念头：${cleanText(report.firstThought || report.firstThoughtDisplay || "想立刻行动。", 90)}`,
+    `心镜共鸣：${mainMirror}`,
+    `训练动作：${cleanText(report.trainingDirection || "停十秒，记录念头，再复盘。", 90)}`
+  ];
+}
+
+function buildSevenDayPrescription(report, mainMirror) {
+  const items = Array.isArray(report.trainingPrescription7Days) ? report.trainingPrescription7Days : [];
+  const source = items.length ? items : Array.from({ length: 7 }, (_, index) => ({
+    day: index + 1,
+    theme: `第 ${index + 1} 日事上练`,
+    action: "停十秒，记录念头，再复盘。",
+    reflectionPrompt: "今天看见了哪一念？"
+  }));
+
+  return source.slice(0, 7).map((item) => ({
+    day: Number(item.day || 1),
+    mirror: mainMirror,
+    title: cleanText(item.theme || item.title || "今日事上练", 60),
+    action: cleanText(item.action || "停十秒，记录念头，再复盘。", 160),
+    reflectionPrompt: cleanText(item.reflectionPrompt || item.reflection_prompt || "今天看见了哪一念？", 160)
+  }));
+}
+
+function refreshLivingMirrorState(record, { updateTrend = true } = {}) {
+  if (!record) return null;
+  if (!record.mirror_report && record.assessment?.report) {
+    record.mirror_report = buildMirrorReportFromAssessment(record.assessment.report, record);
+  }
+
+  const now = new Date().toISOString();
+  const completedCount = (record.training_records || []).filter((item) => item.status === "completed").length;
+  const klineCount = (record.kline_records || []).length;
+  const tradeReviewCount = (record.trade_reviews || []).length;
+  const mirrorScores = buildMirrorScores(record, { completedCount, klineCount, tradeReviewCount });
+  const thiefCounts = buildThiefCounts(record);
+  const trainingCompletionRate = clampPercent((completedCount / 7) * 100);
+  const loopRelapseCount = tradeReviewCount;
+  const conscienceGrowth = mirrorScores.conscience;
+  const trendPoint = {
+    date: now.slice(0, 10),
+    mirrorScores,
+    conscienceGrowth,
+    trainingCompletionRate,
+    loopRelapseCount
+  };
+  const previousTrend = Array.isArray(record.living_mirror_stats?.growthTrend) ? record.living_mirror_stats.growthTrend : [];
+  const growthTrend = updateTrend
+    ? [...previousTrend.filter((item) => item.date !== trendPoint.date), trendPoint].slice(-30)
+    : previousTrend.length ? previousTrend : [trendPoint];
+
+  record.living_mirror_stats = {
+    userId: record.id,
+    schemaVersion: livingMirrorSchemaVersion,
+    mirrorScores,
+    thiefCounts,
+    growthTrend,
+    trainingCompletionRate,
+    loopRelapseCount,
+    conscienceGrowth,
+    lastUpdated: now
+  };
+
+  return record.living_mirror_stats;
+}
+
+function buildMirrorScores(record, { completedCount, klineCount, tradeReviewCount }) {
+  const scores = createEmptyMirrorScores();
+  const report = record.mirror_report;
+  const mainMirror = normalizeMirrorName(report?.mainMirror || "追涨之镜");
+  const subMirror = normalizeMirrorName(report?.subMirror || "良知之镜");
+
+  if (report?.riskRadar?.length) {
+    report.riskRadar.forEach((item) => {
+      const mirror = normalizeMirrorName(item.mirror || inferMirrorName([item.label, item.note], mainMirror));
+      scores[mirrorKeyByName[mirror]] = Math.max(scores[mirrorKeyByName[mirror]], clampPercent(item.value));
+    });
+  }
+
+  scores[mirrorKeyByName[mainMirror]] = Math.max(scores[mirrorKeyByName[mainMirror]], 64);
+  scores[mirrorKeyByName[subMirror]] = Math.max(scores[mirrorKeyByName[subMirror]], 44);
+  scores.conscience = Math.max(scores.conscience, 20);
+
+  (record.trade_reviews || []).forEach((review) => {
+    const mirror = normalizeMirrorName(review.detectedMirror || review.detected_mirror || mainMirror);
+    const key = mirrorKeyByName[mirror];
+    scores[key] = clampPercent(scores[key] + 4);
+  });
+
+  const trainingReduction = Math.min(18, completedCount * 2 + klineCount);
+  Object.keys(scores).forEach((key) => {
+    if (key !== "conscience") scores[key] = clampPercent(scores[key] - trainingReduction);
+  });
+  scores.conscience = clampPercent(scores.conscience + completedCount * 8 + klineCount * 3 + tradeReviewCount * 4);
+
+  return scores;
+}
+
+function createEmptyMirrorScores() {
+  return {
+    chasing: 0,
+    holding_loss: 0,
+    fantasy: 0,
+    gambling: 0,
+    following: 0,
+    hesitation: 0,
+    procrastination: 0,
+    anxiety: 0,
+    conscience: 0
+  };
+}
+
+function buildThiefCounts(record) {
+  const counts = {};
+  [...(record.mirror_report?.thieves || []), ...(record.trade_reviews || []).flatMap((review) => review.detectedThieves || [])]
+    .map((item) => cleanText(item, 12))
+    .filter(Boolean)
+    .forEach((thief) => {
+      counts[thief] = (counts[thief] || 0) + 1;
+    });
+  return counts;
+}
+
+function buildMirrorArchive(record) {
+  const mirrorReport = record.mirror_report || (record.assessment?.report ? buildMirrorReportFromAssessment(record.assessment.report, record) : null);
+  return {
+    user: {
+      id: record.id,
+      phone: record.phone,
+      createdAt: record.created_at,
+      inviteCode: record.invite_source,
+      channel: record.source_channel
+    },
+    reports: mirrorReport ? [mirrorReport] : [],
+    trainingRecords: (record.training_records || []).map((item) => ({
+      id: item.id,
+      userId: record.id,
+      date: item.date_key || String(item.recorded_at || "").slice(0, 10),
+      mirror: inferMirrorName([item.title, item.note, item.cultivation_text], mirrorReport?.mainMirror || "追涨之镜"),
+      action: item.title,
+      completed: item.status === "completed",
+      note: item.cultivation_text || item.note || "",
+      createdAt: item.recorded_at,
+      completedAt: item.status === "completed" ? item.recorded_at : null
+    })),
+    tradeReviews: record.trade_reviews || [],
+    livingMirrorStats: record.living_mirror_stats || refreshLivingMirrorState(record, { updateTrend: false }),
+    retestReports: (record.retests || []).map((item) => buildMirrorReportFromAssessment(item.report, record)).filter(Boolean),
+    inviteCode: record.invite_source,
+    assistantHandoff: record.assistant_summary
+      ? {
+          id: record.assistant_summary.id || `handoff-${record.id}`,
+          userId: record.id,
+          phone: record.phone,
+          mainMirror: mirrorReport?.mainMirror || inferMirrorName([record.assistant_summary.primaryType], "追涨之镜"),
+          subMirror: mirrorReport?.subMirror || inferMirrorName([record.assistant_summary.secondaryType], "良知之镜"),
+          riskTags: [record.assistant_summary.riskLabel].filter(Boolean),
+          recentReviewSummary: (record.trade_reviews || []).at(-1)?.reviewText || "暂无真实交易复盘摘要。",
+          suggestedTrainingAction: record.assistant_summary.focus || "继续完成七日训练和复盘。",
+          campSuggestion: record.assistant_summary.trainingCamp || "",
+          suggestedScript: record.assistant_summary.script || "",
+          complianceReminder: "仅交易心理训练，不提供买卖建议",
+          feishuSynced: record.feishu_sync?.status === "success",
+          status: record.assistant?.status || "pending",
+          createdAt: record.assistant_summary.created_at || new Date().toISOString()
+        }
+      : null
+  };
+}
+
+function inferSecondaryMirror(report, mainMirror) {
+  const inferred = inferMirrorName([
+    report.secondaryType?.label,
+    report.secondaryPersonality?.label,
+    report.secondaryType?.summary,
+    report.secondaryType?.risk
+  ], "良知之镜");
+  if (inferred !== mainMirror) return inferred;
+  return mainMirror === "良知之镜" ? "焦虑之镜" : "良知之镜";
+}
+
+function inferMirrorName(values = [], fallback = "追涨之镜") {
+  const text = values.filter(Boolean).join(" ");
+  Object.entries(legacyTypeMirrorMap).forEach(([legacy, mirror]) => {
+    if (text.includes(legacy)) fallback = mirror;
+  });
+
+  if (/追|错过|上车|冲动|拉升|急拉|临盘追/.test(text)) return "追涨之镜";
+  if (/扛|不认错|边界后移|不甘|止损|拖住/.test(text)) return "扛单之镜";
+  if (/幻想|证明|完美|执念|一定会回来/.test(text)) return "幻想之镜";
+  if (/赌|翻本|报复|梭|赢回来/.test(text)) return "赌性之镜";
+  if (/从众|别人|大家|群|消息|外部/.test(text)) return "从众之镜";
+  if (/犹疑|犹豫|等待|回撤|不确定|观望/.test(text)) return "犹疑之镜";
+  if (/拖延|麻木|明天|以后再说|迟迟/.test(text)) return "拖延之镜";
+  if (/焦虑|恐慌|怕回吐|空仓|害怕|紧张/.test(text)) return "焦虑之镜";
+  if (/良知|纪律|平衡|守心|知行/.test(text)) return "良知之镜";
+  return normalizeMirrorName(fallback);
+}
+
+function normalizeMirrorName(value) {
+  const text = String(value || "");
+  if (mirrorNames.includes(text)) return text;
+  return legacyTypeMirrorMap[text] || inferMirrorName([text], "追涨之镜");
+}
+
+function normalizeThieves(value, evidence = []) {
+  const source = Array.isArray(value) ? value : [];
+  const thieves = source.map((item) => cleanText(item, 12)).filter(Boolean);
+  const text = [...evidence, ...thieves].filter(Boolean).join(" ");
+
+  if (/错过|追|急|上车|拉升/.test(text)) thieves.push("贪", "急");
+  if (/焦虑|怕|恐慌|回吐|空仓/.test(text)) thieves.push("惧");
+  if (/不认错|扛|幻想|执念/.test(text)) thieves.push("痴");
+  if (/别人|从众|消息|问/.test(text)) thieves.push("疑");
+  if (/拖延|麻木/.test(text)) thieves.push("昧");
+  if (/良知|纪律|守心/.test(text)) thieves.push("守心");
+
+  return Array.from(new Set(thieves)).slice(0, 4);
+}
+
+function buildBehaviorTags({ detectedMirror, strongestThought }) {
+  const tags = [detectedMirror.replace("之镜", "")];
+  if (strongestThought) tags.push("真实念头");
+  if (detectedMirror === "追涨之镜") tags.push("怕错过");
+  if (detectedMirror === "赌性之镜") tags.push("想翻本");
+  if (detectedMirror === "扛单之镜") tags.push("不认错");
+  if (detectedMirror === "从众之镜") tags.push("外部声音");
+  return Array.from(new Set(tags)).slice(0, 6);
+}
+
+function buildTradeReviewText({ detectedMirror, detectedThieves, strongestThought }) {
+  const thought = strongestThought || "第一念";
+  const thieves = detectedThieves.length ? detectedThieves.join(" / ") : "待继续观察";
+  return `这次复盘照见的是${detectedMirror}，最明显的一念是「${thought}」，心贼显影为${thieves}。先记录触发与反应，再回到训练动作。`;
+}
+
+function maskTradeSymbol(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  if (raw.includes("*")) return cleanText(raw, 40);
+  if (raw.length <= 2) return "**";
+  return `${"*".repeat(Math.min(6, raw.length - 2))}${raw.slice(-2)}`;
 }
 
 function normalizeReactionTimeMs(value) {
@@ -779,6 +1177,9 @@ function toAdminUser(record) {
     assistantSummary: record.assistant_summary || null,
     feishuSync: record.feishu_sync || null,
     shareCard: record.share_card || null,
+    mirrorReport: record.mirror_report || null,
+    livingMirrorStats: record.living_mirror_stats || null,
+    tradeReviews: (record.trade_reviews || []).map(toAdminTradeReview),
     report: {
       title: "交易人格照见报告",
       heartThief: report?.firstThoughtDisplay || report?.firstThought || "待照见",
@@ -796,6 +1197,18 @@ function toAdminUser(record) {
         ? summarizeRetest(latestRetest.comparison)
         : "完成七日训练和复测后，这里展示风险雷达前后变化。"
     }
+  };
+}
+
+function toAdminTradeReview(review) {
+  return {
+    id: review.id,
+    tradeDate: review.tradeDate,
+    detectedMirror: review.detectedMirror,
+    strongestThought: review.strongestThought,
+    reviewText: review.reviewText,
+    behaviorTags: review.behaviorTags || [],
+    createdAt: review.createdAt
   };
 }
 
@@ -1157,6 +1570,8 @@ function seedDemoUsers() {
     record.assistant_summary = buildAssistantSummary(record, item.report);
     record.share_card = buildShareCard(record, { channel: item.inviteSource });
     record.training_records = item.training.map((training) => normalizeTrainingRecord(training, `${training.dateKey}T09:00:00.000Z`));
+    record.mirror_report = buildMirrorReportFromAssessment(item.report, record);
+    refreshLivingMirrorState(record);
   });
 }
 

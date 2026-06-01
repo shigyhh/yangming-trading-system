@@ -24,10 +24,12 @@ import {
   type PracticeChangeState,
 } from "@/features/assessment/practice-change"
 import {
-  buildAssistantSummaryPreview,
-  buildTodayProofText,
   buildTrainingEvidence,
 } from "@/features/assessment/evidence-engine"
+import {
+  buildAssistantSummary,
+  logAssistantSummaryInDevelopment,
+} from "@/features/assessment/assistant-summary"
 import { buildPreviewAssessmentReport } from "@/features/assessment/preview-report"
 import type { AssessmentReport } from "@/features/assessment/report"
 import { assessmentStorageKeys, clearAssessmentDraft, getStorage } from "@/features/assessment/storage"
@@ -81,6 +83,9 @@ const behaviorBaselineItems = [
   { key: "planChange", label: "临盘改计划", value: 0 },
   { key: "knowingDoing", label: "知行合一", value: 42 },
 ]
+
+const todayProofActionText = "追涨前停十秒"
+const todayProofSealText = "真正的变化，不是今天就不冲动了，而是你已经能在冲动前看见它。"
 
 const klinePressureProfiles: Record<
   ThoughtType,
@@ -192,6 +197,39 @@ function formatTrailTime(value?: string) {
   const date = value ? new Date(value) : new Date()
   if (Number.isNaN(date.getTime())) return "--:--"
   return date.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit", hour12: false })
+}
+
+function formatProofCardDate(value?: string) {
+  const date = value ? new Date(value) : new Date()
+  if (Number.isNaN(date.getTime())) return new Date().toLocaleDateString("zh-CN")
+
+  return date.toLocaleDateString("zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  })
+}
+
+function buildTodayProofCardText({
+  date,
+  selectedThoughtLabel,
+  reflectionText,
+}: {
+  date: string
+  selectedThoughtLabel: string
+  reflectionText: string
+}) {
+  return [
+    "今日心证",
+    `日期：${date}`,
+    `今日一念：${selectedThoughtLabel}`,
+    `今日动作：${todayProofActionText}`,
+    `今日省察：${reflectionText}`,
+    "心证句：",
+    todayProofSealText,
+    "",
+    "仅用于交易行为训练记录，不构成任何投资建议。",
+  ].join("\n")
 }
 
 export default function Sprint10TrainingPage() {
@@ -329,19 +367,19 @@ export default function Sprint10TrainingPage() {
       void syncTrainingRecordBinding({ practiceState: nextPractice, record: syncedRecord })
     }
     if (syncedRecord?.klineRecord) {
-      const assistantSummary = buildAssistantSummaryPreview({
+      const assistantSummary = buildAssistantSummary({
+        userId: getStorage<string>(assessmentStorageKeys.dataBindingUserId, ""),
         trainingDay: syncedRecord.day,
         completedDays: nextPractice.day,
-        checkinType: syncedRecord.checkIn,
-        thoughtType: syncedRecord.klineRecord.reactionKey,
+        checkinType: dailyTraining.state.checkinType,
+        thoughtType: selectedKlineMind.type,
         thoughtLabel: selectedKlineMind.label,
         reflectionText: syncedRecord.cultivationText,
         completedAt: syncedRecord.recordedAt,
+        baselineScores: dailyTraining.state.baselineScores,
       })
       saveAssistantSummaryPreview(assistantSummary)
-      if (process.env.NODE_ENV === "development") {
-        console.log("[assistant-summary-preview]", assistantSummary)
-      }
+      logAssistantSummaryInDevelopment(assistantSummary)
     }
     setSealDropped(true)
     setRecordMessage(isPreview ? "预览训练已记录，不写入数据链。" : "今日训练已记录。")
@@ -405,16 +443,17 @@ export default function Sprint10TrainingPage() {
   const remainingDays = dailyTraining.remainingDays
   const retestLockedDays = Math.max(0, 7 - completedDays)
   const completedThoughtLabel = selectedKlineMind?.label || getThoughtLabel(todayRecord?.klineRecord?.reactionKey || latestRecord?.klineRecord?.reactionKey)
-  const evidenceRecord = todayRecord || latestRecord
-  const todayEvidence = evidenceRecord?.klineRecord
+  const todayProofRecord = isTodayCompleted ? todayRecord : null
+  const todayEvidence = todayProofRecord?.klineRecord
     ? buildTrainingEvidence({
-      trainingDay: evidenceRecord.day,
+      trainingDay: todayProofRecord.day,
       completedDays: practice.day,
-      checkinType: evidenceRecord.checkIn,
-      thoughtType: evidenceRecord.klineRecord.reactionKey,
-      thoughtLabel: getThoughtLabel(evidenceRecord.klineRecord.reactionKey),
-      reflectionText: evidenceRecord.cultivationText,
-      completedAt: evidenceRecord.recordedAt,
+      checkinType: todayProofRecord.checkIn,
+      thoughtType: todayProofRecord.klineRecord.reactionKey,
+      thoughtLabel: getThoughtLabel(todayProofRecord.klineRecord.reactionKey),
+      reflectionText: todayProofRecord.cultivationText,
+      completedAt: todayProofRecord.recordedAt,
+      baselineScores: dailyTraining.state.baselineScores,
     })
     : null
   const evidenceSummary = completedDays === 0
@@ -422,16 +461,12 @@ export default function Sprint10TrainingPage() {
     : `已落下 ${completedDays} 次训练证据。今天记录的是行为、念头和复盘，七日后再生成变化对比。`
 
   const copyTodayProof = async () => {
-    if (!evidenceRecord?.klineRecord) return
+    if (!todayProofRecord?.klineRecord) return
 
-    const text = buildTodayProofText({
-      trainingDay: evidenceRecord.day,
-      completedDays: practice.day,
-      checkinType: evidenceRecord.checkIn,
-      thoughtType: evidenceRecord.klineRecord.reactionKey,
-      thoughtLabel: getThoughtLabel(evidenceRecord.klineRecord.reactionKey),
-      reflectionText: evidenceRecord.cultivationText,
-      completedAt: evidenceRecord.recordedAt,
+    const text = buildTodayProofCardText({
+      date: formatProofCardDate(todayProofRecord.recordedAt),
+      selectedThoughtLabel: getThoughtLabel(todayProofRecord.klineRecord.reactionKey),
+      reflectionText: todayProofRecord.cultivationText || "已完成今日省察。",
     })
 
     try {
@@ -522,6 +557,7 @@ export default function Sprint10TrainingPage() {
                       selectedThoughtLabel={completedThoughtLabel}
                       completedDays={practice.day}
                       remainingDays={remainingDays}
+                      dailySealText={todayEvidence?.dailySealText}
                     />
                   ) : null}
                 </div>
@@ -529,36 +565,14 @@ export default function Sprint10TrainingPage() {
             </GlassPanel>
 
             <div className="practice-left-follow mt-5 grid gap-5">
-              {todayEvidence && evidenceRecord?.klineRecord ? (
-                <GlassPanel className="today-proof-card">
-                  <div>
-                    <p className="font-function text-xs font-semibold tracking-[.18em] text-[#b49d5d]">今日心证</p>
-                    <h2 className="mt-4 font-story text-2xl font-light leading-[1.5] tracking-[.08em]">
-                      今天你不是完成了一次打卡，而是留下了一条训练证据。
-                    </h2>
-                  </div>
-                  <div className="today-proof-grid mt-5">
-                    <EvidencePill label="今日一念" value={getThoughtLabel(evidenceRecord.klineRecord.reactionKey)} />
-                    <EvidencePill label="今日动作" value={todayEvidence.nextActionText} />
-                    <EvidencePill label="今日省察" value={evidenceRecord.cultivationText || "已完成今日省察。"} />
-                  </div>
-                  <p className="mt-5 font-story text-[1.05rem] font-light leading-8 tracking-[.05em] text-[rgba(242,235,220,.72)]">
-                    {todayEvidence.dailySealText}
-                  </p>
-                  <p className="mt-4 font-function text-xs leading-6 tracking-[.08em] text-[rgba(220,212,195,.42)]">
-                    仅用于交易行为训练记录，不构成任何投资建议。
-                  </p>
-                  <div className="mt-5 grid gap-2 md:max-w-[260px]">
-                    <SecondaryButton type="button" onClick={copyTodayProof} className="w-full">
-                      复制心证文字
-                    </SecondaryButton>
-                    {copyMessage ? (
-                      <p className="font-function text-xs leading-6 tracking-[.06em] text-[rgba(216,183,111,.76)]">
-                        {copyMessage}
-                      </p>
-                    ) : null}
-                  </div>
-                </GlassPanel>
+              {todayProofRecord?.klineRecord ? (
+                <TodayProofCard
+                  date={formatProofCardDate(todayProofRecord.recordedAt)}
+                  selectedThoughtLabel={getThoughtLabel(todayProofRecord.klineRecord.reactionKey)}
+                  reflectionText={todayProofRecord.cultivationText || "已完成今日省察。"}
+                  copyMessage={copyMessage}
+                  onCopy={copyTodayProof}
+                />
               ) : null}
 
               <section className="grid gap-5 lg:grid-cols-[.92fr_1.08fr] lg:items-start">
@@ -1005,12 +1019,17 @@ export default function Sprint10TrainingPage() {
           letter-spacing: 0.06em;
         }
 
-        .today-proof-card {
+        :global(.today-proof-card) {
           position: relative;
           overflow: hidden;
         }
 
-        .today-proof-card::before {
+        :global(.today-proof-card > *) {
+          position: relative;
+          z-index: 1;
+        }
+
+        :global(.today-proof-card)::before {
           content: "";
           position: absolute;
           inset: 0;
@@ -1020,15 +1039,77 @@ export default function Sprint10TrainingPage() {
           pointer-events: none;
         }
 
-        .today-proof-grid {
-          display: grid;
-          gap: 0.75rem;
+        :global(.today-proof-card)::after {
+          content: "";
+          position: absolute;
+          right: -8%;
+          bottom: -28%;
+          width: min(58vw, 520px);
+          aspect-ratio: 1;
+          border-radius: 50%;
+          background:
+            repeating-radial-gradient(circle, rgba(216, 183, 111, 0.05) 0 1px, transparent 1px 16px),
+            radial-gradient(circle, rgba(95, 132, 117, 0.08), transparent 62%);
+          opacity: 0.55;
+          pointer-events: none;
         }
 
-        @media (min-width: 760px) {
-          .today-proof-grid {
-            grid-template-columns: 0.72fr 1.18fr 1.1fr;
-          }
+        :global(.today-proof-row) {
+          display: grid;
+          gap: 0.45rem;
+          border: 1px solid rgba(172, 146, 83, 0.12);
+          border-radius: 8px;
+          background: rgba(0, 0, 0, 0.16);
+          padding: 0.92rem 1rem;
+        }
+
+        :global(.today-proof-row span),
+        :global(.today-proof-seal p) {
+          margin: 0;
+          font-family: var(--font-function);
+          font-size: 0.72rem;
+          font-weight: 700;
+          letter-spacing: 0.16em;
+          color: rgba(180, 157, 93, 0.76);
+        }
+
+        :global(.today-proof-row p) {
+          margin: 0;
+          font-family: var(--font-story);
+          font-size: 1.08rem;
+          font-weight: 300;
+          line-height: 1.72;
+          letter-spacing: 0.045em;
+          color: rgba(242, 235, 220, 0.76);
+        }
+
+        :global(.today-proof-seal) {
+          border-top: 1px solid rgba(172, 146, 83, 0.12);
+          padding-top: 1.1rem;
+        }
+
+        :global(.today-proof-seal strong) {
+          display: block;
+          margin-top: 0.75rem;
+          font-family: var(--font-story);
+          font-size: clamp(1.18rem, 2.3vw, 1.65rem);
+          font-weight: 300;
+          line-height: 1.75;
+          letter-spacing: 0.055em;
+          color: rgba(242, 235, 220, 0.8);
+        }
+
+        :global(.today-proof-compliance) {
+          margin: 1rem 0 0;
+          border: 1px solid rgba(172, 146, 83, 0.1);
+          border-radius: 8px;
+          background: rgba(255, 255, 255, 0.02);
+          padding: 0.75rem 0.9rem;
+          font-family: var(--font-function);
+          font-size: 0.76rem;
+          line-height: 1.8;
+          letter-spacing: 0.06em;
+          color: rgba(220, 212, 195, 0.44);
         }
 
         .practice-action-steps {
@@ -1316,6 +1397,17 @@ export default function Sprint10TrainingPage() {
           color: rgba(216, 183, 111, 0.78);
         }
 
+        .retest-locked-button:disabled {
+          cursor: not-allowed;
+          opacity: 0.58;
+        }
+
+        .retest-locked-button:disabled:hover {
+          border-color: rgba(172, 146, 83, 0.14);
+          background: rgba(255, 255, 255, 0.025);
+          color: rgba(220, 212, 195, 0.5);
+        }
+
         .practice-trail-list {
           display: grid;
           gap: 0.55rem;
@@ -1599,14 +1691,83 @@ function ReflectionInput({
   )
 }
 
+function TodayProofCard({
+  date,
+  selectedThoughtLabel,
+  reflectionText,
+  copyMessage,
+  onCopy,
+}: {
+  date: string
+  selectedThoughtLabel: string
+  reflectionText: string
+  copyMessage: string
+  onCopy: () => void
+}) {
+  return (
+    <GlassPanel className="today-proof-card">
+      <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:items-start">
+        <div>
+          <p className="font-function text-xs font-semibold tracking-[.18em] text-[#b49d5d]">今日心证</p>
+          <h2 className="mt-4 font-story text-[clamp(2rem,4vw,3.25rem)] font-light leading-[1.2] tracking-[.08em]">
+            一念已照，
+            <br />
+            今日有证。
+          </h2>
+          <p className="mt-4 font-function text-sm leading-7 text-[rgba(220,212,195,.52)]">
+            日期：{date}
+          </p>
+        </div>
+
+        <div className="grid gap-3">
+          <TodayProofRow label="今日一念" value={selectedThoughtLabel} />
+          <TodayProofRow label="今日动作" value={todayProofActionText} />
+          <TodayProofRow label="今日省察" value={reflectionText} />
+        </div>
+      </div>
+
+      <div className="today-proof-seal mt-5">
+        <p>心证句：</p>
+        <strong>{todayProofSealText}</strong>
+      </div>
+
+      <p className="today-proof-compliance">
+        仅用于交易行为训练记录，不构成任何投资建议。
+      </p>
+
+      <div className="mt-5 grid gap-2 md:max-w-[260px]">
+        <SecondaryButton type="button" onClick={onCopy} className="w-full">
+          复制心证文字
+        </SecondaryButton>
+        {copyMessage ? (
+          <p className="font-function text-xs leading-6 tracking-[.06em] text-[rgba(216,183,111,.76)]">
+            {copyMessage}
+          </p>
+        ) : null}
+      </div>
+    </GlassPanel>
+  )
+}
+
+function TodayProofRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="today-proof-row">
+      <span>{label}</span>
+      <p>{value}</p>
+    </div>
+  )
+}
+
 function CompletionSealCard({
   selectedThoughtLabel,
   completedDays,
   remainingDays,
+  dailySealText,
 }: {
   selectedThoughtLabel: string
   completedDays: number
   remainingDays: number
+  dailySealText?: string
 }) {
   return (
     <div className="practice-seal-ritual" aria-live="polite">
@@ -1618,6 +1779,7 @@ function CompletionSealCard({
         </div>
       </div>
       <p>你今天照见的是：{selectedThoughtLabel}</p>
+      {dailySealText ? <p>{dailySealText}</p> : null}
       <p>已落下第 {completedDays} 次训练证据。</p>
       <p>距离复测还差 {remainingDays} 日。</p>
       <p>真正的变化，不是今天就不冲动了，而是你已经能在冲动前看见它。</p>

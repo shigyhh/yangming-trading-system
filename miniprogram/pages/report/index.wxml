@@ -175,6 +175,9 @@
       <view class="single-action">
         <button class="primary-btn" bindtap="goKlineSimulator">进入 K线压力测试</button>
       </view>
+      <view class="single-action">
+        <button class="ghost-btn" bindtap="goTradeReview">上传真实记录复盘</button>
+      </view>
       <view class="split-actions">
         <button class="ghost-btn" data-type="personality" bindtap="goShareCard">生成人格照见卡</button>
         <button class="ghost-btn" data-type="risk_radar" bindtap="goShareCard">生成风险雷达卡</button>

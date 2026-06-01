@@ -29,7 +29,7 @@
         <view class="hero-theme-line">{{heroView.dayProgressLabel}} · {{heroView.themeLabel}}</view>
 
         <view class="heart-proof-block">
-          <view class="edict-label">今日心证</view>
+          <view class="edict-label">今日法旨</view>
           <view class="edict-main">
             <text wx:for="{{heroView.heartProofLines}}" wx:key="*this">{{item}}</text>
           </view>
@@ -42,8 +42,45 @@
           </view>
         </view>
 
+        <view class="live-mirror-block">
+          <view class="live-mirror-head">
+            <view>
+              <view class="edict-label">真实交易复盘</view>
+              <text>活镜提醒</text>
+            </view>
+            <text>{{liveMirrorReminder.statusText}}</text>
+          </view>
+          <view class="live-mirror-line">{{liveMirrorReminder.reminderLine}}</view>
+          <view class="live-mirror-grid">
+            <view>
+              <text>高频心贼</text>
+              <view>{{liveMirrorReminder.highFrequencyThievesText}}</view>
+              <text>{{liveMirrorReminder.highFrequencyThievesDetail}}</text>
+            </view>
+            <view>
+              <text>高频阶段</text>
+              <view>{{liveMirrorReminder.highFrequencyStage}}</view>
+              <text>{{liveMirrorReminder.stageDetail}}</text>
+            </view>
+            <view>
+              <text>主修训练</text>
+              <view>{{liveMirrorReminder.focusMirror}}</view>
+              <text>{{liveMirrorReminder.mainTraining}}</text>
+            </view>
+          </view>
+          <view wx:if="{{liveMirrorReminder.latest}}" class="live-mirror-latest">
+            <text>最近记录</text>
+            <view>{{liveMirrorReminder.latest.marketLine}}</view>
+            <text>{{liveMirrorReminder.latest.stageLine}}</text>
+          </view>
+          <view class="live-mirror-actions">
+            <button data-noripple="1" bindtap="goTradeReview">{{liveMirrorReminder.primaryActionText}}</button>
+            <button data-noripple="1" bindtap="goTradeReviewArchive">{{liveMirrorReminder.archiveActionText}}</button>
+          </view>
+        </view>
+
         <view class="three-seals-block">
-          <view class="edict-label">今日三印</view>
+          <view class="edict-label">今日之印</view>
           <view class="three-seal-field">
             <text>一念</text>
             <input data-key="thought" value="{{threeSeals.thought}}" bindinput="inputThreeSeal" placeholder="我今天最明显的念头是什么？" />
@@ -56,7 +93,7 @@
             <text>一界</text>
             <input data-key="boundary" value="{{threeSeals.boundary}}" bindinput="inputThreeSeal" placeholder="我今天必须守住哪条边界？" />
           </view>
-          <button data-noripple="1" class="three-seal-save" bindtap="saveThreeSeals">{{threeSeals.completed ? '更新今日三印' : '落下今日三印'}}</button>
+          <button data-noripple="1" class="three-seal-save" bindtap="saveThreeSeals">{{threeSeals.completed ? '更新今日之印' : '落下今日之印'}}</button>
         </view>
 
         <view class="today-stage-block">
@@ -75,7 +112,7 @@
         </view>
 
         <view class="practice-block">
-          <view class="edict-label">今日事上练</view>
+          <view class="edict-label">今日只练一件事</view>
           <view>{{training7View.today.boundaryPractice}}</view>
         </view>
 

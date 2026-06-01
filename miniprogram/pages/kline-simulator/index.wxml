@@ -1,17 +1,20 @@
 <view class="page-shell">
   <view class="page-content">
     <text class="eyebrow">KLINE · 事上练</text>
-    <view class="page-title">K线压力<br />观心训练</view>
-    <view class="page-subtitle">真实历史切片用于盲练反应，不显示未来，不评价对错，只记录第一念、边界和复盘。</view>
+    <view class="page-title">历史 K线<br />观心训练</view>
+    <view class="page-subtitle">选择 A股、港股、美股、期货、数字货币等品类后，系统读取对应历史切片做盲练；不显示未来，不评价对错，只记录第一念、边界和复盘。</view>
 
     <view class="intro-card card">
       <text>今日校准</text>
-      <view>当前人格：{{assessment.primary || '待照见'}} · {{assessment.primaryMirror || '九镜待照见'}} · 先做一段压力测试，再进入 7 天训练。</view>
-      <button class="ghost-btn" bindtap="goReport">查看人格报告</button>
+      <view>当前人格：{{assessment.primary || '待照见'}} · {{assessment.primaryMirror || '九镜待照见'}} · 先做一段历史切片压力测试，再进入 7 天训练。</view>
+      <view class="intro-actions">
+        <button class="ghost-btn" bindtap="goReport">查看人格报告</button>
+        <button class="primary-btn" bindtap="goTradeReview">上传记录复盘</button>
+      </view>
     </view>
 
     <view class="filter-card card">
-      <text>市场盘感</text>
+      <text>历史数据品类</text>
       <scroll-view scroll-x class="chip-strip" show-scrollbar="{{false}}">
         <button
           wx:for="{{markets}}"
@@ -21,7 +24,7 @@
           bindtap="selectMarket"
         >{{item.label}}</button>
       </scroll-view>
-      <text>周期切片</text>
+      <text>历史周期切片</text>
       <scroll-view scroll-x class="chip-strip" show-scrollbar="{{false}}">
         <button
           wx:for="{{timeframes}}"

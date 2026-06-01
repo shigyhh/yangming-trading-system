@@ -628,6 +628,7 @@
 
 .heart-proof-block,
 .contemplation-block,
+.live-mirror-block,
 .three-seals-block,
 .today-stage-block,
 .practice-block,
@@ -671,6 +672,133 @@
 
 .contemplation-block text {
   display: block;
+}
+
+.live-mirror-block {
+  margin-top: 36rpx;
+  padding: 26rpx;
+  overflow: hidden;
+  border-radius: 28rpx;
+  border: 1rpx solid rgba(217, 189, 122, 0.18);
+  background:
+    radial-gradient(circle at 80% 12%, rgba(216, 183, 111, 0.13), transparent 34%),
+    linear-gradient(145deg, rgba(95, 132, 117, 0.12), rgba(244, 235, 221, 0.026) 48%, rgba(8, 8, 7, 0.26));
+  box-shadow:
+    inset 0 1rpx 0 rgba(244, 235, 221, 0.08),
+    0 24rpx 62rpx rgba(0, 0, 0, 0.18);
+}
+
+.live-mirror-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 20rpx;
+  align-items: flex-start;
+}
+
+.live-mirror-head view text {
+  display: block;
+  margin-top: 10rpx;
+  color: rgba(244, 235, 221, 0.94);
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", serif;
+  font-size: 36rpx;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.live-mirror-head > text {
+  flex: 0 0 auto;
+  padding: 10rpx 16rpx;
+  border-radius: 999rpx;
+  color: rgba(216, 183, 111, 0.78);
+  border: 1rpx solid rgba(217, 189, 122, 0.16);
+  background: rgba(8, 8, 7, 0.22);
+  font-size: 20rpx;
+  font-weight: 900;
+}
+
+.live-mirror-line {
+  margin-top: 20rpx;
+  color: rgba(244, 235, 221, 0.74);
+  font-size: 25rpx;
+  line-height: 1.62;
+}
+
+.live-mirror-grid {
+  margin-top: 20rpx;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12rpx;
+}
+
+.live-mirror-grid > view,
+.live-mirror-latest {
+  padding: 18rpx;
+  border-radius: 20rpx;
+  border: 1rpx solid rgba(217, 189, 122, 0.09);
+  background: rgba(8, 8, 7, 0.22);
+}
+
+.live-mirror-grid text,
+.live-mirror-latest text {
+  display: block;
+  color: rgba(216, 183, 111, 0.6);
+  font-size: 19rpx;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  line-height: 1.45;
+}
+
+.live-mirror-grid view view,
+.live-mirror-latest view {
+  margin-top: 8rpx;
+  color: rgba(244, 235, 221, 0.9);
+  font-size: 26rpx;
+  font-weight: 900;
+  line-height: 1.42;
+}
+
+.live-mirror-grid view text:last-child,
+.live-mirror-latest text:last-child {
+  margin-top: 8rpx;
+  color: rgba(244, 235, 221, 0.46);
+  font-size: 20rpx;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.5;
+}
+
+.live-mirror-latest {
+  margin-top: 12rpx;
+}
+
+.live-mirror-actions {
+  margin-top: 20rpx;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14rpx;
+}
+
+.live-mirror-actions button {
+  min-height: 82rpx;
+  width: 100%;
+  display: grid;
+  place-items: center;
+  border-radius: 999rpx;
+  font-size: 25rpx;
+  font-weight: 900;
+}
+
+.live-mirror-actions button:first-child {
+  color: #11130d;
+  background:
+    linear-gradient(180deg, rgba(255, 248, 216, 0.34), rgba(255, 255, 255, 0.04) 34%, transparent 52%),
+    linear-gradient(180deg, rgba(240, 211, 118, 0.92), rgba(188, 137, 52, 0.9));
+}
+
+.live-mirror-actions button:last-child {
+  color: rgba(244, 235, 221, 0.78);
+  border: 1rpx solid rgba(217, 189, 122, 0.14);
+  background: rgba(244, 235, 221, 0.03);
 }
 
 .three-seals-block,

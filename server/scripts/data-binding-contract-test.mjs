@@ -12,6 +12,7 @@ import {
   saveAssessmentReportBinding,
   saveKLineRecordBinding,
   saveRetestResultBinding,
+  saveTradeReviewBinding,
   saveTrainingRecordBinding,
   syncAssistantSummaryToFeishuBinding,
   unloadDataBindingForTests,
@@ -83,6 +84,20 @@ test("data binding service stores assessment, training, kline and retest in runt
       trainingSuggestion: "建议进入 Day 1：观入场冲动。"
     }
   });
+  const tradeReview = await saveTradeReviewBinding({
+    user,
+    review: {
+      imageUrl: "/uploads/reviews/review-001.png",
+      tradeDate: "2026-06-01",
+      symbol: "600519",
+      marketType: "a_share",
+      buyReason: "看到快速拉升，担心错过机会。",
+      sellReason: "回看后发现当时没有写清边界。",
+      strongestThought: "怕错过",
+      behaviorTags: ["截图复盘"]
+    },
+    source: "web-next"
+  });
   const retest = await saveRetestResultBinding({ user, report: retestReport });
   const handoff = await updateAssistantHandoffBinding(user.userId, {
     status: "已承接",
@@ -124,10 +139,13 @@ test("data binding service stores assessment, training, kline and retest in runt
 
   assert.equal(assessment.admin_user.phone, "139****8842");
   assert.equal(assessment.report.schemaVersion, "assessment_report_v1");
+  assert.equal(assessment.mirror_report.schemaVersion, "living_mirror_v1");
+  assert.equal(assessment.living_mirror_stats.schemaVersion, "living_mirror_v1");
   assert.equal(assessment.report.trainingPrescription7Days.length, 7);
   assert.equal(assessment.admin_user.assistantSummary.priority, "优先承接");
   assert.equal(training.record.day, 1);
   assert.equal(training.record.check_in, "preparing_trade");
+  assert.ok(training.living_mirror_stats.conscienceGrowth > assessment.living_mirror_stats.conscienceGrowth);
   assert.equal(mergedTraining.user.id, user.userId);
   assert.ok(mergedTraining.user.merged_ids.includes("web-local-merge-001"));
   assert.equal(kline.record.scene, "急拉");
@@ -136,6 +154,10 @@ test("data binding service stores assessment, training, kline and retest in runt
   assert.equal(kline.record.reaction_time_ms, 2400);
   assert.equal(kline.record.process_scores.planExecution, 58);
   assert.equal(kline.record.process_insight, "你已经看见第一念，下一步是让手慢半拍。");
+  assert.equal(tradeReview.review.detectedMirror, "追涨之镜");
+  assert.equal(tradeReview.review.symbolMasked, "****19");
+  assert.ok(tradeReview.living_mirror_stats.mirrorScores.chasing >= 0);
+  assert.ok(tradeReview.living_mirror_stats.thiefCounts["贪"] >= 1);
   assert.ok(summary.admin_user.klineRecords[0].disciplineAction.includes("过程质量"));
   assert.equal(retest.comparison[0].delta, -18);
   assert.equal(handoff.assistant.status, "已承接");
@@ -153,6 +175,13 @@ test("data binding service stores assessment, training, kline and retest in runt
   assert.equal(aliasSummary.user.id, user.userId);
   assert.equal(aliasSummary.training_records.length, 2);
   assert.equal(summary.kline_records.length, 1);
+  assert.equal(summary.trade_reviews.length, 1);
+  assert.equal(summary.mirror_report.mainMirror, "追涨之镜");
+  assert.equal(summary.mirror_report.schemaVersion, "living_mirror_v1");
+  assert.equal(summary.living_mirror_stats.schemaVersion, "living_mirror_v1");
+  assert.equal(summary.mirror_archive.tradeReviews.length, 1);
+  assert.equal(summary.admin_user.tradeReviews[0].detectedMirror, "追涨之镜");
+  assert.ok(summary.admin_user.livingMirrorStats.conscienceGrowth > 0);
   assert.equal(summary.assistant_summary.primaryType, "冲动型");
   assert.equal(summary.admin_user.klineRecords.length, 1);
   assert.equal(summary.admin_user.retestComparisons.length, 2);
@@ -167,6 +196,8 @@ test("data binding service stores assessment, training, kline and retest in runt
   assert.equal(reloadedSummary.user.id, user.userId);
   assert.equal(reloadedSummary.training_records.length, 2);
   assert.equal(reloadedSummary.kline_records.length, 1);
+  assert.equal(reloadedSummary.trade_reviews.length, 1);
+  assert.equal(reloadedSummary.living_mirror_stats.loopRelapseCount, 1);
   assert.equal(reloadedSummary.admin_user.assistant.owner, "助教明远");
   assert.equal(reloadedSummary.admin_user.assistantSummary.primaryType, "冲动型");
   assert.equal(reloadedSummary.feishu_sync.status, "dry_run");

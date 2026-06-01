@@ -51,18 +51,47 @@
     <view class="mock-sync-card card">
       <view class="mock-sync-head">
         <view>
-          <text>小程序闭环同步占位</text>
-          <view>{{mockUserProfile.reportSource}} · {{mockUserProfile.syncState}}</view>
+          <text>高频陪跑端</text>
+          <view>不是展示端，是活镜数据的日常采集端和训练陪跑端</view>
         </view>
         <button bindtap="generateInviteCard">邀同修照见</button>
       </view>
       <view class="mock-grid">
-        <view>网站测评报告</view>
-        <view>7 天训练记录</view>
-        <view>复测变化</view>
-        <view>助教承接摘要</view>
+        <view>TrainingRecord</view>
+        <view>TradeReview</view>
+        <view>LivingMirrorStats</view>
+        <view>AssistantHandoff</view>
       </view>
       <view class="assistant-summary">{{mockUserProfile.assistantSummary}}</view>
+    </view>
+
+    <view class="handoff-card card">
+      <view class="handoff-head">
+        <view>
+          <text>助教承接状态</text>
+          <view>{{livingMirrorStats.totalReviews || 0}} 条真实复盘 · {{assistantHandoff.currentMirror || '待照见'}}</view>
+        </view>
+        <text>{{userBinding.phoneBound ? '可承接' : '待绑定'}}</text>
+      </view>
+      <view class="handoff-grid">
+        <view>
+          <text>当前主镜</text>
+          <view>{{assistantHandoff.currentMirror || '待照见'}}</view>
+        </view>
+        <view>
+          <text>高频心贼</text>
+          <view>{{assistantHandoff.highFrequencyThieves || '待照见'}}</view>
+        </view>
+        <view>
+          <text>最近念头</text>
+          <view>{{assistantHandoff.recentThought || '待记录'}}</view>
+        </view>
+        <view>
+          <text>训练营建议</text>
+          <view>{{assistantHandoff.campSuggestion || '先完成三次真实复盘'}}</view>
+        </view>
+      </view>
+      <view class="handoff-script">{{assistantHandoff.scriptSuggestion || '完成一次真实复盘后，这里会生成助教承接摘要。'}}</view>
     </view>
 
     <view class="growth-card card" bindtap="tapMenu" data-key="growth">
@@ -271,7 +300,7 @@
 
     <view class="mission-card card">
       <text>小程序定位</text>
-      <view>每日修行器：照见、事上练、省察、留存、私域转化。官网负责建立世界观，小程序负责让用户每天完成一个真实动作。</view>
+      <view>阳明心学交易系统 · 高频陪跑端：每日心证、训练打卡、交易截图上传、复盘采集、活镜提醒、助教承接与订阅提醒。网页负责深度照见，小程序负责每天采集一次真实反应并推动下一次训练。</view>
     </view>
     <button class="danger-clear" bindtap="clearMockData">清理本地 mock 训练数据</button>
 

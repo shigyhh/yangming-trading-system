@@ -63,7 +63,7 @@ export default function AssessmentEntryPage() {
 
   if (showSealIntro) {
     return (
-      <AssessmentShell>
+      <AssessmentShell contentWidth="wide">
         <div className="archive-transition flex min-h-[calc(100svh-4rem)] flex-col items-center justify-center text-center">
           <div className="archive-seal" aria-hidden="true">
             <span>照</span>
@@ -171,7 +171,7 @@ export default function AssessmentEntryPage() {
   }
 
   return (
-    <AssessmentShell>
+    <AssessmentShell contentWidth="wide">
       <div className="ritual-entry-first-step">
         <div className="ritual-entry-breath" aria-hidden="true" />
 
@@ -233,10 +233,12 @@ export default function AssessmentEntryPage() {
         .ritual-entry-first-step {
           position: relative;
           display: flex;
+          width: min(100%, 1120px);
           min-height: calc(100svh - 4rem);
           flex-direction: column;
           align-items: center;
           justify-content: center;
+          margin: 0 auto;
           overflow: hidden;
           padding: clamp(22px, 4svh, 38px) 0;
           text-align: center;
@@ -349,10 +351,10 @@ export default function AssessmentEntryPage() {
         .ritual-line-main {
           margin-top: clamp(22px, 4.2svh, 40px);
           font-family: var(--font-narrative);
-          font-size: clamp(1.48rem, 6.8vw, 2.36rem);
+          font-size: clamp(1.72rem, 4.2vw, 3.65rem);
           font-weight: 300;
           letter-spacing: 0.075em;
-          line-height: 1.78;
+          line-height: 1.56;
           color: rgba(242, 235, 220, 0.86);
           text-shadow: 0 0 24px rgba(216, 183, 111, 0.06);
         }
@@ -377,7 +379,19 @@ export default function AssessmentEntryPage() {
         .ritual-entry-action {
           margin-top: clamp(30px, 5.2svh, 52px);
           width: 100%;
+          max-width: 380px;
           padding-bottom: max(0px, env(safe-area-inset-bottom));
+        }
+
+        @media (min-width: 960px) {
+          .ritual-entry-first-step {
+            min-height: calc(100svh - 5rem);
+            padding-inline: clamp(1rem, 3vw, 2.5rem);
+          }
+
+          .ritual-line-main {
+            max-width: 16em;
+          }
         }
 
         .ritual-entry-note {

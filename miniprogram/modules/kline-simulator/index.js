@@ -314,7 +314,7 @@ function decorateScenario(scene, options = {}) {
     marketSession: market.session,
     paceLabel: timeframe.pace,
     dataSourceLabel: "历史训练切片",
-    segmentLabel: `${market.label} · ${timeframe.label} · 本地训练样本`,
+    segmentLabel: `${market.label} · ${timeframe.label} · 离线训练样本`,
     candles: (scene.candles || []).map((item) => Object.assign({}, item)),
     mirrorNames: (scene.relatedPersonalities || []).map((type) => getMirrorBinding(type).mirrorName),
     compliance: COMPLIANCE_TEXT

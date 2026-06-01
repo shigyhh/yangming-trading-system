@@ -22,6 +22,9 @@ const YM_KLINE_SESSION_RECORDS = "ym_kline_session_records";
 const YM_KLINE_REVIEW_REPORTS = "ym_kline_review_reports";
 const YM_KLINE_MIRROR_CHALLENGES = "ym_kline_mirror_challenges";
 const YM_ANONYMOUS_REACTION_STATS = "ym_anonymous_reaction_stats";
+const YM_TRADE_REVIEW_RECORDS = "ym_trade_review_records";
+const YM_LIVING_MIRROR_STATS = "ym_living_mirror_stats";
+const YM_ASSISTANT_HANDOFF = "ym_assistant_handoff";
 
 module.exports = {
   YM_DAILY_THREE_SEALS,
@@ -47,5 +50,8 @@ module.exports = {
   YM_KLINE_SESSION_RECORDS,
   YM_KLINE_REVIEW_REPORTS,
   YM_KLINE_MIRROR_CHALLENGES,
-  YM_ANONYMOUS_REACTION_STATS
+  YM_ANONYMOUS_REACTION_STATS,
+  YM_TRADE_REVIEW_RECORDS,
+  YM_LIVING_MIRROR_STATS,
+  YM_ASSISTANT_HANDOFF
 };

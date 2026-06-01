@@ -27,6 +27,7 @@ const {
   saveTodayHeartCard,
   clearTodayHeartCard,
   saveInviteEvent,
+  getTradeReviewRecords,
   todayKey
 } = require("../../utils/store");
 const { syncLocalState, syncTrainingProgress, syncShareAttribution } = require("../../utils/api");
@@ -40,6 +41,7 @@ const { buildHeartProofShareCard } = require("../../modules/share/index");
 const { buildRetentionState } = require("../../modules/retention/index");
 const { buildTraining7View } = require("../../modules/training7/index");
 const { buildClassroomView } = require("../../modules/classroom/index");
+const { buildLiveMirrorReminder } = require("../../modules/trade-review/index");
 
 const ENTRY_STATE_KEY = "zhixing_ritual_entry";
 const REACTION_TAGS = ["恐惧", "贪念", "证明", "后悔", "急躁", "逃避"];
@@ -121,7 +123,7 @@ function buildHomeRitualState({
   if (!allSealed) {
     return {
       key: "seal",
-      buttonText: "落下今日三印",
+      buttonText: "落下今日之印",
       primaryLabel: "今日下一步",
       primaryText: "先落三印，再入今日事上练。",
       statusLine: `${checkedCount}/3 已落印`,
@@ -748,6 +750,7 @@ const initialRetentionView = buildRetentionState({
   reminderState: (getRetentionState() || {}).reminder
 });
 const initialTraining7View = buildTraining7View(getTraining7State(), {});
+const initialLiveMirrorReminder = buildLiveMirrorReminder(getTradeReviewRecords());
 
 Page({
   data: {
@@ -796,6 +799,7 @@ Page({
     threeSeals: getTodayThreeSeals(),
     todayStages: buildTodayStages({}),
     classroomView: buildClassroomView(),
+    liveMirrorReminder: initialLiveMirrorReminder,
     userBinding: getUserBinding()
   },
 
@@ -842,6 +846,7 @@ Page({
     const klineMindRecord = getTodayKlineMindRecord();
     const syncStatus = getSyncStatus();
     const retentionState = getRetentionState();
+    const tradeReviewState = getTradeReviewRecords();
     const continuity = buildContinuityState({
       profile,
       mindRecords,
@@ -944,6 +949,7 @@ Page({
     });
     const reportBridge = buildReportBridge(assessment, syncStatus);
     const heroTasks = buildHeroTasks({ reactionRecord, training, dailyContent, training7View, klineMindRecord });
+    const liveMirrorReminder = buildLiveMirrorReminder(tradeReviewState);
     this.setData({
       phone: stored.phone || profile.phone || "",
       vows: buildVows(checkedMap),
@@ -974,6 +980,7 @@ Page({
       training7Summary: buildTraining7Summary(training7View),
       threeSeals,
       todayStages: buildTodayStages({ mind, intradayBoundaryRecord, review: todayReview }),
+      liveMirrorReminder,
       userBinding: getUserBinding(),
       dailyContent,
       hasAssessment: !!assessment
@@ -1021,14 +1028,14 @@ Page({
   saveThreeSeals() {
     const seals = this.data.threeSeals || {};
     if (!seals.thought || !seals.fear || !seals.boundary) {
-      wx.showToast({ title: "请补全今日三印", icon: "none" });
+      wx.showToast({ title: "请补全今日之印", icon: "none" });
       return;
     }
     const saved = saveTodayThreeSeals(seals);
     syncLocalState({ silent: true }).catch(() => {});
     syncTrainingProgress().catch(() => {});
     this.setData({ threeSeals: saved });
-    wx.showToast({ title: "今日三印已落下", icon: "success" });
+    wx.showToast({ title: "今日已照见", icon: "success" });
     promptShareMoment("three_seals_completed", { sourceScene: "three_seals_completed" });
   },
 
@@ -1170,7 +1177,7 @@ Page({
       return false;
     }
     if (this.data.checkedCount < VOWS.length) {
-      wx.showToast({ title: "请先落下今日三印", icon: "none" });
+      wx.showToast({ title: "请先落下今日之印", icon: "none" });
       return false;
     }
 
@@ -1371,6 +1378,14 @@ Page({
 
   goClassroom() {
     wx.redirectTo({ url: "/pages/classroom/index" });
+  },
+
+  goTradeReview() {
+    wx.navigateTo({ url: "/pages/trade-review/index" });
+  },
+
+  goTradeReviewArchive() {
+    wx.navigateTo({ url: "/pages/trade-review-archive/index" });
   },
 
   goTodayStage(e) {

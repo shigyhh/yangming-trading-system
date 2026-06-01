@@ -50,6 +50,25 @@ export type AdminShareCard = {
   created_at: string
 }
 
+export type AdminLivingMirrorStats = {
+  mirrorScores: Record<string, number>
+  thiefCounts: Record<string, number>
+  trainingCompletionRate: number
+  loopRelapseCount: number
+  conscienceGrowth: number
+  lastUpdated: string
+}
+
+export type AdminTradeReview = {
+  id: string
+  tradeDate: string
+  detectedMirror: string
+  strongestThought: string
+  reviewText: string
+  behaviorTags: string[]
+  createdAt: string
+}
+
 export type AdminInviteSourceStats = {
   source: string
   sourceChannel: string
@@ -117,6 +136,8 @@ export type AdminUserRecord = {
   assistantSummary?: AdminAssistantSummary | null
   feishuSync?: AdminFeishuSync | null
   shareCard?: AdminShareCard | null
+  livingMirrorStats?: AdminLivingMirrorStats | null
+  tradeReviews?: AdminTradeReview[]
   report: AdminReport
   trainingRecords: AdminTrainingRecord[]
   klineRecords?: AdminKLineRecord[]
@@ -131,6 +152,7 @@ export const adminApiEndpoints = [
   "GET /api/v1/data-binding/users/:user_id/report",
   "POST /api/v1/data-binding/users/:user_id/training-records",
   "POST /api/v1/data-binding/users/:user_id/kline-records",
+  "POST /api/v1/data-binding/users/:user_id/trade-reviews",
   "POST /api/v1/data-binding/users/:user_id/retests",
   "GET /api/v1/data-binding/users/:user_id/retest-comparison",
   "GET /api/v1/admin/users",

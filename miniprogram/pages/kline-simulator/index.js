@@ -15,6 +15,13 @@ Page({
     timeframeKey: "1d"
   },
 
+  onLoad(options = {}) {
+    const patch = {};
+    if (options.market) patch.marketKey = options.market;
+    if (options.timeframe) patch.timeframeKey = options.timeframe;
+    if (Object.keys(patch).length) this.setData(patch);
+  },
+
   onShow() {
     this.refreshScenarios();
   },
@@ -50,5 +57,9 @@ Page({
 
   goReport() {
     wx.navigateTo({ url: "/pages/report/index" });
+  },
+
+  goTradeReview() {
+    wx.navigateTo({ url: `/pages/trade-review/index?market=${this.data.marketKey}&timeframe=${this.data.timeframeKey}` });
   }
 });

@@ -73,21 +73,20 @@ export default function GlobalReflectionPage() {
   }
 
   return (
-    <AssessmentShell className="py-5">
-      <div className="global-reflection flex flex-col">
-        <StatusPill>全球照见层 · MVP</StatusPill>
-        <h1 className="mt-8 font-story text-[clamp(2.35rem,10.5vw,3.65rem)] font-light leading-[1.32] tracking-[.1em]">
-          不是只有你，
-          <br />
-          会被那一念牵动。
-        </h1>
-        <p className="mt-6 font-story text-[1.08rem] font-light leading-9 tracking-[.045em] text-[rgba(220,212,195,.62)]">
-          这里收集的是匿名交易反应，
-          <br />
-          不是发帖，不是排行，也不是行情判断。
-        </p>
+    <AssessmentShell className="py-5 md:py-8" contentWidth="wide">
+      <div className="global-reflection mx-auto w-full max-w-[1320px]">
+        <section className="global-hero-grid">
+          <div className="global-hero-copy">
+            <StatusPill>全球照见层 · MVP</StatusPill>
+            <h1 className="mt-8 max-w-[11em] font-story text-[clamp(3rem,7.8vw,7.2rem)] font-light leading-[1.08] tracking-[.08em]">
+              不是只有你，会被那一念牵动。
+            </h1>
+            <p className="mt-6 max-w-[38rem] font-story text-[1.1rem] font-light leading-9 tracking-[.045em] text-[rgba(220,212,195,.62)]">
+              这里收集的是匿名交易反应，不是发帖，不是排行，也不是行情判断。
+            </p>
+          </div>
 
-        <GlassPanel className="mt-8">
+          <GlassPanel className="global-panel global-vote-panel">
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="font-function text-xs font-semibold tracking-[.18em] text-[#b49d5d]">今日一念投票</p>
@@ -141,9 +140,11 @@ export default function GlobalReflectionPage() {
           {message ? (
             <p className="mt-3 text-center font-function text-xs tracking-[.08em] text-[rgba(220,212,195,.42)]">{message}</p>
           ) : null}
-        </GlassPanel>
+          </GlassPanel>
+        </section>
 
-        <GlassPanel className="mt-4">
+        <section className="global-insight-grid mt-5">
+          <GlassPanel className="global-panel">
           <p className="font-function text-xs font-semibold tracking-[.18em] text-[#b49d5d]">匿名人格镜像</p>
           <p className="mt-4 font-story text-[1.3rem] font-light leading-[1.7] tracking-[.06em] text-[rgba(242,235,220,.8)]">
             {leading ? `今日最常被照见的是「${leading.label}」。` : "今日还没有形成明显镜像。"}
@@ -159,9 +160,9 @@ export default function GlobalReflectionPage() {
               </p>
             )}
           </div>
-        </GlassPanel>
+          </GlassPanel>
 
-        <GlassPanel className="mt-4">
+          <GlassPanel className="global-panel">
           <p className="font-function text-xs font-semibold tracking-[.18em] text-[#b49d5d]">全球修行长卷</p>
           <div className="mt-5 grid gap-3">
             {summary.scroll.length ? (
@@ -177,9 +178,10 @@ export default function GlobalReflectionPage() {
               </p>
             )}
           </div>
-        </GlassPanel>
+          </GlassPanel>
+        </section>
 
-        <div className="mt-6 grid gap-3 pb-[max(16px,env(safe-area-inset-bottom))]">
+        <div className="mt-6 grid gap-3 pb-[max(16px,env(safe-area-inset-bottom))] md:grid-cols-2 lg:max-w-[760px]">
           <PrimaryLink href="/observing-archive" className="w-full">
             回到观心档案 →
           </PrimaryLink>
@@ -195,6 +197,40 @@ export default function GlobalReflectionPage() {
       <style jsx>{`
         .global-reflection {
           animation: global-reflection-in 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        .global-hero-grid,
+        .global-insight-grid {
+          display: grid;
+          gap: 1rem;
+        }
+
+        .global-panel {
+          position: relative;
+          overflow: hidden;
+        }
+
+        .global-panel::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background:
+            radial-gradient(circle at 16% 0%, rgba(216, 183, 111, 0.065), transparent 15rem),
+            radial-gradient(circle at 86% 18%, rgba(95, 132, 117, 0.06), transparent 16rem);
+          pointer-events: none;
+        }
+
+        @media (min-width: 980px) {
+          .global-hero-grid {
+            grid-template-columns: minmax(0, 1fr) minmax(390px, 0.46fr);
+            align-items: center;
+            min-height: min(58vh, 640px);
+          }
+
+          .global-insight-grid {
+            grid-template-columns: minmax(0, 0.86fr) minmax(0, 1.14fr);
+            align-items: start;
+          }
         }
 
         @keyframes global-reflection-in {

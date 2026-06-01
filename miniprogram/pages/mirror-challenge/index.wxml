@@ -11,7 +11,7 @@
     </view>
 
     <view class="option-card card">
-      <text>模拟同修反应</text>
+      <text>同修反应占位</text>
       <view class="options">
         <button
           wx:for="{{options}}"
