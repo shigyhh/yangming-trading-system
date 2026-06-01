@@ -1,0 +1,231 @@
+.hero-card,
+.screenshot-card,
+.fact-card,
+.evidence-card,
+.score-card,
+.training-card,
+.empty-card {
+  margin-top: 28rpx;
+  padding: 28rpx;
+}
+
+.hero-card text,
+.hero-card view,
+.screenshot-card image,
+.screenshot-card view,
+.fact-card text,
+.fact-card view,
+.evidence-card text,
+.evidence-card view,
+.score-card text,
+.score-card view,
+.training-card text,
+.training-card view,
+.empty-card text,
+.empty-card view,
+.empty-card button {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 20rpx;
+  align-items: flex-start;
+}
+
+.hero-head view text {
+  display: block;
+  color: #f1d27d;
+  font-size: 24rpx;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.hero-head view view {
+  margin-top: 14rpx;
+  color: #fff6e6;
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", serif;
+  font-size: 34rpx;
+  line-height: 1.48;
+}
+
+.hero-head > text {
+  flex: 0 0 auto;
+  max-width: 176rpx;
+  padding: 10rpx 16rpx;
+  border-radius: 999rpx;
+  color: rgba(241, 210, 125, 0.8);
+  border: 1rpx solid rgba(241, 210, 125, 0.18);
+  background: rgba(255, 255, 255, 0.035);
+  font-size: 21rpx;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.hero-meta {
+  margin-top: 14rpx;
+  color: rgba(247, 239, 223, 0.58);
+  font-size: 23rpx;
+  line-height: 1.45;
+}
+
+.screenshot-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.screenshot-card image {
+  width: 100%;
+  height: 330rpx;
+}
+
+.screenshot-card view {
+  padding: 18rpx 24rpx;
+  color: rgba(247, 239, 223, 0.55);
+  font-size: 22rpx;
+}
+
+.fact-card > text,
+.evidence-card > text,
+.score-card > text,
+.training-card > text {
+  display: block;
+  color: #f1d27d;
+  font-size: 24rpx;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.fact-grid {
+  margin-top: 18rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12rpx;
+}
+
+.fact-grid > view,
+.text-line,
+.evidence-row {
+  padding: 18rpx;
+  border-radius: 18rpx;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.fact-grid text,
+.text-line text,
+.evidence-row text:first-child {
+  color: #b49355;
+  font-size: 21rpx;
+  font-weight: 900;
+}
+
+.fact-grid view view,
+.text-line view,
+.evidence-row view view {
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.74);
+  font-size: 24rpx;
+  line-height: 1.5;
+  font-weight: 800;
+}
+
+.text-line,
+.evidence-row,
+.score-row {
+  margin-top: 14rpx;
+}
+
+.evidence-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 150rpx;
+  gap: 16rpx;
+  align-items: center;
+}
+
+.evidence-row > text {
+  color: #f1d27d;
+  font-size: 22rpx;
+  font-weight: 900;
+  text-align: right;
+  line-height: 1.35;
+}
+
+.score-row {
+  display: grid;
+  grid-template-columns: 160rpx 58rpx 1fr;
+  gap: 14rpx;
+  align-items: center;
+}
+
+.score-row > view:first-child,
+.score-row > text {
+  color: rgba(247, 239, 223, 0.72);
+  font-size: 22rpx;
+  font-weight: 800;
+}
+
+.score-row > text {
+  text-align: right;
+}
+
+.score-bar {
+  height: 10rpx;
+  overflow: hidden;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.score-bar view {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #58c2ad, #f1d27d);
+}
+
+.training-card view {
+  margin-top: 16rpx;
+  color: #fff6e6;
+  font-size: 28rpx;
+  line-height: 1.62;
+  font-weight: 900;
+}
+
+.training-card text:last-child {
+  margin-top: 14rpx;
+  color: rgba(247, 239, 223, 0.48);
+  font-size: 22rpx;
+  line-height: 1.5;
+}
+
+.empty-card view {
+  color: #fff6e6;
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", serif;
+  font-size: 34rpx;
+  line-height: 1.35;
+}
+
+.empty-card text {
+  display: block;
+  margin-top: 14rpx;
+  color: rgba(247, 239, 223, 0.6);
+  font-size: 24rpx;
+  line-height: 1.6;
+}
+
+.empty-card button {
+  margin-top: 22rpx;
+}
+
+@media (max-width: 340px) {
+  .fact-grid,
+  .evidence-row,
+  .score-row {
+    grid-template-columns: 1fr;
+  }
+
+  .evidence-row > text,
+  .score-row > text {
+    text-align: left;
+  }
+}

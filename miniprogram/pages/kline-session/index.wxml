@@ -1,0 +1,107 @@
+<view class="page-shell">
+  <view class="page-content">
+    <text class="eyebrow">MIND KLINE · 盲练</text>
+    <view class="page-title">{{scene.title}}</view>
+    <view class="page-subtitle">{{scene.subtitle}}</view>
+    <view class="session-meta card">
+      <text>{{scene.segmentLabel}}</text>
+      <view>{{scene.ruleTag}} · {{scene.marketSession}}</view>
+      <view class="data-status">{{dataStatus}} · {{chartScale.rangeText}}</view>
+    </view>
+
+    <view class="chart-card card">
+      <view class="chart-head">
+        <text>{{scene.dataSourceLabel || '历史片段'}}</text>
+        <view>已显露 {{candles.length}} / {{scene.candles.length}} · 未来不可见</view>
+      </view>
+      <view class="chart-frame">
+        <view class="price-axis">
+          <text>{{chartScale.high}}</text>
+          <text>{{chartScale.mid}}</text>
+          <text>{{chartScale.low}}</text>
+        </view>
+        <view class="mock-chart">
+          <view class="grid-line top"></view>
+          <view class="grid-line mid"></view>
+          <view class="grid-line bottom"></view>
+          <view wx:for="{{candles}}" wx:key="key" class="candle-wrap">
+            <view class="wick" style="height: {{item.wickHeight}}rpx; top: {{item.wickTop}}rpx;"></view>
+            <view class="candle {{item.up ? 'up' : 'down'}}" style="height: {{item.bodyHeight}}rpx; top: {{item.bodyTop}}rpx;"></view>
+            <view class="volume {{item.up ? 'up' : 'down'}}" style="height: {{item.volumeHeight}}rpx;"></view>
+          </view>
+          <view wx:for="{{futureBars}}" wx:key="key" class="candle-wrap future">
+            <view class="future-mask"></view>
+          </view>
+        </view>
+      </view>
+      <view class="chart-foot">
+        <text>{{firstCandleText}}</text>
+        <text>盲练切片</text>
+        <text>{{lastCandleText}}</text>
+      </view>
+    </view>
+
+    <view class="question-card card">
+      <view class="step-line">第 {{checkpoint.step}} 步 · 已停留 {{elapsedText}}</view>
+      <view class="question-text">{{checkpoint.question}}</view>
+      <view class="reaction-time">{{reactionHint}}</view>
+      <view class="options">
+        <button
+          wx:for="{{checkpoint.options}}"
+          wx:key="id"
+          class="option {{selectedOption === item.id ? 'selected' : ''}}"
+          data-id="{{item.id}}"
+          bindtap="selectOption"
+        >
+          <text>{{item.label}}</text>
+          <view>{{item.trait}}</view>
+        </button>
+      </view>
+    </view>
+
+    <view class="boundary-card card">
+      <text>当前边界</text>
+      <input value="{{boundary}}" bindinput="inputBoundary" placeholder="写下你此刻要守住的一界" />
+      <view class="boundary-state-grid">
+        <button
+          wx:for="{{boundaryStates}}"
+          wx:key="key"
+          class="{{boundaryState === item.key ? 'active' : ''}}"
+          data-key="{{item.key}}"
+          bindtap="selectBoundaryState"
+        >
+          <text>{{item.label}}</text>
+          <view>{{item.note}}</view>
+        </button>
+      </view>
+      <button class="switch {{changedPlan ? 'active' : ''}}" bindtap="toggleChangedPlan">
+        {{changedPlan ? '我刚才有临时改计划' : '我暂未改计划'}}
+      </button>
+    </view>
+
+    <view class="mind-card card">
+      <text>当下照见</text>
+      <view class="mind-sub">记录情绪与第一念，让复盘看见真实反应。</view>
+      <view class="emotion-grid">
+        <button
+          wx:for="{{emotionOptions}}"
+          wx:key="*this"
+          class="{{selectedEmotion === item ? 'active' : ''}}"
+          data-emotion="{{item}}"
+          bindtap="selectEmotion"
+        >
+          {{item}}
+        </button>
+      </view>
+      <textarea
+        value="{{firstThought}}"
+        bindinput="inputFirstThought"
+        placeholder="此刻最强的一念是什么？例如：我怕错过、我想证明、我想先离开屏幕"
+      />
+    </view>
+
+    <button class="primary-btn main-action" bindtap="nextStep">{{session.completed ? '生成复盘' : '记录并继续'}}</button>
+    <compliance-notice />
+  </view>
+  <bottom-tab-bar active="mind" />
+</view>

@@ -1,0 +1,92 @@
+<view class="boundary-shell">
+  <view class="boundary-bg mist"></view>
+  <view class="boundary-bg grain"></view>
+
+  <view class="boundary-content">
+    <view class="head">
+      <view class="seal">界</view>
+      <view>
+        <text>盘中守界</text>
+        <view>边界到了，先看见反应，再选择知行合一。</view>
+      </view>
+    </view>
+
+    <view class="hero-card">
+      <text>今日一界</text>
+      <view>{{form.boundary || '先立一条边界，再入事上练心。'}}</view>
+    </view>
+
+    <view class="section-card">
+      <view class="section-title">
+        <text>触发场景</text>
+        <view>{{form.trigger || '待照见'}}</view>
+      </view>
+      <view class="chip-grid">
+        <button
+          wx:for="{{triggerOptions}}"
+          wx:key="*this"
+          data-key="trigger"
+          data-value="{{item}}"
+          class="{{form.trigger === item ? 'active' : ''}}"
+          bindtap="selectOption"
+        >{{item}}</button>
+      </view>
+    </view>
+
+    <view class="section-card">
+      <view class="section-title">
+        <text>第一反应</text>
+        <view>{{form.firstReaction || '待记录'}}</view>
+      </view>
+      <view class="chip-grid">
+        <button
+          wx:for="{{reactionOptions}}"
+          wx:key="*this"
+          data-key="firstReaction"
+          data-value="{{item}}"
+          class="{{form.firstReaction === item ? 'active' : ''}}"
+          bindtap="selectOption"
+        >{{item}}</button>
+      </view>
+    </view>
+
+    <view class="section-card">
+      <view class="section-title">
+        <text>今日边界</text>
+        <view>{{form.boundary || '待选择'}}</view>
+      </view>
+      <view class="chip-grid">
+        <button
+          wx:for="{{boundaryOptions}}"
+          wx:key="*this"
+          data-key="boundary"
+          data-value="{{item}}"
+          class="{{form.boundary === item ? 'active' : ''}}"
+          bindtap="selectOption"
+        >{{item}}</button>
+      </view>
+    </view>
+
+    <view class="section-card">
+      <view class="field-title">此刻照见</view>
+      <textarea
+        maxlength="120"
+        value="{{form.note}}"
+        data-key="note"
+        bindinput="inputField"
+        placeholder="例：边界被触碰时，我最想证明自己判断没错。"
+        placeholder-class="placeholder"
+      />
+    </view>
+
+    <view class="actions">
+      <button class="secondary" bindtap="goReview">收盘省察</button>
+      <button class="primary" bindtap="saveBoundary">{{saved ? '更新守界记录' : '记录这一界'}}</button>
+    </view>
+    <button class="ghost" bindtap="goShareCard">生成守界卡</button>
+
+    <compliance-notice compact="{{true}}" />
+  </view>
+
+  <bottom-tab-bar active="mind" />
+</view>

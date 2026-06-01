@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation"
 import { AssessmentShell, StatusPill } from "@/features/assessment/components"
 import { CycleMirror } from "@/features/assessment/CycleMirror"
 import { generateMirrorReport, type AssessmentReport } from "@/features/assessment/report"
-import { assessmentStorageKeys, getStorage, removeStorage, setStorage } from "@/features/assessment/storage"
+import { assessmentStorageKeys, getStorage, setStorage } from "@/features/assessment/storage"
 
 function CycleMirrorContent() {
   const searchParams = useSearchParams()
@@ -21,12 +21,11 @@ function CycleMirrorContent() {
     const mirrorReport = generateMirrorReport(nextMirrorId)
     setStorage(assessmentStorageKeys.report, mirrorReport)
     setStorage(assessmentStorageKeys.reportCreatedAt, mirrorReport.createdAt)
-    removeStorage(assessmentStorageKeys.practiceChange)
   }, [])
 
   return (
-    <AssessmentShell className="py-5">
-      <div className="cycle-mirror-page flex flex-col">
+    <AssessmentShell className="py-5 md:py-7" contentWidth="wide">
+      <div className="cycle-mirror-page mx-auto flex w-full max-w-[1280px] flex-col">
         <CycleMirror key={mirrorId} initialMirrorId={mirrorId} onMirrorChange={persistMirrorSignal} />
         <div className="mt-3">
           <Link href="/assessment" className="cycle-back-link">
@@ -84,7 +83,7 @@ function CycleMirrorContent() {
 
 export default function CycleMirrorPage() {
   return (
-    <Suspense fallback={<AssessmentShell className="py-5"><StatusPill>正在进入循环之镜</StatusPill></AssessmentShell>}>
+    <Suspense fallback={<AssessmentShell className="py-5" contentWidth="wide"><StatusPill>正在进入循环之镜</StatusPill></AssessmentShell>}>
       <CycleMirrorContent />
     </Suspense>
   )

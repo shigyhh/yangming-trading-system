@@ -169,6 +169,7 @@ function resolveCorsOrigin(origin, req) {
   if (!origin) return "";
   const host = req.headers.host;
   if (host && (origin === `http://${host}` || origin === `https://${host}`)) return origin;
+  if (config.nodeEnv !== "production" && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return origin;
   return config.corsAllowedOrigins.includes(origin) ? origin : "";
 }
 

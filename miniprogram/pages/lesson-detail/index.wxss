@@ -1,0 +1,211 @@
+.lesson-shell {
+  min-height: 100vh;
+  background: #07100e;
+  color: #f5ead8;
+  position: relative;
+  overflow: hidden;
+  padding-bottom: 132rpx;
+}
+
+.lesson-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.lesson-bg.mist {
+  background:
+    radial-gradient(circle at 50% 6%, rgba(216, 183, 111, 0.13), transparent 34%),
+    radial-gradient(circle at 10% 34%, rgba(95, 132, 117, 0.13), transparent 38%),
+    linear-gradient(180deg, #11120e 0%, #07100e 56%, #040706 100%);
+}
+
+.lesson-bg.grain {
+  opacity: 0.2;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.024) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.016) 1px, transparent 1px);
+  background-size: 34rpx 34rpx;
+}
+
+.lesson-content {
+  position: relative;
+  z-index: 1;
+  padding: 40rpx 32rpx;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin-bottom: 32rpx;
+}
+
+.seal {
+  width: 72rpx;
+  height: 72rpx;
+  border: 1rpx solid rgba(216, 183, 111, 0.34);
+  border-radius: 20rpx;
+  display: grid;
+  place-items: center;
+  color: #d8b76f;
+  font-size: 36rpx;
+  font-family: "LXGW WenKai", "Songti SC", serif;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.head text {
+  display: block;
+  font-size: 34rpx;
+  font-weight: 650;
+}
+
+.head view view {
+  margin-top: 8rpx;
+  color: rgba(245, 234, 216, 0.52);
+  font-size: 24rpx;
+}
+
+.lesson-hero,
+.lesson-player,
+.lesson-meta,
+.guide-card,
+.compliance {
+  border: 1rpx solid rgba(217, 189, 122, 0.16);
+  border-radius: 24rpx;
+  background: rgba(9, 17, 14, 0.72);
+}
+
+.lesson-hero {
+  padding: 40rpx;
+  margin-bottom: 20rpx;
+}
+
+.lesson-hero text {
+  color: rgba(216, 183, 111, 0.78);
+  font-size: 22rpx;
+  letter-spacing: 2rpx;
+}
+
+.lesson-hero view {
+  margin-top: 22rpx;
+  font-size: 38rpx;
+  line-height: 1.42;
+  font-family: "LXGW WenKai", "Songti SC", serif;
+}
+
+.lesson-player {
+  min-height: 148rpx;
+  margin-bottom: 20rpx;
+  padding: 24rpx;
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(216, 183, 111, 0.16), transparent 42%),
+    rgba(9, 17, 14, 0.72);
+}
+
+.play-seal {
+  width: 72rpx;
+  height: 72rpx;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 999rpx;
+  color: #11130d;
+  background: linear-gradient(180deg, #ead089, #c69846);
+  font-size: 30rpx;
+  font-weight: 900;
+}
+
+.lesson-player text {
+  display: block;
+  color: #f2dfaa;
+  font-size: 25rpx;
+  font-weight: 900;
+}
+
+.lesson-player view view {
+  margin-top: 10rpx;
+  color: rgba(245, 234, 216, 0.54);
+  font-size: 23rpx;
+  line-height: 1.55;
+}
+
+.lesson-meta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rpx;
+  overflow: hidden;
+  margin-bottom: 20rpx;
+}
+
+.lesson-meta > view {
+  padding: 24rpx 18rpx;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.lesson-meta text,
+.guide-card text {
+  color: rgba(216, 183, 111, 0.72);
+  font-size: 22rpx;
+}
+
+.lesson-meta view view {
+  margin-top: 10rpx;
+  color: rgba(245, 234, 216, 0.7);
+  font-size: 25rpx;
+  line-height: 1.45;
+}
+
+.guide-card {
+  padding: 30rpx;
+}
+
+.guide-card view {
+  margin-top: 16rpx;
+  color: rgba(245, 234, 216, 0.66);
+  font-size: 27rpx;
+  line-height: 1.7;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 18rpx;
+  margin-top: 28rpx;
+}
+
+.actions button,
+.ghost {
+  min-height: 84rpx;
+  border-radius: 22rpx;
+  font-weight: 650;
+  font-size: 26rpx;
+}
+
+.primary {
+  color: #1c160d;
+  background: linear-gradient(135deg, #e6c979, #a9823c);
+}
+
+.secondary,
+.ghost {
+  color: rgba(245, 234, 216, 0.78);
+  background: rgba(255, 255, 255, 0.045);
+  border: 1rpx solid rgba(217, 189, 122, 0.18);
+}
+
+.ghost {
+  width: 100%;
+  margin-top: 18rpx;
+}
+
+.compliance {
+  margin-top: 24rpx;
+  padding: 24rpx;
+  color: rgba(245, 234, 216, 0.42);
+  font-size: 22rpx;
+  line-height: 1.6;
+}

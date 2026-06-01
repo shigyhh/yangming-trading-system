@@ -1,13 +1,6 @@
-export type AssessmentTag =
-  | "fomo_chaser"
-  | "panic_runner"
-  | "hold_and_hope"
-  | "prove_self"
-  | "revenge_rescuer"
-  | "hesitant_watcher"
-  | "over_control"
-  | "numb_repeat"
-  | "disciplined_observer"
+import type { PersonalityTag } from "../../../../packages/personality/index"
+
+export type AssessmentTag = PersonalityTag
 
 export type AssessmentOption = {
   id: string

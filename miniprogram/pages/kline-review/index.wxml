@@ -1,0 +1,113 @@
+<view class="page-shell">
+  <view class="page-content">
+    <text class="eyebrow">REVIEW · 复盘</text>
+    <view class="page-title">K线照见<br />复盘报告</view>
+    <view class="page-subtitle">复盘不评价对错，只看见自己如何反应、如何守界、如何回到计划。</view>
+
+    <block wx:if="{{review}}">
+      <view class="hero-card card">
+        <text>{{review.relatedMirror}}</text>
+        <view>{{review.primaryReaction}}</view>
+        <text class="sub">{{review.marketLabel}} · {{review.timeframeLabel}} · {{review.ruleTag}}</text>
+        <text class="sub">反应时间：{{review.reactionTimeMs}} ms</text>
+        <text class="sub">{{review.relatedLine}}</text>
+      </view>
+
+      <view class="trigger-card card">
+        <view>
+          <text>被触发的念头</text>
+          <text>{{review.trigger}}</text>
+        </view>
+        <view>
+          <text>当下情绪</text>
+          <text>{{review.emotion || '未记录'}}</text>
+        </view>
+        <view>
+          <text>最强一念</text>
+          <text>{{review.firstThought || '未记录'}}</text>
+        </view>
+        <view>
+          <text>反应速度</text>
+          <text>{{review.reactionSecondsText}} · {{review.impulseLine}}</text>
+        </view>
+        <view>
+          <text>对应六贼</text>
+          <text>{{review.heartThievesText}}</text>
+        </view>
+        <view>
+          <text>心贼之镜</text>
+          <text>{{review.relatedHeartMirror}}</text>
+        </view>
+        <view>
+          <text>选择改动</text>
+          <text>{{review.optionSwitchCount || 0}} 次</text>
+        </view>
+        <view>
+          <text>边界状态</text>
+          <text>{{review.boundaryStateLabel || '待照见'}} · {{review.changedPlan ? '曾临时改计划' : '未记录临时改计划'}}</text>
+        </view>
+      </view>
+
+      <view class="evidence-card card">
+        <text>事上练证据</text>
+        <view wx:for="{{review.processEvidence}}" wx:key="label" class="evidence-row">
+          <view>
+            <text>{{item.label}}</text>
+            <view>{{item.detail}}</view>
+          </view>
+          <text>{{item.value}}</text>
+        </view>
+      </view>
+
+      <view class="insight-card card">
+        <text>一句话照见</text>
+        <view>{{review.insight}}</view>
+        <text class="suggestion">{{review.trainingSuggestion}}</text>
+      </view>
+
+      <view class="score-card card">
+        <text>过程评分</text>
+        <view wx:for="{{scoreRows}}" wx:key="key" class="score-row">
+          <view>{{item.label}}</view>
+          <text>{{item.value}}</text>
+          <view class="score-bar"><view style="width: {{item.value}}%;"></view></view>
+        </view>
+      </view>
+
+      <view class="stats-card card">
+        <text>匿名同修分布</text>
+        <view class="stats-note">{{review.anonymousStats.title}}</view>
+        <view wx:for="{{statsRows}}" wx:key="label" class="stats-row {{item.active ? 'active' : ''}}">
+          <view>
+            <text>{{item.label}}</text>
+            <view class="stats-bar"><view style="width: {{item.value}}%;"></view></view>
+          </view>
+          <text>{{item.value}}%</text>
+        </view>
+        <view class="stats-insight">{{review.anonymousStats.insight}}</view>
+        <view class="compliance-line">{{review.anonymousStats.compliance}}</view>
+      </view>
+
+      <view class="split-actions">
+        <button class="ghost-btn" bindtap="saveCard">保存照见卡</button>
+        <button class="primary-btn" bindtap="goMirror">同修镜像</button>
+      </view>
+      <view class="split-actions">
+        <button class="ghost-btn" data-type="kline_insight" bindtap="goShareCard">生成分享预览</button>
+        <button class="ghost-btn" bindtap="goSimulator">再练一段</button>
+      </view>
+      <view class="single-action">
+        <button class="ghost-btn" data-type="group_kline_mirror" bindtap="goShareCard">生成群体镜像卡</button>
+      </view>
+    </block>
+
+    <view wx:else class="empty-card card">
+      <view>还没有 K线复盘</view>
+      <text>先完成一段 K线压力测试，再生成复盘。</text>
+      <button class="primary-btn" bindtap="goSimulator">开始训练</button>
+    </view>
+
+    <compliance-notice />
+  </view>
+  <bottom-tab-bar active="mind" />
+</view>

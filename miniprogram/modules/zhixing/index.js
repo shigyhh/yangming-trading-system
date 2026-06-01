@@ -32,7 +32,7 @@ const ZHIXING_SCORE_RULE = {
     { key: "stageGrowth", name: "主修兑现", weight: 0.16 }
   ],
   inputs: ["九型人格", "主修关卡", "今日照心", "每日事上练", "心性省察"],
-  boundary: "不读取收益、股票代码、账户金额。"
+  boundary: "不读取账户结果、股票代码、账户金额。"
 };
 
 const MIND_SCORE = {
@@ -161,6 +161,128 @@ function calculateZhixingIndex({ mind, training, review, assessment, stageState 
   };
 }
 
+function calculateDailyZhixingMvp({ mind, training, review, threeSeals, training7View, assessment, klineReview } = {}) {
+  const seals = threeSeals || {};
+  const mindReady = !!mind;
+  const hasOpeningDetail = !!(mind && (mind.currentStatus || mind.todayRisk || mind.todayBoundary));
+  const trainingSteps = (training || {}).steps || {};
+  const taskCount = Object.keys(trainingSteps).filter((key) => !!trainingSteps[key]).length;
+  const trainingDay = (training7View || {}).today || {};
+  const trainingTasks = Array.isArray(trainingDay.tasks) ? trainingDay.tasks : [];
+  const trainingTaskCount = trainingTasks.filter((item) => item.done).length;
+  const reviewReady = !!review;
+  const keptBoundary = review ? review.keptBoundary !== false && review.held !== true && review.changedPlan !== true : false;
+  const deviatedPlan = review ? review.deviatedPlan === true || review.changedPlan === true : false;
+  const insightReady = !!(review && (review.insightLine || review.correction));
+
+  const awareness = clamp(
+    34 +
+    (seals.thought ? 14 : 0) +
+    (seals.fear ? 12 : 0) +
+    (seals.boundary ? 12 : 0) +
+    (mindReady ? 16 : 0) +
+    (hasOpeningDetail ? 10 : 0),
+    0,
+    100
+  );
+  const boundary = clamp(
+    30 +
+    (seals.boundary ? 18 : 0) +
+    (mind && mind.todayBoundary ? 14 : 0) +
+    (keptBoundary ? 24 : 0) -
+    (review && review.keptBoundary === false ? 18 : 0),
+    0,
+    100
+  );
+  const execution = clamp(
+    32 +
+    taskCount * 12 +
+    trainingTaskCount * 9 +
+    ((training || {}).completed ? 16 : 0) -
+    (deviatedPlan ? 18 : 0),
+    0,
+    100
+  );
+  const reviewScore = clamp(
+    28 +
+    (reviewReady ? 24 : 0) +
+    (review && review.strongestReaction ? 14 : 0) +
+    (insightReady ? 20 : 0) +
+    (review && typeof review.keptBoundary === "boolean" ? 8 : 0),
+    0,
+    100
+  );
+  const stability = clamp(
+    48 +
+    (mind && ["平静", "静"].includes(mind.currentStatus || mind.name) ? 16 : 0) +
+    (keptBoundary ? 12 : 0) +
+    ((training7View || {}).completedCount || 0) * 4 -
+    (mind && ["急躁", "恐惧", "想证明", "想翻本"].includes(mind.currentStatus) ? 10 : 0) -
+    (deviatedPlan ? 12 : 0),
+    0,
+    100
+  );
+  const delay = clamp(
+    klineReview && klineReview.scores
+      ? klineReview.scores.impulseDelay
+      : 36 + (seals.boundary ? 12 : 0) + (hasOpeningDetail ? 10 : 0) + (keptBoundary ? 16 : 0) - (deviatedPlan ? 12 : 0),
+    0,
+    100
+  );
+  const personalityCalibration = clamp(
+    38 +
+    (assessment ? 22 : 0) +
+    (klineReview ? 20 : 0) +
+    (assessment && klineReview && [assessment.primary, assessment.secondary].includes(klineReview.relatedPersonality) ? 12 : 0) +
+    ((training7View || {}).completedCount || 0) * 2,
+    0,
+    100
+  );
+  const total = clamp(
+    awareness * 0.18 +
+    boundary * 0.2 +
+    execution * 0.16 +
+    delay * 0.12 +
+    reviewScore * 0.16 +
+    stability * 0.12 +
+    personalityCalibration * 0.06,
+    0,
+    100
+  );
+
+  return {
+    version: "daily-mvp-v1",
+    total,
+    personality: { type: "今日陪跑", bias: {} },
+    mainStage: {
+      key: "daily-companion",
+      name: (trainingDay || {}).title || "每日交易观心",
+      progress: (training7View || {}).progressPercent || 0,
+      aligned: true
+    },
+    growthBinding: `每日交易观心 · ${(trainingDay || {}).title || "今日训练"}`,
+    dimensions: [
+      { key: "awareness", name: "照见度", score: awareness, hint: "来自一念、一惧、一界与开盘照心。" },
+      { key: "boundary", name: "守界度", score: boundary, hint: "只看是否写清并守住今日边界。" },
+      { key: "execution", name: "执行度", score: execution, hint: "来自今日任务、事上练和计划一致性。" },
+      { key: "delay", name: "延迟度", score: delay, hint: klineReview ? "来自 K线压力测试中的第一反应停顿。" : "完成 K线压力测试后更准确。" },
+      { key: "review", name: "复盘度", score: reviewScore, hint: "来自收盘省察与今日照见一句话。" },
+      { key: "stability", name: "稳定度", score: stability, hint: "只看情绪与念头稳定，不看外部结果。" },
+      { key: "personalityCalibration", name: "人格校准度", score: personalityCalibration, hint: assessment ? "由问卷、训练记录与 K线复盘共同校准。" : "完成九型照见后生成。" }
+    ],
+    weights: [
+      { key: "awareness", name: "照见度", weight: 0.18 },
+      { key: "boundary", name: "守界度", weight: 0.2 },
+      { key: "execution", name: "执行度", weight: 0.16 },
+      { key: "delay", name: "延迟度", weight: 0.12 },
+      { key: "review", name: "复盘度", weight: 0.16 },
+      { key: "stability", name: "稳定度", weight: 0.12 },
+      { key: "personalityCalibration", name: "人格校准度", weight: 0.06 }
+    ],
+    stateLabel: total >= 82 ? "知行清明" : total >= 68 ? "事上有守" : "今日待练"
+  };
+}
+
 function countCompletedTrainings(trainingState) {
   return Object.keys(trainingState || {}).filter((dayKey) => !!((trainingState || {})[dayKey] || {}).completed).length;
 }
@@ -275,6 +397,7 @@ module.exports = {
   ZHIXING_SCORE_RULE,
   GROWTH_LEVELS,
   calculateZhixingIndex,
+  calculateDailyZhixingMvp,
   buildGrowthLevel,
   buildZhixingRecordState,
   buildScoreRecord

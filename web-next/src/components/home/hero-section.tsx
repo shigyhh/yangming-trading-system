@@ -1,326 +1,195 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { AnimatePresence, motion } from "framer-motion"
+import { motion } from "framer-motion"
+import type { MouseEvent } from "react"
 
 import { FlowButton } from "@/components/home/flow-button"
-
-const mirrorThoughts = [
-  {
-    thought: "先卖一点吧，\n万一跌下来呢？",
-    mirror: "焦虑之镜",
-  },
-  {
-    thought: "再不上车，\n就来不及了。",
-    mirror: "追涨之镜",
-  },
-  {
-    thought: "再等等，\n说不定能回来。",
-    mirror: "扛单之镜",
-  },
-  {
-    thought: "这一把做对，\n就能全回来。",
-    mirror: "赌性之镜",
-  },
-] as const
+import { InsightCard } from "@/components/home/insight-card"
 
 export function HeroSection() {
-  const [thoughtIndex, setThoughtIndex] = useState(0)
-  const activeThought = mirrorThoughts[thoughtIndex]
+  function enterWorldview(event: MouseEvent<HTMLAnchorElement>) {
+    const target = document.getElementById("personality")
+    if (!target) return
 
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setThoughtIndex((current) => (current + 1) % mirrorThoughts.length)
-    }, 4800)
-
-    return () => window.clearInterval(timer)
-  }, [])
+    event.preventDefault()
+    target.scrollIntoView({ behavior: "smooth", block: "start" })
+    window.history.replaceState(null, "", "#personality")
+  }
 
   return (
     <section
       id="hero"
-      aria-label="九面行为心镜首屏"
-      className="relative z-10 mx-auto flex min-h-[100svh] w-full max-w-[1240px] flex-col items-center justify-center overflow-hidden px-4 pb-12 pt-24 text-center md:px-8 md:pb-16 md:pt-28"
+      aria-label="阳明心学交易系统首屏"
+      className="relative z-10 min-h-[100svh] w-full overflow-hidden text-left"
     >
-      <motion.div
-        className="pointer-events-none absolute left-1/2 top-[11%] h-px w-[min(520px,72vw)] -translate-x-1/2 bg-[linear-gradient(90deg,transparent,rgba(216,183,111,.18),transparent)] opacity-40"
-        initial={{ opacity: 0, scaleX: 0.4 }}
-        animate={{ opacity: 0.4, scaleX: 1 }}
-        transition={{ duration: 1.8, delay: 1.1, ease: [0.22, 1, 0.36, 1] }}
-      />
+      <div className="hero-quiet-field" aria-hidden="true">
+        <span className="hero-quiet-moon" />
+        <span className="hero-quiet-ring hero-quiet-ring-one" />
+        <span className="hero-quiet-ring hero-quiet-ring-two" />
+        <span className="hero-quiet-dust hero-quiet-dust-one" />
+        <span className="hero-quiet-dust hero-quiet-dust-two" />
+      </div>
 
-      <div className="relative flex w-full flex-col items-center">
+      <div className="relative z-10 mx-auto grid min-h-[100svh] w-full max-w-[1500px] items-start gap-10 px-5 pb-12 pt-[7.25rem] md:px-8 md:pb-16 md:pt-28 lg:grid-cols-[minmax(0,760px)_minmax(420px,520px)] lg:justify-center lg:gap-16 lg:pt-36 xl:gap-20">
         <motion.div
-          className="mb-4 flex flex-col items-center md:mb-6"
-          initial={{ opacity: 0, y: 18, filter: "blur(8px)" }}
+          className="w-full max-w-[760px] lg:flex lg:min-h-[560px] lg:flex-col"
+          initial={{ opacity: 0, y: 22, filter: "blur(10px)" }}
           animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-          transition={{ duration: 1.1, delay: 1.28, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 1.15, delay: 0.88, ease: [0.22, 1, 0.36, 1] }}
         >
-          <span className="type-level-4 text-[rgba(216,183,111,.5)]">
-            九面行为心镜
-          </span>
-          <h1 className="sr-only">
-            九面行为心镜，照见交易里最先动的那一念
+          <h1 className="font-worldview max-w-[760px] text-[clamp(3.5rem,7.1vw,6.55rem)] font-light leading-[1.04] tracking-[0] text-[rgba(244,235,221,.94)]">
+            心不静，
+            <br />
+            交易必乱。
           </h1>
-        </motion.div>
 
-        <motion.div
-          className="heart-mirror-shell"
-          initial={{ opacity: 0, scale: 0.88, y: 26, filter: "blur(18px)" }}
-          animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
-          transition={{ duration: 1.35, delay: 1.48, ease: [0.22, 1, 0.36, 1] }}
-          aria-label={`心镜照见：${activeThought.thought.replace("\n", "")}`}
-        >
-          <span className="hero-mirror-aura hero-mirror-aura-one" />
-          <span className="hero-mirror-aura hero-mirror-aura-two" />
-          <span className="hero-mirror-frame-line hero-mirror-frame-line-one" />
-          <span className="hero-mirror-frame-line hero-mirror-frame-line-two" />
+          <motion.div
+            className="mt-6 grid w-full max-w-[480px] grid-cols-[1fr_auto_1fr] items-center gap-3 text-center font-story text-[1.16rem] font-light leading-relaxed tracking-[.08em] md:mt-7 md:text-[1.34rem]"
+            initial={{ opacity: 0, y: 10, filter: "blur(6px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            transition={{ duration: 0.9, delay: 1.48, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <span className="text-[rgba(190,194,190,.58)]">
+              市场照见价格
+            </span>
+            <span
+              aria-hidden="true"
+              className="h-9 w-px bg-[linear-gradient(180deg,transparent,rgba(216,183,111,.26),rgba(95,132,117,.16),transparent)]"
+            />
+            <span className="text-[rgba(216,183,111,.64)]">
+              心镜照见自己
+            </span>
+          </motion.div>
 
-          <div className="heart-mirror-water">
-            <span className="hero-mirror-surface-shine" />
-            <span className="hero-mirror-ripple hero-mirror-ripple-one" />
-            <span className="hero-mirror-ripple hero-mirror-ripple-two" />
-
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeThought.thought}
-                className="hero-mirror-thought-wrap"
-                initial={{ opacity: 0, y: 18, filter: "blur(8px)" }}
-                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                exit={{ opacity: 0, y: -16, filter: "blur(8px)" }}
-                transition={{ duration: 0.82, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <p className="font-worldview hero-mirror-thought">
-                  {activeThought.thought}
-                </p>
-                <p className="type-level-4 hero-mirror-name">
-                  此念显影 · {activeThought.mirror}
-                </p>
-              </motion.div>
-            </AnimatePresence>
-          </div>
-        </motion.div>
-
-        <motion.div
-          className="mt-7 flex w-full max-w-[620px] flex-col items-center md:mt-9"
-          initial={{ opacity: 0, y: 22, filter: "blur(8px)" }}
-          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-          transition={{ duration: 1, delay: 2.05, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <p className="font-story max-w-[520px] text-[1.02rem] font-light leading-[2] tracking-[.02em] text-[rgba(244,235,221,.68)] md:text-[1.16rem]">
-            不是行情反复伤你，
-            <br className="sm:hidden" />
-            是同一个念头反复牵动你。
-          </p>
-          <p className="font-worldview mt-3 text-[1.45rem] font-light leading-tight tracking-[.08em] text-[rgba(244,235,221,.8)] md:mt-4 md:text-[1.78rem]">
-            心不静，交易必乱。
+          <p className="mt-7 max-w-[700px] text-[1.05rem] font-medium leading-[1.9] tracking-[.01em] text-[rgba(244,235,221,.76)] md:mt-8 md:text-[1.2rem]">
+            这不是一个预测行情的网站，而是一套帮助交易者照见自己、重建纪律、训练执行的心学系统。
           </p>
 
-          <div className="mt-7 flex w-full justify-center md:mt-8">
-            <FlowButton href="/assessment-entry" className="w-full max-w-[340px] sm:w-auto">
-              入照心
+          <div className="mt-7 grid w-full max-w-[560px] gap-3 sm:grid-cols-2 md:mt-8 lg:mt-auto">
+            <FlowButton href="#personality" className="w-full" onClick={enterWorldview}>
+              开始照见
+            </FlowButton>
+            <FlowButton href="/risk-education" variant="ghost" className="w-full">
+              风险教育
             </FlowButton>
           </div>
-          <a
-            href="#compliance"
-            className="type-level-5 mt-4 text-[rgba(244,235,221,.34)] no-underline transition duration-700 hover:text-[rgba(244,235,221,.62)]"
-          >
-            只做交易认知与风险教育
-          </a>
         </motion.div>
+
+        <div className="relative z-10 hidden w-full max-w-[520px] justify-self-end lg:block">
+          <InsightCard />
+        </div>
       </div>
 
       <style jsx global>{`
-        .heart-mirror-shell {
-          position: relative;
-          width: clamp(286px, 56vw, 540px);
-          aspect-ratio: 1;
-          display: grid;
-          place-items: center;
-          border-radius: 999px;
-          background:
-            radial-gradient(circle at 50% 50%, rgba(41, 37, 28, 0.38), rgba(11, 10, 8, 0.74) 61%, rgba(6, 6, 5, 0.96) 78%),
-            conic-gradient(from 132deg, rgba(114, 82, 41, 0.16), rgba(218, 184, 104, 0.34), rgba(74, 54, 30, 0.2), rgba(218, 184, 104, 0.3), rgba(114, 82, 41, 0.16));
-          border: 1px solid rgba(199, 162, 86, 0.26);
-          box-shadow:
-            0 32px 120px rgba(0, 0, 0, 0.36),
-            0 0 82px rgba(175, 138, 65, 0.08),
-            inset 0 0 46px rgba(216, 183, 111, 0.055);
-        }
-
-        .heart-mirror-shell::before,
-        .heart-mirror-shell::after {
-          content: "";
+        .hero-quiet-field {
           position: absolute;
-          inset: -8%;
-          border-radius: inherit;
-          border: 1px solid rgba(202, 166, 86, 0.12);
-          pointer-events: none;
-        }
-
-        .heart-mirror-shell::after {
-          inset: -17%;
-          border-color: rgba(202, 166, 86, 0.07);
-          filter: blur(0.2px);
-        }
-
-        .hero-mirror-aura,
-        .hero-mirror-frame-line {
-          position: absolute;
-          border-radius: 999px;
-          pointer-events: none;
-        }
-
-        .hero-mirror-aura-one {
-          inset: -24%;
-          background: radial-gradient(circle, rgba(216, 183, 111, 0.08), transparent 62%);
-          filter: blur(30px);
-          animation: hero-mirror-aura-breath 9s ease-in-out infinite;
-        }
-
-        .hero-mirror-aura-two {
-          inset: 8%;
-          background: radial-gradient(circle at 50% 38%, rgba(82, 109, 98, 0.11), transparent 58%);
-          filter: blur(18px);
-          opacity: 0.56;
-        }
-
-        .hero-mirror-frame-line-one {
-          inset: 3.6%;
-          border: 1px solid rgba(216, 183, 111, 0.22);
-          box-shadow: inset 0 0 24px rgba(216, 183, 111, 0.04);
-        }
-
-        .hero-mirror-frame-line-two {
-          inset: 10.8%;
-          border: 1px dashed rgba(230, 204, 142, 0.14);
-          opacity: 0.8;
-        }
-
-        .heart-mirror-water {
-          position: absolute;
-          inset: 13%;
-          display: grid;
-          place-items: center;
+          inset: 0;
+          z-index: 0;
           overflow: hidden;
-          border-radius: 999px;
+          pointer-events: none;
           background:
-            radial-gradient(circle at 50% 28%, rgba(232, 220, 188, 0.12), transparent 18%),
-            radial-gradient(circle at 48% 58%, rgba(43, 55, 52, 0.52), rgba(13, 17, 16, 0.82) 46%, rgba(4, 5, 5, 0.96) 74%),
-            linear-gradient(145deg, rgba(20, 25, 23, 0.86), rgba(3, 4, 4, 0.95));
-          border: 1px solid rgba(226, 202, 148, 0.1);
-          box-shadow:
-            inset 0 0 48px rgba(0, 0, 0, 0.72),
-            inset 0 0 78px rgba(92, 118, 106, 0.08),
-            0 0 34px rgba(216, 183, 111, 0.05);
+            radial-gradient(ellipse at 31% 17%, rgba(244, 235, 221, 0.028), transparent 30rem),
+            radial-gradient(ellipse at 72% 44%, rgba(88, 113, 103, 0.06), transparent 48%),
+            linear-gradient(180deg, rgba(0, 3, 5, 0.12), rgba(0, 0, 0, 0.5));
         }
 
-        .heart-mirror-water::before {
+        .hero-quiet-field::before {
           content: "";
           position: absolute;
-          inset: -25%;
+          inset: 0;
           background:
-            repeating-radial-gradient(ellipse at 50% 52%, rgba(244, 235, 221, 0.055) 0 1px, transparent 2px 16px),
-            linear-gradient(105deg, transparent 0 36%, rgba(244, 235, 221, 0.07) 46%, transparent 57% 100%);
+            radial-gradient(circle at 18% 18%, rgba(244, 235, 221, 0.34) 0 1px, transparent 1.6px),
+            radial-gradient(circle at 24% 34%, rgba(244, 235, 221, 0.18) 0 1px, transparent 1.7px),
+            radial-gradient(circle at 52% 13%, rgba(244, 235, 221, 0.2) 0 1px, transparent 1.7px),
+            radial-gradient(circle at 82% 28%, rgba(244, 235, 221, 0.15) 0 1px, transparent 1.7px),
+            radial-gradient(circle at 68% 62%, rgba(216, 183, 111, 0.16) 0 1px, transparent 1.8px);
+          opacity: 0.56;
+          filter: blur(0.25px);
+        }
+
+        .hero-quiet-field::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background:
+            linear-gradient(115deg, transparent 0 38%, rgba(244, 235, 221, 0.04) 48%, transparent 58% 100%),
+            radial-gradient(ellipse at 62% 80%, rgba(216, 183, 111, 0.08), transparent 44%);
+          opacity: 0.62;
+          filter: blur(10px);
+        }
+
+        .hero-quiet-moon,
+        .hero-quiet-ring,
+        .hero-quiet-dust {
+          position: absolute;
+          display: block;
+          pointer-events: none;
+        }
+
+        .hero-quiet-moon {
+          display: none;
+        }
+
+        .hero-quiet-ring {
+          left: 43%;
+          top: 46%;
+          width: min(64vw, 720px);
+          height: min(64vw, 720px);
+          border: 1px solid rgba(216, 183, 111, 0.06);
+          border-radius: 50%;
+          transform: translate(-50%, -50%);
+          opacity: 0.5;
+        }
+
+        .hero-quiet-ring-two {
+          left: 55%;
+          top: 54%;
+          width: min(48vw, 500px);
+          height: min(48vw, 500px);
+          border-color: rgba(244, 235, 221, 0.035);
+          opacity: 0.42;
+        }
+
+        .hero-quiet-dust {
+          border-radius: 999px;
+          filter: blur(18px);
           opacity: 0.38;
-          transform: rotate(-8deg);
-          animation: hero-mirror-water-drift 12s ease-in-out infinite;
         }
 
-        .hero-mirror-surface-shine {
-          position: absolute;
-          left: 12%;
-          top: 20%;
-          width: 76%;
-          height: 20%;
-          border-radius: 999px;
-          background: linear-gradient(100deg, transparent, rgba(247, 235, 204, 0.12), transparent);
-          filter: blur(8px);
-          transform: rotate(-11deg);
-          opacity: 0.46;
+        .hero-quiet-dust-one {
+          left: 4%;
+          bottom: 9%;
+          width: 48%;
+          height: 18%;
+          background: radial-gradient(ellipse, rgba(216, 183, 111, 0.08), transparent 70%);
         }
 
-        .hero-mirror-ripple {
-          position: absolute;
-          inset: 22%;
-          border-radius: 999px;
-          border: 1px solid rgba(232, 204, 143, 0.08);
-          opacity: 0;
-          animation: hero-mirror-ripple 4.8s ease-out infinite;
+        .hero-quiet-dust-two {
+          right: 8%;
+          top: 24%;
+          width: 42%;
+          height: 22%;
+          background: radial-gradient(ellipse, rgba(88, 113, 103, 0.12), transparent 70%);
         }
 
-        .hero-mirror-ripple-two {
-          animation-delay: 2.35s;
-        }
-
-        .hero-mirror-thought-wrap {
-          position: relative;
-          z-index: 2;
-          width: min(78%, 360px);
-          text-align: center;
-        }
-
-        .hero-mirror-thought {
-          white-space: pre-line;
-          font-size: clamp(30px, 5.2vw, 54px);
-          line-height: 1.42;
-          letter-spacing: 0.045em;
-          font-weight: 300;
-          color: rgba(244, 235, 221, 0.9);
-          text-shadow:
-            0 0 24px rgba(216, 183, 111, 0.1),
-            0 0 46px rgba(0, 0, 0, 0.45);
-        }
-
-        .hero-mirror-name {
-          margin-top: clamp(18px, 3vw, 28px);
-          color: rgba(216, 183, 111, 0.5);
-        }
-
-        @keyframes hero-mirror-aura-breath {
-          0%,
-          100% {
-            opacity: 0.7;
-            transform: scale(0.98);
+        @media (max-width: 640px) {
+          .hero-quiet-field {
+            inset: 0;
           }
-          50% {
-            opacity: 1;
-            transform: scale(1.03);
-          }
-        }
 
-        @keyframes hero-mirror-water-drift {
-          0%,
-          100% {
-            transform: translate3d(-1.5%, 0, 0) rotate(-8deg);
-          }
-          50% {
-            transform: translate3d(1.5%, 1%, 0) rotate(-5deg);
-          }
-        }
-
-        @keyframes hero-mirror-ripple {
-          0% {
-            opacity: 0;
-            transform: scale(0.7);
-          }
-          18% {
+          .hero-quiet-ring {
+            left: 62%;
+            top: 46%;
+            width: 82vw;
+            height: 82vw;
             opacity: 0.42;
           }
-          100% {
-            opacity: 0;
-            transform: scale(1.85);
-          }
-        }
 
-        @media (max-width: 420px) {
-          .heart-mirror-shell {
-            width: min(78vw, 304px);
-          }
-
-          .hero-mirror-thought {
-            font-size: clamp(28px, 8.1vw, 34px);
-            line-height: 1.48;
+          .hero-quiet-ring-two {
+            left: 66%;
+            top: 54%;
+            width: 58vw;
+            height: 58vw;
           }
         }
       `}</style>

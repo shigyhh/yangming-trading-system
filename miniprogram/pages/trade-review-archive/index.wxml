@@ -1,0 +1,72 @@
+<view class="page-shell">
+  <view class="page-content">
+    <text class="eyebrow">LIVE MIRROR · 档案</text>
+    <view class="page-title">复盘采集<br />行为证据链</view>
+    <view class="page-subtitle">每一次上传记录，都会沉淀为历史位置、第一反应、九镜六贼与下一次训练动作。</view>
+
+    <view class="mirror-card card">
+      <view class="mirror-head">
+        <view>
+          <text>活镜提醒</text>
+          <view>{{reminder.focusMirror}}</view>
+        </view>
+        <text>{{reminder.statusText}}</text>
+      </view>
+      <view class="mirror-line">{{reminder.reminderLine}}</view>
+      <view class="mirror-grid">
+        <view>
+          <text>高频心贼</text>
+          <view>{{reminder.highFrequencyThievesText}}</view>
+          <text>{{reminder.highFrequencyThievesDetail}}</text>
+        </view>
+        <view>
+          <text>高频阶段</text>
+          <view>{{reminder.highFrequencyStage}}</view>
+          <text>{{reminder.stageDetail}}</text>
+        </view>
+        <view>
+          <text>主修训练</text>
+          <view>{{reminder.mainTraining}}</view>
+        </view>
+      </view>
+      <view class="split-actions">
+        <button class="ghost-btn" bindtap="goUpload">{{reminder.primaryActionText}}</button>
+        <button class="primary-btn" bindtap="goKlineTraining">进入同品类训练</button>
+      </view>
+    </view>
+
+    <view class="archive-head">
+      <text>复盘记录</text>
+      <view>{{records.length}} 条</view>
+    </view>
+
+    <view wx:if="{{hasRecords}}" class="record-list">
+      <button
+        wx:for="{{records}}"
+        wx:key="id"
+        class="record-row card"
+        data-id="{{item.id}}"
+        bindtap="goDetail"
+      >
+        <view class="record-main">
+          <text>{{item.archiveTitle}}</text>
+          <view>{{item.marketLine}}</view>
+          <view>{{item.stageLine}}</view>
+        </view>
+        <view class="record-side">
+          <text>{{item.heartThievesText}}</text>
+          <view>{{item.createdAtText}}</view>
+        </view>
+      </button>
+    </view>
+
+    <view wx:else class="empty-card card">
+      <view>活镜还没有真实记录</view>
+      <text>先上传一条交易记录截图，系统会生成第一条行为证据链。</text>
+      <button class="primary-btn" bindtap="goUpload">上传第一条记录</button>
+    </view>
+
+    <compliance-notice />
+  </view>
+  <bottom-tab-bar active="mind" />
+</view>

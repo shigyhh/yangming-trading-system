@@ -1,0 +1,105 @@
+{
+  "schemaVersion": "assessment_report_v1",
+  "reportId": "RPT-DEMO-001",
+  "userId": "demo-user",
+  "createdAt": "2026-06-01T09:00:00.000Z",
+  "conclusion": "你的主要惯性是见涨心动，训练重点是行动前先停十秒并复核计划。",
+  "primaryPersonality": {
+    "type": "fomo_chaser",
+    "label": "冲动型",
+    "poeticName": "逐影者",
+    "summary": "容易被错过感带动，行动先于计划。",
+    "score": 86
+  },
+  "secondaryPersonality": {
+    "type": "panic_runner",
+    "label": "焦虑型",
+    "poeticName": "惊弓者",
+    "summary": "波动放大时容易先撤退，再寻找理由。",
+    "score": 62
+  },
+  "riskRadar": [
+    {
+      "key": "impulse",
+      "label": "冲动追入",
+      "value": 86,
+      "description": "看到快速波动时容易先动手。"
+    },
+    {
+      "key": "panic",
+      "label": "恐慌离场",
+      "value": 62,
+      "description": "波动变大时容易急于求稳。"
+    },
+    {
+      "key": "review",
+      "label": "复盘失察",
+      "value": 38,
+      "description": "违规后可能跳过复盘。"
+    }
+  ],
+  "emotionalTriggers": [
+    {
+      "key": "fear_of_missing_out",
+      "label": "怕错过",
+      "description": "价格快速变化、他人催促、热门情绪升温时更容易出现。",
+      "firstThought": "再不上就错过了。"
+    }
+  ],
+  "trainingPrescription7Days": [
+    {
+      "day": 1,
+      "theme": "照见第一念",
+      "action": "每次想立刻行动时，先写下此刻第一念。",
+      "reflectionPrompt": "今天最强的一次第一念是什么？"
+    },
+    {
+      "day": 2,
+      "theme": "停十秒",
+      "action": "行动前停十秒，只确认是否符合原计划。",
+      "reflectionPrompt": "停十秒后，动作有没有变慢？"
+    },
+    {
+      "day": 3,
+      "theme": "复核边界",
+      "action": "行动前写下理由、边界、退出条件。",
+      "reflectionPrompt": "今天是否先写边界，再决定动作？"
+    },
+    {
+      "day": 4,
+      "theme": "记录触发",
+      "action": "只记录触发情绪，不急于修正结果。",
+      "reflectionPrompt": "哪一种场景最容易牵动你？"
+    },
+    {
+      "day": 5,
+      "theme": "降低噪声",
+      "action": "盘中减少外部声音，只看自己的计划卡。",
+      "reflectionPrompt": "减少噪声后，心是否更稳？"
+    },
+    {
+      "day": 6,
+      "theme": "省察偏离",
+      "action": "复盘一次偏离计划的动作，只写一个可修正点。",
+      "reflectionPrompt": "下次最小可改动作是什么？"
+    },
+    {
+      "day": 7,
+      "theme": "复测准备",
+      "action": "回看 7 天记录，标出最常出现的心贼。",
+      "reflectionPrompt": "这 7 天最需要继续训练的一件事是什么？"
+    }
+  ],
+  "campSuggestion": {
+    "name": "7 天照心训练营",
+    "reason": "当前最需要训练的是行动前暂停与计划复核。",
+    "focus": "照见第一念、稳定暂停动作、形成复盘闭环。"
+  },
+  "complianceNotice": "本报告用于交易心理觉察，不构成投资建议",
+  "metadata": {
+    "source": "server",
+    "assessmentVersion": "45",
+    "scoringVersion": "scoring_2026_05_v1",
+    "contentVersion": "assessment_report_v1"
+  }
+}

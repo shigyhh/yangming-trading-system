@@ -1,0 +1,154 @@
+.intro-card {
+  margin-top: 28rpx;
+  padding: 28rpx;
+}
+
+.filter-card {
+  margin-top: 24rpx;
+  padding: 26rpx;
+}
+
+.intro-card text,
+.intro-card view,
+.filter-card text,
+.chip-strip {
+  position: relative;
+  z-index: 1;
+}
+
+.intro-card text {
+  color: #58c2ad;
+  font-size: 24rpx;
+  font-weight: 900;
+}
+
+.intro-card view {
+  margin-top: 12rpx;
+  color: rgba(247, 239, 223, 0.72);
+  font-size: 27rpx;
+  line-height: 1.65;
+}
+
+.intro-actions {
+  position: relative;
+  z-index: 1;
+  margin-top: 22rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14rpx;
+}
+
+.intro-actions button {
+  margin-top: 0;
+}
+
+.filter-card > text {
+  display: block;
+  margin-top: 18rpx;
+  color: #f1d27d;
+  font-size: 22rpx;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.filter-card > text:first-child {
+  margin-top: 0;
+}
+
+.chip-strip {
+  margin: 14rpx -8rpx 0;
+  white-space: nowrap;
+}
+
+.chip-strip button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 58rpx;
+  margin: 0 10rpx 0 0;
+  padding: 0 20rpx;
+  border-radius: 999rpx;
+  color: rgba(247, 239, 223, 0.7);
+  border: 1rpx solid rgba(247, 239, 223, 0.12);
+  background: rgba(255, 255, 255, 0.045);
+  font-size: 23rpx;
+  font-weight: 800;
+}
+
+.chip-strip button.active {
+  color: #11140f;
+  border-color: rgba(241, 210, 125, 0.68);
+  background: linear-gradient(180deg, #f1d27d, #c99d4c);
+}
+
+.section-title {
+  margin-top: 34rpx;
+  color: #f1d27d;
+  font-size: 30rpx;
+  font-weight: 900;
+}
+
+.scene-list {
+  display: grid;
+  gap: 22rpx;
+  margin-top: 20rpx;
+}
+
+.scene-card {
+  padding: 28rpx;
+}
+
+.scene-head,
+.scene-meta,
+.scene-subtitle,
+.scene-tags {
+  position: relative;
+  z-index: 1;
+}
+
+.scene-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+
+.scene-head text {
+  color: #fff6e6;
+  font-size: 34rpx;
+  font-weight: 900;
+}
+
+.scene-head view {
+  color: #f1d27d;
+  font-size: 24rpx;
+  font-weight: 900;
+}
+
+.scene-subtitle {
+  margin-top: 14rpx;
+  color: rgba(247, 239, 223, 0.62);
+  font-size: 25rpx;
+  line-height: 1.55;
+}
+
+.scene-meta {
+  margin-top: 12rpx;
+  color: rgba(241, 210, 125, 0.78);
+  font-size: 22rpx;
+  line-height: 1.45;
+  font-weight: 800;
+}
+
+.scene-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 18rpx;
+}
+
+.scene-tags text {
+  padding: 8rpx 14rpx;
+  border-radius: 999rpx;
+  color: #58c2ad;
+  border: 1rpx solid rgba(88, 194, 173, 0.22);
+  font-size: 22rpx;
+}

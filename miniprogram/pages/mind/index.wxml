@@ -65,6 +65,58 @@
       <button data-noripple="1" bindtap="startBreath">{{breathActive ? '观心中' : '开始三息'}}</button>
     </view>
 
+    <view class="opening-form">
+      <view class="opening-section">
+        <text>当前状态</text>
+        <view>
+          <button
+            wx:for="{{statusOptions}}"
+            wx:key="*this"
+            data-value="{{item}}"
+            data-noripple="1"
+            class="{{currentStatus === item ? 'active' : ''}}"
+            bindtap="selectStatus"
+          >{{item}}</button>
+        </view>
+      </view>
+      <view class="opening-section">
+        <text>今日风险</text>
+        <view>
+          <button
+            wx:for="{{riskOptions}}"
+            wx:key="*this"
+            data-value="{{item}}"
+            data-noripple="1"
+            class="{{todayRisk === item ? 'active' : ''}}"
+            bindtap="selectRisk"
+          >{{item}}</button>
+        </view>
+      </view>
+      <view class="opening-section">
+        <text>今日边界</text>
+        <view>
+          <button
+            wx:for="{{boundaryOptions}}"
+            wx:key="*this"
+            data-value="{{item}}"
+            data-noripple="1"
+            class="{{todayBoundary === item ? 'active' : ''}}"
+            bindtap="selectBoundary"
+          >{{item}}</button>
+        </view>
+      </view>
+      <view class="opening-section note-section">
+        <text>今日照心一句</text>
+        <textarea
+          maxlength="100"
+          value="{{openingNote}}"
+          bindinput="inputOpeningNote"
+          placeholder="例：今天最容易被牵动的是证明欲，先守住情绪边界。"
+          placeholder-class="opening-placeholder"
+        />
+      </view>
+    </view>
+
     <view class="ritual-scroll">
       <view class="scroll-line"></view>
       <view class="ritual-glyph">{{ritual.glyph}}</view>
@@ -85,8 +137,8 @@
           <view>{{ritual.practice}}</view>
         </view>
         <view class="ritual-item">
-          <text>今日仓位边界</text>
-          <view>{{ritual.position}}</view>
+          <text>今日边界</text>
+          <view>{{todayBoundary}} · {{ritual.position}}</view>
         </view>
         <view class="ritual-item">
           <text>今日知行提醒</text>
@@ -96,9 +148,16 @@
     </view>
 
     <view class="loop-strip">
-      <view wx:for="{{loop}}" wx:key="key" class="{{item.key === 'mind' ? 'current' : ''}}">
+      <button
+        wx:for="{{loop}}"
+        wx:key="key"
+        data-page="{{item.page}}"
+        data-noripple="1"
+        class="{{item.key === 'mind' ? 'current' : ''}}"
+        bindtap="goLoopPage"
+      >
         <text>{{item.name}}</text>
-      </view>
+      </button>
     </view>
 
     <view class="actions">

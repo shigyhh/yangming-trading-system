@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "知行讲堂",
+  "usingComponents": {
+    "bottom-tab-bar": "../../components/bottom-tab-bar/index",
+    "compliance-notice": "../../components/compliance-notice/index"
+  }
+}

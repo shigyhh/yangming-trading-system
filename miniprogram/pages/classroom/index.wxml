@@ -1,0 +1,41 @@
+<view class="classroom-shell">
+  <view class="classroom-bg mist"></view>
+  <view class="classroom-bg grain"></view>
+
+  <view class="classroom-content">
+    <view class="head">
+      <view class="seal">行</view>
+      <view>
+        <text>{{classroom.title}}</text>
+        <view>{{classroom.subtitle}}</view>
+      </view>
+    </view>
+
+    <view class="hero-card">
+      <text>事上练课</text>
+      <view>只讲交易心理训练、念头觉察与边界复盘。</view>
+    </view>
+
+    <view class="content-list">
+      <view wx:for="{{classroom.items}}" wx:key="id" class="lesson-card" data-id="{{item.id}}" bindtap="openLesson">
+        <view class="lesson-type">{{item.typeLabel}}</view>
+        <view class="lesson-main">
+          <text>{{item.title}}</text>
+          <view>{{item.subtitle}}</view>
+          <view>{{item.description}}</view>
+        </view>
+        <view class="lesson-foot">
+          <text>{{item.watched ? '已看完' : item.reserved ? '已预约' : item.duration}}</text>
+          <button data-index="{{index}}" catchtap="reserveLive">{{item.statusText || (item.reserved ? '已记录' : item.status)}}</button>
+        </view>
+        <view class="lesson-share" data-id="{{item.id}}" catchtap="shareLesson">生成事上练课卡</view>
+      </view>
+    </view>
+
+    <view class="classroom-compliance">{{classroom.compliance}}</view>
+    <button class="home-link" bindtap="goHome">回到今日陪跑</button>
+    <compliance-notice compact="{{true}}" />
+  </view>
+
+  <bottom-tab-bar active="index" />
+</view>

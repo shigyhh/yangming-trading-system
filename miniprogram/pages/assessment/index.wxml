@@ -2,7 +2,32 @@
   <view class="page-content">
     <text class="eyebrow">ENNEAGRAM · 问心</text>
     <view class="page-title">九型人格<br />照见此心</view>
-    <view class="page-subtitle">用几分钟照见惯性动作，再把它转成每日一件可练之事。</view>
+    <view class="page-subtitle">九型不是标签，是交易反应的镜子。问卷照见倾向，行为记录校准当下状态。</view>
+
+    <view class="mode-card card">
+      <view class="mode-head">
+        <text>照见深度</text>
+        <view>{{bankSource}}</view>
+      </view>
+      <view class="mode-grid">
+        <button
+          wx:for="{{modes}}"
+          wx:key="key"
+          class="mode-btn {{modeKey === item.key ? 'active' : ''}}"
+          data-mode="{{item.key}}"
+          bindtap="selectMode"
+        >
+          <text>{{item.label}}</text>
+          <view>{{item.desc}}</view>
+        </button>
+      </view>
+    </view>
+
+    <view class="dynamic-card card">
+      <text>行为校准</text>
+      <view>{{behaviorPreview.stageLabel}} · 已记录 {{behaviorPreview.trainingDays || 0}} 天训练</view>
+      <text class="dynamic-note">人格会随交易时间和训练记录变化，新手期常先显出冲动与焦虑的混合反应。</text>
+    </view>
 
     <view class="progress-card card">
       <view class="progress-head">
@@ -15,7 +40,12 @@
 
     <view class="question-card card">
       <view class="question-mark">问</view>
+      <view class="question-trigger">{{currentQuestion.mirrorName}} · {{currentQuestion.trigger}}</view>
       <view class="question-text">{{currentQuestion.text}}</view>
+      <view class="boundary-insight">
+        <text>照见边界</text>
+        <view>{{selectedBoundaryInsight}}</view>
+      </view>
       <view class="options">
         <button
           wx:for="{{options}}"
@@ -25,7 +55,7 @@
           bindtap="selectOption"
         >
           <text>{{item.label}}</text>
-          <view>{{item.value}}</view>
+          <view>{{selectedValue === item.value ? '已' : ''}}</view>
         </button>
       </view>
     </view>

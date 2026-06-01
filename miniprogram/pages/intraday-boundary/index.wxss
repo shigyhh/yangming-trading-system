@@ -1,0 +1,191 @@
+.boundary-shell {
+  min-height: 100vh;
+  background: #07100e;
+  color: #f5ead8;
+  position: relative;
+  overflow: hidden;
+  padding-bottom: 132rpx;
+}
+
+.boundary-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.boundary-bg.mist {
+  background:
+    radial-gradient(circle at 50% 8%, rgba(216, 183, 111, 0.13), transparent 34%),
+    radial-gradient(circle at 0% 40%, rgba(95, 132, 117, 0.14), transparent 38%),
+    linear-gradient(180deg, #10120e 0%, #07100e 58%, #040707 100%);
+}
+
+.boundary-bg.grain {
+  opacity: 0.2;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+  background-size: 34rpx 34rpx;
+}
+
+.boundary-content {
+  position: relative;
+  z-index: 1;
+  padding: 40rpx 32rpx;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin-bottom: 32rpx;
+}
+
+.seal {
+  width: 72rpx;
+  height: 72rpx;
+  border: 1rpx solid rgba(216, 183, 111, 0.34);
+  border-radius: 20rpx;
+  display: grid;
+  place-items: center;
+  color: #d8b76f;
+  font-size: 36rpx;
+  font-family: "LXGW WenKai", "Songti SC", serif;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.head text {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 650;
+}
+
+.head view view {
+  margin-top: 8rpx;
+  color: rgba(245, 234, 216, 0.52);
+  font-size: 24rpx;
+}
+
+.hero-card,
+.section-card {
+  border: 1rpx solid rgba(217, 189, 122, 0.16);
+  border-radius: 24rpx;
+  background: rgba(9, 17, 14, 0.74);
+  box-shadow: 0 28rpx 70rpx rgba(0, 0, 0, 0.24);
+}
+
+.hero-card {
+  padding: 36rpx;
+  margin-bottom: 22rpx;
+}
+
+.hero-card text {
+  color: rgba(216, 183, 111, 0.78);
+  font-size: 22rpx;
+  letter-spacing: 2rpx;
+}
+
+.hero-card view {
+  margin-top: 18rpx;
+  font-size: 40rpx;
+  line-height: 1.45;
+  font-family: "LXGW WenKai", "Songti SC", serif;
+}
+
+.section-card {
+  padding: 28rpx;
+  margin-bottom: 18rpx;
+}
+
+.section-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 20rpx;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.section-title text,
+.field-title {
+  color: rgba(216, 183, 111, 0.8);
+  font-size: 24rpx;
+  font-weight: 650;
+}
+
+.section-title view {
+  color: rgba(245, 234, 216, 0.48);
+  font-size: 22rpx;
+}
+
+.chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14rpx;
+}
+
+.chip-grid button {
+  margin: 0;
+  min-height: 58rpx;
+  padding: 0 22rpx;
+  border-radius: 999rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.1);
+  color: rgba(245, 234, 216, 0.72);
+  background: rgba(255, 255, 255, 0.035);
+  font-size: 24rpx;
+}
+
+.chip-grid button.active {
+  color: #1c160d;
+  border-color: rgba(216, 183, 111, 0.58);
+  background: linear-gradient(135deg, #e6c979, #a9823c);
+}
+
+textarea {
+  width: 100%;
+  min-height: 150rpx;
+  margin-top: 18rpx;
+  box-sizing: border-box;
+  border-radius: 18rpx;
+  padding: 22rpx;
+  background: rgba(0, 0, 0, 0.18);
+  color: #f5ead8;
+  border: 1rpx solid rgba(255, 255, 255, 0.08);
+  font-size: 26rpx;
+  line-height: 1.6;
+}
+
+.placeholder {
+  color: rgba(245, 234, 216, 0.32);
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 18rpx;
+  margin-top: 28rpx;
+}
+
+.actions button,
+.ghost {
+  min-height: 84rpx;
+  border-radius: 22rpx;
+  font-weight: 650;
+  font-size: 26rpx;
+}
+
+.primary {
+  color: #1c160d;
+  background: linear-gradient(135deg, #e6c979, #a9823c);
+}
+
+.secondary,
+.ghost {
+  color: rgba(245, 234, 216, 0.78);
+  background: rgba(255, 255, 255, 0.045);
+  border: 1rpx solid rgba(217, 189, 122, 0.18);
+}
+
+.ghost {
+  width: 100%;
+  margin-top: 18rpx;
+}

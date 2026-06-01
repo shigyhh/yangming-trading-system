@@ -4,6 +4,14 @@ const {
   getProfile,
   saveSyncStatus
 } = require("./store");
+const {
+  buildAssessmentBindingPayload,
+  buildRetestBindingPayload,
+  shouldSyncRetest,
+  buildTrainingBindingPayload,
+  buildKLineBindingPayload,
+  buildShareCardBindingPayload
+} = require("./data-binding-adapter");
 
 const API_BASE_KEY = "zhixing_api_base";
 const AUTH_KEY = "zhixing_api_auth";
@@ -80,7 +88,7 @@ async function ensureAuth() {
     data: {
       method: "wechat_miniprogram_demo",
       display_name: profile.nickname || "修行者",
-      contact: getClientId(),
+      contact: profile.phone || getClientId(),
       wechat_bound: true,
       source_channel: "微信小程序MVP"
     }
@@ -173,6 +181,126 @@ async function syncCheckIn(note = "") {
   });
 }
 
+async function syncAssessmentReport(report = null) {
+  const auth = await ensureAuth();
+  const state = collectLocalState();
+  const payload = buildAssessmentBindingPayload({ auth, state, report: report || state.assessment_result });
+  const result = await request({
+    path: "/api/v1/data-binding/assessment-report",
+    method: "POST",
+    token: auth.access_token,
+    data: payload
+  });
+
+  if (shouldSyncRetest(state)) {
+    const boundUserId = (result.user && result.user.id) || payload.user.userId || auth.user.id;
+    request({
+      path: `/api/v1/data-binding/users/${encodeURIComponent(boundUserId)}/retests`,
+      method: "POST",
+      token: auth.access_token,
+      data: buildRetestBindingPayload({ auth, state, report: report || state.assessment_result })
+    }).catch(() => {});
+  }
+
+  return result;
+}
+
+async function syncTrainingProgress(progress = null) {
+  const auth = await ensureAuth();
+  const state = collectLocalState();
+  const trainingPayload = buildTrainingBindingPayload({ auth, state, progress });
+  if (!trainingPayload) {
+    return { ok: true, skipped: true, reason: "暂无训练记录" };
+  }
+
+  const result = await request({
+    path: `/api/v1/data-binding/users/${encodeURIComponent(trainingPayload.user.userId)}/training-records`,
+    method: "POST",
+    token: auth.access_token,
+    data: trainingPayload
+  });
+
+  const klinePayload = buildKLineBindingPayload({
+    auth,
+    state,
+    progress: trainingPayload.practiceState,
+    trainingRecord: trainingPayload.record
+  });
+
+  if (klinePayload) {
+    request({
+      path: `/api/v1/data-binding/users/${encodeURIComponent(klinePayload.user.userId)}/kline-records`,
+      method: "POST",
+      token: auth.access_token,
+      data: klinePayload
+    }).catch(() => {});
+  }
+
+  return result;
+}
+
+async function syncShareAttribution(event = null) {
+  const auth = await ensureAuth();
+  const state = collectLocalState();
+  const payload = buildShareCardBindingPayload({ auth, state, event });
+  return request({
+    path: `/api/v1/data-binding/users/${encodeURIComponent(payload.user.userId)}/share-card`,
+    method: "POST",
+    token: auth.access_token,
+    data: {
+      channel: payload.channel,
+      source_channel: payload.source_channel
+    }
+  });
+}
+
+const KLINE_MARKET_MAP = {
+  cn: "cn_equity",
+  hk: "hk_equity",
+  us: "us_equity",
+  futures: "futures",
+  crypto: "crypto"
+};
+
+const KLINE_TIMEFRAME_MAP = {
+  "1m": "1mo",
+  "1mo": "1mo",
+  "1y": "1y",
+  "1w": "1w",
+  "1d": "1d",
+  "60m": "60m",
+  "30m": "30m",
+  "10m": "10m",
+  "5m": "5m"
+};
+
+async function fetchKlineTrainingSlice({
+  marketKey = "cn",
+  timeframeKey = "1d",
+  symbol = "",
+  windowSize = 60,
+  mode = "firecracker",
+  personalityType = "",
+  gateKey = "shi_shang_mo",
+  blind = true,
+  seed = ""
+} = {}) {
+  const market = KLINE_MARKET_MAP[marketKey] || marketKey || "cn_equity";
+  const timeframe = KLINE_TIMEFRAME_MAP[timeframeKey] || timeframeKey || "1d";
+  const query = [
+    `market=${encodeURIComponent(market)}`,
+    symbol ? `symbol=${encodeURIComponent(symbol)}` : "",
+    `timeframe=${encodeURIComponent(timeframe)}`,
+    `window=${encodeURIComponent(windowSize)}`,
+    `mode=${encodeURIComponent(mode)}`,
+    personalityType ? `personality_type=${encodeURIComponent(personalityType)}` : "",
+    gateKey ? `gate=${encodeURIComponent(gateKey)}` : "",
+    `blind=${blind ? "1" : "0"}`,
+    seed ? `seed=${encodeURIComponent(seed)}` : ""
+  ].filter(Boolean).join("&");
+  return request({ path: `/api/v1/kline-history/slice?${query}` });
+}
+
 module.exports = {
   DEFAULT_API_BASE,
   getApiBase,
@@ -181,5 +309,9 @@ module.exports = {
   ensureAuth,
   syncLocalState,
   pullRemoteState,
-  syncCheckIn
+  syncCheckIn,
+  syncAssessmentReport,
+  syncTrainingProgress,
+  syncShareAttribution,
+  fetchKlineTrainingSlice
 };

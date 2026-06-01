@@ -4,7 +4,9 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 
 import { AssessmentShell, PrimaryLink, StatusPill } from "@/features/assessment/components"
+import { syncAssessmentReportBinding, syncRetestResultBinding } from "@/features/data-binding/api-client"
 import { assessmentQuestions } from "@/features/assessment/questions"
+import { compareRiskRadarSnapshots, reconcilePracticeChangeWithReport, type PracticeChangeState } from "@/features/assessment/practice-change"
 import { generateAssessmentReport, type AssessmentAnswer } from "@/features/assessment/report"
 import { assessmentStorageKeys, getStorage, setStorage } from "@/features/assessment/storage"
 
@@ -36,6 +38,20 @@ export default function AssessmentGeneratingPage() {
     const report = generateAssessmentReport(validAnswers, reportQuestions, selectedMirrorId)
     setStorage(assessmentStorageKeys.report, report)
     setStorage(assessmentStorageKeys.reportCreatedAt, report.createdAt)
+    const savedPractice = getStorage<PracticeChangeState | null>(assessmentStorageKeys.practiceChange, null)
+    if (savedPractice) {
+      const nextPractice = reconcilePracticeChangeWithReport(savedPractice, report)
+      setStorage(assessmentStorageKeys.practiceChange, nextPractice)
+      const comparison = compareRiskRadarSnapshots(nextPractice.baselineReport, nextPractice.retestReport)
+      if (comparison.length) {
+        void syncRetestResultBinding({ report, comparison })
+      }
+    }
+    void syncAssessmentReportBinding({
+      report,
+      answers: validAnswers,
+      questionOrder: reportQuestions.map((question) => question.id),
+    })
 
     const timer = window.setTimeout(() => {
       router.replace("/assessment-result")

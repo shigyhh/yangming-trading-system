@@ -1,0 +1,253 @@
+.hero-card,
+.trigger-card,
+.evidence-card,
+.insight-card,
+.score-card,
+.stats-card,
+.empty-card {
+  margin-top: 26rpx;
+  padding: 28rpx;
+}
+
+.hero-card text,
+.hero-card view,
+.trigger-card text,
+.trigger-card view,
+.insight-card text,
+.insight-card view,
+.evidence-card text,
+.evidence-card view,
+.score-card text,
+.score-row,
+.stats-card text,
+.stats-card view,
+.empty-card view,
+.empty-card text,
+.empty-card button {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-card > text:first-child {
+  color: #f1d27d;
+  font-size: 28rpx;
+  font-weight: 900;
+}
+
+.hero-card view {
+  margin-top: 14rpx;
+  color: #fff6e6;
+  font-family: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", serif;
+  font-size: 44rpx;
+  line-height: 1.35;
+  font-weight: 900;
+}
+
+.hero-card .sub {
+  display: block;
+  margin-top: 12rpx;
+  color: rgba(247, 239, 223, 0.56);
+  font-size: 23rpx;
+}
+
+.trigger-card {
+  display: grid;
+  gap: 12rpx;
+}
+
+.trigger-card > view {
+  display: grid;
+  grid-template-columns: 180rpx 1fr;
+  gap: 18rpx;
+  align-items: center;
+  min-height: 76rpx;
+  padding: 14rpx 18rpx;
+  border-radius: 18rpx;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.trigger-card text:first-child {
+  color: #b49355;
+  font-size: 21rpx;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.trigger-card text:last-child {
+  color: rgba(247, 239, 223, 0.82);
+  font-size: 26rpx;
+  line-height: 1.45;
+  font-weight: 900;
+}
+
+.insight-card > text:first-child,
+.evidence-card > text:first-child,
+.score-card > text:first-child,
+.stats-card > text:first-child {
+  color: #58c2ad;
+  font-size: 24rpx;
+  font-weight: 900;
+}
+
+.evidence-card {
+  display: grid;
+  gap: 12rpx;
+}
+
+.evidence-row {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 18rpx;
+  align-items: center;
+  min-height: 82rpx;
+  padding: 16rpx 18rpx;
+  border-radius: 18rpx;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.evidence-row > view > text {
+  color: #b49355;
+  font-size: 21rpx;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.evidence-row > view > view {
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.56);
+  font-size: 23rpx;
+  line-height: 1.45;
+}
+
+.evidence-row > text {
+  max-width: 210rpx;
+  color: #fff6e6;
+  font-size: 25rpx;
+  line-height: 1.4;
+  font-weight: 900;
+  text-align: right;
+}
+
+.insight-card view {
+  margin-top: 14rpx;
+  color: rgba(247, 239, 223, 0.78);
+  font-size: 30rpx;
+  line-height: 1.65;
+}
+
+.suggestion {
+  display: block;
+  margin-top: 14rpx;
+  color: #f1d27d;
+  font-size: 24rpx;
+  line-height: 1.55;
+}
+
+.score-row {
+  margin-top: 20rpx;
+}
+
+.score-row > view:first-child,
+.stats-row view {
+  color: rgba(247, 239, 223, 0.68);
+  font-size: 24rpx;
+}
+
+.score-row > text,
+.stats-row text {
+  display: block;
+  margin-top: 4rpx;
+  color: #fff6e6;
+  font-size: 30rpx;
+  font-weight: 900;
+}
+
+.score-bar {
+  height: 10rpx;
+  margin-top: 10rpx;
+  overflow: hidden;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.score-bar view {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #58c2ad, #f1d27d);
+}
+
+.stats-note,
+.stats-insight,
+.compliance-line {
+  margin-top: 14rpx;
+  color: rgba(247, 239, 223, 0.62);
+  font-size: 24rpx;
+  line-height: 1.55;
+}
+
+.stats-row {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid rgba(247, 239, 223, 0.08);
+}
+
+.stats-row text {
+  margin-top: 0;
+  color: #f1d27d;
+}
+
+.stats-row > view {
+  flex: 1;
+}
+
+.stats-row > view > text {
+  color: rgba(247, 239, 223, 0.72);
+  font-size: 24rpx;
+  font-weight: 800;
+}
+
+.stats-row.active {
+  background: rgba(241, 210, 125, 0.05);
+}
+
+.stats-bar {
+  height: 8rpx;
+  margin-top: 10rpx;
+  overflow: hidden;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.stats-bar view {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #58c2ad, #f1d27d);
+}
+
+.compliance-line {
+  color: rgba(247, 239, 223, 0.46);
+}
+
+.empty-card view {
+  color: #fff6e6;
+  font-size: 34rpx;
+  font-weight: 900;
+}
+
+.empty-card text {
+  display: block;
+  margin-top: 14rpx;
+  color: rgba(247, 239, 223, 0.62);
+  font-size: 25rpx;
+  line-height: 1.6;
+}
+
+.empty-card button {
+  margin-top: 22rpx;
+}

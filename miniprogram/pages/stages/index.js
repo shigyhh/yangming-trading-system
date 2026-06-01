@@ -8,11 +8,17 @@ const {
   getReviews,
   getTodayReview,
   getZhixingScoreState,
+  getTodayReaction,
+  getTodayIntradayBoundaryRecord,
+  getTodayKlineMindRecord,
+  getTraining7State,
+  saveTraining7State,
   saveMindProfile,
   todayKey
 } = require("../../utils/store");
 const { buildContinuityState } = require("../../modules/continuity/index");
 const { buildStageState, buildMindProfile, buildStageTrainingOverview } = require("../../modules/stages/index");
+const { buildTraining7View } = require("../../modules/training7/index");
 
 Page({
   data: {
@@ -21,7 +27,8 @@ Page({
     stageOverview: buildStageTrainingOverview(),
     currentStage: {},
     personalityPlan: {},
-    mindProfile: {}
+    mindProfile: {},
+    training7View: buildTraining7View({}, {})
   },
 
   onShow() {
@@ -38,6 +45,14 @@ Page({
     const reviews = getReviews();
     const todayReview = getTodayReview();
     const zhixingState = getZhixingScoreState();
+    const training7View = buildTraining7View(getTraining7State(), {
+      mind,
+      reactionRecord: getTodayReaction(),
+      intradayBoundaryRecord: getTodayIntradayBoundaryRecord(),
+      review: todayReview,
+      training,
+      klineMindRecord: getTodayKlineMindRecord()
+    });
     const continuity = buildContinuityState({
       profile,
       trainingState,
@@ -66,7 +81,8 @@ Page({
       stageOverview: buildStageTrainingOverview(),
       currentStage: stageState.currentStage,
       personalityPlan: stageState.personalityPlan,
-      mindProfile
+      mindProfile,
+      training7View
     });
   },
 
@@ -87,5 +103,15 @@ Page({
 
   goRecord() {
     wx.navigateTo({ url: "/pages/zhixing-growth/index" });
+  },
+
+  selectTrainingDay(e) {
+    const day = Number(e.currentTarget.dataset.day || 1);
+    saveTraining7State({ currentDay: day });
+    wx.redirectTo({ url: "/pages/training/index" });
+  },
+
+  goRetest() {
+    wx.redirectTo({ url: "/pages/assessment/index" });
   }
 });

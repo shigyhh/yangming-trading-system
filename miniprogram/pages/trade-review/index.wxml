@@ -1,0 +1,159 @@
+<view class="page-shell">
+  <view class="page-content">
+    <text class="eyebrow">COLLECT · 活镜采集</text>
+    <view class="page-title">真实复盘<br />采集</view>
+    <view class="page-subtitle">30 秒把截图、理由和第一念写入活镜数据；系统再映射九镜六贼，生成下一次训练动作。</view>
+
+    <view class="upload-card card">
+      <text>交易记录截图</text>
+      <view class="upload-preview" wx:if="{{form.screenshotPath}}">
+        <image src="{{form.screenshotPath}}" mode="aspectFill" />
+      </view>
+      <view wx:else class="upload-empty">支持 K线、分时、交易记录、持仓截图；先留住真实证据。</view>
+      <button class="primary-btn" bindtap="chooseImage">{{form.screenshotPath ? '重新选择截图' : '拍照 / 选择截图'}}</button>
+      <view class="upload-note">MVP 先保存截图与手动字段；后续由服务端识别并匹配分时与多周期位置，继续校准活镜数据。</view>
+    </view>
+
+    <view class="quick-review-card card">
+      <text>30 秒采集三问</text>
+      <view>少填字段，先把真实念头留下；每一次都会进入活镜成长数据。</view>
+      <input value="{{form.entryReason}}" bindinput="inputEntryReason" placeholder="为什么进场？例：怕错过 / 按计划 / 群里说" />
+      <input value="{{form.exitReason}}" bindinput="inputExitReason" placeholder="为什么离场？例：怕回吐 / 守规则 / 再确认" />
+      <textarea value="{{form.firstThought}}" bindinput="inputThought" placeholder="当时最大的念头是什么？" />
+    </view>
+
+    <view class="form-card card">
+      <text>历史数据锚点</text>
+      <view class="field-label">数据品类</view>
+      <scroll-view scroll-x class="chip-strip" show-scrollbar="{{false}}">
+        <button wx:for="{{markets}}" wx:key="key" class="{{form.marketKey === item.key ? 'active' : ''}}" data-key="{{item.key}}" bindtap="selectMarket">{{item.label}}</button>
+      </scroll-view>
+
+      <view class="field-label">周期切片</view>
+      <scroll-view scroll-x class="chip-strip" show-scrollbar="{{false}}">
+        <button wx:for="{{timeframes}}" wx:key="key" class="{{form.timeframeKey === item.key ? 'active' : ''}}" data-key="{{item.key}}" bindtap="selectTimeframe">{{item.label}}</button>
+      </scroll-view>
+
+      <view class="field-grid">
+        <view>
+          <text>记录日期</text>
+          <picker mode="date" value="{{form.tradeDate}}" bindchange="changeDate">
+            <view>{{form.tradeDate}}</view>
+          </picker>
+        </view>
+        <view>
+          <text>标的/合约</text>
+          <input value="{{form.symbol}}" bindinput="inputSymbol" placeholder="例如：代码、合约、币种" />
+        </view>
+      </view>
+    </view>
+
+    <view class="form-card card">
+      <text>当时反应</text>
+      <view class="field-label">阶段位置</view>
+      <view class="choice-grid">
+        <button wx:for="{{stagePositions}}" wx:key="key" class="{{form.stagePositionKey === item.key ? 'active' : ''}}" data-key="{{item.key}}" bindtap="selectStage">
+          <text>{{item.label}}</text>
+          <view>{{item.gate}}</view>
+        </button>
+      </view>
+
+      <view class="field-label">行为倾向</view>
+      <view class="choice-grid">
+        <button wx:for="{{actions}}" wx:key="key" class="{{form.actionKey === item.key ? 'active' : ''}}" data-key="{{item.key}}" bindtap="selectAction">
+          <text>{{item.label}}</text>
+          <view>{{item.type}}</view>
+        </button>
+      </view>
+
+      <view class="field-label">情绪</view>
+      <view class="emotion-grid">
+        <button wx:for="{{emotions}}" wx:key="*this" class="{{form.emotion === item ? 'active' : ''}}" data-value="{{item}}" bindtap="selectEmotion">{{item}}</button>
+      </view>
+
+      <view class="field-label">守界状态</view>
+      <view class="choice-grid boundary">
+        <button wx:for="{{boundaryStates}}" wx:key="key" class="{{form.boundaryState === item.key ? 'active' : ''}}" data-key="{{item.key}}" bindtap="selectBoundaryState">
+          <text>{{item.label}}</text>
+          <view>{{item.score}}</view>
+        </button>
+      </view>
+
+      <input value="{{form.planBoundary}}" bindinput="inputBoundary" placeholder="当时应守住哪条边界？" />
+      <textarea value="{{form.reviewNote}}" bindinput="inputNote" placeholder="回看这条记录，你照见了什么？" />
+    </view>
+
+    <view class="split-actions">
+      <button class="ghost-btn" bindtap="resetForm">重新填写</button>
+      <button class="primary-btn" bindtap="generateReview">写入活镜数据</button>
+    </view>
+
+    <view wx:if="{{report}}" class="report-card card">
+      <text>活镜采集结果</text>
+      <view class="one-line">{{report.oneLine}}</view>
+      <view class="verdict-card">
+        <text>判词</text>
+        <view>{{report.verdict}}</view>
+      </view>
+      <view class="match-card">
+        <text>{{report.historicalMatch.marketLabel}} · {{report.historicalMatch.timeframeLabel}} · {{report.historicalMatch.tradeDate}}</text>
+        <view>{{report.historicalMatch.symbol}} · {{report.historicalMatch.stagePosition}}</view>
+        <view>{{report.historicalMatch.sourceStatus}}</view>
+      </view>
+      <view class="mirror-grid">
+        <view>
+          <text>本次行为镜</text>
+          <view>{{report.relatedMirror}}</view>
+        </view>
+        <view>
+          <text>对应六贼</text>
+          <view>{{report.heartThievesText}}</view>
+        </view>
+        <view>
+          <text>关口</text>
+          <view>{{report.stageGate}}</view>
+        </view>
+        <view>
+          <text>守界</text>
+          <view>{{report.boundaryStateLabel}}</view>
+        </view>
+      </view>
+
+      <view class="score-list">
+        <view wx:for="{{report.scoreRows}}" wx:key="key">
+          <text>{{item.label}}</text>
+          <view><view style="width: {{item.value}}%;"></view></view>
+          <text>{{item.value}}</text>
+        </view>
+      </view>
+
+      <view class="evidence-list">
+        <view wx:for="{{report.evidenceChain}}" wx:key="label">
+          <text>{{item.label}}</text>
+          <view>{{item.value}}</view>
+          <view>{{item.detail}}</view>
+        </view>
+      </view>
+
+      <view class="training-action">
+        <text>针对训练</text>
+        <view>{{report.trainingAction}}</view>
+      </view>
+      <button class="ghost-btn" bindtap="goKlineTraining">进入同品类 K线盲练</button>
+    </view>
+
+    <view wx:if="{{records.length}}" class="recent-card card">
+      <view class="recent-head">
+        <text>最近复盘</text>
+        <button bindtap="goReviewArchive">进入档案</button>
+      </view>
+      <view wx:for="{{records}}" wx:key="id" class="recent-row" data-id="{{item.id}}" bindtap="goReviewDetail">
+        <view>{{item.tradeDate}} · {{item.marketLabel}} · {{item.symbol}}</view>
+        <text>{{item.relatedMirror}}</text>
+      </view>
+    </view>
+
+    <compliance-notice />
+  </view>
+  <bottom-tab-bar active="mind" />
+</view>

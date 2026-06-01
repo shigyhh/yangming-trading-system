@@ -1,0 +1,112 @@
+<view class="page-shell">
+  <view class="page-content">
+    <text class="eyebrow">EVIDENCE · 详情</text>
+    <view class="page-title">采集详情<br />照见链路</view>
+    <view class="page-subtitle">这不是按结果评价，而是看见一次真实记录如何进入活镜数据和下一次训练。</view>
+
+    <block wx:if="{{record}}">
+      <view class="hero-card card">
+        <view class="hero-head">
+          <view>
+            <text>{{record.relatedMirror}}</text>
+            <view>{{record.oneLine}}</view>
+          </view>
+          <text>{{record.heartThievesText}}</text>
+        </view>
+        <view class="hero-meta">{{record.marketLine}}</view>
+        <view class="hero-meta">{{record.stageLine}}</view>
+        <view class="hero-meta">{{record.sourceLine}}</view>
+      </view>
+
+      <view class="screenshot-card card" wx:if="{{record.screenshotPath}}" bindtap="previewScreenshot">
+        <image src="{{record.screenshotPath}}" mode="aspectFill" />
+        <view>点击查看截图</view>
+      </view>
+
+      <view class="fact-card card">
+        <text>真实记录</text>
+        <view class="fact-grid">
+          <view>
+            <text>日期</text>
+            <view>{{record.tradeDate || '待补充'}}</view>
+          </view>
+          <view>
+            <text>行为倾向</text>
+            <view>{{record.actionLabel}}</view>
+          </view>
+          <view>
+            <text>情绪</text>
+            <view>{{record.emotion}}</view>
+          </view>
+          <view>
+            <text>守界</text>
+            <view>{{record.boundaryStateLabel}}</view>
+          </view>
+        </view>
+        <view class="text-line">
+          <text>建仓理由</text>
+          <view>{{record.entryReason}}</view>
+        </view>
+        <view class="text-line">
+          <text>离场理由</text>
+          <view>{{record.exitReason}}</view>
+        </view>
+        <view class="text-line">
+          <text>第一念</text>
+          <view>{{record.firstThought}}</view>
+        </view>
+        <view class="text-line">
+          <text>应守边界</text>
+          <view>{{record.planBoundary}}</view>
+        </view>
+        <view class="text-line">
+          <text>复盘照见</text>
+          <view>{{record.reviewNote || '待补充'}}</view>
+        </view>
+      </view>
+
+      <view class="evidence-card card">
+        <text>行为证据链</text>
+        <view wx:for="{{record.evidenceChain}}" wx:key="label" class="evidence-row">
+          <view>
+            <text>{{item.label}}</text>
+            <view>{{item.detail}}</view>
+          </view>
+          <text>{{item.value}}</text>
+        </view>
+      </view>
+
+      <view class="score-card card">
+        <text>过程质量</text>
+        <view wx:for="{{record.scoreRows}}" wx:key="key" class="score-row">
+          <view>{{item.label}}</view>
+          <text>{{item.value}}</text>
+          <view class="score-bar"><view style="width: {{item.value}}%;"></view></view>
+        </view>
+      </view>
+
+      <view class="training-card card">
+        <text>主修训练</text>
+        <view>{{record.trainingAction}}</view>
+          <text>活镜采集：{{reminder.highFrequencyThievesText}} · {{reminder.highFrequencyStage}}</text>
+      </view>
+
+      <view class="split-actions">
+        <button class="ghost-btn" bindtap="goArchive">复盘档案</button>
+        <button class="primary-btn" bindtap="goKlineTraining">同品类训练</button>
+      </view>
+      <view class="single-action">
+        <button class="ghost-btn" bindtap="goUpload">继续上传记录</button>
+      </view>
+    </block>
+
+    <view wx:else class="empty-card card">
+      <view>没有找到这条复盘</view>
+      <text>可以回到档案列表，或重新上传一条真实记录。</text>
+      <button class="primary-btn" bindtap="goUpload">上传真实记录</button>
+    </view>
+
+    <compliance-notice />
+  </view>
+  <bottom-tab-bar active="mind" />
+</view>

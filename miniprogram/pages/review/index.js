@@ -1,6 +1,6 @@
 const {
   getTodayReview,
-  saveTodayReview,
+  saveTodayClosingReview,
   getProfile,
   updateProfile,
   getTodayMind,
@@ -9,9 +9,12 @@ const {
   getZhixingScoreState,
   getTodayHeartCard,
   saveDailyLoopState,
+  getTraining7State,
+  saveTraining7Task,
   todayKey
 } = require("../../utils/store");
-const { syncLocalState } = require("../../utils/api");
+const { syncLocalState, syncTrainingProgress } = require("../../utils/api");
+const { promptShareMoment } = require("../../utils/share-moments");
 const { buildAiReflection, buildAiReplay } = require("../../modules/review/index");
 const { buildDailyLoopState } = require("../../modules/daily-loop/index");
 
@@ -35,7 +38,12 @@ const DEFAULT_FORM = {
   revenge: false,
   emotion: "平静",
   score: 78,
-  correction: ""
+  correction: "",
+  strongestReaction: "",
+  keptBoundary: true,
+  deviatedPlan: false,
+  insightLine: "",
+  tomorrowBoundary: ""
 };
 
 function buildFieldViews(form) {
@@ -110,19 +118,57 @@ Page({
     this.refreshForm(form);
   },
 
+  inputStrongestReaction(e) {
+    const form = Object.assign({}, this.data.form, { strongestReaction: e.detail.value });
+    this.refreshForm(form);
+  },
+
+  setReviewBoolean(e) {
+    const key = e.currentTarget.dataset.key;
+    const value = e.currentTarget.dataset.value === "true";
+    const form = Object.assign({}, this.data.form, { [key]: value });
+    if (key === "keptBoundary") {
+      form.executedStop = value;
+      form.held = !value;
+    }
+    if (key === "deviatedPlan") {
+      form.changedPlan = value;
+      form.inSystem = !value;
+    }
+    form.score = suggestScore(form);
+    this.refreshForm(form);
+  },
+
+  inputInsightLine(e) {
+    const form = Object.assign({}, this.data.form, { insightLine: e.detail.value });
+    this.refreshForm(form);
+  },
+
+  inputTomorrowBoundary(e) {
+    const form = Object.assign({}, this.data.form, { tomorrowBoundary: e.detail.value });
+    this.refreshForm(form);
+  },
+
   saveReview() {
     const correction = (this.data.form.correction || "").trim();
-    if (!correction) {
-      wx.showToast({ title: "写下明日修正动作", icon: "none" });
+    const strongestReaction = (this.data.form.strongestReaction || "").trim();
+    const insightLine = (this.data.form.insightLine || "").trim();
+    const tomorrowBoundary = (this.data.form.tomorrowBoundary || "").trim();
+    if (!strongestReaction || !insightLine) {
+      wx.showToast({ title: "请补全今日省察", icon: "none" });
       return;
     }
 
     const alreadySaved = !!getTodayReview();
-    const savedReview = saveTodayReview(Object.assign({}, this.data.form, {
+    const savedReview = saveTodayClosingReview(Object.assign({}, this.data.form, {
       correction,
+      strongestReaction,
+      insightLine,
+      tomorrowBoundary,
       aiReflection: this.data.aiReflection,
       aiReplay: this.data.aiReplay
     }));
+    saveTraining7Task(Number((getTraining7State() || {}).currentDay || 1), "closing_review", true);
     if (!alreadySaved) {
       const profile = getProfile();
       updateProfile({
@@ -142,10 +188,17 @@ Page({
     }));
     wx.showToast({ title: "省察已保存", icon: "success" });
     syncLocalState({ silent: true }).catch(() => {});
+    syncTrainingProgress().catch(() => {});
     this.setData({ saved: true });
-    setTimeout(() => {
-      wx.redirectTo({ url: "/pages/zhixing-index/index" });
-    }, 420);
+    const prompted = promptShareMoment("closing_review_completed", {
+      sourceScene: "closing_review_completed",
+      onCancel: () => wx.redirectTo({ url: "/pages/zhixing-index/index" })
+    });
+    if (!prompted) {
+      setTimeout(() => {
+        wx.redirectTo({ url: "/pages/zhixing-index/index" });
+      }, 420);
+    }
   },
 
   copySummary() {
@@ -159,6 +212,7 @@ Page({
       `省察：${ai.root}`,
       `追问：${ai.question}`,
       `心证结论：${this.data.aiReplay.deviation}`,
+      `明日一界：${form.tomorrowBoundary || "待记录"}`,
       `系统内：${form.inSystem ? "是" : "否"}`,
       `追高：${form.chased ? "是" : "否"}`,
       `扛单：${form.held ? "是" : "否"}`,

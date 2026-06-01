@@ -28,6 +28,11 @@ export const config = {
   strictRateLimitMax: Number(process.env.STRICT_RATE_LIMIT_MAX || 40),
   ashareKlineBegin: process.env.ASHARE_KLINE_BEGIN || "19900101",
   ashareKlineLimit: Number(process.env.ASHARE_KLINE_LIMIT || 5000),
+  klineDownloadToken: process.env.KLINE_DOWNLOAD_TOKEN || "",
+  tushareToken: process.env.TUSHARE_TOKEN || "",
+  tushareEndpoint: process.env.TUSHARE_ENDPOINT || "https://api.tushare.pro",
+  futuOpenApiBridgeUrl: process.env.FUTU_OPENAPI_BRIDGE_URL || "",
+  okxEndpoint: process.env.OKX_ENDPOINT || "https://www.okx.com",
   allowClientFeishuWebhook: process.env.ALLOW_CLIENT_FEISHU_WEBHOOK === "true",
   authCodeSecret: process.env.AUTH_CODE_SECRET || process.env.SESSION_SECRET || "local-dev-auth-code-secret",
   smsProvider: process.env.SMS_PROVIDER || "mock",
@@ -51,10 +56,11 @@ export const config = {
   wechatOpenAppSecret: process.env.WECHAT_OPEN_APP_SECRET || "",
   corsAllowedOrigins: parseList(
     process.env.CORS_ALLOWED_ORIGINS ||
-      "http://localhost:8787,http://127.0.0.1:8787,http://localhost:8790,http://127.0.0.1:8790,http://localhost:8795,http://127.0.0.1:8795,http://116.62.146.166,http://xxjyxt.com,http://www.xxjyxt.com,https://xxjyxt.com,https://www.xxjyxt.com"
+      "http://localhost:3000,http://127.0.0.1:3000,http://localhost:8787,http://127.0.0.1:8787,http://localhost:8790,http://127.0.0.1:8790,http://localhost:8795,http://127.0.0.1:8795,http://116.62.146.166,http://xxjyxt.com,http://www.xxjyxt.com,https://xxjyxt.com,https://www.xxjyxt.com"
   ),
   feishuBotWebhook: process.env.FEISHU_BOT_WEBHOOK || "",
-  feishuBotSecret: process.env.FEISHU_BOT_SECRET || ""
+  feishuBotSecret: process.env.FEISHU_BOT_SECRET || "",
+  feishuAutoSync: process.env.FEISHU_AUTO_SYNC === "true"
 };
 
 function parseList(value) {

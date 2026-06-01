@@ -76,6 +76,7 @@
 .tribe-card,
 .mentor-card,
 .task-card,
+.handoff-card,
 .assistant-card,
 .archive-card,
 .leaderboard-card,
@@ -336,6 +337,48 @@
   gap: 14rpx;
 }
 
+.handoff-summary {
+  margin-top: 22rpx;
+  padding: 20rpx;
+  border-radius: 20rpx;
+  color: #fff7e7;
+  background: rgba(201, 157, 76, 0.08);
+  font-size: 25rpx;
+  line-height: 1.58;
+  font-weight: 800;
+}
+
+.handoff-grid {
+  margin-top: 18rpx;
+  display: grid;
+  gap: 10rpx;
+}
+
+.handoff-row {
+  min-height: 76rpx;
+  padding: 16rpx 18rpx;
+  display: grid;
+  grid-template-columns: 140rpx 1fr;
+  gap: 18rpx;
+  align-items: center;
+  border-radius: 18rpx;
+  background: rgba(255, 255, 255, 0.036);
+}
+
+.handoff-row text {
+  color: #b49355;
+  font-size: 21rpx;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.handoff-row view {
+  color: rgba(247, 239, 223, 0.78);
+  font-size: 25rpx;
+  line-height: 1.5;
+  font-weight: 800;
+}
+
 .assistant-reply {
   margin-top: 22rpx;
   padding: 22rpx;
@@ -536,6 +579,10 @@
 
   .companion-stats {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .handoff-row {
+    grid-template-columns: 1fr;
   }
 }
 
