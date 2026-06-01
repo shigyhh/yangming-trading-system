@@ -73,7 +73,7 @@ export function InkMountainBackground() {
         transition={{ duration: 1.6, ease: "easeOut" }}
       />
       <motion.div
-        className="absolute inset-[-12%] bg-[radial-gradient(circle_at_24%_16%,rgba(216,183,111,.09),transparent_28rem),radial-gradient(circle_at_82%_12%,rgba(95,132,117,.08),transparent_26rem),radial-gradient(circle_at_54%_86%,rgba(120,60,45,.08),transparent_28rem)]"
+        className="absolute inset-[-12%] bg-[radial-gradient(circle_at_24%_16%,rgba(216,183,111,.035),transparent_24rem),radial-gradient(circle_at_82%_12%,rgba(95,132,117,.08),transparent_26rem),radial-gradient(circle_at_54%_86%,rgba(120,60,45,.08),transparent_28rem)]"
         initial={{ opacity: 0 }}
         animate={{
           opacity: [0, 0.68, 0.56, 0.68],

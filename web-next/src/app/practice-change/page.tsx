@@ -184,7 +184,12 @@ export default function PracticeChangePage() {
           {showSeal ? (
             <div className="practice-seal-ritual" aria-live="polite">
               <p className="seal-stage-label">今日落印</p>
-              <div className="practice-paper-mirror">
+              <div className={cn("practice-paper-mirror", showSeal && "is-cleansed")}>
+                <p className="liangzhi-clearing-copy">
+                  知善知恶是良知。
+                  <br />
+                  为善去恶是格物。
+                </p>
                 <div className="practice-seal">
                   <span>今日已照见</span>
                   <span>事上磨一念</span>
@@ -443,12 +448,58 @@ export default function PracticeChangePage() {
             inset 0 0 46px rgba(0, 0, 0, 0.42);
         }
 
+        .practice-paper-mirror.is-cleansed {
+          width: 190px;
+          height: 164px;
+          background:
+            radial-gradient(circle at 50% 34%, rgba(242, 235, 220, 0.12), transparent 38%),
+            radial-gradient(circle at 50% 74%, rgba(120, 60, 45, 0.09), transparent 48%),
+            repeating-radial-gradient(circle, rgba(216, 183, 111, 0.055) 0 1px, transparent 1px 13px),
+            rgba(8, 8, 6, 0.34);
+          box-shadow:
+            0 24px 62px rgba(0, 0, 0, 0.3),
+            0 0 32px rgba(216, 183, 111, 0.055),
+            inset 0 0 52px rgba(0, 0, 0, 0.38);
+        }
+
         .practice-paper-mirror::before {
           content: "";
           position: absolute;
           inset: 16px;
           border: 1px dashed rgba(220, 212, 195, 0.08);
           border-radius: inherit;
+        }
+
+        .practice-paper-mirror.is-cleansed::after {
+          content: "";
+          position: absolute;
+          inset: -24%;
+          background:
+            linear-gradient(110deg, transparent 18%, rgba(242, 235, 220, 0.08) 42%, transparent 62%),
+            radial-gradient(circle at 50% 44%, rgba(216, 183, 111, 0.08), transparent 42%);
+          filter: blur(3px);
+          opacity: 0;
+          transform: translateX(-24%) rotate(-8deg);
+          animation: dust-wipe 1.2s cubic-bezier(0.22, 1, 0.36, 1) 120ms both;
+          pointer-events: none;
+        }
+
+        .liangzhi-clearing-copy {
+          position: absolute;
+          left: 50%;
+          top: 17px;
+          z-index: 2;
+          width: 14em;
+          margin: 0;
+          font-family: var(--font-world);
+          font-size: 0.76rem;
+          font-weight: 300;
+          line-height: 1.65;
+          letter-spacing: 0.1em;
+          color: rgba(242, 220, 168, 0.68);
+          text-align: center;
+          transform: translateX(-50%);
+          animation: liangzhi-copy-rise 780ms cubic-bezier(0.22, 1, 0.36, 1) 260ms both;
         }
 
         .practice-seal {
@@ -472,6 +523,14 @@ export default function PracticeChangePage() {
             0 0 24px rgba(127, 37, 25, 0.14),
             inset 0 0 28px rgba(127, 37, 25, 0.09);
           animation: seal-drop 540ms cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        .practice-paper-mirror.is-cleansed .practice-seal {
+          width: 92px;
+          height: 92px;
+          margin-top: 42px;
+          font-size: 0.9rem;
+          animation-delay: 0.48s;
         }
 
         .practice-seal span {
@@ -535,6 +594,36 @@ export default function PracticeChangePage() {
             opacity: 1;
             filter: blur(0);
             transform: translateY(0);
+          }
+        }
+
+        @keyframes dust-wipe {
+          0% {
+            opacity: 0;
+            transform: translateX(-30%) rotate(-8deg);
+          }
+
+          38% {
+            opacity: 0.78;
+          }
+
+          100% {
+            opacity: 0;
+            transform: translateX(34%) rotate(-8deg);
+          }
+        }
+
+        @keyframes liangzhi-copy-rise {
+          from {
+            opacity: 0;
+            filter: blur(6px);
+            transform: translate(-50%, 10px);
+          }
+
+          to {
+            opacity: 1;
+            filter: blur(0);
+            transform: translate(-50%, 0);
           }
         }
       `}</style>

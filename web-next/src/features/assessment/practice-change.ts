@@ -81,8 +81,8 @@ const dayPractices: PracticeDay[] = [
 const mirrorFirstPractices: Record<BehaviorMirrorId, PracticeDay> = {
   chasing: {
     title: "追涨前停十秒",
-    note: "今日只练一件事：计划外拉升，不临时追入。",
-    actions: ["开盘前写下今天允许参与的条件。", "盘中看到快速拉升，先停十秒再看计划。", "收盘后记录：我有没有因为怕错过而追进去？"],
+    note: "今日只练一件事：没有系统信号，不主动找机会。",
+    actions: ["开盘前写下今天允许参与的条件。", "盘中看到快速拉升，先停十秒再看系统条件。", "收盘后记录：我有没有因为怕错过而追进去？"],
   },
   holdingLoss: {
     title: "失效不解释",

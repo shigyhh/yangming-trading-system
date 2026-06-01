@@ -21,7 +21,7 @@ export function InsightCard() {
       transition={{ duration: 1.15, ease: [0.22, 1, 0.36, 1], delay: 2.1 }}
     >
       <motion.aside
-        className="relative min-h-[300px] overflow-hidden rounded-[1.5rem] border border-[rgba(217,189,122,.125)] ink-surface p-4 shadow-[0_22px_72px_rgba(0,0,0,.24)] backdrop-blur-2xl md:min-h-[580px] md:rounded-[2rem] md:p-7 md:shadow-[0_32px_104px_rgba(0,0,0,.28)]"
+        className="relative min-h-[300px] overflow-hidden rounded-[1.5rem] border border-[rgba(217,189,122,.125)] ink-surface p-4 shadow-[0_22px_72px_rgba(0,0,0,.24)] backdrop-blur-2xl md:rounded-[2rem] md:p-7 md:shadow-[0_32px_104px_rgba(0,0,0,.28)] lg:min-h-[560px]"
         animate={{ y: [0, -3, 0] }}
         transition={{ duration: 9, repeat: Infinity, ease: "easeInOut", delay: 2.55 }}
         style={{ animation: "border-breath 14s ease-in-out infinite" }}
@@ -44,7 +44,7 @@ export function InsightCard() {
             <Badge className="type-level-5 group relative w-fit overflow-hidden rounded-full border border-[rgba(217,189,122,.06)] bg-[rgba(216,183,111,.012)] px-3 py-1 text-[rgba(216,183,111,.46)] shadow-none transition duration-700 hover:border-[rgba(217,189,122,.14)]">
               <span className="absolute inset-0 -translate-x-full bg-[linear-gradient(100deg,transparent,rgba(255,246,206,.14),transparent)] transition duration-1000 group-hover:translate-x-full" />
               <Eye data-icon="inline-start" />
-              <span className="relative">AI 观心系统</span>
+              <span className="relative">临盘观心</span>
             </Badge>
             <div>
               <p className="type-level-4 opacity-62">今日心证</p>
@@ -56,7 +56,7 @@ export function InsightCard() {
         </div>
 
         <motion.div
-          className="instrument-pane relative z-10 mt-5 rounded-2xl border border-[rgba(244,235,221,.035)] bg-[rgba(0,0,0,.06)] p-4 md:mt-12 md:rounded-3xl md:p-5"
+          className="instrument-pane relative z-10 mt-5 rounded-2xl border border-[rgba(244,235,221,.035)] bg-[rgba(0,0,0,.06)] p-4 md:mt-10 md:rounded-3xl md:p-5"
           animate={{ y: [0, -1, 0] }}
           transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
         >

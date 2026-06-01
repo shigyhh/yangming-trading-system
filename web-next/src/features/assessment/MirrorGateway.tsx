@@ -1,10 +1,17 @@
 "use client"
 
-import { AnimatePresence } from "framer-motion"
 import type { CSSProperties, PointerEvent } from "react"
 import { useEffect, useMemo, useRef, useState } from "react"
 
-import { behaviorMirrorSignals, type BehaviorMirrorId, type BehaviorMirrorSignal } from "./behavior-mirrors"
+import {
+  behaviorMirrorSignals,
+  isBehaviorMirrorId,
+  type BehaviorMirrorId,
+  type BehaviorMirrorSignal,
+} from "./behavior-mirrors"
+import type { PracticeChangeState } from "./practice-change"
+import type { AssessmentReport } from "./report"
+import { assessmentStorageKeys, getStorage } from "./storage"
 import { cn } from "@/lib/utils"
 
 type GatewayPhase =
@@ -42,7 +49,43 @@ type MirrorFlow = {
 
 type MirrorMotion = "dart" | "heavy" | "drift" | "swing" | "follow" | "waver" | "lag" | "tremble" | "steady"
 
+type LiveMirrorState = {
+  completedDays: number
+  hasPracticeMemory: boolean
+  isEmptyMirror: boolean
+  memoryLine: string
+  memoryCue: string
+  sourceMirrorId?: BehaviorMirrorId
+}
+
 const defaultMainMirrorId = "chasing"
+
+const defaultLiveMirrorState: LiveMirrorState = {
+  completedDays: 0,
+  hasPracticeMemory: false,
+  isEmptyMirror: false,
+  memoryLine: "",
+  memoryCue: "行情突然拉升",
+}
+
+function getHeartLakeGeometry(width: number, height: number) {
+  const rx = Math.min(
+    width < 640 ? width * 0.64 : width * 0.34,
+    width < 640 ? 420 : 760,
+  )
+  const ry = Math.min(
+    height * (width < 640 ? 0.19 : 0.22),
+    width < 640 ? 190 : 270,
+    rx * 0.45,
+  )
+
+  return {
+    cx: width * 0.5,
+    poolY: height * (width < 640 ? 0.59 : 0.58),
+    rx,
+    ry,
+  }
+}
 
 const orbitSlotByMirrorId: Record<string, OrbitSlot> = {
   anxiety: { x: -246, y: -652, scale: 0.56, opacity: 0.16, blur: 3.4, zIndex: 12, rotateY: 0, shadow: 0.025 },
@@ -106,40 +149,6 @@ const mirrorShortNameById: Record<BehaviorMirrorId, string> = {
 
 const heartMirrors = behaviorMirrorSignals
 const behaviorMirrors = heartMirrors
-const conscienceMirror = heartMirrors.find((mirror) => mirror.id === "conscience")
-
-const thiefExplanations: Record<string, string> = {
-  贪: "想多拿一点，忘了边界。",
-  急: "怕慢一步就失去机会。",
-  痴: "把希望当判断。",
-  慢: "知道该做，却拖到明天。",
-  疑: "不相信自己的规则。",
-  惧: "怕失去已有利润。",
-  知止: "看见边界，愿意停下。",
-  守心: "情绪起时，不把手交出去。",
-  执行: "规则到了，就落实到动作。",
-}
-
-const sixThiefOrbit = [
-  { id: "贪", x: 0, y: -118 },
-  { id: "急", x: 102, y: -58 },
-  { id: "惧", x: 106, y: 58 },
-  { id: "疑", x: 0, y: 122 },
-  { id: "慢", x: -106, y: 58 },
-  { id: "痴", x: -102, y: -58 },
-]
-
-const mirrorTriggerScenes: Record<string, string> = {
-  chasing: "行情突然拉升",
-  holdingLoss: "价格打到止损",
-  fantasy: "走势已经变弱",
-  gambling: "刚亏完一笔",
-  following: "外界声音变多",
-  hesitation: "机会到了计划区",
-  procrastination: "收盘又想跳过复盘",
-  anxiety: "账户刚有浮盈",
-  conscience: "情绪起来了",
-}
 
 const subconsciousEchoes: Record<string, string> = {
   chasing: "怕错过。",
@@ -153,6 +162,91 @@ const subconsciousEchoes: Record<string, string> = {
   conscience: "情绪起了，但手可以不动。",
 }
 
+const sixThiefOrbit = ["贪", "急", "惧", "疑", "慢", "痴"]
+const sixThiefPositions = [
+  { x: 0, y: -88 },
+  { x: 82, y: -44 },
+  { x: 82, y: 44 },
+  { x: 0, y: 88 },
+  { x: -82, y: 44 },
+  { x: -82, y: -44 },
+]
+
+function completedPracticeDays(state?: PracticeChangeState | null) {
+  if (!state?.records?.length) return 0
+
+  return state.records.filter((record) => (record.status ?? "completed") === "completed").length
+}
+
+function formatPracticeMoment(recordedAt?: string) {
+  if (!recordedAt) return "最近一次"
+
+  const recordedDate = new Date(recordedAt)
+  if (Number.isNaN(recordedDate.getTime())) return "最近一次"
+
+  const now = new Date()
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
+  const recordedStart = new Date(recordedDate.getFullYear(), recordedDate.getMonth(), recordedDate.getDate()).getTime()
+  const dayDiff = Math.round((todayStart - recordedStart) / 86_400_000)
+  const hour = `${recordedDate.getHours()}`.padStart(2, "0")
+  const minute = `${recordedDate.getMinutes()}`.padStart(2, "0")
+
+  if (dayDiff === 0) return `今天 ${hour}:${minute}`
+  if (dayDiff === 1) return `昨天 ${hour}:${minute}`
+  return `${recordedDate.getMonth() + 1}月${recordedDate.getDate()}日 ${hour}:${minute}`
+}
+
+function cleanPracticeNote(note?: string) {
+  return (note || "")
+    .replace(/^今日只练一件事[:：]/, "")
+    .replace(/^今日只练一件事/, "")
+    .trim()
+}
+
+function buildLiveMirrorState(): LiveMirrorState {
+  const savedPractice = getStorage<PracticeChangeState | null>(assessmentStorageKeys.practiceChange, null)
+  const savedReport = getStorage<AssessmentReport | null>(assessmentStorageKeys.report, null)
+  const selectedMirrorId = getStorage<string>(assessmentStorageKeys.selectedMirrorId, "")
+  const sourceMirrorId = isBehaviorMirrorId(savedPractice?.sourceMirrorId)
+    ? savedPractice.sourceMirrorId
+    : isBehaviorMirrorId(savedReport?.sourceMirror?.id)
+      ? savedReport.sourceMirror.id
+      : isBehaviorMirrorId(selectedMirrorId)
+        ? selectedMirrorId
+        : undefined
+  const completedDays = Math.min(completedPracticeDays(savedPractice), 7)
+  const practiceRecords = savedPractice?.records ?? []
+  const latestRecord = practiceRecords[practiceRecords.length - 1]
+  const practiceText = cleanPracticeNote(latestRecord?.note)
+
+  if (completedDays >= 7) {
+    return {
+      completedDays,
+      hasPracticeMemory: true,
+      isEmptyMirror: true,
+      memoryLine: "此心光明。",
+      memoryCue: "七日修行后，心湖暂归平静。",
+      sourceMirrorId: "conscience",
+    }
+  }
+
+  if (latestRecord && practiceText) {
+    return {
+      completedDays,
+      hasPracticeMemory: true,
+      isEmptyMirror: false,
+      memoryLine: `你${formatPracticeMoment(latestRecord.recordedAt)}落印过：${practiceText}`,
+      memoryCue: `${completedDays}日已落印`,
+      sourceMirrorId,
+    }
+  }
+
+  return {
+    ...defaultLiveMirrorState,
+    sourceMirrorId,
+  }
+}
+
 function HeartWaterMirrorPlane({
   phase,
   activeMirrorId,
@@ -163,12 +257,13 @@ function HeartWaterMirrorPlane({
   onMirrorHit?: (clientX: number, clientY: number) => void
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
-  const ripplesRef = useRef<Array<{ x: number; y: number; r: number; a: number }>>([])
+  const ripplesRef = useRef<Array<{ x: number; y: number; r: number; a: number; seed: number }>>([])
   const energyRef = useRef(0)
   const thoughtWaveRef = useRef(0)
+  const phaseEnergyRef = useRef(0)
 
   useEffect(() => {
-    if (phase !== "mirrorArray") return
+    if (phase !== "mirrorArray" && phase !== "focusing") return
 
     const canvas = canvasRef.current
     if (!canvas) return
@@ -176,14 +271,18 @@ function HeartWaterMirrorPlane({
     const dpr = Math.min(window.devicePixelRatio || 1, 2)
     const planeWidth = canvas.width / dpr
     const planeHeight = canvas.height / dpr
-    const poolY = planeHeight * (planeWidth < 540 ? 0.72 : 0.7)
+    const { cx, poolY } = getHeartLakeGeometry(planeWidth, planeHeight)
+    const rippleDelay = phase === "mirrorArray" ? 980 : 80
+    const timer = window.setTimeout(() => {
+      thoughtWaveRef.current = phase === "focusing" ? 1.26 : 1
+      energyRef.current = Math.max(energyRef.current, phase === "focusing" ? 1.06 : 0.82)
+      ripplesRef.current.push(
+        { x: cx, y: poolY, r: 2, a: phase === "focusing" ? 0.52 : 0.42, seed: 1.7 },
+        { x: cx, y: poolY, r: 38, a: phase === "focusing" ? 0.24 : 0.18, seed: 5.3 },
+      )
+    }, rippleDelay)
 
-    thoughtWaveRef.current = 1
-    energyRef.current = Math.max(energyRef.current, 0.82)
-    ripplesRef.current.push(
-      { x: planeWidth * 0.5, y: poolY, r: 2, a: 0.42 },
-      { x: planeWidth * 0.5, y: poolY, r: 38, a: 0.18 },
-    )
+    return () => window.clearTimeout(timer)
   }, [activeMirrorId, phase])
 
   useEffect(() => {
@@ -208,6 +307,35 @@ function HeartWaterMirrorPlane({
 
     const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value))
 
+    const drawOrganicRipple = (
+      x: number,
+      y: number,
+      radiusX: number,
+      radiusY: number,
+      alpha: number,
+      seed: number,
+      time: number,
+      color = "190, 212, 220",
+      lineWidth = 0.8,
+    ) => {
+      context.beginPath()
+      for (let point = 0; point <= 128; point += 1) {
+        const angle = (point / 128) * Math.PI * 2
+        const wobble =
+          1 +
+          Math.sin(angle * 3 + time * 0.74 + seed) * 0.022 +
+          Math.sin(angle * 7 - time * 0.52 + seed * 1.7) * 0.014 +
+          Math.sin(angle * 11 + time * 0.31 + seed * 0.6) * 0.008
+        const rippleX = x + Math.cos(angle) * radiusX * wobble
+        const rippleY = y + Math.sin(angle) * radiusY * wobble
+        if (point === 0) context.moveTo(rippleX, rippleY)
+        else context.lineTo(rippleX, rippleY)
+      }
+      context.strokeStyle = `rgba(${color}, ${alpha})`
+      context.lineWidth = lineWidth
+      context.stroke()
+    }
+
     const drawMirrorReflection = (
       cx: number,
       poolY: number,
@@ -224,8 +352,9 @@ function HeartWaterMirrorPlane({
       const x = clamp(cx + slot.x * (width < 540 ? 0.34 : 0.48), cx - rx * 0.92, cx + rx * 0.92)
       const baseY = poolY - ry * 0.36 + Math.sin(time * 0.45 + index) * ry * 0.08
       const lineHeight = ry * (0.26 + resonance * 0.74)
-      const wobble = Math.sin(time * 1.35 + index * 1.8) * (3 + energyRef.current * 12)
-      const alpha = 0.025 + resonance * 0.09
+      const phaseEnergy = phaseEnergyRef.current
+      const wobble = Math.sin(time * 1.35 + index * 1.8) * (3 + energyRef.current * 12 + phaseEnergy * 8)
+      const alpha = 0.025 + resonance * 0.09 + phaseEnergy * 0.018
       const tint = mirror.id === "conscience" ? "216, 210, 158" : "145, 194, 205"
 
       context.save()
@@ -255,14 +384,27 @@ function HeartWaterMirrorPlane({
 
     const frame = (now: number) => {
       const time = now / 1000
-      const cx = width * 0.5
-      const poolY = height * (width < 540 ? 0.72 : 0.7)
-      const rx = Math.min(width * (width < 540 ? 0.44 : 0.42), 560)
-      const ry = Math.min(height * 0.26, width < 540 ? 132 : 162)
+      const { cx, poolY, rx, ry } = getHeartLakeGeometry(width, height)
       const gsq = ry / rx
       const breath = 0.5 + Math.sin(time * 0.72) * 0.5
       const energy = energyRef.current
       const thoughtWave = thoughtWaveRef.current
+      const targetPhaseEnergy =
+        phase === "mirrorArray"
+          ? 0.16
+          : phase === "focusing"
+            ? 0.88
+            : phase === "subconsciousVisible"
+              ? 0.64
+              : phase === "revealed"
+                ? 0.44
+                : phase === "thiefVisible"
+                  ? 0.34
+                  : phase === "readyForCycle"
+                    ? 0.18
+                    : 0.04
+      phaseEnergyRef.current += (targetPhaseEnergy - phaseEnergyRef.current) * 0.022
+      const phaseEnergy = phaseEnergyRef.current
 
       context.clearRect(0, 0, width, height)
 
@@ -274,13 +416,13 @@ function HeartWaterMirrorPlane({
       context.fillStyle = nightSky
       context.fillRect(0, 0, width, height)
 
-      const skyWash = context.createRadialGradient(cx, poolY, rx * 0.24, cx, poolY - ry * 1.1, rx * 1.62)
+      const skyWash = context.createRadialGradient(cx, poolY, rx * 0.24, cx, poolY - ry * 1.1, rx * 1.86)
       skyWash.addColorStop(0, "rgba(8, 22, 28, 0.14)")
       skyWash.addColorStop(0.52, "rgba(6, 12, 18, 0.075)")
       skyWash.addColorStop(1, "rgba(4, 9, 13, 0)")
       context.fillStyle = skyWash
       context.beginPath()
-      context.ellipse(cx, poolY, rx * 1.25, ry * 1.46, 0, 0, Math.PI * 2)
+      context.ellipse(cx, poolY, rx * 1.36, ry * 1.36, 0, 0, Math.PI * 2)
       context.fill()
 
       const moonX = cx
@@ -347,25 +489,25 @@ function HeartWaterMirrorPlane({
       context.clip()
 
       const pool = context.createRadialGradient(cx, poolY - ry * 0.14, rx * 0.05, cx, poolY, rx)
-      pool.addColorStop(0, "rgba(1, 4, 8, 0.95)")
-      pool.addColorStop(0.48, "rgba(4, 18, 27, 0.88)")
-      pool.addColorStop(0.84, "rgba(7, 35, 45, 0.82)")
-      pool.addColorStop(1, "rgba(13, 47, 58, 0.72)")
+      pool.addColorStop(0, "rgba(1, 4, 8, 0.88)")
+      pool.addColorStop(0.44, "rgba(4, 18, 27, 0.76)")
+      pool.addColorStop(0.78, "rgba(7, 35, 45, 0.52)")
+      pool.addColorStop(1, "rgba(13, 47, 58, 0.12)")
       context.fillStyle = pool
       context.beginPath()
       context.ellipse(cx, poolY, rx, ry, 0, 0, Math.PI * 2)
       context.fill()
 
       const skyReflection = context.createLinearGradient(0, poolY - ry, 0, poolY + ry)
-      skyReflection.addColorStop(0, `rgba(27, 58, 70, ${0.14 + breath * 0.025})`)
-      skyReflection.addColorStop(0.52, "rgba(4, 12, 18, 0.16)")
-      skyReflection.addColorStop(1, "rgba(1, 4, 7, 0.4)")
+      skyReflection.addColorStop(0, `rgba(27, 58, 70, ${0.1 + breath * 0.02})`)
+      skyReflection.addColorStop(0.52, "rgba(4, 12, 18, 0.12)")
+      skyReflection.addColorStop(1, "rgba(1, 4, 7, 0.18)")
       context.fillStyle = skyReflection
       context.beginPath()
       context.ellipse(cx, poolY, rx, ry, 0, 0, Math.PI * 2)
       context.fill()
 
-      const depthRadius = Math.min(rx, ry) * (width < 540 ? 0.86 : 0.98)
+      const depthRadius = Math.min(rx, ry) * (width < 540 ? 0.9 : 0.98)
       const depth = context.createRadialGradient(cx, poolY - ry * 0.08, 0, cx, poolY, depthRadius * 1.68)
       depth.addColorStop(0, "rgba(0, 0, 0, 0.88)")
       depth.addColorStop(0.24, "rgba(0, 2, 4, 0.74)")
@@ -407,11 +549,51 @@ function HeartWaterMirrorPlane({
         const progress = (time * 0.18 + wave * 0.34) % 1
         const ringRy = ry * (1.02 - progress * 0.76)
         const alpha = (0.03 + energy * 0.09) * (1 - progress)
+        drawOrganicRipple(cx, poolY - ry * 0.04, ringRy / gsq, ringRy, alpha, wave * 2.9, time)
+      }
+
+      for (let wave = 0; wave < 5; wave += 1) {
+        const progress = (time * 0.072 + wave * 0.19) % 1
+        const radiusX = rx * (0.2 + progress * 0.64)
+        const radiusY = ry * (0.2 + progress * 0.64)
+        const alpha = (0.035 + energy * 0.045) * (1 - progress) * (wave % 2 === 0 ? 1 : 0.72)
+        drawOrganicRipple(cx, poolY - ry * 0.04, radiusX, radiusY, alpha, wave * 5.11, time, "216, 231, 232", 0.62)
+      }
+
+      for (let strand = 0; strand < 9; strand += 1) {
         context.beginPath()
-        context.ellipse(cx, poolY - ry * 0.04, ringRy / gsq, ringRy, 0, 0, Math.PI * 2)
-        context.strokeStyle = `rgba(190, 212, 220, ${alpha})`
-        context.lineWidth = 0.8
+        for (let step = 0; step <= 54; step += 1) {
+          const progress = step / 54
+          const x = cx - rx * 0.78 + progress * rx * 1.56
+          const y =
+            poolY -
+            ry * 0.4 +
+            strand * ry * 0.1 +
+            Math.sin(progress * Math.PI * 2 + time * 0.38 + strand * 0.8) * (1.8 + energy * 5) +
+            Math.sin(progress * Math.PI * 5 - time * 0.24 + strand) * 1.1
+          if (step === 0) context.moveTo(x, y)
+          else context.lineTo(x, y)
+        }
+        context.strokeStyle = `rgba(190, 212, 220, ${0.018 + energy * 0.018})`
+        context.lineWidth = 0.5
         context.stroke()
+      }
+
+      if (thoughtWave > 0.04) {
+        const dropAlpha = Math.min(0.42, thoughtWave * 0.42)
+        const dropGlow = context.createRadialGradient(cx, poolY - ry * 0.04, 0, cx, poolY - ry * 0.04, 18 + thoughtWave * 22)
+        dropGlow.addColorStop(0, `rgba(216, 183, 111, ${dropAlpha})`)
+        dropGlow.addColorStop(0.36, `rgba(216, 183, 111, ${dropAlpha * 0.18})`)
+        dropGlow.addColorStop(1, "rgba(216, 183, 111, 0)")
+        context.fillStyle = dropGlow
+        context.beginPath()
+        context.ellipse(cx, poolY - ry * 0.04, 18 + thoughtWave * 22, (18 + thoughtWave * 22) * gsq, 0, 0, Math.PI * 2)
+        context.fill()
+
+        context.fillStyle = `rgba(242, 220, 168, ${dropAlpha * 0.72})`
+        context.beginPath()
+        context.ellipse(cx, poolY - ry * 0.04, 2.8, 2.8 * gsq, 0, 0, Math.PI * 2)
+        context.fill()
       }
 
       context.fillStyle = "rgba(0, 0, 0, 0.78)"
@@ -419,21 +601,21 @@ function HeartWaterMirrorPlane({
       context.ellipse(cx, poolY - ry * 0.04, depthRadius * 0.22, depthRadius * 0.14, 0, 0, Math.PI * 2)
       context.fill()
 
-      const wobble = 2.2 + energy * 9 + thoughtWave * 18
+      const wobble = 2.2 + energy * 9 + thoughtWave * 18 + phaseEnergy * 14
       for (let k = 0; k < 26; k += 1) {
         const lineY = poolY - ry * 0.84 + k * ((ry * 1.68) / 26)
         const offset =
           Math.sin(lineY * 0.07 + time * 1.6) * wobble * 0.65 +
           Math.sin(lineY * 0.15 - time * 1.1) * wobble * 0.35
         const baseAlpha = Math.max(0, 0.085 * (1 - Math.abs(lineY - poolY) / (ry * 1.12)))
-        const alpha = baseAlpha * (1 - thoughtWave * 0.46)
+        const alpha = baseAlpha * (1 - Math.min(0.6, thoughtWave * 0.46 + phaseEnergy * 0.18))
         const lineWidth = moonR * (0.54 + 0.52 * (1 - Math.abs(lineY - poolY) / ry))
-        const fragmentCount = thoughtWave > 0.04 ? 3 : 1
+        const fragmentCount = thoughtWave > 0.04 || phaseEnergy > 0.36 ? 3 : 1
 
         for (let fragment = 0; fragment < fragmentCount; fragment += 1) {
           const fragmentShift = fragmentCount === 1 ? 0 : (fragment - 1) * lineWidth * (0.64 + thoughtWave * 0.18)
           const fragmentWidth = fragmentCount === 1 ? lineWidth * 2 : lineWidth * (0.46 - thoughtWave * 0.08)
-          const fragmentJitter = Math.sin(time * 4.4 + k * 1.7 + fragment * 2.2) * thoughtWave * 13
+          const fragmentJitter = Math.sin(time * 4.4 + k * 1.7 + fragment * 2.2) * (thoughtWave * 13 + phaseEnergy * 5)
           const fragmentX = moonX + offset + fragmentShift + fragmentJitter
           const glade = context.createLinearGradient(fragmentX - fragmentWidth * 0.5, 0, fragmentX + fragmentWidth * 0.5, 0)
           glade.addColorStop(0, "rgba(206, 224, 230, 0)")
@@ -448,55 +630,45 @@ function HeartWaterMirrorPlane({
 
       for (let ring = 0; ring < 4; ring += 1) {
         const ringRy = ry * (0.3 + ring * 0.21) + Math.sin(time * 0.35 + ring) * ry * 0.018
-        context.beginPath()
-        context.ellipse(cx, poolY, ringRy / gsq, ringRy, 0, 0, Math.PI * 2)
-        context.strokeStyle = `rgba(160, 188, 196, ${0.028 + ring * 0.005})`
-        context.lineWidth = 0.65
-        context.stroke()
+        drawOrganicRipple(cx, poolY, ringRy / gsq, ringRy, 0.024 + ring * 0.004, ring * 4.8, time, "160, 188, 196", 0.55)
       }
 
       ripplesRef.current.forEach((ripple) => {
-        context.beginPath()
-        context.ellipse(ripple.x, ripple.y, ripple.r, ripple.r * gsq, 0, 0, Math.PI * 2)
-        context.strokeStyle = `rgba(190, 212, 220, ${ripple.a})`
-        context.lineWidth = 1
-        context.stroke()
+        drawOrganicRipple(ripple.x, ripple.y, ripple.r, ripple.r * gsq, ripple.a, ripple.seed, time, "190, 212, 220", 1)
         if (ripple.r > 16) {
-          context.beginPath()
-          context.ellipse(ripple.x, ripple.y, ripple.r * 0.72, ripple.r * 0.72 * gsq, 0, 0, Math.PI * 2)
-          context.strokeStyle = `rgba(180, 205, 214, ${ripple.a * 0.56})`
-          context.lineWidth = 0.7
-          context.stroke()
+          drawOrganicRipple(ripple.x, ripple.y, ripple.r * 0.72, ripple.r * 0.72 * gsq, ripple.a * 0.56, ripple.seed + 3.2, time, "180, 205, 214", 0.7)
         }
       })
 
       const sheen = context.createLinearGradient(0, poolY + ry * 0.18, 0, poolY + ry)
       sheen.addColorStop(0, "rgba(190, 212, 220, 0)")
-      sheen.addColorStop(1, `rgba(190, 212, 220, ${0.035 + breath * 0.025})`)
+      sheen.addColorStop(1, `rgba(190, 212, 220, ${0.026 + breath * 0.016})`)
       context.fillStyle = sheen
       context.beginPath()
       context.ellipse(cx, poolY, rx, ry, 0, 0, Math.PI * 2)
       context.fill()
       context.restore()
 
+      const edgeBreath = context.createRadialGradient(cx, poolY, rx * 0.58, cx, poolY, rx * 1.14)
+      edgeBreath.addColorStop(0, "rgba(216, 183, 111, 0)")
+      edgeBreath.addColorStop(0.72, `rgba(216, 183, 111, ${0.018 + breath * 0.018 + energy * 0.04})`)
+      edgeBreath.addColorStop(1, "rgba(216, 183, 111, 0)")
+      context.save()
+      context.scale(1, ry / rx)
+      context.fillStyle = edgeBreath
       context.beginPath()
-      context.ellipse(cx, poolY, rx, ry, 0, 0, Math.PI * 2)
-      context.strokeStyle = `rgba(196, 160, 80, ${0.2 + breath * 0.08 + energy * 0.08})`
-      context.lineWidth = 1.2
-      context.stroke()
-      context.beginPath()
-      context.ellipse(cx, poolY, rx * 1.03, ry * 1.03, 0, 0, Math.PI * 2)
-      context.strokeStyle = "rgba(184, 148, 63, 0.07)"
-      context.lineWidth = 0.7
-      context.stroke()
+      context.arc(cx, poolY / (ry / rx), rx * 1.08, 0, Math.PI * 2)
+      context.fill()
+      context.restore()
 
-      if (now - lastRipple > 3400) {
-        ripplesRef.current.push({ x: cx, y: poolY, r: 2, a: 0.11 })
+      const naturalRippleInterval = phaseEnergy > 0.5 ? 2400 : 3600
+      if (now - lastRipple > naturalRippleInterval) {
+        ripplesRef.current.push({ x: cx, y: poolY, r: 2, a: 0.11 + phaseEnergy * 0.04, seed: time % 11 })
         lastRipple = now
       }
 
       ripplesRef.current = ripplesRef.current
-        .map((ripple) => ({ ...ripple, r: ripple.r + 1.25 + energy * 1.35, a: ripple.a * 0.975 }))
+        .map((ripple) => ({ ...ripple, r: ripple.r + 1.16 + energy * 1.22 + phaseEnergy * 0.42, a: ripple.a * 0.975 }))
         .filter((ripple) => ripple.r < rx * 1.16 && ripple.a > 0.008)
       energyRef.current += (0 - energyRef.current) * 0.018
       thoughtWaveRef.current += (0 - thoughtWaveRef.current) * 0.02
@@ -526,12 +698,9 @@ function HeartWaterMirrorPlane({
     const heightRatio = canvas.height / Math.min(window.devicePixelRatio || 1, 2) / rect.height
     const x = (event.clientX - rect.left) * widthRatio
     const y = (event.clientY - rect.top) * heightRatio
-    const cx = (canvas.width / Math.min(window.devicePixelRatio || 1, 2)) * 0.5
     const planeHeight = canvas.height / Math.min(window.devicePixelRatio || 1, 2)
     const planeWidth = canvas.width / Math.min(window.devicePixelRatio || 1, 2)
-    const rx = Math.min(planeWidth * (planeWidth < 540 ? 0.44 : 0.42), 560)
-    const ry = Math.min(planeHeight * 0.26, planeWidth < 540 ? 132 : 162)
-    const poolY = planeHeight * (planeWidth < 540 ? 0.72 : 0.7)
+    const { cx, poolY, rx, ry } = getHeartLakeGeometry(planeWidth, planeHeight)
     const dx = (x - cx) / rx
     const dy = (y - poolY) / ry
     let rippleX = x
@@ -543,7 +712,7 @@ function HeartWaterMirrorPlane({
       rippleY = poolY + Math.sin(angle) * ry * 0.86
     }
 
-    ripplesRef.current.push({ x: rippleX, y: rippleY, r: 2, a: 0.5 })
+    ripplesRef.current.push({ x: rippleX, y: rippleY, r: 2, a: 0.5, seed: (rippleX + rippleY) * 0.013 })
     energyRef.current = Math.min(1.4, energyRef.current + 0.62)
   }
 
@@ -553,6 +722,7 @@ function HeartWaterMirrorPlane({
       className="heart-water-plane"
       aria-hidden="true"
       onPointerDown={addRipple}
+      onContextMenu={(event) => event.preventDefault()}
       style={{
         position: "absolute",
         inset: 0,
@@ -564,6 +734,8 @@ function HeartWaterMirrorPlane({
         opacity: 0.98,
         filter: "saturate(0.95) brightness(0.98)",
         pointerEvents: "auto",
+        touchAction: "manipulation",
+        userSelect: "none",
         WebkitTapHighlightColor: "transparent",
       }}
     />
@@ -584,8 +756,8 @@ function getMirrorStyle(slot: OrbitSlot) {
     slot.zIndex >= 62 ? 76 : slot.zIndex >= 54 ? 38 : slot.zIndex >= 28 ? -18 : slot.zIndex >= 18 ? -72 : -128
   const sceneX = slot.x * 0.56
   const sceneY = slot.y * 0.3
-  const mobileX = slot.x * 0.17
-  const mobileY = slot.y * 0.14
+  const mobileX = slot.x * 0.13
+  const mobileY = slot.y * 0.12
 
   return {
     "--mirror-x": `${sceneX}px`,
@@ -612,8 +784,8 @@ function getGravityLineStyle(activeMirrorId: string | null, phase: GatewayPhase)
   const slot = orbitSlotByMirrorId[activeMirrorId] ?? orbitSlotByMirrorId.chasing
   const x = slot.x * 0.56
   const y = slot.y * 0.3
-  const mobileX = slot.x * 0.17
-  const mobileY = slot.y * 0.14
+  const mobileX = slot.x * 0.13
+  const mobileY = slot.y * 0.12
   const length = Math.hypot(x, y)
   const mobileLength = Math.hypot(mobileX, mobileY)
 
@@ -633,10 +805,16 @@ function getResonanceLevel(activeMirrorId: string | null, mirrorId: BehaviorMirr
   return resonanceByMirrorId[activeMirrorId as BehaviorMirrorId]?.[mirrorId] ?? "sleeping"
 }
 
-function getOuterMirrorStyle(mirrorId: BehaviorMirrorId, activeMirrorId: string | null, phase: GatewayPhase) {
+function getOuterMirrorStyle(
+  mirrorId: BehaviorMirrorId,
+  activeMirrorId: string | null,
+  phase: GatewayPhase,
+  completedDays = 0,
+) {
   const baseSlot = orbitSlotByMirrorId[mirrorId] ?? orbitSlotByMirrorId.chasing
   const resonanceLevel = getResonanceLevel(activeMirrorId, mirrorId, phase)
   const flow = mirrorFlowById[mirrorId]
+  const growth = Math.min(Math.max(completedDays, 0), 7) / 7
   const surfacePulse =
     resonanceLevel === "primary"
       ? { low: 0.68, high: 0.9 }
@@ -681,13 +859,30 @@ function getOuterMirrorStyle(mirrorId: BehaviorMirrorId, activeMirrorId: string 
             }
           : {
               ...baseSlot,
-              opacity: Math.max(baseSlot.opacity, mirrorId === "conscience" ? 0.18 : 0.28),
-              blur: Math.min(baseSlot.blur, 2.25),
-              shadow: Math.max(baseSlot.shadow, mirrorId === "conscience" ? 0.025 : 0.04),
+              opacity: Math.max(baseSlot.opacity, mirrorId === "conscience" ? 0.055 + growth * 0.42 : 0.28),
+              blur: Math.min(baseSlot.blur, mirrorId === "conscience" ? 2.7 - growth * 2.05 : 2.25),
+              shadow: Math.max(baseSlot.shadow, mirrorId === "conscience" ? 0.018 + growth * 0.11 : 0.04),
             }
+  const maturedSlot =
+    mirrorId === "conscience"
+      ? {
+          ...slot,
+          scale: slot.scale + growth * 0.16,
+          opacity: Math.min(0.62, slot.opacity + growth * 0.28),
+          blur: Math.max(0.08, slot.blur - growth * 1.5),
+          shadow: slot.shadow + growth * 0.08,
+        }
+      : mirrorId === activeMirrorId
+        ? {
+            ...slot,
+            scale: Math.max(slot.scale - growth * 0.055, slot.scale * 0.9),
+            opacity: Math.max(0.42, slot.opacity - growth * 0.23),
+            shadow: Math.max(0.05, slot.shadow - growth * 0.05),
+          }
+        : slot
 
   return {
-    ...getMirrorStyle(slot),
+    ...getMirrorStyle(maturedSlot),
     "--mirror-flow-duration": `${flow.duration}s`,
     "--mirror-flow-delay": `${flow.delay}s`,
     "--mirror-drift-x": `${flow.driftX * 0.72}px`,
@@ -697,12 +892,14 @@ function getOuterMirrorStyle(mirrorId: BehaviorMirrorId, activeMirrorId: string 
     "--mirror-breath-duration": `${Math.max(5.2, flow.duration * 0.55)}s`,
     "--side-surface-low": surfacePulse.low,
     "--side-surface-high": surfacePulse.high,
+    "--mirror-growth": growth,
   } as CSSProperties
 }
 
 export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) => void }) {
   const [phase, setPhase] = useState<GatewayPhase>("openingJudge")
   const [activeMirrorId, setActiveMirrorId] = useState<string | null>(defaultMainMirrorId)
+  const [liveMirror, setLiveMirror] = useState<LiveMirrorState>(defaultLiveMirrorState)
   const [hoveredMirrorId, setHoveredMirrorId] = useState<string | null>(null)
   const [touchIntensity, setTouchIntensity] = useState(0)
   const touchStartXRef = useRef<number | null>(null)
@@ -728,20 +925,21 @@ export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) =
 
     if (phase === "focusing") return { label: "", text: "", note: "" }
     if (phase === "subconsciousVisible") {
+      if (liveMirror.isEmptyMirror) return { label: "", text: "心湖已静。", note: "" }
       return { label: "", text: subconsciousEchoes[activeMirror.id], note: "" }
     }
-    if (phase === "revealed") return { label: "行为镜", text: mirrorShortNameById[activeMirror.id], note: activeMirror.behavior }
+    if (phase === "revealed") return { label: "", text: activeMirror.name, note: "" }
     if (phase === "thiefVisible") {
-      if (activeMirror.id === "conscience") {
-        return { label: "良知", text: activeMirror.thief.join(" / "), note: "六贼无所依，此心不随。" }
-      }
-
-      return { label: "心贼", text: activeMirror.thief.join(" / "), note: "病根不是行情，是这一念牵动了手。" }
+      if (liveMirror.isEmptyMirror) return { label: "", text: "良知", note: "" }
+      return { label: "", text: activeMirror.thief[0] ?? "", note: "" }
     }
-    if (phase === "readyForCycle") return { label: "判词", text: activeMirror.verdict, note: "" }
+    if (phase === "readyForCycle") {
+      if (liveMirror.isEmptyMirror) return { label: "", text: "止水", note: "" }
+      return { label: "", text: activeMirror.thief.slice(1).join("\n") || activeMirror.thief[0] || "", note: "" }
+    }
 
-    return { label: "", text: splitThought(activeMirror.thought), note: "" }
-  }, [activeMirror, phase])
+    return { label: "", text: liveMirror.memoryLine || splitThought(activeMirror.thought), note: "" }
+  }, [activeMirror, liveMirror.isEmptyMirror, liveMirror.memoryLine, phase])
   const introCopy =
     phase === "openingJudge"
       ? "先不判断行情。"
@@ -750,38 +948,47 @@ export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) =
         : "此刻最先浮上来的那一念，是什么？"
 
   useEffect(() => {
+    const nextLiveMirror = buildLiveMirrorState()
+
+    setLiveMirror(nextLiveMirror)
+    if (nextLiveMirror.sourceMirrorId) {
+      setActiveMirrorId(nextLiveMirror.sourceMirrorId)
+    }
+  }, [])
+
+  useEffect(() => {
     if (phase === "openingJudge") {
-      const timer = window.setTimeout(() => setPhase("openingSelf"), 1050)
+      const timer = window.setTimeout(() => setPhase("openingSelf"), 1240)
       return () => window.clearTimeout(timer)
     }
 
     if (phase === "openingSelf") {
-      const timer = window.setTimeout(() => setPhase("question"), 1120)
+      const timer = window.setTimeout(() => setPhase("question"), 1320)
       return () => window.clearTimeout(timer)
     }
 
     if (phase === "question") {
-      const timer = window.setTimeout(() => setPhase("mirrorArray"), 1280)
+      const timer = window.setTimeout(() => setPhase("mirrorArray"), 1520)
       return () => window.clearTimeout(timer)
     }
 
     if (phase === "focusing") {
-      const timer = window.setTimeout(() => setPhase("subconsciousVisible"), 820)
+      const timer = window.setTimeout(() => setPhase("subconsciousVisible"), 900)
       return () => window.clearTimeout(timer)
     }
 
     if (phase === "subconsciousVisible") {
-      const timer = window.setTimeout(() => setPhase("revealed"), 1050)
+      const timer = window.setTimeout(() => setPhase("revealed"), 1240)
       return () => window.clearTimeout(timer)
     }
 
     if (phase === "revealed") {
-      const timer = window.setTimeout(() => setPhase("thiefVisible"), 1050)
+      const timer = window.setTimeout(() => setPhase("thiefVisible"), 1240)
       return () => window.clearTimeout(timer)
     }
 
     if (phase === "thiefVisible") {
-      const timer = window.setTimeout(() => setPhase("readyForCycle"), 1100)
+      const timer = window.setTimeout(() => setPhase("readyForCycle"), 1340)
       return () => window.clearTimeout(timer)
     }
 
@@ -864,12 +1071,23 @@ export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) =
     focusMirror(behaviorMirrors[nextIndex].id)
   }
 
-  const showDeepEcho =
-    activeMirror &&
-    (phase === "revealed" || phase === "thiefVisible")
+  const liveMirrorGrowth = Math.min(Math.max(liveMirror.completedDays, 0), 7) / 7
 
   return (
-    <section className={cn("nine-heart-mirror", `is-${phase}`)} aria-label="九面行为心镜">
+    <section
+      className={cn(
+        "nine-heart-mirror",
+        `is-${phase}`,
+        liveMirror.hasPracticeMemory && "has-live-memory",
+        liveMirror.isEmptyMirror && "is-empty-mirror",
+      )}
+      style={
+        {
+          "--live-mirror-growth": liveMirrorGrowth,
+        } as CSSProperties
+      }
+      aria-label="九面行为心镜"
+    >
       <div className="gateway-atmosphere" aria-hidden="true">
         <span className="gateway-mist mist-left" />
         <span className="gateway-mist mist-right" />
@@ -885,10 +1103,7 @@ export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) =
 
       {phase === "openingJudge" || phase === "openingSelf" || phase === "question" ? (
         <div className="gateway-empty-stage">
-          <div className="empty-heart-mirror" aria-hidden="true">
-            <span className="empty-water" />
-            <span key={`empty-ripple-${phase}`} className="empty-ripple" />
-          </div>
+          <HeartWaterMirrorPlane phase={phase} activeMirrorId={null} />
 
           <p key={phase} className="empty-copy">{introCopy}</p>
         </div>
@@ -919,23 +1134,18 @@ export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) =
           >
             <div className="gravity-fog" aria-hidden="true" />
             <HeartWaterMirrorPlane phase={phase} activeMirrorId={activeMirrorId} onMirrorHit={focusMirrorAtPoint} />
-            <div className="heart-lake-title" aria-hidden="true">
-              <span>心 月</span>
-              <small>良知之光</small>
-            </div>
-            <div className="heart-lake-touch-hint" aria-hidden="true">轻触心湖，水先动，镜自现。</div>
             <div className="orbit-ring orbit-ring-deep" aria-hidden="true" />
             <div className="orbit-ring orbit-ring-back" aria-hidden="true" />
 
             {phase === "mirrorArray" && activeMirror ? (
-              <div className="causal-hint">
-                <span>触发场景</span>
-                <strong>{mirrorTriggerScenes[activeMirror.id]}</strong>
-              </div>
+              <span className="gravity-line" style={getGravityLineStyle(activeMirror.id, phase)} aria-hidden="true" />
             ) : null}
 
-            {phase === "mirrorArray" && activeMirror ? (
-              <span className="gravity-line" style={getGravityLineStyle(activeMirror.id, phase)} aria-hidden="true" />
+            {phase === "mirrorArray" ? (
+              <div className="causal-hint" aria-hidden="true">
+                <span>{liveMirror.hasPracticeMemory ? "心湖记得" : "触发场景"}</span>
+                <strong>{liveMirror.memoryCue}</strong>
+              </div>
             ) : null}
 
             <div
@@ -953,9 +1163,6 @@ export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) =
               onPointerLeave={stopPressurePulse}
               aria-label="本心水镜，照见当前一念"
             >
-              <span className="lake-deep-reflection" aria-hidden="true">
-                <span>{showDeepEcho ? subconsciousEchoes[activeMirror.id] : ""}</span>
-              </span>
               <span className="lake-voice-undercurrent" aria-hidden="true" />
               {phase === "focusing" ? (
                 <span className="mirror-silence" aria-hidden="true" />
@@ -974,7 +1181,53 @@ export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) =
               )}
             </div>
 
+            {activeMirror && phase === "readyForCycle" && !liveMirror.isEmptyMirror ? (
+              <p className="lake-stage-caption is-verdict">
+                {activeMirror.verdict}
+              </p>
+            ) : null}
+
             <div className="orbit-ring orbit-ring-front" aria-hidden="true" />
+
+            {(phase === "thiefVisible" || phase === "readyForCycle") && activeMirror ? (
+              <div
+                className={cn(
+                  "six-thief-orbit",
+                  activeMirror.id === "conscience" ? "is-quieted" : "is-cycling",
+                )}
+                aria-hidden="true"
+              >
+                {activeMirror.id === "conscience" ? (
+                  <div className="virtue-orbit">
+                    {activeMirror.thief.map((virtue) => (
+                      <i key={virtue}>{virtue}</i>
+                    ))}
+                  </div>
+                ) : (
+                  <>
+                    <span className="thief-cycle-ring" />
+                    {sixThiefOrbit.map((thief, index) => {
+                      const position = sixThiefPositions[index]
+                      return (
+                        <span
+                          key={thief}
+                          className={cn("thief-star", activeMirror.thief.includes(thief) && "is-active")}
+                          style={
+                            {
+                              "--thief-x": `${position.x}px`,
+                              "--thief-y": `${position.y}px`,
+                              animationDelay: `${index * -0.42}s`,
+                            } as CSSProperties
+                          }
+                        >
+                          {thief}
+                        </span>
+                      )
+                    })}
+                  </>
+                )}
+              </div>
+            ) : null}
 
             <div className="orbit-mirrors" aria-hidden={phase !== "mirrorArray"}>
               {outerMirrors.map((mirror) => {
@@ -990,12 +1243,13 @@ export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) =
                       resonanceLevel === "secondary" && "is-secondary-resonant",
                       resonanceLevel === "tertiary" && "is-tertiary-resonant",
                       mirror.id === "conscience" && "is-conscience",
+                      mirror.id === "conscience" && liveMirror.completedDays > 0 && "is-awake-by-practice",
                       `motion-${mirrorMotionById[mirror.id]}`,
                       hoveredMirrorId === mirror.id && "is-hovered",
                       phase !== "mirrorArray" && "is-retreating",
                     )}
                     style={{
-                      ...getOuterMirrorStyle(mirror.id, activeMirrorId, phase),
+                      ...getOuterMirrorStyle(mirror.id, activeMirrorId, phase, liveMirror.completedDays),
                     }}
                     data-mirror-id={mirror.id}
                     onMouseEnter={() => setHoveredMirrorId(mirror.id)}
@@ -1021,107 +1275,7 @@ export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) =
                 )
               })}
             </div>
-
-            {activeMirror && (phase === "thiefVisible" || phase === "readyForCycle") ? (
-              <div
-                className={cn(
-                  "six-thief-orbit",
-                  phase === "readyForCycle" && "is-cycling",
-                  activeMirror.id === "conscience" && "is-quieted",
-                )}
-                aria-hidden="true"
-              >
-                <span className="thief-cycle-ring" />
-                {sixThiefOrbit.map((thief) => {
-                  const active = activeMirror.thief.includes(thief.id)
-
-                  return (
-                    <span
-                      key={thief.id}
-                      className={cn("thief-star", active && "is-active")}
-                      style={{
-                        "--thief-x": `${thief.x}px`,
-                        "--thief-y": `${thief.y}px`,
-                      } as CSSProperties}
-                    >
-                      {thief.id}
-                    </span>
-                  )
-                })}
-                {activeMirror.id === "conscience" ? (
-                  <span className="virtue-orbit">
-                    <i>知止</i>
-                    <i>守心</i>
-                    <i>执行</i>
-                  </span>
-                ) : null}
-              </div>
-            ) : null}
-
-            {conscienceMirror && phase === "readyForCycle" && activeMirror?.id !== "conscience" ? (
-              <div
-                className="hidden-conscience is-awake"
-              >
-                <span>良知开始显影。</span>
-                <small>看见情绪，仍按规则行动。</small>
-              </div>
-            ) : null}
           </div>
-
-          <AnimatePresence mode="wait">
-            {phase === "focusing" && activeMirror ? (
-              <div
-                key="thought-visible"
-                className="mirror-reveal-copy mirror-reveal-copy-quiet is-visible"
-              >
-                <p className="reveal-label">镜面沉默</p>
-              </div>
-            ) : null}
-
-            {phase === "subconsciousVisible" ? (
-              <div
-                key="subconscious-visible"
-                className="mirror-reveal-copy mirror-reveal-copy-quiet is-visible"
-              >
-                <p className="reveal-label">水面下，有一句话先浮上来。</p>
-              </div>
-            ) : null}
-
-            {phase === "revealed" ? (
-              <div
-                key="mirror-visible"
-                className="mirror-reveal-copy is-visible"
-              >
-                <p className="behavior-proof">{activeMirror?.behavior}</p>
-              </div>
-            ) : null}
-
-            {phase === "thiefVisible" ? (
-              <div
-                key="thief-visible"
-                className="mirror-reveal-copy is-visible"
-              >
-                {activeMirror?.id === "conscience" ? (
-                  <>
-                    <p className="reveal-label">良知显影</p>
-                    <p className="conscience-copy">知止 / 守心 / 执行</p>
-                  </>
-                ) : (
-                  <>
-                    <p className="reveal-label">心贼显现</p>
-                    <div className="thief-root-list">
-                      {activeMirror?.thief.map((thief) => (
-                        <p key={thief}>
-                          <span>{thief}</span>
-                          {thiefExplanations[thief] ?? "这一念正在牵动你的手。"}
-                        </p>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
-            ) : null}
-          </AnimatePresence>
 
           {phase === "readyForCycle" ? (
             <button type="button" onClick={() => activeMirror && onComplete(activeMirror.id)} className="mirror-action-script mt-8">
@@ -1362,88 +1516,60 @@ export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) =
         }
 
         .gateway-empty-stage {
-          --empty-mirror-size: clamp(196px, 56vw, 252px);
-          --empty-copy-space: clamp(8.6rem, 22svh, 14rem);
-          width: 100%;
-          min-height: min(86svh, 720px);
-          margin-left: 0;
+          width: 100vw;
+          min-height: calc(100svh - 2.5rem);
+          margin-left: calc(50% - 50vw);
           display: grid;
-          grid-template-rows: var(--empty-mirror-size) var(--empty-copy-space);
-          align-content: center;
-          justify-items: center;
-          gap: clamp(28px, 6svh, 46px);
-        }
-
-        .empty-heart-mirror {
-          position: relative;
-          display: grid;
-          width: var(--empty-mirror-size);
-          height: var(--empty-mirror-size);
           place-items: center;
           overflow: hidden;
-          border: 1px solid rgba(216, 183, 111, 0.42);
-          border-radius: 50%;
-          background:
-            linear-gradient(132deg, rgba(255, 255, 255, 0.13), transparent 19%, transparent 76%, rgba(255, 255, 255, 0.04)),
-            radial-gradient(circle at 43% 31%, rgba(242, 235, 220, 0.14), transparent 18%),
-            radial-gradient(circle at 50% 56%, rgba(95, 132, 117, 0.32), transparent 56%),
-            linear-gradient(145deg, rgba(14, 43, 40, 0.92), rgba(5, 8, 8, 0.98));
-          box-shadow:
-            0 34px 96px rgba(0, 0, 0, 0.5),
-            0 0 72px rgba(180, 157, 93, 0.13),
-            inset 0 0 74px rgba(0, 0, 0, 0.58),
-            inset 0 0 0 9px rgba(216, 183, 111, 0.055);
-          animation: empty-mirror-rise 1.8s cubic-bezier(0.22, 1, 0.36, 1) both;
-          outline: 1px solid rgba(216, 183, 111, 0.12);
-          outline-offset: 8px;
+          isolation: isolate;
         }
 
-        .empty-heart-mirror::before {
+        .gateway-empty-stage::before,
+        .gateway-empty-stage::after {
           content: "";
           position: absolute;
-          inset: 16px;
-          border: 1px dashed rgba(220, 212, 195, 0.105);
-          border-radius: inherit;
+          inset: 0;
+          z-index: 1;
+          pointer-events: none;
         }
 
-        .empty-water {
-          position: absolute;
-          inset: 13%;
-          border-radius: inherit;
+        .gateway-empty-stage::before {
           background:
-            radial-gradient(circle at 50% 48%, rgba(216, 183, 111, 0.13), transparent 58%),
-            repeating-radial-gradient(circle, rgba(220, 212, 195, 0.065) 0 1px, transparent 1px 15px);
-          opacity: 0.48;
-          animation: water-pulse 4.8s ease-in-out infinite;
+            radial-gradient(ellipse at 50% 18%, rgba(208, 224, 230, 0.035), transparent 26%),
+            radial-gradient(ellipse at 50% 68%, rgba(35, 72, 78, 0.08), transparent 42%),
+            radial-gradient(ellipse at 50% 88%, rgba(0, 0, 0, 0.48), transparent 46%);
+          mix-blend-mode: screen;
+          opacity: 0.72;
         }
 
-        .empty-ripple {
-          position: absolute;
-          left: 50%;
-          top: 50%;
-          width: 52px;
-          height: 52px;
-          border: 1px solid rgba(216, 183, 111, 0.42);
-          border-radius: 50%;
-          opacity: 0;
-          transform: translate(-50%, -50%) scale(0.5);
-          animation: empty-ripple-out 1.25s ease-out forwards;
+        .gateway-empty-stage::after {
+          background:
+            linear-gradient(180deg, rgba(0, 0, 0, 0.48), transparent 25%, transparent 62%, rgba(0, 0, 0, 0.76)),
+            radial-gradient(ellipse at 50% 66%, transparent 0 38%, rgba(0, 0, 0, 0.2) 72%, rgba(0, 0, 0, 0.62));
         }
 
         .empty-copy {
-          display: grid;
-          min-height: var(--empty-copy-space);
-          place-items: start center;
+          position: absolute;
+          left: 50%;
+          top: calc(50% + clamp(118px, 23svh, 198px));
+          z-index: 3;
           margin: 0;
           font-family: var(--font-world);
-          max-width: 9em;
-          font-size: clamp(2.05rem, 9.4vw, 3.16rem);
+          width: min(86vw, 13em);
+          max-width: min(86vw, 13em);
+          font-size: clamp(1.72rem, 6.8vw, 2.76rem);
           font-weight: 300;
           line-height: 1.42;
-          letter-spacing: 0.11em;
+          letter-spacing: 0.06em;
           color: rgba(242, 235, 220, 0.82);
-          animation: thought-rise 760ms cubic-bezier(0.22, 1, 0.36, 1) both;
-          transform: translateX(0.055em);
+          animation: empty-copy-rise 760ms cubic-bezier(0.22, 1, 0.36, 1) both;
+          transform: translateX(-50%);
+          text-align: center;
+          text-shadow:
+            0 0 26px rgba(206, 224, 230, 0.12),
+            0 16px 42px rgba(0, 0, 0, 0.72);
+          pointer-events: none;
         }
 
         .mirror-orbit-field {
@@ -1526,7 +1652,7 @@ export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) =
           --lake-voice-brightness-high: 1.08;
           position: absolute;
           left: 50%;
-          top: 63%;
+          top: 57%;
           z-index: 66;
           display: grid;
           width: min(82%, 480px);
@@ -1544,7 +1670,7 @@ export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) =
         }
 
         .heart-lake-voice.is-absorbed {
-          top: 62%;
+          top: 57%;
         }
 
         .lake-voice-undercurrent {
@@ -1616,11 +1742,12 @@ export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) =
 
         .is-readyForCycle .heart-lake-voice .mirror-layer > span {
           max-width: 16em;
-          font-family: var(--font-narrative);
-          font-size: clamp(1.02rem, 4vw, 1.28rem);
-          line-height: 1.72;
-          letter-spacing: 0.045em;
-          color: rgba(242, 235, 220, 0.78);
+          font-family: var(--font-world);
+          font-size: clamp(1.44rem, 6.2vw, 2rem);
+          line-height: 1.42;
+          letter-spacing: 0.1em;
+          color: rgba(242, 220, 168, 0.88);
+          text-shadow: 0 0 22px rgba(216, 183, 111, 0.14);
         }
 
         .is-readyForCycle .heart-lake-voice .mirror-layer small {
@@ -1632,10 +1759,35 @@ export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) =
           color: rgba(220, 212, 195, 0.56);
         }
 
+        .lake-stage-caption {
+          position: absolute;
+          left: 50%;
+          top: calc(57% + 92px);
+          z-index: 67;
+          max-width: min(82vw, 24em);
+          margin: 0;
+          font-family: var(--font-narrative);
+          font-size: clamp(0.92rem, 3.2vw, 1.08rem);
+          font-weight: 300;
+          line-height: 1.82;
+          letter-spacing: 0.045em;
+          color: rgba(220, 212, 195, 0.62);
+          text-align: center;
+          text-shadow: 0 12px 32px rgba(0, 0, 0, 0.58);
+          transform: translateX(-50%);
+          animation: thought-rise 820ms cubic-bezier(0.22, 1, 0.36, 1) both;
+          pointer-events: none;
+        }
+
+        .lake-stage-caption.is-verdict {
+          max-width: min(86vw, 25em);
+          color: rgba(242, 235, 220, 0.74);
+        }
+
         .gravity-fog {
           position: absolute;
           left: 50%;
-          top: 50%;
+          top: 57%;
           z-index: 4;
           width: min(84vw, 520px);
           height: min(84vw, 520px);
@@ -1697,7 +1849,7 @@ export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) =
         .orbit-ring {
           position: absolute;
           left: 50%;
-          top: 70%;
+          top: 57%;
           width: min(142vw, 1080px);
           height: min(52vw, 360px);
           border: 1px solid rgba(180, 157, 93, 0.04);
@@ -1765,7 +1917,7 @@ export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) =
           --gravity-current-angle: var(--gravity-angle);
           position: absolute;
           left: 50%;
-          top: 70%;
+          top: 57%;
           z-index: 46;
           width: var(--gravity-current-length);
           height: 1px;
@@ -2154,7 +2306,7 @@ export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) =
         .mirror-water-ripple {
           position: absolute;
           left: 50%;
-          top: 50%;
+          top: 57%;
           width: 70%;
           height: 70%;
           border: 1px solid rgba(216, 183, 111, var(--touch-ripple-alpha));
@@ -2240,6 +2392,10 @@ export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) =
           letter-spacing: 0.1em;
           color: rgba(242, 220, 168, 0.88);
           text-shadow: 0 0 22px rgba(216, 183, 111, 0.14);
+        }
+
+        .mirror-layer.is-thought {
+          animation: thought-from-water 1.18s cubic-bezier(0.22, 1, 0.36, 1) both;
         }
 
         .mirror-layer.is-subconscious {
@@ -2372,7 +2528,7 @@ export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) =
           height: clamp(78px, 17vw, 104px);
           place-items: center;
           overflow: hidden;
-          border: 1px solid rgba(216, 183, 111, 0.3);
+          border: 1px solid rgba(216, 183, 111, 0.2);
           border-radius: 50%;
           opacity: var(--mirror-opacity);
           pointer-events: auto;
@@ -2382,9 +2538,9 @@ export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) =
             radial-gradient(ellipse at 50% 54%, rgba(216, 183, 111, 0.1), transparent 62%);
           box-shadow:
             0 18px 46px rgba(0, 0, 0, 0.34),
-            0 0 28px rgba(180, 157, 93, var(--mirror-shadow)),
-            inset 0 0 0 5px rgba(216, 183, 111, 0.045),
-            inset 0 1px 0 rgba(255, 255, 255, 0.07);
+            0 0 24px rgba(180, 157, 93, calc(var(--mirror-shadow) * 0.72)),
+            inset 0 0 0 5px rgba(216, 183, 111, 0.032),
+            inset 0 1px 0 rgba(255, 255, 255, 0.055);
           scale: var(--mirror-hover-scale);
           transform: translate(-50%, -50%) translate3d(var(--mirror-scene-x), var(--mirror-scene-y), var(--mirror-depth)) scale(var(--mirror-scale)) rotateY(var(--mirror-rotate-y));
           transform-style: preserve-3d;
@@ -2462,8 +2618,8 @@ export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) =
           font-weight: 600;
           line-height: 1.35;
           letter-spacing: 0.08em;
-          color: rgba(242, 220, 168, 0.66);
-          opacity: 0.48;
+          color: rgba(242, 220, 168, 0.5);
+          opacity: 0.28;
           transform: translate(-50%, -50%);
           transition:
             opacity 220ms ease,
@@ -2613,7 +2769,7 @@ export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) =
         }
 
         .heart-mirror-side.is-secondary-resonant .side-mirror-name {
-          opacity: 0.74;
+          opacity: 0.52;
           color: rgba(242, 220, 168, 0.78);
         }
 
@@ -2624,7 +2780,7 @@ export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) =
         }
 
         .heart-mirror-side.is-tertiary-resonant .side-mirror-name {
-          opacity: 0.58;
+          opacity: 0.36;
         }
 
         .heart-mirror-side:hover .side-mirror-name,
@@ -2632,6 +2788,15 @@ export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) =
         .heart-mirror-side.is-hovered .side-mirror-name {
           opacity: 0.88;
           transform: translate(-50%, -50%) scale(1.02);
+        }
+
+        .is-mirrorArray .heart-mirror-side .side-mirror-name,
+        .is-mirrorArray .heart-mirror-side:hover .side-mirror-name,
+        .is-mirrorArray .heart-mirror-side:focus-visible .side-mirror-name,
+        .is-mirrorArray .heart-mirror-side.is-hovered .side-mirror-name {
+          opacity: 0;
+          filter: blur(4px);
+          transform: translate(-50%, -50%) translateY(4px) scale(0.94);
         }
 
         .slot-top {
@@ -3875,6 +4040,34 @@ export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) =
           }
         }
 
+        @keyframes empty-copy-rise {
+          from {
+            opacity: 0;
+            filter: blur(8px);
+            transform: translate(-50%, 18px);
+          }
+
+          to {
+            opacity: 1;
+            filter: blur(0);
+            transform: translate(-50%, 0);
+          }
+        }
+
+        @keyframes thought-from-water {
+          from {
+            opacity: 0;
+            filter: blur(4px);
+            transform: translateY(10px);
+          }
+
+          to {
+            opacity: 1;
+            filter: blur(0);
+            transform: translateY(0);
+          }
+        }
+
         @keyframes crack-reveal {
           0% {
             opacity: 0;
@@ -3912,14 +4105,14 @@ export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) =
           }
 
           .heart-lake-voice {
-            top: 64%;
+            top: 59%;
             width: 84%;
             min-height: 118px;
           }
 
           .heart-mirror-side {
-            width: 46px;
-            height: 58px;
+            width: 54px;
+            height: 68px;
           }
 
           .empty-copy {
@@ -3936,7 +4129,7 @@ export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) =
           }
 
           .heart-lake-voice {
-            top: 62.5%;
+            top: 57%;
             width: min(58%, 520px);
           }
 
@@ -3962,7 +4155,7 @@ export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) =
           }
 
           .heart-lake-voice {
-            top: 64%;
+            top: 59%;
             width: 86%;
             min-height: 124px;
           }
@@ -3970,8 +4163,56 @@ export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) =
           .heart-mirror-side {
             --mirror-scene-x: var(--mirror-mobile-x);
             --mirror-scene-y: var(--mirror-mobile-y);
-            width: 52px;
-            height: 66px;
+            width: 62px;
+            height: 80px;
+            transform: translate(-50%, -50%) translate3d(var(--mirror-scene-x), var(--mirror-scene-y), var(--mirror-depth)) scale(calc(var(--mirror-scale) * 1.14)) rotateY(var(--mirror-rotate-y));
+          }
+
+          .is-mirrorArray .heart-mirror-side {
+            opacity: 0.54;
+            border-color: rgba(216, 183, 111, 0.42);
+            filter: blur(0.56px) brightness(1.28);
+            box-shadow:
+              0 16px 42px rgba(0, 0, 0, 0.42),
+              0 0 34px rgba(180, 157, 93, 0.15),
+              inset 0 0 0 5px rgba(216, 183, 111, 0.07),
+              inset 0 1px 0 rgba(255, 255, 255, 0.1);
+          }
+
+          .is-mirrorArray .heart-mirror-side::before {
+            opacity: 0.92;
+            box-shadow:
+              inset 0 0 30px rgba(0, 0, 0, 0.58),
+              inset 0 0 0 1px rgba(216, 183, 111, 0.28);
+          }
+
+          .is-mirrorArray .heart-mirror-side::after {
+            opacity: 0.7;
+          }
+
+          .is-mirrorArray .heart-mirror-side .side-mirror-surface {
+            opacity: 0.66;
+          }
+
+          .is-mirrorArray .heart-mirror-side.is-resonant {
+            opacity: 0.96;
+            filter: blur(0) brightness(1.24);
+            border-color: rgba(216, 183, 111, 0.66);
+          }
+
+          .is-mirrorArray .heart-mirror-side.is-secondary-resonant {
+            opacity: 0.78;
+            filter: blur(0.22px) brightness(1.18);
+          }
+
+          .is-mirrorArray .heart-mirror-side.is-tertiary-resonant {
+            opacity: 0.68;
+            filter: blur(0.46px) brightness(1.12);
+          }
+
+          .is-mirrorArray .heart-mirror-side.is-conscience {
+            opacity: 0.44;
+            filter: blur(0.78px) brightness(1.16);
           }
 
           .heart-lake-voice .mirror-layer > span {
@@ -3980,8 +4221,8 @@ export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) =
 
           .is-readyForCycle .heart-lake-voice .mirror-layer > span {
             max-width: 14em;
-            font-size: clamp(0.96rem, 4.2vw, 1.12rem);
-            line-height: 1.72;
+            font-size: clamp(1.18rem, 5.6vw, 1.52rem);
+            line-height: 1.42;
           }
 
           .virtue-orbit {
@@ -4010,8 +4251,23 @@ export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) =
 
           .side-mirror-name {
             width: 5.4em;
-            font-size: 0.42rem;
+            font-size: 0.46rem;
             letter-spacing: 0.08em;
+          }
+
+          .is-mirrorArray .heart-mirror-side .side-mirror-name,
+          .is-mirrorArray .heart-mirror-side:hover .side-mirror-name,
+          .is-mirrorArray .heart-mirror-side:focus-visible .side-mirror-name,
+          .is-mirrorArray .heart-mirror-side.is-hovered .side-mirror-name {
+            opacity: 0.38;
+            filter: blur(0.35px);
+            color: rgba(242, 220, 168, 0.5);
+            transform: translate(-50%, -50%) translateY(1px) scale(0.98);
+          }
+
+          .is-mirrorArray .heart-mirror-side.is-resonant .side-mirror-name {
+            opacity: 0.46;
+            filter: blur(0.2px);
           }
         }
 

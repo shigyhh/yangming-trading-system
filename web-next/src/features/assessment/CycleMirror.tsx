@@ -58,15 +58,15 @@ const cycleCases: CycleMirrorCase[] = [
     id: "chasing",
     sourceMirror: "追涨之镜",
     title: "怕错过追涨循环",
-    status: "行情一动，心先追出去。",
+    status: "一念怕错过，循环已起。",
     verdict: "你追的不是行情，是怕被机会抛下的不安。",
-    practice: "今日只练一件事：不在计划外的快速拉升里证明自己。",
+    practice: "今日只练一件事：没有系统信号，不主动找机会。",
     nodes: [
-      { key: "trigger", title: "触发", short: "它突然拉起来了。", detail: "它离开原来的观察区，屏幕跳动让你感觉机会正在远离。" },
-      { key: "thought", title: "念头", short: "再不上车就来不及了。", detail: "你把错过看成失败，把等待看成落后。" },
-      { key: "action", title: "动作", short: "没等规则，先追进去。", detail: "你的手比规则快，进场理由从计划变成情绪。" },
-      { key: "result", title: "结果", short: "一买就开始回落。", detail: "价格一回落，你开始怀疑、补理由、或者急着逃跑。" },
-      { key: "retrigger", title: "再次触发", short: "下次更怕慢半拍。", detail: "你把亏损归因成不够快，于是下一次更容易追。" },
+      { key: "trigger", title: "怕错过", short: "怕错过。", detail: "行情一拉，你先感到的不是机会，而是自己要被落下。" },
+      { key: "thought", title: "追涨", short: "追进去。", detail: "你把等待看成失败，规则还没说话，手已经动了。" },
+      { key: "action", title: "被套", short: "一买就被套。", detail: "买点追在情绪高处，价格一回落，心也跟着沉下去。" },
+      { key: "result", title: "不甘", short: "不甘心。", detail: "你不想承认这笔是情绪驱动，开始找理由、等反弹。" },
+      { key: "retrigger", title: "再次追涨", short: "下次再次追涨。", detail: "你把亏损理解成慢了半拍，于是下一次更怕错过。" },
     ],
   },
   {
@@ -182,6 +182,38 @@ const aliasToCaseId: Record<string, string> = {
   disciplined_observer: "conscience",
 }
 
+const cycleThiefOrbit = ["贪", "急", "惧", "疑", "慢", "痴"]
+
+const cycleThiefPositions = [
+  { x: 0, y: -48 },
+  { x: 42, y: -24 },
+  { x: 42, y: 24 },
+  { x: 0, y: 48 },
+  { x: -42, y: 24 },
+  { x: -42, y: -24 },
+]
+
+const cycleThievesByCaseId: Record<string, string[]> = {
+  anxiety: ["惧", "疑"],
+  holdingLoss: ["痴", "慢"],
+  chasing: ["贪", "急"],
+  gambling: ["贪", "急", "痴"],
+  hesitation: ["疑", "惧"],
+  fantasy: ["痴"],
+  following: ["疑", "惧"],
+  procrastination: ["慢"],
+  conscience: ["知止", "守心", "执行"],
+}
+
+const cycleThiefDescriptions: Record<string, string> = {
+  贪: "想多拿一点，忘了边界。",
+  急: "等不及，手比规则快。",
+  惧: "怕失去，先把心交出去。",
+  疑: "不信规则，开始外求。",
+  慢: "该断不断，一拖再拖。",
+  痴: "看不清，也不愿承认。",
+}
+
 type CycleMirrorProps = {
   initialMirrorId?: string
   onMirrorChange?: (mirrorId: string) => void
@@ -244,6 +276,8 @@ export function CycleMirror({ initialMirrorId, onMirrorChange }: CycleMirrorProp
 
   const focusedVisual = nodeVisuals.find((item) => item.index === focusedIndex) ?? nodeVisuals[0]
   const activeNode = cycle.nodes[focusedIndex]
+  const activeThieves = cycleThievesByCaseId[cycle.id] ?? []
+  const isConscienceCycle = cycle.id === "conscience"
   const causalLineLength = Math.max(48, Math.sqrt(focusedVisual.x ** 2 + focusedVisual.y ** 2))
   const causalLineAngle = (Math.atan2(focusedVisual.y, focusedVisual.x) * 180) / Math.PI - 90
 
@@ -402,6 +436,48 @@ export function CycleMirror({ initialMirrorId, onMirrorChange }: CycleMirrorProp
         {revealedIndex !== null ? <h2>{activeNode.short}</h2> : null}
         <p>{revealedIndex === null ? activeNode.short : activeNode.detail}</p>
       </motion.div>
+
+      {revealedIndex !== null ? (
+        <motion.div
+          key={`${cycle.id}-thieves-${revealedIndex}`}
+          className={cn("cycle-thief-constellation", isConscienceCycle && "is-liangzhi")}
+          initial={{ opacity: 0, y: 10, filter: "blur(8px)" }}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          transition={{ duration: 0.62, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+          aria-label={isConscienceCycle ? "良知显影" : "六贼后显"}
+        >
+          <p>{isConscienceCycle ? "良知显影" : "六贼后显"}</p>
+          {isConscienceCycle ? (
+            <div className="cycle-virtue-list">
+              {activeThieves.map((virtue) => (
+                <span key={virtue}>{virtue}</span>
+              ))}
+            </div>
+          ) : (
+            <>
+              <span className="cycle-thief-ring" aria-hidden="true" />
+              {cycleThiefOrbit.map((thief, index) => {
+                const position = cycleThiefPositions[index]
+                const active = activeThieves.includes(thief)
+
+                return (
+                  <span
+                    key={thief}
+                    className={cn("cycle-thief-star", active && "is-active")}
+                    style={{
+                      "--cycle-thief-x": `${position.x}px`,
+                      "--cycle-thief-y": `${position.y}px`,
+                    } as CSSProperties}
+                  >
+                    {thief}
+                    {active ? <small>{cycleThiefDescriptions[thief]}</small> : null}
+                  </span>
+                )
+              })}
+            </>
+          )}
+        </motion.div>
+      ) : null}
 
       {revealedIndex !== null ? (
         <div className={cn("cycle-action-rail", accepted && "has-practice")}>
@@ -906,6 +982,129 @@ export function CycleMirror({ initialMirrorId, onMirrorChange }: CycleMirrorProp
           min-height: 132px;
         }
 
+        .cycle-thief-constellation {
+          position: relative;
+          z-index: 5;
+          width: min(100%, 270px);
+          height: 144px;
+          margin: -12px auto 8px;
+          color: rgba(220, 212, 195, 0.58);
+          pointer-events: none;
+        }
+
+        .cycle-thief-constellation > p {
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          z-index: 3;
+          margin: 0;
+          font-family: var(--font-function);
+          font-size: 0.66rem;
+          font-weight: 600;
+          letter-spacing: 0.18em;
+          color: rgba(180, 157, 93, 0.68);
+          transform: translate(-50%, -50%);
+          white-space: nowrap;
+        }
+
+        .cycle-thief-ring {
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          width: 132px;
+          height: 132px;
+          border: 1px solid rgba(120, 60, 45, 0.24);
+          border-radius: 50%;
+          box-shadow:
+            0 0 34px rgba(120, 60, 45, 0.08),
+            inset 0 0 28px rgba(0, 0, 0, 0.28);
+          transform: translate(-50%, -50%);
+          animation: thief-cycle-breathe 5.8s ease-in-out infinite;
+        }
+
+        .cycle-thief-ring::before {
+          content: "";
+          position: absolute;
+          inset: 16px;
+          border: 1px dashed rgba(180, 157, 93, 0.12);
+          border-radius: inherit;
+        }
+
+        .cycle-thief-star {
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          display: grid;
+          min-width: 30px;
+          min-height: 30px;
+          place-items: center;
+          border: 1px solid rgba(180, 157, 93, 0.14);
+          border-radius: 50%;
+          background: rgba(7, 6, 5, 0.42);
+          color: rgba(220, 212, 195, 0.28);
+          font-family: var(--font-world);
+          font-size: 0.92rem;
+          font-weight: 300;
+          line-height: 1;
+          transform: translate(-50%, -50%) translate(var(--cycle-thief-x), var(--cycle-thief-y));
+          transition:
+            color 260ms ease,
+            border-color 260ms ease,
+            box-shadow 260ms ease,
+            background 260ms ease;
+        }
+
+        .cycle-thief-star.is-active {
+          border-color: rgba(120, 60, 45, 0.54);
+          background:
+            radial-gradient(circle, rgba(120, 60, 45, 0.26), transparent 68%),
+            rgba(20, 10, 7, 0.54);
+          color: rgba(242, 220, 168, 0.88);
+          box-shadow:
+            0 0 18px rgba(120, 60, 45, 0.18),
+            0 0 0 6px rgba(120, 60, 45, 0.035);
+        }
+
+        .cycle-thief-star small {
+          position: absolute;
+          left: 50%;
+          top: calc(100% + 6px);
+          width: 8.5em;
+          margin: 0;
+          font-family: var(--font-function);
+          font-size: 0.62rem;
+          font-weight: 400;
+          line-height: 1.45;
+          letter-spacing: 0.04em;
+          color: rgba(220, 212, 195, 0.46);
+          transform: translateX(-50%);
+        }
+
+        .cycle-virtue-list {
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          display: flex;
+          gap: 10px;
+          transform: translate(-50%, 12px);
+        }
+
+        .cycle-virtue-list span {
+          border: 1px solid rgba(216, 183, 111, 0.24);
+          border-radius: 999px;
+          padding: 6px 10px;
+          background: rgba(216, 183, 111, 0.06);
+          color: rgba(242, 220, 168, 0.78);
+          font-family: var(--font-function);
+          font-size: 0.72rem;
+          letter-spacing: 0.1em;
+        }
+
+        .cycle-thief-constellation.is-liangzhi {
+          height: 92px;
+          margin-top: -18px;
+        }
+
         .cycle-action-rail {
           position: relative;
           z-index: 5;
@@ -1154,6 +1353,28 @@ export function CycleMirror({ initialMirrorId, onMirrorChange }: CycleMirrorProp
             line-height: 1.62;
           }
 
+          .cycle-thief-constellation {
+            height: 116px;
+            margin-top: -14px;
+            margin-bottom: 4px;
+          }
+
+          .cycle-thief-ring {
+            width: 108px;
+            height: 108px;
+          }
+
+          .cycle-thief-star {
+            min-width: 27px;
+            min-height: 27px;
+            font-size: 0.82rem;
+            transform: translate(-50%, -50%) translate(calc(var(--cycle-thief-x) * 0.82), calc(var(--cycle-thief-y) * 0.82));
+          }
+
+          .cycle-thief-star small {
+            display: none;
+          }
+
           .cycle-action-rail {
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 8px;
@@ -1283,6 +1504,19 @@ export function CycleMirror({ initialMirrorId, onMirrorChange }: CycleMirrorProp
           100% {
             opacity: 0;
             transform: translate(-50%, -50%) scale(3.2);
+          }
+        }
+
+        @keyframes thief-cycle-breathe {
+          0%,
+          100% {
+            opacity: 0.58;
+            transform: translate(-50%, -50%) scale(0.985) rotate(0deg);
+          }
+
+          50% {
+            opacity: 0.88;
+            transform: translate(-50%, -50%) scale(1.015) rotate(8deg);
           }
         }
       `}</style>

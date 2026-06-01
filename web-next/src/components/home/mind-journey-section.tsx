@@ -127,6 +127,48 @@ export function MindJourneySection() {
   }, [])
 
   useEffect(() => {
+    const section = rootRef.current
+    if (!section) return
+
+    let frame = 0
+    let pendingDelta = 0
+
+    const normalizeWheelDelta = (event: WheelEvent) => {
+      if (event.deltaMode === WheelEvent.DOM_DELTA_LINE) return event.deltaY * 16
+      if (event.deltaMode === WheelEvent.DOM_DELTA_PAGE) return event.deltaY * window.innerHeight
+      return event.deltaY
+    }
+
+    const handleWheel = (event: WheelEvent) => {
+      const rect = section.getBoundingClientRect()
+      const isSectionVisible = rect.top < window.innerHeight && rect.bottom > 0
+
+      if (!isSectionVisible || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return
+
+      pendingDelta += normalizeWheelDelta(event)
+
+      if (event.cancelable) {
+        event.preventDefault()
+      }
+
+      if (frame) return
+
+      frame = window.requestAnimationFrame(() => {
+        window.scrollBy({ top: pendingDelta, left: 0, behavior: "instant" })
+        pendingDelta = 0
+        frame = 0
+      })
+    }
+
+    section.addEventListener("wheel", handleWheel, { passive: false })
+
+    return () => {
+      section.removeEventListener("wheel", handleWheel)
+      if (frame) window.cancelAnimationFrame(frame)
+    }
+  }, [])
+
+  useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
 
     let revertGsap: (() => void) | undefined

@@ -242,33 +242,6 @@ export default function AssessmentEntryPage() {
           text-align: center;
         }
 
-        .ritual-entry-first-step::before,
-        .ritual-entry-first-step::after {
-          content: "";
-          position: absolute;
-          top: 5%;
-          bottom: 5%;
-          width: 1px;
-          background: linear-gradient(
-            180deg,
-            transparent,
-            rgba(172, 146, 83, 0.11) 18%,
-            rgba(172, 146, 83, 0.055) 52%,
-            rgba(172, 146, 83, 0.11) 82%,
-            transparent
-          );
-          opacity: 0.72;
-          pointer-events: none;
-        }
-
-        .ritual-entry-first-step::before {
-          left: clamp(8px, 4vw, 18px);
-        }
-
-        .ritual-entry-first-step::after {
-          right: clamp(8px, 4vw, 18px);
-        }
-
         .ritual-entry-breath {
           position: absolute;
           inset: -3% -18% 0;

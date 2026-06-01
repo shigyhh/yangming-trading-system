@@ -2,7 +2,7 @@
 
 import { ArrowRight } from "lucide-react"
 import { motion } from "framer-motion"
-import type { MouseEvent, ReactNode } from "react"
+import type { MouseEvent, MouseEventHandler, ReactNode } from "react"
 import { useState } from "react"
 
 import { cn } from "@/lib/utils"
@@ -12,6 +12,7 @@ type FlowButtonProps = {
   children: ReactNode
   variant?: "primary" | "ghost"
   className?: string
+  onClick?: MouseEventHandler<HTMLAnchorElement>
 }
 
 type Spark = {
@@ -27,6 +28,7 @@ export function FlowButton({
   children,
   variant = "primary",
   className,
+  onClick,
 }: FlowButtonProps) {
   const [sparks, setSparks] = useState<Spark[]>([])
 
@@ -47,6 +49,7 @@ export function FlowButton({
     })
     setSparks(next)
     window.setTimeout(() => setSparks([]), 760)
+    onClick?.(event)
   }
 
   return (
