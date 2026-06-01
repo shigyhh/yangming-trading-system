@@ -9,6 +9,9 @@ export const assessmentStorageKeys = {
   report: "ym_assessment_report",
   reportCreatedAt: "ym_assessment_report_created_at",
   practiceChange: "ym_practice_change",
+  sprint10TrainingState: "ym_sprint10_training_state_v1",
+  sprint10DailyTrainingDraft: "ym_sprint10_daily_training_state_v1",
+  sprint10AssistantSummary: "ym_sprint10_assistant_summary_v1",
   selectedMirrorId: "ym_selected_behavior_mirror",
   dataBindingUserId: "ym_data_binding_user_id",
   dataBindingLastSyncAt: "ym_data_binding_last_sync_at",
@@ -59,6 +62,9 @@ export function clearAssessmentProgress() {
   removeStorage(assessmentStorageKeys.report)
   removeStorage(assessmentStorageKeys.reportCreatedAt)
   removeStorage(assessmentStorageKeys.practiceChange)
+  removeStorage(assessmentStorageKeys.sprint10TrainingState)
+  removeStorage(assessmentStorageKeys.sprint10DailyTrainingDraft)
+  removeStorage(assessmentStorageKeys.sprint10AssistantSummary)
   removeStorage(assessmentStorageKeys.selectedMirrorId)
 }
 

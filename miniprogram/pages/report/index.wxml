@@ -50,6 +50,25 @@
         </view>
       </view>
 
+      <view class="kline-change-card card">
+        <text>{{klineChange.title}}</text>
+        <view class="kline-change-meta">{{klineChange.fromSegment}} → {{klineChange.toSegment}}</view>
+        <view class="kline-change-meta">{{klineChange.fromMirror}} → {{klineChange.toMirror}}</view>
+        <view class="retest-metrics">
+          <view wx:for="{{klineChange.metrics}}" wx:key="key">
+            <text>{{item.label}}</text>
+            <view>{{item.value}}</view>
+          </view>
+        </view>
+        <view class="kline-before-after">
+          <view wx:for="{{klineChange.beforeAfterRows}}" wx:key="key">
+            <text>{{item.label}}</text>
+            <view>{{item.before}} → {{item.after}}</view>
+          </view>
+        </view>
+        <view class="binding-note">{{klineChange.insight}}</view>
+      </view>
+
       <view class="mini-report-card card">
         <text>一句话照见</text>
         <view>{{miniReport.oneLine}}</view>
@@ -64,14 +83,44 @@
           <text>副人格</text>
           <view>{{miniReport.secondary}}</view>
         </view>
+        <view>
+          <text>主镜</text>
+          <view>{{miniReport.primaryMirror}}</view>
+        </view>
+        <view>
+          <text>心贼</text>
+          <view>{{miniReport.heartThievesText}}</view>
+        </view>
+      </view>
+
+      <view class="mini-report-card card">
+        <text>九镜与六贼</text>
+        <view>{{miniReport.mirrorLine}}</view>
+      </view>
+
+      <view class="evidence-card card">
+        <text>行为证据链</text>
+        <view class="evidence-mantra">问卷照见倾向，K线照见反应，复盘照见模式，训练照见变化。</view>
+        <view wx:for="{{evidenceChain}}" wx:key="source" class="evidence-row">
+          <view class="evidence-weight">{{item.weight}}</view>
+          <view>
+            <text>{{item.source}} · {{item.title}}</text>
+            <view>{{item.detail}}</view>
+          </view>
+        </view>
       </view>
 
       <view class="risk-card card">
         <text>风险雷达</text>
         <view class="risk-grid">
-          <view wx:for="{{miniReport.radar}}" wx:key="label">
-            <text>{{item.label}}</text>
-            <view>{{item.level}}</view>
+          <view wx:for="{{miniReport.radar}}" wx:key="key">
+            <view class="risk-row-head">
+              <text>{{item.label}}</text>
+              <text>{{item.value}}</text>
+            </view>
+            <view class="risk-bar"><view style="width: {{item.value}}%;"></view></view>
+            <view class="risk-level">{{item.level}}</view>
+            <view class="risk-desc">{{item.description}}</view>
           </view>
         </view>
       </view>
@@ -79,6 +128,22 @@
       <view class="mini-report-card card">
         <text>情绪触发</text>
         <view>{{miniReport.trigger}}</view>
+      </view>
+
+      <view class="mode-lines-card card">
+        <text>核心交易模式</text>
+        <view wx:for="{{miniReport.modeLines}}" wx:key="*this">
+          <text>{{index + 1}}</text>
+          <view>{{item}}</view>
+        </view>
+      </view>
+
+      <view class="danger-card card">
+        <text>最需照见的场景</text>
+        <view wx:for="{{miniReport.dangerScenarios}}" wx:key="*this">
+          <text>{{index + 1}}</text>
+          <view>{{item}}</view>
+        </view>
       </view>
 
       <view class="path-card card">
@@ -96,11 +161,19 @@
         <view>{{miniReport.todayAction}}</view>
       </view>
 
+      <view class="mini-report-card card">
+        <text>K线校准</text>
+        <view>{{miniReport.klineCalibration}}</view>
+      </view>
+
       <view class="compliance-card card">{{miniReport.compliance}}</view>
 
       <view class="split-actions">
         <button class="secondary-btn" bindtap="saveReport">收藏心证</button>
         <button class="primary-btn" bindtap="goTraining">开始事上练</button>
+      </view>
+      <view class="single-action">
+        <button class="primary-btn" bindtap="goKlineSimulator">进入 K线压力测试</button>
       </view>
       <view class="split-actions">
         <button class="ghost-btn" data-type="personality" bindtap="goShareCard">生成人格照见卡</button>

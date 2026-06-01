@@ -90,6 +90,10 @@ export async function saveKLineRecordBinding({ user = {}, record = {}, source = 
     reaction: cleanText(record.reaction || "已觉察，未展开", 120),
     discipline_action: cleanText(record.disciplineAction || record.discipline_action || "先停一息，再复盘", 120),
     feedback: cleanText(record.feedback || "", 180),
+    reaction_time_ms: normalizeReactionTimeMs(record.reactionTimeMs || record.reaction_time_ms),
+    process_scores: normalizeProcessScores(record.processScores || record.process_scores),
+    process_insight: cleanText(record.processInsight || record.process_insight || "", 180),
+    training_suggestion: cleanText(record.trainingSuggestion || record.training_suggestion || "", 160),
     source
   };
 
@@ -703,6 +707,23 @@ function normalizeRadarComparison(item) {
   };
 }
 
+function normalizeReactionTimeMs(value) {
+  const time = Number(value || 0);
+  if (!Number.isFinite(time) || time < 0) return 0;
+  return Math.min(Math.round(time), 600000);
+}
+
+function normalizeProcessScores(scores = {}) {
+  const source = scores && typeof scores === "object" ? scores : {};
+  return {
+    planExecution: clampPercent(source.planExecution ?? source.plan_execution),
+    boundaryKeeping: clampPercent(source.boundaryKeeping ?? source.boundary_keeping),
+    impulseDelay: clampPercent(source.impulseDelay ?? source.impulse_delay),
+    emotionalStability: clampPercent(source.emotionalStability ?? source.emotional_stability),
+    reviewCompletion: clampPercent(source.reviewCompletion ?? source.review_completion)
+  };
+}
+
 function compareReportRiskRadar(beforeReport, afterReport) {
   const beforeItems = beforeReport?.riskRadar || [];
   const afterItems = afterReport?.riskRadar || [];
@@ -846,15 +867,30 @@ function toAdminTrainingRecord(record) {
 }
 
 function toAdminKLineRecord(record) {
+  const processQuality = summarizeKLineProcessScores(record.process_scores);
+  const disciplineParts = [
+    record.discipline_action || "先停一息，再复盘",
+    record.feedback,
+    processQuality,
+    record.process_insight
+  ].filter(Boolean);
+
   return {
     day: record.day ? `第 ${record.day} 天` : "未标记天数",
     date: String(record.recorded_at || "").slice(0, 10),
     scene: record.scene || "未填写场景",
     reaction: record.reaction || "已觉察，未展开",
-    disciplineAction: record.feedback
-      ? `${record.discipline_action || "先停一息，再复盘"}；${record.feedback}`
-      : record.discipline_action || "先停一息，再复盘"
+    disciplineAction: disciplineParts.join("；")
   };
+}
+
+function summarizeKLineProcessScores(scores) {
+  if (!scores || typeof scores !== "object") return "";
+  const plan = Number(scores.planExecution ?? scores.plan_execution ?? 0);
+  const boundary = Number(scores.boundaryKeeping ?? scores.boundary_keeping ?? 0);
+  const delay = Number(scores.impulseDelay ?? scores.impulse_delay ?? 0);
+  if (!plan && !boundary && !delay) return "";
+  return `过程质量：计划执行 ${clampPercent(plan)}，守界 ${clampPercent(boundary)}，延迟 ${clampPercent(delay)}`;
 }
 
 function formatPracticeCheckIn(value) {

@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   buildHistoricalKlineSlice,
+  downloadHistoricalKline,
   getHistoricalKlineRules,
   listHistoricalKlineCatalog,
   listHistoricalKlineInstruments,
@@ -18,6 +19,7 @@ test("historical kline catalog exposes markets, cycles and rules", () => {
   assert.ok(timeframeKeys.includes("5m"));
   assert.ok(timeframeKeys.includes("1y"));
   assert.equal(catalog.markets.find((item) => item.key === "cn_equity").rules.settlement, "T+1");
+  assert.deepEqual(catalog.providers.map((item) => item.key), ["tushare", "futu", "okx"]);
 });
 
 test("historical kline instruments report local cache availability", async () => {
@@ -98,4 +100,43 @@ test("historical kline rules are available per market", () => {
   assert.equal(cn.rules.settlement, "T+1");
   assert.equal(crypto.rules.settlement, "7x24");
   assert.ok(cn.rules.boundaryNotes.length >= 1);
+});
+
+test("historical kline download normalizes provider data without exposing tokens", async () => {
+  process.env.TUSHARE_TOKEN = "test-token";
+  const fetchImpl = async (_url, options) => {
+    const body = JSON.parse(options.body);
+    assert.equal(body.api_name, "daily");
+    assert.equal(body.token, "test-token");
+    return {
+      ok: true,
+      async json() {
+        return {
+          code: 0,
+          data: {
+            fields: ["ts_code", "trade_date", "open", "high", "low", "close", "vol", "amount", "pct_chg"],
+            items: [
+              ["600519.SH", "20240103", 100, 108, 98, 106, 1200, 128000, 2.1],
+              ["600519.SH", "20240102", 98, 102, 96, 100, 1000, 99000, 1.2]
+            ]
+          }
+        };
+      }
+    };
+  };
+
+  const result = await downloadHistoricalKline({
+    provider: "tushare",
+    marketKey: "cn_equity",
+    symbol: "600519.SH",
+    name: "测试标的",
+    timeframeKey: "1d",
+    dryRun: true,
+    fetchImpl
+  });
+
+  assert.equal(result.job.provider, "tushare");
+  assert.equal(result.job.candle_count, 2);
+  assert.equal(result.job.dry_run, true);
+  assert.ok(!JSON.stringify(result).includes("test-token"));
 });

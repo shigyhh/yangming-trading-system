@@ -2,7 +2,8 @@ import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { config } from "../config.js";
-import { readJsonFile } from "../lib/store.js";
+import { readJsonFile, writeJsonFile } from "../lib/store.js";
+import { fetchProviderKlines, listKlineProviders, resolveDefaultProvider } from "./klineProviders.js";
 
 const COMPLIANCE_TEXT = "本数据仅用于交易心理训练、行为觉察与复盘教育；不构成投资建议。";
 const DEFAULT_MARKET = "cn_equity";
@@ -328,6 +329,7 @@ export function listHistoricalKlineCatalog() {
     timeframes: TIMEFRAMES,
     adjustment_modes: ADJUSTMENT_MODES,
     training_modes: Object.values(TRAINING_MODES),
+    providers: listKlineProviders(),
     gates: Object.values(GATE_PRACTICES),
     personality_prescriptions: Object.values(PERSONALITY_PRACTICES),
     storage_contract: {
@@ -511,6 +513,111 @@ export async function buildHistoricalKlineSlice({
   };
 }
 
+export async function downloadHistoricalKline({
+  provider = "",
+  marketKey = DEFAULT_MARKET,
+  symbol = "",
+  name = "",
+  timeframeKey = DEFAULT_TIMEFRAME,
+  adjustmentMode = "none",
+  startDate = "",
+  endDate = "",
+  limit = 1000,
+  incremental = true,
+  dryRun = false,
+  fetchImpl = globalThis.fetch
+} = {}) {
+  const market = getMarket(marketKey);
+  const timeframe = getTimeframe(timeframeKey || market.defaultTimeframe);
+  const adjustment = getAdjustmentMode(adjustmentMode);
+  const safeSymbol = String(symbol || "").trim();
+  if (!safeSymbol) {
+    const error = new Error("请提供要下载的标的 symbol。");
+    error.statusCode = 400;
+    throw error;
+  }
+  const providerKey = String(provider || resolveDefaultProvider(market.key)).trim().toLowerCase();
+  const fetched = await fetchProviderKlines({
+    provider: providerKey,
+    market,
+    symbol: safeSymbol,
+    timeframe,
+    adjustmentMode: adjustment.key,
+    startDate,
+    endDate,
+    limit,
+    fetchImpl
+  });
+  const downloadedCandles = normalizeCandles(fetched.candles || []);
+  if (!downloadedCandles.length) {
+    const error = new Error("数据源未返回可用历史K线。");
+    error.statusCode = 502;
+    throw error;
+  }
+
+  const existing = incremental
+    ? await loadKlineDataset({ market, symbol: safeSymbol, timeframeKey: timeframe.key, adjustmentMode: adjustment.key, allowMissing: true })
+    : { candles: [] };
+  const mergedCandles = incremental
+    ? mergeCandlesByDate(existing.candles || [], downloadedCandles)
+    : downloadedCandles;
+  const filePath = buildKlineStoragePath({ market, symbol: safeSymbol, timeframeKey: timeframe.key });
+  const payload = {
+    version: "kline_cache_v2",
+    provider: providerKey,
+    source: fetched.source || providerKey,
+    market_key: market.key,
+    market_label: market.label,
+    symbol: safeSymbol,
+    name: String(name || fetched.name || "").trim(),
+    timeframe_key: timeframe.key,
+    timeframe_label: timeframe.label,
+    adjustment_mode: adjustment.key,
+    adjustment_applied: adjustment.key !== "none",
+    candle_count: mergedCandles.length,
+    downloaded_count: downloadedCandles.length,
+    data_start: mergedCandles[0]?.date || "",
+    data_end: mergedCandles.at(-1)?.date || "",
+    updated_at: new Date().toISOString(),
+    compliance: COMPLIANCE_TEXT,
+    candles: mergedCandles
+  };
+
+  if (!dryRun) {
+    await writeJsonFile(filePath, payload);
+    await upsertInstrument(market, {
+      symbol: safeSymbol,
+      name: payload.name,
+      provider: providerKey,
+      last_timeframe: timeframe.key,
+      updated_at: payload.updated_at
+    });
+  }
+
+  return {
+    job: {
+      provider: providerKey,
+      source: payload.source,
+      market_key: market.key,
+      market_label: market.label,
+      symbol: safeSymbol,
+      name: payload.name,
+      timeframe_key: timeframe.key,
+      timeframe_label: timeframe.label,
+      adjustment_mode: adjustment.key,
+      candle_count: mergedCandles.length,
+      downloaded_count: downloadedCandles.length,
+      added_count: Math.max(0, mergedCandles.length - (existing.candles || []).length),
+      data_start: payload.data_start,
+      data_end: payload.data_end,
+      file: path.relative(config.serverRoot, filePath),
+      dry_run: Boolean(dryRun),
+      updated_at: payload.updated_at
+    },
+    compliance: COMPLIANCE_TEXT
+  };
+}
+
 export function revealHistoricalKlineSlice(token = "") {
   const descriptor = decodeSliceToken(token);
   if (descriptor.version !== SLICE_TOKEN_VERSION || !descriptor.slice_id) {
@@ -584,17 +691,25 @@ function toPublicMarket(market) {
 }
 
 async function loadInstrumentList(market) {
-  if (market.key === "cn_equity") return loadAshareInstruments();
+  if (market.key === "cn_equity") return loadAshareInstruments(market);
   const file = path.join(config.marketDataDir, market.dataDir, "instruments.json");
   const payload = await readJsonFile(file, null);
   const rows = Array.isArray(payload?.instruments) ? payload.instruments : Array.isArray(payload) ? payload : [];
-  return rows.map((item) => normalizeInstrument(item)).filter(Boolean);
+  const cachedSymbols = await listCachedMarketSymbols(market);
+  const merged = new Map();
+  rows.map((item) => normalizeInstrument(item)).filter(Boolean).forEach((item) => merged.set(item.symbol, item));
+  cachedSymbols.forEach((symbol) => {
+    if (!merged.has(symbol)) merged.set(symbol, { symbol, name: "", secid: "", instrument_key: createInstrumentKey(symbol) });
+  });
+  return Array.from(merged.values()).sort((a, b) => a.symbol.localeCompare(b.symbol));
 }
 
-async function loadAshareInstruments() {
+async function loadAshareInstruments(market) {
   const pool = await readJsonFile(path.join(config.marketDataDir, "stock-pool.json"), null);
+  const generic = await readJsonFile(path.join(config.marketDataDir, market.dataDir, "instruments.json"), null);
   const stocks = Array.isArray(pool?.stocks) ? pool.stocks : DEFAULT_STOCK_POOL;
-  const cachedSymbols = await listCachedAshareSymbols();
+  const genericRows = Array.isArray(generic?.instruments) ? generic.instruments : Array.isArray(generic) ? generic : [];
+  const cachedSymbols = uniqueStrings((await listCachedAshareSymbols()).concat(await listCachedMarketSymbols(market)));
   const merged = new Map();
 
   for (const stock of stocks) {
@@ -613,11 +728,34 @@ async function loadAshareInstruments() {
     }
   }
 
+  for (const item of genericRows) {
+    const instrument = normalizeInstrument(item);
+    if (instrument) merged.set(instrument.symbol, Object.assign({}, merged.get(instrument.symbol), instrument));
+  }
+
   const cachedSet = new Set(cachedSymbols);
   return Array.from(merged.values()).sort((a, b) => {
     const readyOrder = Number(cachedSet.has(b.symbol)) - Number(cachedSet.has(a.symbol));
     return readyOrder || a.symbol.localeCompare(b.symbol);
   });
+}
+
+async function listCachedMarketSymbols(market) {
+  const root = path.join(config.marketDataDir, market.dataDir);
+  const symbols = new Set();
+  try {
+    const timeframeDirs = await fs.readdir(root, { withFileTypes: true });
+    for (const dirent of timeframeDirs) {
+      if (!dirent.isDirectory()) continue;
+      const files = await fs.readdir(path.join(root, dirent.name), { withFileTypes: true });
+      files.forEach((file) => {
+        if (file.isFile() && file.name.endsWith(".json")) symbols.add(file.name.replace(/\.json$/, ""));
+      });
+    }
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+  return Array.from(symbols);
 }
 
 async function listCachedAshareSymbols() {
@@ -636,6 +774,32 @@ async function listCachedAshareSymbols() {
     if (error.code !== "ENOENT") throw error;
   }
   return Array.from(symbols);
+}
+
+async function upsertInstrument(market, patch) {
+  const file = path.join(config.marketDataDir, market.dataDir, "instruments.json");
+  const payload = await readJsonFile(file, null);
+  const rows = Array.isArray(payload?.instruments) ? payload.instruments : Array.isArray(payload) ? payload : [];
+  const instrument = normalizeInstrument(patch);
+  if (!instrument) return null;
+  const nextRows = rows
+    .map((item) => normalizeInstrument(item))
+    .filter(Boolean)
+    .filter((item) => item.symbol !== instrument.symbol)
+    .concat(Object.assign({}, instrument, {
+      provider: patch.provider || "",
+      last_timeframe: patch.last_timeframe || "",
+      updated_at: patch.updated_at || new Date().toISOString()
+    }))
+    .sort((a, b) => a.symbol.localeCompare(b.symbol));
+  const nextPayload = {
+    version: "market_instruments_v1",
+    market_key: market.key,
+    updated_at: new Date().toISOString(),
+    instruments: nextRows
+  };
+  await writeJsonFile(file, nextPayload);
+  return instrument;
 }
 
 function normalizeInstrument(item) {
@@ -761,6 +925,21 @@ function buildKlineFileCandidates({ market, symbol, timeframeKey }) {
   }
 
   return candidates;
+}
+
+function buildKlineStoragePath({ market, symbol, timeframeKey }) {
+  return path.join(config.marketDataDir, market.dataDir, timeframeKey, `${String(symbol || "").trim()}.json`);
+}
+
+function mergeCandlesByDate(existing = [], incoming = []) {
+  const map = new Map();
+  normalizeCandles(existing).forEach((item) => map.set(normalizeDateKey(item.date), item));
+  normalizeCandles(incoming).forEach((item) => map.set(normalizeDateKey(item.date), item));
+  return Array.from(map.values()).sort((a, b) => compareDateText(a.date, b.date));
+}
+
+function uniqueStrings(values = []) {
+  return Array.from(new Set(values.map((item) => String(item || "").trim()).filter(Boolean)));
 }
 
 function shouldAggregateFromDaily(timeframeKey) {

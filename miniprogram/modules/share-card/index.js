@@ -3,6 +3,10 @@ const SHARE_CARD_TYPES = [
   "three_seals",
   "personality",
   "risk_radar",
+  "kline_insight",
+  "group_kline_mirror",
+  "mirror_challenge",
+  "impulse_delay",
   "zhixing_score",
   "seven_day_change",
   "retest_change",
@@ -19,6 +23,10 @@ const TYPE_LABELS = {
   three_seals: "三印卡",
   personality: "人格照见卡",
   risk_radar: "风险雷达卡",
+  kline_insight: "一根 K 线照见卡",
+  group_kline_mirror: "群体 K线镜像卡",
+  mirror_challenge: "同修镜像卡",
+  impulse_delay: "冲动延迟卡",
   zhixing_score: "知行指数卡",
   seven_day_change: "七日变化卡",
   retest_change: "复测变化卡",
@@ -30,7 +38,7 @@ const TYPE_LABELS = {
   companion_invite: "同修邀请卡"
 };
 
-const DEFAULT_COMPLIANCE = "本系统用于交易心理觉察与训练，不提供投资建议，不预测行情，不构成任何买卖依据。";
+const DEFAULT_COMPLIANCE = "本系统用于交易心理觉察与训练，不提供投资建议，不预测行情，不构成任何操作依据。";
 
 function normalizeType(type) {
   return SHARE_CARD_TYPES.includes(type) ? type : "daily_mantra";
@@ -65,9 +73,12 @@ function buildShareCardPreview(type, context = {}) {
   const companionMirror = (context.companionMirror || {}).latest || context.companionMirror || {};
   const groupPractice = context.groupPractice || {};
   const subscription = context.subscriptionView || {};
+  const klineReview = ((context.klineReviewReports || {}).latest) || {};
+  const mirrorChallenge = ((context.klineMirrorChallenges || {}).latest) || {};
   const subscriptionProof = subscription.proof || {};
   const groupDayStats = (groupPractice.dayStats || {})[trainingDay.day || 1] || {};
   const radar = assessment.radar || {};
+  const riskRadar = Array.isArray(assessment.riskRadar) ? assessment.riskRadar : [];
   const title = TYPE_LABELS[safeType];
 
   const templates = {
@@ -86,8 +97,8 @@ function buildShareCardPreview(type, context = {}) {
       shareTitle: "今天先看见这一念。"
     },
     personality: {
-      headline: `我的交易人格：${assessment.primary || "待照见"}`,
-      body: `副人格：${assessment.secondary || "待照见"}\n核心风险：${assessment.coreRisk || assessment.summary || "待网站报告同步"}`,
+      headline: `我的交易人格：${assessment.primary || "待照见"} · ${assessment.primaryMirror || "九镜待照见"}`,
+      body: `副人格：${assessment.secondary || "待照见"}\n心贼：${(assessment.primaryThieves || []).join("、") || assessment.virtuePractice || "待照见"}\n核心风险：${assessment.coreRisk || assessment.summary || "待网站报告同步"}`,
       insight: assessment.insight || "我照见了自己的交易人格。原来真正影响交易的，不只是外在波动。",
       cta: "生成我的照见卡",
       shareTitle: "我照见了自己的交易人格。"
@@ -98,12 +109,61 @@ function buildShareCardPreview(type, context = {}) {
       insight: assessment.riskInsight || "我最需要照见的时刻，是边界被触碰后的第一反应。",
       cta: "生成风险雷达卡",
       shareTitle: "这张雷达帮我看见了自己的反应惯性。",
-      metrics: [
+      metrics: riskRadar.length ? riskRadar.slice(0, 5).map((item) => buildMetric(item.label, item.value || "待照见")) : [
         buildMetric("追涨冲动", radar.chasing || assessment.impulse || 82),
         buildMetric("止损抗拒", radar.stopResistance || assessment.boundary || 76),
         buildMetric("亏损后证明欲", radar.proving || assessment.proving || 88),
         buildMetric("计划执行断裂", radar.executionBreak || assessment.execution || 64),
         buildMetric("盈利后失控", radar.euphoria || assessment.euphoria || 58)
+      ]
+    },
+    kline_insight: {
+      headline: "一根 K 线照见我",
+      body: `这段 K 线出现时，我的第一反应是：${klineReview.primaryReaction || "待完成压力测试"}。\n第一念：${klineReview.firstThought || "待记录"}`,
+      insight: klineReview.insight || "照见的不是走势，而是我被触发的第一念。",
+      cta: "生成 K线照见卡",
+      shareTitle: "一根 K线照见了我的第一反应。",
+      metrics: [
+        buildMetric("反应之镜", klineReview.relatedMirror || "待照见"),
+        buildMetric("心贼", (klineReview.heartThieves || []).join("、") || "待照见"),
+        buildMetric("守界度", klineReview.scores ? klineReview.scores.boundaryKeeping : "待生成")
+      ]
+    },
+    group_kline_mirror: {
+      headline: "这一段 K 线，照见一群人的第一念",
+      body: ((klineReview.anonymousStats || {}).title) || "同一段历史片段里，每个人被触发的念头并不相同。",
+      insight: ((klineReview.anonymousStats || {}).insight) || "这不是外在走势的比较，而是交易心理反应分布。",
+      cta: "生成群体镜像卡",
+      shareTitle: "同一段 K线，照见不同的人心。",
+      metrics: (((klineReview.anonymousStats || {}).rows) || [
+        { label: "想立刻行动", value: 42 },
+        { label: "想继续等待", value: 27 },
+        { label: "想放大动作", value: 18 },
+        { label: "想离开屏幕", value: 13 }
+      ]).map((item) => buildMetric(item.label, `${item.value}%`))
+    },
+    mirror_challenge: {
+      headline: "同一段 K 线",
+      body: `我：${mirrorChallenge.inviterReaction || "待照见"}\n同修：${mirrorChallenge.inviteeReaction || "待照见"}`,
+      insight: mirrorChallenge.comparisonInsight || "我们面对的不是同一根 K 线，而是各自心里的念头。",
+      cta: "生成同修镜像卡",
+      shareTitle: "同一段 K线，照见两种反应。",
+      metrics: [
+        buildMetric("我的镜", mirrorChallenge.inviterMirror || "待照见"),
+        buildMetric("同修镜", mirrorChallenge.inviteeMirror || "待照见")
+      ]
+    },
+    impulse_delay: {
+      headline: "冲动延迟卡",
+      body: `本次反应时间：${klineReview.reactionTimeMs || "待生成"} ms`,
+      insight: klineReview.scores && klineReview.scores.impulseDelay < 45
+        ? "行情越快，我越容易把速度当成机会。"
+        : "我正在练习让第一念慢下来。",
+      cta: "生成冲动延迟卡",
+      shareTitle: "我做了一次冲动延迟训练。",
+      metrics: [
+        buildMetric("冲动延迟度", klineReview.scores ? klineReview.scores.impulseDelay : "待生成"),
+        buildMetric("反应之镜", klineReview.relatedMirror || "待照见")
       ]
     },
     zhixing_score: {
@@ -116,8 +176,10 @@ function buildShareCardPreview(type, context = {}) {
         buildMetric("照见度", getDimensionScore(index, "awareness")),
         buildMetric("守界度", getDimensionScore(index, "boundary")),
         buildMetric("执行度", getDimensionScore(index, "execution")),
+        buildMetric("延迟度", getDimensionScore(index, "delay")),
         buildMetric("复盘度", getDimensionScore(index, "review")),
-        buildMetric("稳定度", getDimensionScore(index, "stability"))
+        buildMetric("稳定度", getDimensionScore(index, "stability")),
+        buildMetric("人格校准度", getDimensionScore(index, "personalityCalibration"))
       ]
     },
     seven_day_change: {

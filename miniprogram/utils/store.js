@@ -1,7 +1,9 @@
 const PROFILE_KEY = "zhixing_profile";
-const ASSESSMENT_KEY = "zhixing_assessment_result";
+const ASSESSMENT_KEY = "ym_personality_report";
+const LEGACY_ASSESSMENT_KEY = "zhixing_assessment_result";
 const ASSESSMENT_HISTORY_KEY = "zhixing_assessment_history";
-const ANSWERS_KEY = "zhixing_assessment_answers";
+const ANSWERS_KEY = "ym_personality_test_answers";
+const LEGACY_ANSWERS_KEY = "zhixing_assessment_answers";
 const TRAINING_KEY = "zhixing_training_state";
 const SYNC_STATUS_KEY = "zhixing_sync_status";
 const DOJO_KEY = "zhixing_dojo_state";
@@ -27,7 +29,12 @@ const {
   YM_LESSON_WATCH_RECORDS,
   YM_SUBSCRIPTION_STATE,
   YM_KLINE_MIND_RECORDS,
-  YM_KLINE_HISTORY_CACHE
+  YM_KLINE_HISTORY_CACHE,
+  YM_KLINE_SCENARIOS,
+  YM_KLINE_SESSION_RECORDS,
+  YM_KLINE_REVIEW_REPORTS,
+  YM_KLINE_MIRROR_CHALLENGES,
+  YM_ANONYMOUS_REACTION_STATS
 } = require("../core/storage-keys");
 const REVIEW_KEY = YM_CLOSING_REVIEW;
 const MIND_KEY = YM_OPENING_CHECK;
@@ -202,7 +209,7 @@ function rebindLocalRecords(profile) {
 }
 
 function getAssessmentResult() {
-  return read(ASSESSMENT_KEY, null);
+  return read(ASSESSMENT_KEY, read(LEGACY_ASSESSMENT_KEY, null));
 }
 
 function getAssessmentHistory() {
@@ -265,12 +272,21 @@ function saveAssessmentResult(result, answers) {
   return nextResult;
 }
 
-function getAssessmentAnswers() {
-  return read(ANSWERS_KEY, []);
+function getAssessmentAnswers(modeKey = "") {
+  const saved = read(ANSWERS_KEY, read(LEGACY_ANSWERS_KEY, []));
+  if (Array.isArray(saved)) return saved;
+  if (modeKey && Array.isArray(saved[modeKey])) return saved[modeKey];
+  if (Array.isArray(saved.answers)) return saved.answers;
+  return [];
 }
 
-function saveAssessmentAnswers(answers) {
-  return write(ANSWERS_KEY, Array.isArray(answers) ? answers : []);
+function saveAssessmentAnswers(answers, modeKey = "") {
+  if (!modeKey) return write(ANSWERS_KEY, Array.isArray(answers) ? answers : []);
+  const saved = read(ANSWERS_KEY, {});
+  const drafts = Array.isArray(saved) ? {} : Object.assign({}, saved || {});
+  drafts[modeKey] = Array.isArray(answers) ? answers : [];
+  drafts.activeMode = modeKey;
+  return write(ANSWERS_KEY, drafts);
 }
 
 function getTrainingState() {
@@ -565,6 +581,84 @@ function saveTodayKlineMindRecord(record) {
   records[todayKey()] = nextRecord;
   write(YM_KLINE_MIND_RECORDS, records);
   return nextRecord;
+}
+
+function getKlineScenarioState() {
+  return read(YM_KLINE_SCENARIOS, {
+    updatedAt: null,
+    source: "local_mock",
+    scenarios: []
+  });
+}
+
+function saveKlineScenarioState(scenarios) {
+  return write(YM_KLINE_SCENARIOS, {
+    updatedAt: Date.now(),
+    source: "local_mock",
+    scenarios: Array.isArray(scenarios) ? scenarios : []
+  });
+}
+
+function getKlineSessionRecords() {
+  return read(YM_KLINE_SESSION_RECORDS, {
+    latest: null,
+    records: []
+  });
+}
+
+function saveKlineSessionRecord(session) {
+  const state = getKlineSessionRecords();
+  const record = withUserBinding(Object.assign({}, session || {}, {
+    updatedAt: Date.now()
+  }));
+  const records = (state.records || []).filter((item) => item.id !== record.id).concat(record).slice(-30);
+  return write(YM_KLINE_SESSION_RECORDS, {
+    latest: record,
+    records
+  });
+}
+
+function getKlineReviewReports() {
+  return read(YM_KLINE_REVIEW_REPORTS, {
+    latest: null,
+    records: []
+  });
+}
+
+function saveKlineReviewReport(report) {
+  const state = getKlineReviewReports();
+  const record = withUserBinding(Object.assign({}, report || {}, {
+    updatedAt: Date.now()
+  }));
+  const records = (state.records || []).filter((item) => item.id !== record.id).concat(record).slice(-30);
+  write(YM_ANONYMOUS_REACTION_STATS, record.anonymousStats || {});
+  return write(YM_KLINE_REVIEW_REPORTS, {
+    latest: record,
+    records
+  });
+}
+
+function getKlineMirrorChallenges() {
+  return read(YM_KLINE_MIRROR_CHALLENGES, {
+    latest: null,
+    records: []
+  });
+}
+
+function saveKlineMirrorChallenge(challenge) {
+  const state = getKlineMirrorChallenges();
+  const record = withUserBinding(Object.assign({}, challenge || {}, {
+    updatedAt: Date.now()
+  }));
+  const records = (state.records || []).filter((item) => item.id !== record.id).concat(record).slice(-30);
+  return write(YM_KLINE_MIRROR_CHALLENGES, {
+    latest: record,
+    records
+  });
+}
+
+function getAnonymousReactionStats() {
+  return read(YM_ANONYMOUS_REACTION_STATS, {});
 }
 
 function getTraining7State() {
@@ -980,6 +1074,15 @@ function clearMockMvpState() {
     YM_LESSON_WATCH_RECORDS,
     YM_SUBSCRIPTION_STATE,
     YM_KLINE_MIND_RECORDS,
+    YM_KLINE_SCENARIOS,
+    YM_KLINE_SESSION_RECORDS,
+    YM_KLINE_REVIEW_REPORTS,
+    YM_KLINE_MIRROR_CHALLENGES,
+    YM_ANONYMOUS_REACTION_STATS,
+    ASSESSMENT_KEY,
+    LEGACY_ASSESSMENT_KEY,
+    ANSWERS_KEY,
+    LEGACY_ANSWERS_KEY,
     TRAINING_KEY,
     DAILY_LOOP_KEY,
     HEART_CARD_KEY,
@@ -1025,7 +1128,9 @@ function saveDojoState(patch) {
 
 function clearAssessment() {
   wx.removeStorageSync(ASSESSMENT_KEY);
+  wx.removeStorageSync(LEGACY_ASSESSMENT_KEY);
   wx.removeStorageSync(ANSWERS_KEY);
+  wx.removeStorageSync(LEGACY_ANSWERS_KEY);
   updateProfile({ stage: "立志", lastAssessmentType: "" });
 }
 
@@ -1046,6 +1151,11 @@ function collectLocalState() {
     intraday_boundary_records: getIntradayBoundaryRecords(),
     kline_mind_records: getKlineMindRecords(),
     kline_history_cache: getKlineHistoryCache(),
+    kline_scenarios: getKlineScenarioState(),
+    kline_session_records: getKlineSessionRecords(),
+    kline_review_reports: getKlineReviewReports(),
+    kline_mirror_challenges: getKlineMirrorChallenges(),
+    anonymous_reaction_stats: getAnonymousReactionStats(),
     closing_review_records: getClosingReviewRecords(),
     share_cards: getShareCardState(),
     invite_events: getInviteEvents(),
@@ -1089,6 +1199,11 @@ function applyRemoteState(remoteState = {}) {
   if (remoteState.intraday_boundary_records && typeof remoteState.intraday_boundary_records === "object") write(YM_INTRADAY_BOUNDARY_RECORDS, remoteState.intraday_boundary_records);
   if (remoteState.kline_mind_records && typeof remoteState.kline_mind_records === "object") write(YM_KLINE_MIND_RECORDS, remoteState.kline_mind_records);
   if (remoteState.kline_history_cache && typeof remoteState.kline_history_cache === "object") write(YM_KLINE_HISTORY_CACHE, remoteState.kline_history_cache);
+  if (remoteState.kline_scenarios && typeof remoteState.kline_scenarios === "object") write(YM_KLINE_SCENARIOS, remoteState.kline_scenarios);
+  if (remoteState.kline_session_records && typeof remoteState.kline_session_records === "object") write(YM_KLINE_SESSION_RECORDS, remoteState.kline_session_records);
+  if (remoteState.kline_review_reports && typeof remoteState.kline_review_reports === "object") write(YM_KLINE_REVIEW_REPORTS, remoteState.kline_review_reports);
+  if (remoteState.kline_mirror_challenges && typeof remoteState.kline_mirror_challenges === "object") write(YM_KLINE_MIRROR_CHALLENGES, remoteState.kline_mirror_challenges);
+  if (remoteState.anonymous_reaction_stats && typeof remoteState.anonymous_reaction_stats === "object") write(YM_ANONYMOUS_REACTION_STATS, remoteState.anonymous_reaction_stats);
   if (remoteState.closing_review_records && typeof remoteState.closing_review_records === "object") write(REVIEW_KEY, remoteState.closing_review_records);
   if (remoteState.share_cards && typeof remoteState.share_cards === "object") write(YM_SHARE_CARDS, remoteState.share_cards);
   if (Array.isArray(remoteState.invite_events)) write(YM_INVITE_EVENTS, remoteState.invite_events);
@@ -1170,6 +1285,15 @@ module.exports = {
   saveTodayIntradayBoundaryRecord,
   getKlineHistoryCache,
   saveKlineHistorySlice,
+  getKlineScenarioState,
+  saveKlineScenarioState,
+  getKlineSessionRecords,
+  saveKlineSessionRecord,
+  getKlineReviewReports,
+  saveKlineReviewReport,
+  getKlineMirrorChallenges,
+  saveKlineMirrorChallenge,
+  getAnonymousReactionStats,
   getKlineMindRecords,
   getTodayKlineMindRecord,
   saveTodayKlineMindRecord,

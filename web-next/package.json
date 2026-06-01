@@ -12,7 +12,7 @@
     "test:personality": "node --test ../packages/personality/index.test.mjs",
     "test:report-adapter": "node --test src/features/assessment/report-adapter.test.mjs",
     "test:result-card": "node --test src/features/assessment/result-card.test.mjs",
-    "test:practice-change": "node --test src/features/assessment/practice-change.test.mjs",
+    "test:practice-change": "node --test src/features/assessment/practice-change.test.mjs src/features/assessment/evidence-engine.test.mjs",
     "test:data-binding": "node --test ../server/scripts/data-binding-contract-test.mjs",
     "test:user-center": "node --test src/features/data-binding/user-center.test.mjs",
     "test:admin-handoff": "node --test src/features/admin/assistant-handoff.test.mjs",

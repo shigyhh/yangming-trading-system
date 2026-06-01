@@ -19,6 +19,14 @@ export type PracticeMetric = {
 export type PracticeRecordStatus = "completed" | "missed"
 export type PracticeCheckInStatus = "preparing_trade" | "observe_only" | "already_traded"
 
+export type KLineProcessScores = {
+  planExecution: number
+  boundaryKeeping: number
+  impulseDelay: number
+  emotionalStability: number
+  reviewCompletion: number
+}
+
 export type KLineTrainingRecord = {
   sceneKey?: string
   reactionKey?: string
@@ -26,6 +34,10 @@ export type KLineTrainingRecord = {
   reaction: string
   disciplineAction: string
   feedback?: string
+  reactionTimeMs?: number
+  processScores?: KLineProcessScores
+  processInsight?: string
+  trainingSuggestion?: string
 }
 
 export type DailyPracticeEntry = {

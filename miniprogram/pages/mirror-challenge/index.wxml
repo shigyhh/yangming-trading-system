@@ -1,0 +1,57 @@
+<view class="page-shell">
+  <view class="page-content">
+    <text class="eyebrow">MIRROR · 同修</text>
+    <view class="page-title">同修镜像<br />照见挑战</view>
+    <view class="page-subtitle">不是比较谁对谁错，而是同一段 K 线照见两个人不同的念头。</view>
+
+    <view class="mirror-card card">
+      <text>我的第一反应</text>
+      <view>{{review.primaryReaction || '待完成 K线复盘'}}</view>
+      <text class="sub">{{review.relatedMirror || '待照见'}}</text>
+    </view>
+
+    <view class="option-card card">
+      <text>模拟同修反应</text>
+      <view class="options">
+        <button
+          wx:for="{{options}}"
+          wx:key="id"
+          class="option {{selected === item.id ? 'selected' : ''}}"
+          data-id="{{item.id}}"
+          bindtap="selectOption"
+        >
+          <text>{{item.label}}</text>
+          <view>{{item.trait}}</view>
+        </button>
+      </view>
+      <button class="primary-btn" bindtap="createChallenge">生成镜像对比</button>
+    </view>
+
+    <view wx:if="{{challenge}}" class="result-card card">
+      <text>同一段 K 线</text>
+      <view class="compare-row">
+        <view>
+          <text>我</text>
+          <view>{{challenge.inviterReaction}}</view>
+          <text>{{challenge.inviterTrigger}}</text>
+          <text>{{challenge.inviterMirror}}</text>
+        </view>
+        <view>
+          <text>同修</text>
+          <view>{{challenge.inviteeReaction}}</view>
+          <text>{{challenge.inviteeTrigger}}</text>
+          <text>{{challenge.inviteeMirror}}</text>
+        </view>
+      </view>
+      <view class="insight">{{challenge.comparisonInsight}}</view>
+      <button class="ghost-btn" bindtap="goShareCard">生成同修镜像卡</button>
+    </view>
+
+    <view class="single-action">
+      <button class="ghost-btn" bindtap="goSimulator">再练一段</button>
+    </view>
+
+    <compliance-notice />
+  </view>
+  <bottom-tab-bar active="mind" />
+</view>

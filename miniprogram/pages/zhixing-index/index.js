@@ -9,6 +9,7 @@ const {
   getTodayReview,
   getTodayReaction,
   getTodayIntradayBoundaryRecord,
+  getKlineReviewReports,
   getAssessmentResult,
   getTodayThreeSeals,
   getTraining7State,
@@ -48,6 +49,7 @@ Page({
     const reviews = getReviews();
     const review = getTodayReview();
     const assessment = getAssessmentResult();
+    const klineReview = (getKlineReviewReports() || {}).latest || null;
     const threeSeals = getTodayThreeSeals();
     const zhixingScoreState = getZhixingScoreState();
     const heartCardRecord = getTodayHeartCard();
@@ -78,7 +80,7 @@ Page({
       continuity,
       zhixingScoreState
     });
-    const index = calculateDailyZhixingMvp({ mind, training: growth.training, review, threeSeals, training7View });
+    const index = calculateDailyZhixingMvp({ mind, training: growth.training, review, threeSeals, training7View, assessment, klineReview });
     const canSaveScore = !!(mind || review || threeSeals.completed || growth.training.completed);
     const scoreRecord = buildScoreRecord({ dayKey: todayKey(), index, context: { continuity, trainingState, reviews } });
     const scoreState = canSaveScore ? saveZhixingScoreRecord(scoreRecord) : zhixingScoreState;
@@ -112,17 +114,18 @@ Page({
       growthLevel: recordState.growthLevel,
       growth,
       loopState,
-      actions: this.buildActions({ mind, training: growth.training, review, assessment, heartCardRecord })
+      actions: this.buildActions({ mind, training: growth.training, review, assessment, klineReview, heartCardRecord })
     });
     if (canSaveScore) {
       promptShareMoment("zhixing_score_generated", { sourceScene: "zhixing_score_generated" });
     }
   },
 
-  buildActions({ mind, training, review, assessment, heartCardRecord }) {
+  buildActions({ mind, training, review, assessment, klineReview, heartCardRecord }) {
     const actions = [];
     if (!mind) actions.push({ label: "先做开盘照心", url: "/pages/mind/index" });
     if (!assessment) actions.push({ label: "完成九型人格", url: "/pages/assessment/index" });
+    if (!klineReview) actions.push({ label: "完成 K线压力测试", url: "/pages/kline-simulator/index" });
     if (!training?.completed) actions.push({ label: "完成今日事上练", url: "/pages/training/index" });
     if (!review) actions.push({ label: "收盘后做省察", url: "/pages/review/index" });
     if (actions.length) return actions;

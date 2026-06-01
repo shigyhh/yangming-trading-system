@@ -161,7 +161,7 @@ function calculateZhixingIndex({ mind, training, review, assessment, stageState 
   };
 }
 
-function calculateDailyZhixingMvp({ mind, training, review, threeSeals, training7View } = {}) {
+function calculateDailyZhixingMvp({ mind, training, review, threeSeals, training7View, assessment, klineReview } = {}) {
   const seals = threeSeals || {};
   const mindReady = !!mind;
   const hasOpeningDetail = !!(mind && (mind.currentStatus || mind.todayRisk || mind.todayBoundary));
@@ -222,12 +222,30 @@ function calculateDailyZhixingMvp({ mind, training, review, threeSeals, training
     0,
     100
   );
+  const delay = clamp(
+    klineReview && klineReview.scores
+      ? klineReview.scores.impulseDelay
+      : 36 + (seals.boundary ? 12 : 0) + (hasOpeningDetail ? 10 : 0) + (keptBoundary ? 16 : 0) - (deviatedPlan ? 12 : 0),
+    0,
+    100
+  );
+  const personalityCalibration = clamp(
+    38 +
+    (assessment ? 22 : 0) +
+    (klineReview ? 20 : 0) +
+    (assessment && klineReview && [assessment.primary, assessment.secondary].includes(klineReview.relatedPersonality) ? 12 : 0) +
+    ((training7View || {}).completedCount || 0) * 2,
+    0,
+    100
+  );
   const total = clamp(
-    awareness * 0.22 +
-    boundary * 0.24 +
-    execution * 0.2 +
-    reviewScore * 0.2 +
-    stability * 0.14,
+    awareness * 0.18 +
+    boundary * 0.2 +
+    execution * 0.16 +
+    delay * 0.12 +
+    reviewScore * 0.16 +
+    stability * 0.12 +
+    personalityCalibration * 0.06,
     0,
     100
   );
@@ -247,15 +265,19 @@ function calculateDailyZhixingMvp({ mind, training, review, threeSeals, training
       { key: "awareness", name: "照见度", score: awareness, hint: "来自一念、一惧、一界与开盘照心。" },
       { key: "boundary", name: "守界度", score: boundary, hint: "只看是否写清并守住今日边界。" },
       { key: "execution", name: "执行度", score: execution, hint: "来自今日任务、事上练和计划一致性。" },
+      { key: "delay", name: "延迟度", score: delay, hint: klineReview ? "来自 K线压力测试中的第一反应停顿。" : "完成 K线压力测试后更准确。" },
       { key: "review", name: "复盘度", score: reviewScore, hint: "来自收盘省察与今日照见一句话。" },
-      { key: "stability", name: "稳定度", score: stability, hint: "只看情绪与念头稳定，不看外部结果。" }
+      { key: "stability", name: "稳定度", score: stability, hint: "只看情绪与念头稳定，不看外部结果。" },
+      { key: "personalityCalibration", name: "人格校准度", score: personalityCalibration, hint: assessment ? "由问卷、训练记录与 K线复盘共同校准。" : "完成九型照见后生成。" }
     ],
     weights: [
-      { key: "awareness", name: "照见度", weight: 0.22 },
-      { key: "boundary", name: "守界度", weight: 0.24 },
-      { key: "execution", name: "执行度", weight: 0.2 },
-      { key: "review", name: "复盘度", weight: 0.2 },
-      { key: "stability", name: "稳定度", weight: 0.14 }
+      { key: "awareness", name: "照见度", weight: 0.18 },
+      { key: "boundary", name: "守界度", weight: 0.2 },
+      { key: "execution", name: "执行度", weight: 0.16 },
+      { key: "delay", name: "延迟度", weight: 0.12 },
+      { key: "review", name: "复盘度", weight: 0.16 },
+      { key: "stability", name: "稳定度", weight: 0.12 },
+      { key: "personalityCalibration", name: "人格校准度", weight: 0.06 }
     ],
     stateLabel: total >= 82 ? "知行清明" : total >= 68 ? "事上有守" : "今日待练"
   };

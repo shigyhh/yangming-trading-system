@@ -16,6 +16,8 @@ const {
   getLessonReservations,
   getLessonWatchRecords,
   getSubscriptionView,
+  getKlineReviewReports,
+  getKlineMirrorChallenges,
   getUserBinding,
   getShareCardAlbum,
   saveShareCard,
@@ -88,6 +90,8 @@ Page({
       companionMirror: getCompanionMirrorState().latest,
       groupPractice: getGroupPracticeState(),
       subscriptionView: getSubscriptionView(),
+      klineReviewReports: getKlineReviewReports(),
+      klineMirrorChallenges: getKlineMirrorChallenges(),
       inviteCode: userBinding.inviteCode || "",
       lesson
     };
@@ -118,7 +122,7 @@ Page({
       sourceScene: this.data.sourceScene
     }));
     const inviteCode = (getUserBinding() || {}).inviteCode || "";
-    if (["companion_invite", "group_practice", "personality_mirror", "live_reservation"].includes(this.data.card.type)) {
+    if (["companion_invite", "group_practice", "personality_mirror", "live_reservation", "group_kline_mirror"].includes(this.data.card.type)) {
       const events = saveInviteEvent({
         sourceScene: this.data.sourceScene,
         sourcePage: "share_card",
@@ -134,6 +138,26 @@ Page({
       card: saved.latest
     });
     wx.showToast({ title: "已存入心证卡册", icon: "success" });
+  },
+
+  buildShareText() {
+    const card = this.data.card || {};
+    const metrics = (card.metrics || []).map((item) => `${item.label}：${item.value}`).join("\n");
+    return [
+      card.title || card.typeLabel || "心证卡",
+      card.headline,
+      card.body,
+      metrics,
+      card.insight,
+      card.compliance
+    ].filter(Boolean).join("\n\n");
+  },
+
+  copyShareText() {
+    wx.setClipboardData({
+      data: this.buildShareText(),
+      success: () => wx.showToast({ title: "分享文案已复制", icon: "success" })
+    });
   },
 
   inviteCompanion() {

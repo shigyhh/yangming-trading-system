@@ -70,7 +70,17 @@ test("data binding service stores assessment, training, kline and retest in runt
       scene: "急拉",
       reaction: "想追",
       disciplineAction: "先停十秒，再复核计划",
-      feedback: "今天先练写下进场理由。"
+      feedback: "今天先练写下进场理由。",
+      reactionTimeMs: 2400,
+      processScores: {
+        planExecution: 58,
+        boundaryKeeping: 54,
+        impulseDelay: 42,
+        emotionalStability: 56,
+        reviewCompletion: 78
+      },
+      processInsight: "你已经看见第一念，下一步是让手慢半拍。",
+      trainingSuggestion: "建议进入 Day 1：观入场冲动。"
     }
   });
   const retest = await saveRetestResultBinding({ user, report: retestReport });
@@ -123,6 +133,10 @@ test("data binding service stores assessment, training, kline and retest in runt
   assert.equal(kline.record.scene, "急拉");
   assert.equal(kline.record.reaction_key, "fear_missing");
   assert.equal(kline.record.feedback, "今天先练写下进场理由。");
+  assert.equal(kline.record.reaction_time_ms, 2400);
+  assert.equal(kline.record.process_scores.planExecution, 58);
+  assert.equal(kline.record.process_insight, "你已经看见第一念，下一步是让手慢半拍。");
+  assert.ok(summary.admin_user.klineRecords[0].disciplineAction.includes("过程质量"));
   assert.equal(retest.comparison[0].delta, -18);
   assert.equal(handoff.assistant.status, "已承接");
   assert.equal(handoff.assistant.owner, "助教明远");

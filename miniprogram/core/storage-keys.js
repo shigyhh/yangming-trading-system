@@ -15,6 +15,13 @@ const YM_LESSON_WATCH_RECORDS = "ym_lesson_watch_records";
 const YM_SUBSCRIPTION_STATE = "ym_subscription_state";
 const YM_KLINE_MIND_RECORDS = "ym_kline_mind_records";
 const YM_KLINE_HISTORY_CACHE = "ym_kline_history_cache";
+const YM_PERSONALITY_TEST_ANSWERS = "ym_personality_test_answers";
+const YM_PERSONALITY_REPORT = "ym_personality_report";
+const YM_KLINE_SCENARIOS = "ym_kline_scenarios";
+const YM_KLINE_SESSION_RECORDS = "ym_kline_session_records";
+const YM_KLINE_REVIEW_REPORTS = "ym_kline_review_reports";
+const YM_KLINE_MIRROR_CHALLENGES = "ym_kline_mirror_challenges";
+const YM_ANONYMOUS_REACTION_STATS = "ym_anonymous_reaction_stats";
 
 module.exports = {
   YM_DAILY_THREE_SEALS,
@@ -33,5 +40,12 @@ module.exports = {
   YM_LESSON_WATCH_RECORDS,
   YM_SUBSCRIPTION_STATE,
   YM_KLINE_MIND_RECORDS,
-  YM_KLINE_HISTORY_CACHE
+  YM_KLINE_HISTORY_CACHE,
+  YM_PERSONALITY_TEST_ANSWERS,
+  YM_PERSONALITY_REPORT,
+  YM_KLINE_SCENARIOS,
+  YM_KLINE_SESSION_RECORDS,
+  YM_KLINE_REVIEW_REPORTS,
+  YM_KLINE_MIRROR_CHALLENGES,
+  YM_ANONYMOUS_REACTION_STATS
 };

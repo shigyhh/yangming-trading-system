@@ -6,6 +6,8 @@ export type KlineHistoryAdjustmentModeKey = "none" | "forward" | "backward" | "d
 
 export type KlineHistoryTrainingModeKey = "step_replay" | "firecracker" | "boundary" | "personality" | "gate"
 
+export type KlineHistoryProviderKey = "tushare" | "futu" | "okx"
+
 export type KlineHistoryMarket = {
   key: KlineHistoryMarketKey
   label: string
@@ -39,6 +41,15 @@ export type KlineHistoryTrainingMode = {
   key: KlineHistoryTrainingModeKey
   label: string
   prompt: string
+}
+
+export type KlineHistoryProvider = {
+  key: KlineHistoryProviderKey
+  label: string
+  markets: KlineHistoryMarketKey[]
+  timeframes: KlineHistoryTimeframeKey[]
+  requires: string[]
+  note: string
 }
 
 export type KlineHistoryGatePractice = {
@@ -135,6 +146,7 @@ export type KlineHistoryCatalogResponse = {
   timeframes: KlineHistoryTimeframe[]
   adjustment_modes: KlineHistoryAdjustmentMode[]
   training_modes: KlineHistoryTrainingMode[]
+  providers: KlineHistoryProvider[]
   gates: KlineHistoryGatePractice[]
   personality_prescriptions: KlineHistoryPersonalityPractice[]
   storage_contract: {
@@ -143,6 +155,46 @@ export type KlineHistoryCatalogResponse = {
     kline_file: string
     ashare_legacy_file: string
   }
+  compliance: string
+}
+
+export type KlineHistoryDownloadRequest = {
+  provider?: KlineHistoryProviderKey
+  market: KlineHistoryMarketKey
+  symbol: string
+  name?: string
+  timeframe: KlineHistoryTimeframeKey
+  adjustment?: KlineHistoryAdjustmentModeKey
+  start_date?: string
+  end_date?: string
+  limit?: number
+  incremental?: boolean
+  dry_run?: boolean
+}
+
+export type KlineHistoryDownloadJob = {
+  provider: KlineHistoryProviderKey
+  source: string
+  market_key: KlineHistoryMarketKey
+  market_label: string
+  symbol: string
+  name: string
+  timeframe_key: KlineHistoryTimeframeKey
+  timeframe_label: string
+  adjustment_mode: KlineHistoryAdjustmentModeKey
+  candle_count: number
+  downloaded_count: number
+  added_count: number
+  data_start: string
+  data_end: string
+  file: string
+  dry_run: boolean
+  updated_at: string
+}
+
+export type KlineHistoryDownloadResponse = {
+  ok: true
+  job: KlineHistoryDownloadJob
   compliance: string
 }
 

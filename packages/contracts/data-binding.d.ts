@@ -113,6 +113,16 @@ export type DataBindingKLineRecord = {
   reaction: string
   disciplineAction: string
   feedback?: string
+  reactionTimeMs?: number
+  processScores?: {
+    planExecution: number
+    boundaryKeeping: number
+    impulseDelay: number
+    emotionalStability: number
+    reviewCompletion: number
+  }
+  processInsight?: string
+  trainingSuggestion?: string
 }
 
 export type DataBindingRetestComparison = {

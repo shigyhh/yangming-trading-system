@@ -49,6 +49,7 @@
       <button class="secondary" bindtap="saveCard">{{saved ? '已存入卡册' : '保存心证卡'}}</button>
       <button class="primary" open-type="share" bindtap="inviteCompanion">邀一位同修同行</button>
     </view>
+    <button class="ghost copy-action" bindtap="copyShareText">复制分享文案</button>
 
     <view class="album-card" wx:if="{{album.length}}">
       <view class="album-head">

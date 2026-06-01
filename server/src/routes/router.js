@@ -18,7 +18,7 @@ import { consumeWechatAuthCode, createWechatAuthUrl } from "../services/wechatAu
 import { advanceZhixingReplaySession, finishZhixingReplaySession, getZhixingReplaySession, listZhixingReplayResults, startZhixingReplaySession, submitZhixingReplayDecision } from "../services/zhixingReplay.js";
 import { generateShareCardBinding, getAdminUserFromBindings, getDataBindingUserSummary, getInviteSourceStatsBinding, getRetestComparisonBinding, getShareCardBinding, getUserReportBinding, listAdminUsersFromBindings, saveAssessmentReportBinding, saveKLineRecordBinding, saveRetestResultBinding, saveTrainingRecordBinding, syncAssistantSummaryToFeishuBinding, updateAssistantHandoffBinding } from "../services/dataBinding.js";
 import { getGlobalReflectionToday, listGlobalReflectionChoices, submitGlobalReflectionVote } from "../services/globalReflection.js";
-import { buildHistoricalKlineSlice, getHistoricalKlineRules, listHistoricalKlineCatalog, listHistoricalKlineInstruments, revealHistoricalKlineSlice } from "../services/historicalKline.js";
+import { buildHistoricalKlineSlice, downloadHistoricalKline, getHistoricalKlineRules, listHistoricalKlineCatalog, listHistoricalKlineInstruments, revealHistoricalKlineSlice } from "../services/historicalKline.js";
 
 export async function route(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
@@ -66,6 +66,7 @@ export async function route(req, res) {
         kline_history_rules: "GET /api/v1/kline-history/rules?market=cn_equity",
         kline_history_slice: "GET /api/v1/kline-history/slice?market=cn_equity&symbol=600519&timeframe=1d&blind=1",
         kline_history_reveal: "GET /api/v1/kline-history/reveal?token=xxx",
+        kline_history_download: "POST /api/v1/kline-history/download",
         zhixing_replay_start: "POST /api/v1/zhixing-replay/start",
         zhixing_replay_session: "GET /api/v1/zhixing-replay/:session_id",
         zhixing_replay_decision: "POST /api/v1/zhixing-replay/:session_id/decision",
@@ -689,6 +690,25 @@ export async function route(req, res) {
     return sendJson(res, 200, { ok: true, ...result });
   }
 
+  if (req.method === "POST" && pathname === "/api/v1/kline-history/download") {
+    assertKlineDownloadAccess(req);
+    const body = await readJson(req);
+    const result = await downloadHistoricalKline({
+      provider: body.provider,
+      marketKey: body.market || body.market_key,
+      symbol: body.symbol || body.code || body.instrument,
+      name: body.name,
+      timeframeKey: body.timeframe || body.timeframe_key || body.klt,
+      adjustmentMode: body.adjustment || body.adjustment_mode || body.fq,
+      startDate: body.start_date || body.start,
+      endDate: body.end_date || body.end,
+      limit: body.limit,
+      incremental: body.incremental !== false,
+      dryRun: Boolean(body.dry_run || body.dryRun)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
   if (req.method === "POST" && pathname === "/api/v1/kline-practice/submit") {
     const auth = await authenticateRequest(req);
     const body = await readJson(req);
@@ -888,6 +908,16 @@ function getBooleanParam(url, key, fallback = false) {
   if (!url.searchParams.has(key)) return fallback;
   const value = String(url.searchParams.get(key) || "").toLowerCase();
   return ["1", "true", "yes", "on"].includes(value);
+}
+
+function assertKlineDownloadAccess(req) {
+  const configuredToken = config.klineDownloadToken || "";
+  if (!configuredToken && config.nodeEnv !== "production") return;
+  const provided = String(req.headers["x-kline-download-token"] || req.headers.authorization || "").replace(/^Bearer\s+/i, "").trim();
+  if (configuredToken && provided === configuredToken) return;
+  const error = new Error("K线下载服务未授权");
+  error.statusCode = 403;
+  throw error;
 }
 
 function maskPhone(phone) {

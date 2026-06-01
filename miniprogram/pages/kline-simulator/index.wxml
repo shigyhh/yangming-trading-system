@@ -1,0 +1,54 @@
+<view class="page-shell">
+  <view class="page-content">
+    <text class="eyebrow">KLINE · 事上练</text>
+    <view class="page-title">K线压力<br />观心训练</view>
+    <view class="page-subtitle">真实历史切片用于盲练反应，不显示未来，不评价对错，只记录第一念、边界和复盘。</view>
+
+    <view class="intro-card card">
+      <text>今日校准</text>
+      <view>当前人格：{{assessment.primary || '待照见'}} · {{assessment.primaryMirror || '九镜待照见'}} · 先做一段压力测试，再进入 7 天训练。</view>
+      <button class="ghost-btn" bindtap="goReport">查看人格报告</button>
+    </view>
+
+    <view class="filter-card card">
+      <text>市场盘感</text>
+      <scroll-view scroll-x class="chip-strip" show-scrollbar="{{false}}">
+        <button
+          wx:for="{{markets}}"
+          wx:key="key"
+          class="{{marketKey === item.key ? 'active' : ''}}"
+          data-key="{{item.key}}"
+          bindtap="selectMarket"
+        >{{item.label}}</button>
+      </scroll-view>
+      <text>周期切片</text>
+      <scroll-view scroll-x class="chip-strip" show-scrollbar="{{false}}">
+        <button
+          wx:for="{{timeframes}}"
+          wx:key="key"
+          class="{{timeframeKey === item.key ? 'active' : ''}}"
+          data-key="{{item.key}}"
+          bindtap="selectTimeframe"
+        >{{item.label}}</button>
+      </scroll-view>
+    </view>
+
+    <view class="section-title">历史盲练场景</view>
+    <view class="scene-list">
+      <view wx:for="{{scenarios}}" wx:key="id" class="scene-card card" bindtap="startScene" data-id="{{item.id}}">
+        <view class="scene-head">
+          <text>{{item.title}}</text>
+          <view>Day {{item.trainingDay}}</view>
+        </view>
+        <view class="scene-meta">{{item.segmentLabel}} · {{item.ruleTag}}</view>
+        <view class="scene-subtitle">{{item.subtitle}}</view>
+        <view class="scene-tags">
+          <text wx:for="{{item.mirrorNames}}" wx:key="*this">{{item}}</text>
+        </view>
+      </view>
+    </view>
+
+    <compliance-notice />
+  </view>
+  <bottom-tab-bar active="mind" />
+</view>

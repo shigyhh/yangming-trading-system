@@ -27,7 +27,7 @@ const COACH_INTERFACE_SCHEMA = {
 
 function inferTriggerFromText(text = "") {
   const value = String(text || "");
-  if (/止损后|追回|追.*回|追回去|追单|又追|马上买|立刻/.test(value)) {
+  if (/止损后|追回|追.*回|追回去|追单|又追|马上动|立刻/.test(value)) {
     return {
       personality: "冲动型",
       heartThief: "急",

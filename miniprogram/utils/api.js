@@ -254,6 +254,53 @@ async function syncShareAttribution(event = null) {
   });
 }
 
+const KLINE_MARKET_MAP = {
+  cn: "cn_equity",
+  hk: "hk_equity",
+  us: "us_equity",
+  futures: "futures",
+  crypto: "crypto"
+};
+
+const KLINE_TIMEFRAME_MAP = {
+  "1m": "1mo",
+  "1mo": "1mo",
+  "1y": "1y",
+  "1w": "1w",
+  "1d": "1d",
+  "60m": "60m",
+  "30m": "30m",
+  "10m": "10m",
+  "5m": "5m"
+};
+
+async function fetchKlineTrainingSlice({
+  marketKey = "cn",
+  timeframeKey = "1d",
+  symbol = "",
+  windowSize = 60,
+  mode = "firecracker",
+  personalityType = "",
+  gateKey = "shi_shang_mo",
+  blind = true,
+  seed = ""
+} = {}) {
+  const market = KLINE_MARKET_MAP[marketKey] || marketKey || "cn_equity";
+  const timeframe = KLINE_TIMEFRAME_MAP[timeframeKey] || timeframeKey || "1d";
+  const query = [
+    `market=${encodeURIComponent(market)}`,
+    symbol ? `symbol=${encodeURIComponent(symbol)}` : "",
+    `timeframe=${encodeURIComponent(timeframe)}`,
+    `window=${encodeURIComponent(windowSize)}`,
+    `mode=${encodeURIComponent(mode)}`,
+    personalityType ? `personality_type=${encodeURIComponent(personalityType)}` : "",
+    gateKey ? `gate=${encodeURIComponent(gateKey)}` : "",
+    `blind=${blind ? "1" : "0"}`,
+    seed ? `seed=${encodeURIComponent(seed)}` : ""
+  ].filter(Boolean).join("&");
+  return request({ path: `/api/v1/kline-history/slice?${query}` });
+}
+
 module.exports = {
   DEFAULT_API_BASE,
   getApiBase,
@@ -265,5 +312,6 @@ module.exports = {
   syncCheckIn,
   syncAssessmentReport,
   syncTrainingProgress,
-  syncShareAttribution
+  syncShareAttribution,
+  fetchKlineTrainingSlice
 };
