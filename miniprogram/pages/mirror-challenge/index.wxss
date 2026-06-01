@@ -1,0 +1,122 @@
+.mirror-card,
+.option-card,
+.result-card {
+  margin-top: 26rpx;
+  padding: 28rpx;
+}
+
+.mirror-card text,
+.mirror-card view,
+.option-card text,
+.options,
+.option-card button,
+.result-card text,
+.result-card view,
+.result-card button {
+  position: relative;
+  z-index: 1;
+}
+
+.mirror-card > text:first-child,
+.option-card > text:first-child,
+.result-card > text:first-child {
+  color: #58c2ad;
+  font-size: 24rpx;
+  font-weight: 900;
+}
+
+.mirror-card view {
+  margin-top: 12rpx;
+  color: #fff6e6;
+  font-family: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", serif;
+  font-size: 42rpx;
+  font-weight: 900;
+}
+
+.mirror-card .sub {
+  display: block;
+  margin-top: 10rpx;
+  color: #f1d27d;
+}
+
+.options {
+  display: grid;
+  gap: 16rpx;
+  margin-top: 20rpx;
+}
+
+.option {
+  min-height: 84rpx;
+  padding: 14rpx 20rpx;
+  border-radius: 18rpx;
+  color: rgba(247, 239, 223, 0.78);
+  border: 1rpx solid rgba(247, 239, 223, 0.12);
+  background: rgba(255, 255, 255, 0.045);
+  text-align: left;
+}
+
+.option text {
+  color: #fff6e6;
+  font-size: 27rpx;
+  font-weight: 900;
+}
+
+.option view {
+  margin-top: 6rpx;
+  color: rgba(247, 239, 223, 0.5);
+  font-size: 22rpx;
+}
+
+.option.selected {
+  color: #11140f;
+  border-color: rgba(241, 210, 125, 0.72);
+  background: linear-gradient(180deg, #f1d27d, #c99d4c);
+}
+
+.option.selected text,
+.option.selected view {
+  color: #11140f;
+}
+
+.option-card .primary-btn {
+  margin-top: 22rpx;
+}
+
+.compare-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18rpx;
+  margin-top: 22rpx;
+}
+
+.compare-row > view {
+  padding: 20rpx;
+  border-radius: 18rpx;
+  border: 1rpx solid rgba(247, 239, 223, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.compare-row text {
+  color: #f1d27d;
+  font-size: 22rpx;
+  font-weight: 900;
+}
+
+.compare-row view view {
+  margin: 12rpx 0;
+  color: #fff6e6;
+  font-size: 28rpx;
+  line-height: 1.4;
+  font-weight: 900;
+}
+
+.insight {
+  margin-top: 20rpx;
+  color: rgba(247, 239, 223, 0.72);
+  font-size: 26rpx;
+  line-height: 1.65;
+}
+
+.result-card .ghost-btn {
+  margin-top: 22rpx;
+}

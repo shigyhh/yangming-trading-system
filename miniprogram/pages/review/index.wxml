@@ -25,6 +25,54 @@
       <text>{{saved ? '已保存' : '待填写'}}</text>
     </view>
 
+    <view class="closing-review-card card">
+      <text>收盘省察</text>
+      <view class="closing-field">
+        <view>今天最强烈的一次交易反应</view>
+        <textarea
+          class="textarea-field"
+          maxlength="120"
+          placeholder="例：边界被触碰时，我很想证明自己没有错。"
+          value="{{form.strongestReaction}}"
+          bindinput="inputStrongestReaction"
+        />
+      </view>
+      <view class="closing-switch">
+        <view>是否守住今日边界</view>
+        <view>
+          <button class="{{form.keptBoundary ? 'active' : ''}}" data-key="keptBoundary" data-value="true" bindtap="setReviewBoolean">是</button>
+          <button class="{{!form.keptBoundary ? 'active' : ''}}" data-key="keptBoundary" data-value="false" bindtap="setReviewBoolean">否</button>
+        </view>
+      </view>
+      <view class="closing-switch">
+        <view>是否偏离计划</view>
+        <view>
+          <button class="{{form.deviatedPlan ? 'active' : ''}}" data-key="deviatedPlan" data-value="true" bindtap="setReviewBoolean">是</button>
+          <button class="{{!form.deviatedPlan ? 'active' : ''}}" data-key="deviatedPlan" data-value="false" bindtap="setReviewBoolean">否</button>
+        </view>
+      </view>
+      <view class="closing-field">
+        <view>今日照见一句话</view>
+        <textarea
+          class="textarea-field"
+          maxlength="80"
+          placeholder="例：真正牵动我的不是波动，而是不愿承认边界。"
+          value="{{form.insightLine}}"
+          bindinput="inputInsightLine"
+        />
+      </view>
+      <view class="closing-field">
+        <view>明日要守住的一界</view>
+        <textarea
+          class="textarea-field"
+          maxlength="80"
+          placeholder="例：明日只守计划边界，不被不甘推着走。"
+          value="{{form.tomorrowBoundary}}"
+          bindinput="inputTomorrowBoundary"
+        />
+      </view>
+    </view>
+
     <view class="field-list">
       <view wx:for="{{fields}}" wx:key="key" class="field-card card">
         <view class="field-label">{{item.label}}</view>

@@ -1,0 +1,72 @@
+<view class="share-shell">
+  <view class="share-bg mist"></view>
+  <view class="share-bg grain"></view>
+
+  <view class="share-content">
+    <view class="head">
+      <view class="seal">证</view>
+      <view>
+        <text>心证卡</text>
+        <view>被照见之后，才自然愿意分享。</view>
+      </view>
+    </view>
+
+    <scroll-view scroll-x class="type-strip" show-scrollbar="{{false}}">
+      <button
+        wx:for="{{cardTypes}}"
+        wx:key="type"
+        data-type="{{item.type}}"
+        class="{{item.active ? 'active' : ''}}"
+        bindtap="switchType"
+      >{{item.title}}</button>
+    </scroll-view>
+
+    <view class="card-preview">
+      <view class="card-top">
+        <view>
+          <text>{{card.typeLabel}}</text>
+          <view>阳明心学交易系统</view>
+        </view>
+        <view class="mini-seal">知</view>
+      </view>
+      <view class="headline">{{card.headline}}</view>
+      <view class="body">{{card.body}}</view>
+      <view class="metrics" wx:if="{{card.metrics && card.metrics.length}}">
+        <view wx:for="{{card.metrics}}" wx:key="label">
+          <text>{{item.label}}</text>
+          <view>{{item.value}}</view>
+          <text wx:if="{{item.trend}}">{{item.trend}}</text>
+        </view>
+      </view>
+      <view class="insight">{{card.insight}}</view>
+      <view class="card-foot">
+        <text>{{card.cta}}</text>
+        <view>同修照见</view>
+      </view>
+    </view>
+
+    <view class="share-actions">
+      <button class="secondary" bindtap="saveCard">{{saved ? '已存入卡册' : '保存心证卡'}}</button>
+      <button class="primary" open-type="share" bindtap="inviteCompanion">邀一位同修同行</button>
+    </view>
+    <button class="ghost copy-action" bindtap="copyShareText">复制分享文案</button>
+
+    <view class="album-card" wx:if="{{album.length}}">
+      <view class="album-head">
+        <text>我的心证卡册</text>
+        <view bindtap="goProfile">去用户中心</view>
+      </view>
+      <view class="album-list">
+        <view wx:for="{{album}}" wx:key="id">
+          <text>{{item.typeLabel}}</text>
+          <view>{{item.headline}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="compliance-card">{{card.compliance}}</view>
+    <button class="ghost" bindtap="goHome">回到今日陪跑</button>
+  </view>
+
+  <bottom-tab-bar active="zhixing" />
+</view>

@@ -1,0 +1,58 @@
+<view class="lesson-shell">
+  <view class="lesson-bg mist"></view>
+  <view class="lesson-bg grain"></view>
+
+  <view class="lesson-content">
+    <view class="head">
+      <view class="seal">课</view>
+      <view>
+        <text>{{lesson.title}}</text>
+        <view>{{lesson.typeLabel}} · {{lesson.subtitle}}</view>
+      </view>
+    </view>
+
+    <view class="lesson-hero">
+      <text>{{lesson.typeLabel}}</text>
+      <view>{{lesson.description}}</view>
+    </view>
+
+    <view class="lesson-player">
+      <view class="play-seal">{{lesson.type === 'live' ? '约' : lesson.watched ? '已' : '观'}}</view>
+      <view>
+        <text>{{lesson.type === 'live' ? '直播预约占位' : '观课记录占位'}}</text>
+        <view>{{lesson.type === 'live' ? '正式推流后接入直播间，这里先完成预约与承接。' : '看完后点“记录已看”，系统会生成回放分享时刻。'}}</view>
+      </view>
+    </view>
+
+    <view class="lesson-meta">
+      <view>
+        <text>训练主题</text>
+        <view>{{lesson.relatedDay}}</view>
+      </view>
+      <view>
+        <text>时长 / 时间</text>
+        <view>{{lesson.startTime || lesson.duration}}</view>
+      </view>
+      <view>
+        <text>预约状态</text>
+        <view>{{lesson.watched ? '已看完' : lesson.reserved ? '已预约' : '待记录'}}</view>
+      </view>
+    </view>
+
+    <view class="guide-card">
+      <text>今日导引</text>
+      <view>{{lesson.guide}}</view>
+    </view>
+
+    <view class="actions">
+      <button class="secondary" bindtap="goClassroom">返回讲堂</button>
+      <button class="primary" bindtap="reserveLesson">{{lesson.reservationText}}</button>
+    </view>
+    <button class="ghost" bindtap="goShareCard">生成事上练课卡</button>
+
+    <view class="compliance">{{lesson.compliance}}</view>
+    <compliance-notice compact="{{true}}" />
+  </view>
+
+  <bottom-tab-bar active="index" />
+</view>

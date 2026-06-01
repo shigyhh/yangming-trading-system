@@ -1,3 +1,88 @@
+.mode-card,
+.dynamic-card {
+  margin-top: 26rpx;
+  padding: 24rpx;
+}
+
+.mode-head {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  gap: 18rpx;
+  color: rgba(247, 239, 223, 0.62);
+  font-size: 22rpx;
+}
+
+.mode-head text {
+  color: #f1d27d;
+  font-weight: 800;
+}
+
+.mode-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14rpx;
+  margin-top: 20rpx;
+}
+
+.mode-btn {
+  min-height: 112rpx;
+  padding: 16rpx 12rpx;
+  border-radius: 18rpx;
+  border: 1rpx solid rgba(247, 239, 223, 0.12);
+  background: rgba(255, 255, 255, 0.045);
+  color: rgba(247, 239, 223, 0.62);
+  text-align: left;
+}
+
+.mode-btn text {
+  display: block;
+  color: rgba(247, 239, 223, 0.9);
+  font-size: 24rpx;
+  font-weight: 900;
+}
+
+.mode-btn view {
+  margin-top: 8rpx;
+  font-size: 19rpx;
+  line-height: 1.35;
+}
+
+.mode-btn.active {
+  border-color: rgba(241, 210, 125, 0.68);
+  background: linear-gradient(180deg, rgba(241, 210, 125, 0.22), rgba(201, 157, 76, 0.08));
+}
+
+.dynamic-card text,
+.dynamic-card view {
+  position: relative;
+  z-index: 1;
+}
+
+.dynamic-card > text:first-child {
+  color: #58c2ad;
+  font-size: 24rpx;
+  font-weight: 900;
+}
+
+.dynamic-card view {
+  margin-top: 12rpx;
+  color: #fff6e6;
+  font-size: 28rpx;
+  font-weight: 800;
+}
+
+.dynamic-note {
+  display: block;
+  margin-top: 10rpx;
+  color: rgba(247, 239, 223, 0.6);
+  font-size: 23rpx;
+  line-height: 1.55;
+}
+
 .progress-card {
   margin-top: 32rpx;
   padding: 26rpx;
@@ -79,6 +164,44 @@
   font-weight: 700;
 }
 
+.question-trigger {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  margin-top: 22rpx;
+  padding: 9rpx 16rpx;
+  border-radius: 999rpx;
+  color: #58c2ad;
+  border: 1rpx solid rgba(88, 194, 173, 0.22);
+  background: rgba(88, 194, 173, 0.07);
+  font-size: 21rpx;
+  line-height: 1.35;
+  font-weight: 900;
+}
+
+.boundary-insight {
+  position: relative;
+  z-index: 1;
+  margin-top: 22rpx;
+  padding: 20rpx 22rpx;
+  border-left: 4rpx solid rgba(88, 194, 173, 0.8);
+  background: rgba(88, 194, 173, 0.07);
+}
+
+.boundary-insight text {
+  color: #58c2ad;
+  font-size: 22rpx;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.boundary-insight view {
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.68);
+  font-size: 24rpx;
+  line-height: 1.55;
+}
+
 @media (max-width: 340px) {
   .question-card {
     padding-left: 24rpx;
@@ -92,6 +215,10 @@
   .option {
     min-height: 84rpx;
     font-size: 26rpx;
+  }
+
+  .mode-grid {
+    grid-template-columns: 1fr;
   }
 }
 

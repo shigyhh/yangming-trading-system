@@ -1,0 +1,86 @@
+<view class="page-shell">
+  <view class="page-content">
+    <text class="eyebrow">DATA MIRROR · 活镜采集</text>
+    <view class="page-title">活镜数据<br />训练台</view>
+    <view class="page-subtitle">这里不是报告展示页，而是把每次真实复盘沉淀成九镜变化、心贼频次和下一次训练动作。</view>
+
+    <view class="mirror-hero card">
+      <view class="lake-glow"></view>
+      <view class="mirror-label">采集生成主镜</view>
+      <view class="mirror-name">{{stats.currentMirror || '活镜未点亮'}}</view>
+      <view class="mirror-count">{{hasRecords ? stats.totalReviews + ' 条复盘采集' : '上传第一条记录后生成'}}</view>
+      <view class="thief-line">
+        <text>最近高频心贼</text>
+        <view>{{stats.topThievesText || '待照见'}}</view>
+      </view>
+    </view>
+
+    <view class="change-card card">
+      <view class="card-head">
+        <text>7 天采集变化</text>
+        <view>只看反应模式，不绑定结果</view>
+      </view>
+      <view class="change-row" wx:for="{{stats.mirrorTrendRows}}" wx:key="mirror">
+        <text>{{item.mirror}}</text>
+        <view class="{{item.tone}}">{{item.direction}} {{item.percent}}</view>
+      </view>
+    </view>
+
+    <view class="reminder-card card">
+      <view class="card-head">
+        <text>下一次训练提醒</text>
+        <view>今日只练一件事</view>
+      </view>
+      <view class="reminder-line">{{stats.todayReminder || '先完成一条真实复盘，让活镜开始记录。'}}</view>
+      <view class="training-line">{{stats.mainTraining || '把第一念记录下来。'}}</view>
+      <button class="primary-btn" bindtap="goReview">{{hasRecords ? '继续采集一笔复盘' : '上传第一条记录'}}</button>
+    </view>
+
+    <view class="recent-card card">
+      <view class="card-head">
+        <text>最近三次采集</text>
+        <view bindtap="goArchive">进入档案</view>
+      </view>
+      <view wx:if="{{stats.recentThree.length}}">
+        <button
+          wx:for="{{stats.recentThree}}"
+          wx:key="id"
+          class="recent-row"
+          data-id="{{item.id}}"
+          bindtap="goDetail"
+        >{{item.line}}</button>
+      </view>
+      <view wx:else class="empty-text">还没有采集记录。先上传一张截图，照见第一次真实反应。</view>
+    </view>
+
+    <view class="assistant-card card">
+      <view class="card-head">
+        <text>助教承接摘要</text>
+        <view>本地 mock</view>
+      </view>
+      <view class="assistant-grid">
+        <view>
+          <text>当前主镜</text>
+          <view>{{stats.assistantHandoff.currentMirror}}</view>
+        </view>
+        <view>
+          <text>当前副镜</text>
+          <view>{{stats.assistantHandoff.secondaryMirror}}</view>
+        </view>
+        <view>
+          <text>高频心贼</text>
+          <view>{{stats.assistantHandoff.highFrequencyThieves}}</view>
+        </view>
+        <view>
+          <text>最近念头</text>
+          <view>{{stats.assistantHandoff.recentThought}}</view>
+        </view>
+      </view>
+      <view class="assistant-script">{{stats.assistantHandoff.scriptSuggestion}}</view>
+      <button class="ghost-btn" bindtap="goAssistant">去我的页承接</button>
+    </view>
+
+    <compliance-notice />
+  </view>
+  <bottom-tab-bar active="mirror" />
+</view>

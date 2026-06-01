@@ -34,6 +34,71 @@
   gap: 16rpx;
 }
 
+.closing-review-card {
+  margin-bottom: 22rpx;
+  padding: 26rpx;
+}
+
+.closing-review-card > text,
+.closing-field,
+.closing-switch {
+  position: relative;
+  z-index: 1;
+}
+
+.closing-review-card > text {
+  display: block;
+  color: #f1d27d;
+  font-size: 24rpx;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.closing-field {
+  margin-top: 22rpx;
+}
+
+.closing-field > view,
+.closing-switch > view:first-child {
+  color: rgba(247, 239, 223, 0.74);
+  font-size: 25rpx;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.closing-switch {
+  min-height: 82rpx;
+  margin-top: 18rpx;
+  display: flex;
+  justify-content: space-between;
+  gap: 18rpx;
+  align-items: center;
+}
+
+.closing-switch > view:last-child {
+  display: flex;
+  gap: 10rpx;
+}
+
+.closing-switch button {
+  min-width: 78rpx;
+  height: 56rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 999rpx;
+  color: rgba(247, 239, 223, 0.58);
+  border: 1rpx solid rgba(247, 239, 223, 0.12);
+  background: rgba(255, 255, 255, 0.045);
+  font-size: 24rpx;
+  font-weight: 800;
+}
+
+.closing-switch button.active {
+  color: #11140f;
+  border-color: rgba(241, 210, 125, 0.78);
+  background: linear-gradient(180deg, #f1d27d, #c99d4c);
+}
+
 .field-card {
   padding: 22rpx;
   display: flex;

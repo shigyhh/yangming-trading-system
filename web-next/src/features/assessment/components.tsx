@@ -27,7 +27,7 @@ export function AssessmentShell({
       <div
         className={cn(
           "relative z-10 mx-auto flex min-h-[calc(100svh-4rem)] w-full flex-col justify-center md:min-h-[calc(100svh-5rem)]",
-          contentWidth === "wide" ? "max-w-none" : "max-w-[430px]",
+          contentWidth === "wide" ? "max-w-none" : "max-w-[430px] md:max-w-[720px]",
         )}
       >
         {children}
@@ -94,7 +94,7 @@ export function SecondaryButton({ children, className, ...props }: ButtonHTMLAtt
 
 export function ComplianceNote({ children }: { children: ReactNode }) {
   return (
-    <p className="mt-5 rounded-[8px] border border-[rgba(172,146,83,.14)] bg-white/[.025] px-4 py-3 text-center font-function text-xs leading-6 tracking-[.04em] text-[rgba(220,212,195,.46)]">
+    <p className="compliance-note mt-5 rounded-[8px] border border-[rgba(172,146,83,.14)] bg-white/[.025] px-4 py-3 text-center font-function text-xs leading-6 tracking-[.04em] text-[rgba(220,212,195,.46)]">
       {children}
     </p>
   )

@@ -39,7 +39,7 @@ const CULTIVATION_LOOP = [
 
 const PRODUCT_LANGUAGE = {
   core: ["知行合一", "照心", "立志", "戒律", "事上练", "致良知", "省察", "破心中贼", "观心", "克己", "修行", "心境"],
-  forbidden: ["暴富", "翻倍", "妖股", "龙头", "必赢", "稳赚", "财富自由"]
+  restrictedCategory: "marketing_promises"
 };
 
 const DAILY_TOOLKIT = [

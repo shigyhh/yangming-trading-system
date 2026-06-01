@@ -72,7 +72,7 @@ export default function AssessmentLoginPage() {
   }
 
   return (
-    <AssessmentShell>
+    <AssessmentShell contentWidth="wide">
       {!showArchiveForm ? (
         <div className="archive-transition flex min-h-[calc(100svh-4rem)] flex-col items-center justify-center text-center">
           <div className="archive-seal" aria-hidden="true">
@@ -177,20 +177,18 @@ export default function AssessmentLoginPage() {
           `}</style>
         </div>
       ) : (
-      <div className="flex flex-col">
-        <StatusPill>安放心证</StatusPill>
-        <h1 className="mt-8 font-story text-[clamp(2.5rem,11vw,3.8rem)] font-light leading-[1.2] tracking-[.11em]">
-          让此心一照，
-          <br />
-          日后仍可回看。
-        </h1>
-        <p className="mt-7 font-story text-[1.04rem] font-light leading-9 tracking-[.04em] text-[rgba(220,212,195,.66)]">
-          仅以手机号，
-          <br />
-          存放这一份心证。
-        </p>
+      <div className="login-page mx-auto grid w-full max-w-[1180px] gap-6">
+        <section className="login-copy">
+          <StatusPill>安放心证</StatusPill>
+          <h1 className="mt-8 max-w-[10em] font-story text-[clamp(3rem,7.2vw,6.4rem)] font-light leading-[1.08] tracking-[.08em]">
+            让此心一照，日后仍可回看。
+          </h1>
+          <p className="mt-7 max-w-[32rem] font-story text-[1.08rem] font-light leading-9 tracking-[.04em] text-[rgba(220,212,195,.66)]">
+            仅以手机号，存放这一份心证。后续报告、训练记录、复测变化都会归到同一个用户。
+          </p>
+        </section>
 
-        <GlassPanel className="mt-9 grid gap-5">
+        <GlassPanel className="login-card grid gap-5">
           <label className="grid gap-2">
             <span className="font-function text-sm text-[rgba(220,212,195,.68)]">手机号</span>
             <input
@@ -244,6 +242,61 @@ export default function AssessmentLoginPage() {
         <ComplianceNote>
           手机号仅用于保存照见心证与复看变化。本系统不预测行情，不提供买卖建议。
         </ComplianceNote>
+
+        <style jsx>{`
+          .login-page {
+            animation: login-page-in 820ms cubic-bezier(0.22, 1, 0.36, 1) both;
+          }
+
+          .login-copy {
+            position: relative;
+            isolation: isolate;
+          }
+
+          .login-copy::before {
+            content: "";
+            position: absolute;
+            inset: -16% auto auto 34%;
+            width: min(48vw, 460px);
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background:
+              repeating-radial-gradient(circle, rgba(216, 183, 111, 0.055) 0 1px, transparent 1px 18px),
+              radial-gradient(circle, rgba(95, 132, 117, 0.08), transparent 62%);
+            opacity: 0.62;
+            z-index: -1;
+          }
+
+          .login-card {
+            align-self: center;
+          }
+
+          @media (min-width: 960px) {
+            .login-page {
+              grid-template-columns: minmax(0, 1fr) minmax(360px, 0.46fr);
+              align-items: center;
+              min-height: calc(100svh - 5rem);
+            }
+
+            .login-page :global(.compliance-note) {
+              grid-column: 1 / -1;
+            }
+          }
+
+          @keyframes login-page-in {
+            from {
+              opacity: 0;
+              filter: blur(8px);
+              transform: translateY(18px);
+            }
+
+            to {
+              opacity: 1;
+              filter: blur(0);
+              transform: translateY(0);
+            }
+          }
+        `}</style>
       </div>
       )}
     </AssessmentShell>

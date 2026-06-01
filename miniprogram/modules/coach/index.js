@@ -22,12 +22,12 @@ const COACH_INTERFACE_SCHEMA = {
     "commandment_reminder",
     "coach_note"
   ],
-  boundary: "只做观心、戒律、事上练动作，不输出买卖建议、具体标的、收益承诺。"
+  boundary: "只做观心、戒律、事上练动作，不输出操作判断、具体标的、结果承诺。"
 };
 
 function inferTriggerFromText(text = "") {
   const value = String(text || "");
-  if (/止损后|追回|追.*回|追回去|追单|又追|马上买|立刻/.test(value)) {
+  if (/止损后|追回|追.*回|追回去|追单|又追|马上动|立刻/.test(value)) {
     return {
       personality: "冲动型",
       heartThief: "急",

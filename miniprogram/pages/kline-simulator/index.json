@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "K线压力测试",
+  "usingComponents": {
+    "bottom-tab-bar": "/components/bottom-tab-bar/index",
+    "compliance-notice": "/components/compliance-notice/index"
+  }
+}

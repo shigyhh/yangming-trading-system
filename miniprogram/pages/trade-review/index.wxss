@@ -1,0 +1,371 @@
+.upload-card,
+.quick-review-card,
+.form-card,
+.report-card,
+.recent-card {
+  margin-top: 26rpx;
+  padding: 28rpx;
+}
+
+.upload-card > text,
+.quick-review-card > text,
+.form-card > text,
+.report-card > text,
+.recent-card > text,
+.upload-empty,
+.upload-preview,
+.upload-card button,
+.upload-note,
+.quick-review-card view,
+.quick-review-card input,
+.quick-review-card textarea,
+.field-label,
+.chip-strip,
+.field-grid,
+.choice-grid,
+.emotion-grid,
+.form-card textarea,
+.form-card input,
+.one-line,
+.verdict-card,
+.match-card,
+.mirror-grid,
+.score-list,
+.evidence-list,
+.training-action,
+.recent-head,
+.recent-row {
+  position: relative;
+  z-index: 1;
+}
+
+.upload-card > text,
+.quick-review-card > text,
+.form-card > text,
+.report-card > text,
+.recent-card > text,
+.recent-head > text {
+  display: block;
+  color: #f1d27d;
+  font-size: 24rpx;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.quick-review-card > view {
+  margin-top: 12rpx;
+  color: rgba(247, 239, 223, 0.56);
+  font-size: 23rpx;
+  line-height: 1.5;
+}
+
+.quick-review-card input,
+.quick-review-card textarea {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 16rpx;
+  padding: 20rpx 22rpx;
+  border-radius: 18rpx;
+  color: #fff6e6;
+  border: 1rpx solid rgba(241, 210, 125, 0.14);
+  background: rgba(255, 255, 255, 0.045);
+  font-size: 25rpx;
+  line-height: 1.5;
+}
+
+.quick-review-card input {
+  height: 80rpx;
+}
+
+.quick-review-card textarea {
+  min-height: 130rpx;
+}
+
+.upload-preview {
+  height: 300rpx;
+  margin-top: 18rpx;
+  overflow: hidden;
+  border-radius: 20rpx;
+  border: 1rpx solid rgba(247, 239, 223, 0.12);
+}
+
+.upload-preview image {
+  width: 100%;
+  height: 100%;
+}
+
+.upload-empty {
+  min-height: 168rpx;
+  margin-top: 18rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 20rpx;
+  color: rgba(247, 239, 223, 0.56);
+  border: 1rpx dashed rgba(241, 210, 125, 0.28);
+  background: rgba(255, 255, 255, 0.035);
+  font-size: 24rpx;
+}
+
+.upload-card button {
+  margin-top: 20rpx;
+}
+
+.upload-note {
+  margin-top: 14rpx;
+  color: rgba(247, 239, 223, 0.48);
+  font-size: 22rpx;
+  line-height: 1.55;
+}
+
+.field-label {
+  margin-top: 24rpx;
+  color: #58c2ad;
+  font-size: 22rpx;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.chip-strip {
+  margin: 14rpx -8rpx 0;
+  white-space: nowrap;
+}
+
+.chip-strip button,
+.emotion-grid button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 58rpx;
+  margin-right: 10rpx;
+  padding: 0 20rpx;
+  border-radius: 999rpx;
+  color: rgba(247, 239, 223, 0.7);
+  border: 1rpx solid rgba(247, 239, 223, 0.12);
+  background: rgba(255, 255, 255, 0.045);
+  font-size: 23rpx;
+  font-weight: 800;
+}
+
+.chip-strip button.active,
+.emotion-grid button.active,
+.choice-grid button.active {
+  color: #11140f;
+  border-color: rgba(241, 210, 125, 0.68);
+  background: linear-gradient(180deg, #f1d27d, #c99d4c);
+}
+
+.field-grid {
+  margin-top: 18rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14rpx;
+}
+
+.field-grid > view,
+.verdict-card,
+.match-card,
+.mirror-grid > view,
+.evidence-list > view,
+.recent-row {
+  padding: 18rpx;
+  border-radius: 18rpx;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.field-grid text {
+  display: block;
+  color: #b49355;
+  font-size: 21rpx;
+  font-weight: 900;
+}
+
+.field-grid picker,
+.field-grid input {
+  margin-top: 10rpx;
+  color: #fff6e6;
+  font-size: 25rpx;
+  font-weight: 800;
+}
+
+.choice-grid {
+  margin-top: 14rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12rpx;
+}
+
+.choice-grid button {
+  min-height: 88rpx;
+  padding: 14rpx 18rpx;
+  border-radius: 18rpx;
+  color: rgba(247, 239, 223, 0.72);
+  border: 1rpx solid rgba(247, 239, 223, 0.12);
+  background: rgba(255, 255, 255, 0.045);
+  text-align: left;
+}
+
+.choice-grid text {
+  display: block;
+  font-size: 25rpx;
+  font-weight: 900;
+}
+
+.choice-grid view {
+  margin-top: 6rpx;
+  font-size: 21rpx;
+  opacity: 0.68;
+}
+
+.emotion-grid {
+  margin-top: 14rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+}
+
+.form-card textarea,
+.form-card input {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 18rpx;
+  padding: 20rpx 22rpx;
+  border-radius: 18rpx;
+  color: #fff6e6;
+  border: 1rpx solid rgba(247, 239, 223, 0.12);
+  background: rgba(255, 255, 255, 0.045);
+  font-size: 25rpx;
+  line-height: 1.5;
+}
+
+.form-card input {
+  height: 80rpx;
+}
+
+.form-card textarea {
+  min-height: 128rpx;
+}
+
+.one-line {
+  margin-top: 18rpx;
+  color: #fff6e6;
+  font-family: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", serif;
+  font-size: 32rpx;
+  line-height: 1.55;
+  font-weight: 900;
+}
+
+.match-card,
+.verdict-card,
+.mirror-grid,
+.score-list,
+.evidence-list,
+.training-action,
+.recent-row {
+  margin-top: 18rpx;
+}
+
+.match-card text,
+.verdict-card text,
+.training-action text,
+.evidence-list text,
+.mirror-grid text {
+  color: #b49355;
+  font-size: 21rpx;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.match-card view,
+.verdict-card view,
+.training-action view,
+.evidence-list view view,
+.mirror-grid view view {
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.72);
+  font-size: 24rpx;
+  line-height: 1.5;
+  font-weight: 800;
+}
+
+.mirror-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12rpx;
+}
+
+.score-list > view {
+  position: relative;
+  z-index: 1;
+  margin-top: 14rpx;
+  display: grid;
+  grid-template-columns: 160rpx 1fr 58rpx;
+  gap: 14rpx;
+  align-items: center;
+}
+
+.score-list text {
+  color: rgba(247, 239, 223, 0.72);
+  font-size: 22rpx;
+  font-weight: 800;
+}
+
+.score-list > view > view {
+  height: 10rpx;
+  overflow: hidden;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.score-list > view > view > view {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #58c2ad, #f1d27d);
+}
+
+.evidence-list > view {
+  margin-top: 12rpx;
+}
+
+.recent-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18rpx;
+}
+
+.recent-head button {
+  min-height: 54rpx;
+  padding: 0 18rpx;
+  border-radius: 999rpx;
+  color: rgba(247, 239, 223, 0.72);
+  border: 1rpx solid rgba(247, 239, 223, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 21rpx;
+  font-weight: 900;
+}
+
+.recent-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 18rpx;
+  align-items: center;
+}
+
+.recent-row view {
+  color: rgba(247, 239, 223, 0.72);
+  font-size: 23rpx;
+  line-height: 1.45;
+}
+
+.recent-row text {
+  color: #f1d27d;
+  font-size: 23rpx;
+  font-weight: 900;
+}
+
+@media (max-width: 340px) {
+  .field-grid,
+  .choice-grid,
+  .mirror-grid {
+    grid-template-columns: 1fr;
+  }
+}
