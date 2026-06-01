@@ -1,11 +1,8 @@
 "use client"
 
 import { AmbientSound } from "@/components/home/ambient-sound"
-import { AiFocusSection } from "@/components/home/ai-focus-section"
 import { HeroSection } from "@/components/home/hero-section"
 import { InkMountainBackground } from "@/components/home/ink-mountain-background"
-import { MindJourneySection } from "@/components/home/mind-journey-section"
-import { PersonalityEntrySection } from "@/components/home/personality-entry-section"
 import { TopNav } from "@/components/home/top-nav"
 import { WaterRippleField } from "@/components/home/water-ripple-field"
 
@@ -17,9 +14,6 @@ export function CinematicHome() {
       <WaterRippleField />
       <TopNav />
       <HeroSection />
-      <MindJourneySection />
-      <AiFocusSection />
-      <PersonalityEntrySection />
       <footer
         id="compliance"
         className="font-function relative z-10 mx-auto w-full max-w-[1240px] px-4 pb-10 text-center text-sm leading-7 text-muted-cream md:px-8"

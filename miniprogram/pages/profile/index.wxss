@@ -76,6 +76,180 @@
   font-weight: 700;
 }
 
+.identity-card {
+  margin-top: 22rpx;
+  padding: 26rpx;
+}
+
+.identity-head,
+.identity-chain,
+.identity-input,
+.identity-source {
+  position: relative;
+  z-index: 1;
+}
+
+.identity-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 20rpx;
+  align-items: flex-start;
+}
+
+.identity-head view {
+  min-width: 0;
+}
+
+.identity-head view text {
+  display: block;
+  color: #d8b76f;
+  font-size: 23rpx;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.identity-head view view {
+  margin-top: 10rpx;
+  color: #fff6e6;
+  font-size: 28rpx;
+  font-weight: 800;
+  line-height: 1.36;
+}
+
+.identity-head > text {
+  flex: 0 0 auto;
+  color: rgba(247, 239, 223, 0.52);
+  font-size: 22rpx;
+  font-weight: 800;
+}
+
+.identity-chain {
+  margin-top: 22rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.identity-chain view {
+  padding: 10rpx 14rpx;
+  border-radius: 999rpx;
+  color: rgba(247, 239, 223, 0.72);
+  border: 1rpx solid rgba(216, 183, 111, 0.14);
+  background: rgba(216, 183, 111, 0.05);
+  font-size: 20rpx;
+  font-weight: 800;
+}
+
+.identity-input {
+  margin-top: 22rpx;
+  display: grid;
+  grid-template-columns: 1fr 150rpx;
+  gap: 12rpx;
+}
+
+.identity-input input {
+  height: 76rpx;
+  padding: 0 22rpx;
+  border-radius: 18rpx;
+  color: #fff6e6;
+  border: 1rpx solid rgba(201, 157, 76, 0.16);
+  background: rgba(255, 255, 255, 0.035);
+  font-size: 25rpx;
+}
+
+.identity-input button {
+  min-height: 76rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 18rpx;
+  color: #11130d;
+  background: linear-gradient(180deg, #ead089, #c69846);
+  font-size: 24rpx;
+  font-weight: 900;
+}
+
+.identity-source {
+  margin-top: 14rpx;
+  color: rgba(247, 239, 223, 0.42);
+  font-size: 21rpx;
+  line-height: 1.5;
+}
+
+.mock-sync-card,
+.card-album {
+  margin-top: 22rpx;
+  padding: 26rpx;
+}
+
+.mock-sync-head,
+.mock-grid,
+.assistant-summary,
+.card-album-head,
+.card-album-list {
+  position: relative;
+  z-index: 1;
+}
+
+.mock-sync-head,
+.card-album-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18rpx;
+}
+
+.mock-sync-head view text,
+.card-album-head view text {
+  display: block;
+  color: #d8b76f;
+  font-size: 23rpx;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.mock-sync-head view view,
+.card-album-head view view {
+  margin-top: 10rpx;
+  color: rgba(247, 239, 223, 0.62);
+  font-size: 24rpx;
+  line-height: 1.5;
+}
+
+.mock-sync-head button,
+.card-album-head button {
+  min-width: 176rpx;
+  min-height: 64rpx;
+  padding: 0 18rpx;
+  border-radius: 999rpx;
+  color: #11130d;
+  background: linear-gradient(180deg, #ead089, #c69846);
+  font-size: 23rpx;
+  font-weight: 900;
+}
+
+.mock-grid {
+  margin-top: 22rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12rpx;
+}
+
+.mock-grid view {
+  padding: 14rpx 16rpx;
+  border-radius: 16rpx;
+  color: rgba(247, 239, 223, 0.72);
+  border: 1rpx solid rgba(216, 183, 111, 0.12);
+  background: rgba(216, 183, 111, 0.04);
+  font-size: 22rpx;
+}
+
+.assistant-summary {
+  margin-top: 18rpx;
+  color: rgba(247, 239, 223, 0.48);
+  font-size: 23rpx;
+  line-height: 1.6;
+}
+
 .growth-card {
   margin-top: 22rpx;
   padding: 26rpx;
@@ -136,6 +310,249 @@
   color: rgba(247, 239, 223, 0.56);
   font-size: 23rpx;
   line-height: 1.5;
+}
+
+.membership-card,
+.subscription-card,
+.retention-panel {
+  margin-top: 22rpx;
+  padding: 26rpx;
+}
+
+.membership-head,
+.subscription-head,
+.membership-note,
+.benefit-list,
+.retention-row,
+.time-picker,
+.identity-proof,
+.subscription-plans,
+.subscription-note {
+  position: relative;
+  z-index: 1;
+}
+
+.membership-head,
+.subscription-head,
+.retention-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+
+.membership-head view,
+.subscription-head view,
+.retention-row view {
+  min-width: 0;
+}
+
+.membership-head view text,
+.subscription-head view text,
+.retention-row view text {
+  display: block;
+  color: #d8b76f;
+  font-size: 23rpx;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.membership-head view view {
+  margin-top: 10rpx;
+  color: #fff6e6;
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", serif;
+  font-size: 40rpx;
+  font-weight: 600;
+}
+
+.subscription-head view view {
+  margin-top: 10rpx;
+  color: #fff6e6;
+  font-size: 30rpx;
+  font-weight: 900;
+  line-height: 1.35;
+}
+
+.membership-head > text,
+.subscription-head > text {
+  flex: 0 0 auto;
+  color: rgba(247, 239, 223, 0.58);
+  font-size: 24rpx;
+  font-weight: 800;
+}
+
+.identity-proof {
+  margin-top: 24rpx;
+  padding: 22rpx;
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  border-radius: 22rpx;
+  border: 1rpx solid rgba(216, 183, 111, 0.18);
+  background:
+    radial-gradient(circle at 15% 8%, rgba(216, 183, 111, 0.14), transparent 44%),
+    rgba(255, 255, 255, 0.025);
+}
+
+.proof-seal {
+  width: 82rpx;
+  height: 82rpx;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 24rpx;
+  color: #11130d;
+  background: linear-gradient(180deg, #ead089, #c69846);
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", serif;
+  font-size: 38rpx;
+  font-weight: 900;
+}
+
+.identity-proof text {
+  color: #f4ebdd;
+  font-size: 30rpx;
+  font-weight: 900;
+}
+
+.identity-proof view view {
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.52);
+  font-size: 22rpx;
+  line-height: 1.4;
+}
+
+.subscription-plans {
+  margin-top: 18rpx;
+  display: grid;
+  gap: 12rpx;
+}
+
+.subscription-plans button {
+  min-height: 92rpx;
+  padding: 16rpx 18rpx;
+  border-radius: 18rpx;
+  text-align: left;
+  color: rgba(247, 239, 223, 0.78);
+  border: 1rpx solid rgba(216, 183, 111, 0.13);
+  background: rgba(216, 183, 111, 0.04);
+}
+
+.subscription-plans button.active {
+  border-color: rgba(216, 183, 111, 0.38);
+  background: rgba(216, 183, 111, 0.1);
+}
+
+.subscription-plans text {
+  display: block;
+  color: #f2dfaa;
+  font-size: 25rpx;
+  font-weight: 900;
+}
+
+.subscription-plans view {
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.5);
+  font-size: 22rpx;
+}
+
+.subscription-note {
+  margin-top: 16rpx;
+  color: rgba(247, 239, 223, 0.54);
+  font-size: 23rpx;
+  line-height: 1.55;
+}
+
+.identity-proof-btn {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-height: 76rpx;
+  margin-top: 18rpx;
+  border-radius: 20rpx;
+  color: #11130d;
+  background: linear-gradient(180deg, #ead089, #c69846);
+  font-size: 24rpx;
+  font-weight: 900;
+}
+
+.membership-note {
+  margin-top: 18rpx;
+  color: rgba(247, 239, 223, 0.58);
+  font-size: 24rpx;
+  line-height: 1.58;
+}
+
+.benefit-list {
+  margin-top: 22rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.benefit-list view {
+  padding: 12rpx 16rpx;
+  border-radius: 999rpx;
+  color: rgba(247, 239, 223, 0.76);
+  border: 1rpx solid rgba(216, 183, 111, 0.16);
+  background: rgba(216, 183, 111, 0.055);
+  font-size: 21rpx;
+  font-weight: 700;
+}
+
+.retention-row view view {
+  margin-top: 10rpx;
+  color: rgba(247, 239, 223, 0.58);
+  font-size: 24rpx;
+  line-height: 1.5;
+}
+
+.time-picker {
+  min-height: 78rpx;
+  margin-top: 20rpx;
+  padding: 18rpx 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+  border-radius: 18rpx;
+  border: 1rpx solid rgba(201, 157, 76, 0.16);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.time-picker text {
+  flex: 0 0 auto;
+  color: rgba(247, 239, 223, 0.48);
+  font-size: 22rpx;
+  font-weight: 800;
+}
+
+.time-picker view {
+  min-width: 0;
+  color: #fff6e6;
+  font-size: 24rpx;
+  font-weight: 800;
+  text-align: right;
+  line-height: 1.4;
+}
+
+.mini-action {
+  flex: 0 0 auto;
+  min-width: 174rpx;
+  min-height: 68rpx;
+  padding: 0 18rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 999rpx;
+  color: #d8b76f;
+  border: 1rpx solid rgba(216, 183, 111, 0.22);
+  background: rgba(216, 183, 111, 0.055);
+  font-size: 22rpx;
+  font-weight: 900;
+}
+
+.mini-action.due {
+  color: #11130d;
+  background: linear-gradient(180deg, #ead089, #c69846);
 }
 
 .sync-card {
@@ -202,6 +619,21 @@
 }
 
 @media (max-width: 340px) {
+  .membership-head,
+  .retention-row,
+  .time-picker {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .time-picker view {
+    text-align: left;
+  }
+
+  .mini-action {
+    width: 100%;
+  }
+
   .sync-actions {
     grid-template-columns: 1fr;
   }
@@ -227,6 +659,109 @@
   color: rgba(247, 239, 223, 0.5);
   font-size: 22rpx;
   line-height: 1.55;
+}
+
+.card-album-list {
+  display: grid;
+  gap: 12rpx;
+  margin-top: 20rpx;
+}
+
+.card-album-actions {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12rpx;
+  margin-top: 20rpx;
+}
+
+.card-album-actions button {
+  min-height: 70rpx;
+  border-radius: 18rpx;
+  color: rgba(247, 239, 223, 0.78);
+  border: 1rpx solid rgba(216, 183, 111, 0.16);
+  background: rgba(216, 183, 111, 0.045);
+  font-size: 24rpx;
+  font-weight: 800;
+}
+
+.share-moment-panel {
+  position: relative;
+  z-index: 1;
+  margin-top: 24rpx;
+  padding-top: 22rpx;
+  border-top: 1rpx solid rgba(247, 239, 223, 0.08);
+}
+
+.share-moment-title text {
+  display: block;
+  color: #f2dfaa;
+  font-size: 25rpx;
+  font-weight: 900;
+}
+
+.share-moment-title view {
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.5);
+  font-size: 22rpx;
+  line-height: 1.5;
+}
+
+.share-moment-grid {
+  margin-top: 16rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12rpx;
+}
+
+.share-moment-grid button {
+  min-height: 132rpx;
+  padding: 16rpx;
+  border-radius: 18rpx;
+  text-align: left;
+  border: 1rpx solid rgba(216, 183, 111, 0.13);
+  background: linear-gradient(180deg, rgba(246, 216, 134, 0.075), rgba(255, 255, 255, 0.025));
+}
+
+.share-moment-grid button text:first-child {
+  display: block;
+  color: rgba(216, 183, 111, 0.78);
+  font-size: 21rpx;
+  font-weight: 900;
+}
+
+.share-moment-grid button view {
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.82);
+  font-size: 24rpx;
+  font-weight: 800;
+  line-height: 1.36;
+}
+
+.share-moment-grid button text:last-child {
+  display: block;
+  margin-top: 10rpx;
+  color: rgba(247, 239, 223, 0.42);
+  font-size: 20rpx;
+}
+
+.card-album-list > view {
+  padding: 18rpx 0;
+  border-top: 1rpx solid rgba(247, 239, 223, 0.08);
+}
+
+.card-album-list text {
+  color: rgba(216, 183, 111, 0.72);
+  font-size: 22rpx;
+  font-weight: 800;
+}
+
+.card-album-list view view {
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.64);
+  font-size: 24rpx;
+  line-height: 1.48;
 }
 
 .menu-list {
@@ -296,4 +831,16 @@
   color: rgba(247, 239, 223, 0.68);
   font-size: 26rpx;
   line-height: 1.7;
+}
+
+.danger-clear {
+  width: 100%;
+  min-height: 78rpx;
+  margin-top: 22rpx;
+  border-radius: 22rpx;
+  color: rgba(247, 239, 223, 0.62);
+  border: 1rpx solid rgba(120, 60, 45, 0.36);
+  background: rgba(120, 60, 45, 0.12);
+  font-size: 24rpx;
+  font-weight: 800;
 }

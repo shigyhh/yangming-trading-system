@@ -25,6 +25,46 @@
       </view>
     </view>
 
+    <view class="identity-card card">
+      <view class="identity-head">
+        <view>
+          <text>手机号贯穿档案</text>
+          <view>{{userBinding.phoneBound ? userBinding.phoneMask : '绑定后贯穿报告、训练、复测、邀约与助教承接'}}</view>
+        </view>
+        <text>{{userBinding.phoneBound ? '已绑定' : '待绑定'}}</text>
+      </view>
+      <view class="identity-chain">
+        <view>网站测评报告</view>
+        <view>小程序训练记录</view>
+        <view>复测变化</view>
+        <view>邀请码来源</view>
+        <view>助教承接摘要</view>
+      </view>
+      <view class="identity-input">
+        <input type="number" maxlength="11" value="{{phoneDraft}}" bindinput="inputPhone" placeholder="输入手机号完成贯穿绑定" />
+        <button bindtap="savePhoneBinding">{{userBinding.phoneBound ? '更新绑定' : '绑定'}}</button>
+      </view>
+      <view class="identity-source">邀请码来源：{{userBinding.inviteSource || '自然进入'}}</view>
+      <view class="identity-source">我的同修码：{{userBinding.inviteCode || mockUserProfile.inviteCode || '待生成'}}</view>
+    </view>
+
+    <view class="mock-sync-card card">
+      <view class="mock-sync-head">
+        <view>
+          <text>小程序闭环同步占位</text>
+          <view>{{mockUserProfile.reportSource}} · {{mockUserProfile.syncState}}</view>
+        </view>
+        <button bindtap="generateInviteCard">邀同修照见</button>
+      </view>
+      <view class="mock-grid">
+        <view>网站测评报告</view>
+        <view>7 天训练记录</view>
+        <view>复测变化</view>
+        <view>助教承接摘要</view>
+      </view>
+      <view class="assistant-summary">{{mockUserProfile.assistantSummary}}</view>
+    </view>
+
     <view class="growth-card card" bindtap="tapMenu" data-key="growth">
       <view class="growth-head">
         <view>
@@ -35,6 +75,84 @@
       </view>
       <view class="growth-bar"><view style="width: {{growth.overall}}%;"></view></view>
       <view class="growth-next">下一步：{{growth.nextAction}} · {{continuity.milestone.label}}还差{{continuity.milestone.remaining}}日</view>
+    </view>
+
+    <view class="membership-card card">
+      <view class="membership-head">
+        <view>
+          <text>会员修行体系</text>
+          <view>{{retentionView.membership.current.name}}</view>
+        </view>
+        <text>{{retentionView.longTraining.title}}</text>
+      </view>
+      <view class="membership-note">{{retentionView.membership.current.note}}</view>
+      <view class="benefit-list">
+        <view wx:for="{{retentionView.membership.benefits}}" wx:key="*this">{{item}}</view>
+      </view>
+      <view class="growth-bar"><view style="width: {{retentionView.membership.progress}}%;"></view></view>
+      <view class="growth-next">{{retentionView.membership.nextText}}</view>
+    </view>
+
+    <view class="subscription-card card">
+      <view class="subscription-head">
+        <view>
+          <text>订阅与同修身份</text>
+          <view>{{subscriptionView.proof.identityName}}</view>
+        </view>
+        <text>{{subscriptionView.statusText}}</text>
+      </view>
+      <view class="identity-proof">
+        <view class="proof-seal">修</view>
+        <view>
+          <text>{{subscriptionView.proof.planName}}</text>
+          <view>{{subscriptionView.proof.proofNo}}</view>
+          <view>{{subscriptionView.proof.validText}}</view>
+        </view>
+      </view>
+      <view class="subscription-plans">
+        <button
+          wx:for="{{subscriptionView.plans}}"
+          wx:key="key"
+          class="{{item.active ? 'active' : ''}}"
+          data-key="{{item.key}}"
+          bindtap="selectSubscriptionPlan"
+        >
+          <text>{{item.name}}</text>
+          <view>{{item.durationLabel}} · {{item.cadence}}</view>
+        </button>
+      </view>
+      <view class="subscription-note">{{subscriptionView.current.note}}</view>
+      <button class="identity-proof-btn" bindtap="generateMembershipIdentity">生成同修身份证明</button>
+    </view>
+
+    <view class="retention-panel card">
+      <view class="retention-row">
+        <view>
+          <text>每日轻提醒</text>
+          <view>{{retentionView.reminder.hint}}</view>
+        </view>
+        <switch checked="{{retentionView.reminder.enabled}}" color="#d8b76f" bindchange="toggleReminder" />
+      </view>
+      <picker mode="time" value="{{retentionView.reminder.time}}" bindchange="changeReminderTime">
+        <view class="time-picker">
+          <text>提醒时间</text>
+          <view>{{retentionView.reminder.label}}</view>
+        </view>
+      </picker>
+    </view>
+
+    <view class="retention-panel card">
+      <view class="retention-row">
+        <view>
+          <text>复测变化</text>
+          <view>{{retentionView.retest.hint}}</view>
+        </view>
+        <button class="mini-action {{retentionView.retest.due ? 'due' : ''}}" bindtap="goAssessment">{{retentionView.retest.actionText}}</button>
+      </view>
+      <view class="time-picker" bindtap="goContent365">
+        <text>365天修行</text>
+        <view>{{retentionView.content365.subtitle}} · {{retentionView.content365.nextText}}</view>
+      </view>
     </view>
 
     <view class="sync-card card">
@@ -53,6 +171,87 @@
         <button class="primary-btn" bindtap="syncNow">同步</button>
       </view>
       <text class="sync-tip">开发者工具可用 127.0.0.1；手机真机预览请改成电脑局域网 IP，并确认后端服务已启动。</text>
+    </view>
+
+    <view class="card-album card">
+      <view class="card-album-head">
+        <view>
+          <text>我的心证卡册</text>
+          <view>{{shareCards.length ? '已沉淀今日照见' : '生成第一张心证卡后会出现在这里'}}</view>
+        </view>
+        <button bindtap="generateInviteCard">生成邀请卡</button>
+      </view>
+      <view class="card-album-actions">
+        <button data-type="personality_mirror" bindtap="generateShareCard">同修镜像卡</button>
+        <button data-type="group_practice" bindtap="generateShareCard">群内共修卡</button>
+        <button data-type="retest_change" bindtap="generateShareCard">复测变化卡</button>
+      </view>
+      <view class="share-moment-panel">
+        <view class="share-moment-title">
+          <text>12 个自然分享时刻</text>
+          <view>从被照见，到邀同修照见</view>
+        </view>
+        <view class="share-moment-grid">
+          <button
+            wx:for="{{shareMoments}}"
+            wx:key="key"
+            data-key="{{item.key}}"
+            data-type="{{item.cardType}}"
+            bindtap="generateMomentCard"
+          >
+            <text>{{item.label}}</text>
+            <view>{{item.title}}</view>
+            <text>{{item.cardLabel}}</text>
+          </button>
+        </view>
+      </view>
+      <view class="card-album-list" wx:if="{{shareCards.length}}">
+        <view wx:for="{{shareCards}}" wx:key="id">
+          <text>{{item.typeLabel}}</text>
+          <view>{{item.headline}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="card-album card">
+      <view class="card-album-head">
+        <view>
+          <text>讲堂与同修记录</text>
+          <view>{{lessonReservations.length}} 条预约 · {{lessonWatchRecords.length}} 条观看 · {{inviteEvents.length}} 条同修邀请</view>
+        </view>
+      </view>
+      <view class="card-album-list">
+        <view>
+          <text>共修局</text>
+          <view>{{groupPractice.groupCode || '待生成'}} · {{groupPractice.memberCount || 1}} 位同修 · 今日{{trainingDone || 0}}步记录</view>
+        </view>
+        <view wx:if="{{companionMirror.ready}}">
+          <text>同修镜像</text>
+          <view>我：{{companionMirror.inviteePrimary}} · 同修：{{companionMirror.inviterPrimary}}</view>
+        </view>
+        <view wx:if="{{retestSnapshots.baseline || retestSnapshots.retest}}">
+          <text>复测快照</text>
+          <view>Day1：{{retestSnapshots.baseline.primary || '待初测'}} · Day7：{{retestSnapshots.retest.primary || '待复测'}}</view>
+        </view>
+      </view>
+      <view class="card-album-list" wx:if="{{lessonReservations.length}}">
+        <view wx:for="{{lessonReservations}}" wx:key="id">
+          <text>{{item.typeLabel || item.type || '课程'}}</text>
+          <view>{{item.title}}</view>
+        </view>
+      </view>
+      <view class="card-album-list" wx:if="{{lessonWatchRecords.length}}">
+        <view wx:for="{{lessonWatchRecords}}" wx:key="id">
+          <text>已看完</text>
+          <view>{{item.title}}</view>
+        </view>
+      </view>
+      <view class="card-album-list" wx:if="{{inviteEvents.length}}">
+        <view wx:for="{{inviteEvents}}" wx:key="id">
+          <text>{{item.sourceScene || '同修邀请'}}</text>
+          <view>{{item.shareCardType || item.cardType || 'companion_invite'}} · {{item.assessmentCompleted ? '已照见' : '待照见'}} · {{item.day7Completed ? '七日完成' : item.day3Completed ? '三日连修' : item.day1Completed ? 'Day1完成' : '训练未完成'}}</view>
+        </view>
+      </view>
     </view>
 
     <view class="section-title">
@@ -74,6 +273,7 @@
       <text>小程序定位</text>
       <view>每日修行器：照见、事上练、省察、留存、私域转化。官网负责建立世界观，小程序负责让用户每天完成一个真实动作。</view>
     </view>
+    <button class="danger-clear" bindtap="clearMockData">清理本地 mock 训练数据</button>
 
     <compliance-notice />
   </view>

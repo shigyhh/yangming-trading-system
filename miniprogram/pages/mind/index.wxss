@@ -108,9 +108,13 @@
 .mind-instrument {
   position: relative;
   width: 100%;
-  height: 650rpx;
+  min-height: 0;
   margin-top: 56rpx;
-  overflow: hidden;
+  padding: 28rpx;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16rpx;
+  overflow: visible;
   border-radius: 44rpx;
   background:
     radial-gradient(circle at 50% 52%, rgba(241, 210, 125, 0.11), transparent 30%),
@@ -133,11 +137,15 @@
 }
 
 .instrument-status {
-  position: absolute;
-  left: 34rpx;
-  top: 30rpx;
-  right: 34rpx;
+  position: relative;
+  left: auto;
+  top: auto;
+  right: auto;
   z-index: 6;
+  grid-column: 1 / -1;
+  order: 0;
+  min-height: 54rpx;
+  margin-bottom: 10rpx;
   display: flex;
   justify-content: space-between;
   gap: 20rpx;
@@ -157,13 +165,7 @@
 }
 
 .ring {
-  position: absolute;
-  left: 50%;
-  top: 52%;
-  border-radius: 50%;
-  border: 1rpx solid rgba(241, 210, 125, 0.12);
-  transform: translate(-50%, -50%);
-  pointer-events: none;
+  display: none;
 }
 
 .ring-a {
@@ -188,17 +190,21 @@
 }
 
 .instrument-core {
-  position: absolute;
-  left: 50%;
-  top: 52%;
+  position: relative;
+  left: auto;
+  top: auto;
   z-index: 5;
-  width: 250rpx;
-  height: 250rpx;
-  padding-top: 34rpx;
+  grid-column: 1 / -1;
+  order: 1;
+  width: 100%;
+  height: auto;
+  min-height: 210rpx;
+  margin-bottom: 8rpx;
+  padding: 30rpx 28rpx;
   display: grid;
   justify-items: center;
-  align-content: start;
-  border-radius: 50%;
+  align-content: center;
+  border-radius: 32rpx;
   color: #f6d886;
   border: 1rpx solid rgba(241, 210, 125, 0.4);
   background:
@@ -207,7 +213,7 @@
   box-shadow:
     inset 0 0 46rpx rgba(241, 210, 125, 0.08),
     0 0 82rpx rgba(241, 210, 125, 0.08);
-  transform: translate(-50%, -50%);
+  transform: none;
 }
 
 .core-glow {
@@ -222,7 +228,7 @@
   position: relative;
   z-index: 1;
   font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", serif;
-  font-size: 70rpx;
+  font-size: 64rpx;
   font-weight: 900;
 }
 
@@ -231,7 +237,7 @@
   z-index: 1;
   margin-top: 2rpx;
   color: #fff7e7;
-  font-size: 24rpx;
+  font-size: 28rpx;
   font-weight: 900;
 }
 
@@ -240,7 +246,7 @@
   z-index: 1;
   margin-top: 6rpx;
   color: rgba(247, 239, 223, 0.5);
-  font-size: 20rpx;
+  font-size: 23rpx;
 }
 
 .wave {
@@ -269,14 +275,15 @@
 }
 
 .orbit-node {
-  position: absolute;
+  position: relative;
   z-index: 7;
-  width: 104rpx;
+  order: 2;
+  width: 100%;
   height: 104rpx;
   display: grid;
   place-items: center;
   align-content: center;
-  border-radius: 32rpx;
+  border-radius: 26rpx;
   color: rgba(247, 239, 223, 0.52);
   border: 1rpx solid rgba(255, 255, 255, 0.07);
   background: rgba(255, 255, 255, 0.032);
@@ -286,13 +293,13 @@
 .orbit-node text {
   color: currentColor;
   font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", serif;
-  font-size: 38rpx;
+  font-size: 34rpx;
   font-weight: 900;
 }
 
 .orbit-node view {
   margin-top: 4rpx;
-  font-size: 18rpx;
+  font-size: 20rpx;
   font-weight: 800;
 }
 
@@ -305,14 +312,20 @@
     inset 0 0 18rpx rgba(241, 210, 125, 0.08);
 }
 
-.node-0 { left: 50%; top: 92rpx; transform: translateX(-50%); }
-.node-1 { right: 72rpx; top: 156rpx; }
-.node-2 { right: 48rpx; top: 50%; transform: translateY(-50%); }
-.node-3 { right: 72rpx; bottom: 74rpx; }
-.node-4 { left: 50%; bottom: 40rpx; transform: translateX(-50%); }
-.node-5 { left: 72rpx; bottom: 74rpx; }
-.node-6 { left: 48rpx; top: 50%; transform: translateY(-50%); }
-.node-7 { left: 72rpx; top: 156rpx; }
+.node-0,
+.node-1,
+.node-2,
+.node-3,
+.node-4,
+.node-5,
+.node-6,
+.node-7 {
+  left: auto;
+  right: auto;
+  top: auto;
+  bottom: auto;
+  transform: none;
+}
 
 .breath-panel {
   margin-top: 30rpx;
@@ -370,6 +383,70 @@
   background: rgba(201, 157, 76, 0.06);
   font-size: 26rpx;
   font-weight: 900;
+}
+
+.opening-form {
+  margin-top: 30rpx;
+  display: grid;
+  gap: 18rpx;
+}
+
+.opening-section {
+  padding: 24rpx;
+  border-radius: 28rpx;
+  border: 1rpx solid rgba(241, 210, 125, 0.12);
+  background: rgba(255, 255, 255, 0.028);
+}
+
+.opening-section > text {
+  display: block;
+  color: rgba(241, 210, 125, 0.66);
+  font-size: 22rpx;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.opening-section > view {
+  margin-top: 18rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.opening-section button {
+  min-height: 58rpx;
+  padding: 0 20rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 999rpx;
+  color: rgba(247, 239, 223, 0.6);
+  border: 1rpx solid rgba(241, 210, 125, 0.12);
+  background: rgba(255, 255, 255, 0.026);
+  font-size: 23rpx;
+  font-weight: 800;
+}
+
+.opening-section button.active {
+  color: #11130d;
+  background: linear-gradient(180deg, rgba(240, 211, 118, 0.92), rgba(188, 137, 52, 0.88));
+}
+
+.note-section textarea {
+  width: 100%;
+  min-height: 132rpx;
+  margin-top: 18rpx;
+  box-sizing: border-box;
+  padding: 22rpx;
+  border-radius: 22rpx;
+  color: #f7efdf;
+  border: 1rpx solid rgba(241, 210, 125, 0.12);
+  background: rgba(0, 0, 0, 0.16);
+  font-size: 25rpx;
+  line-height: 1.6;
+}
+
+.opening-placeholder {
+  color: rgba(247, 239, 223, 0.34);
 }
 
 .ritual-scroll {
@@ -453,27 +530,38 @@
 
 .loop-strip {
   margin-top: 34rpx;
-  display: flex;
-  gap: 12rpx;
-  overflow: hidden;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14rpx;
 }
 
-.loop-strip view {
-  flex: 1;
+.loop-strip button {
   min-width: 0;
+  min-height: 64rpx;
+  padding: 0 12rpx;
   display: grid;
   place-items: center;
-  height: 54rpx;
   border-radius: 999rpx;
-  color: rgba(247, 239, 223, 0.36);
-  border: 1rpx solid rgba(255, 255, 255, 0.055);
-  font-size: 20rpx;
+  color: rgba(247, 239, 223, 0.42);
+  border: 1rpx solid rgba(255, 255, 255, 0.075);
+  background: rgba(255, 255, 255, 0.026);
+  font-size: 22rpx;
   font-weight: 800;
 }
 
-.loop-strip .current {
+.loop-strip button::before,
+.loop-strip button::after {
+  display: none;
+}
+
+.loop-strip button.current {
   color: #11130d;
   background: linear-gradient(180deg, #f6d886, #c99d4c);
+}
+
+.loop-strip button text {
+  position: relative;
+  z-index: 2;
 }
 
 .actions {
@@ -591,26 +679,18 @@
   }
 
   .mind-instrument {
-    height: 590rpx;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 24rpx;
   }
 
   .instrument-core {
-    width: 220rpx;
-    height: 220rpx;
-  }
-
-  .ring-a {
-    width: 430rpx;
-    height: 430rpx;
-  }
-
-  .ring-b {
-    width: 330rpx;
-    height: 330rpx;
+    width: 100%;
+    height: auto;
+    min-height: 190rpx;
   }
 
   .orbit-node {
-    width: 90rpx;
+    width: 100%;
     height: 90rpx;
     border-radius: 26rpx;
   }
@@ -621,24 +701,6 @@
 
   .orbit-node view {
     font-size: 17rpx;
-  }
-
-  .node-1,
-  .node-3 {
-    right: 42rpx;
-  }
-
-  .node-5,
-  .node-7 {
-    left: 42rpx;
-  }
-
-  .node-2 {
-    right: 28rpx;
-  }
-
-  .node-6 {
-    left: 28rpx;
   }
 
   .actions {

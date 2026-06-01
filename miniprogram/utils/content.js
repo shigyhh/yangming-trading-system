@@ -1,4 +1,4 @@
-const COMPLIANCE_TEXT = "本系统仅用于交易认知、事上练与风险教育；不推荐股票、不提供操作指令、不承诺结果。";
+const COMPLIANCE_TEXT = "本系统用于交易心理觉察与训练，不提供投资建议，不预测行情，不构成任何买卖依据。";
 
 const PERSONALITIES = {
   "冲动型": {

@@ -22,7 +22,7 @@ const COACH_INTERFACE_SCHEMA = {
     "commandment_reminder",
     "coach_note"
   ],
-  boundary: "只做观心、戒律、事上练动作，不输出买卖建议、具体标的、收益承诺。"
+  boundary: "只做观心、戒律、事上练动作，不输出操作判断、具体标的、结果承诺。"
 };
 
 function inferTriggerFromText(text = "") {

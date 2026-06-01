@@ -9,7 +9,7 @@ import { MirrorRevelation } from "@/features/assessment/MirrorRevelation"
 import { assessmentQuestions } from "@/features/assessment/questions"
 import { generateMirrorReport } from "@/features/assessment/report"
 import type { AssessmentAnswer } from "@/features/assessment/report"
-import { assessmentStorageKeys, getStorage, hasSavedPhone, removeStorage, setStorage } from "@/features/assessment/storage"
+import { assessmentStorageKeys, getStorage, hasSavedPhone, setStorage } from "@/features/assessment/storage"
 import { cn } from "@/lib/utils"
 
 function sanitizeAnswers(answers: AssessmentAnswer[]) {
@@ -181,7 +181,6 @@ export default function AssessmentPage() {
             setStorage(assessmentStorageKeys.selectedMirrorId, mirrorId)
             setStorage(assessmentStorageKeys.report, mirrorReport)
             setStorage(assessmentStorageKeys.reportCreatedAt, mirrorReport.createdAt)
-            removeStorage(assessmentStorageKeys.practiceChange)
             router.push(`/cycle-mirror?mirror=${encodeURIComponent(mirrorId)}`)
           }}
         />

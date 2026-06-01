@@ -23,15 +23,198 @@
       </view>
 
       <view class="edict-scroll" bindlongpress="openPosterMode">
-        <view class="edict-kicker">
-          <text>{{heroView.dayLabel}}</text>
-          <text>{{heroView.todayStageLabel}}</text>
+        <view class="hero-stage-line">
+          <text>{{heroView.daySimpleLabel}} / {{heroView.stageOrderLabel}} / {{heroView.stageNameLabel}}</text>
         </view>
-        <view class="edict-label">今日心证</view>
-        <view class="edict-main">
-          <text wx:for="{{heroView.heartProofLines}}" wx:key="*this">{{item}}</text>
+        <view class="hero-theme-line">{{heroView.dayProgressLabel}} · {{heroView.themeLabel}}</view>
+
+        <view class="heart-proof-block">
+          <view class="edict-label">今日心证</view>
+          <view class="edict-main">
+            <text wx:for="{{heroView.heartProofLines}}" wx:key="*this">{{item}}</text>
+          </view>
         </view>
-        <view data-noripple="1" class="edict-footnote" bindtap="openPosterMode">长按收为今日心证</view>
+
+        <view class="contemplation-block">
+          <view class="edict-label">今日观心</view>
+          <view>
+            <text wx:for="{{heroView.contemplationLines}}" wx:key="*this">{{item}}</text>
+          </view>
+        </view>
+
+        <view class="three-seals-block">
+          <view class="edict-label">今日三印</view>
+          <view class="three-seal-field">
+            <text>一念</text>
+            <input data-key="thought" value="{{threeSeals.thought}}" bindinput="inputThreeSeal" placeholder="我今天最明显的念头是什么？" />
+          </view>
+          <view class="three-seal-field">
+            <text>一惧</text>
+            <input data-key="fear" value="{{threeSeals.fear}}" bindinput="inputThreeSeal" placeholder="我今天最怕发生什么？" />
+          </view>
+          <view class="three-seal-field">
+            <text>一界</text>
+            <input data-key="boundary" value="{{threeSeals.boundary}}" bindinput="inputThreeSeal" placeholder="我今天必须守住哪条边界？" />
+          </view>
+          <button data-noripple="1" class="three-seal-save" bindtap="saveThreeSeals">{{threeSeals.completed ? '更新今日三印' : '落下今日三印'}}</button>
+        </view>
+
+        <view class="today-stage-block">
+          <view class="edict-label">今日阶段</view>
+          <button
+            wx:for="{{todayStages}}"
+            wx:key="key"
+            data-route="{{item.route}}"
+            data-noripple="1"
+            class="today-stage-row {{item.done ? 'done' : ''}}"
+            bindtap="goTodayStage"
+          >
+            <view>{{item.title}}</view>
+            <text>{{item.status}}</text>
+          </button>
+        </view>
+
+        <view class="practice-block">
+          <view class="edict-label">今日事上练</view>
+          <view>{{training7View.today.boundaryPractice}}</view>
+        </view>
+
+        <view class="today-three">
+          <view class="edict-label">今日任务清单</view>
+          <button
+            wx:for="{{heroTasks.list}}"
+            wx:key="key"
+            data-key="{{item.key}}"
+            data-noripple="1"
+            class="today-three-row {{item.done ? 'done' : ''}}"
+            bindtap="handleHeroTask"
+          >
+            <text>{{index + 1}}</text>
+            <view>{{item.title}}</view>
+            <text>{{item.status}}</text>
+          </button>
+          <button data-noripple="1" class="today-checkin-button" bindtap="completeTodayCheckIn">完成今日打卡</button>
+        </view>
+
+        <view class="hero-bottom-actions">
+          <button data-noripple="1" bindtap="goReportBridge">查看我的人格报告</button>
+          <button data-noripple="1" bindtap="goTrainingDay">{{heroTasks.trainingButtonText}}</button>
+        </view>
+        <view class="hero-secondary-actions">
+          <button data-noripple="1" bindtap="goZhixingIndex">知行指数</button>
+          <button data-noripple="1" bindtap="goClassroom">知行讲堂</button>
+        </view>
+        <view class="hero-share-actions">
+          <button data-noripple="1" data-type="daily_mantra" bindtap="goShareCard">生成今日心证卡</button>
+          <button data-noripple="1" data-type="companion_invite" bindtap="goShareCard">邀一位同修同行</button>
+        </view>
+        <view data-noripple="1" class="edict-footnote" bindtap="openPosterMode">长按收藏 / 记录今日心证</view>
+      </view>
+    </view>
+
+    <view class="scene scene-reaction-detail">
+      <view class="reaction-recorder">
+        <view class="reaction-head">
+          <view>
+            <text>交易反应记录</text>
+            <view>{{reactionRecord ? '今日已记录，可继续补充。' : '今天交易中最强烈的一个反应是什么？'}}</view>
+          </view>
+          <text>{{reactionRecord ? '已打卡' : '待打卡'}}</text>
+        </view>
+        <view class="reaction-question">是恐惧、贪念、证明、后悔、急躁，还是逃避？当时有没有偏离计划？</view>
+        <view class="reaction-tags">
+          <button
+            wx:for="{{reactionTags}}"
+            wx:key="*this"
+            data-tag="{{item}}"
+            data-noripple="1"
+            class="{{selectedReactionTag === item ? 'active' : ''}}"
+            bindtap="selectReactionTag"
+          >{{item}}</button>
+        </view>
+        <textarea
+          class="reaction-input"
+          maxlength="80"
+          value="{{reactionDraft}}"
+          placeholder="例：边界快到时，我开始想找理由；这一次先停了十秒，没有跟着念头走。"
+          placeholder-class="reaction-placeholder"
+          bindinput="inputReaction"
+        />
+        <button data-noripple="1" class="reaction-save" bindtap="saveReactionRecord">{{reactionRecord ? '更新今日行为打卡' : '记录今日行为打卡'}}</button>
+      </view>
+    </view>
+
+    <view class="scene scene-retention">
+      <view class="retention-card seven-day-card">
+        <view class="retention-head">
+          <view>
+            <text>{{training7Summary.title}}</text>
+            <view>{{training7Summary.currentText}} · {{training7Summary.todayTitle}}</view>
+          </view>
+          <text>{{training7Summary.statusText}}</text>
+        </view>
+        <view class="retention-bar"><view style="width: {{training7Summary.progress}}%;"></view></view>
+        <view class="seven-day-strip">
+          <view wx:for="{{training7View.days}}" wx:key="day" class="seven-day-dot {{item.completed ? 'done' : ''}} {{item.active ? 'active' : ''}}">
+            <text>{{item.day}}</text>
+            <view>{{item.title}}</view>
+          </view>
+        </view>
+        <button data-noripple="1" class="retention-next" bindtap="goRetest">
+          <text>复测变化</text>
+          <view>{{training7Summary.retestText}}</view>
+        </button>
+      </view>
+
+      <view class="retention-card">
+        <view class="retention-head">
+          <view>
+            <text>今日训练进度</text>
+            <view>{{retentionView.dailyHook}}</view>
+          </view>
+          <text>{{retentionView.loop.statusText}}</text>
+        </view>
+        <view class="retention-bar"><view style="width: {{retentionView.loop.progress}}%;"></view></view>
+        <view class="loop-step-strip">
+          <button
+            wx:for="{{loopSteps}}"
+            wx:key="key"
+            data-index="{{index}}"
+            data-noripple="1"
+            class="loop-step {{item.done ? 'done' : ''}} {{item.active ? 'active' : ''}}"
+            bindtap="goLoopStep"
+          >
+            <text>{{item.shortName}}</text>
+            <view>{{item.status}}</view>
+          </button>
+        </view>
+        <button data-noripple="1" class="retention-next" bindtap="goNextStep">
+          <text>下一步</text>
+          <view>{{retentionView.loop.nextName}} · {{retentionView.loop.nextAction}}</view>
+        </button>
+      </view>
+
+      <view class="retention-grid">
+        <view data-noripple="1" class="retention-mini" bindtap="goContent365">
+          <text>365天修行</text>
+          <view>{{retentionView.content365.subtitle}}</view>
+          <view class="mini-progress"><view style="width: {{retentionView.content365.progress}}%;"></view></view>
+          <text>{{retentionView.content365.nextText}}</text>
+        </view>
+        <view data-noripple="1" class="retention-mini" bindtap="goProfile">
+          <text>长期训练</text>
+          <view>{{retentionView.longTraining.title}}</view>
+          <view class="mini-progress"><view style="width: {{retentionView.longTraining.progress}}%;"></view></view>
+          <text>{{retentionView.longTraining.subtitle}}</text>
+        </view>
+      </view>
+
+      <view data-noripple="1" class="retest-banner {{retentionView.retest.due ? 'due' : ''}}" bindtap="goRetest">
+        <view>
+          <text>{{retentionView.retest.label}}</text>
+          <view>{{retentionView.retest.hint}}</view>
+        </view>
+        <text>{{retentionView.retest.actionText}}</text>
       </view>
     </view>
 
@@ -124,7 +307,7 @@
 
     <view class="entry-panel sync-entry-panel">
       <label class="phone-field">
-        <text>手机号 · 可稍后补充</text>
+        <text>手机号 · 贯穿报告、训练、复测与助教</text>
         <input
           data-noripple="1"
           type="number"
@@ -137,6 +320,8 @@
       </label>
       <view class="entry-note">数据仅用于本页状态记录</view>
     </view>
+
+    <compliance-notice compact="{{true}}" />
   </view>
 
   <view wx:if="{{posterMode}}" class="edict-poster-mode" catchtap="closePosterMode" catchtouchmove="noop">
@@ -168,7 +353,7 @@
     <view class="poster-footer">
       <view class="poster-footer-seal">{{shareCard.stageSeal.seal}}</view>
       <view>
-        <view>不预测行情，不推荐股票。</view>
+        <view>不做行情判断，不提供操作指令。</view>
         <view>只训练知行合一。</view>
       </view>
     </view>

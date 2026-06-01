@@ -13,8 +13,9 @@ const {
   saveDailyLoopState,
   todayKey
 } = require("../../utils/store");
-const { syncLocalState } = require("../../utils/api");
+const { syncLocalState, syncAssessmentReport } = require("../../utils/api");
 const { buildDailyLoopState } = require("../../modules/daily-loop/index");
+const { promptShareMoment } = require("../../utils/share-moments");
 
 Page({
   data: {
@@ -87,8 +88,13 @@ Page({
         heartCardRecord: getTodayHeartCard()
       }));
       syncLocalState({ silent: true }).catch(() => {});
+      syncAssessmentReport(result).catch(() => {});
       wx.showToast({ title: "心证已生成", icon: "success" });
-      wx.navigateTo({ url: "/pages/report/index" });
+      const prompted = promptShareMoment("assessment_completed", {
+        sourceScene: "assessment_completed",
+        onCancel: () => wx.navigateTo({ url: "/pages/report/index" })
+      });
+      if (!prompted) wx.navigateTo({ url: "/pages/report/index" });
       this.setData({ answers });
       return;
     }

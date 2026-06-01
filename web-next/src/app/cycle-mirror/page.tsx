@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation"
 import { AssessmentShell, StatusPill } from "@/features/assessment/components"
 import { CycleMirror } from "@/features/assessment/CycleMirror"
 import { generateMirrorReport, type AssessmentReport } from "@/features/assessment/report"
-import { assessmentStorageKeys, getStorage, removeStorage, setStorage } from "@/features/assessment/storage"
+import { assessmentStorageKeys, getStorage, setStorage } from "@/features/assessment/storage"
 
 function CycleMirrorContent() {
   const searchParams = useSearchParams()
@@ -21,7 +21,6 @@ function CycleMirrorContent() {
     const mirrorReport = generateMirrorReport(nextMirrorId)
     setStorage(assessmentStorageKeys.report, mirrorReport)
     setStorage(assessmentStorageKeys.reportCreatedAt, mirrorReport.createdAt)
-    removeStorage(assessmentStorageKeys.practiceChange)
   }, [])
 
   return (

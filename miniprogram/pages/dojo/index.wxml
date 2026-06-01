@@ -114,6 +114,43 @@
       </view>
     </view>
 
+    <view class="handoff-card">
+      <view class="card-head">
+        <view>
+          <text>助教承接摘要</text>
+          <view>手机号贯穿报告、训练、复测与道场来源</view>
+        </view>
+        <text>承接</text>
+      </view>
+      <view class="handoff-summary">{{dojo.assistantHandoff.summary}}</view>
+      <view class="handoff-grid">
+        <view class="handoff-row">
+          <text>手机号</text>
+          <view>{{dojo.assistantHandoff.phoneMask}}</view>
+        </view>
+        <view class="handoff-row">
+          <text>人格报告</text>
+          <view>{{dojo.assistantHandoff.report}}</view>
+        </view>
+        <view class="handoff-row">
+          <text>训练进度</text>
+          <view>{{dojo.assistantHandoff.training}} · {{dojo.assistantHandoff.continuity}}</view>
+        </view>
+        <view class="handoff-row">
+          <text>交易反应</text>
+          <view>{{dojo.assistantHandoff.reaction}}</view>
+        </view>
+        <view class="handoff-row">
+          <text>复测变化</text>
+          <view>{{dojo.assistantHandoff.retest}}</view>
+        </view>
+        <view class="handoff-row">
+          <text>邀请码源</text>
+          <view>{{dojo.assistantHandoff.inviteSource}}</view>
+        </view>
+      </view>
+    </view>
+
     <view class="assistant-card">
       <view class="card-head">
         <view>

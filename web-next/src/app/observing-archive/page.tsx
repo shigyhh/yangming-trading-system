@@ -10,9 +10,14 @@ import {
   SecondaryLink,
   StatusPill,
 } from "@/features/assessment/components"
-import type { PracticeChangeState, PracticeMetric } from "@/features/assessment/practice-change"
+import { compareRiskRadarSnapshots, type PracticeChangeState, type PracticeMetric } from "@/features/assessment/practice-change"
 import { getAssessmentTypeLabel, type AssessmentReport } from "@/features/assessment/report"
 import { assessmentStorageKeys, getStorage } from "@/features/assessment/storage"
+import {
+  fetchDataBindingSummary,
+  getDataBindingUserProfile,
+  type DataBindingSummaryResponse,
+} from "@/features/data-binding/api-client"
 
 function getMetricDelta(metric: PracticeMetric) {
   return metric.direction === "down" ? metric.before - metric.current : metric.current - metric.before
@@ -59,13 +64,21 @@ function getNextAction(report: AssessmentReport | null, practice: PracticeChange
 export default function ObservingArchivePage() {
   const [report, setReport] = useState<AssessmentReport | null>(null)
   const [practice, setPractice] = useState<PracticeChangeState | null>(null)
+  const [profile, setProfile] = useState<ReturnType<typeof getDataBindingUserProfile> | null>(null)
+  const [remoteSummary, setRemoteSummary] = useState<DataBindingSummaryResponse | null>(null)
+  const [serverChecked, setServerChecked] = useState(false)
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
+      setProfile(getDataBindingUserProfile())
       setReport(getStorage<AssessmentReport | null>(assessmentStorageKeys.report, null))
       setPractice(getStorage<PracticeChangeState | null>(assessmentStorageKeys.practiceChange, null))
       setLoaded(true)
+      void fetchDataBindingSummary().then((result) => {
+        if (result.ok) setRemoteSummary(result.data)
+        setServerChecked(true)
+      })
     }, 0)
 
     return () => window.clearTimeout(timer)
@@ -77,6 +90,22 @@ export default function ObservingArchivePage() {
     if (!practice?.metrics.length) return null
     return [...practice.metrics].sort((a, b) => getMetricDelta(b) - getMetricDelta(a))[0]
   }, [practice])
+  const lastSyncAt = getStorage<string>(assessmentStorageKeys.dataBindingLastSyncAt, "")
+  const trainingRecordCount = remoteSummary?.training_records.length ?? practice?.records.length ?? 0
+  const klineRecordCount = remoteSummary?.kline_records.length ?? practice?.records.filter((record) => Boolean(record.klineRecord)).length ?? 0
+  const retestComparisonCount = remoteSummary?.retest_comparison.length
+    ?? compareRiskRadarSnapshots(practice?.baselineReport, practice?.retestReport).length
+  const dataSourceLabel = remoteSummary
+    ? "Server API 已绑定"
+    : serverChecked
+      ? "本地记录"
+      : "同步检测中"
+  const bindingUser = remoteSummary?.user
+  const latestBindingTime = bindingUser?.updated_at || lastSyncAt
+  const reportBindingLabel = remoteSummary?.report ? "报告已归档" : report ? "本地报告待同步" : "暂无报告"
+  const assistantBindingLabel = remoteSummary?.assistant_summary ? "助教摘要已生成" : "等待测评后生成"
+  const shareCardBindingLabel = remoteSummary?.share_card ? "分享卡已生成" : "未生成分享卡"
+  const feishuBindingLabel = remoteSummary?.feishu_sync?.status ? `飞书：${remoteSummary.feishu_sync.status}` : "飞书未同步"
 
   if (!loaded) {
     return (
@@ -102,6 +131,18 @@ export default function ObservingArchivePage() {
         </p>
 
         <GlassPanel className="mt-8">
+          <p className="font-function text-xs font-semibold tracking-[.18em] text-[#b49d5d]">用户中心</p>
+          <div className="mt-5 grid gap-3">
+            <ArchiveMeta label="账号" value={bindingUser?.nickname || profile?.nickname || "体验学员"} />
+            <ArchiveMeta label="手机号" value={bindingUser?.phone || profile?.maskedPhone || "未留存"} />
+            <ArchiveMeta label="用户 ID" value={bindingUser?.id || profile?.userId || "等待生成"} />
+            <ArchiveMeta label="邀请码来源" value={bindingUser?.invite_source || profile?.inviteSource || "web-next"} />
+            <ArchiveMeta label="数据来源" value={dataSourceLabel} />
+            <ArchiveMeta label="最近同步" value={latestBindingTime ? formatArchiveTime(latestBindingTime) : "等待首次同步"} />
+          </div>
+        </GlassPanel>
+
+        <GlassPanel className="mt-8">
           <p className="font-function text-xs font-semibold tracking-[.18em] text-[#b49d5d]">今日心证</p>
           {report ? (
             <>
@@ -117,6 +158,22 @@ export default function ObservingArchivePage() {
               暂无心证。
             </p>
           )}
+        </GlassPanel>
+
+        <GlassPanel className="mt-4">
+          <p className="font-function text-xs font-semibold tracking-[.18em] text-[#b49d5d]">数据闭环</p>
+          <div className="mt-5 grid gap-3">
+            <ArchiveMeta label="测评报告" value={reportBindingLabel} />
+            <ArchiveMeta label="训练记录" value={`${trainingRecordCount} 条`} />
+            <ArchiveMeta label="K 线心念记录" value={`${klineRecordCount} 条`} />
+            <ArchiveMeta label="复测雷达" value={retestComparisonCount ? `${retestComparisonCount} 项变化` : "等待复测"} />
+            <ArchiveMeta label="助教承接" value={assistantBindingLabel} />
+            <ArchiveMeta label="分享卡片" value={shareCardBindingLabel} />
+            <ArchiveMeta label="飞书同步" value={feishuBindingLabel} />
+          </div>
+          <p className="mt-4 font-function text-xs leading-6 text-[rgba(220,212,195,.46)]">
+            server 未启动时，本页继续读取本机记录；server 启动后，测评、训练、复测、邀请码、助教摘要与分享卡会进入同一份用户数据绑定结构。
+          </p>
         </GlassPanel>
 
         <GlassPanel className="mt-4">
@@ -163,6 +220,9 @@ export default function ObservingArchivePage() {
           <PrimaryLink href={nextAction.href} className="mt-6 w-full">
             {nextAction.label} →
           </PrimaryLink>
+          <SecondaryLink href="/share-card" className="mt-3 w-full">
+            生成照见分享卡 →
+          </SecondaryLink>
           <SecondaryLink href="/global-reflection" className="mt-3 w-full">
             看全球交易者的一念 →
           </SecondaryLink>
@@ -193,4 +253,24 @@ export default function ObservingArchivePage() {
       `}</style>
     </AssessmentShell>
   )
+}
+
+function ArchiveMeta({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-4 rounded-[8px] border border-[rgba(172,146,83,.1)] bg-white/[.025] px-4 py-3">
+      <span className="font-function text-xs tracking-[.1em] text-[rgba(220,212,195,.42)]">{label}</span>
+      <span className="text-right font-function text-sm text-[rgba(242,235,220,.72)]">{value}</span>
+    </div>
+  )
+}
+
+function formatArchiveTime(value: string) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return "等待首次同步"
+  return date.toLocaleString("zh-CN", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  })
 }

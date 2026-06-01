@@ -10,15 +10,23 @@ const {
   getZhixingScoreState,
   getTodayReview,
   getTodayHeartCard,
+  getTodayReaction,
+  getTodayIntradayBoundaryRecord,
+  getTraining7State,
+  saveTraining7State,
+  saveTraining7Task,
+  saveTraining7Reflection,
   saveDailyLoopState,
   todayKey
 } = require("../../utils/store");
-const { syncCheckIn, syncLocalState } = require("../../utils/api");
+const { syncCheckIn, syncLocalState, syncTrainingProgress } = require("../../utils/api");
+const { promptShareMoment } = require("../../utils/share-moments");
 const { getPersonalityArchive } = require("../../modules/personality/index");
 const { buildCompletionPatch } = require("../../modules/continuity/index");
 const { getPersonalityStagePlan } = require("../../core/personality-stage-map");
 const { buildDailyLoopState } = require("../../modules/daily-loop/index");
 const { buildDailyTrainingCard } = require("../../modules/practice/index");
+const { buildTraining7View } = require("../../modules/training7/index");
 
 const STEP_META = [
   { id: "trigger", title: "照见触发场景", subtitle: "先看见今天最容易被牵动的一念" },
@@ -44,7 +52,9 @@ Page({
     mind: null,
     mindTask: "",
     indexFocus: "",
-    trainingCard: null
+    trainingCard: null,
+    training7View: buildTraining7View({}, {}),
+    trainingDay: null
   },
 
   onShow() {
@@ -61,6 +71,14 @@ Page({
     const trainingCard = buildDailyTrainingCard({ dateKey: todayKey(), personalityType: type, mind });
     const steps = buildSteps(state);
     const doneCount = steps.filter((item) => item.done).length;
+    const training7View = buildTraining7View(getTraining7State(), {
+      mind,
+      reactionRecord: getTodayReaction(),
+      intradayBoundaryRecord: getTodayIntradayBoundaryRecord(),
+      review: getTodayReview(),
+      training: state
+    });
+    const trainingDay = training7View.today;
 
     this.setData({
       result,
@@ -75,7 +93,9 @@ Page({
       completed: !!state.completed,
       mind,
       mindTask: mind?.oneThing || state.mindTask || "",
-      indexFocus: mind?.indexFocus || state.indexFocus || "知行合一"
+      indexFocus: mind?.indexFocus || state.indexFocus || "知行合一",
+      training7View,
+      trainingDay
     });
   },
 
@@ -85,7 +105,9 @@ Page({
     const steps = Object.assign({}, state.steps);
     steps[id] = !steps[id];
     saveTodayTraining(Object.assign({}, state, { steps, trainingCard: this.data.trainingCard }));
+    if (id === "trigger") saveTraining7Task((this.data.training7View || {}).currentDay || 1, "daily_practice", !!steps[id]);
     syncLocalState({ silent: true }).catch(() => {});
+    syncTrainingProgress().catch(() => {});
     this.load();
   },
 
@@ -103,7 +125,9 @@ Page({
     const state = getTodayTraining();
     const steps = Object.assign({}, state.steps, { reflection: true });
     saveTodayTraining(Object.assign({}, state, { reflection: text, steps, trainingCard: this.data.trainingCard }));
+    saveTraining7Reflection((this.data.training7View || {}).currentDay || 1, text);
     syncLocalState({ silent: true }).catch(() => {});
+    syncTrainingProgress().catch(() => {});
     wx.showToast({ title: "省察已保存", icon: "success" });
     this.load();
   },
@@ -132,6 +156,7 @@ Page({
       });
     }
     const savedTraining = saveTodayTraining(Object.assign({}, state, { completed: true, trainingCard: this.data.trainingCard }));
+    saveTraining7Task((this.data.training7View || {}).currentDay || 1, "daily_practice", true);
     saveDailyLoopState(buildDailyLoopState({
       todayKey: todayKey(),
       profile: getProfile(),
@@ -144,11 +169,20 @@ Page({
     }));
     syncCheckIn(`每日事上练完成：${this.data.type}`).catch(() => {});
     syncLocalState({ silent: true }).catch(() => {});
+    syncTrainingProgress().catch(() => {});
     wx.showToast({ title: "今日事上练完成", icon: "success" });
     this.load();
-    setTimeout(() => {
-      this.goReview();
-    }, 420);
+    const currentDay = Number((this.data.training7View || {}).currentDay || 1);
+    const prompted = currentDay >= 7
+      ? promptShareMoment("seven_day_completed", { sourceScene: "training_day_7", onCancel: () => this.goReview() })
+      : currentDay >= 3
+        ? promptShareMoment("streak_3_days", { sourceScene: "training_day_3", onCancel: () => this.goReview() })
+        : false;
+    if (!prompted) {
+      setTimeout(() => {
+        this.goReview();
+      }, 420);
+    }
   },
 
   goReview() {
@@ -165,5 +199,15 @@ Page({
 
   goIndex() {
     wx.redirectTo({ url: "/pages/zhixing-index/index" });
+  },
+
+  selectTrainingDay(e) {
+    const day = Number(e.currentTarget.dataset.day || 1);
+    saveTraining7State({ currentDay: day });
+    this.load();
+  },
+
+  goRetest() {
+    wx.redirectTo({ url: "/pages/assessment/index" });
   }
 });

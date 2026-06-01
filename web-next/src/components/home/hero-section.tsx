@@ -1,45 +1,14 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { AnimatePresence, motion } from "framer-motion"
+import { motion } from "framer-motion"
 
 import { FlowButton } from "@/components/home/flow-button"
 
-const mirrorThoughts = [
-  {
-    thought: "先卖一点吧，\n万一跌下来呢？",
-    mirror: "焦虑之镜",
-  },
-  {
-    thought: "再不上车，\n就来不及了。",
-    mirror: "追涨之镜",
-  },
-  {
-    thought: "再等等，\n说不定能回来。",
-    mirror: "扛单之镜",
-  },
-  {
-    thought: "这一把做对，\n就能全回来。",
-    mirror: "赌性之镜",
-  },
-] as const
-
 export function HeroSection() {
-  const [thoughtIndex, setThoughtIndex] = useState(0)
-  const activeThought = mirrorThoughts[thoughtIndex]
-
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setThoughtIndex((current) => (current + 1) % mirrorThoughts.length)
-    }, 4800)
-
-    return () => window.clearInterval(timer)
-  }, [])
-
   return (
     <section
       id="hero"
-      aria-label="九面行为心镜首屏"
+      aria-label="卷一照见此心首屏"
       className="relative z-10 mx-auto flex min-h-[100svh] w-full max-w-[1240px] flex-col items-center justify-center overflow-hidden px-4 pb-12 pt-24 text-center md:px-8 md:pb-16 md:pt-28"
     >
       <motion.div
@@ -57,11 +26,8 @@ export function HeroSection() {
           transition={{ duration: 1.1, delay: 1.28, ease: [0.22, 1, 0.36, 1] }}
         >
           <span className="type-level-4 text-[rgba(216,183,111,.5)]">
-            九面行为心镜
+            卷一 · 照见此心
           </span>
-          <h1 className="sr-only">
-            九面行为心镜，照见交易里最先动的那一念
-          </h1>
         </motion.div>
 
         <motion.div
@@ -69,7 +35,7 @@ export function HeroSection() {
           initial={{ opacity: 0, scale: 0.88, y: 26, filter: "blur(18px)" }}
           animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
           transition={{ duration: 1.35, delay: 1.48, ease: [0.22, 1, 0.36, 1] }}
-          aria-label={`心镜照见：${activeThought.thought.replace("\n", "")}`}
+          aria-label="心镜照见此心"
         >
           <span className="hero-mirror-aura hero-mirror-aura-one" />
           <span className="hero-mirror-aura hero-mirror-aura-two" />
@@ -81,23 +47,19 @@ export function HeroSection() {
             <span className="hero-mirror-ripple hero-mirror-ripple-one" />
             <span className="hero-mirror-ripple hero-mirror-ripple-two" />
 
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeThought.thought}
-                className="hero-mirror-thought-wrap"
-                initial={{ opacity: 0, y: 18, filter: "blur(8px)" }}
-                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                exit={{ opacity: 0, y: -16, filter: "blur(8px)" }}
-                transition={{ duration: 0.82, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <p className="font-worldview hero-mirror-thought">
-                  {activeThought.thought}
-                </p>
-                <p className="type-level-4 hero-mirror-name">
-                  此念显影 · {activeThought.mirror}
-                </p>
-              </motion.div>
-            </AnimatePresence>
+            <motion.div
+              className="hero-mirror-thought-wrap"
+              initial={{ opacity: 0, y: 18, filter: "blur(8px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              transition={{ duration: 0.92, delay: 2.02, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <p className="font-worldview hero-mirror-thought">
+                照见此心
+              </p>
+              <p className="type-level-4 hero-mirror-name">
+                先看见自己最先动的那一念
+              </p>
+            </motion.div>
           </div>
         </motion.div>
 
@@ -108,17 +70,20 @@ export function HeroSection() {
           transition={{ duration: 1, delay: 2.05, ease: [0.22, 1, 0.36, 1] }}
         >
           <p className="font-story max-w-[520px] text-[1.02rem] font-light leading-[2] tracking-[.02em] text-[rgba(244,235,221,.68)] md:text-[1.16rem]">
-            不是行情反复伤你，
+            你以为你亏给了行情。
             <br className="sm:hidden" />
-            是同一个念头反复牵动你。
+            其实，是同一个念头反复牵动你。
           </p>
-          <p className="font-worldview mt-3 text-[1.45rem] font-light leading-tight tracking-[.08em] text-[rgba(244,235,221,.8)] md:mt-4 md:text-[1.78rem]">
+          <h1 className="font-worldview mt-3 text-[1.45rem] font-light leading-tight tracking-[.08em] text-[rgba(244,235,221,.82)] md:mt-4 md:text-[1.78rem]">
             心不静，交易必乱。
+          </h1>
+          <p className="font-story mt-3 max-w-[560px] text-[.9rem] font-light leading-[1.9] tracking-[.02em] text-[rgba(244,235,221,.48)] md:mt-4 md:text-[1.02rem]">
+            这里不预测行情，只照见交易里的反应模式，帮助你从觉察开始，训练纪律与复盘能力。
           </p>
 
           <div className="mt-7 flex w-full justify-center md:mt-8">
             <FlowButton href="/assessment-entry" className="w-full max-w-[340px] sm:w-auto">
-              入照心
+              进入交易人格测评
             </FlowButton>
           </div>
           <a

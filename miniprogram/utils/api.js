@@ -80,7 +80,7 @@ async function ensureAuth() {
     data: {
       method: "wechat_miniprogram_demo",
       display_name: profile.nickname || "修行者",
-      contact: getClientId(),
+      contact: profile.phone || getClientId(),
       wechat_bound: true,
       source_channel: "微信小程序MVP"
     }
@@ -173,6 +173,74 @@ async function syncCheckIn(note = "") {
   });
 }
 
+async function syncAssessmentReport(report = null) {
+  const auth = await ensureAuth();
+  const state = collectLocalState();
+  return request({
+    path: `/api/v1/users/${auth.user.id}/assessment-report`,
+    method: "POST",
+    token: auth.access_token,
+    data: {
+      source_channel: "微信小程序MVP",
+      report: report || state.assessment_result,
+      assessment_history: state.assessment_history,
+      user_binding: state.user_binding,
+      retest_snapshots: state.retest_snapshots,
+      companion_mirrors: state.companion_mirrors,
+      subscription_state: state.subscription_state
+    }
+  });
+}
+
+async function syncTrainingProgress(progress = null) {
+  const auth = await ensureAuth();
+  const state = collectLocalState();
+  return request({
+    path: `/api/v1/users/${auth.user.id}/training-progress`,
+    method: "POST",
+    token: auth.access_token,
+    data: {
+      source_channel: "微信小程序MVP",
+      progress: progress || {
+        training7_state: state.training7_state,
+        three_seals_records: state.three_seals_records,
+        opening_check_records: state.opening_check_records,
+        intraday_boundary_records: state.intraday_boundary_records,
+        closing_review_records: state.closing_review_records,
+        zhixing_score: state.zhixing_score,
+        retest_snapshots: state.retest_snapshots,
+        group_practice: state.group_practice,
+        lesson_watch_records: state.lesson_watch_records,
+        subscription_state: state.subscription_state
+      },
+      user_binding: state.user_binding
+    }
+  });
+}
+
+async function syncShareAttribution(event = null) {
+  const auth = await ensureAuth();
+  const state = collectLocalState();
+  return request({
+    path: `/api/v1/users/${auth.user.id}/share-attribution`,
+    method: "POST",
+    token: auth.access_token,
+    data: {
+      source_channel: "微信小程序MVP",
+      event,
+      invite_events: state.invite_events,
+      invite_funnel: state.invite_funnel,
+      share_cards: state.share_cards,
+      companion_mirrors: state.companion_mirrors,
+      group_practice: state.group_practice,
+      lesson_reservations: state.lesson_reservations,
+      lesson_watch_records: state.lesson_watch_records,
+      subscription_state: state.subscription_state,
+      user_binding: state.user_binding
+    }
+  });
+}
+
 module.exports = {
   DEFAULT_API_BASE,
   getApiBase,
@@ -181,5 +249,8 @@ module.exports = {
   ensureAuth,
   syncLocalState,
   pullRemoteState,
-  syncCheckIn
+  syncCheckIn,
+  syncAssessmentReport,
+  syncTrainingProgress,
+  syncShareAttribution
 };

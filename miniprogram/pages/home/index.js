@@ -1,6 +1,9 @@
 const {
   getProfile,
   updateProfile,
+  bindPhone,
+  saveInviteSource,
+  getUserBinding,
   getTodayMind,
   getAssessmentResult,
   getTodayTraining,
@@ -9,25 +12,40 @@ const {
   getTodayReview,
   getReviews,
   getZhixingScoreState,
+  getSyncStatus,
+  getTodayReaction,
+  saveTodayReaction,
+  getTodayIntradayBoundaryRecord,
+  getTraining7State,
+  saveTraining7Task,
+  getTodayThreeSeals,
+  saveTodayThreeSeals,
+  getRetentionState,
   saveDailyLoopState,
   getTodayHeartCard,
   saveTodayHeartCard,
   clearTodayHeartCard,
+  saveInviteEvent,
   todayKey
 } = require("../../utils/store");
-const { syncLocalState } = require("../../utils/api");
+const { syncLocalState, syncTrainingProgress, syncShareAttribution } = require("../../utils/api");
+const { promptShareMoment } = require("../../utils/share-moments");
 const { buildCompanionSystem } = require("../../modules/companion/index");
 const { buildDailyLoopState } = require("../../modules/daily-loop/index");
 const { buildContinuityState } = require("../../modules/continuity/index");
 const { getTodayContent } = require("../../modules/content365/index");
 const { buildStageState } = require("../../modules/stages/index");
 const { buildHeartProofShareCard } = require("../../modules/share/index");
+const { buildRetentionState } = require("../../modules/retention/index");
+const { buildTraining7View } = require("../../modules/training7/index");
+const { buildClassroomView } = require("../../modules/classroom/index");
 
 const ENTRY_STATE_KEY = "zhixing_ritual_entry";
+const REACTION_TAGS = ["恐惧", "贪念", "证明", "后悔", "急躁", "逃避"];
 const VOWS = [
-  { key: "plan", seal: "志", text: "我承诺：无计划，不开仓。" },
-  { key: "stop", seal: "止", text: "我承诺：触发止损，不移动。" },
-  { key: "emotion", seal: "离", text: "我承诺：情绪失控，先离场。" }
+  { key: "plan", seal: "志", text: "我承诺：无边界，不行动。" },
+  { key: "stop", seal: "止", text: "我承诺：边界触发，不再辩解。" },
+  { key: "emotion", seal: "照", text: "我承诺：情绪翻涌，先停十秒。" }
 ];
 const QR_BLOCKS = Array.from({ length: 25 }).map((_, index) => ({
   key: index,
@@ -309,12 +327,36 @@ function splitHeartProofLines(heartProof) {
   return [text.slice(0, middle), text.slice(middle)].filter(Boolean);
 }
 
-function buildHeroView(dailyContent) {
+function buildHeroView(dailyContent, training7View = {}) {
   const safeContent = dailyContent || {};
+  const todayTraining = training7View.today || null;
+  const dayNumber = Number((todayTraining || {}).day || safeContent.dayNumber || String(safeContent.id || "").replace(/\D/g, "") || 1);
+  const dayProgressLabel = todayTraining ? `Day ${dayNumber} / 7` : `Day ${String(dayNumber).padStart(3, "0")} / 365`;
+  const stageCore = safeContent.stageCore || safeContent.stageName || "今日修行";
+  const stageTitle = safeContent.stageTitle || "";
+  const stageOrderMap = {
+    1: "第一关",
+    2: "第二关",
+    3: "第三关",
+    4: "第四关",
+    5: "第五关",
+    6: "第六关"
+  };
+  const stageOrder = String(stageTitle).match(/第(\d+)关/);
+  const contemplationLines = [
+    todayTraining ? todayTraining.reflectionQuestion : "当行情触碰你的边界时，你第一反应是遵守计划，还是想证明自己？"
+  ].filter(Boolean);
+  const heartProof = todayTraining ? todayTraining.mantra : safeContent.heartProof;
   return {
-    dayLabel: safeContent.id || "Day001",
-    todayStageLabel: normalizeStageTitle(safeContent.stageTitle, safeContent.stageName),
-    heartProofLines: splitHeartProofLines(safeContent.heartProof),
+    dayLabel: todayTraining ? `Day${String(dayNumber).padStart(2, "0")}` : safeContent.id || "Day001",
+    daySimpleLabel: `Day ${dayNumber}`,
+    todayStageLabel: todayTraining ? todayTraining.title : normalizeStageTitle(safeContent.stageTitle, safeContent.stageName),
+    stageOrderLabel: todayTraining ? "七日观心" : stageOrder ? stageOrderMap[Number(stageOrder[1])] || stageOrder[0] : "今日关卡",
+    stageNameLabel: todayTraining ? todayTraining.title : safeContent.stageName || "今日修行",
+    dayProgressLabel,
+    themeLabel: todayTraining ? `今日主题 · ${todayTraining.title}` : `${stageCore} · ${safeContent.loopPosition || "每日照见"}`,
+    heartProofLines: splitHeartProofLines(heartProof),
+    contemplationLines,
     interpretation: safeContent.interpretation || safeContent.review || "市场不是敌人，失守的念头才是。",
     commandment: safeContent.commandment || "无计划，不行动。"
   };
@@ -580,12 +622,131 @@ function buildCompanionView({ companionSystem, continuity, stageView, zhixingSco
   };
 }
 
+function buildTodayActionView({ loopState = {}, homeRitualState = {}, reactionRecord = null, training = {}, assessment = null } = {}) {
+  const nextStep = loopState.nextStep || {};
+  const hasReaction = !!reactionRecord;
+  const trainingDone = !!training.completed;
+  const hasAssessment = !!assessment;
+  return {
+    title: nextStep.name ? `今天先完成：${nextStep.name}` : "今天先落下一次真实动作",
+    copy: hasReaction
+      ? "反应已记录，继续完成今日事上练与省察。"
+      : "先记录一次真实交易反应，再进入今日事上练。",
+    buttonText: homeRitualState.buttonText || nextStep.action || "开始今日训练",
+    checkInText: hasReaction ? "行为已打卡" : "记录行为打卡",
+    reportText: hasAssessment ? "报告已生成" : "先生成测评报告",
+    trainingText: trainingDone ? "事上练已完成" : `${loopState.statusText || "0/7 已完成"}`
+  };
+}
+
+function buildReportBridge(assessment, syncStatus = {}) {
+  if (!assessment) {
+    return {
+      linked: false,
+      title: "网站测评报告未生成",
+      subtitle: "先完成九型照见，网站和小程序才有同一份人格报告作为训练起点。",
+      buttonText: "开始测评",
+      syncText: "未同步"
+    };
+  }
+  return {
+    linked: true,
+    title: `${assessment.primary || "主反应"} · ${assessment.secondary || "次反应"}`,
+    subtitle: syncStatus.ok
+      ? "报告已进入同步状态，可作为网站报告、训练路径和复测变化的共同基准。"
+      : "本地报告已生成，建议同步后与网站测评报告共用同一份基准。",
+    buttonText: "查看报告",
+    syncText: syncStatus.ok ? "已同步" : "同步报告"
+  };
+}
+
+function buildTraining7Summary(training7View = {}) {
+  return {
+    title: "7 天交易观心陪跑",
+    statusText: training7View.progressText || "0/7",
+    progress: training7View.progressPercent || 0,
+    currentText: `当前 Day ${training7View.currentDay || 1}`,
+    todayTitle: ((training7View.today || {}).title) || "观入场冲动",
+    retestText: training7View.canRetest ? "开始复测" : "第 7 天开放复测"
+  };
+}
+
+function buildTodayStages({ mind = null, intradayBoundaryRecord = null, review = null } = {}) {
+  return [
+    {
+      key: "mind",
+      title: "开盘前照心",
+      status: mind ? "已照见" : "待照心",
+      done: !!mind,
+      route: "/pages/mind/index"
+    },
+    {
+      key: "boundary",
+      title: "盘中守界",
+      status: intradayBoundaryRecord && intradayBoundaryRecord.completed ? "已记录" : "待记录",
+      done: !!(intradayBoundaryRecord && intradayBoundaryRecord.completed),
+      route: "/pages/intraday-boundary/index"
+    },
+    {
+      key: "review",
+      title: "收盘后省察",
+      status: review ? "已省察" : "待省察",
+      done: !!review,
+      route: "/pages/review/index"
+    }
+  ];
+}
+
+function buildHeroTasks({ reactionRecord = null, training = {}, dailyContent = {}, training7View = {} } = {}) {
+  const trainingDay = training7View.today || {};
+  const sevenDayTasks = Array.isArray(trainingDay.tasks) ? trainingDay.tasks : [];
+  if (sevenDayTasks.length) {
+    return {
+      trainingButtonText: `${training.completed ? "继续" : "开始"}第 ${trainingDay.day || 1} 天训练`,
+      list: sevenDayTasks.map((task) => Object.assign({}, task, {
+        status: task.done ? "已完成" : "待完成"
+      }))
+    };
+  }
+  const steps = (training || {}).steps || {};
+  const dayNumber = Number((dailyContent || {}).dayNumber || 1);
+  return {
+    trainingButtonText: `进入第 ${dayNumber} 天训练`,
+    list: [
+      {
+        key: "reaction",
+        title: "记录一次交易反应",
+        status: reactionRecord ? "已记录" : "待记录",
+        done: !!reactionRecord
+      },
+      {
+        key: "kline",
+        title: "完成一次 K 线观心",
+        status: steps.trigger || training.completed ? "已完成" : "待完成",
+        done: !!(steps.trigger || training.completed)
+      },
+      {
+        key: "checkin",
+        title: "完成今日打卡",
+        status: training.completed ? "已打卡" : "待打卡",
+        done: !!training.completed
+      }
+    ]
+  };
+}
+
 const initialDailyContent = getTodayContent();
 const initialHomeRitualState = buildHomeRitualState({
   checkedCount: 0,
   dailyContent: initialDailyContent,
   dayKey: todayKey()
 });
+const initialRetentionView = buildRetentionState({
+  todayKey: todayKey(),
+  dailyContent: initialDailyContent,
+  reminderState: (getRetentionState() || {}).reminder
+});
+const initialTraining7View = buildTraining7View(getTraining7State(), {});
 
 Page({
   data: {
@@ -601,7 +762,7 @@ Page({
     posterMode: false,
     dailyContent: initialDailyContent,
     hasAssessment: false,
-    heroView: buildHeroView(initialDailyContent),
+    heroView: buildHeroView(initialDailyContent, initialTraining7View),
     stageState: buildStageState({}),
     stageView: buildStageView(buildStageState({}), initialDailyContent),
     companionView: buildCompanionView({
@@ -620,7 +781,34 @@ Page({
     primaryTaskText: initialHomeRitualState.primaryText,
     homeRitualState: initialHomeRitualState,
     loopState: buildDailyLoopState({}),
-    loopSteps: []
+    loopSteps: [],
+    retentionView: initialRetentionView,
+    todayActionView: buildTodayActionView({ loopState: buildDailyLoopState({}), homeRitualState: initialHomeRitualState }),
+    reportBridge: buildReportBridge(null, {}),
+    reactionTags: REACTION_TAGS,
+    selectedReactionTag: "",
+    reactionDraft: "",
+    reactionRecord: null,
+    heroTasks: buildHeroTasks({ dailyContent: initialDailyContent, training7View: initialTraining7View }),
+    training7View: initialTraining7View,
+    training7Summary: buildTraining7Summary(initialTraining7View),
+    threeSeals: getTodayThreeSeals(),
+    todayStages: buildTodayStages({}),
+    classroomView: buildClassroomView(),
+    userBinding: getUserBinding()
+  },
+
+  onLoad(options = {}) {
+    if (options.invite) {
+      saveInviteSource(options.invite, {
+        sourceScene: options.sourceScene || "home_invite_activation",
+        sourcePage: "home",
+        shareCardType: options.shareCardType || "unknown",
+        sourcePrimary: options.sourcePrimary || "",
+        sourceSecondary: options.sourceSecondary || "",
+        groupCode: options.groupCode || ""
+      });
+    }
   },
 
   onShow() {
@@ -645,8 +833,13 @@ Page({
     const trainingState = getTrainingState();
     const reviews = getReviews();
     const todayReview = getTodayReview();
+    const threeSeals = getTodayThreeSeals();
     const zhixingScoreState = getZhixingScoreState();
     const todayHeartCard = getTodayHeartCard();
+    const reactionRecord = getTodayReaction();
+    const intradayBoundaryRecord = getTodayIntradayBoundaryRecord();
+    const syncStatus = getSyncStatus();
+    const retentionState = getRetentionState();
     const continuity = buildContinuityState({
       profile,
       mindRecords,
@@ -678,7 +871,14 @@ Page({
       zhixingScore: zhixingScoreState.latest || {}
     });
     const dailyContent = getTodayContent();
-    const heroView = buildHeroView(dailyContent);
+    const training7View = buildTraining7View(getTraining7State(), {
+      mind,
+      training,
+      reactionRecord,
+      intradayBoundaryRecord,
+      review: todayReview
+    });
+    const heroView = buildHeroView(dailyContent, training7View);
     const stageView = buildStageView(stageState, dailyContent);
     const homeRitualState = buildHomeRitualState({
       checkedCount,
@@ -721,6 +921,26 @@ Page({
       trainingState,
       reviews
     });
+    const retentionView = buildRetentionState({
+      todayKey: currentDay,
+      profile,
+      assessment,
+      continuity,
+      dailyContent,
+      zhixingScoreState,
+      loopState,
+      reminderState: (retentionState || {}).reminder,
+      heartCardRecord: todayHeartCard
+    });
+    const todayActionView = buildTodayActionView({
+      loopState,
+      homeRitualState,
+      reactionRecord,
+      training,
+      assessment
+    });
+    const reportBridge = buildReportBridge(assessment, syncStatus);
+    const heroTasks = buildHeroTasks({ reactionRecord, training, dailyContent, training7View });
     this.setData({
       phone: stored.phone || profile.phone || "",
       vows: buildVows(checkedMap),
@@ -740,6 +960,18 @@ Page({
       heartCardImagePath: (todayHeartCard || {}).imagePath || "",
       loopState,
       loopSteps: loopState.steps,
+      retentionView,
+      todayActionView,
+      reportBridge,
+      reactionRecord,
+      selectedReactionTag: (reactionRecord || {}).tag || "",
+      reactionDraft: (reactionRecord || {}).note || "",
+      heroTasks,
+      training7View,
+      training7Summary: buildTraining7Summary(training7View),
+      threeSeals,
+      todayStages: buildTodayStages({ mind, intradayBoundaryRecord, review: todayReview }),
+      userBinding: getUserBinding(),
       dailyContent,
       hasAssessment: !!assessment
     });
@@ -765,8 +997,125 @@ Page({
   inputPhone(e) {
     const phone = e.detail.value;
     this.saveEntryState({ phone });
+    if (/^1\d{10}$/.test(String(phone || ""))) {
+      bindPhone(phone, { bindSource: "home_identity_field" });
+      syncLocalState({ silent: true }).catch(() => {});
+    }
     this.setData({
-      phone
+      phone,
+      userBinding: getUserBinding()
+    });
+  },
+
+  inputThreeSeal(e) {
+    const key = e.currentTarget.dataset.key;
+    const value = e.detail.value;
+    this.setData({
+      threeSeals: Object.assign({}, this.data.threeSeals || {}, { [key]: value })
+    });
+  },
+
+  saveThreeSeals() {
+    const seals = this.data.threeSeals || {};
+    if (!seals.thought || !seals.fear || !seals.boundary) {
+      wx.showToast({ title: "请补全今日三印", icon: "none" });
+      return;
+    }
+    const saved = saveTodayThreeSeals(seals);
+    syncLocalState({ silent: true }).catch(() => {});
+    syncTrainingProgress().catch(() => {});
+    this.setData({ threeSeals: saved });
+    wx.showToast({ title: "今日三印已落下", icon: "success" });
+    promptShareMoment("three_seals_completed", { sourceScene: "three_seals_completed" });
+  },
+
+  selectReactionTag(e) {
+    this.setData({ selectedReactionTag: e.currentTarget.dataset.tag || "" });
+  },
+
+  inputReaction(e) {
+    this.setData({ reactionDraft: e.detail.value });
+  },
+
+  saveReactionRecord() {
+    const tag = this.data.selectedReactionTag;
+    const note = String(this.data.reactionDraft || "").trim();
+    if (!tag && !note) {
+      wx.showToast({ title: "先记下一次真实反应", icon: "none" });
+      return;
+    }
+    const record = saveTodayReaction({
+      tag: tag || "未标记",
+      note,
+      heartProof: (this.data.dailyContent || {}).heartProof || "",
+      trainingAction: (this.data.dailyContent || {}).trainingAction || "",
+      source: "home_reaction_checkin"
+    });
+    saveTraining7Task((this.data.training7View || {}).currentDay || 1, "reaction_record", true);
+    const training7View = buildTraining7View(getTraining7State(), {
+      mind: getTodayMind(),
+      reactionRecord: record,
+      intradayBoundaryRecord: getTodayIntradayBoundaryRecord(),
+      review: getTodayReview(),
+      training: getTodayTraining()
+    });
+    syncLocalState({ silent: true }).catch(() => {});
+    syncTrainingProgress().catch(() => {});
+    wx.showToast({ title: "行为打卡已记录", icon: "success" });
+    this.setData({
+      reactionRecord: record,
+      heroTasks: buildHeroTasks({
+        reactionRecord: record,
+        training: getTodayTraining(),
+        dailyContent: this.data.dailyContent,
+        training7View
+      }),
+      training7View,
+      training7Summary: buildTraining7Summary(training7View),
+      todayStages: buildTodayStages({
+        mind: getTodayMind(),
+        intradayBoundaryRecord: getTodayIntradayBoundaryRecord(),
+        review: getTodayReview()
+      }),
+      todayActionView: buildTodayActionView({
+        loopState: this.data.loopState,
+        homeRitualState: this.data.homeRitualState,
+        reactionRecord: record,
+        training: getTodayTraining(),
+        assessment: getAssessmentResult()
+      })
+    });
+  },
+
+  completeTodayCheckIn() {
+    const day = (this.data.training7View || {}).currentDay || 1;
+    saveTraining7Task(day, "checkin", true);
+    const training7View = buildTraining7View(getTraining7State(), {
+      mind: getTodayMind(),
+      reactionRecord: getTodayReaction(),
+      intradayBoundaryRecord: getTodayIntradayBoundaryRecord(),
+      review: getTodayReview(),
+      training: getTodayTraining()
+    });
+    syncLocalState({ silent: true }).catch(() => {});
+    syncTrainingProgress().catch(() => {});
+    wx.showToast({ title: "今日打卡已完成", icon: "success" });
+    if (day >= 3) {
+      promptShareMoment("streak_3_days", { sourceScene: "training_day_3" });
+    }
+    if (day >= 7) {
+      promptShareMoment("seven_day_completed", { sourceScene: "training_day_7" });
+    }
+    this.setData({
+      training7View,
+      training7Summary: buildTraining7Summary(training7View),
+      heroView: buildHeroView(this.data.dailyContent, training7View),
+      heroTasks: buildHeroTasks({
+        reactionRecord: getTodayReaction(),
+        training: getTodayTraining(),
+        dailyContent: this.data.dailyContent,
+        training7View
+      })
     });
   },
 
@@ -787,6 +1136,7 @@ Page({
     if (checkedCount >= VOWS.length) {
       updateProfile({ vowsAccepted: true, lastVowDate: todayKey() });
       syncLocalState({ silent: true }).catch(() => {});
+      syncTrainingProgress().catch(() => {});
     }
     this.loadEntryState();
     if (!wasChecked && checkedMap[key]) this.setData({ sealEffectKey: key });
@@ -822,9 +1172,10 @@ Page({
       stage: this.data.stageState.currentStage.name,
       vowsAccepted: true
     };
-    if (phone) profilePatch.phone = phone;
+    if (phone) bindPhone(phone, { bindSource: "home_ritual_entry" });
     updateProfile(profilePatch);
     syncLocalState({ silent: true }).catch(() => {});
+    syncTrainingProgress().catch(() => {});
     return true;
   },
 
@@ -923,6 +1274,7 @@ Page({
       });
       updateProfile({ lastHeartCardDay: todayKey(), lastHeartCardAt: Date.now() });
       syncLocalState({ silent: true }).catch(() => {});
+      syncTrainingProgress().catch(() => {});
       wx.hideLoading();
       wx.showToast({ title: "心证卡已落成", icon: "success" });
       this.loadEntryState();
@@ -1002,6 +1354,82 @@ Page({
     wx.navigateTo({ url: "/pages/content365/index" });
   },
 
+  goProfile() {
+    wx.navigateTo({ url: "/pages/profile/index" });
+  },
+
+  goZhixingIndex() {
+    wx.redirectTo({ url: "/pages/zhixing-index/index" });
+  },
+
+  goClassroom() {
+    wx.redirectTo({ url: "/pages/classroom/index" });
+  },
+
+  goTodayStage(e) {
+    const route = e.currentTarget.dataset.route;
+    if (route) wx.redirectTo({ url: route });
+  },
+
+  goRetest() {
+    if (!(this.data.training7View || {}).canRetest) {
+      wx.showToast({ title: "第7天开放复测", icon: "none" });
+      return;
+    }
+    wx.redirectTo({ url: "/pages/assessment/index" });
+  },
+
+  goTrainingDay() {
+    wx.redirectTo({ url: "/pages/training/index" });
+  },
+
+  handleHeroTask(e) {
+    const key = e.currentTarget.dataset.key;
+    if (key === "opening_check") {
+      wx.redirectTo({ url: "/pages/mind/index" });
+      return;
+    }
+    if (key === "intraday_boundary") {
+      wx.redirectTo({ url: "/pages/intraday-boundary/index" });
+      return;
+    }
+    if (key === "reaction" || key === "reaction_record") {
+      wx.pageScrollTo({ selector: ".scene-reaction-detail", duration: 420 });
+      return;
+    }
+    if (key === "kline" || key === "daily_practice") {
+      wx.redirectTo({ url: "/pages/training/index" });
+      return;
+    }
+    if (key === "closing_review") {
+      wx.redirectTo({ url: "/pages/review/index" });
+      return;
+    }
+    if (key === "checkin") {
+      this.completeTodayCheckIn();
+    }
+  },
+
+  goShareCard(e) {
+    const type = e.currentTarget.dataset.type || "daily_mantra";
+    const scene = type === "companion_invite" ? "companion_invite_home" : "daily_mantra_home";
+    wx.navigateTo({ url: `/pages/share-card/index?type=${type}&sourceScene=${scene}` });
+  },
+
+  goReportBridge() {
+    if (this.data.reportBridge && this.data.reportBridge.linked) {
+      wx.navigateTo({ url: "/pages/report/index" });
+      return;
+    }
+    wx.redirectTo({ url: "/pages/assessment/index" });
+  },
+
+  syncReportBridge() {
+    syncLocalState({ silent: false })
+      .then(() => this.loadEntryState())
+      .catch(() => this.loadEntryState());
+  },
+
   goLoopStep(e) {
     const index = Number(e.currentTarget.dataset.index || 0);
     const step = this.data.loopSteps[index];
@@ -1052,9 +1480,27 @@ Page({
   onShareAppMessage() {
     const card = this.data.shareCard || {};
     const record = this.data.heartCardRecord || getTodayHeartCard();
+    const inviteCode = (this.data.companionView || {}).inviteCode || (getUserBinding() || {}).inviteCode || "";
+    const basePath = card.sharePath || "/pages/home/index";
+    const sourceScene = "home_heart_card";
+    const shareCardType = "daily_mantra";
+    const query = [
+      inviteCode ? `invite=${encodeURIComponent(inviteCode)}` : "",
+      `sourceScene=${encodeURIComponent(sourceScene)}`,
+      `shareCardType=${encodeURIComponent(shareCardType)}`
+    ].filter(Boolean).join("&");
+    const path = query ? `${basePath}${basePath.includes("?") ? "&" : "?"}${query}` : basePath;
+    const events = saveInviteEvent({
+      sourceScene,
+      sourcePage: "home",
+      shareCardType,
+      channel: "share_message",
+      inviteCode
+    });
+    syncShareAttribution(events[events.length - 1]).catch(() => {});
     return {
       title: card.shareTitle || "今日心证：先立其志，再入其事。",
-      path: card.sharePath || "/pages/home/index",
+      path,
       imageUrl: (record || {}).imagePath || ""
     };
   },
@@ -1062,9 +1508,27 @@ Page({
   onShareTimeline() {
     const card = this.data.shareCard || {};
     const record = this.data.heartCardRecord || getTodayHeartCard();
+    const inviteCode = ((getUserBinding() || {}).inviteCode || "");
+    const sourceScene = "home_timeline";
+    const shareCardType = "daily_mantra";
+    const query = [
+      `day=${(this.data.dailyContent || {}).dayNumber || 1}`,
+      "from=timeline",
+      inviteCode ? `invite=${encodeURIComponent(inviteCode)}` : "",
+      `sourceScene=${encodeURIComponent(sourceScene)}`,
+      `shareCardType=${encodeURIComponent(shareCardType)}`
+    ].filter(Boolean).join("&");
+    const events = saveInviteEvent({
+      sourceScene,
+      sourcePage: "home",
+      shareCardType,
+      channel: "share_timeline",
+      inviteCode
+    });
+    syncShareAttribution(events[events.length - 1]).catch(() => {});
     return {
       title: card.shareTitle || "今日心证：先立其志，再入其事。",
-      query: `day=${(this.data.dailyContent || {}).dayNumber || 1}&from=timeline`,
+      query,
       imageUrl: (record || {}).imagePath || ""
     };
   }

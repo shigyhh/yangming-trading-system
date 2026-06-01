@@ -12,11 +12,11 @@
 | `server` | 共用 API、用户身份、测评会话、评分报告、训练记录、小程序同步、道场/助教承接 | Node.js HTTP server、本地 JSON runtime、PostgreSQL schema 预留 |
 | `miniprogram` | 微信小程序端每日修行闭环：照心、测评、报告、训练、复盘、成长、用户中心 | 原生微信小程序页面、模块、组件、工具层 |
 
-当前仓库还没有 `packages/` 目录。按项目规则，后续应补齐：
+当前仓库已开始补齐 `packages/` 目录。按项目规则，后续仍需继续完善：
 
 - `packages/personality`：统一人格计算与人格到训练路径映射。
 - `packages/content`：统一文案、365 天心证、训练内容、报告内容。
-- `packages/contracts`：统一 Web、小程序、后台共用接口类型。
+- `packages/contracts`：统一 Web、小程序、后台共用接口类型。当前已包含测评报告统一 schema。
 
 ## 顶层目录
 
@@ -29,6 +29,7 @@
 | `worldview` | 世界观源文件，定义人格、六阶段、文案边界、AI 教练规则和用户旅程。 |
 | `design-system` | 视觉与产品宪法、小程序 token 等设计系统资料。 |
 | `data` | 项目共用静态规则与每日修行内容数据。 |
+| `packages` | 未来三端共享包。当前已有 `contracts`，用于沉淀测评报告等共用数据结构。 |
 | `web-mvp` | 早期 Web MVP 静态页与数据资源，部分服务端仍可托管。 |
 | `prototypes` | 原型页面。 |
 | `scripts` | 根目录辅助脚本。 |
@@ -40,6 +41,7 @@
 | --- | --- |
 | `docs/RUNBOOK.md` | 本地运行手册，说明 Web、Server、小程序如何在台式机启动。 |
 | `docs/PROJECT_MAP.md` | 当前项目结构地图，说明三端职责、业务域目录、结构风险和后续顺序。 |
+| `docs/ASSESSMENT_REPORT_SCHEMA.md` | 测评报告统一 schema、三端字段映射和最小改造方案。 |
 | `docs/V1验证报告.md` | V1 阶段验证记录。 |
 | `docs/世界观与系统规则.md` | 产品世界观、核心闭环、禁止边界、九型人格、六大关卡和 AI 观心规则。 |
 | `docs/上线发布流程.md` | 上线发布流程说明。 |

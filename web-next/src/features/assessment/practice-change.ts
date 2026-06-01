@@ -18,19 +18,50 @@ export type PracticeMetric = {
 
 export type PracticeRecordStatus = "completed" | "missed"
 
+export type KLineTrainingRecord = {
+  scene: string
+  reaction: string
+  disciplineAction: string
+}
+
+export type DailyPracticeEntry = {
+  cultivationText: string
+  klineRecord?: KLineTrainingRecord
+}
+
+export type PracticeRiskRadarSnapshot = {
+  createdAt: string
+  primaryType: string
+  secondaryType: string
+  riskRadar: Array<{ key: string; label: string; value: number }>
+}
+
+export type PracticeRadarComparison = {
+  key: string
+  label: string
+  before: number
+  after: number
+  delta: number
+}
+
 export type PracticeChangeState = {
   startedAt: string
   sourceMirrorId?: BehaviorMirrorId
   day: number
   lastRecordedDate?: string
+  baselineReport?: PracticeRiskRadarSnapshot
+  retestReport?: PracticeRiskRadarSnapshot
   metrics: PracticeMetric[]
   records: Array<{
     day: number
+    dateKey?: string
     title: string
     note: string
     actions?: string[]
     status?: PracticeRecordStatus
     recordedAt?: string
+    cultivationText?: string
+    klineRecord?: KLineTrainingRecord
   }>
 }
 
@@ -157,6 +188,19 @@ function completedRecordCount(records: PracticeChangeState["records"]) {
   return records.filter((record) => (record.status ?? "completed") === "completed").length
 }
 
+function reportSnapshot(report: AssessmentReport): PracticeRiskRadarSnapshot {
+  return {
+    createdAt: report.createdAt,
+    primaryType: report.primaryType.label,
+    secondaryType: report.secondaryType.label,
+    riskRadar: report.riskRadar.map((item) => ({
+      key: item.key,
+      label: item.label,
+      value: clampScore(item.value),
+    })),
+  }
+}
+
 export function createPracticeChange(report: AssessmentReport): PracticeChangeState {
   const impulse = riskValue(report, "impulse")
   const holding = riskValue(report, "holding")
@@ -207,8 +251,27 @@ export function createPracticeChange(report: AssessmentReport): PracticeChangeSt
     sourceMirrorId: report.sourceMirror?.id,
     day: 0,
     lastRecordedDate: undefined,
+    baselineReport: reportSnapshot(report),
+    retestReport: undefined,
     metrics,
     records: [],
+  }
+}
+
+export function reconcilePracticeChangeWithReport(
+  state: PracticeChangeState,
+  report: AssessmentReport,
+): PracticeChangeState {
+  const snapshot = reportSnapshot(report)
+  const baselineReport = state.baselineReport ?? snapshot
+  const isNewReport = snapshot.createdAt !== baselineReport.createdAt
+  const retestReport = isNewReport ? snapshot : state.retestReport
+
+  return {
+    ...state,
+    sourceMirrorId: state.sourceMirrorId ?? report.sourceMirror?.id,
+    baselineReport,
+    retestReport,
   }
 }
 
@@ -219,21 +282,26 @@ export function canRecordPracticeToday(state: PracticeChangeState) {
 export function advancePracticeChange(
   state: PracticeChangeState,
   status: PracticeRecordStatus = "completed",
+  entry?: DailyPracticeEntry,
 ): PracticeChangeState {
   if (!canRecordPracticeToday(state)) return state
 
   const nextDay = Math.min(state.day + 1, 7)
   const practices = getDayPractices(state.sourceMirrorId)
   const practice = practices[nextDay - 1] ?? practices[practices.length - 1]
+  const dateKey = todayKey()
   const nextRecords = [
     ...state.records.filter((record) => record.day !== nextDay),
     {
       day: nextDay,
+      dateKey,
       title: practice.title,
       note: practice.note,
       actions: practice.actions,
       status,
       recordedAt: new Date().toISOString(),
+      cultivationText: entry?.cultivationText,
+      klineRecord: entry?.klineRecord,
     },
   ].sort((a, b) => a.day - b.day)
   const completedDays = completedRecordCount(nextRecords)
@@ -241,7 +309,7 @@ export function advancePracticeChange(
   return {
     ...state,
     day: nextDay,
-    lastRecordedDate: todayKey(),
+    lastRecordedDate: dateKey,
     metrics: state.metrics.map((metric) => ({
       ...metric,
       current: metricProgress(metric.before, metric.direction, completedDays),
@@ -255,4 +323,24 @@ export function getPracticePrescription(report?: AssessmentReport | null) {
     day: index + 1,
     ...item,
   }))
+}
+
+export function compareRiskRadarSnapshots(
+  before?: PracticeRiskRadarSnapshot,
+  after?: PracticeRiskRadarSnapshot,
+): PracticeRadarComparison[] {
+  if (!before || !after) return []
+
+  return before.riskRadar.map((beforeItem) => {
+    const afterItem = after.riskRadar.find((item) => item.key === beforeItem.key)
+    const afterValue = clampScore(afterItem?.value ?? beforeItem.value)
+
+    return {
+      key: beforeItem.key,
+      label: beforeItem.label,
+      before: clampScore(beforeItem.value),
+      after: afterValue,
+      delta: afterValue - clampScore(beforeItem.value),
+    }
+  })
 }

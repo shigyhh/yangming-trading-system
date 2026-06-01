@@ -12,9 +12,12 @@ import { getMiniprogramState, saveMiniprogramState } from "../services/miniprogr
 import { bindDojoMentor, createDojoTask, getDojoLeaderboard, getMentorDashboard, getUserDojoBindings, getUserDojoSummary, listDojoMentors, listDojoMindRecords, listDojoTasks, registerDojoMentor, saveDojoMindRecord, saveUserDojoTaskRecord } from "../services/dojo.js";
 import { createPhoneLoginCode, normalizePhone, verifyPhoneLoginCode } from "../services/phoneAuth.js";
 import { getPublicStats } from "../services/stats.js";
+import { getI18nBundle, listSupportedLocales } from "../services/i18n.js";
 import { getQuestionBankStats } from "../services/questionBank.js";
 import { consumeWechatAuthCode, createWechatAuthUrl } from "../services/wechatAuth.js";
 import { advanceZhixingReplaySession, finishZhixingReplaySession, getZhixingReplaySession, listZhixingReplayResults, startZhixingReplaySession, submitZhixingReplayDecision } from "../services/zhixingReplay.js";
+import { generateShareCardBinding, getAdminUserFromBindings, getDataBindingUserSummary, getInviteSourceStatsBinding, getRetestComparisonBinding, getShareCardBinding, getUserReportBinding, listAdminUsersFromBindings, saveAssessmentReportBinding, saveKLineRecordBinding, saveRetestResultBinding, saveTrainingRecordBinding, syncAssistantSummaryToFeishuBinding, updateAssistantHandoffBinding } from "../services/dataBinding.js";
+import { getGlobalReflectionToday, listGlobalReflectionChoices, submitGlobalReflectionVote } from "../services/globalReflection.js";
 
 export async function route(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
@@ -67,7 +70,25 @@ export async function route(req, res) {
         forum_create_post: "POST /api/v1/forum/posts",
         forum_post: "GET /api/v1/forum/posts/:post_id",
         forum_comment: "POST /api/v1/forum/posts/:post_id/comments",
-        feishu_report_sync: "POST /api/v1/integrations/feishu/report"
+        feishu_report_sync: "POST /api/v1/integrations/feishu/report",
+        data_binding_assessment_report: "POST /api/v1/data-binding/assessment-report",
+        data_binding_user_report: "GET /api/v1/data-binding/users/:user_id/report",
+        data_binding_training_record: "POST /api/v1/data-binding/users/:user_id/training-records",
+        data_binding_kline_record: "POST /api/v1/data-binding/users/:user_id/kline-records",
+        data_binding_retest: "POST /api/v1/data-binding/users/:user_id/retests",
+        data_binding_retest_comparison: "GET /api/v1/data-binding/users/:user_id/retest-comparison",
+        data_binding_user_summary: "GET /api/v1/data-binding/users/:user_id/summary",
+        admin_users: "GET /api/v1/admin/users",
+        admin_user_detail: "GET /api/v1/admin/users/:user_id",
+        admin_assistant_handoff: "POST /api/v1/admin/users/:user_id/assistant-handoff",
+        admin_feishu_sync: "POST /api/v1/admin/users/:user_id/feishu-sync",
+        admin_invite_sources: "GET /api/v1/admin/invite-sources",
+        data_binding_share_card: "GET|POST /api/v1/data-binding/users/:user_id/share-card",
+        i18n_locales: "GET /api/v1/i18n/locales",
+        i18n_bundle: "GET /api/v1/i18n/bundle?locale=zh-CN",
+        global_reflection_options: "GET /api/v1/global-reflection/options",
+        global_reflection_today: "GET /api/v1/global-reflection/today",
+        global_reflection_vote: "POST /api/v1/global-reflection/vote"
       }
     });
   }
@@ -88,6 +109,180 @@ export async function route(req, res) {
   if (req.method === "GET" && pathname === "/api/v1/questions/stats") {
     const stats = await getQuestionBankStats();
     return sendJson(res, 200, { ok: true, ...stats });
+  }
+
+  if (req.method === "GET" && pathname === "/api/v1/i18n/locales") {
+    return sendJson(res, 200, {
+      ok: true,
+      defaultLocale: "zh-CN",
+      supportedLocales: listSupportedLocales()
+    });
+  }
+
+  if (req.method === "GET" && pathname === "/api/v1/i18n/bundle") {
+    const bundle = getI18nBundle({
+      locale: url.searchParams.get("locale") || "",
+      acceptLanguage: req.headers["accept-language"] || ""
+    });
+    return sendJson(res, 200, { ok: true, ...bundle });
+  }
+
+  if (req.method === "GET" && pathname === "/api/v1/global-reflection/options") {
+    return sendJson(res, 200, {
+      ok: true,
+      choices: listGlobalReflectionChoices()
+    });
+  }
+
+  if (req.method === "GET" && pathname === "/api/v1/global-reflection/today") {
+    const summary = await getGlobalReflectionToday({
+      dateKey: url.searchParams.get("date_key") || ""
+    });
+    return sendJson(res, 200, { ok: true, summary });
+  }
+
+  if (req.method === "POST" && pathname === "/api/v1/global-reflection/vote") {
+    const body = await readJson(req);
+    const result = await submitGlobalReflectionVote({
+      anonymousId: body.anonymous_id || body.anonymousId,
+      thoughtKey: body.thought_key || body.thoughtKey,
+      primaryType: body.primary_type || body.primaryType,
+      sourceChannel: body.source_channel || body.sourceChannel,
+      dateKey: body.date_key || body.dateKey
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/v1/admin/users") {
+    const users = await listAdminUsersFromBindings();
+    return sendJson(res, 200, {
+      ok: true,
+      source: "data-binding-runtime-json",
+      users
+    });
+  }
+
+  if (req.method === "GET" && pathname === "/api/v1/admin/invite-sources") {
+    const inviteSources = await getInviteSourceStatsBinding();
+    return sendJson(res, 200, {
+      ok: true,
+      source: "data-binding-runtime-json",
+      inviteSources
+    });
+  }
+
+  const adminUserMatch = pathname.match(/^\/api\/v1\/admin\/users\/([^/]+)$/);
+  if (req.method === "GET" && adminUserMatch) {
+    const user = await getAdminUserFromBindings(adminUserMatch[1]);
+    if (!user) return sendJson(res, 404, { ok: false, error: "用户不存在" });
+    return sendJson(res, 200, {
+      ok: true,
+      source: "data-binding-runtime-json",
+      user
+    });
+  }
+
+  const adminAssistantHandoffMatch = pathname.match(/^\/api\/v1\/admin\/users\/([^/]+)\/assistant-handoff$/);
+  if (req.method === "POST" && adminAssistantHandoffMatch) {
+    const body = await readJson(req);
+    const result = await updateAssistantHandoffBinding(adminAssistantHandoffMatch[1], {
+      status: body.status,
+      owner: body.owner,
+      note: body.note,
+      handoffAt: body.handoff_at || body.handoffAt
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const adminFeishuSyncMatch = pathname.match(/^\/api\/v1\/admin\/users\/([^/]+)\/feishu-sync$/);
+  if (req.method === "POST" && adminFeishuSyncMatch) {
+    const body = await readJson(req);
+    const result = await syncAssistantSummaryToFeishuBinding(adminFeishuSyncMatch[1], {
+      dryRun: body.dry_run !== false
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "POST" && pathname === "/api/v1/data-binding/assessment-report") {
+    const body = await readJson(req);
+    const result = await saveAssessmentReportBinding({
+      user: body.user,
+      report: body.report,
+      answers: body.answers,
+      questionOrder: body.question_order || body.questionOrder,
+      source: body.source || body.source_channel || "api"
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const dataBindingUserReportMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/report$/);
+  if (req.method === "GET" && dataBindingUserReportMatch) {
+    const report = await getUserReportBinding(dataBindingUserReportMatch[1]);
+    if (!report) return sendJson(res, 404, { ok: false, error: "报告不存在" });
+    return sendJson(res, 200, { ok: true, report });
+  }
+
+  const dataBindingTrainingMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/training-records$/);
+  if (req.method === "POST" && dataBindingTrainingMatch) {
+    const body = await readJson(req);
+    const result = await saveTrainingRecordBinding({
+      user: { ...(body.user || {}), userId: dataBindingTrainingMatch[1] },
+      record: body.record,
+      practiceState: body.practice_state || body.practiceState || null,
+      source: body.source || body.source_channel || "api"
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const dataBindingKlineMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/kline-records$/);
+  if (req.method === "POST" && dataBindingKlineMatch) {
+    const body = await readJson(req);
+    const result = await saveKLineRecordBinding({
+      user: { ...(body.user || {}), userId: dataBindingKlineMatch[1] },
+      record: body.record,
+      source: body.source || body.source_channel || "api"
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const dataBindingRetestMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/retests$/);
+  if (req.method === "POST" && dataBindingRetestMatch) {
+    const body = await readJson(req);
+    const result = await saveRetestResultBinding({
+      user: { ...(body.user || {}), userId: dataBindingRetestMatch[1] },
+      report: body.report,
+      comparison: body.comparison,
+      source: body.source || body.source_channel || "api"
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const dataBindingRetestComparisonMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/retest-comparison$/);
+  if (req.method === "GET" && dataBindingRetestComparisonMatch) {
+    const comparison = await getRetestComparisonBinding(dataBindingRetestComparisonMatch[1]);
+    return sendJson(res, 200, { ok: true, comparison });
+  }
+
+  const dataBindingSummaryMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/summary$/);
+  if (req.method === "GET" && dataBindingSummaryMatch) {
+    const summary = await getDataBindingUserSummary(dataBindingSummaryMatch[1]);
+    if (!summary) return sendJson(res, 404, { ok: false, error: "用户不存在" });
+    return sendJson(res, 200, { ok: true, ...summary });
+  }
+
+  const dataBindingShareCardMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/share-card$/);
+  if (req.method === "GET" && dataBindingShareCardMatch) {
+    const shareCard = await getShareCardBinding(dataBindingShareCardMatch[1]);
+    if (!shareCard) return sendJson(res, 404, { ok: false, error: "分享卡不存在" });
+    return sendJson(res, 200, { ok: true, share_card: shareCard });
+  }
+
+  if (req.method === "POST" && dataBindingShareCardMatch) {
+    const body = await readJson(req);
+    const result = await generateShareCardBinding(dataBindingShareCardMatch[1], {
+      channel: body.channel || body.source_channel || ""
+    });
+    return sendJson(res, 200, { ok: true, ...result });
   }
 
   if (req.method === "GET" && pathname === "/api/v1/assistant-qrs/next") {

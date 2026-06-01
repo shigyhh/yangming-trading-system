@@ -49,7 +49,40 @@
     </view>
 
     <view class="section-title">
-      <view>关卡进度</view>
+      <view>7 天训练关卡</view>
+      <text>{{training7View.progressText}}</text>
+    </view>
+
+    <view class="training-seven-list">
+      <button
+        wx:for="{{training7View.days}}"
+        wx:key="day"
+        class="training-seven-card card {{item.active ? 'active' : ''}} {{item.completed ? 'done' : ''}}"
+        data-day="{{item.day}}"
+        bindtap="selectTrainingDay"
+      >
+        <view class="training-seven-top">
+          <view class="training-seven-day">Day {{item.day}}</view>
+          <text>{{item.completed ? '已闭环' : item.active ? '今日' : '待练'}}</text>
+        </view>
+        <view class="training-seven-main">
+          <text>{{item.title}}</text>
+          <view>{{item.reflectionQuestion}}</view>
+        </view>
+        <view class="training-seven-foot">进入第 {{item.day}} 天训练</view>
+      </button>
+    </view>
+
+    <view wx:if="{{training7View.canRetest}}" class="retest-stage-card card" bindtap="goRetest">
+      <view>
+        <text>复测变化</text>
+        <view>第 7 天已开放复测，看见这一周反应模式的变化。</view>
+      </view>
+      <text>开始复测</text>
+    </view>
+
+    <view class="section-title">
+      <view>个人关卡进度</view>
       <text>{{stageState.overall}}%</text>
     </view>
 

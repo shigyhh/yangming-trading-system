@@ -242,6 +242,9 @@ export default function AssessmentResultPage() {
           >
             保存心证
           </SecondaryButton>
+          <SecondaryLink href="/share-card" className="w-full">
+            生成照见分享卡 →
+          </SecondaryLink>
           <SecondaryLink href="/observing-archive" className="w-full">
             进入观心档案 →
           </SecondaryLink>

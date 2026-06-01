@@ -5,9 +5,9 @@ import { motion } from "framer-motion"
 import { FlowButton } from "@/components/home/flow-button"
 
 const navItems = [
-  ["心性长卷", "#personality"],
-  ["观心之路", "#ai-focus"],
-  ["风险教育", "#compliance"],
+  ["卷一", "#hero"],
+  ["测评", "/assessment-entry"],
+  ["边界", "#compliance"],
 ]
 
 export function TopNav() {
@@ -25,7 +25,7 @@ export function TopNav() {
           </span>
           <span className="flex flex-col">
             <strong className="type-level-5 text-[rgba(216,183,111,.62)]">阳明心学交易系统</strong>
-            <em className="type-level-4 mt-1 text-[0.62rem] not-italic text-muted-cream opacity-42">见行情 · 见心 · 见人格</em>
+            <em className="type-level-4 mt-1 text-[0.62rem] not-italic text-muted-cream opacity-42">卷一 · 照见此心</em>
           </span>
         </a>
         <div className="hidden items-center gap-7 text-[rgba(244,235,221,.44)] md:flex">
@@ -49,8 +49,8 @@ export function TopNav() {
           ))}
         </div>
         <div className="hidden sm:block">
-          <FlowButton href="#personality" variant="ghost" className="min-h-10 px-5 opacity-58 hover:opacity-90">
-            进入照心
+          <FlowButton href="/assessment-entry" variant="ghost" className="min-h-10 px-5 opacity-58 hover:opacity-90">
+            进入测评
           </FlowButton>
         </div>
       </nav>

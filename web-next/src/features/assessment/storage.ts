@@ -10,6 +10,8 @@ export const assessmentStorageKeys = {
   reportCreatedAt: "ym_assessment_report_created_at",
   practiceChange: "ym_practice_change",
   selectedMirrorId: "ym_selected_behavior_mirror",
+  dataBindingUserId: "ym_data_binding_user_id",
+  dataBindingLastSyncAt: "ym_data_binding_last_sync_at",
 } as const
 
 export function getStorage<T>(key: string, fallback: T): T {
@@ -64,4 +66,5 @@ export function clearAssessmentDraft() {
   removeStorage(assessmentStorageKeys.answers)
   removeStorage(assessmentStorageKeys.currentIndex)
   removeStorage(assessmentStorageKeys.questionOrder)
+  removeStorage(assessmentStorageKeys.selectedMirrorId)
 }

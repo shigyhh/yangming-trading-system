@@ -61,6 +61,204 @@
   font-size: 24rpx;
 }
 
+.binding-card {
+  margin-top: 24rpx;
+  padding: 28rpx;
+}
+
+.binding-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 18rpx;
+  align-items: flex-start;
+}
+
+.binding-head view text {
+  display: block;
+  color: #f1d27d;
+  font-size: 23rpx;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.binding-head view view {
+  margin-top: 10rpx;
+  color: #fff6e6;
+  font-size: 28rpx;
+  line-height: 1.45;
+  font-weight: 800;
+}
+
+.binding-head > text {
+  flex: 0 0 auto;
+  padding: 10rpx 18rpx;
+  border-radius: 999rpx;
+  color: #58c2ad;
+  border: 1rpx solid rgba(88, 194, 173, 0.22);
+  background: rgba(88, 194, 173, 0.06);
+  font-size: 21rpx;
+  font-weight: 900;
+}
+
+.binding-grid {
+  margin-top: 22rpx;
+  display: grid;
+  gap: 12rpx;
+}
+
+.binding-grid > view {
+  min-height: 82rpx;
+  padding: 16rpx 18rpx;
+  display: grid;
+  grid-template-columns: 180rpx 1fr;
+  gap: 18rpx;
+  align-items: center;
+  border-radius: 18rpx;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.binding-grid text {
+  color: #b49355;
+  font-size: 21rpx;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.binding-grid view view {
+  color: rgba(247, 239, 223, 0.78);
+  font-size: 25rpx;
+  line-height: 1.5;
+  font-weight: 800;
+}
+
+.binding-note {
+  margin-top: 18rpx;
+  color: rgba(247, 239, 223, 0.5);
+  font-size: 23rpx;
+  line-height: 1.58;
+}
+
+.mini-report-card,
+.risk-card,
+.persona-brief,
+.retest-change-card,
+.compliance-card {
+  margin-top: 24rpx;
+  padding: 28rpx;
+}
+
+.mini-report-card > text,
+.risk-card > text,
+.retest-change-card > text {
+  position: relative;
+  z-index: 1;
+  display: block;
+  color: #f1d27d;
+  font-size: 23rpx;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.mini-report-card > view {
+  position: relative;
+  z-index: 1;
+  margin-top: 14rpx;
+  color: rgba(247, 239, 223, 0.78);
+  font-size: 28rpx;
+  line-height: 1.62;
+}
+
+.persona-brief {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14rpx;
+}
+
+.persona-brief > view {
+  position: relative;
+  z-index: 1;
+  min-height: 132rpx;
+  padding: 22rpx;
+  border-radius: 18rpx;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.persona-brief text,
+.risk-grid text {
+  display: block;
+  color: #b49355;
+  font-size: 21rpx;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.persona-brief view view {
+  margin-top: 12rpx;
+  color: #fff6e6;
+  font-size: 32rpx;
+  font-weight: 900;
+}
+
+.risk-grid {
+  position: relative;
+  z-index: 1;
+  margin-top: 20rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12rpx;
+}
+
+.retest-metrics {
+  position: relative;
+  z-index: 1;
+  margin-top: 20rpx;
+  display: grid;
+  gap: 12rpx;
+}
+
+.retest-metrics > view {
+  min-height: 78rpx;
+  padding: 16rpx 18rpx;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16rpx;
+  align-items: center;
+  border-radius: 18rpx;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.retest-metrics text {
+  color: rgba(247, 239, 223, 0.72);
+  font-size: 25rpx;
+  font-weight: 800;
+}
+
+.retest-metrics view view {
+  color: #58c2ad;
+  font-size: 25rpx;
+  font-weight: 900;
+}
+
+.risk-grid > view {
+  min-height: 104rpx;
+  padding: 20rpx;
+  border-radius: 18rpx;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.risk-grid view view {
+  margin-top: 10rpx;
+  color: rgba(247, 239, 223, 0.82);
+  font-size: 28rpx;
+  font-weight: 900;
+}
+
+.compliance-card {
+  color: rgba(247, 239, 223, 0.52);
+  font-size: 23rpx;
+  line-height: 1.6;
+}
+
 .report-list {
   display: grid;
   gap: 0;
@@ -96,6 +294,15 @@
 
   .path-step {
     min-height: 126rpx;
+  }
+
+  .binding-grid > view {
+    grid-template-columns: 1fr;
+  }
+
+  .persona-brief,
+  .risk-grid {
+    grid-template-columns: 1fr;
   }
 }
 

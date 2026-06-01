@@ -15,45 +15,100 @@
         <view class="secondary">次人格：{{result.secondary}}</view>
       </view>
 
-      <view class="stage-path-card card">
-        <text>第一阶段 · 照见所得</text>
-        <view class="path-focus">{{stagePlan.heartThief}}</view>
-        <view class="path-copy">{{stagePlan.commandment}}</view>
-        <view class="path-copy muted-copy">{{stagePlan.training}}</view>
-      </view>
-
-      <view class="core-output-card card">
-        <view wx:for="{{coreOutputs}}" wx:key="label" class="core-output-row">
-          <text>{{item.label}}</text>
-          <view>{{item.value}}</view>
+      <view class="binding-card card">
+        <view class="binding-head">
+          <view>
+            <text>手机号贯穿档案</text>
+            <view>{{userBinding.phoneMask}} · {{userBinding.phoneBound ? '已绑定' : '待绑定'}}</view>
+          </view>
+          <text>{{assessmentHistory.length || 1}}次照见</text>
         </view>
-      </view>
-
-      <view class="section-title">
-        <view>人格心证</view>
-        <text>修行路径</text>
-      </view>
-
-      <view class="report-list">
-        <view wx:for="{{reportBlocks}}" wx:key="title" class="report-block card">
-          <text>{{item.title}}</text>
-          <view>{{item.content}}</view>
+        <view class="binding-grid">
+          <view>
+            <text>网站测评报告</text>
+            <view>{{result.primary}}</view>
+          </view>
+          <view>
+            <text>复测变化</text>
+            <view>{{retestChange.title}}</view>
+          </view>
+          <view>
+            <text>邀请码来源</text>
+            <view>{{userBinding.inviteSource || '自然进入'}}</view>
+          </view>
         </view>
+        <view class="binding-note">{{retestChange.detail}}</view>
       </view>
 
-      <view class="path-card card">
-        <text>推荐事上练路径</text>
-        <view class="path-row">
-          <view wx:for="{{path}}" wx:key="*this" class="path-step">
-            <view>{{index + 1}}</view>
-            <text>{{item}}</text>
+      <view wx:if="{{retestChange.metrics.length}}" class="retest-change-card card">
+        <text>复测变化</text>
+        <view class="retest-metrics">
+          <view wx:for="{{retestChange.metrics}}" wx:key="label">
+            <text>{{item.label}}</text>
+            <view>{{item.value}}</view>
           </view>
         </view>
       </view>
 
+      <view class="mini-report-card card">
+        <text>一句话照见</text>
+        <view>{{miniReport.oneLine}}</view>
+      </view>
+
+      <view class="persona-brief card">
+        <view>
+          <text>主人格</text>
+          <view>{{miniReport.primary}}</view>
+        </view>
+        <view>
+          <text>副人格</text>
+          <view>{{miniReport.secondary}}</view>
+        </view>
+      </view>
+
+      <view class="risk-card card">
+        <text>风险雷达</text>
+        <view class="risk-grid">
+          <view wx:for="{{miniReport.radar}}" wx:key="label">
+            <text>{{item.label}}</text>
+            <view>{{item.level}}</view>
+          </view>
+        </view>
+      </view>
+
+      <view class="mini-report-card card">
+        <text>情绪触发</text>
+        <view>{{miniReport.trigger}}</view>
+      </view>
+
+      <view class="path-card card">
+        <text>7 天训练处方</text>
+        <view class="path-row">
+          <view wx:for="{{miniReport.prescription}}" wx:key="day" class="path-step">
+            <view>{{item.day}}</view>
+            <text>{{item.title}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="mini-report-card card">
+        <text>今日训练</text>
+        <view>{{miniReport.todayAction}}</view>
+      </view>
+
+      <view class="compliance-card card">{{miniReport.compliance}}</view>
+
       <view class="split-actions">
         <button class="secondary-btn" bindtap="saveReport">收藏心证</button>
         <button class="primary-btn" bindtap="goTraining">开始事上练</button>
+      </view>
+      <view class="split-actions">
+        <button class="ghost-btn" data-type="personality" bindtap="goShareCard">生成人格照见卡</button>
+        <button class="ghost-btn" data-type="risk_radar" bindtap="goShareCard">生成风险雷达卡</button>
+      </view>
+      <view class="split-actions">
+        <button class="ghost-btn" data-type="personality_mirror" bindtap="goShareCard">生成同修镜像卡</button>
+        <button class="ghost-btn" data-type="group_practice" bindtap="goShareCard">生成共修邀请卡</button>
       </view>
       <view class="split-actions">
         <button class="ghost-btn" bindtap="goAssessment">重新照见</button>

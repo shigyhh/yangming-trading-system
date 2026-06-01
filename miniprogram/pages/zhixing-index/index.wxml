@@ -19,15 +19,15 @@
 
     <view class="binding-card">
       <view>
-        <text>人格绑定</text>
-        <view>{{index.personality.type || '待识别'}}</view>
+        <text>指数来源</text>
+        <view>{{index.personality.type || '今日陪跑'}}</view>
       </view>
       <view>
-        <text>主修关卡</text>
+        <text>今日训练</text>
         <view>{{index.mainStage.name || '待开启'}}</view>
       </view>
       <view>
-        <text>成长进度</text>
+        <text>7天进度</text>
         <view>{{index.mainStage.progress || 0}}%</view>
       </view>
     </view>
@@ -74,8 +74,13 @@
       <view>沉淀近7天、近30天知行指数，以及当前修行成长阶段。</view>
     </view>
 
+    <view class="review-entry" data-url="/pages/classroom/index" bindtap="goAction">
+      <text>知行讲堂</text>
+      <view>今日导引视频、训练营直播预约和往期回放，先做内容占位。</view>
+    </view>
+
     <compliance-notice compact="{{true}}" />
   </view>
 
-  <bottom-tab-bar active="index" />
+  <bottom-tab-bar active="zhixing" />
 </view>

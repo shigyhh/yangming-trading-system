@@ -7,7 +7,11 @@ const {
   getTrainingState,
   getReviews,
   getTodayReview,
+  getTodayReaction,
+  getTodayIntradayBoundaryRecord,
   getAssessmentResult,
+  getTodayThreeSeals,
+  getTraining7State,
   getZhixingScoreState,
   saveZhixingScoreRecord,
   saveMindProfile,
@@ -16,9 +20,12 @@ const {
   todayKey
 } = require("../../utils/store");
 const { buildContinuityState } = require("../../modules/continuity/index");
-const { calculateZhixingIndex, buildZhixingRecordState } = require("../../modules/zhixing/index");
+const { calculateZhixingIndex, calculateDailyZhixingMvp, buildZhixingRecordState, buildScoreRecord } = require("../../modules/zhixing/index");
 const { buildDailyLoopState } = require("../../modules/daily-loop/index");
 const { buildCultivationGrowthState } = require("../../modules/cultivation/index");
+const { buildTraining7View } = require("../../modules/training7/index");
+const { promptShareMoment } = require("../../utils/share-moments");
+const { syncTrainingProgress } = require("../../utils/api");
 
 Page({
   data: {
@@ -41,8 +48,16 @@ Page({
     const reviews = getReviews();
     const review = getTodayReview();
     const assessment = getAssessmentResult();
+    const threeSeals = getTodayThreeSeals();
     const zhixingScoreState = getZhixingScoreState();
     const heartCardRecord = getTodayHeartCard();
+    const training7View = buildTraining7View(getTraining7State(), {
+      mind,
+      training,
+      reactionRecord: getTodayReaction(),
+      intradayBoundaryRecord: getTodayIntradayBoundaryRecord(),
+      review
+    });
     const continuity = buildContinuityState({
       profile,
       trainingState,
@@ -63,9 +78,10 @@ Page({
       continuity,
       zhixingScoreState
     });
-    const index = growth.zhixingIndex;
-    const canSaveScore = !!review;
-    const scoreState = canSaveScore ? saveZhixingScoreRecord(growth.scoreRecord) : zhixingScoreState;
+    const index = calculateDailyZhixingMvp({ mind, training: growth.training, review, threeSeals, training7View });
+    const canSaveScore = !!(mind || review || threeSeals.completed || growth.training.completed);
+    const scoreRecord = buildScoreRecord({ dayKey: todayKey(), index, context: { continuity, trainingState, reviews } });
+    const scoreState = canSaveScore ? saveZhixingScoreRecord(scoreRecord) : zhixingScoreState;
     const recordState = buildZhixingRecordState(scoreState, { continuity, trainingState, reviews });
     const loopState = saveDailyLoopState(buildDailyLoopState({
       todayKey: todayKey(),
@@ -84,6 +100,7 @@ Page({
         growth_level: recordState.growthLevel.current.name
       });
       saveMindProfile(Object.assign({}, growth.mindProfile, { zhixing_score: index.total }));
+      syncTrainingProgress().catch(() => {});
     }
 
     this.setData({
@@ -97,6 +114,9 @@ Page({
       loopState,
       actions: this.buildActions({ mind, training: growth.training, review, assessment, heartCardRecord })
     });
+    if (canSaveScore) {
+      promptShareMoment("zhixing_score_generated", { sourceScene: "zhixing_score_generated" });
+    }
   },
 
   buildActions({ mind, training, review, assessment, heartCardRecord }) {
@@ -107,14 +127,25 @@ Page({
     if (!review) actions.push({ label: "收盘后做省察", url: "/pages/review/index" });
     if (actions.length) return actions;
     if (!heartCardRecord || !heartCardRecord.completed) {
-      return [{ label: "回首页落成心证卡", url: "/pages/home/index" }];
+      return [
+        { label: "生成知行指数卡", url: "/pages/share-card/index?type=zhixing_score" },
+        { label: "回首页落成心证卡", url: "/pages/home/index" }
+      ];
     }
-    return [{ label: "回首页同修收束", url: "/pages/home/index" }];
+    return [
+      { label: "生成知行指数卡", url: "/pages/share-card/index?type=zhixing_score" },
+      { label: "回首页同修收束", url: "/pages/home/index" }
+    ];
   },
 
   goAction(e) {
     const url = e.currentTarget.dataset.url;
-    if (url) wx.redirectTo({ url });
+    if (!url) return;
+    if (url.includes("/pages/share-card/")) {
+      wx.navigateTo({ url });
+      return;
+    }
+    wx.redirectTo({ url });
   },
 
   goStages() {

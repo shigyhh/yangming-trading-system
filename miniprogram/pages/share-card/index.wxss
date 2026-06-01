@@ -1,0 +1,280 @@
+.share-shell {
+  min-height: 100vh;
+  background: #07100e;
+  color: #f5ead8;
+  position: relative;
+  overflow: hidden;
+  padding-bottom: 132rpx;
+}
+
+.share-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.share-bg.mist {
+  background:
+    radial-gradient(circle at 50% 4%, rgba(216, 183, 111, 0.14), transparent 34%),
+    radial-gradient(circle at 100% 28%, rgba(95, 132, 117, 0.13), transparent 36%),
+    linear-gradient(180deg, #11120e 0%, #07100e 55%, #040706 100%);
+}
+
+.share-bg.grain {
+  opacity: 0.2;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.026) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+  background-size: 34rpx 34rpx;
+}
+
+.share-content {
+  position: relative;
+  z-index: 1;
+  padding: 40rpx 32rpx;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin-bottom: 28rpx;
+}
+
+.seal,
+.mini-seal {
+  display: grid;
+  place-items: center;
+  color: #d8b76f;
+  font-family: "LXGW WenKai", "Songti SC", serif;
+  border: 1rpx solid rgba(216, 183, 111, 0.34);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.seal {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 20rpx;
+  font-size: 36rpx;
+}
+
+.head text {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 650;
+}
+
+.head view view {
+  margin-top: 8rpx;
+  color: rgba(245, 234, 216, 0.52);
+  font-size: 24rpx;
+}
+
+.type-strip {
+  white-space: nowrap;
+  margin: 0 -32rpx 28rpx;
+  padding: 0 32rpx;
+  box-sizing: border-box;
+}
+
+.type-strip button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 58rpx;
+  margin: 0 12rpx 0 0;
+  padding: 0 22rpx;
+  border-radius: 999rpx;
+  color: rgba(245, 234, 216, 0.7);
+  background: rgba(255, 255, 255, 0.045);
+  border: 1rpx solid rgba(217, 189, 122, 0.14);
+  font-size: 24rpx;
+}
+
+.type-strip button.active {
+  color: #1c160d;
+  background: linear-gradient(135deg, #e6c979, #a9823c);
+}
+
+.card-preview {
+  min-height: 740rpx;
+  padding: 44rpx 38rpx;
+  border-radius: 30rpx;
+  border: 1rpx solid rgba(217, 189, 122, 0.22);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.018)),
+    radial-gradient(circle at 50% 0%, rgba(216, 183, 111, 0.12), transparent 45%),
+    rgba(9, 16, 13, 0.84);
+  box-shadow: 0 36rpx 90rpx rgba(0, 0, 0, 0.32);
+}
+
+.card-top,
+.card-foot,
+.album-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 24rpx;
+  align-items: center;
+}
+
+.card-top text {
+  color: rgba(216, 183, 111, 0.72);
+  font-size: 24rpx;
+  letter-spacing: 2rpx;
+}
+
+.card-top view view {
+  margin-top: 8rpx;
+  color: rgba(245, 234, 216, 0.42);
+  font-size: 22rpx;
+}
+
+.mini-seal {
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 18rpx;
+  font-size: 30rpx;
+}
+
+.headline {
+  margin-top: 64rpx;
+  font-size: 48rpx;
+  line-height: 1.28;
+  font-family: "LXGW WenKai", "Songti SC", serif;
+  color: rgba(255, 250, 235, 0.96);
+  white-space: pre-line;
+}
+
+.body {
+  margin-top: 32rpx;
+  color: rgba(245, 234, 216, 0.66);
+  font-size: 28rpx;
+  line-height: 1.72;
+  white-space: pre-line;
+}
+
+.metrics {
+  display: grid;
+  gap: 14rpx;
+  margin-top: 30rpx;
+}
+
+.metrics > view {
+  display: flex;
+  justify-content: space-between;
+  gap: 20rpx;
+  align-items: center;
+  padding: 18rpx 0;
+  border-bottom: 1rpx solid rgba(255, 255, 255, 0.07);
+}
+
+.metrics text {
+  color: rgba(245, 234, 216, 0.5);
+  font-size: 23rpx;
+}
+
+.metrics view view {
+  color: #d8b76f;
+  font-size: 28rpx;
+  font-weight: 650;
+}
+
+.insight {
+  margin-top: 34rpx;
+  padding: 24rpx;
+  border-radius: 22rpx;
+  border: 1rpx solid rgba(95, 132, 117, 0.24);
+  color: rgba(245, 234, 216, 0.76);
+  background: rgba(95, 132, 117, 0.08);
+  font-size: 26rpx;
+  line-height: 1.65;
+}
+
+.card-foot {
+  margin-top: 46rpx;
+  color: rgba(216, 183, 111, 0.82);
+  font-size: 24rpx;
+}
+
+.card-foot view {
+  color: rgba(245, 234, 216, 0.38);
+}
+
+.share-actions {
+  display: grid;
+  grid-template-columns: 1fr 1.25fr;
+  gap: 18rpx;
+  margin-top: 28rpx;
+}
+
+.share-actions button,
+.ghost {
+  min-height: 84rpx;
+  border-radius: 22rpx;
+  font-weight: 650;
+  font-size: 26rpx;
+}
+
+.primary {
+  color: #1c160d;
+  background: linear-gradient(135deg, #e6c979, #a9823c);
+}
+
+.secondary,
+.ghost {
+  color: rgba(245, 234, 216, 0.78);
+  background: rgba(255, 255, 255, 0.045);
+  border: 1rpx solid rgba(217, 189, 122, 0.18);
+}
+
+.album-card,
+.compliance-card {
+  margin-top: 24rpx;
+  border: 1rpx solid rgba(217, 189, 122, 0.14);
+  border-radius: 24rpx;
+  background: rgba(255, 255, 255, 0.035);
+  padding: 28rpx;
+}
+
+.album-head text {
+  font-size: 28rpx;
+  font-weight: 650;
+}
+
+.album-head view {
+  color: #d8b76f;
+  font-size: 24rpx;
+}
+
+.album-list {
+  display: grid;
+  gap: 14rpx;
+  margin-top: 20rpx;
+}
+
+.album-list > view {
+  padding: 18rpx 0;
+  border-top: 1rpx solid rgba(255, 255, 255, 0.06);
+}
+
+.album-list text {
+  color: rgba(216, 183, 111, 0.72);
+  font-size: 22rpx;
+}
+
+.album-list view view {
+  margin-top: 8rpx;
+  color: rgba(245, 234, 216, 0.62);
+  font-size: 25rpx;
+  line-height: 1.45;
+}
+
+.compliance-card {
+  color: rgba(245, 234, 216, 0.42);
+  font-size: 22rpx;
+  line-height: 1.6;
+}
+
+.ghost {
+  width: 100%;
+  margin-top: 18rpx;
+}

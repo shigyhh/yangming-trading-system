@@ -1,0 +1,212 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yangming-trading-system.local/contracts/assessment-report.schema.json",
+  "title": "UnifiedAssessmentReport",
+  "description": "阳明心学交易系统测评报告统一结构。用于 Web、小程序、后台共用，不包含投资建议。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "reportId",
+    "userId",
+    "createdAt",
+    "conclusion",
+    "primaryPersonality",
+    "secondaryPersonality",
+    "riskRadar",
+    "emotionalTriggers",
+    "trainingPrescription7Days",
+    "campSuggestion",
+    "complianceNotice",
+    "metadata"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "assessment_report_v1"
+    },
+    "reportId": {
+      "type": "string",
+      "description": "报告编号。未持久化前可为空字符串。"
+    },
+    "userId": {
+      "type": "string",
+      "description": "用户 ID。前端展示时不得暴露敏感身份。"
+    },
+    "createdAt": {
+      "type": "string",
+      "description": "报告生成时间，建议 ISO 8601。"
+    },
+    "conclusion": {
+      "type": "string",
+      "minLength": 1,
+      "description": "一句话结论，只描述交易心理惯性和训练方向。"
+    },
+    "primaryPersonality": {
+      "$ref": "#/$defs/personalityProfile"
+    },
+    "secondaryPersonality": {
+      "$ref": "#/$defs/personalityProfile"
+    },
+    "riskRadar": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/riskRadarItem"
+      },
+      "description": "风险雷达，数值只表示心理/行为偏差强度，不表示投资风险评级。"
+    },
+    "emotionalTriggers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/emotionalTrigger"
+      },
+      "description": "情绪触发与第一念。"
+    },
+    "trainingPrescription7Days": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "$ref": "#/$defs/trainingPrescription"
+      },
+      "description": "7 天训练处方，每天只给一个可执行的觉察/训练动作。"
+    },
+    "campSuggestion": {
+      "$ref": "#/$defs/campSuggestion"
+    },
+    "complianceNotice": {
+      "type": "string",
+      "const": "本报告用于交易心理觉察，不构成投资建议"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "type": "string",
+          "description": "web、miniprogram、admin、server 等来源。"
+        },
+        "assessmentVersion": {
+          "type": "string"
+        },
+        "scoringVersion": {
+          "type": "string"
+        },
+        "contentVersion": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "personalityProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "label", "summary", "score"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "稳定枚举值，建议后续由 packages/personality 提供。"
+        },
+        "label": {
+          "type": "string",
+          "description": "展示名称，如冲动型、扛单型。"
+        },
+        "poeticName": {
+          "type": "string",
+          "description": "可选的东方化命名。"
+        },
+        "summary": {
+          "type": "string",
+          "description": "人格模式摘要，不做医学诊断。"
+        },
+        "score": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "riskRadarItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "label", "value"],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "emotionalTrigger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "label", "description"],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "firstThought": {
+          "type": "string",
+          "description": "触发时最常出现的第一念。"
+        }
+      }
+    },
+    "trainingPrescription": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["day", "theme", "action", "reflectionPrompt"],
+      "properties": {
+        "day": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 7
+        },
+        "theme": {
+          "type": "string"
+        },
+        "action": {
+          "type": "string",
+          "description": "训练动作，只能围绕觉察、复盘、纪律训练。"
+        },
+        "reflectionPrompt": {
+          "type": "string",
+          "description": "当日复盘提示。"
+        }
+      }
+    },
+    "campSuggestion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "reason", "focus"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "focus": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

@@ -7,13 +7,18 @@ const {
   getMindRecords,
   getReviews,
   getTodayReview,
+  getTodayReaction,
+  getAssessmentHistory,
   getZhixingScoreState,
   getDojoState,
   saveDojoState,
+  getUserBinding,
+  saveInviteSource,
+  saveInviteEvent,
   updateProfile,
   todayKey
 } = require("../../utils/store");
-const { syncLocalState } = require("../../utils/api");
+const { syncLocalState, syncShareAttribution } = require("../../utils/api");
 const { buildGrowthState } = require("../../modules/growth/index");
 const { buildContinuityState } = require("../../modules/continuity/index");
 const { buildDojoView, buildAssistantReply } = require("../../modules/dojo/index");
@@ -30,6 +35,19 @@ Page({
     assistantReply: null
   },
 
+  onLoad(options = {}) {
+    if (options.invite) {
+      saveInviteSource(options.invite, {
+        sourceScene: options.sourceScene || "dojo_invite_activation",
+        sourcePage: "dojo",
+        shareCardType: options.shareCardType || "companion_invite",
+        sourcePrimary: options.sourcePrimary || "",
+        sourceSecondary: options.sourceSecondary || "",
+        groupCode: options.groupCode || ""
+      });
+    }
+  },
+
   onShow() {
     this.load();
   },
@@ -42,8 +60,10 @@ Page({
     const assessment = getAssessmentResult();
     const training = getTodayTraining();
     const review = getTodayReview();
+    const reaction = getTodayReaction();
     const dojoState = getDojoState();
     const zhixingScore = getZhixingScoreState();
+    const assessmentHistory = getAssessmentHistory();
     const today = todayKey();
     const continuity = buildContinuityState({
       profile,
@@ -72,9 +92,12 @@ Page({
       mind: getTodayMind(),
       training,
       review,
+      reaction,
       growth,
       continuity,
       zhixingScore,
+      assessmentHistory,
+      userBinding: getUserBinding(),
       dojoState,
       todayKey: today
     };
@@ -182,9 +205,10 @@ Page({
     }
     const context = this.buildContext();
     const reply = buildAssistantReply(input, context);
+    const handoff = buildDojoView(context).assistantHandoff;
     const state = getDojoState();
-    const logs = [{ input, reply, createdAt: Date.now() }].concat(state.assistantLogs || []).slice(0, 8);
-    saveDojoState({ assistantLogs: logs });
+    const logs = [{ input, reply, assistantHandoff: handoff, createdAt: Date.now() }].concat(state.assistantLogs || []).slice(0, 8);
+    saveDojoState({ assistantLogs: logs, assistantHandoff: handoff });
     syncLocalState({ silent: true }).catch(() => {});
     this.setData({ assistantReply: reply, assistantInput: "" });
     this.load();
@@ -199,9 +223,26 @@ Page({
   },
 
   onShareAppMessage() {
+    const inviteCode = (this.data.dojo && this.data.dojo.inviteCode) || "";
+    const sourceScene = "dojo_companion";
+    const shareCardType = "companion_invite";
+    const query = [
+      inviteCode ? `invite=${encodeURIComponent(inviteCode)}` : "",
+      `sourceScene=${encodeURIComponent(sourceScene)}`,
+      `shareCardType=${encodeURIComponent(shareCardType)}`
+    ].filter(Boolean).join("&");
+    const path = `/pages/dojo/index${query ? `?${query}` : ""}`;
+    const events = saveInviteEvent({
+      sourceScene,
+      sourcePage: "dojo",
+      shareCardType,
+      channel: "share_message",
+      inviteCode
+    });
+    syncShareAttribution(events[events.length - 1]).catch(() => {});
     return {
       title: `今日有${this.data.companion.todayCount.value}位同修正在修行，一起守住今日一念`,
-      path: "/pages/dojo/index"
+      path
     };
   }
 });

@@ -51,10 +51,11 @@ export const config = {
   wechatOpenAppSecret: process.env.WECHAT_OPEN_APP_SECRET || "",
   corsAllowedOrigins: parseList(
     process.env.CORS_ALLOWED_ORIGINS ||
-      "http://localhost:8787,http://127.0.0.1:8787,http://localhost:8790,http://127.0.0.1:8790,http://localhost:8795,http://127.0.0.1:8795,http://116.62.146.166,http://xxjyxt.com,http://www.xxjyxt.com,https://xxjyxt.com,https://www.xxjyxt.com"
+      "http://localhost:3000,http://127.0.0.1:3000,http://localhost:8787,http://127.0.0.1:8787,http://localhost:8790,http://127.0.0.1:8790,http://localhost:8795,http://127.0.0.1:8795,http://116.62.146.166,http://xxjyxt.com,http://www.xxjyxt.com,https://xxjyxt.com,https://www.xxjyxt.com"
   ),
   feishuBotWebhook: process.env.FEISHU_BOT_WEBHOOK || "",
-  feishuBotSecret: process.env.FEISHU_BOT_SECRET || ""
+  feishuBotSecret: process.env.FEISHU_BOT_SECRET || "",
+  feishuAutoSync: process.env.FEISHU_AUTO_SYNC === "true"
 };
 
 function parseList(value) {

@@ -3,9 +3,11 @@ const { CULTIVATION_LOOP } = require("../../modules/index/index");
 const {
   getProfile,
   getTodayMind,
-  saveTodayMind,
+  saveTodayOpeningCheck,
   getTodayTraining,
   saveTodayTraining,
+  getTraining7State,
+  saveTraining7Task,
   updateProfile,
   getAssessmentResult,
   getZhixingScoreState,
@@ -14,7 +16,8 @@ const {
   saveDailyLoopState,
   todayKey
 } = require("../../utils/store");
-const { syncLocalState } = require("../../utils/api");
+const { syncLocalState, syncTrainingProgress } = require("../../utils/api");
+const { promptShareMoment } = require("../../utils/share-moments");
 const { buildDailyLoopState } = require("../../modules/daily-loop/index");
 
 function buildNodes(selectedKey) {
@@ -23,6 +26,10 @@ function buildNodes(selectedKey) {
     nodeClass: `node-${index}`
   }));
 }
+
+const STATUS_OPTIONS = ["平静", "急躁", "兴奋", "恐惧", "想证明", "想翻本", "犹豫", "麻木"];
+const RISK_OPTIONS = ["追涨", "扛单", "重仓", "频繁交易", "止损抗拒", "盈利后失控", "亏损后报复", "临时改计划"];
+const BOUNDARY_OPTIONS = ["仓位边界", "止损边界", "次数边界", "时间边界", "情绪边界", "计划边界"];
 
 Page({
   data: {
@@ -38,7 +45,14 @@ Page({
     breathText: "三息未启",
     scanText: "待观心",
     waveBars: [34, 62, 46, 72, 40, 58, 50],
-    nextButtonText: "去九型人格"
+    nextButtonText: "去九型人格",
+    statusOptions: STATUS_OPTIONS,
+    riskOptions: RISK_OPTIONS,
+    boundaryOptions: BOUNDARY_OPTIONS,
+    currentStatus: "平静",
+    todayRisk: "追涨",
+    todayBoundary: "情绪边界",
+    openingNote: ""
   },
   breathTimer: null,
 
@@ -51,6 +65,10 @@ Page({
         ritual: saved,
         saved: true,
         scanText: "今日已照见",
+        currentStatus: saved.currentStatus || saved.name || "平静",
+        todayRisk: saved.todayRisk || "追涨",
+        todayBoundary: saved.todayBoundary || "情绪边界",
+        openingNote: saved.openingNote || "",
         nextButtonText: getAssessmentResult() ? "进入今日修行" : "去九型人格"
       });
     } else {
@@ -118,11 +136,32 @@ Page({
     }
   },
 
+  selectStatus(e) {
+    this.setData({ currentStatus: e.currentTarget.dataset.value });
+  },
+
+  selectRisk(e) {
+    this.setData({ todayRisk: e.currentTarget.dataset.value });
+  },
+
+  selectBoundary(e) {
+    this.setData({ todayBoundary: e.currentTarget.dataset.value });
+  },
+
+  inputOpeningNote(e) {
+    this.setData({ openingNote: e.detail.value });
+  },
+
   saveMind() {
-    const ritual = saveTodayMind(Object.assign({}, this.data.ritual, {
+    const ritual = saveTodayOpeningCheck(Object.assign({}, this.data.ritual, {
       scanText: this.data.scanText,
-      breathText: this.data.breathText
+      breathText: this.data.breathText,
+      currentStatus: this.data.currentStatus,
+      todayRisk: this.data.todayRisk,
+      todayBoundary: this.data.todayBoundary,
+      openingNote: this.data.openingNote
     }));
+    saveTraining7Task(Number((getTraining7State() || {}).currentDay || 1), "opening_check", true);
     const training = getTodayTraining();
     saveTodayTraining(Object.assign({}, training, {
       mindKey: ritual.key,
@@ -146,6 +185,7 @@ Page({
       heartCardRecord: getTodayHeartCard()
     }));
     syncLocalState({ silent: true }).catch(() => {});
+    syncTrainingProgress().catch(() => {});
     this.setData({
       ritual,
       saved: true,
@@ -153,6 +193,7 @@ Page({
       nextButtonText: getAssessmentResult() ? "进入今日修行" : "去九型人格"
     });
     wx.showToast({ title: "今日心境已照见", icon: "success" });
+    promptShareMoment("opening_check_completed", { sourceScene: "opening_check_completed" });
     return ritual;
   },
 
@@ -166,6 +207,12 @@ Page({
 
   goReview() {
     wx.redirectTo({ url: "/pages/review/index" });
+  },
+
+  goLoopPage(e) {
+    const page = e.currentTarget.dataset.page;
+    if (!page) return;
+    wx.redirectTo({ url: page });
   },
 
   createRipple(e) {

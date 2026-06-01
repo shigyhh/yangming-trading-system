@@ -8,8 +8,8 @@ const DOJO_TASKS = [
   {
     key: "plan-before-action",
     title: "行动前三问",
-    discipline: "无计划，不开仓。",
-    action: "任何行动前先写理由、边界、离场条件。"
+    discipline: "无计划，不行动。",
+    action: "任何行动前先写理由、边界、复盘依据。"
   },
   {
     key: "stop-without-debate",
@@ -36,13 +36,10 @@ const HUMAN_MENTOR_ROLES = [
   { key: "assistant", label: "助教", scope: "提醒打卡、协助省察、承接修行营服务" }
 ];
 
+const { buildInviteCode, summarizeAssistantHandoff } = require("../user-identity/index");
+
 function getTaskIndex(todayKey) {
   return String(todayKey || "").split("").reduce((sum, char) => sum + char.charCodeAt(0), 0) % DOJO_TASKS.length;
-}
-
-function buildInviteCode(profile) {
-  const raw = String((profile && profile.phone) || (profile && profile.createdAt) || Date.now());
-  return `ZX${raw.slice(-4)}${String(raw.length * 7).slice(-2)}`;
 }
 
 function getMentorRole(roleKey) {
@@ -109,7 +106,7 @@ function buildAssistantReply(input, context) {
   let focus = "先把这一念写清楚，再决定要不要行动。";
 
   if (text.includes("急") || lower.includes("fomo")) {
-    focus = "你现在要练的不是更快，而是慢一拍。行动前先写理由、边界、离场条件。";
+    focus = "你现在要练的不是更快，而是慢一拍。行动前先写理由、边界、复盘依据。";
   } else if (text.includes("怕") || text.includes("焦虑")) {
     focus = "焦虑想要确定感，但修行先要看见不确定。把观察窗口固定下来，窗口外只记录心境。";
   } else if (text.includes("亏") || text.includes("不甘")) {
@@ -149,6 +146,7 @@ function buildDojoView(context) {
   const inviteCode = buildInviteCode(safeContext.profile || {});
   const leaderboard = buildLeaderboard(safeContext.profile || {}, safeContext.growth || {}, safeContext.continuity || {});
   const relation = buildMentorRelation(dojoState);
+  const assistantHandoff = summarizeAssistantHandoff(safeContext);
 
   return {
     inviteCode,
@@ -161,6 +159,7 @@ function buildDojoView(context) {
       accepted: !!taskRecord.accepted,
       completed: !!taskRecord.completed
     }),
+    assistantHandoff,
     completedTaskCount: countCompletedDojoTasks(dojoState),
     leaderboard,
     assistantLogs: dojoState.assistantLogs || [],

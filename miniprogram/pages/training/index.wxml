@@ -13,6 +13,35 @@
       <view class="mind-axis">{{indexFocus}}</view>
     </view>
 
+    <view class="seven-training-card card">
+      <view class="seven-training-head">
+        <view>
+          <text>7 天交易观心陪跑</text>
+          <view>Day {{training7View.currentDay}} · {{trainingDay.title}}</view>
+        </view>
+        <text>{{training7View.progressText}}</text>
+      </view>
+      <view class="seven-training-bar"><view style="width: {{training7View.progressPercent}}%;"></view></view>
+      <view class="seven-day-list">
+        <button
+          wx:for="{{training7View.days}}"
+          wx:key="day"
+          class="seven-day-row {{item.active ? 'active' : ''}} {{item.completed ? 'done' : ''}}"
+          data-day="{{item.day}}"
+          bindtap="selectTrainingDay"
+        >
+          <text>Day {{item.day}}</text>
+          <view>{{item.title}}</view>
+          <text>{{item.completed ? '已闭环' : item.active ? '今日' : '待练'}}</text>
+        </button>
+      </view>
+      <view class="training-field jade">
+        <text>今日观心问题</text>
+        <view>{{trainingDay.reflectionQuestion}}</view>
+      </view>
+      <button wx:if="{{training7View.canRetest}}" class="secondary-btn" bindtap="goRetest">开始复测</button>
+    </view>
+
     <view wx:if="{{!result}}" class="pre-card card">
       <view>建议先照见人格</view>
       <text>照见后，事上练会按你的主导人格切换触发场景和克治动作。</text>
