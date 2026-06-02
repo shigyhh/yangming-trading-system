@@ -1,0 +1,175 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
+  <title id="title">阳明照心体 V0.2 字体系预览</title>
+  <desc id="desc">减少光效和按钮感后的阳明照心体字体系样张，包含照字黑白裸字测试、首页标题标点处理和品牌法则编排。</desc>
+  <defs>
+    <style>
+      @font-face {
+        font-family: "YangmingDisplayPreview";
+        src: url("../../web-next/public/fonts/NotoSerifSC-Variable.woff2") format("woff2");
+        font-weight: 200 900;
+      }
+      @font-face {
+        font-family: "YangmingHandPreview";
+        src: url("../../web-next/public/fonts/LXGWWenKai-Medium.woff2") format("woff2");
+        font-weight: 500;
+      }
+      .system-label {
+        font-family: "Avenir Next", "Inter", "Helvetica Neue", Arial, sans-serif;
+        font-size: 15px;
+        font-weight: 650;
+        letter-spacing: .24em;
+        fill: rgba(244, 235, 221, .42);
+      }
+      .cn-label {
+        font-family: "YangmingDisplayPreview", "Noto Serif SC", "Songti SC", serif;
+        font-size: 23px;
+        font-weight: 430;
+        letter-spacing: .18em;
+        fill: rgba(216, 183, 111, .62);
+      }
+      .small {
+        font-family: "Noto Sans SC", "PingFang SC", sans-serif;
+        font-size: 17px;
+        font-weight: 500;
+        letter-spacing: .08em;
+        fill: rgba(244, 235, 221, .5);
+      }
+      .display {
+        font-family: "YangmingDisplayPreview", "Noto Serif SC", "Songti SC", serif;
+        font-size: 112px;
+        font-weight: 455;
+        letter-spacing: .028em;
+        fill: #f3ead9;
+      }
+      .punct {
+        font-family: "YangmingDisplayPreview", "Noto Serif SC", "Songti SC", serif;
+        font-size: 78px;
+        font-weight: 340;
+        fill: rgba(216, 183, 111, .42);
+      }
+      .law {
+        font-family: "YangmingDisplayPreview", "Noto Serif SC", "Songti SC", serif;
+        font-size: 43px;
+        font-weight: 430;
+        letter-spacing: .11em;
+        fill: rgba(244, 235, 221, .82);
+      }
+      .law-note {
+        font-family: "Noto Sans SC", "PingFang SC", sans-serif;
+        font-size: 15px;
+        font-weight: 500;
+        letter-spacing: .08em;
+        fill: rgba(244, 235, 221, .38);
+      }
+    </style>
+
+    <radialGradient id="v2Bg" cx="58%" cy="36%" r="78%">
+      <stop offset="0%" stop-color="#15140f"/>
+      <stop offset="48%" stop-color="#0b0b09"/>
+      <stop offset="100%" stop-color="#070706"/>
+    </radialGradient>
+    <linearGradient id="hairline" x1="0" x2="1">
+      <stop offset="0%" stop-color="rgba(216,183,111,0)"/>
+      <stop offset="50%" stop-color="rgba(216,183,111,.34)"/>
+      <stop offset="100%" stop-color="rgba(216,183,111,0)"/>
+    </linearGradient>
+    <filter id="paperGrain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency=".72" numOctaves="2" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer>
+        <feFuncA type="table" tableValues="0 .032"/>
+      </feComponentTransfer>
+    </filter>
+
+    <g id="zhao-v02" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M55 40H120V124H55Z" stroke-width="9.5"/>
+      <path d="M68 68H108M68 96H108" stroke-width="5.6" opacity=".74"/>
+      <path d="M154 40H216" stroke-width="9.5"/>
+      <path d="M185 43C181 68 167 90 145 106" stroke-width="9.5"/>
+      <path d="M154 84H218V124H154Z" stroke-width="9.5"/>
+      <path d="M166 104H207" stroke-width="5.2" opacity=".72"/>
+      <path d="M43 151H231" stroke-width="8.2"/>
+      <path d="M64 184C55 201 47 216 37 233" stroke-width="8.2"/>
+      <path d="M110 183C104 202 100 219 96 238" stroke-width="7.8"/>
+      <path d="M158 183C164 202 168 219 172 238" stroke-width="7.8"/>
+      <path d="M208 184C220 202 230 217 240 233" stroke-width="8.2"/>
+    </g>
+  </defs>
+
+  <rect width="1600" height="1000" fill="url(#v2Bg)"/>
+  <rect width="1600" height="1000" filter="url(#paperGrain)" opacity=".8"/>
+  <circle cx="1250" cy="168" r="284" fill="rgba(216,183,111,.035)"/>
+  <circle cx="240" cy="800" r="360" fill="rgba(95,132,117,.045)"/>
+  <path d="M0 806C192 750 322 705 484 746C640 786 735 832 904 760C1055 696 1170 734 1294 782C1398 822 1500 810 1600 785V1000H0Z" fill="rgba(244,235,221,.028)"/>
+  <path d="M0 902C204 840 365 833 536 861C744 895 872 830 1048 852C1234 875 1376 930 1600 868V1000H0Z" fill="rgba(95,132,117,.045)"/>
+
+  <line x1="92" y1="92" x2="1508" y2="92" stroke="url(#hairline)" stroke-width="1"/>
+  <text x="92" y="62" class="system-label">YANGMING REFLECTION DISPLAY · V0.2</text>
+  <text x="1508" y="62" class="small" text-anchor="end">少光效 · 重骨架 · 可复制字体系</text>
+
+  <g transform="translate(104 154)">
+    <text x="0" y="0" class="cn-label">照字标裸字测试</text>
+    <rect x="0" y="34" width="420" height="420" rx="30" fill="rgba(8,8,7,.2)" stroke="rgba(217,189,122,.12)"/>
+    <g transform="translate(74 92) scale(1.15)" color="#e9dfcb">
+      <use href="#zhao-v02"/>
+    </g>
+    <text x="210" y="500" text-anchor="middle" class="small">无光效主版：先证明骨架成立</text>
+  </g>
+
+  <g transform="translate(576 154)">
+    <text x="0" y="0" class="cn-label">首页 Display 标题</text>
+    <text x="0" y="126" class="display">心不静<tspan class="punct" dx="-10" dy="-8">，</tspan></text>
+    <text x="0" y="262" class="display">交易必乱<tspan class="punct" dx="-10" dy="-2">。</tspan></text>
+    <text x="2" y="324" class="small">楷意收敛至收笔与重心；标点减弱并做光学悬挂。</text>
+    <line x1="0" y1="374" x2="818" y2="374" stroke="url(#hairline)" stroke-width="1"/>
+    <text x="0" y="424" class="system-label">REFLECTIVE INTELLIGENCE · DISCIPLINE BEFORE DECISION</text>
+  </g>
+
+  <g transform="translate(104 742)">
+    <text x="0" y="-46" class="cn-label">品牌法则，不做按钮</text>
+    <line x1="0" y1="0" x2="1392" y2="0" stroke="rgba(217,189,122,.12)"/>
+    <g transform="translate(0 50)">
+      <text x="0" y="0" class="system-label" fill="rgba(216,183,111,.5)">01</text>
+      <text x="0" y="64" class="law">以交易照人心</text>
+      <text x="0" y="108" class="law-note">看见交易里的第一反应</text>
+    </g>
+    <line x1="342" y1="30" x2="342" y2="180" stroke="rgba(217,189,122,.1)"/>
+    <g transform="translate(386 50)">
+      <text x="0" y="0" class="system-label" fill="rgba(216,183,111,.5)">02</text>
+      <text x="0" y="64" class="law">以复盘照行为</text>
+      <text x="0" y="108" class="law-note">把念头落回证据</text>
+    </g>
+    <line x1="728" y1="30" x2="728" y2="180" stroke="rgba(217,189,122,.1)"/>
+    <g transform="translate(772 50)">
+      <text x="0" y="0" class="system-label" fill="rgba(216,183,111,.5)">03</text>
+      <text x="0" y="64" class="law">以训练照变化</text>
+      <text x="0" y="108" class="law-note">用七日训练看见改变</text>
+    </g>
+    <line x1="1114" y1="30" x2="1114" y2="180" stroke="rgba(217,189,122,.1)"/>
+    <g transform="translate(1158 50)">
+      <text x="0" y="0" class="system-label" fill="rgba(216,183,111,.5)">04</text>
+      <text x="0" y="64" class="law">以活镜照成长</text>
+      <text x="0" y="108" class="law-note">长期记录人格的松动</text>
+    </g>
+  </g>
+
+  <g transform="translate(104 540)">
+    <text x="0" y="0" class="cn-label">缩放与黑白测试</text>
+    <rect x="0" y="24" width="92" height="74" rx="15" fill="#f4ebdd"/>
+    <g transform="translate(22 40) scale(.2)" color="#080807">
+      <use href="#zhao-v02"/>
+    </g>
+    <rect x="116" y="24" width="92" height="74" rx="15" fill="#080807" stroke="rgba(244,235,221,.16)"/>
+    <g transform="translate(138 40) scale(.2)" color="#f4ebdd">
+      <use href="#zhao-v02"/>
+    </g>
+    <rect x="232" y="24" width="54" height="54" rx="13" fill="#080807" stroke="rgba(244,235,221,.18)"/>
+    <g transform="translate(245 36) scale(.12)" color="#f4ebdd">
+      <use href="#zhao-v02"/>
+    </g>
+    <text x="0" y="130" class="small">白底 / 黑底 / 16px：先成立，再允许极弱暖光。</text>
+  </g>
+
+  <text x="104" y="944" class="small">合规边界：仅用于交易认知、行为训练与风险教育；不荐股、不喊单、不承诺收益。</text>
+  <text x="1508" y="944" class="system-label" text-anchor="end">SYSTEM BEFORE POSTER</text>
+</svg>

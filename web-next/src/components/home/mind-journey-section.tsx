@@ -592,10 +592,10 @@ export function MindJourneySection() {
                   className={[
                     "relative mx-auto flex max-w-[960px] flex-col items-center justify-center",
                     isFinal
-                      ? "font-worldview type-level-3-cinematic gap-3 md:gap-5 md:leading-[1.26]"
+                      ? "brand-scroll-title type-level-3-cinematic gap-3 md:gap-5 md:leading-[1.26]"
                       : isReflection
                         ? "type-level-2 type-level-2-cinematic"
-                        : "font-worldview type-level-3-cinematic",
+                        : "brand-scroll-title type-level-3-cinematic",
                   ].join(" ")}
                   style={
                     isReflection
@@ -611,7 +611,7 @@ export function MindJourneySection() {
                     </span>
                   ) : null}
                   {isReflection && moment.emotion ? (
-                    <span data-journey-emotion className="font-worldview mb-6 flex flex-col gap-1 text-[clamp(4.4rem,18vw,10rem)] font-normal leading-[.95] tracking-[.045em] text-[rgba(244,235,221,.94)] md:mb-8 md:text-[clamp(6.8rem,11vw,11rem)] md:tracking-[.075em]">
+                    <span data-journey-emotion className="brand-emotion-title mb-6 flex flex-col gap-1 text-[clamp(4.4rem,18vw,10rem)] leading-[.95] md:mb-8 md:text-[clamp(6.8rem,11vw,11rem)]">
                       {moment.emotion.map((line) => (
                         <span key={line}>{line}</span>
                       ))}
@@ -622,7 +622,7 @@ export function MindJourneySection() {
                     data-journey-personality={isReflection ? true : undefined}
                     className={
                       isReflection
-                        ? "font-worldview text-[clamp(1.45rem,5.4vw,3.25rem)] leading-[1.32] tracking-[.12em] text-[rgba(216,183,111,.84)] md:text-[clamp(2.15rem,3.8vw,4.1rem)] md:tracking-[.16em]"
+                        ? "brand-personality-title text-[clamp(1.45rem,5.4vw,3.25rem)] leading-[1.32] md:text-[clamp(2.15rem,3.8vw,4.1rem)]"
                         : "flex flex-col gap-4 md:gap-5"
                     }
                   >

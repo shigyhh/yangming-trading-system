@@ -1,3 +1,41 @@
+.report-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin-bottom: 28rpx;
+}
+
+.report-brand-mark {
+  width: 82rpx;
+  height: 82rpx;
+  flex: 0 0 82rpx;
+  border-radius: 24rpx;
+  border: 1rpx solid rgba(217, 189, 122, 0.16);
+  background:
+    radial-gradient(circle at 50% 42%, rgba(216, 183, 111, 0.12), transparent 66%),
+    rgba(17, 16, 13, 0.42);
+  box-shadow:
+    inset 0 1rpx 0 rgba(244, 235, 221, 0.1),
+    0 20rpx 42rpx rgba(0, 0, 0, 0.26);
+}
+
+.report-brand-copy text {
+  display: block;
+  color: rgba(244, 235, 221, 0.86);
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", serif;
+  font-size: 28rpx;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.report-brand-copy view {
+  margin-top: 8rpx;
+  color: rgba(216, 183, 111, 0.46);
+  font-size: 20rpx;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
 .hero-report {
   margin-top: 32rpx;
   padding: 40rpx 28rpx;
@@ -27,7 +65,7 @@
 
 .ring text {
   color: #f1d27d;
-  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
   font-size: 56rpx;
   font-weight: 900;
   font-variant-numeric: tabular-nums;

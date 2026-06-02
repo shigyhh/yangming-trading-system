@@ -3,6 +3,7 @@
 import { motion } from "framer-motion"
 import type { MouseEvent } from "react"
 
+import { YangmingA1Mark } from "@/components/brand/yangming-mark"
 import { FlowButton } from "@/components/home/flow-button"
 
 export function TopNav() {
@@ -24,8 +25,8 @@ export function TopNav() {
     >
       <nav className="mx-auto flex min-h-16 w-full max-w-[1360px] items-center justify-between gap-6 px-5 md:min-h-[72px] md:px-8">
         <a href="#hero" className="group flex items-center gap-3 opacity-68 no-underline transition duration-700 hover:opacity-95">
-          <span className="font-worldview grid size-9 place-items-center rounded-full border border-[rgba(217,189,122,.085)] bg-[rgba(217,189,122,.018)] text-lg text-[rgba(216,183,111,.66)] shadow-[0_0_20px_rgba(216,183,111,.018)] transition duration-700 group-hover:border-[rgba(217,189,122,.2)] group-hover:shadow-[0_0_24px_rgba(216,183,111,.055)] md:size-10 md:text-xl">
-            心
+          <span className="grid size-9 place-items-center rounded-full border border-[rgba(217,189,122,.085)] bg-[rgba(217,189,122,.018)] text-[rgba(216,183,111,.72)] shadow-[0_0_20px_rgba(216,183,111,.018)] transition duration-700 group-hover:border-[rgba(217,189,122,.2)] group-hover:text-[rgba(244,235,221,.82)] group-hover:shadow-[0_0_24px_rgba(216,183,111,.055)] md:size-10">
+            <YangmingA1Mark className="size-6 md:size-7" title="阳明照见主标" />
           </span>
           <span className="flex flex-col">
             <strong className="type-level-5 text-[rgba(216,183,111,.62)]">阳明心学交易系统</strong>

@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { motion, useReducedMotion } from "framer-motion"
+import type { CSSProperties } from "react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { cn } from "@/lib/utils"

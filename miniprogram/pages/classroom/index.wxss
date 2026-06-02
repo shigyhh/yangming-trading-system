@@ -7,7 +7,7 @@
   background:
     radial-gradient(circle at 72% 8%, rgba(216, 183, 111, 0.12), transparent 28%),
     linear-gradient(180deg, #0a100f 0%, #070d0b 48%, #030605 100%);
-  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
 }
 
 .classroom-bg {

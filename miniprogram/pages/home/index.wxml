@@ -15,7 +15,17 @@
       <view class="edict-bg edict-bg-grain"></view>
 
       <view class="edict-header">
-        <view class="brand-seal">知</view>
+        <view class="brand-seal brand-zhao-mini">
+          <view class="zhao-eyes">
+            <view class="zhao-eye"></view>
+            <view class="zhao-eye"></view>
+          </view>
+          <view class="zhao-mirror"></view>
+          <view class="zhao-fire">
+            <view class="zhao-fire-dot"></view>
+            <view class="zhao-fire-dot"></view>
+          </view>
+        </view>
         <view class="brand-copy">
           <view class="brand-title">阳明心学交易系统</view>
           <view class="brand-subtitle">每日一页 · 照见本心</view>

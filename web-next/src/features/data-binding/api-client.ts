@@ -15,9 +15,9 @@ import type {
   DataBindingTrainingResponse,
   DataBindingUserProfile,
   DataBindingUserSummaryResponse,
-} from "../../../../packages/contracts/data-binding"
+} from "@yangming/contracts/data-binding"
 
-import type { TradeReview } from "../../../../packages/contracts/living-mirror"
+import type { TradeReview } from "@yangming/contracts/living-mirror"
 
 import type { PracticeChangeState } from "@/features/assessment/practice-change"
 import type { AssessmentAnswer, AssessmentReport } from "@/features/assessment/report"

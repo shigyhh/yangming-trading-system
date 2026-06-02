@@ -20,6 +20,9 @@ test("assessment result page renders unified report card sections and preview mo
     "report.campSuggestion",
     "报告卡预览",
     "AI 观心系统 · 报告卡",
+    "YangmingA1Mark",
+    "YangmingGlyph",
+    'icon="trade"',
     "本报告用于交易心理觉察，不构成投资建议",
   ].forEach((token) => {
     assert.equal(source.includes(token), true, `missing token: ${token}`)

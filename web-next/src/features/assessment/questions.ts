@@ -1,4 +1,4 @@
-import type { PersonalityTag } from "../../../../packages/personality/index"
+import type { PersonalityTag } from "@yangming/personality"
 
 export type AssessmentTag = PersonalityTag
 

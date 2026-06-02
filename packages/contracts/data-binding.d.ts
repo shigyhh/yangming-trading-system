@@ -1,4 +1,15 @@
-import type { AssistantHandoff, LivingMirrorStats, MirrorArchive, MirrorReport, TradeReview } from "./living-mirror"
+import type {
+  AssistantHandoff,
+  DailyHeartWitness,
+  LivingMirrorClosedLoop,
+  LivingMirrorStats,
+  MirrorArchive,
+  MirrorReport,
+  PersonalCycle,
+  RetestChange,
+  ShareCardSnapshot,
+  TradeReview,
+} from "./living-mirror"
 
 export type DataBindingRiskRadarItem = {
   key: string
@@ -247,6 +258,7 @@ export type DataBindingAssessmentResponse = {
   report: DataBindingAssessmentReport
   mirror_report: MirrorReport
   living_mirror_stats: LivingMirrorStats
+  living_mirror_loop?: LivingMirrorClosedLoop
   admin_user: DataBindingAdminUser
 }
 
@@ -254,6 +266,7 @@ export type DataBindingTrainingResponse = {
   user: DataBindingPublicUser
   record: DataBindingTrainingRecord
   living_mirror_stats: LivingMirrorStats
+  daily_heart_witness?: DailyHeartWitness
   admin_user: DataBindingAdminUser
 }
 
@@ -261,6 +274,7 @@ export type DataBindingKLineResponse = {
   user: DataBindingPublicUser
   record: DataBindingKLineRecord
   living_mirror_stats: LivingMirrorStats
+  personal_cycle?: PersonalCycle
   admin_user: DataBindingAdminUser
 }
 
@@ -275,6 +289,7 @@ export type DataBindingRetestResponse = {
   }
   comparison: DataBindingRetestComparison[]
   living_mirror_stats: LivingMirrorStats
+  retest_change?: RetestChange
   admin_user: DataBindingAdminUser
 }
 
@@ -291,6 +306,10 @@ export type DataBindingUserSummaryResponse = {
   kline_records: DataBindingKLineRecord[]
   trade_reviews: TradeReview[]
   living_mirror_stats: LivingMirrorStats | null
+  living_mirror_loop?: LivingMirrorClosedLoop
+  daily_heart_witnesses?: DailyHeartWitness[]
+  personal_cycles?: PersonalCycle[]
+  retest_changes?: RetestChange[]
   retests: Array<{
     id: string
     saved_at: string
@@ -302,6 +321,7 @@ export type DataBindingUserSummaryResponse = {
   assistant_summary: DataBindingAssistantSummary | null
   feishu_sync: DataBindingFeishuSyncState | null
   share_card: DataBindingShareCard | null
+  share_cards?: ShareCardSnapshot[]
   admin_user?: DataBindingAdminUser
   mirror_archive?: MirrorArchive
 }
@@ -382,6 +402,7 @@ export type DataBindingTradeReviewResponse = {
   user: DataBindingPublicUser
   review: TradeReview
   living_mirror_stats: LivingMirrorStats
+  personal_cycle?: PersonalCycle
   admin_user: DataBindingAdminUser
 }
 

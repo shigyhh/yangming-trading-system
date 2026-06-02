@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 
+import { YangmingA1Mark, YangmingGlyph } from "@/components/brand/yangming-mark"
 import {
   AssessmentShell,
   ComplianceNote,
@@ -479,7 +480,10 @@ function ReportCoreCard({
       <div className="relative grid gap-6 px-5 py-6 sm:px-7 sm:py-7">
         <div className="report-core-ring" aria-hidden="true" />
         <div className="relative z-10">
-          <p className="font-function text-xs font-semibold tracking-[.2em] text-[#b49d5d]">AI 观心系统 · 报告卡</p>
+          <div className="flex items-center justify-between gap-4">
+            <p className="font-function text-xs font-semibold tracking-[.2em] text-[#b49d5d]">AI 观心系统 · 报告卡</p>
+            <YangmingA1Mark className="size-10 shrink-0 text-[rgba(216,183,111,.72)]" title="阳明照见报告主标" />
+          </div>
           <h1 className="mt-5 font-story text-[clamp(2.2rem,6vw,4.1rem)] font-light leading-[1.25] tracking-[.1em] text-[#f2ebdc]">
             {primaryTypeLabel}
             <span className="mt-2 block text-[0.46em] tracking-[.16em] text-[rgba(220,212,195,.46)]">
@@ -494,10 +498,10 @@ function ReportCoreCard({
         <RiskRadar items={riskItems} />
 
         <div className="relative z-10 grid gap-3 sm:grid-cols-2">
-          <ReportMetric label="镜中念头" value={report.firstThoughtDisplay || report.firstThought} />
-          <ReportMetric label="风险标签" value={riskItems[0]?.label ?? report.primaryType.risk} />
-          <ReportMetric label="报告结构" value={report.schemaVersion} />
-          <ReportMetric label="合规边界" value={report.complianceNotice} />
+          <ReportMetric icon="trade" label="镜中念头" value={report.firstThoughtDisplay || report.firstThought} />
+          <ReportMetric icon="review" label="风险标签" value={riskItems[0]?.label ?? report.primaryType.risk} />
+          <ReportMetric icon="train" label="报告结构" value={report.schemaVersion} />
+          <ReportMetric icon="growth" label="合规边界" value={report.complianceNotice} />
         </div>
       </div>
       <style jsx>{`
@@ -631,10 +635,21 @@ function RiskRadar({ items }: { items: ReturnType<typeof getHeartRiskItems> }) {
   )
 }
 
-function ReportMetric({ label, value }: { label: string; value: string }) {
+function ReportMetric({
+  icon,
+  label,
+  value,
+}: {
+  icon: "trade" | "review" | "train" | "growth"
+  label: string
+  value: string
+}) {
   return (
     <div className="rounded-[8px] border border-[rgba(172,146,83,.12)] bg-white/[.025] px-4 py-3">
-      <p className="font-function text-xs tracking-[.14em] text-[rgba(180,157,93,.58)]">{label}</p>
+      <p className="flex items-center gap-2 font-function text-xs tracking-[.14em] text-[rgba(180,157,93,.58)]">
+        <YangmingGlyph kind={icon} className="size-4 text-[rgba(216,183,111,.62)]" />
+        <span>{label}</span>
+      </p>
       <p className="mt-2 font-function text-sm leading-6 text-[rgba(242,235,220,.7)]">{value}</p>
     </div>
   )

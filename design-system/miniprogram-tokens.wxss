@@ -1,11 +1,30 @@
 /* 阳明心学交易小程序视觉令牌，可按需复制到 app.wxss */
 
+.font-yangming-display,
+.font-brand-display,
+.font-mantra {
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", serif;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+}
+
+.font-yangming-hand,
+.font-seal {
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Kaiti SC", "STKaiti", serif;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+.font-yangming-body {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+}
+
 .font-title {
   font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", "STSong", serif;
 }
 
 .font-body {
-  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
 }
 
 .font-section {
@@ -13,13 +32,13 @@
 }
 
 .font-number {
-  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
 .font-english {
-  font-family: "Inter", "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
 }
 
 .surface-deep {

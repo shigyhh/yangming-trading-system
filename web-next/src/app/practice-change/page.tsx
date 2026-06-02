@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 
+import { YangmingC16Mark, YangmingGlyph } from "@/components/brand/yangming-mark"
 import {
   AssessmentShell,
   ComplianceNote,
@@ -23,6 +24,7 @@ import {
 } from "@/features/assessment/practice-change"
 import type { AssessmentReport } from "@/features/assessment/report"
 import { assessmentStorageKeys, clearAssessmentProgress, getStorage, setStorage } from "@/features/assessment/storage"
+import { cn } from "@/lib/utils"
 
 function getMetricDelta(metric: PracticeMetric) {
   return metric.direction === "down" ? metric.before - metric.current : metric.current - metric.before
@@ -137,6 +139,22 @@ export default function PracticeChangePage() {
   return (
     <AssessmentShell className="py-5">
       <div className="practice-change flex flex-col">
+        <div className="mb-3 flex items-center justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="grid size-11 shrink-0 place-items-center rounded-[8px] border border-[rgba(216,183,111,.14)] bg-[rgba(216,183,111,.026)] text-[rgba(216,183,111,.76)] shadow-[0_18px_44px_rgba(0,0,0,.18)]">
+              <YangmingC16Mark className="size-8" title="阳明照见训练小标" />
+            </span>
+            <div className="min-w-0">
+              <p className="font-function text-xs font-semibold tracking-[.18em] text-[rgba(216,183,111,.66)]">
+                YANGMING TRAINING
+              </p>
+              <p className="mt-1 truncate font-function text-xs tracking-[.08em] text-[rgba(220,212,195,.42)]">
+                停十秒 · 先照心 · 再落行动
+              </p>
+            </div>
+          </div>
+          <YangmingGlyph kind="train" className="size-7 shrink-0 text-[rgba(216,183,111,.44)]" title="训练照变化" />
+        </div>
         <StatusPill>今日修行</StatusPill>
         <h1 className="mt-8 font-story text-[clamp(2.25rem,10vw,3.45rem)] font-light leading-[1.3] tracking-[.1em]">
           今天只修
@@ -150,7 +168,10 @@ export default function PracticeChangePage() {
         </p>
 
         <GlassPanel className="mt-8">
-          <p className="font-function text-xs font-semibold tracking-[.18em] text-[#b49d5d]">今日事上练</p>
+          <p className="flex items-center gap-2 font-function text-xs font-semibold tracking-[.18em] text-[#b49d5d]">
+            <YangmingGlyph kind="train" className="size-4 text-[rgba(216,183,111,.68)]" />
+            <span>今日事上练</span>
+          </p>
           <h2 className="mt-4 font-story text-2xl font-light leading-[1.45] tracking-[.08em]">
             {nextPractice ? `第 ${nextPractice.day} 日：${nextPractice.title}` : "七日已满，复看心证。"}
           </h2>
@@ -201,7 +222,10 @@ export default function PracticeChangePage() {
         </GlassPanel>
 
         <GlassPanel className="mt-8">
-          <p className="font-function text-xs font-semibold tracking-[.18em] text-[#b49d5d]">知行合一分数</p>
+          <p className="flex items-center gap-2 font-function text-xs font-semibold tracking-[.18em] text-[#b49d5d]">
+            <YangmingGlyph kind="growth" className="size-4 text-[rgba(216,183,111,.68)]" />
+            <span>知行合一分数</span>
+          </p>
           <div className="mt-5 grid grid-cols-[1fr_auto] items-end gap-4">
             <div>
               <p className="font-story text-[clamp(2.55rem,12vw,4rem)] font-light leading-none tracking-[.08em]">
@@ -218,7 +242,10 @@ export default function PracticeChangePage() {
         </GlassPanel>
 
         <GlassPanel className="mt-4">
-          <p className="font-function text-xs font-semibold tracking-[.18em] text-[#b49d5d]">行为变化</p>
+          <p className="flex items-center gap-2 font-function text-xs font-semibold tracking-[.18em] text-[#b49d5d]">
+            <YangmingGlyph kind="review" className="size-4 text-[rgba(216,183,111,.68)]" />
+            <span>行为变化</span>
+          </p>
           <p className="mt-4 font-story text-[1.18rem] font-light leading-8 tracking-[.05em] text-[rgba(242,235,220,.72)]">
             {practice.day === 0
               ? "变化还没开始。先落下第一日省察。"

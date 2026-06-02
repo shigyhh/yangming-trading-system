@@ -1,0 +1,27 @@
+{
+  "name": "@yangming/content",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    "./personality": {
+      "import": "./personality.js",
+      "default": "./personality.js"
+    },
+    "./share-card": {
+      "import": "./share-card.js",
+      "default": "./share-card.js"
+    },
+    "./global-reflection": {
+      "import": "./global-reflection.js",
+      "default": "./global-reflection.js"
+    },
+    "./brand": {
+      "import": "./brand.js",
+      "default": "./brand.js"
+    },
+    "./i18n": {
+      "import": "./i18n.js",
+      "default": "./i18n.js"
+    }
+  }
+}

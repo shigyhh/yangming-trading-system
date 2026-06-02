@@ -492,18 +492,18 @@ function drawHeartProofPoster(ctx, payload, width, height) {
 
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
-  ctx.font = '600 17px "HarmonyOS Sans SC", sans-serif';
+  ctx.font = '600 17px "PingFang SC", "Noto Sans SC", sans-serif';
   ctx.fillStyle = "rgba(255,255,245,0.9)";
   ctx.fillText(card.brand || "阳明心学交易系统", margin + 68, 66);
-  ctx.font = '600 10px "HarmonyOS Sans SC", sans-serif';
+  ctx.font = '600 10px "PingFang SC", "Noto Sans SC", sans-serif';
   ctx.fillStyle = "rgba(232,199,106,0.56)";
   ctx.fillText("今日心证 · 照见本心", margin + 68, 86);
 
-  ctx.font = '700 13px "HarmonyOS Sans SC", sans-serif';
+  ctx.font = '700 13px "PingFang SC", "Noto Sans SC", sans-serif';
   ctx.fillStyle = "rgba(232,199,106,0.68)";
   ctx.fillText(stageText, margin, posterTop + 48);
 
-  ctx.font = '700 13px "HarmonyOS Sans SC", sans-serif';
+  ctx.font = '700 13px "PingFang SC", "Noto Sans SC", sans-serif';
   ctx.fillStyle = "rgba(232,199,106,0.5)";
   ctx.fillText("今日心证", margin, posterTop + 92);
 
@@ -513,31 +513,31 @@ function drawHeartProofPoster(ctx, payload, width, height) {
     ctx.fillText(line, margin, posterTop + 152 + index * Math.round(width * 0.122));
   });
 
-  ctx.font = '16px "HarmonyOS Sans SC", sans-serif';
+  ctx.font = '16px "PingFang SC", "Noto Sans SC", sans-serif';
   ctx.fillStyle = "rgba(255,255,245,0.58)";
   drawWrappedText(ctx, interpretation, margin, posterTop + 276, posterWidth, 28, 2);
 
   const lawTop = posterTop + 360;
-  ctx.font = '700 11px "HarmonyOS Sans SC", sans-serif';
+  ctx.font = '700 11px "PingFang SC", "Noto Sans SC", sans-serif';
   ctx.fillStyle = "rgba(232,199,106,0.54)";
   ctx.fillText("今日戒律", margin, lawTop);
   ctx.font = '500 20px "LXGW WenKai", "Songti SC", serif';
   ctx.fillStyle = "rgba(255,250,235,0.88)";
   drawWrappedText(ctx, commandment, margin, lawTop + 34, posterWidth, 30, 2);
 
-  ctx.font = '700 11px "HarmonyOS Sans SC", sans-serif';
+  ctx.font = '700 11px "PingFang SC", "Noto Sans SC", sans-serif';
   ctx.fillStyle = "rgba(232,199,106,0.46)";
   ctx.fillText("今日事上练", margin, lawTop + 104);
-  ctx.font = '14px "HarmonyOS Sans SC", sans-serif';
+  ctx.font = '14px "PingFang SC", "Noto Sans SC", sans-serif';
   ctx.fillStyle = "rgba(255,255,245,0.52)";
   drawWrappedText(ctx, training, margin, lawTop + 130, posterWidth - 80, 24, 3);
 
   drawSeal(ctx, width - margin - 78, posterBottom - 106, 78, (card.stageSeal || {}).seal || "知");
 
-  ctx.font = '700 12px "HarmonyOS Sans SC", sans-serif';
+  ctx.font = '700 12px "PingFang SC", "Noto Sans SC", sans-serif';
   ctx.fillStyle = "rgba(232,199,106,0.58)";
   ctx.fillText(`${card.rankName || "观己"} · ${card.streakText || "0日连修"} · ${card.scoreText || "待生成知行"}`, margin, posterBottom + 44);
-  ctx.font = '11px "HarmonyOS Sans SC", sans-serif';
+  ctx.font = '11px "PingFang SC", "Noto Sans SC", sans-serif';
   ctx.fillStyle = "rgba(255,255,245,0.36)";
   ctx.fillText(card.footer || "不做行情评判，不推荐标的。只修说到做到。", margin, posterBottom + 72);
   drawQrMark(ctx, width - margin - 54, posterBottom + 22, 54);

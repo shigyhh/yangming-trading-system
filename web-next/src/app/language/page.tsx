@@ -11,7 +11,7 @@ import {
   getStoredLocale,
   storeLocale,
 } from "@/features/i18n/api-client"
-import type { I18nBundle, SupportedLocale, SupportedLocaleCode } from "../../../../packages/contracts/i18n"
+import type { I18nBundle, SupportedLocale, SupportedLocaleCode } from "@yangming/contracts/i18n"
 
 export default function LanguagePage() {
   const [locale, setLocale] = useState<SupportedLocaleCode>("zh-CN")

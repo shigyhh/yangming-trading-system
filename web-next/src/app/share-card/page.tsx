@@ -23,8 +23,8 @@ import {
   buildShareCardConclusion,
   buildShareCardTrainingFocus,
   shareCardContent,
-} from "../../../../packages/content/share-card.js"
-import type { DataBindingShareCard } from "../../../../packages/contracts/data-binding"
+} from "@yangming/content/share-card"
+import type { DataBindingShareCard } from "@yangming/contracts/data-binding"
 
 type LocalShareCard = Pick<
   DataBindingShareCard,

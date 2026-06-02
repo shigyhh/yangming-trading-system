@@ -1,4 +1,4 @@
-import type { HeartThief, MirrorName, TradeReview } from "../../../../packages/contracts/living-mirror"
+import type { HeartThief, MirrorName, TradeReview } from "@yangming/contracts/living-mirror"
 
 export type TradeReviewDraft = {
   imageUrl: string

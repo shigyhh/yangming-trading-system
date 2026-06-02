@@ -7,7 +7,7 @@
   background:
     radial-gradient(circle at 72% 6%, rgba(211, 168, 79, 0.14), transparent 28%),
     linear-gradient(180deg, #0b1118 0%, #070d11 45%, #030606 100%);
-  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
 }
 
 .mind-bg {

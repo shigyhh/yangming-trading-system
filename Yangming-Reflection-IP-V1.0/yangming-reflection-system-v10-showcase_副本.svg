@@ -1,0 +1,213 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1280" viewBox="0 0 1800 1280" role="img" aria-labelledby="title desc">
+  <title id="title">阳明照见字系 V1.0 Showcase 对外展示版</title>
+  <desc id="desc">对外展示版，只保留品牌最核心的文字、标志、动作、产品流、符号与边界。</desc>
+  <defs>
+    <style>
+      @font-face {
+        font-family: "YangmingDisplayPreview";
+        src: url("../../web-next/public/fonts/NotoSerifSC-Variable.woff2") format("woff2");
+        font-weight: 200 900;
+      }
+      @font-face {
+        font-family: "YangmingSansPreview";
+        src: url("../../web-next/public/fonts/NotoSansSC-Variable.woff2") format("woff2");
+        font-weight: 100 900;
+      }
+      .latin {
+        font-family: "Avenir Next", "Inter", "Helvetica Neue", Arial, sans-serif;
+        font-size: 13px;
+        font-weight: 690;
+        letter-spacing: .22em;
+        fill: rgba(244, 235, 221, .42);
+      }
+      .latin-small {
+        font-family: "Avenir Next", "Inter", "Helvetica Neue", Arial, sans-serif;
+        font-size: 10.5px;
+        font-weight: 720;
+        letter-spacing: .18em;
+        fill: rgba(244, 235, 221, .42);
+      }
+      .latin-dark {
+        font-family: "Avenir Next", "Inter", "Helvetica Neue", Arial, sans-serif;
+        font-size: 10px;
+        font-weight: 720;
+        letter-spacing: .16em;
+        fill: rgba(17, 16, 13, .5);
+      }
+      .hero {
+        font-family: "YangmingDisplayPreview", "Noto Serif SC", "Songti SC", serif;
+        font-size: 78px;
+        font-weight: 425;
+        letter-spacing: .02em;
+        fill: #f3ead9;
+      }
+      .display {
+        font-family: "YangmingDisplayPreview", "Noto Serif SC", "Songti SC", serif;
+        font-size: 34px;
+        font-weight: 430;
+        letter-spacing: .045em;
+        fill: rgba(244, 235, 221, .88);
+      }
+      .body {
+        font-family: "YangmingSansPreview", "Noto Sans SC", "PingFang SC", sans-serif;
+        font-size: 14px;
+        font-weight: 530;
+        letter-spacing: .04em;
+        fill: rgba(244, 235, 221, .58);
+      }
+      .body-strong {
+        font-family: "YangmingSansPreview", "Noto Sans SC", "PingFang SC", sans-serif;
+        font-size: 14px;
+        font-weight: 650;
+        letter-spacing: .04em;
+        fill: rgba(244, 235, 221, .78);
+      }
+      .num {
+        font-family: "Avenir Next", "Inter", "Helvetica Neue", Arial, sans-serif;
+        font-size: 48px;
+        font-weight: 670;
+        letter-spacing: .02em;
+        fill: #f3ead9;
+      }
+      .paper-title {
+        font-family: "YangmingDisplayPreview", "Noto Serif SC", "Songti SC", serif;
+        font-size: 28px;
+        font-weight: 440;
+        letter-spacing: .04em;
+        fill: #11100d;
+      }
+      .paper-body {
+        font-family: "YangmingSansPreview", "Noto Sans SC", "PingFang SC", sans-serif;
+        font-size: 13px;
+        font-weight: 540;
+        letter-spacing: .035em;
+        fill: rgba(17, 16, 13, .62);
+      }
+      .paper-num {
+        font-family: "Avenir Next", "Inter", "Helvetica Neue", Arial, sans-serif;
+        font-size: 30px;
+        font-weight: 670;
+        fill: #11100d;
+      }
+    </style>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#11100d"/>
+      <stop offset="58%" stop-color="#080807"/>
+      <stop offset="100%" stop-color="#050504"/>
+    </linearGradient>
+    <linearGradient id="paper" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#f5eddf"/>
+      <stop offset="100%" stop-color="#ebe0cc"/>
+    </linearGradient>
+    <linearGradient id="line" x1="0" x2="1">
+      <stop offset="0%" stop-color="rgba(216,183,111,0)"/>
+      <stop offset="50%" stop-color="rgba(216,183,111,.34)"/>
+      <stop offset="100%" stop-color="rgba(216,183,111,0)"/>
+    </linearGradient>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency=".68" numOctaves="2" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer>
+        <feFuncA type="table" tableValues="0 .022"/>
+      </feComponentTransfer>
+    </filter>
+    <g id="zhao-a" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M55 40H119V123H55Z" stroke-width="9"/>
+      <path d="M68 68H107M68 96H107" stroke-width="5" opacity=".72"/>
+      <path d="M154 42H214" stroke-width="9"/>
+      <path d="M184 44C180 68 167 88 146 104" stroke-width="9"/>
+      <path d="M154 84H217V123H154Z" stroke-width="9"/>
+      <path d="M166 104H206" stroke-width="4.8" opacity=".7"/>
+      <path d="M70 151H209" stroke-width="6.4"/>
+      <path d="M72 184C63 200 57 213 50 228M114 183C108 199 105 214 102 231M156 183C160 199 163 214 166 231M197 184C206 200 215 214 222 228" stroke-width="6.6"/>
+    </g>
+    <g id="glyph-trade" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M30 88H150M90 42V134"/><circle cx="90" cy="88" r="18"/>
+    </g>
+    <g id="glyph-review" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M54 54H132V132H54Z"/><path d="M50 150C86 134 112 152 148 132"/>
+    </g>
+    <g id="glyph-train" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M50 64H132M58 92H140M66 120H148"/><path d="M144 120L154 110"/>
+    </g>
+    <g id="glyph-growth" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M42 92C66 66 116 66 140 92C116 116 66 116 42 92Z"/>
+      <path d="M90 136V74M90 96C72 88 68 74 70 58M90 96C112 86 118 72 116 54"/>
+    </g>
+  </defs>
+
+  <rect width="1800" height="1280" fill="url(#bg)"/>
+  <rect width="1800" height="1280" filter="url(#grain)" opacity=".78"/>
+  <circle cx="1470" cy="120" r="360" fill="rgba(216,183,111,.035)"/>
+  <path d="M0 1120C250 1040 510 1060 742 1106C960 1150 1100 1040 1328 1088C1506 1124 1640 1168 1800 1118V1280H0Z" fill="rgba(95,132,117,.05)"/>
+  <line x1="96" y1="84" x2="1704" y2="84" stroke="url(#line)" stroke-width="1"/>
+  <text x="96" y="52" class="latin">YANGMING REFLECTION SYSTEM · V1.0 SHOWCASE</text>
+  <text x="1704" y="52" text-anchor="end" class="body">以照为字，以心证为法，以训练为行，以风险为界。</text>
+
+  <g transform="translate(120 176)">
+    <g color="#f3ead9"><use href="#zhao-a" transform="scale(.56)"/></g>
+    <text x="0" y="246" class="latin-small">ONE WORD</text>
+    <text x="0" y="290" class="display">照</text>
+  </g>
+
+  <g transform="translate(420 178)">
+    <text x="0" y="0" class="latin-small">ONE SENTENCE</text>
+    <text x="0" y="92" class="hero">心不静，</text>
+    <text x="0" y="180" class="hero">交易必乱。</text>
+    <text x="0" y="244" class="body">一个动作：停十秒，先照心。</text>
+    <text x="0" y="284" class="body">一个系统：心证、取证、复盘、训练、纪律。</text>
+    <text x="0" y="324" class="body">一条边界：不玄学，不预测市场。</text>
+  </g>
+
+  <g transform="translate(1100 174)">
+    <rect x="0" y="0" width="430" height="330" rx="28" fill="url(#paper)"/>
+    <g transform="translate(34 34)" color="#11100d"><use href="#zhao-a" transform="scale(.22)"/></g>
+    <text x="118" y="66" class="paper-title">心证训练手册</text>
+    <line x1="34" y1="104" x2="396" y2="104" stroke="rgba(17,16,13,.14)"/>
+    <text x="34" y="148" class="paper-body">看见上涨，不等于看见机会。</text>
+    <text x="34" y="184" class="paper-body">怕错过，是最常见的追高理由。</text>
+    <text x="34" y="220" class="paper-body">训练动作：停十秒，写下第一念。</text>
+    <text x="34" y="252" class="latin-dark">DISCIPLINE</text>
+    <text x="34" y="292" class="paper-num">88%</text>
+    <text x="188" y="252" class="latin-dark">CYCLE</text>
+    <text x="188" y="292" class="paper-num">1/7</text>
+  </g>
+
+  <g transform="translate(120 604)">
+    <text x="0" y="0" class="latin-small">PRODUCT FLOW</text>
+    <rect x="0" y="36" width="312" height="210" rx="24" fill="rgba(244,235,221,.04)" stroke="rgba(217,189,122,.14)"/>
+    <text x="26" y="92" class="display">今日只练一件事</text>
+    <text x="26" y="136" class="body">看到拉升，先停十秒。</text>
+    <text x="26" y="198" class="num">10s</text>
+    <rect x="366" y="36" width="312" height="210" rx="24" fill="rgba(244,235,221,.04)" stroke="rgba(217,189,122,.14)"/>
+    <text x="392" y="92" class="display">心证记录</text>
+    <text x="392" y="136" class="body">我想追，不是因为机会，</text>
+    <text x="392" y="172" class="body">而是怕错过。</text>
+    <rect x="732" y="36" width="312" height="210" rx="24" fill="rgba(244,235,221,.04)" stroke="rgba(217,189,122,.14)"/>
+    <text x="758" y="92" class="display">复盘报告</text>
+    <text x="758" y="136" class="body">这次先动的是怕错过。</text>
+    <text x="758" y="198" class="num">88%</text>
+    <rect x="1098" y="36" width="312" height="210" rx="24" fill="rgba(120,60,45,.10)" stroke="rgba(120,60,45,.30)"/>
+    <text x="1124" y="92" class="display">风险边界</text>
+    <text x="1124" y="136" class="body">只做认知、训练与风险教育。</text>
+    <text x="1124" y="184" class="body-strong">不荐股，不喊单，不承诺收益。</text>
+  </g>
+
+  <g transform="translate(120 936)" color="#f3ead9">
+    <text x="0" y="0" class="latin-small">FOUR MOTIFS</text>
+    <use href="#glyph-trade" transform="translate(0 44) scale(.34)" stroke-width="8"/>
+    <use href="#glyph-review" transform="translate(200 44) scale(.34)" stroke-width="8"/>
+    <use href="#glyph-train" transform="translate(400 44) scale(.34)" stroke-width="8"/>
+    <use href="#glyph-growth" transform="translate(600 44) scale(.34)" stroke-width="8"/>
+    <text x="0" y="176" class="body">以交易照人心</text>
+    <text x="200" y="176" class="body">以复盘照行为</text>
+    <text x="400" y="176" class="body">以训练照变化</text>
+    <text x="600" y="176" class="body">以活镜照成长</text>
+  </g>
+
+  <g transform="translate(1036 976)">
+    <text x="0" y="0" class="latin-small">BOUNDARY</text>
+    <text x="0" y="54" class="body">For trading cognition, behavior training, and risk education only.</text>
+    <text x="0" y="94" class="body">No recommendation, no trade signal, no guaranteed returns.</text>
+  </g>
+</svg>

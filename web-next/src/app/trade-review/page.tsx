@@ -24,7 +24,7 @@ import {
   tradeReviewStorageKey,
   type TradeReviewDraft,
 } from "@/features/trade-review/trade-review"
-import type { LivingMirrorStats, TradeReview } from "../../../../packages/contracts/living-mirror"
+import type { LivingMirrorStats, TradeReview } from "@yangming/contracts/living-mirror"
 
 const mirrorScoreLabels: Record<string, string> = {
   chasing: "追涨之镜",

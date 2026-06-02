@@ -15,9 +15,6 @@ App({
   onLaunch() {
     ensureProfile();
     loadFontFace("ZX-LXGW", 'url("assets/fonts/LXGWWenKai-Zhixing.woff2")', "500");
-    loadFontFace("ZX-Harmony", 'url("assets/fonts/HarmonyOS-SansSC-Regular-Zhixing.woff2")', "400");
-    loadFontFace("ZX-Harmony", 'url("assets/fonts/HarmonyOS-SansSC-Medium-Zhixing.woff2")', "500");
-    loadFontFace("ZX-Harmony", 'url("assets/fonts/HarmonyOS-SansSC-Bold-Zhixing.woff2")', "700");
   },
   globalData: {
     productName: "阳明心学交易系统",

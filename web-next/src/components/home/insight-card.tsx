@@ -3,13 +3,16 @@
 import { Eye } from "lucide-react"
 import { motion } from "framer-motion"
 
+import { YangmingGlyph } from "@/components/brand/yangming-mark"
 import { Badge } from "@/components/ui/badge"
 import { KLineSpirit } from "@/components/home/kline-spirit"
 
 const orbitItems = [
-  ["心学关卡", "事上练"],
-  ["今日动作", "停十秒"],
-]
+  { glyph: "review", label: "心学关卡", value: "事上练" },
+  { glyph: "train", label: "今日动作", value: "停十秒" },
+] as const
+
+const glyphKindByIndex = ["trade", "review", "train", "growth"] as const
 
 const energyBars = [0.44, 0.28, 0.54, 0.34, 0.48]
 
@@ -48,7 +51,7 @@ export function InsightCard() {
             </Badge>
             <div>
               <p className="type-level-4 opacity-62">今日心证</p>
-              <h2 className="type-level-2 mt-2 text-[rgba(244,235,221,.9)] md:mt-3">
+              <h2 className="brand-card-title mt-2 md:mt-3">
                 知而未行
               </h2>
             </div>
@@ -67,13 +70,16 @@ export function InsightCard() {
         </motion.div>
 
         <div className="relative z-10 mt-3 grid grid-cols-2 gap-3 md:mt-5 md:gap-4">
-          {orbitItems.map(([label, value]) => (
+          {orbitItems.map((item) => (
             <div
-              key={label}
+              key={item.label}
               className="instrument-pane rounded-2xl border border-[rgba(244,235,221,.03)] bg-[rgba(0,0,0,.052)] p-3 md:rounded-3xl md:p-5"
             >
-              <p className="type-level-4 text-[0.66rem] opacity-52 md:text-[0.7rem]">{label}</p>
-              <strong className="font-worldview mt-1.5 block text-lg font-light tracking-[.04em] text-[rgba(244,235,221,.68)] md:mt-2 md:text-xl">{value}</strong>
+              <p className="type-level-4 flex items-center gap-2 text-[0.66rem] opacity-52 md:text-[0.7rem]">
+                <YangmingGlyph kind={item.glyph} className="size-4 text-[rgba(216,183,111,.62)]" />
+                <span>{item.label}</span>
+              </p>
+              <strong className="brand-small-title mt-1.5 block text-lg md:mt-2 md:text-xl">{item.value}</strong>
             </div>
           ))}
         </div>
@@ -84,7 +90,7 @@ export function InsightCard() {
             {[0, 1, 2, 3].map((item) => (
               <motion.i
                 key={item}
-                className="block h-1 rounded-full bg-[linear-gradient(90deg,rgba(95,132,117,.22),rgba(216,183,111,.42))]"
+                className="flex h-6 items-center justify-center rounded-full text-[rgba(216,183,111,.34)]"
                 animate={{ opacity: [0.22, 0.58, 0.22], scaleX: [0.72, 1, 0.72] }}
                 transition={{
                   duration: 9,
@@ -92,7 +98,9 @@ export function InsightCard() {
                   ease: "easeInOut",
                   delay: item * 0.7,
                 }}
-              />
+              >
+                <YangmingGlyph kind={glyphKindByIndex[item]} className="size-5" />
+              </motion.i>
             ))}
           </div>
         </div>

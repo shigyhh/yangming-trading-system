@@ -1,5 +1,22 @@
 <view class="page-shell">
   <view class="page-content">
+    <view class="report-brand-row">
+      <view class="report-brand-mark brand-zhao-mini">
+        <view class="zhao-eyes">
+          <view class="zhao-eye"></view>
+          <view class="zhao-eye"></view>
+        </view>
+        <view class="zhao-mirror"></view>
+        <view class="zhao-fire">
+          <view class="zhao-fire-dot"></view>
+          <view class="zhao-fire-dot"></view>
+        </view>
+      </view>
+      <view class="report-brand-copy">
+        <text>阳明照见报告</text>
+        <view>心证 · 复盘 · 训练 · 纪律</view>
+      </view>
+    </view>
     <text class="eyebrow">PERSONALITY · 观心</text>
     <view class="page-title">九型人格<br />心证</view>
     <view class="page-subtitle">不是评判你，而是照见惯性动作，把它转成每日修行。</view>

@@ -1,0 +1,67 @@
+{
+  "name": "Yangming Reflection Brand Asset Pack",
+  "version": "1.0.0",
+  "status": "protected-release-candidate",
+  "principle": "以照为字，以心证为法，以训练为行，以风险为界。",
+  "assets": {
+    "logoA1": {
+      "status": "final",
+      "source": "web-next/public/brand/yangming-a1.svg",
+      "component": "web-next/src/components/brand/yangming-mark.tsx#YangmingA1Mark",
+      "note": "Original vector paths. No font outline dependency."
+    },
+    "markC16": {
+      "status": "final",
+      "source": "web-next/public/brand/yangming-c16.svg",
+      "component": "web-next/src/components/brand/yangming-mark.tsx#YangmingC16Mark",
+      "note": "Small-size original vector mark for favicon, avatar and 24px UI contexts."
+    },
+    "uiGlyphs": {
+      "status": "final",
+      "source": "web-next/public/brand/yangming-ui-glyphs.svg",
+      "component": "web-next/src/components/brand/yangming-mark.tsx#YangmingGlyph",
+      "kinds": ["trade", "review", "train", "growth"],
+      "note": "Original symbolic system for four brand motifs."
+    }
+  },
+  "fonts": {
+    "display": {
+      "family": "Noto Serif SC",
+      "source": "web-next/public/fonts/NotoSerifSC-Variable.woff2",
+      "usage": "Display text carrier only",
+      "originalFont": false
+    },
+    "text": {
+      "family": "Noto Sans SC",
+      "source": "web-next/public/fonts/NotoSansSC-Variable.woff2",
+      "usage": "Web text carrier only",
+      "originalFont": false
+    },
+    "hand": {
+      "family": "LXGW WenKai",
+      "source": "web-next/public/fonts/LXGWWenKai-Medium.woff2",
+      "usage": "Warm title carrier only",
+      "originalFont": false
+    },
+    "harmonyOS": {
+      "family": "HarmonyOS Sans SC",
+      "source": "miniprogram/assets/fonts/HarmonyOS-SansSC-*.woff2",
+      "usage": "Disabled until complete license is retained",
+      "status": "license-review-required"
+    }
+  },
+  "prohibitions": [
+    "Do not trace commercial font outlines.",
+    "Do not convert commercial fonts to paths and modify them as original work.",
+    "Do not use the 20 percent modification myth.",
+    "Do not use unlicensed fonts for logos, avatars, posters or app titles."
+  ],
+  "integrations": {
+    "webHome": "web-next/src/components/home/top-nav.tsx",
+    "webReport": "web-next/src/app/assessment-result/page.tsx",
+    "webTraining": "web-next/src/app/practice-change/page.tsx",
+    "miniprogramHome": "miniprogram/pages/home/index.wxml",
+    "miniprogramReport": "miniprogram/pages/report/index.wxml",
+    "miniprogramTraining": "miniprogram/pages/training/index.wxml"
+  }
+}
