@@ -6,7 +6,7 @@ import type {
   I18nLocalesResponse,
   SupportedLocale,
   SupportedLocaleCode,
-} from "../../../../packages/contracts/i18n"
+} from "@yangming/contracts/i18n"
 
 type I18nResult<T> =
   | { ok: true; data: T }

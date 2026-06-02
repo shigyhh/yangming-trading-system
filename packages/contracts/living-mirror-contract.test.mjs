@@ -6,25 +6,41 @@ const contractUrl = new URL("./living-mirror.d.ts", import.meta.url)
 const roadmapUrl = new URL("../../docs/SPRINT_9_19_LIVING_MIRROR_ROADMAP.md", import.meta.url)
 
 const requiredTypes = [
+  "LivingMirrorClosedLoop",
+  "LivingMirrorLoopStage",
   "User",
   "MirrorReport",
   "TrainingRecord",
   "TradeReview",
   "LivingMirrorStats",
-  "LivingMirrorGrowthProfile",
-  "BehaviorLoop",
+  "MirrorSpectrumEntry",
+  "PersonalCycle",
+  "DailyHeartWitness",
+  "LivingMirrorGrowthSignal",
+  "HeartMirrorTree",
+  "RetestChange",
   "AssistantHandoff",
+  "ShareCardSnapshot",
   "GlobalReflectionEntry",
   "GlobalMirrorHeatmapRow",
 ]
 
 const requiredFields = [
+  "stages",
+  "sharedEntities",
+  "webRole",
+  "miniprogramRole",
+  "primarySurface",
+  "nextAction",
+  "complianceGuardrail",
   "mainMirror",
   "subMirror",
+  "mirrorSpectrum",
   "thieves",
   "verdict",
   "riskRadar",
   "typicalLoop",
+  "typicalCycle",
   "sevenDayPrescription",
   "campSuggestion",
   "imageUrl",
@@ -35,23 +51,14 @@ const requiredFields = [
   "strongestThought",
   "detectedMirror",
   "detectedThieves",
+  "personalCycle",
   "mirrorScores",
   "thiefCounts",
   "growthTrend",
-  "growth_profile_id",
-  "highFrequencyThought",
-  "repeatedBehaviors",
-  "affectedDimensions",
-  "trainingContinuity",
-  "heartProofCount",
-  "tradeReviewCount",
-  "behaviorLoopCount",
-  "retestSummary",
-  "nextCycleFocus",
-  "mirrorLifeStage",
-  "behavior_loop_id",
-  "repeatCount",
-  "evidenceSources",
+  "heartMirrorTree",
+  "growthSource",
+  "dailyHeartWitness",
+  "latestPersonalCycle",
   "suggestedScript",
   "feishuSynced",
 ]
@@ -70,7 +77,7 @@ const mirrorLabels = [
 
 const forbiddenPhrases = ["推荐买入", "推荐卖出", "必赚", "稳赚", "收益保证", "抄底", "逃顶"]
 
-test("living mirror contract exposes the shared Sprint 9+ entities", async () => {
+test("living mirror contract exposes the shared Sprint 8-19 loop entities", async () => {
   const contract = await readFile(contractUrl, "utf8")
 
   requiredTypes.forEach((typeName) => {
@@ -89,10 +96,10 @@ test("living mirror contract exposes the shared Sprint 9+ entities", async () =>
   assert.ok(contract.includes("仅为交易心理觉察数据，不构成投资建议"))
 })
 
-test("living mirror roadmap covers Sprint 9 through Sprint 19 without forbidden promises", async () => {
+test("living mirror roadmap covers Sprint 8 through Sprint 19 without forbidden promises", async () => {
   const roadmap = await readFile(roadmapUrl, "utf8")
 
-  for (let sprint = 9; sprint <= 19; sprint += 1) {
+  for (let sprint = 8; sprint <= 19; sprint += 1) {
     assert.ok(roadmap.includes(`Sprint ${sprint}`), `roadmap missing Sprint ${sprint}`)
   }
 
@@ -104,6 +111,11 @@ test("living mirror roadmap covers Sprint 9 through Sprint 19 without forbidden 
   assert.ok(roadmap.includes("以复盘照行为"))
   assert.ok(roadmap.includes("以训练照变化"))
   assert.ok(roadmap.includes("以活镜照成长"))
+  assert.ok(roadmap.includes("不要把这些 Sprint 做成一堆独立页面"))
+  assert.ok(roadmap.includes("深度照见引擎"))
+  assert.ok(roadmap.includes("每日修行陪跑器"))
+  assert.ok(roadmap.includes("心镜之树"))
+  assert.ok(roadmap.includes("用户自己的循环"))
 
   forbiddenPhrases.forEach((phrase) => {
     assert.equal(roadmap.includes(phrase), false, `roadmap contains forbidden phrase: ${phrase}`)

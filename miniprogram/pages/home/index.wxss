@@ -8,7 +8,7 @@
     radial-gradient(circle at 72% 12%, rgba(218, 180, 92, 0.07), transparent 28%),
     radial-gradient(circle at 12% 72%, rgba(49, 85, 78, 0.09), transparent 34%),
     linear-gradient(180deg, #0a1116 0%, #07100f 48%, #030606 100%);
-  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
 }
 
 .mist-layer,
@@ -65,6 +65,21 @@
 
 .ink-mountains {
   animation: mountainDrift 34s ease-in-out infinite alternate;
+}
+
+.mind-ripple {
+  position: fixed;
+  z-index: 8;
+  width: 18rpx;
+  height: 18rpx;
+  margin-left: -9rpx;
+  margin-top: -9rpx;
+  border-radius: 50%;
+  border: 0;
+  background: radial-gradient(circle, rgba(241, 210, 125, 0.28), rgba(241, 210, 125, 0.08) 36%, transparent 72%);
+  box-shadow: 0 0 22rpx rgba(241, 210, 125, 0.08);
+  animation: ripple 0.46s ease-out forwards;
+  pointer-events: none;
 }
 
 .ritual-content {
@@ -363,6 +378,10 @@
   font-weight: 500;
 }
 
+.brand-seal.brand-zhao-mini {
+  font-size: 0;
+}
+
 .brand-copy {
   min-width: 0;
 }
@@ -382,629 +401,15 @@
   letter-spacing: 0.18em;
 }
 
-.mini-mirror-card {
-  position: relative;
-  z-index: 2;
-  margin-top: 42rpx;
-  padding: 38rpx 34rpx 36rpx;
-  border-radius: 30rpx;
-  border: 1rpx solid rgba(216, 183, 111, 0.18);
-  background:
-    radial-gradient(circle at 78% 0%, rgba(216, 183, 111, 0.14), transparent 34%),
-    radial-gradient(circle at 12% 96%, rgba(95, 132, 117, 0.12), transparent 38%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.018));
-  box-shadow:
-    inset 0 1rpx 0 rgba(244, 235, 221, 0.08),
-    0 34rpx 88rpx rgba(0, 0, 0, 0.32);
-  animation: edictFadeIn 1s ease-out both;
-}
-
-.daily-state-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20rpx;
-}
-
-.daily-state-row > text {
-  flex: 0 0 auto;
-  padding: 10rpx 18rpx;
-  border-radius: 999rpx;
-  color: #11120e;
-  background: linear-gradient(180deg, #ead48c, #c99a46);
-  font-size: 21rpx;
-  font-weight: 900;
-}
-
-.daily-state-row > view {
-  min-width: 0;
-  color: rgba(247, 239, 223, 0.52);
-  font-size: 22rpx;
-  line-height: 1.35;
-  text-align: right;
-  font-weight: 800;
-}
-
-.daily-progress-grid {
-  margin-top: 22rpx;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10rpx;
-}
-
-.daily-progress-grid > view {
-  min-height: 82rpx;
-  padding: 14rpx 16rpx;
-  border-radius: 16rpx;
-  border: 1rpx solid rgba(216, 183, 111, 0.1);
-  background: rgba(255, 255, 255, 0.032);
-}
-
-.daily-progress-grid text {
-  display: block;
-  color: rgba(216, 183, 111, 0.72);
-  font-size: 19rpx;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-}
-
-.daily-progress-grid view view {
-  margin-top: 8rpx;
-  color: rgba(247, 239, 223, 0.82);
-  font-size: 24rpx;
-  font-weight: 900;
-  line-height: 1.25;
-}
-
-.mini-mirror-eyebrow {
-  color: #d8b76f;
-  font-size: 22rpx;
-  font-weight: 900;
-  letter-spacing: 0.16em;
-}
-
-.daily-proof {
-  margin-top: 34rpx;
-}
-
-.daily-proof-lines {
-  margin-top: 18rpx;
-  color: #fff6e6;
-  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", "STSong", serif;
-  font-size: 58rpx;
-  font-weight: 700;
-  line-height: 1.28;
-  text-shadow: 0 12rpx 34rpx rgba(0, 0, 0, 0.36);
-}
-
-.daily-proof-lines text {
-  display: block;
-}
-
-.daily-proof-lines text + text {
-  margin-top: 8rpx;
-}
-
-.mini-mirror-one {
-  margin-top: 32rpx;
-  padding: 22rpx 24rpx;
-  border-left: 4rpx solid rgba(95, 132, 117, 0.58);
-  background:
-    linear-gradient(90deg, rgba(95, 132, 117, 0.1), transparent 78%),
-    rgba(244, 235, 221, 0.018);
-}
-
-.mini-mirror-one text {
-  display: block;
-  color: #b49355;
-  font-size: 21rpx;
-  font-weight: 900;
-  letter-spacing: 0.12em;
-}
-
-.mini-mirror-one view {
-  margin-top: 10rpx;
-  color: #fff6e6;
-  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", serif;
-  font-size: 32rpx;
-  line-height: 1.45;
-  font-weight: 900;
-}
-
-.journey-resume {
-  margin-top: 18rpx;
-  padding: 22rpx;
-  border-radius: 22rpx;
-  border: 1rpx solid rgba(216, 183, 111, 0.14);
-  background: rgba(0, 0, 0, 0.16);
-}
-
-.journey-resume text {
-  display: block;
-  color: #f1d27d;
-  font-size: 24rpx;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-}
-
-.journey-resume view {
-  margin-top: 10rpx;
-  color: rgba(247, 239, 223, 0.68);
-  font-size: 23rpx;
-  line-height: 1.5;
-}
-
-.journey-complete {
-  position: relative;
-  margin-top: 24rpx;
-  padding: 34rpx 28rpx 30rpx;
-  overflow: hidden;
-  border-radius: 28rpx;
-  border: 1rpx solid rgba(216, 183, 111, 0.2);
-  background:
-    radial-gradient(circle at 50% 0%, rgba(120, 60, 45, 0.2), transparent 42%),
-    radial-gradient(circle at 82% 22%, rgba(216, 183, 111, 0.12), transparent 34%),
-    linear-gradient(180deg, rgba(244, 235, 221, 0.07), rgba(244, 235, 221, 0.018));
-  box-shadow:
-    inset 0 1rpx 0 rgba(244, 235, 221, 0.08),
-    0 28rpx 84rpx rgba(0, 0, 0, 0.34);
-}
-
-.journey-complete::before {
-  content: "";
-  position: absolute;
-  inset: 18rpx;
-  border-radius: 24rpx;
-  border: 1rpx solid rgba(216, 183, 111, 0.08);
-  pointer-events: none;
-}
-
-.completion-seal {
-  width: 82rpx;
-  height: 82rpx;
-  margin: 0 auto 18rpx;
-  display: grid;
-  place-items: center;
-  border-radius: 24rpx;
-  color: rgba(244, 235, 221, 0.9);
-  border: 2rpx solid rgba(120, 60, 45, 0.64);
-  background:
-    radial-gradient(circle at 50% 42%, rgba(120, 60, 45, 0.88), rgba(57, 20, 16, 0.5));
-  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", serif;
-  font-size: 40rpx;
-  font-weight: 900;
-  box-shadow: 0 16rpx 40rpx rgba(120, 60, 45, 0.24);
-}
-
-.completion-kicker {
-  position: relative;
-  z-index: 1;
-  color: rgba(216, 183, 111, 0.72);
-  font-size: 21rpx;
-  font-weight: 900;
-  letter-spacing: 0.18em;
-  text-align: center;
-}
-
-.completion-title {
-  position: relative;
-  z-index: 1;
-  display: block;
-  margin-top: 10rpx;
-  color: #fff6e6;
-  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", "STSong", serif;
-  font-size: 40rpx;
-  font-weight: 900;
-  line-height: 1.25;
-  text-align: center;
-}
-
-.completion-lines {
-  position: relative;
-  z-index: 1;
-  margin-top: 28rpx;
-  display: grid;
-  gap: 16rpx;
-}
-
-.completion-lines > view {
-  min-height: 104rpx;
-  padding: 20rpx 22rpx;
-  border-radius: 20rpx;
-  border: 1rpx solid rgba(216, 183, 111, 0.1);
-  background: rgba(0, 0, 0, 0.16);
-}
-
-.completion-lines text,
-.completion-seals text,
-.completion-proof-grid view view {
-  display: block;
-  color: rgba(247, 239, 223, 0.48);
-  font-size: 21rpx;
-  font-weight: 800;
-  line-height: 1.45;
-}
-
-.completion-lines view view {
-  margin-top: 8rpx;
-  color: #fff6e6;
-  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", serif;
-  font-size: 30rpx;
-  font-weight: 900;
-  line-height: 1.38;
-}
-
-.completion-seals {
-  position: relative;
-  z-index: 1;
-  margin-top: 18rpx;
-  padding: 18rpx 22rpx;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18rpx;
-  border-radius: 999rpx;
-  border: 1rpx solid rgba(120, 60, 45, 0.3);
-  background: rgba(120, 60, 45, 0.1);
-}
-
-.completion-seals view {
-  flex: 0 0 auto;
-  color: #f1d27d;
-  font-size: 25rpx;
-  font-weight: 900;
-  letter-spacing: 0.16em;
-}
-
-.completion-proof-grid {
-  position: relative;
-  z-index: 1;
-  margin-top: 20rpx;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12rpx;
-}
-
-.completion-proof-grid > view {
-  padding: 18rpx 20rpx;
-  border-radius: 18rpx;
-  background: rgba(244, 235, 221, 0.035);
-}
-
-.completion-proof-grid text {
-  display: block;
-  color: rgba(244, 235, 221, 0.9);
-  font-size: 25rpx;
-  font-weight: 900;
-  line-height: 1.35;
-}
-
-.journey-complete-actions {
-  position: relative;
-  z-index: 1;
-  margin-top: 22rpx;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10rpx;
-}
-
-.journey-complete-actions button {
-  min-height: 64rpx;
-  border-radius: 999rpx;
-  color: rgba(247, 239, 223, 0.82);
-  border: 1rpx solid rgba(216, 183, 111, 0.18);
-  background: rgba(255, 255, 255, 0.035);
-  font-size: 24rpx;
-  font-weight: 900;
-}
-
-.journey-complete-actions button.primary {
-  color: #11120e;
-  border-color: rgba(240, 211, 118, 0.18);
-  background:
-    linear-gradient(180deg, rgba(255, 248, 216, 0.34), rgba(255, 255, 255, 0.04) 34%, transparent 52%),
-    linear-gradient(180deg, rgba(240, 211, 118, 0.94), rgba(188, 137, 52, 0.9));
-}
-
-.journey-complete-actions button::after {
-  display: none;
-}
-
-.closure-chain-card {
-  margin-top: 24rpx;
-  padding: 26rpx;
-  border-radius: 26rpx;
-  border: 1rpx solid rgba(216, 183, 111, 0.14);
-  background:
-    radial-gradient(circle at 88% 0%, rgba(88, 194, 173, 0.09), transparent 42%),
-    rgba(244, 235, 221, 0.026);
-}
-
-.closure-chain-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 18rpx;
-}
-
-.closure-chain-head text:first-child {
-  display: block;
-  color: #f1d27d;
-  font-size: 23rpx;
-  font-weight: 900;
-  letter-spacing: 0.14em;
-}
-
-.closure-chain-head view view {
-  margin-top: 8rpx;
-  color: rgba(247, 239, 223, 0.52);
-  font-size: 22rpx;
-  line-height: 1.5;
-}
-
-.closure-chain-head > text {
-  flex: 0 0 auto;
-  padding: 8rpx 14rpx;
-  border-radius: 999rpx;
-  color: rgba(241, 210, 125, 0.82);
-  border: 1rpx solid rgba(216, 183, 111, 0.16);
-  background: rgba(216, 183, 111, 0.055);
-  font-size: 21rpx;
-  font-weight: 900;
-}
-
-.closure-chain-list {
-  margin-top: 20rpx;
-  display: grid;
-  gap: 12rpx;
-}
-
-.closure-chain-list > view {
-  min-height: 94rpx;
-  padding: 16rpx;
-  display: grid;
-  grid-template-columns: 46rpx minmax(0, 1fr) 104rpx;
-  gap: 14rpx;
-  align-items: center;
-  border-radius: 18rpx;
-  border: 1rpx solid rgba(247, 239, 223, 0.08);
-  background: rgba(0, 0, 0, 0.14);
-}
-
-.closure-chain-list > view.done {
-  border-color: rgba(88, 194, 173, 0.18);
-  background: rgba(88, 194, 173, 0.055);
-}
-
-.closure-chain-list > view.current {
-  border-color: rgba(216, 183, 111, 0.28);
-  background: rgba(216, 183, 111, 0.075);
-}
-
-.closure-chain-list > view > text:first-child {
-  width: 42rpx;
-  height: 42rpx;
-  display: grid;
-  place-items: center;
-  border-radius: 999rpx;
-  color: rgba(247, 239, 223, 0.58);
-  border: 1rpx solid rgba(216, 183, 111, 0.16);
-  font-size: 20rpx;
-  font-weight: 900;
-}
-
-.closure-chain-list > view.done > text:first-child,
-.closure-chain-list > view.current > text:first-child {
-  color: #11130d;
-  border-color: transparent;
-  background: linear-gradient(180deg, #ead089, #c69846);
-}
-
-.closure-chain-list view view text {
-  display: block;
-  color: #fff6e6;
-  font-size: 24rpx;
-  line-height: 1.35;
-  font-weight: 900;
-}
-
-.closure-chain-list view view view {
-  margin-top: 6rpx;
-  color: rgba(247, 239, 223, 0.5);
-  font-size: 21rpx;
-  line-height: 1.4;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-
-.closure-chain-list > view > text:last-child {
-  color: rgba(247, 239, 223, 0.42);
-  font-size: 20rpx;
-  line-height: 1.35;
-  text-align: right;
-  font-weight: 900;
-}
-
-.closure-chain-list > view.done > text:last-child {
-  color: rgba(88, 194, 173, 0.86);
-}
-
-.closure-chain-list > view.current > text:last-child {
-  color: #f1d27d;
-}
-
-.closure-next-action {
-  margin-top: 18rpx;
-  padding: 16rpx 18rpx;
-  border-left: 4rpx solid rgba(216, 183, 111, 0.44);
-  border-radius: 14rpx;
-  color: rgba(247, 239, 223, 0.72);
-  background: rgba(216, 183, 111, 0.055);
-  font-size: 23rpx;
-  line-height: 1.5;
-  font-weight: 900;
-}
-
-.quiet-loading {
-  position: fixed;
-  inset: 0;
-  z-index: 90;
-  display: grid;
-  place-items: center;
-  padding: 54rpx;
-  background: rgba(3, 6, 6, 0.62);
-  backdrop-filter: blur(18rpx);
-}
-
-.quiet-loading-card {
-  width: 100%;
-  max-width: 520rpx;
-  padding: 42rpx 34rpx;
-  border-radius: 28rpx;
-  border: 1rpx solid rgba(216, 183, 111, 0.18);
-  background:
-    radial-gradient(circle at 50% 0%, rgba(216, 183, 111, 0.1), transparent 44%),
-    rgba(12, 18, 16, 0.94);
-  text-align: center;
-  box-shadow: 0 32rpx 88rpx rgba(0, 0, 0, 0.38);
-}
-
-.quiet-loading-seal {
-  width: 74rpx;
-  height: 74rpx;
-  margin: 0 auto 22rpx;
-  display: grid;
-  place-items: center;
-  border-radius: 22rpx;
-  color: #f1d27d;
-  border: 1rpx solid rgba(216, 183, 111, 0.3);
-  background: rgba(216, 183, 111, 0.08);
-  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", serif;
-  font-size: 36rpx;
-  animation: quietSealBreath 1.6s ease-in-out infinite;
-}
-
-.quiet-loading-card text {
-  display: block;
-  color: #fff6e6;
-  font-size: 30rpx;
-  font-weight: 900;
-}
-
-.quiet-loading-card view:last-child {
-  margin-top: 14rpx;
-  color: rgba(247, 239, 223, 0.54);
-  font-size: 24rpx;
-  line-height: 1.55;
-}
-
-.mini-primary {
-  min-height: 88rpx;
-  margin-top: 34rpx;
-  display: grid;
-  place-items: center;
-  border-radius: 999rpx;
-  color: #11120e;
-  background: linear-gradient(180deg, #efd98f, #c7953f);
-  font-size: 28rpx;
-  font-weight: 900;
-}
-
-.mini-primary-hint {
-  margin-top: 14rpx;
-  color: rgba(247, 239, 223, 0.46);
-  font-size: 22rpx;
-  font-weight: 600;
-  line-height: 1.45;
-  text-align: center;
-}
-
-.mini-primary::after,
-.daily-core-actions button::after {
-  display: none;
-}
-
-.daily-core-actions {
-  margin-top: 16rpx;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14rpx;
-}
-
-.daily-core-actions button {
-  min-height: 78rpx;
-  padding: 0 18rpx;
-  display: grid;
-  place-items: center;
-  border-radius: 999rpx;
-  color: rgba(247, 239, 223, 0.82);
-  border: 1rpx solid rgba(216, 183, 111, 0.16);
-  background: rgba(0, 0, 0, 0.2);
-  font-size: 23rpx;
-  font-weight: 900;
-  line-height: 1.2;
-}
-
-.daily-core-actions button:last-child {
-  color: rgba(216, 183, 111, 0.9);
-  border-color: rgba(216, 183, 111, 0.22);
-  background:
-    linear-gradient(180deg, rgba(216, 183, 111, 0.07), rgba(255, 255, 255, 0.025)),
-    rgba(0, 0, 0, 0.16);
-}
-
-.living-written {
-  margin-top: 22rpx;
-  padding: 18rpx;
-  display: grid;
-  grid-template-columns: 58rpx minmax(0, 1fr);
-  gap: 16rpx;
-  align-items: center;
-  border-radius: 22rpx;
-  border: 1rpx solid rgba(120, 60, 45, 0.3);
-  background:
-    radial-gradient(circle at 29rpx 29rpx, rgba(120, 60, 45, 0.22), transparent 60%),
-    rgba(244, 235, 221, 0.024);
-}
-
-.living-written > text {
-  width: 58rpx;
-  height: 58rpx;
-  display: grid;
-  place-items: center;
-  border-radius: 18rpx;
-  color: rgba(244, 235, 221, 0.88);
-  border: 2rpx solid rgba(120, 60, 45, 0.56);
-  background: radial-gradient(circle at 50% 44%, rgba(120, 60, 45, 0.68), rgba(57, 20, 16, 0.38));
-  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", serif;
-  font-size: 30rpx;
-}
-
-.living-written view text {
-  display: block;
-  color: #f1d27d;
-  font-size: 23rpx;
-  font-weight: 900;
-}
-
-.living-written view view {
-  margin-top: 6rpx;
-  color: rgba(247, 239, 223, 0.52);
-  font-size: 21rpx;
-  line-height: 1.45;
-}
-
 .edict-scroll {
   flex: 1;
   min-height: 660rpx;
-  margin-top: 180rpx;
+  margin-top: 42rpx;
   padding: 38rpx 30rpx 42rpx;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  justify-content: flex-start;
+  justify-content: center;
   text-align: left;
   overflow: hidden;
   border: 1rpx solid rgba(217, 189, 122, 0.16);
@@ -1018,24 +423,6 @@
     inset 0 -1rpx 0 rgba(216, 183, 111, 0.045),
     0 38rpx 90rpx rgba(0, 0, 0, 0.28);
   animation: edictFadeIn 1.18s 0.16s ease-out both;
-}
-
-.practice-detail-head {
-  position: relative;
-  z-index: 1;
-  padding: 24rpx;
-  border-radius: 24rpx;
-  border: 1rpx solid rgba(217, 189, 122, 0.1);
-  background:
-    linear-gradient(90deg, rgba(216, 183, 111, 0.055), transparent 78%),
-    rgba(244, 235, 221, 0.018);
-}
-
-.practice-detail-head > view:last-child {
-  margin-top: 14rpx;
-  color: rgba(244, 235, 221, 0.72);
-  font-size: 25rpx;
-  line-height: 1.6;
 }
 
 .edict-scroll::before,
@@ -1280,10 +667,6 @@
     rgba(244, 235, 221, 0.018);
 }
 
-.contemplation-block.compact {
-  margin-top: 28rpx;
-}
-
 .contemplation-block > view:last-child {
   margin-top: 16rpx;
   color: rgba(244, 235, 221, 0.76);
@@ -1428,23 +811,6 @@
   margin-top: 36rpx;
 }
 
-.practice-block {
-  padding: 24rpx;
-  border-left: 3rpx solid rgba(95, 132, 117, 0.58);
-  background:
-    linear-gradient(90deg, rgba(95, 132, 117, 0.09), transparent 78%),
-    rgba(244, 235, 221, 0.016);
-}
-
-.practice-block > view:last-child {
-  margin-top: 16rpx;
-  color: rgba(244, 235, 221, 0.86);
-  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", serif;
-  font-size: 32rpx;
-  line-height: 1.5;
-  font-weight: 600;
-}
-
 .three-seal-field {
   min-height: 82rpx;
   margin-top: 14rpx;
@@ -1481,68 +847,6 @@
   font-weight: 900;
 }
 
-.seal-open-panel {
-  margin-top: 22rpx;
-  padding: 22rpx;
-  display: grid;
-  grid-template-columns: 72rpx minmax(0, 1fr);
-  gap: 18rpx;
-  border-radius: 24rpx;
-  border: 1rpx solid rgba(120, 60, 45, 0.32);
-  background:
-    radial-gradient(circle at 36rpx 40rpx, rgba(120, 60, 45, 0.22), transparent 54%),
-    rgba(244, 235, 221, 0.026);
-}
-
-.seal-mark-large {
-  width: 72rpx;
-  height: 72rpx;
-  display: grid;
-  place-items: center;
-  border-radius: 22rpx;
-  color: rgba(244, 235, 221, 0.88);
-  border: 2rpx solid rgba(120, 60, 45, 0.58);
-  background:
-    radial-gradient(circle at 50% 44%, rgba(120, 60, 45, 0.72), rgba(57, 20, 16, 0.44));
-  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", serif;
-  font-size: 38rpx;
-}
-
-.seal-open-panel > view:nth-child(2) text {
-  display: block;
-  color: rgba(244, 235, 221, 0.92);
-  font-size: 25rpx;
-  font-weight: 900;
-  line-height: 1.4;
-}
-
-.seal-open-panel > view:nth-child(2) view {
-  margin-top: 8rpx;
-  color: rgba(244, 235, 221, 0.52);
-  font-size: 21rpx;
-  line-height: 1.45;
-}
-
-.seal-open-panel button {
-  grid-column: 1 / -1;
-  min-height: 70rpx;
-  display: grid;
-  place-items: center;
-  border-radius: 999rpx;
-  color: rgba(244, 235, 221, 0.78);
-  border: 1rpx solid rgba(217, 189, 122, 0.13);
-  background: rgba(244, 235, 221, 0.03);
-  font-size: 23rpx;
-  font-weight: 900;
-}
-
-.seal-open-panel button:nth-of-type(2) {
-  color: #11130d;
-  background:
-    linear-gradient(180deg, rgba(255, 248, 216, 0.34), rgba(255, 255, 255, 0.04) 34%, transparent 52%),
-    linear-gradient(180deg, rgba(240, 211, 118, 0.92), rgba(188, 137, 52, 0.9));
-}
-
 .today-stage-row {
   width: 100%;
   min-height: 76rpx;
@@ -1577,6 +881,21 @@
 
 .today-stage-row.done text {
   color: rgba(216, 183, 111, 0.72);
+}
+
+.practice-block {
+  padding: 24rpx;
+  border-left: 3rpx solid rgba(95, 132, 117, 0.58);
+  background:
+    linear-gradient(90deg, rgba(95, 132, 117, 0.09), transparent 78%),
+    rgba(244, 235, 221, 0.016);
+}
+
+.practice-block > view:last-child {
+  margin-top: 16rpx;
+  color: rgba(244, 235, 221, 0.78);
+  font-size: 26rpx;
+  line-height: 1.6;
 }
 
 .today-three {
@@ -2048,17 +1367,17 @@
   border-top: 1rpx solid rgba(217, 189, 122, 0.08);
 }
 
-.today-action-status-item {
+.today-action-status > view {
   min-width: 0;
   padding: 22rpx 10rpx 0;
   border-right: 1rpx solid rgba(217, 189, 122, 0.07);
 }
 
-.today-action-status-item-last {
+.today-action-status > view:last-child {
   border-right: 0;
 }
 
-.today-action-status-label {
+.today-action-status text {
   display: block;
   color: rgba(216, 183, 111, 0.46);
   font-size: 19rpx;
@@ -2066,7 +1385,7 @@
   letter-spacing: 0.1em;
 }
 
-.today-action-status-value {
+.today-action-status view view {
   margin-top: 10rpx;
   color: rgba(244, 235, 221, 0.78);
   font-size: 22rpx;
@@ -2413,14 +1732,14 @@
     linear-gradient(180deg, rgba(240, 211, 118, 0.9), rgba(188, 137, 52, 0.88));
 }
 
-.retention-next-label {
+.retention-next text {
   flex: 0 0 auto;
   font-size: 22rpx;
   font-weight: 800;
   letter-spacing: 0.12em;
 }
 
-.retention-next-detail {
+.retention-next view {
   min-width: 0;
   flex: 1;
   font-size: 25rpx;
@@ -3106,7 +2425,7 @@
 .companion-metrics text {
   display: block;
   color: rgba(255, 247, 231, 0.86);
-  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
   font-size: 38rpx;
   font-weight: 800;
   line-height: 1;
@@ -3166,6 +2485,39 @@
 
 .companion-whisper text {
   display: block;
+}
+
+.growth-grid {
+  margin-top: 28rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18rpx;
+}
+
+.growth-grid > view {
+  min-height: 116rpx;
+  padding: 24rpx 22rpx;
+  border-radius: 28rpx;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.growth-grid > view:last-child {
+  grid-column: 1 / -1;
+}
+
+.growth-grid text {
+  display: block;
+  color: rgba(255, 247, 231, 0.84);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  font-size: 34rpx;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.growth-grid view view {
+  margin-top: 10rpx;
+  color: rgba(247, 239, 223, 0.36);
+  font-size: 21rpx;
 }
 
 .entry-panel {
@@ -3271,6 +2623,17 @@
   50% {
     opacity: 0.78;
     transform: scale(1.03);
+  }
+}
+
+@keyframes ripple {
+  from {
+    opacity: 0.34;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 0;
+    transform: scale(9);
   }
 }
 
@@ -3395,17 +2758,6 @@
   50% { background-position: 100% 50%; }
 }
 
-@keyframes quietSealBreath {
-  0%, 100% {
-    opacity: 0.72;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.035);
-  }
-}
-
 @media (max-width: 340px) {
   .ritual-shell {
     padding-left: 44rpx;
@@ -3518,13 +2870,13 @@
     grid-template-columns: 1fr;
   }
 
-  .today-action-status-item {
+  .today-action-status > view {
     padding: 18rpx 0;
     border-right: 0;
     border-bottom: 1rpx solid rgba(217, 189, 122, 0.07);
   }
 
-  .today-action-status-item-last {
+  .today-action-status > view:last-child {
     border-bottom: 0;
   }
 
@@ -3553,7 +2905,7 @@
     gap: 8rpx;
   }
 
-  .retention-next-detail {
+  .retention-next view {
     text-align: left;
   }
 
@@ -3683,9 +3035,21 @@
     font-size: 28rpx;
   }
 
+  .growth-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .growth-grid > view:last-child {
+    grid-column: auto;
+  }
+
   .lamp-field {
     height: 84rpx;
     gap: 10rpx;
+  }
+
+  .companion-copy text {
+    font-size: 34rpx;
   }
 
   .echo-row {

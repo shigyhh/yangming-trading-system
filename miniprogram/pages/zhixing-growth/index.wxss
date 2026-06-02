@@ -37,7 +37,7 @@
 
 .level-head > text {
   color: #f1d27d;
-  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
   font-size: 72rpx;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
@@ -82,7 +82,7 @@
 .require-card view {
   margin-top: 10rpx;
   color: #f1d27d;
-  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
   font-size: 30rpx;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
@@ -140,7 +140,7 @@
 
 .bar-item text {
   color: #f1d27d;
-  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
   font-size: 22rpx;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
@@ -160,7 +160,7 @@
 
 .trend-card text {
   color: #f1d27d;
-  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
   font-size: 42rpx;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
@@ -204,7 +204,7 @@
 
 .record-row > text {
   color: #f1d27d;
-  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
   font-size: 36rpx;
   font-weight: 900;
   font-variant-numeric: tabular-nums;

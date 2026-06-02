@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 260" role="img" aria-labelledby="title">
+  <title id="title">阳明照见 A1 主标</title>
+  <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M55 40H119V123H55Z" stroke-width="9"/>
+    <path d="M68 68H107M68 96H107" stroke-width="5" opacity=".72"/>
+    <path d="M154 42H214" stroke-width="9"/>
+    <path d="M184 44C180 68 167 88 146 104" stroke-width="9"/>
+    <path d="M154 84H217V123H154Z" stroke-width="9"/>
+    <path d="M166 104H206" stroke-width="4.8" opacity=".7"/>
+    <path d="M70 151H209" stroke-width="6.4"/>
+    <path d="M72 184C63 200 57 213 50 228M114 183C108 199 105 214 102 231M156 183C160 199 163 214 166 231M197 184C206 200 215 214 222 228" stroke-width="6.6"/>
+  </g>
+</svg>

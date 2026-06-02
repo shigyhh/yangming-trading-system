@@ -5,7 +5,7 @@ import type {
   GlobalReflectionSummary,
   GlobalReflectionVotePayload,
   GlobalReflectionVoteResponse,
-} from "../../../../packages/contracts/global-reflection"
+} from "@yangming/contracts/global-reflection"
 
 type GlobalReflectionResult<T> =
   | { ok: true; data: T }

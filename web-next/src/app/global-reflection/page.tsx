@@ -13,7 +13,7 @@ import {
   fetchGlobalReflectionToday,
   submitGlobalReflectionVote,
 } from "@/features/global-reflection/api-client"
-import type { GlobalReflectionChoice, GlobalReflectionSummary } from "../../../../packages/contracts/global-reflection"
+import type { GlobalReflectionChoice, GlobalReflectionSummary } from "@yangming/contracts/global-reflection"
 
 export default function GlobalReflectionPage() {
   const [choices, setChoices] = useState<GlobalReflectionChoice[]>(fallbackGlobalReflectionChoices)

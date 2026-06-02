@@ -20,7 +20,7 @@ export function HeroSection() {
     <section
       id="hero"
       aria-label="阳明心学交易系统首屏"
-      className="relative z-10 min-h-[100svh] w-full overflow-hidden text-left"
+      className="relative z-10 w-full overflow-hidden text-left md:min-h-[100svh]"
     >
       <div className="hero-quiet-field" aria-hidden="true">
         <span className="hero-quiet-moon" />
@@ -30,35 +30,50 @@ export function HeroSection() {
         <span className="hero-quiet-dust hero-quiet-dust-two" />
       </div>
 
-      <div className="relative z-10 mx-auto grid min-h-[100svh] w-full max-w-[1500px] items-start gap-10 px-5 pb-12 pt-[7.25rem] md:px-8 md:pb-16 md:pt-28 lg:grid-cols-[minmax(0,760px)_minmax(420px,520px)] lg:justify-center lg:gap-16 lg:pt-36 xl:gap-20">
+      <div className="relative z-10 mx-auto grid w-full max-w-[1500px] items-start gap-10 px-5 pb-10 pt-[6.75rem] md:min-h-[100svh] md:px-8 md:pb-16 md:pt-28 lg:grid-cols-[minmax(0,760px)_minmax(420px,520px)] lg:justify-center lg:gap-16 lg:pt-36 xl:gap-20">
         <motion.div
           className="w-full max-w-[760px] lg:flex lg:min-h-[560px] lg:flex-col"
           initial={{ opacity: 0, y: 22, filter: "blur(10px)" }}
           animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
           transition={{ duration: 1.15, delay: 0.88, ease: [0.22, 1, 0.36, 1] }}
         >
-          <h1 className="font-worldview max-w-[760px] text-[clamp(3.5rem,7.1vw,6.55rem)] font-light leading-[1.04] tracking-[0] text-[rgba(244,235,221,.94)]">
-            心不静，
-            <br />
-            交易必乱。
+          <h1 className="brand-hero-title max-w-[760px]" aria-label="心不静，交易必乱。">
+            <span className="brand-title-line">
+              <span className="brand-title-phrase">心不静</span>
+              <span className="brand-title-punct">，</span>
+            </span>
+            <span className="brand-title-line">
+              <span className="brand-title-phrase">交易必乱</span>
+              <span className="brand-title-punct">。</span>
+            </span>
           </h1>
 
           <motion.div
             className="mt-6 grid w-full max-w-[480px] grid-cols-[1fr_auto_1fr] items-center gap-3 text-center font-story text-[1.16rem] font-light leading-relaxed tracking-[.08em] md:mt-7 md:text-[1.34rem]"
-            initial={{ opacity: 0, y: 10, filter: "blur(6px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            transition={{ duration: 0.9, delay: 1.48, ease: [0.22, 1, 0.36, 1] }}
           >
-            <span className="text-[rgba(190,194,190,.58)]">
+            <motion.span
+              className="text-[rgba(190,194,190,.58)]"
+              initial={{ opacity: 0, y: 10, filter: "blur(6px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              transition={{ duration: 0.82, delay: 1.38, ease: [0.22, 1, 0.36, 1] }}
+            >
               市场照见价格
-            </span>
-            <span
+            </motion.span>
+            <motion.span
               aria-hidden="true"
               className="h-9 w-px bg-[linear-gradient(180deg,transparent,rgba(216,183,111,.26),rgba(95,132,117,.16),transparent)]"
+              initial={{ opacity: 0, scaleY: 0.42 }}
+              animate={{ opacity: 1, scaleY: 1 }}
+              transition={{ duration: 0.72, delay: 1.68, ease: [0.22, 1, 0.36, 1] }}
             />
-            <span className="text-[rgba(216,183,111,.64)]">
+            <motion.span
+              className="text-[rgba(216,183,111,.64)]"
+              initial={{ opacity: 0, y: 10, filter: "blur(6px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              transition={{ duration: 0.82, delay: 1.88, ease: [0.22, 1, 0.36, 1] }}
+            >
               心镜照见自己
-            </span>
+            </motion.span>
           </motion.div>
 
           <p className="mt-7 max-w-[700px] text-[1.05rem] font-medium leading-[1.9] tracking-[.01em] text-[rgba(244,235,221,.76)] md:mt-8 md:text-[1.2rem]">
@@ -192,6 +207,7 @@ export function HeroSection() {
             height: 58vw;
           }
         }
+
       `}</style>
     </section>
   )

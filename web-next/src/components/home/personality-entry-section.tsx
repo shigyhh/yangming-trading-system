@@ -47,7 +47,6 @@ export function PersonalityEntrySection() {
 
       <div className="content content-compact">
         <div className="top-copy">
-          <span className="line line-soft ritual-step ritual-step-1">你准备好了吗？</span>
           <span className="line line-main ritual-step ritual-step-2">照见，</span>
           <span className="line line-main ritual-step ritual-step-2">最先动的那一念。</span>
         </div>
@@ -159,28 +158,24 @@ export function PersonalityEntrySection() {
 
         .line {
           display: block;
-          font-family: "STSong", "Songti SC", "SimSun", var(--font-narrative), serif;
+          font-family: var(--font-yangming-title), var(--font-narrative), serif;
           font-size: calc(38 * var(--sprint7-rpx));
           line-height: 1.72;
           letter-spacing: calc(4 * var(--sprint7-rpx));
           color: rgba(221, 215, 200, 0.78);
           font-weight: 300;
-        }
-
-        .line-soft {
-          margin-bottom: calc(34 * var(--sprint7-rpx));
-          font-size: calc(34 * var(--sprint7-rpx));
-          line-height: 1.5;
-          letter-spacing: calc(4 * var(--sprint7-rpx));
-          color: rgba(221, 215, 200, 0.58);
+          font-optical-sizing: auto;
+          font-variation-settings: "wght" 360;
         }
 
         .line-main {
-          font-family: var(--font-world), "LXGW WenKai", serif;
+          font-family: var(--font-yangming-hand), var(--font-world), serif;
           font-size: calc(58 * var(--sprint7-rpx));
           line-height: 1.35;
-          letter-spacing: calc(5 * var(--sprint7-rpx));
+          letter-spacing: calc(7 * var(--sprint7-rpx));
           color: rgba(242, 235, 220, 0.88);
+          font-weight: 500;
+          font-variation-settings: "wght" 500;
           text-shadow: 0 0 calc(24 * var(--sprint7-rpx)) rgba(216, 183, 111, 0.08);
         }
 
@@ -194,28 +189,24 @@ export function PersonalityEntrySection() {
           animation: ritual-reveal 1100ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
 
-        .is-ritual-ready .ritual-step-1 {
+        .is-ritual-ready .ritual-step-2 {
           animation-delay: 0ms;
         }
 
-        .is-ritual-ready .ritual-step-2 {
-          animation-delay: 1000ms;
-        }
-
         .is-ritual-ready .ritual-step-3 {
-          animation-delay: 2500ms;
+          animation-delay: 1500ms;
         }
 
         .is-ritual-ready .ritual-step-4 {
-          animation-delay: 3500ms;
+          animation-delay: 2500ms;
         }
 
         .is-ritual-ready .ritual-step-5 {
-          animation-delay: 4600ms;
+          animation-delay: 3600ms;
         }
 
         .is-ritual-ready .ritual-step-6 {
-          animation-delay: 5350ms;
+          animation-delay: 4350ms;
         }
 
         .middle-copy {
@@ -237,12 +228,13 @@ export function PersonalityEntrySection() {
 
         .question-line {
           display: block;
-          font-family: "STSong", "Songti SC", "SimSun", var(--font-narrative), serif;
+          font-family: var(--font-yangming-title), var(--font-narrative), serif;
           font-size: calc(70 * var(--sprint7-rpx));
           line-height: 1.25;
           letter-spacing: calc(8 * var(--sprint7-rpx));
           color: rgba(242, 235, 220, 0.92);
-          font-weight: 300;
+          font-weight: 500;
+          font-variation-settings: "wght" 470;
           text-shadow: 0 0 calc(20 * var(--sprint7-rpx)) rgba(255, 246, 218, 0.08);
         }
 
@@ -251,11 +243,12 @@ export function PersonalityEntrySection() {
           max-width: calc(680 * var(--sprint7-rpx));
           margin-top: calc(92 * var(--sprint7-rpx));
           text-align: center;
-          font-family: "STSong", "Songti SC", "SimSun", var(--font-narrative), serif;
+          font-family: var(--font-yangming-title), var(--font-narrative), serif;
           font-size: calc(31 * var(--sprint7-rpx));
           line-height: 1.75;
           letter-spacing: calc(2 * var(--sprint7-rpx));
           color: rgba(217, 211, 197, 0.66);
+          font-variation-settings: "wght" 360;
         }
 
         .ritual-copy {
@@ -340,17 +333,18 @@ export function PersonalityEntrySection() {
         .home-ritual-seal span {
           position: relative;
           z-index: 2;
-          font-family: var(--font-world), serif;
+          font-family: var(--font-yangming-hand), var(--font-world), serif;
           font-size: calc(72 * var(--sprint7-rpx));
-          font-weight: 300;
-          letter-spacing: calc(11 * var(--sprint7-rpx));
+          font-weight: 500;
+          letter-spacing: 0;
+          font-variation-settings: "wght" 500;
           color: rgba(242, 235, 220, 0.78);
-          transform: translateX(calc(5 * var(--sprint7-rpx)));
+          transform: translateX(calc(1 * var(--sprint7-rpx)));
         }
 
         .home-ritual-transition p {
           margin: 0;
-          font-family: var(--font-narrative), serif;
+          font-family: var(--font-yangming-title), var(--font-narrative), serif;
           font-size: calc(31 * var(--sprint7-rpx));
           font-weight: 300;
           line-height: 1.8;

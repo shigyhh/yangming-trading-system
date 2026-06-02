@@ -12,13 +12,6 @@ import type { AssessmentAnswer } from "@/features/assessment/report"
 import { assessmentStorageKeys, getStorage, hasSavedPhone, setStorage } from "@/features/assessment/storage"
 import { cn } from "@/lib/utils"
 
-function sanitizeAnswers(answers: AssessmentAnswer[]) {
-  return answers.filter((answer) => {
-    const question = assessmentQuestions.find((item) => item.id === answer.questionId)
-    return Boolean(question?.options.some((option) => option.id === answer.optionId))
-  })
-}
-
 function shuffleQuestionIds() {
   const ids = assessmentQuestions.map((item) => item.id)
 
@@ -53,7 +46,6 @@ export default function AssessmentPage() {
   const [answers, setAnswers] = useState<AssessmentAnswer[]>([])
   const [loaded, setLoaded] = useState(false)
   const [isSealing, setIsSealing] = useState(false)
-  const [gatewayDone, setGatewayDone] = useState(false)
   const [showLoadingRecovery, setShowLoadingRecovery] = useState(false)
 
   useEffect(() => {
@@ -78,15 +70,11 @@ export default function AssessmentPage() {
     }
 
     const timer = window.setTimeout(() => {
-      const restoredAnswers = sanitizeAnswers(getStorage<AssessmentAnswer[]>(assessmentStorageKeys.answers, []))
-      const restoredIndex = getStorage<number>(assessmentStorageKeys.currentIndex, 0)
       const restoredOrder = normalizeQuestionOrder(getStorage<string[]>(assessmentStorageKeys.questionOrder, []))
 
       setQuestionOrder(restoredOrder)
-      setAnswers(restoredAnswers)
-      setCurrentIndex(Math.min(Math.max(Number(restoredIndex) || 0, 0), restoredOrder.length - 1))
-      const cameFromCycle = new URLSearchParams(window.location.search).get("fromCycle") === "1"
-      setGatewayDone(cameFromCycle || restoredAnswers.length > 0 || Number(restoredIndex) > 0)
+      setAnswers([])
+      setCurrentIndex(0)
       setStorage(assessmentStorageKeys.questionOrder, restoredOrder)
       setLoaded(true)
       setShowLoadingRecovery(false)
@@ -160,10 +148,9 @@ export default function AssessmentPage() {
   if (!loaded || !question) {
     return (
       <AssessmentShell>
-        <div className="grid gap-5">
-          <StatusPill>正在进入照心</StatusPill>
+        <div className="grid min-h-[12rem] place-items-center gap-5">
           {showLoadingRecovery || !question ? (
-            <SecondaryButton type="button" onClick={() => router.replace(hasSavedPhone() ? "/assessment-entry" : "/assessment-login")}>
+            <SecondaryButton type="button" onClick={() => router.replace(hasSavedPhone() ? "/assessment" : "/assessment-login")}>
               重新进入照心
             </SecondaryButton>
           ) : null}
@@ -172,7 +159,7 @@ export default function AssessmentPage() {
     )
   }
 
-  if (!gatewayDone && currentIndex === 0 && answers.length === 0) {
+  if (currentIndex === 0 && answers.length === 0) {
     return (
       <AssessmentShell className="py-5" contentWidth="wide">
         <MirrorGateway

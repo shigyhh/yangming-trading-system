@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>阳明照心体 V0.3 定标样张</title>
+  <style>
+    @font-face {
+      font-family: YangmingDisplayPreview;
+      src: url("../../web-next/public/fonts/NotoSerifSC-Variable.woff2") format("woff2");
+      font-weight: 200 900;
+    }
+
+    :root {
+      color-scheme: dark;
+      --ink: #080807;
+      --paper: #f3ead9;
+      --gold: rgba(216, 183, 111, .62);
+      --line: rgba(217, 189, 122, .12);
+      --display: YangmingDisplayPreview, "Noto Serif SC", "Songti SC", serif;
+      --body: "Noto Sans SC", "PingFang SC", system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--paper);
+      background:
+        radial-gradient(circle at 78% 8%, rgba(216, 183, 111, .05), transparent 28rem),
+        linear-gradient(180deg, #11100d, var(--ink));
+      font-family: var(--body);
+    }
+
+    main {
+      width: min(1180px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 46px 0 70px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      gap: 22px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--line);
+      color: rgba(244, 235, 221, .42);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+    }
+
+    .preview {
+      width: 100%;
+      margin-top: 34px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: rgba(8, 8, 7, .26);
+    }
+
+    .preview img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .notes {
+      margin-top: 34px;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 1px;
+      border: 1px solid var(--line);
+      background: var(--line);
+    }
+
+    .note {
+      min-height: 148px;
+      padding: 22px;
+      background: rgba(8, 8, 7, .76);
+    }
+
+    .note strong {
+      display: block;
+      color: var(--gold);
+      font-family: var(--display);
+      font-size: 20px;
+      font-weight: 440;
+      letter-spacing: .1em;
+    }
+
+    .note p {
+      margin: 14px 0 0;
+      color: rgba(244, 235, 221, .52);
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    .compliance {
+      margin-top: 34px;
+      color: rgba(244, 235, 221, .38);
+      font-size: 12px;
+      letter-spacing: .08em;
+      text-align: center;
+    }
+
+    @media (max-width: 980px) {
+      header,
+      .notes {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <span>Yangming Reflection Display · V0.3</span>
+      <span>Precision pass</span>
+    </header>
+    <section class="preview" aria-label="阳明照心体 V0.3 定标样张">
+      <img src="./yangming-reflection-display-v03.svg" alt="阳明照心体 V0.3 定标样张" />
+    </section>
+    <section class="notes" aria-label="V0.3 改动说明">
+      <div class="note">
+        <strong>Logo 六稿</strong>
+        <p>只微调横线长度、四点角度、底部重量，不换“照”的概念。</p>
+      </div>
+      <div class="note">
+        <strong>主标题定标</strong>
+        <p>明宋 88%、楷意 7%、品牌特征 5%，标点继续减权。</p>
+      </div>
+      <div class="note">
+        <strong>白底测试</strong>
+        <p>去掉黑金氛围后，仍要靠骨架、比例和留白成立。</p>
+      </div>
+      <div class="note">
+        <strong>数字系统</strong>
+        <p>交易训练会出现天数、秒数、百分比和周期，数字必须同样克制。</p>
+      </div>
+      <div class="note">
+        <strong>产品化</strong>
+        <p>这一版开始服务网页、小程序、报告页、分享卡，而不是单张海报。</p>
+      </div>
+    </section>
+    <p class="compliance">本系统仅用于交易认知、行为训练与风险教育；不荐股、不喊单、不承诺收益。</p>
+  </main>
+</body>
+</html>

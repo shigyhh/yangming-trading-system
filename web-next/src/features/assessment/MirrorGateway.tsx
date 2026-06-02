@@ -1,289 +1,735 @@
 "use client"
 
-import type { CSSProperties, PointerEvent } from "react"
-import { useEffect, useMemo, useRef, useState } from "react"
+import type { PointerEvent as ReactPointerEvent } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
-import {
-  behaviorMirrorSignals,
-  isBehaviorMirrorId,
-  type BehaviorMirrorId,
-  type BehaviorMirrorSignal,
-} from "./behavior-mirrors"
-import type { PracticeChangeState } from "./practice-change"
-import type { AssessmentReport } from "./report"
-import { assessmentStorageKeys, getStorage } from "./storage"
 import { cn } from "@/lib/utils"
 
-type GatewayPhase =
-  | "openingJudge"
-  | "openingSelf"
-  | "question"
-  | "mirrorArray"
-  | "focusing"
-  | "subconsciousVisible"
-  | "revealed"
-  | "thiefVisible"
-  | "readyForCycle"
+type MirrorGatewayProps = {
+  onComplete: (mirrorId: string) => void
+}
 
-type OrbitSlot = {
+type GatewayPhase =
+  | "waterStill"
+  | "waterSeeing"
+  | "thoughtRising"
+  | "mirrorsResponding"
+  | "mainMirrorAbsorbing"
+  | "emotionalPayoff"
+  | "thiefRevealed"
+  | "heartSeal"
+  | "conscienceReady"
+  | "conscienceClearing"
+  | "complete"
+
+type MirrorId =
+  | "chasing"
+  | "holdingLoss"
+  | "fantasy"
+  | "gambling"
+  | "following"
+  | "hesitation"
+  | "procrastination"
+  | "anxiety"
+  | "conscience"
+
+type MirrorSpec = {
+  id: MirrorId
+  name: string
+  angle: number
+  radiusX: number
+  radiusY: number
+  size: number
+  speed: number
+  phase: number
+  depth: number
+  resonance: "primary" | "secondary" | "tertiary" | "quiet" | "conscience"
+}
+
+type Ripple = {
   x: number
   y: number
-  scale: number
-  opacity: number
-  blur: number
-  zIndex: number
-  rotateY: number
-  shadow: number
+  r: number
+  a: number
+  speed: number
+  seed: number
 }
 
-type ResonanceLevel = "primary" | "secondary" | "tertiary" | "sleeping"
-
-type MirrorFlow = {
-  duration: number
-  delay: number
-  driftX: number
-  driftY: number
-  counterX: number
-  counterY: number
+type CanvasGeometry = {
+  width: number
+  height: number
+  cx: number
+  moonX: number
+  moonY: number
+  moonR: number
+  lakeY: number
+  lakeRx: number
+  lakeRy: number
 }
 
-type MirrorMotion = "dart" | "heavy" | "drift" | "swing" | "follow" | "waver" | "lag" | "tremble" | "steady"
-
-type LiveMirrorState = {
-  completedDays: number
-  hasPracticeMemory: boolean
-  isEmptyMirror: boolean
-  memoryLine: string
-  memoryCue: string
-  sourceMirrorId?: BehaviorMirrorId
+type RitualCopy = {
+  kicker: string
+  main: string
+  sub?: string
+  seal?: string
 }
 
-const defaultMainMirrorId = "chasing"
+const MAIN_MIRROR_ID: MirrorId = "chasing"
 
-const defaultLiveMirrorState: LiveMirrorState = {
-  completedDays: 0,
-  hasPracticeMemory: false,
-  isEmptyMirror: false,
-  memoryLine: "",
-  memoryCue: "行情突然拉升",
-}
+const getNow = () => (typeof performance !== "undefined" ? performance.now() : Date.now())
 
-function getHeartLakeGeometry(width: number, height: number) {
-  const rx = Math.min(
-    width < 640 ? width * 0.64 : width * 0.34,
-    width < 640 ? 420 : 760,
-  )
-  const ry = Math.min(
-    height * (width < 640 ? 0.19 : 0.22),
-    width < 640 ? 190 : 270,
-    rx * 0.45,
-  )
-
-  return {
-    cx: width * 0.5,
-    poolY: height * (width < 640 ? 0.59 : 0.58),
-    rx,
-    ry,
-  }
-}
-
-const orbitSlotByMirrorId: Record<string, OrbitSlot> = {
-  anxiety: { x: -246, y: -652, scale: 0.56, opacity: 0.16, blur: 3.4, zIndex: 12, rotateY: 0, shadow: 0.025 },
-  following: { x: -784, y: -374, scale: 0.78, opacity: 0.28, blur: 2.2, zIndex: 24, rotateY: 13, shadow: 0.045 },
-  hesitation: { x: 646, y: -526, scale: 0.64, opacity: 0.23, blur: 2.5, zIndex: 18, rotateY: -13, shadow: 0.035 },
-  holdingLoss: { x: -832, y: -62, scale: 0.88, opacity: 0.38, blur: 1.45, zIndex: 58, rotateY: 14, shadow: 0.075 },
-  chasing: { x: 772, y: 92, scale: 0.86, opacity: 0.44, blur: 0.9, zIndex: 62, rotateY: -14, shadow: 0.085 },
-  gambling: { x: -704, y: 556, scale: 0.76, opacity: 0.28, blur: 2.2, zIndex: 54, rotateY: 11, shadow: 0.045 },
-  fantasy: { x: 708, y: 438, scale: 0.66, opacity: 0.26, blur: 2.4, zIndex: 28, rotateY: -11, shadow: 0.04 },
-  procrastination: { x: 214, y: 694, scale: 0.58, opacity: 0.18, blur: 3.1, zIndex: 16, rotateY: 0, shadow: 0.025 },
-  conscience: { x: -44, y: 746, scale: 0.48, opacity: 0.12, blur: 2.8, zIndex: 10, rotateY: 0, shadow: 0.018 },
-}
-
-const resonanceByMirrorId: Record<BehaviorMirrorId, Partial<Record<BehaviorMirrorId, ResonanceLevel>>> = {
-  chasing: { chasing: "primary", gambling: "secondary", following: "tertiary" },
-  holdingLoss: { holdingLoss: "primary", fantasy: "secondary", anxiety: "tertiary" },
-  fantasy: { fantasy: "primary", holdingLoss: "secondary", hesitation: "tertiary" },
-  gambling: { gambling: "primary", chasing: "secondary", holdingLoss: "tertiary" },
-  following: { following: "primary", hesitation: "secondary", chasing: "tertiary" },
-  hesitation: { hesitation: "primary", anxiety: "secondary", following: "tertiary" },
-  procrastination: { procrastination: "primary", holdingLoss: "secondary", conscience: "tertiary" },
-  anxiety: { anxiety: "primary", hesitation: "secondary", chasing: "tertiary" },
-  conscience: { conscience: "primary", anxiety: "tertiary", hesitation: "tertiary" },
-}
-
-const mirrorFlowById: Record<BehaviorMirrorId, MirrorFlow> = {
-  chasing: { duration: 4.8, delay: -1.1, driftX: 8, driftY: -6, counterX: -7, counterY: 5 },
-  holdingLoss: { duration: 24.8, delay: -6.2, driftX: -8, driftY: 42, counterX: 10, counterY: 18 },
-  fantasy: { duration: 23.6, delay: -8.8, driftX: 64, driftY: -38, counterX: -58, counterY: 34 },
-  gambling: { duration: 12.4, delay: -4.1, driftX: -46, driftY: -28, counterX: 56, counterY: 34 },
-  following: { duration: 19.8, delay: -10.4, driftX: 42, driftY: -22, counterX: -36, counterY: 26 },
-  hesitation: { duration: 8.8, delay: -2.5, driftX: -28, driftY: -18, counterX: 30, counterY: 18 },
-  procrastination: { duration: 31.4, delay: -12.8, driftX: 18, driftY: 26, counterX: -16, counterY: -10 },
-  anxiety: { duration: 3.4, delay: -0.6, driftX: -5, driftY: 4, counterX: 4, counterY: -5 },
-  conscience: { duration: 36.8, delay: -14.2, driftX: 4, driftY: -3, counterX: -3, counterY: 3 },
-}
-
-const mirrorMotionById: Record<BehaviorMirrorId, MirrorMotion> = {
-  chasing: "dart",
-  holdingLoss: "heavy",
-  fantasy: "drift",
-  gambling: "swing",
-  following: "follow",
-  hesitation: "waver",
-  procrastination: "lag",
-  anxiety: "tremble",
-  conscience: "steady",
-}
-
-const mirrorShortNameById: Record<BehaviorMirrorId, string> = {
-  chasing: "追涨",
-  holdingLoss: "扛单",
-  fantasy: "幻想",
-  gambling: "赌性",
-  following: "从众",
-  hesitation: "犹疑",
-  procrastination: "拖延",
-  anxiety: "焦虑",
-  conscience: "良知",
-}
-
-const heartMirrors = behaviorMirrorSignals
-const behaviorMirrors = heartMirrors
-
-const subconsciousEchoes: Record<string, string> = {
-  chasing: "怕错过。",
-  holdingLoss: "怕认错。",
-  fantasy: "怕自己错了。",
-  gambling: "想翻回来。",
-  following: "怕自己负责。",
-  hesitation: "怕做错。",
-  procrastination: "怕面对。",
-  anxiety: "怕利润没了。",
-  conscience: "情绪起了，但手可以不动。",
-}
-
-const sixThiefOrbit = ["贪", "急", "惧", "疑", "慢", "痴"]
-const sixThiefPositions = [
-  { x: 0, y: -88 },
-  { x: 82, y: -44 },
-  { x: 82, y: 44 },
-  { x: 0, y: 88 },
-  { x: -82, y: 44 },
-  { x: -82, y: -44 },
+const phaseOrder: GatewayPhase[] = [
+  "waterStill",
+  "waterSeeing",
+  "thoughtRising",
+  "mirrorsResponding",
+  "mainMirrorAbsorbing",
+  "emotionalPayoff",
+  "thiefRevealed",
+  "heartSeal",
+  "conscienceReady",
+  "conscienceClearing",
+  "complete",
 ]
 
-function completedPracticeDays(state?: PracticeChangeState | null) {
-  if (!state?.records?.length) return 0
-
-  return state.records.filter((record) => (record.status ?? "completed") === "completed").length
+const phaseAutoDelay: Partial<Record<GatewayPhase, number>> = {
+  waterStill: 1050,
+  waterSeeing: 1180,
+  thoughtRising: 2300,
+  mainMirrorAbsorbing: 900,
+  emotionalPayoff: 4200,
+  thiefRevealed: 3100,
+  heartSeal: 3000,
+  conscienceClearing: 3500,
 }
 
-function formatPracticeMoment(recordedAt?: string) {
-  if (!recordedAt) return "最近一次"
+const mirrorSpecs: MirrorSpec[] = [
+  {
+    id: "chasing",
+    name: "追涨之镜",
+    angle: -0.18,
+    radiusX: 0.46,
+    radiusY: 0.15,
+    size: 1.08,
+    speed: 0.055,
+    phase: 0.3,
+    depth: 0.62,
+    resonance: "primary",
+  },
+  {
+    id: "holdingLoss",
+    name: "扛单之镜",
+    angle: Math.PI * 0.78,
+    radiusX: 0.52,
+    radiusY: 0.17,
+    size: 0.86,
+    speed: 0.018,
+    phase: 1.8,
+    depth: 0.12,
+    resonance: "quiet",
+  },
+  {
+    id: "fantasy",
+    name: "幻想之镜",
+    angle: Math.PI * 0.28,
+    radiusX: 0.5,
+    radiusY: 0.2,
+    size: 0.72,
+    speed: 0.026,
+    phase: 2.7,
+    depth: -0.22,
+    resonance: "quiet",
+  },
+  {
+    id: "gambling",
+    name: "赌性之镜",
+    angle: Math.PI * 1.18,
+    radiusX: 0.55,
+    radiusY: 0.18,
+    size: 0.82,
+    speed: 0.04,
+    phase: 4.1,
+    depth: 0.34,
+    resonance: "secondary",
+  },
+  {
+    id: "following",
+    name: "从众之镜",
+    angle: Math.PI * 1.66,
+    radiusX: 0.54,
+    radiusY: 0.16,
+    size: 0.78,
+    speed: 0.034,
+    phase: 5.2,
+    depth: 0.2,
+    resonance: "tertiary",
+  },
+  {
+    id: "hesitation",
+    name: "犹疑之镜",
+    angle: Math.PI * 0.54,
+    radiusX: 0.48,
+    radiusY: 0.2,
+    size: 0.74,
+    speed: 0.046,
+    phase: 3.6,
+    depth: -0.12,
+    resonance: "quiet",
+  },
+  {
+    id: "procrastination",
+    name: "拖延之镜",
+    angle: Math.PI * 1.46,
+    radiusX: 0.44,
+    radiusY: 0.19,
+    size: 0.66,
+    speed: 0.022,
+    phase: 2.2,
+    depth: -0.42,
+    resonance: "quiet",
+  },
+  {
+    id: "anxiety",
+    name: "焦虑之镜",
+    angle: Math.PI * 1.92,
+    radiusX: 0.4,
+    radiusY: 0.2,
+    size: 0.7,
+    speed: 0.058,
+    phase: 0.9,
+    depth: -0.36,
+    resonance: "quiet",
+  },
+  {
+    id: "conscience",
+    name: "良知之镜",
+    angle: Math.PI * 0.98,
+    radiusX: 0.36,
+    radiusY: 0.24,
+    size: 0.68,
+    speed: 0.018,
+    phase: 2.9,
+    depth: -0.52,
+    resonance: "conscience",
+  },
+]
 
-  const recordedDate = new Date(recordedAt)
-  if (Number.isNaN(recordedDate.getTime())) return "最近一次"
+const thiefDetails = [
+  { word: "贪", detail: "想抓住更多。" },
+  { word: "急", detail: "怕慢一步就失去机会。" },
+]
 
-  const now = new Date()
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
-  const recordedStart = new Date(recordedDate.getFullYear(), recordedDate.getMonth(), recordedDate.getDate()).getTime()
-  const dayDiff = Math.round((todayStart - recordedStart) / 86_400_000)
-  const hour = `${recordedDate.getHours()}`.padStart(2, "0")
-  const minute = `${recordedDate.getMinutes()}`.padStart(2, "0")
-
-  if (dayDiff === 0) return `今天 ${hour}:${minute}`
-  if (dayDiff === 1) return `昨天 ${hour}:${minute}`
-  return `${recordedDate.getMonth() + 1}月${recordedDate.getDate()}日 ${hour}:${minute}`
+const ritualCopyByPhase: Record<GatewayPhase, RitualCopy> = {
+  waterStill: {
+    kicker: "水面入静",
+    main: "先不判断行情。",
+  },
+  waterSeeing: {
+    kicker: "水面入静",
+    main: "先看见这一念。",
+  },
+  thoughtRising: {
+    kicker: "触发场景：行情突然拉升",
+    main: "「再不上车就来不及了。」",
+    sub: "这一念，从水底浮上来。",
+  },
+  mirrorsResponding: {
+    kicker: "九镜响应",
+    main: "追涨之镜正在发亮。",
+    sub: "赌性之镜、从众之镜随之微动；良知之镜仍在远处。",
+  },
+  mainMirrorAbsorbing: {
+    kicker: "照见此念",
+    main: "追涨之镜入湖。",
+    sub: "先停一息，不急着定名。",
+  },
+  emotionalPayoff: {
+    kicker: "照回情绪收益",
+    main: "你怕的不是错过行情。\n你怕的是错过之后，\n那个“又慢了一步”的自己。",
+    sub: "镜子只是照回来，不替你评判。",
+  },
+  thiefRevealed: {
+    kicker: "心贼现形",
+    main: "贪 · 急",
+    sub: "贪：想抓住更多。\n急：怕慢一步就失去机会。",
+  },
+  heartSeal: {
+    kicker: "今日心证",
+    main: "心随涨动",
+    sub: "一念怕错过，便已离规则。",
+  },
+  conscienceReady: {
+    kicker: "良知收束",
+    main: "按住水面 · 致良知",
+    sub: "让浊气散开，让月影复圆。",
+  },
+  conscienceClearing: {
+    kicker: "致良知",
+    main: "知善知恶是良知\n为善去恶是格物",
+    sub: "心湖复静，九镜归远。",
+  },
+  complete: {
+    kicker: "今日已照见",
+    main: "今日已照见",
+    sub: "怕错过\n↓\n追涨\n↓\n被套\n↓\n不甘\n↓\n再次追涨",
+    seal: "进入循环之镜",
+  },
 }
 
-function cleanPracticeNote(note?: string) {
-  return (note || "")
-    .replace(/^今日只练一件事[:：]/, "")
-    .replace(/^今日只练一件事/, "")
-    .trim()
+function easeOutCubic(value: number) {
+  return 1 - Math.pow(1 - value, 3)
 }
 
-function buildLiveMirrorState(): LiveMirrorState {
-  const savedPractice = getStorage<PracticeChangeState | null>(assessmentStorageKeys.practiceChange, null)
-  const savedReport = getStorage<AssessmentReport | null>(assessmentStorageKeys.report, null)
-  const selectedMirrorId = getStorage<string>(assessmentStorageKeys.selectedMirrorId, "")
-  const sourceMirrorId = isBehaviorMirrorId(savedPractice?.sourceMirrorId)
-    ? savedPractice.sourceMirrorId
-    : isBehaviorMirrorId(savedReport?.sourceMirror?.id)
-      ? savedReport.sourceMirror.id
-      : isBehaviorMirrorId(selectedMirrorId)
-        ? selectedMirrorId
-        : undefined
-  const completedDays = Math.min(completedPracticeDays(savedPractice), 7)
-  const practiceRecords = savedPractice?.records ?? []
-  const latestRecord = practiceRecords[practiceRecords.length - 1]
-  const practiceText = cleanPracticeNote(latestRecord?.note)
+function easeInOut(value: number) {
+  return value < 0.5 ? 2 * value * value : 1 - Math.pow(-2 * value + 2, 2) / 2
+}
 
-  if (completedDays >= 7) {
-    return {
-      completedDays,
-      hasPracticeMemory: true,
-      isEmptyMirror: true,
-      memoryLine: "此心光明。",
-      memoryCue: "七日修行后，心湖暂归平静。",
-      sourceMirrorId: "conscience",
-    }
-  }
+function clamp(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value))
+}
 
-  if (latestRecord && practiceText) {
-    return {
-      completedDays,
-      hasPracticeMemory: true,
-      isEmptyMirror: false,
-      memoryLine: `你${formatPracticeMoment(latestRecord.recordedAt)}落印过：${practiceText}`,
-      memoryCue: `${completedDays}日已落印`,
-      sourceMirrorId,
-    }
-  }
+function getPhaseIndex(phase: GatewayPhase) {
+  return phaseOrder.indexOf(phase)
+}
+
+function isAtLeast(phase: GatewayPhase, target: GatewayPhase) {
+  return getPhaseIndex(phase) >= getPhaseIndex(target)
+}
+
+function getGeometry(width: number, height: number): CanvasGeometry {
+  const mobile = width < 640
+  const lakeRx = Math.min(width * (mobile ? 0.72 : 0.54), mobile ? 460 : 880)
+  const lakeRy = Math.min(height * (mobile ? 0.13 : 0.15), lakeRx * 0.34)
 
   return {
-    ...defaultLiveMirrorState,
-    sourceMirrorId,
+    width,
+    height,
+    cx: width * 0.5,
+    moonX: width * 0.5,
+    moonY: height * (mobile ? 0.16 : 0.13),
+    moonR: Math.min(width * (mobile ? 0.075 : 0.052), 58),
+    lakeY: height * (mobile ? 0.58 : 0.6),
+    lakeRx,
+    lakeRy,
   }
 }
 
-function HeartWaterMirrorPlane({
+function drawOrganicEllipse(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  rx: number,
+  ry: number,
+  time: number,
+  seed: number,
+) {
+  context.beginPath()
+  for (let point = 0; point <= 128; point += 1) {
+    const angle = (point / 128) * Math.PI * 2
+    const wobble =
+      1 +
+      Math.sin(angle * 3 + time * 0.62 + seed) * 0.018 +
+      Math.sin(angle * 7 - time * 0.38 + seed * 1.7) * 0.012
+    const px = x + Math.cos(angle) * rx * wobble
+    const py = y + Math.sin(angle) * ry * wobble
+    if (point === 0) context.moveTo(px, py)
+    else context.lineTo(px, py)
+  }
+}
+
+function drawMoon(
+  context: CanvasRenderingContext2D,
+  geometry: CanvasGeometry,
+  time: number,
+  disturbance: number,
+  clarity: number,
+) {
+  const { moonX, moonY, moonR } = geometry
+  const glow = context.createRadialGradient(moonX, moonY, moonR * 0.3, moonX, moonY, moonR * 5)
+  glow.addColorStop(0, `rgba(232, 236, 228, ${0.17 + clarity * 0.11})`)
+  glow.addColorStop(0.28, `rgba(210, 224, 222, ${0.05 + clarity * 0.04})`)
+  glow.addColorStop(1, "rgba(210, 224, 222, 0)")
+  context.fillStyle = glow
+  context.beginPath()
+  context.arc(moonX, moonY, moonR * 5, 0, Math.PI * 2)
+  context.fill()
+
+  const segmentCount = disturbance > 0.18 ? 18 : 1
+  const moonGradient = context.createRadialGradient(
+    moonX - moonR * 0.28,
+    moonY - moonR * 0.3,
+    moonR * 0.12,
+    moonX,
+    moonY,
+    moonR,
+  )
+  moonGradient.addColorStop(0, `rgba(245, 242, 226, ${0.88 + clarity * 0.1})`)
+  moonGradient.addColorStop(0.62, `rgba(210, 218, 210, ${0.6 + clarity * 0.18})`)
+  moonGradient.addColorStop(1, `rgba(142, 154, 154, ${0.32 + clarity * 0.16})`)
+
+  if (segmentCount === 1) {
+    context.fillStyle = moonGradient
+    context.beginPath()
+    context.arc(moonX, moonY, moonR, 0, Math.PI * 2)
+    context.fill()
+  } else {
+    context.save()
+    context.fillStyle = moonGradient
+    for (let index = 0; index < segmentCount; index += 1) {
+      const start = (index / segmentCount) * Math.PI * 2
+      const end = ((index + 0.72) / segmentCount) * Math.PI * 2
+      const shift = Math.sin(time * 1.8 + index * 1.7) * moonR * 0.09 * disturbance
+      context.beginPath()
+      context.moveTo(moonX + shift, moonY)
+      context.arc(moonX + shift, moonY, moonR, start, end)
+      context.closePath()
+      context.globalAlpha = 0.72 + clarity * 0.16
+      context.fill()
+    }
+    context.restore()
+  }
+
+  context.beginPath()
+  context.arc(moonX, moonY, moonR * 1.16, 0, Math.PI * 2)
+  context.strokeStyle = `rgba(216, 224, 210, ${0.12 + clarity * 0.08})`
+  context.lineWidth = 0.8
+  context.stroke()
+}
+
+function drawBackground(context: CanvasRenderingContext2D, geometry: CanvasGeometry, time: number) {
+  const { width, height, cx, lakeY, lakeRx, lakeRy, moonX, moonY, moonR } = geometry
+
+  const sky = context.createLinearGradient(0, 0, 0, height)
+  sky.addColorStop(0, "#020607")
+  sky.addColorStop(0.36, "#050b0c")
+  sky.addColorStop(0.68, "#060806")
+  sky.addColorStop(1, "#000101")
+  context.fillStyle = sky
+  context.fillRect(0, 0, width, height)
+
+  const upperMist = context.createRadialGradient(cx, height * 0.3, 0, cx, height * 0.3, width * 0.55)
+  upperMist.addColorStop(0, "rgba(95, 132, 117, 0.075)")
+  upperMist.addColorStop(0.42, "rgba(17, 28, 28, 0.12)")
+  upperMist.addColorStop(1, "rgba(0, 0, 0, 0)")
+  context.fillStyle = upperMist
+  context.fillRect(0, 0, width, height)
+
+  const mountainY = lakeY - lakeRy * 1.05
+  context.fillStyle = "rgba(8, 12, 12, 0.58)"
+  context.beginPath()
+  context.moveTo(0, mountainY + lakeRy * 0.4)
+  context.lineTo(0, mountainY + lakeRy * 0.05)
+  context.quadraticCurveTo(width * 0.18, mountainY - lakeRy * 0.38, width * 0.36, mountainY - lakeRy * 0.1)
+  context.quadraticCurveTo(width * 0.55, mountainY + lakeRy * 0.16, width * 0.72, mountainY - lakeRy * 0.28)
+  context.quadraticCurveTo(width * 0.87, mountainY - lakeRy * 0.5, width, mountainY - lakeRy * 0.08)
+  context.lineTo(width, mountainY + lakeRy * 0.56)
+  context.closePath()
+  context.fill()
+
+  const moonPath = context.createLinearGradient(0, moonY + moonR * 1.5, 0, lakeY - lakeRy * 0.8)
+  moonPath.addColorStop(0, "rgba(218, 226, 220, 0.05)")
+  moonPath.addColorStop(0.74, "rgba(218, 226, 220, 0.012)")
+  moonPath.addColorStop(1, "rgba(218, 226, 220, 0)")
+  context.fillStyle = moonPath
+  context.beginPath()
+  context.moveTo(moonX - moonR * 0.3, moonY + moonR * 1.1)
+  context.bezierCurveTo(moonX - lakeRx * 0.1, lakeY - lakeRy * 2.5, cx - lakeRx * 0.16, lakeY - lakeRy, cx - lakeRx * 0.18, lakeY)
+  context.lineTo(cx + lakeRx * 0.18, lakeY)
+  context.bezierCurveTo(cx + lakeRx * 0.16, lakeY - lakeRy, moonX + lakeRx * 0.1, lakeY - lakeRy * 2.5, moonX + moonR * 0.3, moonY + moonR * 1.1)
+  context.closePath()
+  context.fill()
+
+  for (let star = 0; star < 56; star += 1) {
+    const x = ((Math.sin(star * 93.41) + 1) * 0.5) * width
+    const y = ((Math.cos(star * 41.17) + 1) * 0.5) * height * 0.62
+    const alpha = 0.04 + ((Math.sin(time * 0.5 + star) + 1) * 0.5) * 0.11
+    context.fillStyle = `rgba(216, 224, 218, ${alpha})`
+    context.beginPath()
+    context.arc(x, y, star % 4 === 0 ? 1.1 : 0.65, 0, Math.PI * 2)
+    context.fill()
+  }
+}
+
+function drawLake(
+  context: CanvasRenderingContext2D,
+  geometry: CanvasGeometry,
+  time: number,
+  ripples: Ripple[],
+  disturbance: number,
+  clarity: number,
+  holdProgress: number,
+) {
+  const { cx, lakeY, lakeRx, lakeRy, moonR } = geometry
+  const gsq = lakeRy / lakeRx
+
+  context.save()
+  context.beginPath()
+  context.ellipse(cx, lakeY, lakeRx, lakeRy, 0, 0, Math.PI * 2)
+  context.clip()
+
+  const lake = context.createRadialGradient(cx, lakeY - lakeRy * 0.12, lakeRx * 0.02, cx, lakeY, lakeRx)
+  lake.addColorStop(0, `rgba(2, 8, 12, ${0.92 - clarity * 0.08})`)
+  lake.addColorStop(0.44, "rgba(4, 20, 28, 0.78)")
+  lake.addColorStop(0.78, "rgba(6, 42, 52, 0.48)")
+  lake.addColorStop(1, "rgba(10, 48, 58, 0.16)")
+  context.fillStyle = lake
+  context.beginPath()
+  context.ellipse(cx, lakeY, lakeRx, lakeRy, 0, 0, Math.PI * 2)
+  context.fill()
+
+  const moonGlow = context.createRadialGradient(cx, lakeY - lakeRy * 0.12, 0, cx, lakeY - lakeRy * 0.08, lakeRx * 0.42)
+  moonGlow.addColorStop(0, `rgba(245, 232, 190, ${0.12 + clarity * 0.26 - disturbance * 0.08})`)
+  moonGlow.addColorStop(0.42, `rgba(216, 183, 111, ${0.06 + clarity * 0.12})`)
+  moonGlow.addColorStop(1, "rgba(216, 183, 111, 0)")
+  context.fillStyle = moonGlow
+  context.beginPath()
+  context.ellipse(cx, lakeY - lakeRy * 0.08, lakeRx * 0.42, lakeRy * 0.72, 0, 0, Math.PI * 2)
+  context.fill()
+
+  const wobble = 1.8 + disturbance * 24 + holdProgress * 3
+  const fragments = disturbance > 0.4 ? 4 : disturbance > 0.18 ? 2 : 1
+  for (let line = 0; line < 30; line += 1) {
+    const y = lakeY - lakeRy * 0.82 + line * ((lakeRy * 1.64) / 30)
+    const distance = Math.abs(y - lakeY) / (lakeRy * 1.02)
+    const baseAlpha = Math.max(0, (0.1 + clarity * 0.12) * (1 - distance))
+    const offset =
+      Math.sin(y * 0.07 + time * 1.3) * wobble * 0.5 +
+      Math.sin(y * 0.15 - time * 0.9) * wobble * 0.3
+    const lineWidth = moonR * (0.68 + (1 - distance) * 1.2)
+
+    for (let fragment = 0; fragment < fragments; fragment += 1) {
+      const split = fragments === 1 ? 0 : (fragment - (fragments - 1) / 2) * lineWidth * 1.4
+      const fragmentWidth = fragments === 1 ? lineWidth * 2.2 : lineWidth * 0.58
+      const x = cx + offset + split + Math.sin(time * 3 + fragment + line) * disturbance * 10
+      const gradient = context.createLinearGradient(x - fragmentWidth, 0, x + fragmentWidth, 0)
+      gradient.addColorStop(0, "rgba(232, 228, 210, 0)")
+      gradient.addColorStop(0.5, `rgba(232, 228, 210, ${baseAlpha * (1 - disturbance * 0.24)})`)
+      gradient.addColorStop(1, "rgba(232, 228, 210, 0)")
+      context.fillStyle = gradient
+      context.fillRect(x - fragmentWidth, y - 2.5, fragmentWidth * 2, 5)
+    }
+  }
+
+  if (disturbance > 0.32) {
+    const mud = context.createRadialGradient(cx, lakeY, lakeRx * 0.12, cx, lakeY, lakeRx * 0.75)
+    mud.addColorStop(0, `rgba(50, 34, 24, ${0.08 * disturbance})`)
+    mud.addColorStop(0.5, `rgba(28, 18, 14, ${0.1 * disturbance})`)
+    mud.addColorStop(1, "rgba(28, 18, 14, 0)")
+    context.fillStyle = mud
+    context.beginPath()
+    context.ellipse(cx, lakeY, lakeRx * 0.82, lakeRy * 0.86, 0, 0, Math.PI * 2)
+    context.fill()
+  }
+
+  if (holdProgress > 0.02) {
+    context.beginPath()
+    context.ellipse(cx, lakeY, lakeRx * holdProgress, lakeRy * holdProgress, 0, 0, Math.PI * 2)
+    context.strokeStyle = `rgba(245, 232, 190, ${0.32 * (1 - holdProgress)})`
+    context.lineWidth = 1.2
+    context.stroke()
+  }
+
+  ripples.forEach((ripple) => {
+    drawOrganicEllipse(context, ripple.x, ripple.y, ripple.r, ripple.r * gsq, time, ripple.seed)
+    context.strokeStyle = `rgba(206, 224, 230, ${ripple.a})`
+    context.lineWidth = 0.8
+    context.stroke()
+  })
+
+  context.restore()
+
+  context.beginPath()
+  context.ellipse(cx, lakeY, lakeRx, lakeRy, 0, 0, Math.PI * 2)
+  context.strokeStyle = `rgba(216, 183, 111, ${0.1 + clarity * 0.09})`
+  context.lineWidth = 1
+  context.stroke()
+}
+
+function drawMirror(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  alpha: number,
+  resonance: MirrorSpec["resonance"],
+  name: string,
+  time: number,
+) {
+  const isGood = resonance === "conscience"
+  const isPrimary = resonance === "primary"
+  const isSecondary = resonance === "secondary" || resonance === "tertiary"
+  const glowColor = isGood ? "210, 214, 178" : isPrimary ? "216, 183, 111" : isSecondary ? "188, 148, 80" : "160, 190, 194"
+  const surface = context.createRadialGradient(x - size * 0.28, y - size * 0.32, size * 0.08, x, y, size)
+  surface.addColorStop(0, `rgba(242, 235, 220, ${0.06 + alpha * 0.14})`)
+  surface.addColorStop(0.46, `rgba(8, 34, 36, ${0.6 + alpha * 0.16})`)
+  surface.addColorStop(1, `rgba(4, 8, 8, ${0.78 + alpha * 0.12})`)
+  context.fillStyle = surface
+  context.beginPath()
+  context.ellipse(x, y, size * 0.82, size, 0, 0, Math.PI * 2)
+  context.fill()
+
+  context.beginPath()
+  context.ellipse(x, y, size * 0.82, size, 0, 0, Math.PI * 2)
+  context.strokeStyle = `rgba(${glowColor}, ${0.12 + alpha * 0.42})`
+  context.lineWidth = isPrimary ? 1.25 : 0.75
+  context.stroke()
+
+  context.beginPath()
+  context.arc(x - size * 0.2, y - size * 0.24, size * 0.44, Math.PI * 1.1, Math.PI * 1.75)
+  context.strokeStyle = `rgba(242, 235, 220, ${0.04 + alpha * 0.12})`
+  context.lineWidth = 0.7
+  context.stroke()
+
+  if (alpha > 0.2) {
+    context.beginPath()
+    context.ellipse(x, y, size * (0.94 + Math.sin(time * 1.4) * 0.01), size * 1.14, 0, 0, Math.PI * 2)
+    context.strokeStyle = `rgba(${glowColor}, ${alpha * (isPrimary ? 0.28 : 0.12)})`
+    context.lineWidth = 0.7
+    context.stroke()
+  }
+
+  if (alpha > 0.18) {
+    context.font = `${clamp(size * 0.26, 10, 14)}px "Songti SC", "Noto Serif SC", serif`
+    context.textAlign = "center"
+    context.textBaseline = "middle"
+    context.fillStyle = `rgba(242, 220, 168, ${isPrimary ? alpha * 0.78 : alpha * 0.38})`
+    context.fillText(name, x, y + size * 1.42)
+  }
+}
+
+function drawNineMirrors(
+  context: CanvasRenderingContext2D,
+  geometry: CanvasGeometry,
+  phase: GatewayPhase,
+  time: number,
+  phaseProgress: number,
+) {
+  if (!isAtLeast(phase, "mirrorsResponding") || phase === "complete") return
+
+  const { cx, lakeY, lakeRx, lakeRy } = geometry
+  const show = phase === "mirrorsResponding" ? easeOutCubic(phaseProgress) : 1
+  const absorbing = phase === "mainMirrorAbsorbing" ? easeInOut(phaseProgress) : phase === "emotionalPayoff" || phase === "thiefRevealed" || phase === "heartSeal" || phase === "conscienceReady" || phase === "conscienceClearing" ? 1 : 0
+  const retreat = phase === "conscienceClearing" ? easeOutCubic(phaseProgress) : 0
+
+  const sorted = [...mirrorSpecs].sort((a, b) => a.depth - b.depth)
+  sorted.forEach((mirror) => {
+    const theta = mirror.angle + time * mirror.speed
+    const driftX = Math.cos(theta) * lakeRx * mirror.radiusX
+    const driftY = Math.sin(theta) * lakeRy * mirror.radiusY
+    const bob = Math.sin(time * 0.8 + mirror.phase) * lakeRy * 0.06
+    const baseX = cx + driftX
+    const baseY = lakeY + driftY - lakeRy * 0.98 + bob
+    const centerX = cx
+    const centerY = lakeY - lakeRy * 0.08
+    const isMain = mirror.id === MAIN_MIRROR_ID
+    const x = isMain ? baseX + (centerX - baseX) * absorbing : baseX
+    const y = isMain ? baseY + (centerY - baseY) * absorbing : baseY
+    const depthAlpha = mirror.depth > 0 ? 1 : 0.72
+    const resonanceAlpha =
+      mirror.resonance === "primary"
+        ? 0.95
+        : mirror.resonance === "secondary"
+          ? 0.44
+          : mirror.resonance === "tertiary"
+            ? 0.34
+            : mirror.resonance === "conscience"
+              ? 0.26
+              : 0.16
+    const fadeOut = isMain ? 1 - absorbing * 0.78 : 1 - absorbing * 0.78
+    const alpha = clamp(show * resonanceAlpha * depthAlpha * fadeOut * (1 - retreat * 0.8), 0, 1)
+    const size = lakeRx * 0.055 * mirror.size * (isMain ? 1 + show * 0.28 - absorbing * 0.2 : 1)
+
+    if (alpha <= 0.015) return
+    drawMirror(context, x, y, size, alpha, mirror.resonance, mirror.name, time)
+  })
+}
+
+function drawThiefSeal(
+  context: CanvasRenderingContext2D,
+  geometry: CanvasGeometry,
+  phase: GatewayPhase,
+  time: number,
+  phaseProgress: number,
+) {
+  if (!isAtLeast(phase, "thiefRevealed")) return
+
+  const { cx, lakeY, lakeRx, lakeRy } = geometry
+  const alpha =
+    phase === "thiefRevealed"
+      ? easeOutCubic(phaseProgress)
+      : phase === "heartSeal"
+        ? 1
+        : phase === "conscienceReady"
+          ? 0.68
+          : phase === "conscienceClearing"
+            ? 1 - easeOutCubic(phaseProgress) * 0.82
+            : 0
+  if (alpha <= 0.01) return
+
+  const sealSize = Math.min(lakeRx * 0.13, 94)
+  const x = cx
+  const y = lakeY - lakeRy * 0.12
+  const seal = context.createRadialGradient(x, y, 0, x, y, sealSize)
+  seal.addColorStop(0, `rgba(127, 37, 25, ${0.22 * alpha})`)
+  seal.addColorStop(0.56, `rgba(80, 20, 14, ${0.1 * alpha})`)
+  seal.addColorStop(1, "rgba(127, 37, 25, 0)")
+  context.fillStyle = seal
+  context.beginPath()
+  context.ellipse(x, y, sealSize, sealSize * 0.62, -0.08, 0, Math.PI * 2)
+  context.fill()
+
+  thiefDetails.forEach((item, index) => {
+    const tx = x + (index === 0 ? -sealSize * 0.42 : sealSize * 0.42)
+    const ty = y + Math.sin(time * 1.1 + index) * 2
+    context.font = `${Math.min(sealSize * 0.38, 30)}px "Songti SC", "Noto Serif SC", serif`
+    context.textAlign = "center"
+    context.textBaseline = "middle"
+    context.fillStyle = `rgba(196, 91, 62, ${0.74 * alpha})`
+    context.fillText(item.word, tx, ty)
+  })
+
+  context.beginPath()
+  context.ellipse(x, y, sealSize * 1.18, sealSize * 0.72, 0, 0, Math.PI * 2)
+  context.strokeStyle = `rgba(196, 91, 62, ${0.2 * alpha})`
+  context.lineWidth = 0.8
+  context.stroke()
+}
+
+function RitualCanvas({
   phase,
-  activeMirrorId,
-  onMirrorHit,
+  phaseStartedAt,
+  holdProgress,
+  pulse,
+  onWaterPointerDown,
+  onWaterPointerUp,
 }: {
   phase: GatewayPhase
-  activeMirrorId: string | null
-  onMirrorHit?: (clientX: number, clientY: number) => void
+  phaseStartedAt: number
+  holdProgress: number
+  pulse: number
+  onWaterPointerDown: (event: ReactPointerEvent<HTMLCanvasElement>) => void
+  onWaterPointerUp: () => void
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
-  const ripplesRef = useRef<Array<{ x: number; y: number; r: number; a: number; seed: number }>>([])
-  const energyRef = useRef(0)
-  const thoughtWaveRef = useRef(0)
-  const phaseEnergyRef = useRef(0)
+  const phaseRef = useRef(phase)
+  const phaseStartedAtRef = useRef(phaseStartedAt)
+  const holdProgressRef = useRef(holdProgress)
+  const pulseRef = useRef(pulse)
+  const ripplesRef = useRef<Ripple[]>([])
+  const lastRippleAtRef = useRef(0)
 
   useEffect(() => {
-    if (phase !== "mirrorArray" && phase !== "focusing") return
+    phaseRef.current = phase
+    phaseStartedAtRef.current = phaseStartedAt
+  }, [phase, phaseStartedAt])
 
-    const canvas = canvasRef.current
-    if (!canvas) return
+  useEffect(() => {
+    holdProgressRef.current = holdProgress
+  }, [holdProgress])
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2)
-    const planeWidth = canvas.width / dpr
-    const planeHeight = canvas.height / dpr
-    const { cx, poolY } = getHeartLakeGeometry(planeWidth, planeHeight)
-    const rippleDelay = phase === "mirrorArray" ? 980 : 80
-    const timer = window.setTimeout(() => {
-      thoughtWaveRef.current = phase === "focusing" ? 1.26 : 1
-      energyRef.current = Math.max(energyRef.current, phase === "focusing" ? 1.06 : 0.82)
-      ripplesRef.current.push(
-        { x: cx, y: poolY, r: 2, a: phase === "focusing" ? 0.52 : 0.42, seed: 1.7 },
-        { x: cx, y: poolY, r: 38, a: phase === "focusing" ? 0.24 : 0.18, seed: 5.3 },
-      )
-    }, rippleDelay)
-
-    return () => window.clearTimeout(timer)
-  }, [activeMirrorId, phase])
+  useEffect(() => {
+    pulseRef.current = pulse
+  }, [pulse])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -293,3631 +739,581 @@ function HeartWaterMirrorPlane({
     let width = 0
     let height = 0
     let frameId = 0
-    let lastRipple = 0
+    let lastPulse = pulseRef.current
 
     const resize = () => {
       const rect = canvas.getBoundingClientRect()
       const dpr = Math.min(window.devicePixelRatio || 1, 2)
-      width = Math.max(280, Math.round(rect.width))
-      height = Math.max(360, Math.round(rect.height))
+      width = Math.max(320, Math.round(rect.width))
+      height = Math.max(520, Math.round(rect.height))
       canvas.width = Math.round(width * dpr)
       canvas.height = Math.round(height * dpr)
       context.setTransform(dpr, 0, 0, dpr, 0, 0)
     }
 
-    const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value))
-
-    const drawOrganicRipple = (
-      x: number,
-      y: number,
-      radiusX: number,
-      radiusY: number,
-      alpha: number,
-      seed: number,
-      time: number,
-      color = "190, 212, 220",
-      lineWidth = 0.8,
-    ) => {
-      context.beginPath()
-      for (let point = 0; point <= 128; point += 1) {
-        const angle = (point / 128) * Math.PI * 2
-        const wobble =
-          1 +
-          Math.sin(angle * 3 + time * 0.74 + seed) * 0.022 +
-          Math.sin(angle * 7 - time * 0.52 + seed * 1.7) * 0.014 +
-          Math.sin(angle * 11 + time * 0.31 + seed * 0.6) * 0.008
-        const rippleX = x + Math.cos(angle) * radiusX * wobble
-        const rippleY = y + Math.sin(angle) * radiusY * wobble
-        if (point === 0) context.moveTo(rippleX, rippleY)
-        else context.lineTo(rippleX, rippleY)
-      }
-      context.strokeStyle = `rgba(${color}, ${alpha})`
-      context.lineWidth = lineWidth
-      context.stroke()
-    }
-
-    const drawMirrorReflection = (
-      cx: number,
-      poolY: number,
-      rx: number,
-      ry: number,
-      time: number,
-      mirror: BehaviorMirrorSignal,
-      index: number,
-    ) => {
-      const slot = orbitSlotByMirrorId[mirror.id] ?? orbitSlotByMirrorId.chasing
-      const level = getResonanceLevel(activeMirrorId, mirror.id, phase)
-      const resonance =
-        level === "primary" ? 1 : level === "secondary" ? 0.62 : level === "tertiary" ? 0.38 : mirror.id === "conscience" ? 0.14 : 0.22
-      const x = clamp(cx + slot.x * (width < 540 ? 0.34 : 0.48), cx - rx * 0.92, cx + rx * 0.92)
-      const baseY = poolY - ry * 0.36 + Math.sin(time * 0.45 + index) * ry * 0.08
-      const lineHeight = ry * (0.26 + resonance * 0.74)
-      const phaseEnergy = phaseEnergyRef.current
-      const wobble = Math.sin(time * 1.35 + index * 1.8) * (3 + energyRef.current * 12 + phaseEnergy * 8)
-      const alpha = 0.025 + resonance * 0.09 + phaseEnergy * 0.018
-      const tint = mirror.id === "conscience" ? "216, 210, 158" : "145, 194, 205"
-
-      context.save()
-      context.beginPath()
-      context.ellipse(cx, poolY, rx, ry, 0, 0, Math.PI * 2)
-      context.clip()
-      const gradient = context.createLinearGradient(x + wobble, baseY - lineHeight * 0.18, x - wobble * 0.4, baseY + lineHeight)
-      gradient.addColorStop(0, `rgba(${tint}, 0)`)
-      gradient.addColorStop(0.38, `rgba(${tint}, ${alpha})`)
-      gradient.addColorStop(1, `rgba(${tint}, 0)`)
-      context.strokeStyle = gradient
-      context.lineWidth = 10 + resonance * 22
-      context.beginPath()
-      context.moveTo(x + wobble * 0.35, baseY - lineHeight * 0.2)
-      context.lineTo(x - wobble * 0.3, baseY + lineHeight)
-      context.stroke()
-
-      const glow = context.createRadialGradient(x + wobble, baseY + lineHeight * 0.35, 0, x + wobble, baseY + lineHeight * 0.35, 28 + resonance * 28)
-      glow.addColorStop(0, `rgba(${tint}, ${alpha * 0.9})`)
-      glow.addColorStop(1, `rgba(${tint}, 0)`)
-      context.fillStyle = glow
-      context.beginPath()
-      context.ellipse(x + wobble, baseY + lineHeight * 0.35, 18 + resonance * 18, 34 + resonance * 32, 0, 0, Math.PI * 2)
-      context.fill()
-      context.restore()
+    const addCenterRipple = (alpha = 0.24, speed = 1.26) => {
+      const geometry = getGeometry(width, height)
+      ripplesRef.current.push({
+        x: geometry.cx,
+        y: geometry.lakeY,
+        r: 2,
+        a: alpha,
+        speed,
+        seed: Math.random() * 12,
+      })
     }
 
     const frame = (now: number) => {
       const time = now / 1000
-      const { cx, poolY, rx, ry } = getHeartLakeGeometry(width, height)
-      const gsq = ry / rx
-      const breath = 0.5 + Math.sin(time * 0.72) * 0.5
-      const energy = energyRef.current
-      const thoughtWave = thoughtWaveRef.current
-      const targetPhaseEnergy =
-        phase === "mirrorArray"
-          ? 0.16
-          : phase === "focusing"
-            ? 0.88
-            : phase === "subconsciousVisible"
-              ? 0.64
-              : phase === "revealed"
-                ? 0.44
-                : phase === "thiefVisible"
-                  ? 0.34
-                  : phase === "readyForCycle"
-                    ? 0.18
-                    : 0.04
-      phaseEnergyRef.current += (targetPhaseEnergy - phaseEnergyRef.current) * 0.022
-      const phaseEnergy = phaseEnergyRef.current
+      const geometry = getGeometry(width, height)
+      const phaseValue = phaseRef.current
+      const elapsed = now - phaseStartedAtRef.current
+      const phaseProgress = clamp(elapsed / (phaseAutoDelay[phaseValue] ?? 2400), 0, 1)
+      const hold = holdProgressRef.current
+
+      if (pulseRef.current !== lastPulse) {
+        addCenterRipple(phaseValue === "mainMirrorAbsorbing" ? 0.44 : 0.32, phaseValue === "mainMirrorAbsorbing" ? 1.9 : 1.42)
+        lastPulse = pulseRef.current
+      }
+
+      const disturbedByPhase =
+        phaseValue === "thoughtRising"
+          ? 0.42 * easeOutCubic(phaseProgress)
+          : phaseValue === "mirrorsResponding"
+            ? 0.32
+            : phaseValue === "mainMirrorAbsorbing"
+              ? 0.72 * Math.sin(phaseProgress * Math.PI)
+              : phaseValue === "emotionalPayoff"
+                ? 0.42
+                : phaseValue === "thiefRevealed"
+                  ? 0.58
+                  : phaseValue === "heartSeal"
+                    ? 0.28 * (1 - phaseProgress * 0.4)
+                    : phaseValue === "conscienceReady"
+                      ? 0.22
+                      : phaseValue === "conscienceClearing"
+                        ? 0.18 * (1 - easeOutCubic(phaseProgress)) * (1 - hold * 0.6)
+                        : 0.06
+      const clarity =
+        phaseValue === "conscienceClearing"
+          ? 0.48 + easeOutCubic(phaseProgress) * 0.52
+          : phaseValue === "complete"
+            ? 1
+            : phaseValue === "heartSeal"
+              ? 0.58 + phaseProgress * 0.28
+              : phaseValue === "waterStill" || phaseValue === "waterSeeing"
+                ? 0.86
+                : 0.55
 
       context.clearRect(0, 0, width, height)
+      drawBackground(context, geometry, time)
+      drawMoon(context, geometry, time, disturbedByPhase, clarity)
+      drawLake(context, geometry, time, ripplesRef.current, disturbedByPhase, clarity, hold)
 
-      const nightSky = context.createLinearGradient(0, 0, 0, height)
-      nightSky.addColorStop(0, "rgba(0, 4, 8, 0.62)")
-      nightSky.addColorStop(0.34, "rgba(1, 8, 10, 0.42)")
-      nightSky.addColorStop(0.58, "rgba(3, 9, 7, 0.2)")
-      nightSky.addColorStop(1, "rgba(0, 0, 0, 0)")
-      context.fillStyle = nightSky
-      context.fillRect(0, 0, width, height)
-
-      const skyWash = context.createRadialGradient(cx, poolY, rx * 0.24, cx, poolY - ry * 1.1, rx * 1.86)
-      skyWash.addColorStop(0, "rgba(8, 22, 28, 0.14)")
-      skyWash.addColorStop(0.52, "rgba(6, 12, 18, 0.075)")
-      skyWash.addColorStop(1, "rgba(4, 9, 13, 0)")
-      context.fillStyle = skyWash
-      context.beginPath()
-      context.ellipse(cx, poolY, rx * 1.36, ry * 1.36, 0, 0, Math.PI * 2)
-      context.fill()
-
-      const moonX = cx
-      const moonY = height * 0.12
-      const moonR = Math.min(rx * 0.058, 30)
-      const halo = context.createRadialGradient(moonX, moonY, moonR * 0.7, moonX, moonY, moonR * 6.6)
-      halo.addColorStop(0, "rgba(210, 224, 230, 0.07)")
-      halo.addColorStop(0.34, "rgba(210, 224, 230, 0.028)")
-      halo.addColorStop(1, "rgba(210, 224, 230, 0)")
-      context.fillStyle = halo
-      context.beginPath()
-      context.arc(moonX, moonY, moonR * 7.2, 0, Math.PI * 2)
-      context.fill()
-
-      const moon = context.createRadialGradient(moonX - moonR * 0.18, moonY - moonR * 0.18, moonR * 0.16, moonX, moonY, moonR)
-      moon.addColorStop(0, "rgba(239, 248, 249, 0.38)")
-      moon.addColorStop(0.58, "rgba(210, 224, 228, 0.3)")
-      moon.addColorStop(1, "rgba(174, 194, 200, 0.055)")
-      context.fillStyle = moon
-      context.beginPath()
-      context.arc(moonX, moonY, moonR, 0, Math.PI * 2)
-      context.fill()
-
-      const moonPath = context.createLinearGradient(0, moonY + moonR * 1.1, 0, poolY - ry * 0.78)
-      moonPath.addColorStop(0, "rgba(210, 224, 230, 0.024)")
-      moonPath.addColorStop(0.62, "rgba(210, 224, 230, 0.01)")
-      moonPath.addColorStop(1, "rgba(210, 224, 230, 0)")
-      context.fillStyle = moonPath
-      context.beginPath()
-      context.moveTo(moonX - moonR * 0.22, moonY + moonR * 1.04)
-      context.bezierCurveTo(moonX - moonR * 0.8, poolY - ry * 1.78, moonX - rx * 0.08, poolY - ry * 1.18, moonX - rx * 0.12, poolY - ry * 0.78)
-      context.lineTo(moonX + rx * 0.12, poolY - ry * 0.78)
-      context.bezierCurveTo(moonX + rx * 0.08, poolY - ry * 1.18, moonX + moonR * 0.8, poolY - ry * 1.78, moonX + moonR * 0.22, moonY + moonR * 1.04)
-      context.closePath()
-      context.fill()
-
-      for (let ray = 0; ray < 7; ray += 1) {
-        const progress = ray / 6
-        const rayY = moonY + moonR * 2.4 + progress * (poolY - ry * 1.08 - moonY - moonR * 2.4)
-        const rayWidth = moonR * (1.1 + progress * 5.8)
-        const rayOffset = Math.sin(time * 0.34 + ray * 1.4) * moonR * 0.32
-        const rayGradient = context.createLinearGradient(moonX - rayWidth, 0, moonX + rayWidth, 0)
-        rayGradient.addColorStop(0, "rgba(210, 224, 230, 0)")
-        rayGradient.addColorStop(0.5, `rgba(210, 224, 230, ${0.012 * (1 - progress * 0.42)})`)
-        rayGradient.addColorStop(1, "rgba(210, 224, 230, 0)")
-        context.fillStyle = rayGradient
-        context.fillRect(moonX - rayWidth + rayOffset, rayY, rayWidth * 2, 1.2)
-      }
-
-      const horizonY = poolY - ry * 1.02
-      context.fillStyle = "rgba(6, 12, 17, 0.18)"
-      context.beginPath()
-      context.moveTo(cx - rx * 1.18, horizonY + 20)
-      context.lineTo(cx - rx * 1.18, horizonY + 2)
-      context.quadraticCurveTo(cx - rx * 0.54, horizonY - 14, cx - rx * 0.08, horizonY + 4)
-      context.quadraticCurveTo(cx + rx * 0.42, horizonY + 18, cx + rx * 1.18, horizonY - 4)
-      context.lineTo(cx + rx * 1.18, horizonY + 38)
-      context.closePath()
-      context.fill()
-
-      context.save()
-      context.beginPath()
-      context.ellipse(cx, poolY, rx, ry, 0, 0, Math.PI * 2)
-      context.clip()
-
-      const pool = context.createRadialGradient(cx, poolY - ry * 0.14, rx * 0.05, cx, poolY, rx)
-      pool.addColorStop(0, "rgba(1, 4, 8, 0.88)")
-      pool.addColorStop(0.44, "rgba(4, 18, 27, 0.76)")
-      pool.addColorStop(0.78, "rgba(7, 35, 45, 0.52)")
-      pool.addColorStop(1, "rgba(13, 47, 58, 0.12)")
-      context.fillStyle = pool
-      context.beginPath()
-      context.ellipse(cx, poolY, rx, ry, 0, 0, Math.PI * 2)
-      context.fill()
-
-      const skyReflection = context.createLinearGradient(0, poolY - ry, 0, poolY + ry)
-      skyReflection.addColorStop(0, `rgba(27, 58, 70, ${0.1 + breath * 0.02})`)
-      skyReflection.addColorStop(0.52, "rgba(4, 12, 18, 0.12)")
-      skyReflection.addColorStop(1, "rgba(1, 4, 7, 0.18)")
-      context.fillStyle = skyReflection
-      context.beginPath()
-      context.ellipse(cx, poolY, rx, ry, 0, 0, Math.PI * 2)
-      context.fill()
-
-      const depthRadius = Math.min(rx, ry) * (width < 540 ? 0.9 : 0.98)
-      const depth = context.createRadialGradient(cx, poolY - ry * 0.08, 0, cx, poolY, depthRadius * 1.68)
-      depth.addColorStop(0, "rgba(0, 0, 0, 0.88)")
-      depth.addColorStop(0.24, "rgba(0, 2, 4, 0.74)")
-      depth.addColorStop(0.54, "rgba(4, 24, 29, 0.34)")
-      depth.addColorStop(1, "rgba(4, 30, 40, 0)")
-      context.fillStyle = depth
-      context.beginPath()
-      context.ellipse(cx, poolY - ry * 0.04, depthRadius * 1.4, depthRadius * 0.82, 0, 0, Math.PI * 2)
-      context.fill()
-
-      const eventHorizon = context.createRadialGradient(cx, poolY - ry * 0.04, depthRadius * 0.18, cx, poolY - ry * 0.04, depthRadius * 1.15)
-      eventHorizon.addColorStop(0, "rgba(0, 0, 0, 0)")
-      eventHorizon.addColorStop(0.58, "rgba(0, 0, 0, 0)")
-      eventHorizon.addColorStop(0.64, `rgba(184, 148, 63, ${0.05 + breath * 0.03 + energy * 0.04})`)
-      eventHorizon.addColorStop(0.7, "rgba(0, 0, 0, 0)")
-      eventHorizon.addColorStop(1, "rgba(0, 0, 0, 0)")
-      context.fillStyle = eventHorizon
-      context.beginPath()
-      context.ellipse(cx, poolY - ry * 0.04, depthRadius * 1.12, depthRadius * 0.68, 0, 0, Math.PI * 2)
-      context.fill()
-
-      for (let arm = 0; arm < 3; arm += 1) {
+      if (phaseValue === "thoughtRising") {
+        const rise = easeOutCubic(phaseProgress)
+        const glow = context.createRadialGradient(geometry.cx, geometry.lakeY - geometry.lakeRy * (0.12 + rise * 1.2), 0, geometry.cx, geometry.lakeY - geometry.lakeRy * (0.12 + rise * 1.2), geometry.lakeRx * 0.22)
+        glow.addColorStop(0, `rgba(216, 183, 111, ${0.14 * (1 - rise * 0.2)})`)
+        glow.addColorStop(1, "rgba(216, 183, 111, 0)")
+        context.fillStyle = glow
         context.beginPath()
-        for (let step = 0; step < 42; step += 1) {
-          const progress = step / 41
-          const angle = time * 0.08 + arm * ((Math.PI * 2) / 3) + progress * 2.9
-          const radius = depthRadius * (0.16 + progress * 0.74)
-          const x = cx + Math.cos(angle) * radius * 1.06
-          const y = poolY - ry * 0.04 + Math.sin(angle) * radius * 0.44
-          if (step === 0) context.moveTo(x, y)
-          else context.lineTo(x, y)
-        }
-        context.strokeStyle = `rgba(190, 212, 220, ${0.018 + energy * 0.035})`
-        context.lineWidth = 1
-        context.stroke()
-      }
-
-      for (let wave = 0; wave < 3; wave += 1) {
-        const progress = (time * 0.18 + wave * 0.34) % 1
-        const ringRy = ry * (1.02 - progress * 0.76)
-        const alpha = (0.03 + energy * 0.09) * (1 - progress)
-        drawOrganicRipple(cx, poolY - ry * 0.04, ringRy / gsq, ringRy, alpha, wave * 2.9, time)
-      }
-
-      for (let wave = 0; wave < 5; wave += 1) {
-        const progress = (time * 0.072 + wave * 0.19) % 1
-        const radiusX = rx * (0.2 + progress * 0.64)
-        const radiusY = ry * (0.2 + progress * 0.64)
-        const alpha = (0.035 + energy * 0.045) * (1 - progress) * (wave % 2 === 0 ? 1 : 0.72)
-        drawOrganicRipple(cx, poolY - ry * 0.04, radiusX, radiusY, alpha, wave * 5.11, time, "216, 231, 232", 0.62)
-      }
-
-      for (let strand = 0; strand < 9; strand += 1) {
-        context.beginPath()
-        for (let step = 0; step <= 54; step += 1) {
-          const progress = step / 54
-          const x = cx - rx * 0.78 + progress * rx * 1.56
-          const y =
-            poolY -
-            ry * 0.4 +
-            strand * ry * 0.1 +
-            Math.sin(progress * Math.PI * 2 + time * 0.38 + strand * 0.8) * (1.8 + energy * 5) +
-            Math.sin(progress * Math.PI * 5 - time * 0.24 + strand) * 1.1
-          if (step === 0) context.moveTo(x, y)
-          else context.lineTo(x, y)
-        }
-        context.strokeStyle = `rgba(190, 212, 220, ${0.018 + energy * 0.018})`
-        context.lineWidth = 0.5
-        context.stroke()
-      }
-
-      if (thoughtWave > 0.04) {
-        const dropAlpha = Math.min(0.42, thoughtWave * 0.42)
-        const dropGlow = context.createRadialGradient(cx, poolY - ry * 0.04, 0, cx, poolY - ry * 0.04, 18 + thoughtWave * 22)
-        dropGlow.addColorStop(0, `rgba(216, 183, 111, ${dropAlpha})`)
-        dropGlow.addColorStop(0.36, `rgba(216, 183, 111, ${dropAlpha * 0.18})`)
-        dropGlow.addColorStop(1, "rgba(216, 183, 111, 0)")
-        context.fillStyle = dropGlow
-        context.beginPath()
-        context.ellipse(cx, poolY - ry * 0.04, 18 + thoughtWave * 22, (18 + thoughtWave * 22) * gsq, 0, 0, Math.PI * 2)
-        context.fill()
-
-        context.fillStyle = `rgba(242, 220, 168, ${dropAlpha * 0.72})`
-        context.beginPath()
-        context.ellipse(cx, poolY - ry * 0.04, 2.8, 2.8 * gsq, 0, 0, Math.PI * 2)
+        context.ellipse(geometry.cx, geometry.lakeY - geometry.lakeRy * (0.12 + rise * 1.2), geometry.lakeRx * 0.22, geometry.lakeRy * 0.58, 0, 0, Math.PI * 2)
         context.fill()
       }
 
-      context.fillStyle = "rgba(0, 0, 0, 0.78)"
-      context.beginPath()
-      context.ellipse(cx, poolY - ry * 0.04, depthRadius * 0.22, depthRadius * 0.14, 0, 0, Math.PI * 2)
-      context.fill()
+      drawNineMirrors(context, geometry, phaseValue, time, phaseProgress)
+      drawThiefSeal(context, geometry, phaseValue, time, phaseProgress)
 
-      const wobble = 2.2 + energy * 9 + thoughtWave * 18 + phaseEnergy * 14
-      for (let k = 0; k < 26; k += 1) {
-        const lineY = poolY - ry * 0.84 + k * ((ry * 1.68) / 26)
-        const offset =
-          Math.sin(lineY * 0.07 + time * 1.6) * wobble * 0.65 +
-          Math.sin(lineY * 0.15 - time * 1.1) * wobble * 0.35
-        const baseAlpha = Math.max(0, 0.085 * (1 - Math.abs(lineY - poolY) / (ry * 1.12)))
-        const alpha = baseAlpha * (1 - Math.min(0.6, thoughtWave * 0.46 + phaseEnergy * 0.18))
-        const lineWidth = moonR * (0.54 + 0.52 * (1 - Math.abs(lineY - poolY) / ry))
-        const fragmentCount = thoughtWave > 0.04 || phaseEnergy > 0.36 ? 3 : 1
-
-        for (let fragment = 0; fragment < fragmentCount; fragment += 1) {
-          const fragmentShift = fragmentCount === 1 ? 0 : (fragment - 1) * lineWidth * (0.64 + thoughtWave * 0.18)
-          const fragmentWidth = fragmentCount === 1 ? lineWidth * 2 : lineWidth * (0.46 - thoughtWave * 0.08)
-          const fragmentJitter = Math.sin(time * 4.4 + k * 1.7 + fragment * 2.2) * (thoughtWave * 13 + phaseEnergy * 5)
-          const fragmentX = moonX + offset + fragmentShift + fragmentJitter
-          const glade = context.createLinearGradient(fragmentX - fragmentWidth * 0.5, 0, fragmentX + fragmentWidth * 0.5, 0)
-          glade.addColorStop(0, "rgba(206, 224, 230, 0)")
-          glade.addColorStop(0.5, `rgba(206, 224, 230, ${alpha * (fragmentCount === 1 ? 1 : 0.82)})`)
-          glade.addColorStop(1, "rgba(206, 224, 230, 0)")
-          context.fillStyle = glade
-          context.fillRect(fragmentX - fragmentWidth * 0.5, lineY - 3, fragmentWidth, 6)
-        }
-      }
-
-      heartMirrors.forEach((mirror, index) => drawMirrorReflection(cx, poolY, rx, ry, time, mirror, index))
-
-      for (let ring = 0; ring < 4; ring += 1) {
-        const ringRy = ry * (0.3 + ring * 0.21) + Math.sin(time * 0.35 + ring) * ry * 0.018
-        drawOrganicRipple(cx, poolY, ringRy / gsq, ringRy, 0.024 + ring * 0.004, ring * 4.8, time, "160, 188, 196", 0.55)
-      }
-
-      ripplesRef.current.forEach((ripple) => {
-        drawOrganicRipple(ripple.x, ripple.y, ripple.r, ripple.r * gsq, ripple.a, ripple.seed, time, "190, 212, 220", 1)
-        if (ripple.r > 16) {
-          drawOrganicRipple(ripple.x, ripple.y, ripple.r * 0.72, ripple.r * 0.72 * gsq, ripple.a * 0.56, ripple.seed + 3.2, time, "180, 205, 214", 0.7)
-        }
-      })
-
-      const sheen = context.createLinearGradient(0, poolY + ry * 0.18, 0, poolY + ry)
-      sheen.addColorStop(0, "rgba(190, 212, 220, 0)")
-      sheen.addColorStop(1, `rgba(190, 212, 220, ${0.026 + breath * 0.016})`)
-      context.fillStyle = sheen
-      context.beginPath()
-      context.ellipse(cx, poolY, rx, ry, 0, 0, Math.PI * 2)
-      context.fill()
-      context.restore()
-
-      const edgeBreath = context.createRadialGradient(cx, poolY, rx * 0.58, cx, poolY, rx * 1.14)
-      edgeBreath.addColorStop(0, "rgba(216, 183, 111, 0)")
-      edgeBreath.addColorStop(0.72, `rgba(216, 183, 111, ${0.018 + breath * 0.018 + energy * 0.04})`)
-      edgeBreath.addColorStop(1, "rgba(216, 183, 111, 0)")
-      context.save()
-      context.scale(1, ry / rx)
-      context.fillStyle = edgeBreath
-      context.beginPath()
-      context.arc(cx, poolY / (ry / rx), rx * 1.08, 0, Math.PI * 2)
-      context.fill()
-      context.restore()
-
-      const naturalRippleInterval = phaseEnergy > 0.5 ? 2400 : 3600
-      if (now - lastRipple > naturalRippleInterval) {
-        ripplesRef.current.push({ x: cx, y: poolY, r: 2, a: 0.11 + phaseEnergy * 0.04, seed: time % 11 })
-        lastRipple = now
+      const naturalInterval = phaseValue === "thoughtRising" ? 1400 : phaseValue === "mainMirrorAbsorbing" ? 360 : 2700
+      if (now - lastRippleAtRef.current > naturalInterval) {
+        addCenterRipple(phaseValue === "mainMirrorAbsorbing" ? 0.36 : 0.12, phaseValue === "mainMirrorAbsorbing" ? 1.8 : 1.12)
+        lastRippleAtRef.current = now
       }
 
       ripplesRef.current = ripplesRef.current
-        .map((ripple) => ({ ...ripple, r: ripple.r + 1.16 + energy * 1.22 + phaseEnergy * 0.42, a: ripple.a * 0.975 }))
-        .filter((ripple) => ripple.r < rx * 1.16 && ripple.a > 0.008)
-      energyRef.current += (0 - energyRef.current) * 0.018
-      thoughtWaveRef.current += (0 - thoughtWaveRef.current) * 0.02
+        .map((ripple) => ({
+          ...ripple,
+          r: ripple.r + ripple.speed + disturbedByPhase * 1.1,
+          a: ripple.a * (phaseValue === "conscienceClearing" ? 0.968 : 0.976),
+        }))
+        .filter((ripple) => ripple.a > 0.008 && ripple.r < geometry.lakeRx * 1.18)
 
       frameId = window.requestAnimationFrame(frame)
     }
 
     resize()
     frameId = window.requestAnimationFrame(frame)
-    const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => resize()) : null
+    const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(resize) : null
     resizeObserver?.observe(canvas)
 
     return () => {
       window.cancelAnimationFrame(frameId)
       resizeObserver?.disconnect()
     }
-  }, [activeMirrorId, phase])
-
-  const addRipple = (event: PointerEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-
-    onMirrorHit?.(event.clientX, event.clientY)
-
-    const rect = canvas.getBoundingClientRect()
-    const widthRatio = canvas.width / Math.min(window.devicePixelRatio || 1, 2) / rect.width
-    const heightRatio = canvas.height / Math.min(window.devicePixelRatio || 1, 2) / rect.height
-    const x = (event.clientX - rect.left) * widthRatio
-    const y = (event.clientY - rect.top) * heightRatio
-    const planeHeight = canvas.height / Math.min(window.devicePixelRatio || 1, 2)
-    const planeWidth = canvas.width / Math.min(window.devicePixelRatio || 1, 2)
-    const { cx, poolY, rx, ry } = getHeartLakeGeometry(planeWidth, planeHeight)
-    const dx = (x - cx) / rx
-    const dy = (y - poolY) / ry
-    let rippleX = x
-    let rippleY = y
-
-    if (dx * dx + dy * dy > 1) {
-      const angle = Math.atan2(dy, dx)
-      rippleX = cx + Math.cos(angle) * rx * 0.86
-      rippleY = poolY + Math.sin(angle) * ry * 0.86
-    }
-
-    ripplesRef.current.push({ x: rippleX, y: rippleY, r: 2, a: 0.5, seed: (rippleX + rippleY) * 0.013 })
-    energyRef.current = Math.min(1.4, energyRef.current + 0.62)
-  }
+  }, [])
 
   return (
     <canvas
       ref={canvasRef}
-      className="heart-water-plane"
+      className="nine-mirror-canvas"
       aria-hidden="true"
-      onPointerDown={addRipple}
+      onPointerDown={onWaterPointerDown}
+      onPointerUp={onWaterPointerUp}
+      onPointerCancel={onWaterPointerUp}
+      onPointerLeave={onWaterPointerUp}
       onContextMenu={(event) => event.preventDefault()}
-      style={{
-        position: "absolute",
-        inset: 0,
-        zIndex: 12,
-        display: "block",
-        width: "100%",
-        height: "100%",
-        cursor: "pointer",
-        opacity: 0.98,
-        filter: "saturate(0.95) brightness(0.98)",
-        pointerEvents: "auto",
-        touchAction: "manipulation",
-        userSelect: "none",
-        WebkitTapHighlightColor: "transparent",
-      }}
     />
   )
 }
 
-function splitThought(text: string) {
-  if (text.length <= 13) return text
-  return text.replace("，", "，\n")
-}
+export function MirrorGateway({ onComplete }: MirrorGatewayProps) {
+  const [phase, setPhase] = useState<GatewayPhase>("waterStill")
+  const [phaseStartedAt, setPhaseStartedAt] = useState(getNow)
+  const [holdProgress, setHoldProgress] = useState(0)
+  const [isHoldingWater, setIsHoldingWater] = useState(false)
+  const [pulse, setPulse] = useState(0)
+  const holdFrameRef = useRef<number | null>(null)
+  const currentCopy = ritualCopyByPhase[phase]
+  const canSeeThought = phase === "mirrorsResponding"
+  const canHoldWater = phase === "conscienceReady"
+  const canEnterCycle = phase === "complete"
 
-function getOuterMirrors(): BehaviorMirrorSignal[] {
-  return behaviorMirrors
-}
+  const copyClassName = useMemo(
+    () =>
+      cn(
+        "ritual-copy",
+        phase === "thoughtRising" && "is-thought",
+        phase === "emotionalPayoff" && "is-payoff",
+        phase === "thiefRevealed" && "is-thief",
+        phase === "heartSeal" && "is-heart-seal",
+        phase === "conscienceClearing" && "is-conscience",
+        phase === "complete" && "is-complete",
+      ),
+    [phase],
+  )
 
-function getMirrorStyle(slot: OrbitSlot) {
-  const depth =
-    slot.zIndex >= 62 ? 76 : slot.zIndex >= 54 ? 38 : slot.zIndex >= 28 ? -18 : slot.zIndex >= 18 ? -72 : -128
-  const sceneX = slot.x * 0.56
-  const sceneY = slot.y * 0.3
-  const mobileX = slot.x * 0.13
-  const mobileY = slot.y * 0.12
-
-  return {
-    "--mirror-x": `${sceneX}px`,
-    "--mirror-y": `${sceneY}px`,
-    "--mirror-mobile-x": `${mobileX}px`,
-    "--mirror-mobile-y": `${mobileY}px`,
-    "--mirror-pull-x": `${sceneX * 0.88}px`,
-    "--mirror-pull-y": `${sceneY * 0.88}px`,
-    "--mirror-mobile-pull-x": `${mobileX * 0.86}px`,
-    "--mirror-mobile-pull-y": `${mobileY * 0.86}px`,
-    "--mirror-depth": `${depth}px`,
-    "--mirror-scale": slot.scale,
-    "--mirror-opacity": slot.opacity,
-    "--mirror-blur": `${slot.blur}px`,
-    "--mirror-z-index": slot.zIndex,
-    "--mirror-rotate-y": `${slot.rotateY}deg`,
-    "--mirror-shadow": slot.shadow,
-  } as CSSProperties
-}
-
-function getGravityLineStyle(activeMirrorId: string | null, phase: GatewayPhase) {
-  if (!activeMirrorId || phase !== "mirrorArray") return {}
-
-  const slot = orbitSlotByMirrorId[activeMirrorId] ?? orbitSlotByMirrorId.chasing
-  const x = slot.x * 0.56
-  const y = slot.y * 0.3
-  const mobileX = slot.x * 0.13
-  const mobileY = slot.y * 0.12
-  const length = Math.hypot(x, y)
-  const mobileLength = Math.hypot(mobileX, mobileY)
-
-  return {
-    "--gravity-x": `${x}px`,
-    "--gravity-y": `${y}px`,
-    "--gravity-length": `${length}px`,
-    "--gravity-angle": `${Math.atan2(y, x)}rad`,
-    "--gravity-mobile-length": `${mobileLength}px`,
-    "--gravity-mobile-angle": `${Math.atan2(mobileY, mobileX)}rad`,
-  } as CSSProperties
-}
-
-function getResonanceLevel(activeMirrorId: string | null, mirrorId: BehaviorMirrorId, phase: GatewayPhase): ResonanceLevel {
-  if (!activeMirrorId || (phase !== "mirrorArray" && phase !== "focusing")) return "sleeping"
-
-  return resonanceByMirrorId[activeMirrorId as BehaviorMirrorId]?.[mirrorId] ?? "sleeping"
-}
-
-function getOuterMirrorStyle(
-  mirrorId: BehaviorMirrorId,
-  activeMirrorId: string | null,
-  phase: GatewayPhase,
-  completedDays = 0,
-) {
-  const baseSlot = orbitSlotByMirrorId[mirrorId] ?? orbitSlotByMirrorId.chasing
-  const resonanceLevel = getResonanceLevel(activeMirrorId, mirrorId, phase)
-  const flow = mirrorFlowById[mirrorId]
-  const growth = Math.min(Math.max(completedDays, 0), 7) / 7
-  const surfacePulse =
-    resonanceLevel === "primary"
-      ? { low: 0.68, high: 0.9 }
-      : resonanceLevel === "secondary"
-        ? { low: 0.52, high: 0.72 }
-        : resonanceLevel === "tertiary"
-          ? { low: 0.42, high: 0.6 }
-          : { low: 0.28, high: 0.46 }
-  const slot =
-    resonanceLevel === "primary"
-      ? {
-          ...baseSlot,
-          x: baseSlot.x * 1.16,
-          y: baseSlot.y * 0.94,
-          scale: Math.min(1.06, baseSlot.scale + 0.2),
-          opacity: 0.88,
-          blur: 0.08,
-          zIndex: 66,
-          shadow: 0.2,
-        }
-      : resonanceLevel === "secondary"
-        ? {
-            ...baseSlot,
-            x: baseSlot.x * 1.02,
-            y: baseSlot.y * 1.02,
-            scale: Math.min(0.98, baseSlot.scale + 0.1),
-            opacity: 0.62,
-            blur: 0.58,
-            zIndex: Math.min(60, baseSlot.zIndex + 8),
-            shadow: 0.12,
-          }
-        : resonanceLevel === "tertiary"
-          ? {
-              ...baseSlot,
-              x: baseSlot.x * 1.08,
-              y: baseSlot.y * 1.06,
-              scale: Math.min(0.92, baseSlot.scale + 0.04),
-              opacity: 0.48,
-              blur: 0.95,
-              zIndex: baseSlot.zIndex + 4,
-              shadow: 0.08,
-            }
-          : {
-              ...baseSlot,
-              opacity: Math.max(baseSlot.opacity, mirrorId === "conscience" ? 0.055 + growth * 0.42 : 0.28),
-              blur: Math.min(baseSlot.blur, mirrorId === "conscience" ? 2.7 - growth * 2.05 : 2.25),
-              shadow: Math.max(baseSlot.shadow, mirrorId === "conscience" ? 0.018 + growth * 0.11 : 0.04),
-            }
-  const maturedSlot =
-    mirrorId === "conscience"
-      ? {
-          ...slot,
-          scale: slot.scale + growth * 0.16,
-          opacity: Math.min(0.62, slot.opacity + growth * 0.28),
-          blur: Math.max(0.08, slot.blur - growth * 1.5),
-          shadow: slot.shadow + growth * 0.08,
-        }
-      : mirrorId === activeMirrorId
-        ? {
-            ...slot,
-            scale: Math.max(slot.scale - growth * 0.055, slot.scale * 0.9),
-            opacity: Math.max(0.42, slot.opacity - growth * 0.23),
-            shadow: Math.max(0.05, slot.shadow - growth * 0.05),
-          }
-        : slot
-
-  return {
-    ...getMirrorStyle(maturedSlot),
-    "--mirror-flow-duration": `${flow.duration}s`,
-    "--mirror-flow-delay": `${flow.delay}s`,
-    "--mirror-drift-x": `${flow.driftX * 0.72}px`,
-    "--mirror-drift-y": `${flow.driftY * 0.62}px`,
-    "--mirror-counter-x": `${flow.counterX * 0.72}px`,
-    "--mirror-counter-y": `${flow.counterY * 0.62}px`,
-    "--mirror-breath-duration": `${Math.max(5.2, flow.duration * 0.55)}s`,
-    "--side-surface-low": surfacePulse.low,
-    "--side-surface-high": surfacePulse.high,
-    "--mirror-growth": growth,
-  } as CSSProperties
-}
-
-export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) => void }) {
-  const [phase, setPhase] = useState<GatewayPhase>("openingJudge")
-  const [activeMirrorId, setActiveMirrorId] = useState<string | null>(defaultMainMirrorId)
-  const [liveMirror, setLiveMirror] = useState<LiveMirrorState>(defaultLiveMirrorState)
-  const [hoveredMirrorId, setHoveredMirrorId] = useState<string | null>(null)
-  const [touchIntensity, setTouchIntensity] = useState(0)
-  const touchStartXRef = useRef<number | null>(null)
-  const pressureTimerRef = useRef<number | null>(null)
-  const pressureReleaseTimerRef = useRef<number | null>(null)
-  const activeMirror = useMemo(() => heartMirrors.find((mirror) => mirror.id === activeMirrorId) ?? null, [activeMirrorId])
-  const outerMirrors = useMemo(() => getOuterMirrors(), [])
-  const showArray =
-    phase === "mirrorArray" ||
-    phase === "focusing" ||
-    phase === "subconsciousVisible" ||
-    phase === "revealed" ||
-    phase === "thiefVisible" ||
-    phase === "readyForCycle"
-  const revealIsComplete = phase === "revealed" || phase === "thiefVisible" || phase === "readyForCycle"
-  const mirrorBaseScale = phase === "mirrorArray" ? 1 : 1.13
-  const mirrorRestScale = mirrorBaseScale + touchIntensity * 0.025
-  const mirrorPeakScale = mirrorRestScale + 0.015
-  const mirrorBrightnessLow = revealIsComplete ? 1 : 0.92
-  const mirrorBrightnessHigh = revealIsComplete ? 1.1 : 1.08
-  const mirrorLayer = useMemo(() => {
-    if (!activeMirror) return { label: "", text: "此刻这一念\n正在浮上来。", note: "" }
-
-    if (phase === "focusing") return { label: "", text: "", note: "" }
-    if (phase === "subconsciousVisible") {
-      if (liveMirror.isEmptyMirror) return { label: "", text: "心湖已静。", note: "" }
-      return { label: "", text: subconsciousEchoes[activeMirror.id], note: "" }
+  const goToPhase = useCallback((nextPhase: GatewayPhase) => {
+    setPhase(nextPhase)
+    setPhaseStartedAt(getNow())
+    if (nextPhase !== "conscienceReady") {
+      setIsHoldingWater(false)
+      setHoldProgress(0)
     }
-    if (phase === "revealed") return { label: "", text: activeMirror.name, note: "" }
-    if (phase === "thiefVisible") {
-      if (liveMirror.isEmptyMirror) return { label: "", text: "良知", note: "" }
-      return { label: "", text: activeMirror.thief[0] ?? "", note: "" }
-    }
-    if (phase === "readyForCycle") {
-      if (liveMirror.isEmptyMirror) return { label: "", text: "止水", note: "" }
-      return { label: "", text: activeMirror.thief.slice(1).join("\n") || activeMirror.thief[0] || "", note: "" }
-    }
-
-    return { label: "", text: liveMirror.memoryLine || splitThought(activeMirror.thought), note: "" }
-  }, [activeMirror, liveMirror.isEmptyMirror, liveMirror.memoryLine, phase])
-  const introCopy =
-    phase === "openingJudge"
-      ? "先不判断行情。"
-      : phase === "openingSelf"
-        ? "先看见自己。"
-        : "此刻最先浮上来的那一念，是什么？"
+  }, [])
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      const nextLiveMirror = buildLiveMirrorState()
+    const delay = phaseAutoDelay[phase]
+    if (!delay) return undefined
 
-      setLiveMirror(nextLiveMirror)
-      if (nextLiveMirror.sourceMirrorId) {
-        setActiveMirrorId(nextLiveMirror.sourceMirrorId)
-      }
-    }, 0)
+    const nextPhase = phaseOrder[getPhaseIndex(phase) + 1]
+    if (!nextPhase) return undefined
 
+    const timer = window.setTimeout(() => goToPhase(nextPhase), delay)
     return () => window.clearTimeout(timer)
-  }, [])
+  }, [goToPhase, phase])
 
   useEffect(() => {
-    if (phase === "openingJudge") {
-      const timer = window.setTimeout(() => setPhase("openingSelf"), 1240)
-      return () => window.clearTimeout(timer)
+    if (!canHoldWater || !isHoldingWater) return undefined
+
+    let last = getNow()
+    const tick = (now: number) => {
+      const delta = now - last
+      last = now
+      setHoldProgress((current) => {
+        const next = clamp(current + delta / 1650, 0, 1)
+        if (next >= 1) {
+          setIsHoldingWater(false)
+          window.setTimeout(() => goToPhase("conscienceClearing"), 60)
+        }
+        return next
+      })
+      holdFrameRef.current = window.requestAnimationFrame(tick)
     }
 
-    if (phase === "openingSelf") {
-      const timer = window.setTimeout(() => setPhase("question"), 1320)
-      return () => window.clearTimeout(timer)
-    }
-
-    if (phase === "question") {
-      const timer = window.setTimeout(() => setPhase("mirrorArray"), 1520)
-      return () => window.clearTimeout(timer)
-    }
-
-    if (phase === "focusing") {
-      const timer = window.setTimeout(() => setPhase("subconsciousVisible"), 900)
-      return () => window.clearTimeout(timer)
-    }
-
-    if (phase === "subconsciousVisible") {
-      const timer = window.setTimeout(() => setPhase("revealed"), 1240)
-      return () => window.clearTimeout(timer)
-    }
-
-    if (phase === "revealed") {
-      const timer = window.setTimeout(() => setPhase("thiefVisible"), 1240)
-      return () => window.clearTimeout(timer)
-    }
-
-    if (phase === "thiefVisible") {
-      const timer = window.setTimeout(() => setPhase("readyForCycle"), 1340)
-      return () => window.clearTimeout(timer)
-    }
-
-    return undefined
-  }, [phase])
-
-  useEffect(() => {
+    holdFrameRef.current = window.requestAnimationFrame(tick)
     return () => {
-      if (pressureTimerRef.current) window.clearInterval(pressureTimerRef.current)
-      if (pressureReleaseTimerRef.current) window.clearTimeout(pressureReleaseTimerRef.current)
+      if (holdFrameRef.current) window.cancelAnimationFrame(holdFrameRef.current)
     }
-  }, [])
+  }, [canHoldWater, goToPhase, isHoldingWater])
 
-  const stopPressurePulse = () => {
-    if (pressureTimerRef.current) window.clearInterval(pressureTimerRef.current)
-    pressureTimerRef.current = null
-
-    if (pressureReleaseTimerRef.current) window.clearTimeout(pressureReleaseTimerRef.current)
-    pressureReleaseTimerRef.current = window.setTimeout(() => setTouchIntensity(0), 720)
+  const revealThought = () => {
+    if (!canSeeThought) return
+    setPulse((current) => current + 1)
+    goToPhase("mainMirrorAbsorbing")
   }
 
-  const startPressurePulse = (event: PointerEvent<HTMLElement>) => {
-    if (pressureReleaseTimerRef.current) window.clearTimeout(pressureReleaseTimerRef.current)
-    if (pressureTimerRef.current) window.clearInterval(pressureTimerRef.current)
-
-    const initialPressure = event.pressure && event.pressure > 0 ? event.pressure : 0.34
-    setTouchIntensity(Math.min(1, Math.max(0.18, initialPressure)))
-
-    const startTime = performance.now()
-    pressureTimerRef.current = window.setInterval(() => {
-      const fallbackPressure = 0.34 + Math.min(0.5, (performance.now() - startTime) / 2200)
-      setTouchIntensity((current) => Math.min(1, Math.max(current, fallbackPressure)))
-    }, 90)
+  const startHolding = () => {
+    if (!canHoldWater) return
+    setIsHoldingWater(true)
+    setPulse((current) => current + 1)
   }
 
-  const updatePressurePulse = (event: PointerEvent<HTMLElement>) => {
-    if (!event.pressure || event.pressure <= 0) return
-    setTouchIntensity(Math.min(1, Math.max(0.18, event.pressure)))
+  const stopHolding = () => {
+    setIsHoldingWater(false)
+    if (canHoldWater) {
+      setHoldProgress((current) => current * 0.78)
+    }
   }
 
-  const focusMirror = (mirrorId: string) => {
-    const nextIndex = heartMirrors.findIndex((mirror) => mirror.id === mirrorId)
-    if (nextIndex < 0) return
+  const handleCanvasPointerDown = (event: ReactPointerEvent<HTMLCanvasElement>) => {
+    if (canSeeThought) {
+      event.currentTarget.setPointerCapture?.(event.pointerId)
+      revealThought()
+      return
+    }
 
-    setActiveMirrorId(mirrorId)
-    setPhase("focusing")
+    if (canHoldWater) {
+      event.currentTarget.setPointerCapture?.(event.pointerId)
+      startHolding()
+    }
   }
 
-  const revealCurrentMirror = () => {
-    if (!activeMirror) return
-    setPhase("focusing")
+  const handleCanvasPointerUp = () => {
+    stopHolding()
   }
-
-  const focusMirrorAtPoint = (clientX: number, clientY: number) => {
-    if (phase !== "mirrorArray") return
-
-    const mirrors = Array.from(document.querySelectorAll<HTMLElement>(".heart-mirror-side"))
-    const hitMirror = mirrors.find((mirror) => {
-      const rect = mirror.getBoundingClientRect()
-      const touchPad = 14
-
-      return (
-        clientX >= rect.left - touchPad &&
-        clientX <= rect.right + touchPad &&
-        clientY >= rect.top - touchPad &&
-        clientY <= rect.bottom + touchPad
-      )
-    })
-
-    const mirrorId = hitMirror?.dataset.mirrorId
-    if (mirrorId) focusMirror(mirrorId)
-  }
-
-  const focusAdjacent = (direction: -1 | 1) => {
-    const currentIndex = Math.max(
-      0,
-      behaviorMirrors.findIndex((mirror) => mirror.id === activeMirrorId),
-    )
-    const nextIndex = (currentIndex + direction + behaviorMirrors.length) % behaviorMirrors.length
-    focusMirror(behaviorMirrors[nextIndex].id)
-  }
-
-  const liveMirrorGrowth = Math.min(Math.max(liveMirror.completedDays, 0), 7) / 7
 
   return (
-    <section
-      className={cn(
-        "nine-heart-mirror",
-        `is-${phase}`,
-        liveMirror.hasPracticeMemory && "has-live-memory",
-        liveMirror.isEmptyMirror && "is-empty-mirror",
-      )}
-      style={
-        {
-          "--live-mirror-growth": liveMirrorGrowth,
-        } as CSSProperties
-      }
-      aria-label="九面行为心镜"
-    >
-      <div className="gateway-atmosphere" aria-hidden="true">
-        <span className="gateway-mist mist-left" />
-        <span className="gateway-mist mist-right" />
-        <span className="gateway-mountain mountain-back" />
-        <span className="gateway-mountain mountain-front" />
-        <span className="gateway-star-line star-line-one" />
-        <span className="gateway-star-line star-line-two" />
-        <i className="gateway-particle particle-one" />
-        <i className="gateway-particle particle-two" />
-        <i className="gateway-particle particle-three" />
-        <i className="gateway-particle particle-four" />
+    <section className={cn("moon-heart-gateway", `is-${phase}`)} aria-label="明月照心 · 九镜照念">
+      <RitualCanvas
+        phase={phase}
+        phaseStartedAt={phaseStartedAt}
+        holdProgress={holdProgress}
+        pulse={pulse}
+        onWaterPointerDown={handleCanvasPointerDown}
+        onWaterPointerUp={handleCanvasPointerUp}
+      />
+
+      <div className="ritual-title" aria-hidden="true">
+        <span>明月照心</span>
+        <i />
+        <span>九镜照念</span>
       </div>
 
-      {phase === "openingJudge" || phase === "openingSelf" || phase === "question" ? (
-        <div className="gateway-empty-stage">
-          <HeartWaterMirrorPlane phase={phase} activeMirrorId={null} />
+      <div key={phase} className={copyClassName} aria-live="polite">
+        <small>{currentCopy.kicker}</small>
+        <h1>{currentCopy.main}</h1>
+        {currentCopy.sub ? <p>{currentCopy.sub}</p> : null}
+      </div>
 
-          <p key={phase} className="empty-copy">{introCopy}</p>
+      {phase === "thiefRevealed" ? (
+        <div key="thief-detail" className="thief-detail" aria-label="心贼解释">
+          {thiefDetails.map((item) => (
+            <span key={item.word}>
+              <b>{item.word}</b>
+              {item.detail}
+            </span>
+          ))}
         </div>
       ) : null}
 
-      {showArray ? (
-        <div className="gateway-array-stage">
-          <div
-            className="mirror-orbit-field"
-            aria-live="polite"
-            onTouchStart={(event) => {
-              touchStartXRef.current = event.touches[0]?.clientX ?? null
-            }}
-            onTouchEnd={(event) => {
-              const startX = touchStartXRef.current
-              touchStartXRef.current = null
-              if (startX === null || phase !== "mirrorArray") return
+      {canSeeThought ? (
+        <button type="button" className="ritual-action" onClick={revealThought}>
+          照见此念
+        </button>
+      ) : null}
 
-              const endX = event.changedTouches[0]?.clientX ?? startX
-              const deltaX = endX - startX
-              if (Math.abs(deltaX) > 34) focusAdjacent(deltaX > 0 ? -1 : 1)
-            }}
-            onClick={(event) => {
-              if (phase !== "mirrorArray") return
+      {canHoldWater ? (
+        <button
+          type="button"
+          className="ritual-action hold-action"
+          onPointerDown={startHolding}
+          onPointerUp={stopHolding}
+          onPointerCancel={stopHolding}
+          onPointerLeave={stopHolding}
+          aria-label="按住水面，致良知"
+        >
+          <span style={{ transform: `scaleX(${Math.max(0.04, holdProgress)})` }} />
+          按住水面 · 致良知
+        </button>
+      ) : null}
 
-              focusMirrorAtPoint(event.clientX, event.clientY)
-            }}
-          >
-            <div className="gravity-fog" aria-hidden="true" />
-            <HeartWaterMirrorPlane phase={phase} activeMirrorId={activeMirrorId} onMirrorHit={focusMirrorAtPoint} />
-            <div className="orbit-ring orbit-ring-deep" aria-hidden="true" />
-            <div className="orbit-ring orbit-ring-back" aria-hidden="true" />
-
-            {phase === "mirrorArray" && activeMirror ? (
-              <span className="gravity-line" style={getGravityLineStyle(activeMirror.id, phase)} aria-hidden="true" />
-            ) : null}
-
-            {phase === "mirrorArray" ? (
-              <div className="causal-hint" aria-hidden="true">
-                <span>{liveMirror.hasPracticeMemory ? "心湖记得" : "触发场景"}</span>
-                <strong>{liveMirror.memoryCue}</strong>
-              </div>
-            ) : null}
-
-            <div
-              className={cn("heart-lake-voice", phase !== "mirrorArray" && "is-absorbed")}
-              style={{
-                "--lake-voice-rest-scale": mirrorRestScale,
-                "--lake-voice-peak-scale": mirrorPeakScale,
-                "--lake-voice-brightness-low": mirrorBrightnessLow,
-                "--lake-voice-brightness-high": mirrorBrightnessHigh,
-              } as CSSProperties}
-              onPointerDown={startPressurePulse}
-              onPointerMove={updatePressurePulse}
-              onPointerUp={stopPressurePulse}
-              onPointerCancel={stopPressurePulse}
-              onPointerLeave={stopPressurePulse}
-              aria-label="本心水镜，照见当前一念"
-            >
-              <span className="lake-voice-undercurrent" aria-hidden="true" />
-              {phase === "focusing" ? (
-                <span className="mirror-silence" aria-hidden="true" />
-              ) : (
-                <span
-                  className={cn(
-                    "mirror-layer",
-                    phase === "mirrorArray" && "is-thought",
-                    phase === "subconsciousVisible" && "is-subconscious",
-                  )}
-                >
-                  {mirrorLayer.label ? <small>{mirrorLayer.label}</small> : null}
-                  <span>{mirrorLayer.text}</span>
-                  {mirrorLayer.note ? <em>{mirrorLayer.note}</em> : null}
-                </span>
-              )}
-            </div>
-
-            {activeMirror && phase === "readyForCycle" && !liveMirror.isEmptyMirror ? (
-              <p className="lake-stage-caption is-verdict">
-                {activeMirror.verdict}
-              </p>
-            ) : null}
-
-            <div className="orbit-ring orbit-ring-front" aria-hidden="true" />
-
-            {(phase === "thiefVisible" || phase === "readyForCycle") && activeMirror ? (
-              <div
-                className={cn(
-                  "six-thief-orbit",
-                  activeMirror.id === "conscience" ? "is-quieted" : "is-cycling",
-                )}
-                aria-hidden="true"
-              >
-                {activeMirror.id === "conscience" ? (
-                  <div className="virtue-orbit">
-                    {activeMirror.thief.map((virtue) => (
-                      <i key={virtue}>{virtue}</i>
-                    ))}
-                  </div>
-                ) : (
-                  <>
-                    <span className="thief-cycle-ring" />
-                    {sixThiefOrbit.map((thief, index) => {
-                      const position = sixThiefPositions[index]
-                      return (
-                        <span
-                          key={thief}
-                          className={cn("thief-star", activeMirror.thief.includes(thief) && "is-active")}
-                          style={
-                            {
-                              "--thief-x": `${position.x}px`,
-                              "--thief-y": `${position.y}px`,
-                              animationDelay: `${index * -0.42}s`,
-                            } as CSSProperties
-                          }
-                        >
-                          {thief}
-                        </span>
-                      )
-                    })}
-                  </>
-                )}
-              </div>
-            ) : null}
-
-            <div className="orbit-mirrors" aria-hidden={phase !== "mirrorArray"}>
-              {outerMirrors.map((mirror) => {
-                const resonanceLevel = getResonanceLevel(activeMirrorId, mirror.id, phase)
-
-                return (
-                  <button
-                    key={mirror.id}
-                    type="button"
-                    className={cn(
-                      "heart-mirror-side",
-                      resonanceLevel === "primary" && "is-resonant",
-                      resonanceLevel === "secondary" && "is-secondary-resonant",
-                      resonanceLevel === "tertiary" && "is-tertiary-resonant",
-                      mirror.id === "conscience" && "is-conscience",
-                      mirror.id === "conscience" && liveMirror.completedDays > 0 && "is-awake-by-practice",
-                      `motion-${mirrorMotionById[mirror.id]}`,
-                      hoveredMirrorId === mirror.id && "is-hovered",
-                      phase !== "mirrorArray" && "is-retreating",
-                    )}
-                    style={{
-                      ...getOuterMirrorStyle(mirror.id, activeMirrorId, phase, liveMirror.completedDays),
-                    }}
-                    data-mirror-id={mirror.id}
-                    onMouseEnter={() => setHoveredMirrorId(mirror.id)}
-                    onMouseLeave={() => setHoveredMirrorId((current) => (current === mirror.id ? null : current))}
-                    onPointerEnter={() => setHoveredMirrorId(mirror.id)}
-                    onPointerMove={() => setHoveredMirrorId(mirror.id)}
-                    onPointerLeave={() => setHoveredMirrorId((current) => (current === mirror.id ? null : current))}
-                    onFocus={() => setHoveredMirrorId(mirror.id)}
-                    onBlur={() => setHoveredMirrorId((current) => (current === mirror.id ? null : current))}
-                    onClick={() => {
-                      if (phase === "mirrorArray") focusMirror(mirror.id)
-                    }}
-                    aria-label={
-                      resonanceLevel === "primary"
-                        ? `当前共鸣，照见${mirrorShortNameById[mirror.id]}`
-                        : `照见潜在行为镜：${mirrorShortNameById[mirror.id]}`
-                    }
-                  >
-                    <span className="side-mirror-surface" aria-hidden="true" />
-                    <span className="side-mirror-glint" aria-hidden="true" />
-                    <span className="side-mirror-name" aria-hidden="true">{mirrorShortNameById[mirror.id]}</span>
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-
-          {phase === "readyForCycle" ? (
-            <button type="button" onClick={() => activeMirror && onComplete(activeMirror.id)} className="mirror-action-script mt-8">
-              进入循环之镜
-            </button>
-          ) : phase === "mirrorArray" ? (
-            <button type="button" onClick={revealCurrentMirror} className="mirror-action-script mirror-action-main mt-7">
-              照见此念
-            </button>
-          ) : null}
-        </div>
+      {canEnterCycle ? (
+        <button type="button" className="ritual-action cycle-action" onClick={() => onComplete(MAIN_MIRROR_ID)}>
+          {currentCopy.seal}
+        </button>
       ) : null}
 
       <style jsx>{`
-        .nine-heart-mirror {
+        .moon-heart-gateway {
           position: relative;
-          display: flex;
-          width: 100%;
-          min-height: calc(100svh - 2.5rem);
-          align-items: center;
-          justify-content: center;
-          overflow: hidden;
-          background:
-            radial-gradient(ellipse at 50% 68%, rgba(7, 19, 22, 0.4), transparent 38%),
-            radial-gradient(ellipse at 50% 16%, rgba(20, 31, 31, 0.2), transparent 42%),
-            linear-gradient(180deg, #000306 0%, #010506 38%, #030604 66%, #000101 100%);
-          text-align: center;
-        }
-
-        .nine-heart-mirror::before {
-          content: "";
-          position: absolute;
-          inset: -22% -46%;
-          background:
-            radial-gradient(circle at 50% 17%, rgba(210, 224, 230, 0.035), transparent 18%),
-            radial-gradient(circle at 50% 46%, rgba(0, 0, 0, 0.58), transparent 24%),
-            radial-gradient(circle at 50% 42%, rgba(88, 113, 103, 0.035), transparent 36%),
-            radial-gradient(ellipse at 50% 82%, rgba(2, 9, 12, 0.52), transparent 58%);
-          filter: blur(4px);
-          opacity: 0.84;
-          animation: gateway-breath 11s ease-in-out infinite;
-          pointer-events: none;
-        }
-
-        .gateway-atmosphere {
-          position: absolute;
-          inset: -30% -54%;
-          z-index: 0;
-          overflow: hidden;
-          pointer-events: none;
-        }
-
-        .gateway-atmosphere::before,
-        .gateway-atmosphere::after {
-          content: "";
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-        }
-
-        .gateway-atmosphere::before {
-          background:
-            radial-gradient(circle at 18% 34%, rgba(180, 157, 93, 0.18) 0 1px, transparent 2px),
-            radial-gradient(circle at 78% 30%, rgba(180, 157, 93, 0.16) 0 1px, transparent 2px),
-            radial-gradient(circle at 62% 76%, rgba(127, 37, 25, 0.16) 0 1px, transparent 2px),
-            radial-gradient(circle at 30% 84%, rgba(180, 157, 93, 0.13) 0 1px, transparent 2px);
-          opacity: 0.72;
-          animation: far-dust-drift 28s ease-in-out infinite;
-        }
-
-        .gateway-atmosphere::after {
-          inset: -2% 2%;
-          background:
-            linear-gradient(180deg, rgba(0, 2, 5, 0.72), rgba(0, 4, 6, 0.22) 42%, rgba(0, 0, 0, 0.52)),
-            radial-gradient(ellipse at 50% 44%, rgba(3, 11, 14, 0.3), transparent 56%);
-          filter: blur(22px);
-          opacity: 0.74;
-          animation: nebula-breathe 18s ease-in-out infinite;
-        }
-
-        .gateway-mist,
-        .gateway-mountain,
-        .gateway-star-line,
-        .gateway-particle {
-          position: absolute;
-          display: block;
-          pointer-events: none;
-        }
-
-        .gateway-mist {
-          border-radius: 999px;
-          filter: blur(18px);
-          opacity: 0.45;
-        }
-
-        .mist-left {
-          left: -3%;
-          top: 12%;
-          width: 62%;
-          height: 26%;
-          background: radial-gradient(ellipse, rgba(80, 112, 110, 0.08), transparent 68%);
-          animation: mist-drift 18s ease-in-out infinite;
-        }
-
-        .mist-right {
-          right: -4%;
-          bottom: 8%;
-          width: 66%;
-          height: 30%;
-          background: radial-gradient(ellipse, rgba(95, 132, 117, 0.1), transparent 70%);
-          animation: mist-drift 22s ease-in-out infinite reverse;
-        }
-
-        .gateway-mountain {
-          left: 50%;
-          bottom: -3%;
-          width: min(112vw, 560px);
-          height: 118px;
-          border-radius: 48% 52% 0 0;
-          background: linear-gradient(180deg, rgba(22, 23, 19, 0), rgba(7, 7, 6, 0.78));
-          clip-path: polygon(0 72%, 12% 56%, 27% 68%, 43% 38%, 56% 62%, 70% 32%, 83% 58%, 100% 44%, 100% 100%, 0 100%);
-          opacity: 0.34;
-          transform: translateX(-50%);
-        }
-
-        .mountain-front {
-          bottom: -1%;
-          width: min(120vw, 620px);
-          height: 96px;
-          opacity: 0.24;
-          transform: translateX(-50%) scaleX(1.08);
-        }
-
-        .gateway-star-line {
-          left: 50%;
-          top: 49%;
-          width: min(114vw, 560px);
-          height: 164px;
-          border: 1px solid rgba(180, 157, 93, 0.075);
-          border-radius: 50%;
-          transform: translate(-50%, -50%) rotate(-12deg);
-        }
-
-        .star-line-two {
-          width: min(98vw, 486px);
-          height: 118px;
-          border-style: dashed;
-          border-color: rgba(127, 37, 25, 0.12);
-          transform: translate(-50%, -50%) rotate(18deg);
-        }
-
-        .gateway-particle {
-          width: 4px;
-          height: 4px;
-          border-radius: 50%;
-          background: rgba(180, 157, 93, 0.72);
-          box-shadow: 0 0 14px rgba(180, 157, 93, 0.28);
-          opacity: 0.58;
-          transition: transform 820ms cubic-bezier(0.22, 1, 0.36, 1), opacity 820ms ease;
-          animation: particle-drift 15s linear infinite;
-        }
-
-        .particle-one {
-          left: 16%;
-          top: 26%;
-        }
-
-        .particle-two {
-          right: 17%;
-          top: 31%;
-          animation-duration: 18s;
-          animation-delay: -5s;
-        }
-
-        .particle-three {
-          left: 26%;
-          bottom: 23%;
-          background: rgba(127, 37, 25, 0.66);
-          animation-duration: 20s;
-          animation-delay: -8s;
-        }
-
-        .particle-four {
-          right: 31%;
-          bottom: 18%;
-          animation-duration: 22s;
-          animation-delay: -11s;
-        }
-
-        .is-focusing .gateway-particle,
-        .is-subconsciousVisible .gateway-particle,
-        .is-revealed .gateway-particle,
-        .is-thiefVisible .gateway-particle,
-        .is-readyForCycle .gateway-particle {
-          opacity: 0.78;
-          animation-duration: 24s;
-        }
-
-        .is-focusing .particle-one,
-        .is-subconsciousVisible .particle-one,
-        .is-revealed .particle-one,
-        .is-thiefVisible .particle-one,
-        .is-readyForCycle .particle-one {
-          transform: translate(34px, 42px);
-        }
-
-        .is-focusing .particle-two,
-        .is-subconsciousVisible .particle-two,
-        .is-revealed .particle-two,
-        .is-thiefVisible .particle-two,
-        .is-readyForCycle .particle-two {
-          transform: translate(-38px, 36px);
-        }
-
-        .is-focusing .particle-three,
-        .is-subconsciousVisible .particle-three,
-        .is-revealed .particle-three,
-        .is-thiefVisible .particle-three,
-        .is-readyForCycle .particle-three {
-          transform: translate(32px, -38px);
-        }
-
-        .is-focusing .particle-four,
-        .is-subconsciousVisible .particle-four,
-        .is-revealed .particle-four,
-        .is-thiefVisible .particle-four,
-        .is-readyForCycle .particle-four {
-          transform: translate(-24px, -34px);
-        }
-
-        .gateway-empty-stage,
-        .gateway-array-stage {
-          position: relative;
-          z-index: 1;
-          width: 100vw;
-          margin-left: calc(50% - 50vw);
-          animation: gateway-stage-in 760ms cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
-
-        .gateway-empty-stage {
           width: 100vw;
           min-height: calc(100svh - 2.5rem);
           margin-left: calc(50% - 50vw);
-          display: grid;
-          place-items: center;
           overflow: hidden;
           isolation: isolate;
+          background:
+            radial-gradient(ellipse at 50% 58%, rgba(19, 45, 45, 0.32), transparent 42%),
+            linear-gradient(180deg, #020607 0%, #050706 64%, #000101 100%);
+          color: rgba(244, 235, 221, 0.92);
+          text-align: center;
         }
 
-        .gateway-empty-stage::before,
-        .gateway-empty-stage::after {
+        .moon-heart-gateway::after {
           content: "";
           position: absolute;
           inset: 0;
-          z-index: 1;
+          z-index: 4;
+          background:
+            radial-gradient(ellipse at 50% 50%, transparent 0 50%, rgba(0, 0, 0, 0.42) 82%, rgba(0, 0, 0, 0.86)),
+            linear-gradient(180deg, rgba(0, 0, 0, 0.38), transparent 22%, transparent 70%, rgba(0, 0, 0, 0.62));
           pointer-events: none;
         }
 
-        .gateway-empty-stage::before {
-          background:
-            radial-gradient(ellipse at 50% 18%, rgba(208, 224, 230, 0.035), transparent 26%),
-            radial-gradient(ellipse at 50% 68%, rgba(35, 72, 78, 0.08), transparent 42%),
-            radial-gradient(ellipse at 50% 88%, rgba(0, 0, 0, 0.48), transparent 46%);
-          mix-blend-mode: screen;
-          opacity: 0.72;
-        }
-
-        .gateway-empty-stage::after {
-          background:
-            linear-gradient(180deg, rgba(0, 0, 0, 0.48), transparent 25%, transparent 62%, rgba(0, 0, 0, 0.76)),
-            radial-gradient(ellipse at 50% 66%, transparent 0 38%, rgba(0, 0, 0, 0.2) 72%, rgba(0, 0, 0, 0.62));
-        }
-
-        .empty-copy {
-          position: absolute;
-          left: 50%;
-          top: calc(50% + clamp(118px, 23svh, 198px));
-          z-index: 3;
-          margin: 0;
-          font-family: var(--font-world);
-          width: min(86vw, 13em);
-          max-width: min(86vw, 13em);
-          font-size: clamp(1.72rem, 6.8vw, 2.76rem);
-          font-weight: 300;
-          line-height: 1.42;
-          letter-spacing: 0.06em;
-          color: rgba(242, 235, 220, 0.82);
-          animation: empty-copy-rise 760ms cubic-bezier(0.22, 1, 0.36, 1) both;
-          transform: translateX(-50%);
-          text-align: center;
-          text-shadow:
-            0 0 26px rgba(206, 224, 230, 0.12),
-            0 16px 42px rgba(0, 0, 0, 0.72);
-          pointer-events: none;
-        }
-
-        .mirror-orbit-field {
-          position: relative;
-          width: 100vw;
-          height: min(104svh, 680px);
-          min-height: 560px;
-          max-height: 720px;
-          margin: 0 auto;
-          perspective: 1540px;
-          transform-style: preserve-3d;
-        }
-
-        .heart-water-plane {
+        .nine-mirror-canvas {
           position: absolute;
           inset: 0;
-          z-index: 12;
+          z-index: 1;
           display: block;
           width: 100%;
           height: 100%;
           cursor: pointer;
-          opacity: 0.98;
-          filter: saturate(0.9) brightness(0.9);
-          pointer-events: auto;
+          touch-action: manipulation;
           -webkit-tap-highlight-color: transparent;
         }
 
-        .heart-lake-title {
-          position: absolute;
-          left: 0;
-          right: 0;
-          top: 0.92rem;
-          z-index: 40;
-          display: grid;
-          gap: 0.22rem;
-          font-family: var(--font-function);
-          font-size: clamp(0.7rem, 2.55vw, 0.92rem);
-          font-weight: 600;
-          letter-spacing: 0.44em;
-          color: rgba(214, 224, 228, 0.44);
-          text-align: center;
-          text-indent: 0.42em;
-          text-shadow: 0 0 18px rgba(206, 224, 230, 0.08);
-          pointer-events: none;
-          animation: thought-rise 1.5s cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
-
-        .heart-lake-title span,
-        .heart-lake-title small {
-          display: block;
-        }
-
-        .heart-lake-title small {
-          font-size: 0.5rem;
-          font-weight: 500;
-          letter-spacing: 0.2em;
-          color: rgba(216, 183, 111, 0.42);
-          text-indent: 0.2em;
-        }
-
-        .heart-lake-touch-hint {
-          position: absolute;
-          left: 0;
-          right: 0;
-          bottom: 1.05rem;
-          z-index: 72;
-          font-family: var(--font-function);
-          font-size: clamp(0.62rem, 2.1vw, 0.74rem);
-          line-height: 1.7;
-          letter-spacing: 0.16em;
-          color: rgba(180, 195, 200, 0.36);
-          text-align: center;
-          pointer-events: none;
-        }
-
-        .heart-lake-voice {
-          --lake-voice-rest-scale: 1;
-          --lake-voice-peak-scale: 1.015;
-          --lake-voice-brightness-low: 0.94;
-          --lake-voice-brightness-high: 1.08;
+        .ritual-title {
           position: absolute;
           left: 50%;
-          top: 57%;
-          z-index: 66;
-          display: grid;
-          width: min(82%, 480px);
-          min-height: 132px;
-          place-items: center;
-          color: rgba(242, 235, 220, 0.82);
-          text-align: center;
-          transform: translate(-50%, -50%) scale(var(--lake-voice-rest-scale));
-          transition:
-            opacity 620ms ease,
-            filter 620ms ease,
-            transform 820ms cubic-bezier(0.22, 1, 0.36, 1);
-          animation: lake-voice-breathe 5.8s ease-in-out infinite;
-          pointer-events: none;
-        }
-
-        .heart-lake-voice.is-absorbed {
-          top: 57%;
-        }
-
-        .lake-voice-undercurrent {
-          position: absolute;
-          inset: 22% 8%;
-          z-index: 0;
-          border-radius: 50%;
-          background:
-            radial-gradient(ellipse at 50% 50%, rgba(216, 183, 111, 0.13), transparent 28%),
-            radial-gradient(ellipse at 50% 60%, rgba(95, 132, 117, 0.14), transparent 60%);
-          opacity: 0.38;
-          filter: blur(14px);
-          transform: scale(0.92);
-          animation: lake-undercurrent-breathe 6.4s ease-in-out infinite;
-          pointer-events: none;
-        }
-
-        .lake-deep-reflection {
-          position: absolute;
-          left: 50%;
-          top: 58%;
-          z-index: 1;
-          display: grid;
-          width: min(16em, 78%);
-          place-items: center;
-          opacity: 0;
-          filter: blur(10px);
-          transform: translate(-50%, -50%) translateY(32px) scale(0.96);
-          transition:
-            opacity 780ms ease,
-            filter 780ms ease,
-            transform 780ms cubic-bezier(0.22, 1, 0.36, 1);
-          pointer-events: none;
-        }
-
-        .lake-deep-reflection span {
-          font-family: var(--font-function);
-          font-size: clamp(0.76rem, 2.4vw, 0.94rem);
-          font-weight: 600;
-          line-height: 1.5;
-          letter-spacing: 0.18em;
-          color: rgba(216, 183, 111, 0.42);
-        }
-
-        .is-subconsciousVisible .lake-deep-reflection,
-        .is-revealed .lake-deep-reflection,
-        .is-thiefVisible .lake-deep-reflection {
-          opacity: 0.72;
-          filter: blur(0.6px);
-          transform: translate(-50%, -50%) translateY(56px) scale(1);
-        }
-
-        .heart-lake-voice .mirror-layer,
-        .heart-lake-voice .mirror-silence {
-          z-index: 3;
-        }
-
-        .heart-lake-voice .mirror-layer > span {
-          font-size: clamp(1.16rem, 4.8vw, 1.52rem);
-          line-height: 1.62;
-          text-shadow:
-            0 0 22px rgba(206, 224, 230, 0.1),
-            0 12px 34px rgba(0, 0, 0, 0.42);
-        }
-
-        .heart-lake-voice .mirror-layer:not(.is-thought) > span {
-          font-size: clamp(1.44rem, 6.2vw, 2rem);
-        }
-
-        .is-readyForCycle .heart-lake-voice .mirror-layer > span {
-          max-width: 16em;
-          font-family: var(--font-world);
-          font-size: clamp(1.44rem, 6.2vw, 2rem);
-          line-height: 1.42;
-          letter-spacing: 0.1em;
-          color: rgba(242, 220, 168, 0.88);
-          text-shadow: 0 0 22px rgba(216, 183, 111, 0.14);
-        }
-
-        .is-readyForCycle .heart-lake-voice .mirror-layer small {
-          margin-bottom: 0.34rem;
-          opacity: 0.72;
-        }
-
-        .heart-lake-voice .mirror-layer em {
-          color: rgba(220, 212, 195, 0.56);
-        }
-
-        .lake-stage-caption {
-          position: absolute;
-          left: 50%;
-          top: calc(57% + 92px);
-          z-index: 67;
-          max-width: min(82vw, 24em);
-          margin: 0;
-          font-family: var(--font-narrative);
-          font-size: clamp(0.92rem, 3.2vw, 1.08rem);
-          font-weight: 300;
-          line-height: 1.82;
-          letter-spacing: 0.045em;
-          color: rgba(220, 212, 195, 0.62);
-          text-align: center;
-          text-shadow: 0 12px 32px rgba(0, 0, 0, 0.58);
-          transform: translateX(-50%);
-          animation: thought-rise 820ms cubic-bezier(0.22, 1, 0.36, 1) both;
-          pointer-events: none;
-        }
-
-        .lake-stage-caption.is-verdict {
-          max-width: min(86vw, 25em);
-          color: rgba(242, 235, 220, 0.74);
-        }
-
-        .gravity-fog {
-          position: absolute;
-          left: 50%;
-          top: 57%;
-          z-index: 4;
-          width: min(84vw, 520px);
-          height: min(84vw, 520px);
-          border-radius: 50%;
-          background:
-            radial-gradient(circle, rgba(0, 0, 0, 0.22), transparent 31%),
-            radial-gradient(circle, rgba(95, 132, 117, 0.07), transparent 58%),
-            radial-gradient(circle, rgba(216, 183, 111, 0.045), transparent 72%);
-          opacity: 0.76;
-          filter: blur(12px);
-          transform: translate(-50%, -50%) translateZ(-210px);
-          pointer-events: none;
-        }
-
-        .causal-hint {
-          position: absolute;
-          left: calc(50% - clamp(132px, 35vw, 176px));
-          top: calc(50% - clamp(120px, 32vw, 154px));
-          z-index: 72;
-          display: grid;
-          gap: 0.18rem;
-          max-width: 9.8em;
-          padding-left: 0.8rem;
-          text-align: left;
-          transform: translateZ(92px);
-          pointer-events: none;
-          animation: thought-rise 780ms cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
-
-        .causal-hint::before {
-          content: "";
-          position: absolute;
-          left: 0;
-          top: 0.18rem;
-          bottom: 0.18rem;
-          width: 1px;
-          background: linear-gradient(180deg, rgba(180, 157, 93, 0), rgba(180, 157, 93, 0.5), rgba(180, 157, 93, 0));
-          opacity: 0.58;
-        }
-
-        .causal-hint span {
-          font-family: var(--font-function);
-          font-size: 0.58rem;
-          font-weight: 600;
-          line-height: 1.25;
-          letter-spacing: 0.18em;
-          color: rgba(180, 157, 93, 0.54);
-        }
-
-        .causal-hint strong {
-          font-family: var(--font-narrative);
-          font-size: clamp(0.78rem, 2.4vw, 0.92rem);
-          font-weight: 300;
-          line-height: 1.48;
-          letter-spacing: 0.06em;
-          color: rgba(242, 220, 168, 0.76);
-        }
-
-        .orbit-ring {
-          position: absolute;
-          left: 50%;
-          top: 57%;
-          width: min(142vw, 1080px);
-          height: min(52vw, 360px);
-          border: 1px solid rgba(180, 157, 93, 0.04);
-          border-radius: 50%;
-          pointer-events: none;
-          transform-style: preserve-3d;
-        }
-
-        .orbit-ring::before,
-        .orbit-ring::after {
-          content: "";
-          position: absolute;
-          inset: 8% -9%;
-          border: 1px solid rgba(180, 157, 93, 0.036);
-          border-radius: inherit;
-          pointer-events: none;
-        }
-
-        .orbit-ring::after {
-          inset: 20% -18%;
-          border-color: rgba(127, 37, 25, 0.052);
-          border-style: dashed;
-        }
-
-        .orbit-ring-deep {
-          z-index: 6;
-          width: min(160vw, 1220px);
-          height: min(58vw, 410px);
-          opacity: 0.18;
-          border-color: rgba(95, 132, 117, 0.036);
-          transform: translate(-50%, -50%) translateZ(-260px) rotateX(70deg) rotateZ(31deg);
-          filter: blur(1.1px);
-        }
-
-        .orbit-ring-back {
+          top: clamp(1.15rem, 2.4vw, 1.9rem);
           z-index: 8;
-          opacity: 0.26;
-          transform: translate(-50%, -50%) translateZ(-178px) rotateX(65deg) rotateZ(-15deg);
-          filter: blur(0.32px);
-        }
-
-        .orbit-ring-front {
-          z-index: 70;
-          width: min(148vw, 1120px);
-          height: min(43vw, 300px);
-          opacity: 0.2;
-          border-color: rgba(216, 183, 111, 0.07);
-          transform: translate(-50%, -50%) translateZ(128px) rotateX(68deg) rotateZ(16deg);
-          mix-blend-mode: screen;
-          filter: blur(0.05px);
-        }
-
-        .orbit-ring-front::before {
-          inset: 15% -12%;
-          border-color: rgba(216, 183, 111, 0.066);
-        }
-
-        .orbit-ring-front::after {
-          inset: 29% -22%;
-          border-color: rgba(127, 37, 25, 0.066);
-        }
-
-        .gravity-line {
-          --gravity-current-length: var(--gravity-length);
-          --gravity-current-angle: var(--gravity-angle);
-          position: absolute;
-          left: 50%;
-          top: 57%;
-          z-index: 46;
-          width: var(--gravity-current-length);
-          height: 1px;
-          background: linear-gradient(90deg, rgba(216, 183, 111, 0.2), rgba(216, 183, 111, 0.044), transparent);
-          opacity: 0.34;
-          transform: translateY(-50%) rotate(var(--gravity-current-angle));
-          transform-origin: left center;
-          filter: blur(0.2px);
-          pointer-events: none;
-          animation: gravity-line-listen 3.8s ease-in-out infinite;
-        }
-
-        .gravity-line::before {
-          content: "";
-          position: absolute;
-          left: 0;
-          top: 50%;
-          width: 28px;
-          height: 28px;
-          border-radius: 50%;
-          background: radial-gradient(circle, rgba(216, 183, 111, 0.16), transparent 66%);
-          opacity: 0.72;
-          transform: translate(-50%, -50%);
-        }
-
-        .orbit-mirrors {
-          position: absolute;
-          inset: 0;
-          z-index: 34;
-          transform-style: preserve-3d;
-          pointer-events: none;
-        }
-
-        .is-focusing .orbit-mirrors,
-        .is-subconsciousVisible .orbit-mirrors,
-        .is-revealed .orbit-mirrors,
-        .is-thiefVisible .orbit-mirrors,
-        .is-readyForCycle .orbit-mirrors {
-          opacity: 0.2;
-        }
-
-        .heart-mirror-main,
-        .heart-mirror-side {
-          border: 1px solid rgba(216, 183, 111, 0.31);
-          background:
-            linear-gradient(132deg, rgba(255, 255, 255, 0.13), transparent 19%, transparent 76%, rgba(255, 255, 255, 0.04)),
-            radial-gradient(circle at 43% 31%, rgba(242, 235, 220, 0.12), transparent 18%),
-            radial-gradient(circle at 50% 56%, rgba(95, 132, 117, 0.3), transparent 56%),
-            repeating-radial-gradient(circle, rgba(220, 212, 195, 0.045) 0 1px, transparent 1px 15px),
-            linear-gradient(145deg, rgba(14, 43, 40, 0.88), rgba(5, 8, 8, 0.98));
-          color: rgba(242, 235, 220, 0.78);
-          box-shadow:
-            0 26px 72px rgba(0, 0, 0, 0.42),
-            inset 0 1px 0 rgba(255, 255, 255, 0.07);
-          font: inherit;
-          cursor: pointer;
-          -webkit-tap-highlight-color: transparent;
-        }
-
-        .heart-mirror-main {
-          --touch-intensity: 0;
-          --touch-highlight-alpha: 0.1;
-          --touch-highlight-soft: 0.055;
-          --touch-glint-alpha: 0.11;
-          --touch-glint-soft: 0.06;
-          --touch-water-alpha: 0.28;
-          --touch-water-soft: 0.15;
-          --touch-ripple-alpha: 0.2;
-          --touch-reflection-alpha: 0.08;
-          --touch-deep-opacity: 0.28;
-          --touch-deep-blur: 2.4px;
-          --touch-deep-scale: 0.94;
-          --touch-shift: 0px;
-          --mirror-rest-scale: 1;
-          --mirror-peak-scale: 1.015;
-          --mirror-brightness-low: 0.95;
-          --mirror-brightness-high: 1.08;
-          --mirror-glow-low: 0.12;
-          --mirror-glow-high: 0.2;
-          position: absolute;
-          left: 50%;
-          top: 70%;
-          z-index: 50;
-          display: grid;
-          width: clamp(184px, 52vw, 222px);
-          aspect-ratio: 1;
-          height: auto;
-          transform: translate(-50%, -50%) scale(var(--mirror-rest-scale));
-          place-items: center;
-          overflow: hidden;
-          border-radius: 50%;
-          isolation: isolate;
-          background:
-            radial-gradient(circle at 50% 34%, rgba(217, 236, 244, 0.16), transparent 25%),
-            radial-gradient(circle at 50% 57%, rgba(55, 98, 111, 0.22), transparent 68%),
-            linear-gradient(145deg, rgba(8, 24, 34, 0.96), rgba(2, 7, 12, 0.99));
-          transition:
-            border-color 640ms ease,
-            box-shadow 640ms ease,
-            transform 820ms cubic-bezier(0.22, 1, 0.36, 1);
-          animation: mirror-breathe 5.8s ease-in-out infinite;
-          cursor: default;
-          outline: 1px solid rgba(216, 183, 111, 0.1);
-          outline-offset: 7px;
-        }
-
-        .heart-mirror-main::before {
-          content: "";
-          position: absolute;
-          inset: 0;
-          border-radius: inherit;
-          background:
-            radial-gradient(circle at 50% 33%, rgba(222, 238, 244, 0.2), transparent 24%),
-            radial-gradient(ellipse at 50% 56%, rgba(202, 234, 242, 0.08), transparent 42%),
-            radial-gradient(circle at 50% 50%, transparent 0 40%, rgba(216, 183, 111, 0.045) 43%, transparent 47%);
-          opacity: 0.38;
-          mix-blend-mode: screen;
-          pointer-events: none;
-        }
-
-        .mirror-water-canvas {
-          position: absolute;
-          inset: 5%;
-          z-index: 1;
-          width: 90%;
-          height: 90%;
-          border-radius: 50%;
-          opacity: 0.96;
-          mix-blend-mode: normal;
-          pointer-events: none;
-          filter: saturate(0.95) brightness(1.08);
-          transform: scale(1.02);
-        }
-
-        .mirror-moon {
-          position: absolute;
-          left: 50%;
-          top: 18%;
-          z-index: 1;
-          width: 34%;
-          aspect-ratio: 1;
-          border-radius: 50%;
-          background:
-            radial-gradient(circle at 48% 38%, rgba(238, 250, 252, 0.88), rgba(211, 233, 240, 0.5) 48%, rgba(155, 184, 194, 0.16) 76%, transparent 78%);
-          opacity: 0.42;
-          filter: blur(0.35px);
-          transform: translate(-50%, -50%);
-          box-shadow:
-            0 0 28px rgba(196, 225, 236, 0.18),
-            0 0 70px rgba(196, 225, 236, 0.08);
-          mix-blend-mode: screen;
-          pointer-events: none;
-          animation: moon-still-breathe 8.8s ease-in-out infinite;
-        }
-
-        .mirror-moon-reflection {
-          position: absolute;
-          left: 50%;
-          top: 43%;
-          z-index: 1;
-          width: 20%;
-          height: 30%;
-          border-radius: 50% 50% 46% 46%;
-          background:
-            radial-gradient(ellipse at 50% 0%, rgba(238, 250, 252, 0.48), rgba(215, 239, 246, 0.2) 30%, transparent 74%),
-            linear-gradient(180deg, rgba(238, 250, 252, 0.24), transparent 78%);
-          opacity: 0.38;
-          filter: blur(2.4px);
-          transform: translateX(-50%);
-          mix-blend-mode: screen;
-          pointer-events: none;
-          animation: moon-reflection-breathe 7.2s ease-in-out infinite;
-        }
-
-        .mirror-living-water {
-          position: absolute;
-          inset: 7%;
-          z-index: 0;
-          border-radius: inherit;
-          background:
-            radial-gradient(circle at 50% 50%, transparent 0 26%, rgba(95, 132, 117, 0.12) 28%, transparent 58%),
-            radial-gradient(ellipse at 46% 32%, rgba(242, 235, 220, 0.032), transparent 18%),
-            repeating-radial-gradient(circle at 50% 50%, rgba(220, 212, 195, 0.032) 0 1px, transparent 1px 14px);
-          opacity: 0.34;
-          filter: blur(0.35px);
-          mix-blend-mode: screen;
-          pointer-events: none;
-          animation: living-water-breathe 6.2s ease-in-out infinite;
-        }
-
-        .mirror-depth-chamber {
-          position: absolute;
-          inset: 13%;
-          z-index: 0;
-          border-radius: inherit;
-          background:
-            radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.96), rgba(1, 3, 3, 0.9) 24%, transparent 36%),
-            radial-gradient(circle at 50% 55%, rgba(4, 18, 18, 0.78), rgba(3, 7, 7, 0.5) 48%, transparent 68%),
-            repeating-radial-gradient(circle at 50% 50%, rgba(220, 212, 195, 0.028) 0 1px, transparent 1px 18px);
-          box-shadow:
-            inset 0 0 58px rgba(0, 0, 0, 0.72),
-            inset 0 0 120px rgba(0, 0, 0, 0.34);
-          opacity: 0.28;
-          transform: scale(0.95);
-          pointer-events: none;
-          animation: depth-chamber-breathe 7.4s ease-in-out infinite;
-        }
-
-        .mirror-event-horizon {
-          position: absolute;
-          inset: 8%;
-          z-index: 1;
-          border-radius: inherit;
-          background:
-            radial-gradient(circle, transparent 61%, rgba(216, 183, 111, 0.12) 62%, transparent 66%),
-            conic-gradient(from 210deg, transparent, rgba(216, 183, 111, 0.1), transparent 34%, rgba(95, 132, 117, 0.08), transparent 72%, rgba(127, 37, 25, 0.06), transparent);
-          opacity: 0.34;
-          mix-blend-mode: screen;
-          pointer-events: none;
-          animation: event-horizon-breathe 6.4s ease-in-out infinite;
-        }
-
-        .mirror-vortex {
-          position: absolute;
-          inset: 28%;
-          z-index: 1;
-          border-radius: inherit;
-          background:
-            radial-gradient(circle, rgba(0, 0, 0, 0.98) 0 27%, transparent 42%),
-            conic-gradient(from 140deg, rgba(216, 183, 111, 0.075), transparent 18%, rgba(95, 132, 117, 0.06), transparent 45%, rgba(216, 183, 111, 0.045), transparent 78%, rgba(127, 37, 25, 0.045), transparent);
-          opacity: 0.18;
-          filter: blur(0.25px);
-          mix-blend-mode: screen;
-          pointer-events: none;
-          animation: vortex-turn 18s linear infinite;
-        }
-
-        .mirror-inner-stillness {
-          position: absolute;
-          inset: 31%;
-          z-index: 1;
-          border-radius: inherit;
-          background:
-            radial-gradient(circle, rgba(0, 0, 0, 0.54), transparent 34%),
-            radial-gradient(circle, rgba(95, 132, 117, 0.12), transparent 70%);
-          opacity: 0.44;
-          filter: blur(0.45px);
-          pointer-events: none;
-          animation: inner-stillness-listen 5.8s ease-in-out infinite;
-        }
-
-        .mirror-rim-inscription {
-          position: absolute;
-          left: 50%;
-          top: 14%;
-          z-index: 4;
-          font-family: var(--font-function);
-          font-size: 0.56rem;
-          font-weight: 600;
-          letter-spacing: 0.2em;
-          color: rgba(180, 157, 93, 0.3);
-          opacity: 0.46;
-          transform: translateX(-50%);
-          pointer-events: none;
-          transition: opacity 720ms ease, filter 720ms ease;
-        }
-
-        .is-focusing .mirror-rim-inscription,
-        .is-subconsciousVisible .mirror-rim-inscription,
-        .is-revealed .mirror-rim-inscription,
-        .is-thiefVisible .mirror-rim-inscription,
-        .is-readyForCycle .mirror-rim-inscription {
-          opacity: 0.22;
-          filter: blur(0.4px);
-        }
-
-        .heart-mirror-main:hover,
-        .heart-mirror-main:focus-visible {
-          border-color: rgba(216, 183, 111, 0.55);
-          outline-color: rgba(216, 183, 111, 0.2);
-          box-shadow:
-            0 32px 88px rgba(0, 0, 0, 0.5),
-            0 0 82px rgba(180, 157, 93, 0.16),
-            inset 0 0 76px rgba(0, 0, 0, 0.6),
-            inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        }
-
-        .mirror-deep-reflection {
-          position: absolute;
-          inset: 0;
-          z-index: 1;
-          display: grid;
-          place-items: end center;
-          padding-bottom: 38px;
-          border-radius: 50%;
-          background:
-            radial-gradient(circle at 50% 68%, rgba(5, 8, 8, 0.28), transparent 44%),
-            repeating-radial-gradient(circle, rgba(220, 212, 195, 0.035) 0 1px, transparent 1px 14px);
-          opacity: calc(var(--touch-deep-opacity) + 0.18);
-          filter: blur(0.9px);
-          transform: scale(var(--touch-deep-scale));
-          pointer-events: none;
-        }
-
-        .mirror-deep-reflection span {
-          max-width: 10em;
-          font-family: var(--font-function);
-          font-size: 0.72rem;
-          line-height: 1.52;
-          letter-spacing: 0.12em;
-          color: rgba(216, 183, 111, 0.48);
-          transform: translateY(4px);
-        }
-
-        .is-focusing .mirror-deep-reflection {
-          opacity: 0;
-          filter: blur(6px);
-        }
-
-        .is-subconsciousVisible .mirror-deep-reflection,
-        .is-revealed .mirror-deep-reflection,
-        .is-thiefVisible .mirror-deep-reflection,
-        .is-readyForCycle .mirror-deep-reflection {
-          opacity: 0.12;
-        }
-
-        .is-subconsciousVisible .mirror-deep-reflection {
-          opacity: 0.62;
-          filter: blur(0.45px);
-          transform: scale(0.98) translateY(-2px);
-        }
-
-        .mirror-front-reflection {
-          position: absolute;
-          inset: -22% -18% 46%;
-          z-index: 5;
-          border-radius: 50%;
-          background:
-            radial-gradient(ellipse at 42% 28%, rgba(242, 235, 220, var(--touch-reflection-alpha)), transparent 36%),
-            radial-gradient(ellipse at 62% 44%, rgba(95, 132, 117, 0.042), transparent 46%);
-          opacity: 0.055;
-          transform: translateX(var(--touch-shift));
-          animation: front-reflection-glide 10.8s ease-in-out infinite;
-          mix-blend-mode: screen;
-          pointer-events: none;
-        }
-
-        .heart-mirror-main.is-absorbed {
-          border-color: rgba(216, 183, 111, 0.46);
-          box-shadow:
-            0 34px 104px rgba(0, 0, 0, 0.52),
-            0 0 76px rgba(180, 157, 93, 0.14),
-            inset 0 0 74px rgba(0, 0, 0, 0.58),
-            inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        }
-
-        .heart-mirror-main::after {
-          content: "";
-          position: absolute;
-          inset: 19%;
-          border-radius: inherit;
-          background: radial-gradient(circle, rgba(216, 183, 111, 0.13), transparent 62%);
-          opacity: 0;
-          transform: scale(0.62);
-          pointer-events: none;
-        }
-
-        .is-focusing .heart-mirror-main::after {
-          animation: mirror-ripple 880ms ease-out forwards;
-        }
-
-        .is-subconsciousVisible .heart-mirror-main::after,
-        .is-revealed .heart-mirror-main::after,
-        .is-thiefVisible .heart-mirror-main::after {
-          animation: mirror-ripple 1.05s ease-out forwards;
-        }
-
-        .is-readyForCycle .heart-mirror-main {
-          animation-duration: 8.2s;
-        }
-
-        .is-mirrorArray .heart-mirror-main::after {
-          animation: mirror-breath-ripple 5.6s ease-in-out infinite;
-        }
-
-        .mirror-water-ripple {
-          position: absolute;
-          left: 50%;
-          top: 57%;
-          width: 70%;
-          height: 70%;
-          border: 1px solid rgba(216, 183, 111, var(--touch-ripple-alpha));
-          border-radius: 50%;
-          opacity: 0;
-          transform: translate(-50%, -50%) scale(0.3);
-          pointer-events: none;
-        }
-
-        .mirror-water-ripple-one {
-          animation: mirror-surface-ripple 1.3s ease-out forwards, mirror-surface-ripple 3.6s ease-out 2s infinite;
-        }
-
-        .mirror-water-ripple-two {
-          animation: mirror-surface-ripple 1.3s ease-out 420ms forwards, mirror-surface-ripple 3.9s ease-out 3.1s infinite;
-        }
-
-        .mirror-water-ripple-three {
-          animation: mirror-surface-ripple 1.3s ease-out 820ms forwards, mirror-surface-ripple 4.2s ease-out 4s infinite;
-        }
-
-        .is-focusing .mirror-water-ripple {
-          border-color: rgba(216, 183, 111, 0.46);
-        }
-
-        .is-focusing .mirror-water-ripple-one {
-          animation: mirror-click-ripple 1.05s ease-out forwards;
-        }
-
-        .is-focusing .mirror-water-ripple-two {
-          animation: mirror-click-ripple 1.05s ease-out 160ms forwards;
-        }
-
-        .is-focusing .mirror-water-ripple-three {
-          animation: mirror-click-ripple 1.05s ease-out 300ms forwards;
-        }
-
-        .mirror-crack {
-          position: absolute;
-          z-index: 2;
-          inset: 20%;
-          opacity: 0;
-          background:
-            linear-gradient(118deg, transparent 0 44%, rgba(220, 212, 195, 0.14) 45%, transparent 47%),
-            linear-gradient(32deg, transparent 0 54%, rgba(220, 212, 195, 0.11) 55%, transparent 57%);
-          filter: blur(0.2px);
-          transform: scale(0.7);
-        }
-
-        .mirror-layer,
-        .mirror-silence {
-          position: relative;
-          z-index: 3;
-          display: grid;
-          width: 82%;
-          place-items: center;
-          white-space: pre-line;
-          animation: thought-rise 920ms cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
-
-        .mirror-layer small {
-          margin-bottom: 0.5rem;
-          font-family: var(--font-function);
-          font-size: 0.64rem;
-          font-weight: 600;
-          letter-spacing: 0.18em;
-          color: rgba(180, 157, 93, 0.66);
-        }
-
-        .mirror-layer > span {
-          font-family: var(--font-narrative);
-          font-size: clamp(1.05rem, 4.8vw, 1.28rem);
-          font-weight: 300;
-          line-height: 1.62;
-          letter-spacing: 0.045em;
-          color: rgba(242, 235, 220, 0.88);
-        }
-
-        .mirror-layer:not(.is-thought) > span {
-          font-family: var(--font-world);
-          font-size: clamp(1.28rem, 6vw, 1.72rem);
-          line-height: 1.42;
-          letter-spacing: 0.1em;
-          color: rgba(242, 220, 168, 0.88);
-          text-shadow: 0 0 22px rgba(216, 183, 111, 0.14);
-        }
-
-        .mirror-layer.is-thought {
-          animation: thought-from-water 1.18s cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
-
-        .mirror-layer.is-subconscious {
-          width: 74%;
-          animation: subconscious-reflection-rise 960ms cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
-
-        .mirror-layer.is-subconscious > span {
-          font-family: var(--font-function);
-          font-size: clamp(0.86rem, 3vw, 1.02rem);
-          font-weight: 600;
-          line-height: 1.5;
-          letter-spacing: 0.16em;
-          color: rgba(216, 183, 111, 0.64);
-          text-shadow: 0 0 20px rgba(216, 183, 111, 0.14);
-        }
-
-        .mirror-layer em {
-          max-width: 14em;
-          margin-top: 0.7rem;
-          font-family: var(--font-function);
-          font-size: 0.64rem;
-          font-style: normal;
-          line-height: 1.62;
-          letter-spacing: 0.045em;
-          color: rgba(220, 212, 195, 0.48);
-        }
-
-        .mirror-silence {
-          width: 42%;
-          height: 42%;
-          border-radius: 50%;
-          background:
-            radial-gradient(circle, rgba(216, 183, 111, 0.12), transparent 46%),
-            repeating-radial-gradient(circle, rgba(220, 212, 195, 0.08) 0 1px, transparent 1px 13px);
-          opacity: 0.54;
-          animation: silence-pulse 820ms ease-in-out both;
-        }
-
-        .is-revealed .mirror-crack,
-        .is-thiefVisible .mirror-crack,
-        .is-readyForCycle .mirror-crack {
-          animation: crack-reveal 820ms ease-out forwards;
-        }
-
-        .mirror-thought,
-        .mirror-name {
-          position: relative;
-          z-index: 2;
-          display: block;
-        }
-
-        .mirror-thought {
-          width: 82%;
-          align-self: center;
-          white-space: pre-line;
-          font-family: var(--font-narrative);
-          font-size: clamp(1.08rem, 5vw, 1.28rem);
-          font-weight: 300;
-          line-height: 1.68;
-          letter-spacing: 0.045em;
-          color: rgba(242, 235, 220, 0.88);
-          animation: thought-rise 960ms cubic-bezier(0.22, 1, 0.36, 1) both;
-          transition:
-            opacity 720ms ease,
-            transform 720ms cubic-bezier(0.22, 1, 0.36, 1),
-            filter 720ms ease;
-        }
-
-        .mirror-name {
-          min-height: 1.5em;
-          align-self: center;
-          font-family: var(--font-world);
-          font-size: clamp(1.45rem, 6.8vw, 2.08rem);
-          font-weight: 300;
-          letter-spacing: 0.13em;
-          color: rgba(216, 183, 111, 0.76);
-          transform: translateX(0.06em);
-          animation: name-reveal 620ms ease both;
-        }
-
-        .is-focusing .mirror-thought {
-          opacity: 0.68;
-          filter: blur(0.6px);
-          transform: translateY(-4px);
-        }
-
-        .is-revealed .mirror-thought,
-        .is-thiefVisible .mirror-thought,
-        .is-readyForCycle .mirror-thought {
-          opacity: 0.17;
-          filter: blur(1.6px);
-          transform: translateY(-30px) scale(0.92);
-        }
-
-        .is-revealed .mirror-name,
-        .is-thiefVisible .mirror-name,
-        .is-readyForCycle .mirror-name {
-          position: absolute;
-          left: 50%;
-          top: 50%;
-          width: 90%;
-          transform: translate(-50%, -50%) translateX(0.06em);
-          color: rgba(242, 220, 168, 0.9);
-          text-shadow: 0 0 22px rgba(216, 183, 111, 0.16);
-        }
-
-        .heart-mirror-side {
-          --mirror-hover-scale: 1;
-          --mirror-flow-duration: 16s;
-          --mirror-flow-delay: 0s;
-          --mirror-drift-x: 5px;
-          --mirror-drift-y: -6px;
-          --mirror-counter-x: -4px;
-          --mirror-counter-y: 4px;
-          --mirror-scene-x: var(--mirror-x);
-          --mirror-scene-y: var(--mirror-y);
-          --mirror-current-pull-x: var(--mirror-pull-x);
-          --mirror-current-pull-y: var(--mirror-pull-y);
-          --mirror-depth: -48px;
-          --mirror-breath-duration: 8s;
-          --side-surface-low: 0.28;
-          --side-surface-high: 0.46;
-          position: absolute;
-          left: 50%;
-          top: 50%;
-          z-index: var(--mirror-z-index);
-          display: grid;
-          width: clamp(62px, 14vw, 82px);
-          height: clamp(78px, 17vw, 104px);
-          place-items: center;
-          overflow: hidden;
-          border: 1px solid rgba(216, 183, 111, 0.2);
-          border-radius: 50%;
-          opacity: var(--mirror-opacity);
-          pointer-events: auto;
-          filter: blur(var(--mirror-blur));
-          background:
-            linear-gradient(140deg, rgba(85, 66, 36, 0.5), rgba(16, 13, 9, 0.72)),
-            radial-gradient(ellipse at 50% 54%, rgba(216, 183, 111, 0.1), transparent 62%);
-          box-shadow:
-            0 18px 46px rgba(0, 0, 0, 0.34),
-            0 0 24px rgba(180, 157, 93, calc(var(--mirror-shadow) * 0.72)),
-            inset 0 0 0 5px rgba(216, 183, 111, 0.032),
-            inset 0 1px 0 rgba(255, 255, 255, 0.055);
-          scale: var(--mirror-hover-scale);
-          transform: translate(-50%, -50%) translate3d(var(--mirror-scene-x), var(--mirror-scene-y), var(--mirror-depth)) scale(var(--mirror-scale)) rotateY(var(--mirror-rotate-y));
-          transform-style: preserve-3d;
-          transition:
-            opacity 520ms ease,
-            scale 220ms cubic-bezier(0.22, 1, 0.36, 1),
-            transform 820ms cubic-bezier(0.22, 1, 0.36, 1),
-            border-color 520ms ease,
-            filter 520ms ease;
-          animation: subconscious-float var(--mirror-flow-duration) ease-in-out var(--mirror-flow-delay) infinite;
-        }
-
-        .heart-mirror-side::before {
-          content: "";
-          position: absolute;
-          inset: 8%;
-          border-radius: inherit;
-          background:
-            radial-gradient(ellipse at 50% 52%, rgba(11, 36, 34, 0.82), rgba(5, 8, 8, 0.86) 62%, transparent 64%),
-            repeating-radial-gradient(ellipse at 50% 52%, rgba(220, 212, 195, 0.045) 0 1px, transparent 1px 12px);
-          box-shadow:
-            inset 0 0 32px rgba(0, 0, 0, 0.68),
-            inset 0 0 0 1px rgba(216, 183, 111, 0.18);
-          opacity: 0.76;
-          pointer-events: none;
-        }
-
-        .heart-mirror-side::after {
-          content: "";
-          position: absolute;
-          inset: 15% 19% 58% 19%;
-          border-radius: inherit;
-          background: linear-gradient(105deg, transparent, rgba(242, 235, 220, 0.16), transparent);
-          opacity: 0.46;
-          transform: rotate(-12deg);
-          pointer-events: none;
-        }
-
-        .side-mirror-surface {
-          position: absolute;
-          inset: 14%;
-          z-index: 1;
-          border-radius: inherit;
-          background:
-            radial-gradient(circle at 45% 35%, rgba(242, 235, 220, 0.1), transparent 19%),
-            radial-gradient(ellipse at 50% 58%, rgba(95, 132, 117, 0.18), transparent 62%),
-            repeating-radial-gradient(ellipse at 50% 54%, rgba(220, 212, 195, 0.035) 0 1px, transparent 1px 11px);
-          opacity: var(--side-surface-low);
-          pointer-events: none;
-          animation: side-surface-breathe var(--mirror-breath-duration) ease-in-out var(--mirror-flow-delay) infinite;
-        }
-
-        .side-mirror-glint {
-          position: absolute;
-          left: 19%;
-          top: 32%;
-          z-index: 2;
-          display: block;
-          width: 62%;
-          height: 1px;
-          border-radius: 999px;
-          background: linear-gradient(90deg, transparent, rgba(242, 235, 220, 0.18), transparent);
-          opacity: 0.54;
-          transform: rotate(-14deg);
-        }
-
-        .side-mirror-name {
-          position: absolute;
-          left: 50%;
-          top: 50%;
-          z-index: 3;
-          width: 5.8em;
-          font-family: var(--font-function);
-          font-size: 0.5rem;
-          font-weight: 600;
-          line-height: 1.35;
-          letter-spacing: 0.08em;
-          color: rgba(242, 220, 168, 0.5);
-          opacity: 0.28;
-          transform: translate(-50%, -50%);
-          transition:
-            opacity 220ms ease,
-            transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
-          pointer-events: none;
-        }
-
-        .heart-mirror-side.is-conscience {
-          opacity: 0.14;
-          filter: blur(1.8px);
-        }
-
-        .is-readyForCycle .heart-mirror-side.is-conscience,
-        .hidden-conscience.is-awake {
-          opacity: 0.58;
-          filter: blur(0);
-        }
-
-        .heart-mirror-side:hover,
-        .heart-mirror-side:focus-visible,
-        .heart-mirror-side.is-hovered {
-          --mirror-hover-scale: 1.08;
-          opacity: 0.78;
-          border-color: rgba(216, 183, 111, 0.34);
-          outline: none;
-          filter: blur(0.1px) brightness(1.12);
-          box-shadow:
-            0 18px 50px rgba(0, 0, 0, 0.42),
-            0 0 24px rgba(216, 183, 111, 0.07),
-            inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        }
-
-        .heart-mirror-side.is-resonant {
-          opacity: 0.86;
-          border-color: rgba(216, 183, 111, 0.56);
-          filter: blur(0) brightness(1.14);
-          box-shadow:
-            0 22px 64px rgba(0, 0, 0, 0.46),
-            0 0 44px rgba(180, 157, 93, 0.16),
-            inset 0 0 0 5px rgba(216, 183, 111, 0.07),
-            inset 0 1px 0 rgba(255, 255, 255, 0.12);
-          animation:
-            subconscious-float var(--mirror-flow-duration) ease-in-out var(--mirror-flow-delay) infinite,
-            resonant-mirror-breathe 4.8s ease-in-out infinite;
-        }
-
-        .heart-mirror-side.motion-dart {
-          animation-name: mirror-dart-float;
-          animation-timing-function: cubic-bezier(0.3, 0, 0.18, 1);
-        }
-
-        .heart-mirror-side.motion-heavy {
-          animation-name: mirror-heavy-float;
-          animation-timing-function: cubic-bezier(0.45, 0, 0.3, 1);
-        }
-
-        .heart-mirror-side.motion-swing {
-          animation-name: mirror-swing-float;
-        }
-
-        .heart-mirror-side.motion-follow {
-          animation-name: mirror-follow-float;
-        }
-
-        .heart-mirror-side.motion-waver {
-          animation-name: mirror-waver-float;
-        }
-
-        .heart-mirror-side.motion-lag {
-          animation-name: mirror-lag-float;
-        }
-
-        .heart-mirror-side.motion-tremble {
-          animation-name: mirror-tremble-float;
-        }
-
-        .heart-mirror-side.motion-steady {
-          animation-name: mirror-steady-float;
-        }
-
-        .heart-mirror-side.is-resonant.motion-dart {
-          animation:
-            mirror-dart-float var(--mirror-flow-duration) cubic-bezier(0.3, 0, 0.18, 1) var(--mirror-flow-delay) infinite,
-            resonant-mirror-breathe 4.8s ease-in-out infinite;
-        }
-
-        .heart-mirror-side.is-resonant.motion-heavy {
-          animation:
-            mirror-heavy-float var(--mirror-flow-duration) cubic-bezier(0.45, 0, 0.3, 1) var(--mirror-flow-delay) infinite,
-            resonant-mirror-breathe 5.6s ease-in-out infinite;
-        }
-
-        .heart-mirror-side.is-resonant.motion-swing {
-          animation:
-            mirror-swing-float var(--mirror-flow-duration) ease-in-out var(--mirror-flow-delay) infinite,
-            resonant-mirror-breathe 4.9s ease-in-out infinite;
-        }
-
-        .heart-mirror-side.is-resonant.motion-follow {
-          animation:
-            mirror-follow-float var(--mirror-flow-duration) ease-in-out var(--mirror-flow-delay) infinite,
-            resonant-mirror-breathe 5.1s ease-in-out infinite;
-        }
-
-        .heart-mirror-side.is-resonant.motion-waver {
-          animation:
-            mirror-waver-float var(--mirror-flow-duration) ease-in-out var(--mirror-flow-delay) infinite,
-            resonant-mirror-breathe 4.7s ease-in-out infinite;
-        }
-
-        .heart-mirror-side.is-resonant.motion-lag {
-          animation:
-            mirror-lag-float var(--mirror-flow-duration) ease-in-out var(--mirror-flow-delay) infinite,
-            resonant-mirror-breathe 5.8s ease-in-out infinite;
-        }
-
-        .heart-mirror-side.is-resonant.motion-tremble {
-          animation:
-            mirror-tremble-float var(--mirror-flow-duration) ease-in-out var(--mirror-flow-delay) infinite,
-            resonant-mirror-breathe 4.6s ease-in-out infinite;
-        }
-
-        .heart-mirror-side.is-resonant.motion-steady {
-          animation:
-            mirror-steady-float var(--mirror-flow-duration) ease-in-out var(--mirror-flow-delay) infinite,
-            resonant-mirror-breathe 6.4s ease-in-out infinite;
-        }
-
-        .heart-mirror-side.is-resonant .side-mirror-name {
-          opacity: 0.92;
-          color: rgba(242, 220, 168, 0.9);
-        }
-
-        .heart-mirror-side.is-resonant .side-mirror-surface {
-          opacity: 0.84;
-        }
-
-        .heart-mirror-side.is-secondary-resonant {
-          opacity: 0.62;
-          border-color: rgba(216, 183, 111, 0.42);
-          filter: blur(0.45px) brightness(1.08);
-          box-shadow:
-            0 19px 54px rgba(0, 0, 0, 0.42),
-            0 0 30px rgba(180, 157, 93, 0.1),
-            inset 0 0 0 5px rgba(216, 183, 111, 0.055),
-            inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        }
-
-        .heart-mirror-side.is-secondary-resonant .side-mirror-name {
-          opacity: 0.52;
-          color: rgba(242, 220, 168, 0.78);
-        }
-
-        .heart-mirror-side.is-tertiary-resonant {
-          opacity: 0.48;
-          border-color: rgba(216, 183, 111, 0.34);
-          filter: blur(0.85px) brightness(1.04);
-        }
-
-        .heart-mirror-side.is-tertiary-resonant .side-mirror-name {
-          opacity: 0.36;
-        }
-
-        .heart-mirror-side:hover .side-mirror-name,
-        .heart-mirror-side:focus-visible .side-mirror-name,
-        .heart-mirror-side.is-hovered .side-mirror-name {
-          opacity: 0.88;
-          transform: translate(-50%, -50%) scale(1.02);
-        }
-
-        .is-mirrorArray .heart-mirror-side .side-mirror-name,
-        .is-mirrorArray .heart-mirror-side:hover .side-mirror-name,
-        .is-mirrorArray .heart-mirror-side:focus-visible .side-mirror-name,
-        .is-mirrorArray .heart-mirror-side.is-hovered .side-mirror-name {
-          opacity: 0;
-          filter: blur(4px);
-          transform: translate(-50%, -50%) translateY(4px) scale(0.94);
-        }
-
-        .slot-top {
-          left: 50%;
-          top: 3%;
-          z-index: 15;
-          opacity: 0.42;
-          filter: blur(1.2px);
-          transform: translate(-50%, -50%) translateZ(-120px) scale(0.72);
-          animation: mirror-float-a 12s ease-in-out infinite;
-        }
-
-        .slot-upper-right {
-          left: 78%;
-          top: 16%;
-          z-index: 28;
-          opacity: 0.62;
-          filter: blur(0.6px);
-          transform: translate(-50%, -50%) translateZ(-44px) scale(0.86) rotateY(-10deg);
-          animation: mirror-float-b 13s ease-in-out infinite;
-        }
-
-        .slot-right {
-          left: 91%;
-          top: 50%;
-          z-index: 38;
-          opacity: 0.76;
-          filter: blur(0.2px);
-          transform: translate(-50%, -50%) translateZ(20px) scale(0.96) rotateY(-12deg);
-          animation: mirror-float-c 14s ease-in-out infinite;
-        }
-
-        .slot-lower-right {
-          left: 78%;
-          top: 84%;
-          z-index: 34;
-          opacity: 0.66;
-          filter: blur(0.5px);
-          transform: translate(-50%, -50%) translateZ(-28px) scale(0.9) rotateY(-9deg);
-          animation: mirror-float-a 15s ease-in-out infinite reverse;
-        }
-
-        .slot-bottom {
-          left: 50%;
-          top: 97%;
-          z-index: 20;
-          opacity: 0.46;
-          filter: blur(1px);
-          transform: translate(-50%, -50%) translateZ(-96px) scale(0.76);
-          animation: mirror-float-b 16s ease-in-out infinite reverse;
-        }
-
-        .slot-lower-left {
-          left: 22%;
-          top: 84%;
-          z-index: 34;
-          opacity: 0.66;
-          filter: blur(0.5px);
-          transform: translate(-50%, -50%) translateZ(-28px) scale(0.9) rotateY(9deg);
-          animation: mirror-float-c 13s ease-in-out infinite reverse;
-        }
-
-        .slot-left {
-          left: 9%;
-          top: 50%;
-          z-index: 38;
-          opacity: 0.76;
-          filter: blur(0.2px);
-          transform: translate(-50%, -50%) translateZ(20px) scale(0.96) rotateY(12deg);
-          animation: mirror-float-a 14s ease-in-out infinite;
-        }
-
-        .slot-upper-left {
-          left: 22%;
-          top: 16%;
-          z-index: 28;
-          opacity: 0.62;
-          filter: blur(0.6px);
-          transform: translate(-50%, -50%) translateZ(-44px) scale(0.86) rotateY(10deg);
-          animation: mirror-float-b 15s ease-in-out infinite;
-        }
-
-        .is-focusing .heart-mirror-side,
-        .is-subconsciousVisible .heart-mirror-side,
-        .is-revealed .heart-mirror-side,
-        .is-thiefVisible .heart-mirror-side,
-        .is-readyForCycle .heart-mirror-side {
-          opacity: 0.1;
-          transform: translate(-50%, -50%) translate3d(var(--mirror-scene-x), var(--mirror-scene-y), var(--mirror-depth)) scale(0.62);
-          filter: blur(2.8px);
-        }
-
-        .is-focusing .heart-mirror-side.is-resonant {
-          opacity: 0.46;
-          transform: translate(-50%, -50%) translate3d(var(--mirror-current-pull-x), var(--mirror-current-pull-y), 84px) scale(0.74);
-          filter: blur(0.25px) brightness(1.1);
-          border-color: rgba(216, 183, 111, 0.44);
-        }
-
-        .six-thief-orbit {
-          position: absolute;
-          left: 50%;
-          top: 50%;
-          z-index: 68;
-          width: 1px;
-          height: 1px;
-          pointer-events: none;
-          transform: translate(-50%, -50%) translateZ(104px);
-          animation: thief-field-rise 760ms cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
-
-        .thief-cycle-ring {
-          position: absolute;
-          left: 50%;
-          top: 50%;
-          width: 258px;
-          height: 168px;
-          border: 1px solid rgba(127, 37, 25, 0.12);
-          border-radius: 50%;
-          background:
-            conic-gradient(
-              from 22deg,
-              transparent 0 9%,
-              rgba(127, 37, 25, 0.14) 10% 11%,
-              transparent 12% 25%,
-              rgba(127, 37, 25, 0.12) 26% 27%,
-              transparent 28% 42%,
-              rgba(127, 37, 25, 0.12) 43% 44%,
-              transparent 45% 59%,
-              rgba(127, 37, 25, 0.12) 60% 61%,
-              transparent 62% 76%,
-              rgba(127, 37, 25, 0.12) 77% 78%,
-              transparent 79% 92%,
-              rgba(127, 37, 25, 0.14) 93% 94%,
-              transparent 95% 100%
-            );
-          opacity: 0;
-          transform: translate(-50%, -50%) rotate(-8deg);
-          transition: opacity 860ms ease, filter 860ms ease;
-        }
-
-        .thief-cycle-ring::after {
-          content: "";
-          position: absolute;
-          right: 7%;
-          top: 31%;
-          width: 7px;
-          height: 7px;
-          border-right: 1px solid rgba(196, 91, 62, 0.34);
-          border-top: 1px solid rgba(196, 91, 62, 0.34);
-          opacity: 0.36;
-          transform: rotate(34deg);
-        }
-
-        .six-thief-orbit.is-cycling .thief-cycle-ring {
-          opacity: 0.78;
-          filter: drop-shadow(0 0 18px rgba(127, 37, 25, 0.12));
-          animation: thief-cycle-breathe 5.2s ease-in-out infinite;
-        }
-
-        .thief-star {
-          position: absolute;
-          left: 50%;
-          top: 50%;
-          display: grid;
-          width: 34px;
-          height: 34px;
-          place-items: center;
-          border: 1px solid rgba(127, 37, 25, 0.22);
-          border-radius: 50%;
-          background:
-            radial-gradient(circle, rgba(127, 37, 25, 0.14), rgba(8, 6, 5, 0.28) 64%, transparent 70%);
-          color: rgba(220, 212, 195, 0.38);
-          font-family: var(--font-world);
-          font-size: 0.88rem;
-          line-height: 1;
-          opacity: 0.48;
-          filter: blur(0.7px);
-          transform: translate(-50%, -50%) translate(var(--thief-x), var(--thief-y)) scale(0.86);
-          box-shadow:
-            inset 0 0 18px rgba(0, 0, 0, 0.48),
-            0 0 18px rgba(127, 37, 25, 0.08);
-          transition:
-            border-color 680ms ease,
-            color 680ms ease,
-            opacity 680ms ease,
-            filter 680ms ease,
-            transform 880ms cubic-bezier(0.22, 1, 0.36, 1);
-          animation: thief-star-drift 6.8s ease-in-out infinite;
-        }
-
-        .thief-star.is-active {
-          border-color: rgba(196, 91, 62, 0.58);
-          background:
-            radial-gradient(circle, rgba(127, 37, 25, 0.32), rgba(35, 10, 7, 0.38) 64%, transparent 72%);
-          color: rgba(232, 132, 96, 0.88);
-          opacity: 0.92;
-          filter: blur(0);
-          transform: translate(-50%, -50%) translate(var(--thief-x), var(--thief-y)) scale(1);
-          box-shadow:
-            inset 0 0 18px rgba(0, 0, 0, 0.5),
-            0 0 22px rgba(127, 37, 25, 0.18);
-        }
-
-        .six-thief-orbit.is-cycling .thief-star {
-          opacity: 0.68;
-          filter: blur(0.2px);
-        }
-
-        .six-thief-orbit.is-cycling .thief-star.is-active {
-          opacity: 1;
-          animation:
-            thief-star-drift 6.8s ease-in-out infinite,
-            thief-active-pulse 2.8s ease-in-out infinite;
-        }
-
-        .six-thief-orbit.is-quieted .thief-star {
-          border-color: rgba(180, 157, 93, 0.18);
-          background:
-            radial-gradient(circle, rgba(180, 157, 93, 0.08), rgba(8, 8, 6, 0.22) 64%, transparent 72%);
-          color: rgba(220, 212, 195, 0.22);
-          opacity: 0.22;
-          filter: blur(1.2px);
-        }
-
-        .six-thief-orbit.is-quieted .thief-cycle-ring {
-          opacity: 0.12;
-          filter: blur(1.2px);
-        }
-
-        .virtue-orbit {
-          position: absolute;
-          left: 50%;
-          top: 50%;
           display: flex;
-          gap: 12px;
-          width: max-content;
           align-items: center;
-          white-space: nowrap;
-          transform: translate(-50%, -50%) translateY(142px);
-          color: rgba(216, 183, 111, 0.68);
+          gap: clamp(0.74rem, 2vw, 1.18rem);
           font-family: var(--font-function);
-          font-size: 0.62rem;
+          font-size: clamp(0.64rem, 1.6vw, 0.78rem);
           font-weight: 600;
-          letter-spacing: 0.14em;
-          text-shadow: 0 0 18px rgba(216, 183, 111, 0.12);
-        }
-
-        .virtue-orbit i {
-          font-style: normal;
-          opacity: 0;
-          animation: virtue-rise 680ms ease forwards;
-        }
-
-        .virtue-orbit i:nth-child(2) {
-          animation-delay: 180ms;
-        }
-
-        .virtue-orbit i:nth-child(3) {
-          animation-delay: 360ms;
-        }
-
-        .is-focusing .heart-mirror-main {
-          --mirror-glow-low: 0.18;
-          --mirror-glow-high: 0.24;
-          border-color: rgba(216, 183, 111, 0.58);
-          box-shadow:
-            0 34px 104px rgba(0, 0, 0, 0.54),
-            0 0 92px rgba(180, 157, 93, 0.18),
-            inset 0 0 82px rgba(0, 0, 0, 0.62),
-            inset 0 1px 0 rgba(255, 255, 255, 0.12);
-        }
-
-        .hidden-conscience {
-          position: absolute;
-          left: 50%;
-          top: 51%;
-          z-index: 1;
-          display: grid;
-          gap: 8px;
-          font-family: var(--font-world);
-          font-size: 0.9rem;
-          font-weight: 300;
-          letter-spacing: 0.16em;
-          color: rgba(216, 183, 111, 0.42);
-          opacity: 0.16;
-          transform: translate(-50%, -50%) translateY(108px);
-          transition:
-            opacity 800ms ease,
-            filter 800ms ease,
-            transform 800ms cubic-bezier(0.22, 1, 0.36, 1);
+          letter-spacing: 0.22em;
+          color: rgba(216, 183, 111, 0.46);
+          text-indent: 0.22em;
+          transform: translateX(-50%);
           pointer-events: none;
         }
 
-        .hidden-conscience small {
+        .ritual-title i {
+          width: 3.8rem;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(216, 183, 111, 0.36), transparent);
+        }
+
+        .ritual-copy {
+          position: absolute;
+          left: 50%;
+          top: clamp(50%, 57svh, 59%);
+          z-index: 9;
+          display: grid;
+          width: min(88vw, 720px);
+          gap: 0.82rem;
+          transform: translate(-50%, -50%);
+          animation: copy-rise 920ms cubic-bezier(0.22, 1, 0.36, 1) both;
+          pointer-events: none;
+        }
+
+        .ritual-copy small {
           font-family: var(--font-function);
-          font-size: 0.68rem;
-          letter-spacing: 0.12em;
-          color: rgba(220, 212, 195, 0.34);
-        }
-
-        .hidden-conscience.is-awake {
-          opacity: 0.84;
-          filter: blur(0);
-          transform: translate(-50%, -50%) translateY(132px);
-          text-shadow: 0 0 18px rgba(216, 183, 111, 0.2);
-        }
-
-        .mirror-reveal-copy {
-          min-height: 122px;
-          margin-top: 1rem;
-          opacity: 0;
-          transform: translateY(12px);
-          filter: blur(8px);
-          transition:
-            opacity 620ms ease,
-            transform 620ms cubic-bezier(0.22, 1, 0.36, 1),
-            filter 620ms ease;
-        }
-
-        .mirror-reveal-copy.is-visible {
-          opacity: 1;
-          transform: translateY(0);
-          filter: blur(0);
-        }
-
-        .mirror-reveal-copy-quiet {
-          min-height: 64px;
-        }
-
-        .reveal-label {
-          margin: 0;
-          font-family: var(--font-function);
-          font-size: 0.72rem;
+          font-size: clamp(0.68rem, 1.8vw, 0.82rem);
+          font-weight: 600;
           letter-spacing: 0.18em;
-          color: rgba(180, 157, 93, 0.62);
+          color: rgba(216, 183, 111, 0.68);
+          text-indent: 0.18em;
         }
 
-        .thought-proof {
-          margin: 0.42rem auto 0;
-          max-width: 19em;
-          font-family: var(--font-narrative);
-          font-size: clamp(1.06rem, 4.6vw, 1.22rem);
-          font-weight: 300;
-          line-height: 1.78;
-          letter-spacing: 0.045em;
-          color: rgba(242, 235, 220, 0.76);
-        }
-
-        .reveal-name {
-          margin: 0.4rem 0 0;
+        .ritual-copy h1 {
+          margin: 0;
+          white-space: pre-line;
           font-family: var(--font-world);
-          font-size: clamp(2rem, 8.8vw, 2.75rem);
+          font-size: clamp(2rem, 6.8vw, 4.4rem);
           font-weight: 300;
-          line-height: 1.12;
-          letter-spacing: 0.14em;
-          color: rgba(216, 183, 111, 0.82);
-          transform: translateX(0.07em);
+          line-height: 1.34;
+          letter-spacing: 0.06em;
+          color: rgba(244, 235, 221, 0.9);
+          text-shadow:
+            0 0 34px rgba(216, 183, 111, 0.1),
+            0 20px 60px rgba(0, 0, 0, 0.7);
         }
 
-        .behavior-proof {
-          max-width: 18em;
-          margin: 0.72rem auto 0;
+        .ritual-copy p {
+          margin: 0 auto;
+          max-width: min(82vw, 34em);
+          white-space: pre-line;
           font-family: var(--font-narrative);
-          font-size: clamp(0.98rem, 4.1vw, 1.12rem);
+          font-size: clamp(0.92rem, 2.4vw, 1.12rem);
           font-weight: 300;
           line-height: 1.72;
-          letter-spacing: 0.045em;
-          color: rgba(220, 212, 195, 0.68);
+          letter-spacing: 0.06em;
+          color: rgba(220, 212, 195, 0.6);
         }
 
-        .thief-root-list {
-          display: grid;
-          max-width: 22em;
-          margin: 0.78rem auto 0;
-          gap: 10px;
+        .ritual-copy.is-thought {
+          top: clamp(54%, 60svh, 62%);
         }
 
-        .thief-root-list p {
-          margin: 0;
+        .ritual-copy.is-thought h1 {
+          font-size: clamp(1.72rem, 5.6vw, 3.35rem);
+          animation: thought-from-water 1.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        .ritual-copy.is-payoff {
+          top: clamp(52%, 58svh, 60%);
+          width: min(88vw, 780px);
+        }
+
+        .ritual-copy.is-payoff h1 {
           font-family: var(--font-narrative);
-          font-size: clamp(0.95rem, 3.9vw, 1.08rem);
-          font-weight: 300;
-          line-height: 1.7;
+          font-size: clamp(1.62rem, 4.8vw, 3.1rem);
+          line-height: 1.58;
           letter-spacing: 0.04em;
-          color: rgba(220, 212, 195, 0.68);
         }
 
-        .thief-root-list span {
-          display: inline-grid;
-          min-width: 2.1em;
-          height: 2.1em;
-          margin-right: 0.56rem;
-          place-items: center;
-          border: 1px solid rgba(127, 37, 25, 0.5);
-          border-radius: 50%;
-          background: rgba(127, 37, 25, 0.18);
-          color: rgba(218, 108, 80, 0.9);
-          font-family: var(--font-world);
-          font-size: 0.9em;
-          letter-spacing: 0;
-          box-shadow: 0 0 18px rgba(127, 37, 25, 0.11);
-          animation: seal-mark-drop 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+        .ritual-copy.is-thief h1 {
+          color: rgba(196, 91, 62, 0.88);
+          letter-spacing: 0.2em;
+          text-indent: 0.2em;
+          text-shadow:
+            0 0 28px rgba(127, 37, 25, 0.22),
+            0 22px 58px rgba(0, 0, 0, 0.76);
         }
 
-        .heart-verdict,
-        .conscience-copy,
-        .heart-thief-mark {
-          margin: 0.55rem auto 0;
-          max-width: 22em;
-          font-family: var(--font-narrative);
-          font-size: clamp(1rem, 4.4vw, 1.16rem);
-          font-weight: 300;
-          line-height: 1.86;
-          letter-spacing: 0.045em;
-          color: rgba(220, 212, 195, 0.72);
+        .ritual-copy.is-heart-seal h1,
+        .ritual-copy.is-conscience h1 {
+          color: rgba(242, 220, 168, 0.92);
         }
 
-        .heart-thief-mark {
-          font-family: var(--font-function);
-          font-size: 0.78rem;
-          line-height: 1.6;
-          letter-spacing: 0.14em;
-          color: rgba(180, 157, 93, 0.62);
+        .ritual-copy.is-complete {
+          top: 50%;
         }
 
-        .conscience-copy {
-          color: rgba(216, 183, 111, 0.68);
+        .ritual-copy.is-complete h1 {
+          font-size: clamp(2.1rem, 6vw, 3.8rem);
+          color: rgba(242, 220, 168, 0.92);
         }
 
-        .mirror-hint {
-          margin: 1.5rem 0 0;
-          font-family: var(--font-function);
-          font-size: 0.72rem;
-          letter-spacing: 0.16em;
-          color: rgba(220, 212, 195, 0.34);
+        .ritual-copy.is-complete p {
+          margin-top: 0.3rem;
+          font-size: clamp(1rem, 2.5vw, 1.22rem);
+          line-height: 1.64;
+          color: rgba(244, 235, 221, 0.72);
         }
 
-        .mirror-action-script {
-          position: relative;
-          z-index: 88;
-          display: inline-flex;
-          width: min(100%, 430px);
-          min-height: 52px;
-          align-items: center;
+        .thief-detail {
+          position: absolute;
+          left: 50%;
+          top: calc(58% + clamp(110px, 15svh, 150px));
+          z-index: 9;
+          display: flex;
+          flex-wrap: wrap;
           justify-content: center;
-          border: 1px solid rgba(216, 183, 111, 0.28);
+          gap: 0.7rem;
+          width: min(86vw, 520px);
+          transform: translateX(-50%);
+          animation: copy-rise 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+          pointer-events: none;
+        }
+
+        .thief-detail span {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.34rem;
+          padding: 0.48rem 0.74rem;
+          border: 1px solid rgba(127, 37, 25, 0.28);
+          border-radius: 999px;
+          background: rgba(18, 12, 10, 0.26);
+          font-family: var(--font-function);
+          font-size: clamp(0.72rem, 1.7vw, 0.82rem);
+          letter-spacing: 0.08em;
+          color: rgba(220, 212, 195, 0.62);
+        }
+
+        .thief-detail b {
+          font-family: var(--font-world);
+          font-weight: 400;
+          color: rgba(196, 91, 62, 0.88);
+        }
+
+        .ritual-action {
+          position: absolute;
+          left: 50%;
+          bottom: clamp(1.6rem, 5svh, 3.5rem);
+          z-index: 10;
+          min-width: min(74vw, 360px);
+          min-height: 58px;
+          padding: 0 2.2rem;
+          overflow: hidden;
+          border: 1px solid rgba(216, 183, 111, 0.34);
           border-radius: 999px;
           background:
-            radial-gradient(circle at 50% 0%, rgba(216, 183, 111, 0.12), transparent 48%),
-            rgba(5, 5, 4, 0.24);
-          color: rgba(242, 235, 220, 0.82);
-          cursor: pointer;
+            linear-gradient(180deg, rgba(216, 183, 111, 0.78), rgba(154, 124, 55, 0.86)),
+            radial-gradient(ellipse at 50% 0%, rgba(255, 244, 203, 0.36), transparent 62%);
+          color: rgba(4, 4, 3, 0.9);
           font-family: var(--font-function);
-          font-size: 0.92rem;
-          font-weight: 500;
-          letter-spacing: 0.12em;
-          text-align: center;
-          text-decoration: none;
+          font-size: clamp(0.92rem, 2.2vw, 1.02rem);
+          font-weight: 700;
+          letter-spacing: 0.18em;
+          text-indent: 0.18em;
           box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, 0.08),
-            0 18px 52px rgba(0, 0, 0, 0.24);
+            0 18px 54px rgba(0, 0, 0, 0.46),
+            inset 0 1px 0 rgba(255, 255, 255, 0.24);
+          transform: translateX(-50%);
           transition:
-            border-color 260ms ease,
-            color 260ms ease,
-            background 260ms ease,
-            transform 180ms ease;
+            transform 180ms ease,
+            border-color 240ms ease,
+            filter 240ms ease;
           -webkit-tap-highlight-color: transparent;
         }
 
-        .mirror-action-script:active {
-          transform: scale(0.985);
+        .ritual-action:hover,
+        .ritual-action:focus-visible {
+          border-color: rgba(242, 220, 168, 0.56);
+          filter: brightness(1.06);
+          outline: none;
         }
 
-        .mirror-action-main {
-          box-shadow:
-            0 18px 52px rgba(0, 0, 0, 0.28),
-            0 0 42px rgba(180, 157, 93, 0.1);
+        .ritual-action:active {
+          transform: translateX(-50%) translateY(2px);
         }
 
-        @keyframes mist-drift {
-          0%,
-          100% {
-            transform: translate3d(0, 0, 0) scale(1);
-          }
-
-          50% {
-            transform: translate3d(18px, -10px, 0) scale(1.08);
-          }
+        .hold-action {
+          background:
+            linear-gradient(180deg, rgba(38, 34, 22, 0.72), rgba(12, 14, 10, 0.82)),
+            radial-gradient(ellipse at 50% 0%, rgba(216, 183, 111, 0.18), transparent 66%);
+          color: rgba(242, 220, 168, 0.9);
+          touch-action: none;
         }
 
-        @keyframes far-dust-drift {
-          0%,
-          100% {
-            opacity: 0.48;
-            transform: translate3d(0, 0, 0) scale(1);
-          }
-
-          50% {
-            opacity: 0.78;
-            transform: translate3d(22px, -16px, 0) scale(1.04);
-          }
+        .hold-action span {
+          position: absolute;
+          left: 0;
+          top: 0;
+          bottom: 0;
+          width: 100%;
+          background: linear-gradient(90deg, rgba(216, 183, 111, 0.26), rgba(95, 132, 117, 0.18));
+          opacity: 0.72;
+          transform-origin: left center;
+          pointer-events: none;
         }
 
-        @keyframes nebula-breathe {
-          0%,
-          100% {
-            opacity: 0.55;
-            transform: scale(0.98);
-          }
-
-          50% {
-            opacity: 0.82;
-            transform: scale(1.04);
-          }
+        .cycle-action {
+          bottom: clamp(1.1rem, 3.4svh, 2.4rem);
         }
 
-        @keyframes particle-drift {
-          0% {
-            opacity: 0.26;
-            margin-top: 0;
-          }
-
-          50% {
-            opacity: 0.72;
-            margin-top: -12px;
-          }
-
-          100% {
-            opacity: 0.26;
-            margin-top: 0;
-          }
-        }
-
-        @keyframes gateway-stage-in {
+        @keyframes copy-rise {
           from {
             opacity: 0;
-            filter: blur(10px);
-            transform: translateY(18px);
+            filter: blur(12px);
+            transform: translate(-50%, calc(-50% + 22px));
           }
 
           to {
             opacity: 1;
             filter: blur(0);
-            transform: translateY(0);
+            transform: translate(-50%, -50%);
           }
         }
 
-        @keyframes gateway-breath {
-          0%,
-          100% {
-            opacity: 0.54;
-            transform: scale(1);
-          }
-
-          50% {
-            opacity: 0.84;
-            transform: scale(1.035);
-          }
-        }
-
-        @keyframes empty-mirror-rise {
+        @keyframes thought-from-water {
           from {
             opacity: 0;
-            transform: scale(0.86);
-          }
-
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-
-        @keyframes water-pulse {
-          0%,
-          100% {
-            opacity: 0.28;
-            transform: scale(0.86);
-          }
-
-          50% {
-            opacity: 0.52;
-            transform: scale(1.08);
-          }
-        }
-
-        @keyframes living-water-breathe {
-          0%,
-          100% {
-            opacity: 0.38;
-            filter: blur(0.3px);
-            transform: scale(0.96);
-          }
-
-          50% {
-            opacity: 0.66;
-            filter: blur(0);
-            transform: scale(1.035);
-          }
-        }
-
-        @keyframes lake-voice-breathe {
-          0%,
-          100% {
-            filter: brightness(var(--lake-voice-brightness-low)) blur(0);
-            transform: translate(-50%, -50%) scale(var(--lake-voice-rest-scale));
-          }
-
-          50% {
-            filter: brightness(var(--lake-voice-brightness-high)) blur(0.1px);
-            transform: translate(-50%, -50%) scale(var(--lake-voice-peak-scale));
-          }
-        }
-
-        @keyframes lake-undercurrent-breathe {
-          0%,
-          100% {
-            opacity: 0.22;
-            transform: scale(0.88);
-          }
-
-          50% {
-            opacity: 0.46;
-            transform: scale(1.05);
-          }
-        }
-
-        @keyframes depth-chamber-breathe {
-          0%,
-          100% {
-            opacity: 0.16;
-            transform: scale(0.94);
-          }
-
-          50% {
-            opacity: 0.32;
-            transform: scale(0.985);
-          }
-        }
-
-        @keyframes moon-still-breathe {
-          0%,
-          100% {
-            opacity: 0.34;
-            transform: translate(-50%, -50%) scale(0.98);
-          }
-
-          50% {
-            opacity: 0.5;
-            transform: translate(-50%, -50%) scale(1.025);
-          }
-        }
-
-        @keyframes moon-reflection-breathe {
-          0%,
-          100% {
-            opacity: 0.28;
-            transform: translateX(-50%) scaleY(0.92);
-          }
-
-          50% {
-            opacity: 0.46;
-            transform: translateX(-50%) scaleY(1.08);
-          }
-        }
-
-        @keyframes inner-stillness-listen {
-          0%,
-          100% {
-            opacity: 0.34;
-            transform: scale(0.92);
-          }
-
-          50% {
-            opacity: 0.58;
-            transform: scale(1.04);
-          }
-        }
-
-        @keyframes orbit-drift {
-          from {
-            transform: rotate(0deg);
-          }
-
-          to {
-            transform: rotate(360deg);
-          }
-        }
-
-        @keyframes mirror-float-a {
-          0%,
-          100% {
-            margin-top: 0;
-            margin-left: 0;
-          }
-
-          50% {
-            margin-top: -7px;
-            margin-left: 5px;
-          }
-        }
-
-        @keyframes mirror-float-b {
-          0%,
-          100% {
-            margin-top: 0;
-            margin-left: 0;
-          }
-
-          50% {
-            margin-top: 6px;
-            margin-left: -4px;
-          }
-        }
-
-        @keyframes mirror-float-c {
-          0%,
-          100% {
-            margin-top: 0;
-            margin-left: 0;
-          }
-
-          50% {
-            margin-top: -4px;
-            margin-left: -6px;
-          }
-        }
-
-        @keyframes subconscious-float {
-          0%,
-          100% {
-            margin-top: 0;
-            margin-left: 0;
-          }
-
-          42% {
-            margin-top: var(--mirror-drift-y);
-            margin-left: var(--mirror-drift-x);
-          }
-
-          72% {
-            margin-top: var(--mirror-counter-y);
-            margin-left: var(--mirror-counter-x);
-          }
-        }
-
-        @keyframes mirror-dart-float {
-          0%,
-          100% {
-            margin-top: 0;
-            margin-left: 0;
-          }
-
-          12% {
-            margin-top: -2px;
-            margin-left: 3px;
-          }
-
-          18% {
-            margin-top: var(--mirror-drift-y);
-            margin-left: var(--mirror-drift-x);
-          }
-
-          28% {
-            margin-top: 3px;
-            margin-left: -2px;
-          }
-
-          44% {
-            margin-top: var(--mirror-counter-y);
-            margin-left: var(--mirror-counter-x);
-          }
-
-          58% {
-            margin-top: -3px;
-            margin-left: 4px;
-          }
-
-          76% {
-            margin-top: 0;
-            margin-left: var(--mirror-drift-x);
-          }
-        }
-
-        @keyframes mirror-heavy-float {
-          0%,
-          100% {
-            margin-top: 0;
-            margin-left: 0;
-          }
-
-          38% {
-            margin-top: var(--mirror-drift-y);
-            margin-left: 0;
-          }
-
-          52%,
-          62% {
-            margin-top: var(--mirror-drift-y);
-            margin-left: 0;
-          }
-
-          72% {
-            margin-top: 0;
-            margin-left: var(--mirror-counter-x);
-          }
-        }
-
-        @keyframes mirror-swing-float {
-          0%,
-          100% {
-            margin-top: 0;
-            margin-left: 0;
-          }
-
-          32% {
-            margin-top: var(--mirror-drift-y);
-            margin-left: var(--mirror-drift-x);
-            scale: 1.08;
-          }
-
-          66% {
-            margin-top: var(--mirror-counter-y);
-            margin-left: var(--mirror-counter-x);
-            scale: 0.92;
-          }
-        }
-
-        @keyframes mirror-follow-float {
-          0%,
-          100% {
-            margin-top: 0;
-            margin-left: 0;
-          }
-
-          46% {
-            margin-top: var(--mirror-drift-y);
-            margin-left: var(--mirror-drift-x);
-          }
-
-          58% {
-            margin-top: calc(var(--mirror-drift-y) * 0.6);
-            margin-left: calc(var(--mirror-drift-x) * 1.22);
-          }
-
-          78% {
-            margin-top: 0;
-            margin-left: var(--mirror-counter-x);
-          }
-        }
-
-        @keyframes mirror-waver-float {
-          0%,
-          100% {
-            margin-top: 0;
-            margin-left: 0;
-          }
-
-          24% {
-            margin-top: var(--mirror-drift-y);
-            margin-left: var(--mirror-counter-x);
-          }
-
-          36% {
-            margin-top: calc(var(--mirror-drift-y) * -0.42);
-            margin-left: calc(var(--mirror-counter-x) * -0.72);
-          }
-
-          48% {
-            margin-top: var(--mirror-counter-y);
-            margin-left: var(--mirror-drift-x);
-          }
-
-          72% {
-            margin-top: 0;
-            margin-left: var(--mirror-counter-x);
-          }
-        }
-
-        @keyframes mirror-lag-float {
-          0%,
-          18%,
-          28%,
-          100% {
-            margin-top: 0;
-            margin-left: 0;
-          }
-
-          58% {
-            margin-top: var(--mirror-drift-y);
-            margin-left: var(--mirror-drift-x);
-          }
-
-          68%,
-          76% {
-            margin-top: var(--mirror-drift-y);
-            margin-left: var(--mirror-drift-x);
-          }
-
-          84% {
-            margin-top: var(--mirror-counter-y);
-            margin-left: 0;
-          }
-        }
-
-        @keyframes mirror-tremble-float {
-          0%,
-          100% {
-            margin-top: 0;
-            margin-left: 0;
-          }
-
-          20% {
-            margin-top: var(--mirror-drift-y);
-            margin-left: var(--mirror-drift-x);
-          }
-
-          26% {
-            margin-top: calc(var(--mirror-drift-y) * -0.8);
-            margin-left: calc(var(--mirror-drift-x) * -0.8);
-          }
-
-          35% {
-            margin-top: 0;
-            margin-left: var(--mirror-counter-x);
-          }
-
-          48% {
-            margin-top: calc(var(--mirror-counter-y) * -0.7);
-            margin-left: 3px;
-          }
-
-          64% {
-            margin-top: var(--mirror-counter-y);
-            margin-left: 0;
-          }
-        }
-
-        @keyframes mirror-steady-float {
-          0%,
-          100% {
-            margin-top: 0;
-            margin-left: 0;
-          }
-
-          50% {
-            margin-top: 1px;
-            margin-left: -1px;
-          }
-        }
-
-        @keyframes resonant-mirror-breathe {
-          0%,
-          100% {
-            opacity: 0.76;
-            filter: blur(0.18px) brightness(1.06);
-          }
-
-          50% {
-            opacity: 0.92;
-            filter: blur(0) brightness(1.18);
-          }
-        }
-
-        @keyframes side-surface-breathe {
-          0%,
-          100% {
-            opacity: var(--side-surface-low);
-            transform: scale(0.985);
-          }
-
-          50% {
-            opacity: var(--side-surface-high);
-            transform: scale(1.025);
-          }
-        }
-
-        @keyframes gravity-line-listen {
-          0%,
-          100% {
-            opacity: 0.14;
-            filter: blur(0.45px);
-          }
-
-          50% {
-            opacity: 0.38;
-            filter: blur(0.1px);
-          }
-        }
-
-        @keyframes mirror-ripple {
-          0% {
-            opacity: 0.56;
-            transform: scale(0.46);
-          }
-
-          100% {
-            opacity: 0;
-            transform: scale(1.72);
-          }
-        }
-
-        @keyframes empty-ripple-out {
-          0% {
-            opacity: 0.56;
-            transform: translate(-50%, -50%) scale(0.42);
-          }
-
-          100% {
-            opacity: 0;
-            transform: translate(-50%, -50%) scale(3.05);
-          }
-        }
-
-        @keyframes mirror-breath-ripple {
-          0%,
-          100% {
-            opacity: 0.1;
-            transform: scale(0.58);
-          }
-
-          50% {
-            opacity: 0.42;
-            transform: scale(1.34);
-          }
-        }
-
-        @keyframes mirror-breathe {
-          0%,
-          100% {
-            filter: brightness(var(--mirror-brightness-low));
-            transform: translate(-50%, -50%) scale(var(--mirror-rest-scale));
-            box-shadow:
-              0 26px 72px rgba(0, 0, 0, 0.42),
-              0 0 50px rgba(180, 157, 93, var(--mirror-glow-low)),
-              inset 0 0 68px rgba(0, 0, 0, 0.56),
-              inset 0 1px 0 rgba(255, 255, 255, 0.07);
-          }
-
-          50% {
-            filter: brightness(var(--mirror-brightness-high));
-            transform: translate(-50%, -50%) scale(var(--mirror-peak-scale));
-            box-shadow:
-              0 30px 82px rgba(0, 0, 0, 0.5),
-              0 0 76px rgba(180, 157, 93, var(--mirror-glow-high)),
-              inset 0 0 78px rgba(0, 0, 0, 0.62),
-              inset 0 1px 0 rgba(255, 255, 255, 0.1);
-          }
-        }
-
-        @keyframes mirror-surface-ripple {
-          0% {
-            opacity: 0.18;
-            transform: translate(-50%, -50%) scale(0.3);
-          }
-
-          100% {
-            opacity: 0;
-            transform: translate(-50%, -50%) scale(1.15);
-          }
-        }
-
-        @keyframes mirror-click-ripple {
-          0% {
-            opacity: 0.42;
-            transform: translate(-50%, -50%) scale(1.36);
-          }
-
-          100% {
-            opacity: 0;
-            transform: translate(-50%, -50%) scale(0.18);
-          }
-        }
-
-        @keyframes event-horizon-breathe {
-          0%,
-          100% {
-            opacity: 0.46;
-            transform: scale(0.985) rotate(0deg);
-          }
-
-          50% {
-            opacity: 0.74;
-            transform: scale(1.018) rotate(1.5deg);
-          }
-        }
-
-        @keyframes vortex-turn {
-          from {
-            transform: rotate(0deg) scale(0.96);
-          }
-
-          to {
-            transform: rotate(360deg) scale(0.96);
-          }
-        }
-
-        @keyframes front-reflection-glide {
-          0%,
-          100% {
-            opacity: 0.028;
-            margin-left: -10px;
-            margin-top: -3px;
-          }
-
-          50% {
-            opacity: 0.07;
-            margin-left: 10px;
-            margin-top: 3px;
-          }
-        }
-
-        @keyframes subconscious-reflection-rise {
-          from {
-            opacity: 0;
-            filter: blur(9px);
-            transform: translateY(16px) scale(0.94);
+            filter: blur(16px);
+            transform: translateY(42px) scale(0.96);
           }
 
           to {
@@ -3927,384 +1323,67 @@ export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) =
           }
         }
 
-        @keyframes silence-pulse {
-          0% {
-            opacity: 0;
-            filter: blur(10px);
-            transform: scale(0.72);
-          }
-
-          100% {
-            opacity: 0.58;
-            filter: blur(0);
-            transform: scale(1);
-          }
-        }
-
-        @keyframes seal-mark-drop {
-          from {
-            opacity: 0;
-            filter: blur(5px);
-            transform: translateY(-8px) scale(1.18) rotate(-8deg);
-          }
-
-          70% {
-            opacity: 1;
-            filter: blur(0);
-            transform: translateY(1px) scale(0.96) rotate(-8deg);
-          }
-
-          to {
-            opacity: 1;
-            filter: blur(0);
-            transform: translateY(0) scale(1) rotate(-8deg);
-          }
-        }
-
-        @keyframes thief-field-rise {
-          from {
-            opacity: 0;
-            filter: blur(12px);
-            transform: translate(-50%, -50%) translateZ(84px) scale(0.78);
-          }
-
-          to {
-            opacity: 1;
-            filter: blur(0);
-            transform: translate(-50%, -50%) translateZ(104px) scale(1);
-          }
-        }
-
-        @keyframes thief-cycle-breathe {
-          0%,
-          100% {
-            opacity: 0.42;
-            transform: translate(-50%, -50%) rotate(-8deg) scale(0.96);
-          }
-
-          50% {
-            opacity: 0.82;
-            transform: translate(-50%, -50%) rotate(-5deg) scale(1.04);
-          }
-        }
-
-        @keyframes thief-star-drift {
-          0%,
-          100% {
-            margin-top: 0;
-            margin-left: 0;
-          }
-
-          50% {
-            margin-top: -5px;
-            margin-left: 4px;
-          }
-        }
-
-        @keyframes thief-active-pulse {
-          0%,
-          100% {
-            box-shadow:
-              inset 0 0 18px rgba(0, 0, 0, 0.5),
-              0 0 18px rgba(127, 37, 25, 0.14);
-          }
-
-          50% {
-            box-shadow:
-              inset 0 0 18px rgba(0, 0, 0, 0.5),
-              0 0 30px rgba(196, 91, 62, 0.24);
-          }
-        }
-
-        @keyframes virtue-rise {
-          from {
-            opacity: 0;
-            filter: blur(8px);
-            transform: translateY(8px);
-          }
-
-          to {
-            opacity: 1;
-            filter: blur(0);
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes thought-rise {
-          from {
-            opacity: 0;
-            filter: blur(8px);
-            transform: translateY(18px);
-          }
-
-          to {
-            opacity: 1;
-            filter: blur(0);
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes empty-copy-rise {
-          from {
-            opacity: 0;
-            filter: blur(8px);
-            transform: translate(-50%, 18px);
-          }
-
-          to {
-            opacity: 1;
-            filter: blur(0);
-            transform: translate(-50%, 0);
-          }
-        }
-
-        @keyframes thought-from-water {
-          from {
-            opacity: 0;
-            filter: blur(4px);
-            transform: translateY(10px);
-          }
-
-          to {
-            opacity: 1;
-            filter: blur(0);
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes crack-reveal {
-          0% {
-            opacity: 0;
-            transform: scale(0.7);
-          }
-
-          45% {
-            opacity: 0.68;
-          }
-
-          100% {
-            opacity: 0.22;
-            transform: scale(1.18);
-          }
-        }
-
-        @keyframes name-reveal {
-          from {
-            opacity: 0;
-            filter: blur(8px);
-            transform: translateX(0.06em) translateY(8px);
-          }
-
-          to {
-            opacity: 1;
-            filter: blur(0);
-            transform: translateX(0.06em) translateY(0);
-          }
-        }
-
-        @media (max-width: 390px) {
-          .mirror-orbit-field {
-            height: min(92svh, 590px);
-            min-height: 520px;
-          }
-
-          .heart-lake-voice {
-            top: 59%;
-            width: 84%;
-            min-height: 118px;
-          }
-
-          .heart-mirror-side {
-            width: 54px;
-            height: 68px;
-          }
-
-          .empty-copy {
-            font-size: 1.84rem;
-          }
-        }
-
-        @media (min-width: 768px) {
-          .mirror-orbit-field {
-            width: 100vw;
-            height: min(88svh, 760px);
-            min-height: 620px;
-            max-height: 780px;
-          }
-
-          .heart-lake-voice {
-            top: 57%;
-            width: min(58%, 520px);
-          }
-
-          .causal-hint {
-            left: calc(50% - clamp(160px, 19vw, 206px));
-            top: calc(50% - clamp(138px, 16vw, 166px));
-          }
-        }
-
         @media (max-width: 640px) {
-          .mirror-orbit-field {
-            width: 100vw;
-            height: min(92svh, 620px);
-            min-height: 540px;
+          .moon-heart-gateway {
+            min-height: calc(100svh - 1.25rem);
           }
 
-          .heart-lake-title {
-            top: 0.9rem;
+          .ritual-title {
+            top: 0.95rem;
+            gap: 0.62rem;
+            font-size: 0.62rem;
+            letter-spacing: 0.14em;
           }
 
-          .heart-lake-touch-hint {
-            bottom: 0.75rem;
+          .ritual-title i {
+            width: 2.2rem;
           }
 
-          .heart-lake-voice {
-            top: 59%;
-            width: 86%;
-            min-height: 124px;
+          .ritual-copy {
+            top: 58%;
+            width: 90vw;
           }
 
-          .heart-mirror-side {
-            --mirror-scene-x: var(--mirror-mobile-x);
-            --mirror-scene-y: var(--mirror-mobile-y);
-            width: 62px;
-            height: 80px;
-            transform: translate(-50%, -50%) translate3d(var(--mirror-scene-x), var(--mirror-scene-y), var(--mirror-depth)) scale(calc(var(--mirror-scale) * 1.14)) rotateY(var(--mirror-rotate-y));
-          }
-
-          .is-mirrorArray .heart-mirror-side {
-            opacity: 0.54;
-            border-color: rgba(216, 183, 111, 0.42);
-            filter: blur(0.56px) brightness(1.28);
-            box-shadow:
-              0 16px 42px rgba(0, 0, 0, 0.42),
-              0 0 34px rgba(180, 157, 93, 0.15),
-              inset 0 0 0 5px rgba(216, 183, 111, 0.07),
-              inset 0 1px 0 rgba(255, 255, 255, 0.1);
-          }
-
-          .is-mirrorArray .heart-mirror-side::before {
-            opacity: 0.92;
-            box-shadow:
-              inset 0 0 30px rgba(0, 0, 0, 0.58),
-              inset 0 0 0 1px rgba(216, 183, 111, 0.28);
-          }
-
-          .is-mirrorArray .heart-mirror-side::after {
-            opacity: 0.7;
-          }
-
-          .is-mirrorArray .heart-mirror-side .side-mirror-surface {
-            opacity: 0.66;
-          }
-
-          .is-mirrorArray .heart-mirror-side.is-resonant {
-            opacity: 0.96;
-            filter: blur(0) brightness(1.24);
-            border-color: rgba(216, 183, 111, 0.66);
-          }
-
-          .is-mirrorArray .heart-mirror-side.is-secondary-resonant {
-            opacity: 0.78;
-            filter: blur(0.22px) brightness(1.18);
-          }
-
-          .is-mirrorArray .heart-mirror-side.is-tertiary-resonant {
-            opacity: 0.68;
-            filter: blur(0.46px) brightness(1.12);
-          }
-
-          .is-mirrorArray .heart-mirror-side.is-conscience {
-            opacity: 0.44;
-            filter: blur(0.78px) brightness(1.16);
-          }
-
-          .heart-lake-voice .mirror-layer > span {
-            font-size: clamp(1.02rem, 4.8vw, 1.28rem);
-          }
-
-          .is-readyForCycle .heart-lake-voice .mirror-layer > span {
-            max-width: 14em;
-            font-size: clamp(1.18rem, 5.6vw, 1.52rem);
+          .ritual-copy h1 {
+            font-size: clamp(1.78rem, 8vw, 2.55rem);
             line-height: 1.42;
           }
 
-          .virtue-orbit {
-            transform: translate(-50%, -50%) translateY(128px);
-            gap: 10px;
-            font-size: 0.58rem;
+          .ritual-copy.is-payoff h1 {
+            font-size: clamp(1.34rem, 6.4vw, 2rem);
+            line-height: 1.68;
           }
 
-          .causal-hint {
-            left: calc(50% - clamp(126px, 34vw, 148px));
-            top: calc(50% - clamp(114px, 30vw, 132px));
+          .ritual-copy.is-thief h1 {
+            font-size: clamp(2rem, 10vw, 2.85rem);
           }
 
-          .mirror-layer > span {
-            font-size: clamp(1rem, 4.6vw, 1.18rem);
-            line-height: 1.58;
+          .ritual-copy p {
+            font-size: 0.84rem;
           }
 
-          .mirror-layer:not(.is-thought) > span {
-            font-size: clamp(1.18rem, 5.6vw, 1.52rem);
+          .thief-detail {
+            top: calc(58% + 130px);
+            gap: 0.46rem;
           }
 
-          .mirror-action-script {
-            min-height: 48px;
+          .thief-detail span {
+            font-size: 0.68rem;
+            padding: 0.42rem 0.58rem;
           }
 
-          .side-mirror-name {
-            width: 5.4em;
-            font-size: 0.46rem;
-            letter-spacing: 0.08em;
-          }
-
-          .is-mirrorArray .heart-mirror-side .side-mirror-name,
-          .is-mirrorArray .heart-mirror-side:hover .side-mirror-name,
-          .is-mirrorArray .heart-mirror-side:focus-visible .side-mirror-name,
-          .is-mirrorArray .heart-mirror-side.is-hovered .side-mirror-name {
-            opacity: 0.38;
-            filter: blur(0.35px);
-            color: rgba(242, 220, 168, 0.5);
-            transform: translate(-50%, -50%) translateY(1px) scale(0.98);
-          }
-
-          .is-mirrorArray .heart-mirror-side.is-resonant .side-mirror-name {
-            opacity: 0.46;
-            filter: blur(0.2px);
+          .ritual-action {
+            min-width: min(82vw, 340px);
+            min-height: 52px;
+            padding: 0 1.5rem;
+            font-size: 0.86rem;
           }
         }
 
         @media (prefers-reduced-motion: reduce) {
-          .nine-heart-mirror::before,
-          .gateway-empty-stage,
-          .gateway-array-stage,
-          .empty-heart-mirror,
-          .empty-water,
-          .orbit-mirrors,
-          .heart-water-plane,
-          .heart-lake-voice,
-          .lake-voice-undercurrent,
-          .lake-deep-reflection,
-          .mirror-water-canvas,
-          .mirror-moon,
-          .mirror-moon-reflection,
-          .mirror-living-water,
-          .mirror-depth-chamber,
-          .mirror-inner-stillness,
-          .side-mirror-surface,
-          .heart-mirror-main::after,
-          .mirror-water-ripple,
-          .empty-ripple,
-          .mirror-crack,
-          .mirror-thought,
-          .mirror-name,
-          .mirror-layer.is-subconscious,
-          .six-thief-orbit,
-          .thief-cycle-ring,
-          .thief-star,
-          .virtue-orbit i,
-          .heart-mirror-side.is-resonant {
+          .ritual-copy,
+          .ritual-copy.is-thought h1,
+          .thief-detail {
             animation: none !important;
             filter: none !important;
           }

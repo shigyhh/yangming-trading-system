@@ -8,7 +8,7 @@
     radial-gradient(circle at 24% 6%, rgba(88, 194, 173, 0.12), transparent 30%),
     radial-gradient(circle at 78% 14%, rgba(211, 168, 79, 0.12), transparent 28%),
     linear-gradient(180deg, #0a1116 0%, #07100f 50%, #030606 100%);
-  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
 }
 
 .growth-bg {
@@ -97,7 +97,7 @@
   position: relative;
   z-index: 1;
   color: #f6d886;
-  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
   font-size: 90rpx;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
@@ -198,7 +198,7 @@
 
 .stats-row text {
   color: #f6d886;
-  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
   font-size: 34rpx;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
@@ -506,7 +506,7 @@
 
 .gate-progress {
   color: #f6d886;
-  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
   font-size: 30rpx;
   font-weight: 900;
   font-variant-numeric: tabular-nums;

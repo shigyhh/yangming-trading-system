@@ -6,20 +6,51 @@
 
 ## 字体规范
 
-小程序字体只保留清晰的品牌分工，避免系统默认字体混排。
+Web 与小程序共用同一套品牌字体语义，避免系统默认字体混排。当前工程先用本地子集字体承载，后续拿到授权或定制字库后，只替换 `Yangming Display / Yangming Hand` 对应字体资产，不重写页面。
+
+字体与字形来源防护见：[brand-guideline/00-font-ip-provenance.md](./brand-guideline/00-font-ip-provenance.md)。Logo、favicon、小程序头像和 UI Glyph 必须使用原创矢量资产，不得使用任何字体里的“照”字转曲、描摹或修改。
+
+品牌基准：
+
+- Apple：克制、清晰、精准字距。
+- 原研哉 / MUJI：留白、安静、不过度装饰。
+- Headspace：有陪伴感，但不幼态。
+
+品牌四句必须优先服务“照见、复盘、训练、成长”：
+
+- 以交易照人心。
+- 以复盘照行为。
+- 以训练照变化。
+- 以活镜照成长。
+
+字体语义：
+
+| 语义 | Web token | 小程序 class | 当前承载 | 后续原创字库方向 |
+| --- | --- | --- | --- | --- |
+| 品牌显示字 | `--font-yangming-title` / `.brand-display` | `.font-yangming-display` | Noto Serif SC / ZX-LXGW | 精修宋/明骨架，收笔克制，适合大标题 |
+| 题字手感字 | `--font-yangming-hand` / `.brand-emotion-title` | `.font-yangming-hand` | LXGW WenKai / ZX-LXGW | 手写笔意，只用于“照、定力、心证”等少数字 |
+| 正文功能字 | `--font-interface` / `.font-function` | `.font-yangming-body` | Noto Sans SC / 系统无衬线 | 现代、清晰、像产品界面 |
+
+授权状态：
+
+| 字体 | 当前判断 | 使用限制 |
+| --- | --- | --- |
+| Noto Serif SC / Noto Sans SC | 官方 Noto 体系，按 SIL Open Font License 留档后可用 | 只做文字承载，不做 Logo 轮廓底稿 |
+| LXGW WenKai | 官方仓库提供 OFL | 只做文字承载，不做 Logo 轮廓底稿 |
+| HarmonyOS Sans SC | 本地字体显示 Huawei Device Co., Ltd. 与 Hanyi Fonts，仓库未保存完整授权条款 | 待授权确认；当前工程不再主动加载，不得用于 Logo、主标、小标、品牌字形底稿或默认正文承载 |
 
 | 场景 | 字体 |
 | --- | --- |
 | 心证、戒律、六大关卡、九型人格名称、页面主标题 | LXGW WenKai / 霞鹜文楷 |
 | 卡片标题、模块标题、数据板块标题 | Source Han Serif SC / 思源宋体 SemiBold |
-| 正文说明、训练内容、AI分析、数据面板说明 | HarmonyOS Sans SC Regular / Medium |
-| 知行指数数字、成长数值、连续修行天数 | HarmonyOS Sans SC Bold |
+| 正文说明、训练内容、AI分析、数据面板说明 | 系统无衬线 / Noto Sans SC / PingFang SC |
+| 知行指数数字、成长数值、连续修行天数 | 系统无衬线等宽数字 |
 | OPENING MIND、MIND SCAN、TRAINING 等英文标签 | Inter |
 
 小程序内的实际字体族：
 
 - `ZX-LXGW`：从 `LXGWWenKai-Medium.ttf` 裁剪出的 woff2 子集。
-- `ZX-Harmony`：从 HarmonyOS Sans SC Regular / Medium / Bold 裁剪出的 woff2 子集。
+- `ZX-Harmony`：历史字体子集，当前不主动加载、不作为默认正文承载；只有拿到完整授权留档后才可重新评估。
 - `Source Han Serif SC` 和 `Inter` 暂作为系统/设备字体优先项，未打包进小程序。
 
 字体层级：

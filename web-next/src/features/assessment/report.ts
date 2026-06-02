@@ -7,7 +7,7 @@ import {
   type PersonalityMirrorSignal,
   type PersonalityTypeProfile,
   type UnifiedAssessmentReport,
-} from "../../../../packages/personality/index.js"
+} from "@yangming/personality"
 
 export type AssessmentAnswer = {
   questionId: string

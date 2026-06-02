@@ -5,6 +5,22 @@
 @custom-variant dark (&:is(.dark *));
 
 @font-face {
+  font-family: "Yangming Hand";
+  src: url("/fonts/LXGWWenKai-Medium.woff2") format("woff2");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 500;
+}
+
+@font-face {
+  font-family: "Yangming Display";
+  src: url("/fonts/NotoSerifSC-Variable.woff2") format("woff2");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 200 900;
+}
+
+@font-face {
   font-family: "LXGW WenKai Local";
   src: url("/fonts/LXGWWenKai-Light.woff2") format("woff2");
   font-display: swap;
@@ -93,6 +109,8 @@
 :root {
   --background: #080807;
   --foreground: #f4ebdd;
+  --font-yangming-title: "Yangming Display", "Noto Serif SC Local", "Noto Serif SC", "Noto Serif CJK SC", "Source Han Serif SC", "Songti SC", "STSong", serif;
+  --font-yangming-hand: "Yangming Hand", "LXGW WenKai Local", "LXGW WenKai", "LXGW WenKai Screen", "Kaiti SC", "STKaiti", serif;
   --font-world: "LXGW WenKai Local", "LXGW WenKai", "LXGW WenKai Screen", "Kaiti SC", "STKaiti", serif;
   --font-narrative: "Noto Serif SC Local", "Noto Serif SC", "Noto Serif CJK SC", "Source Han Serif SC", "Songti SC", "STSong", serif;
   --font-interface: "Noto Sans SC Local", "Noto Sans SC", "Noto Sans CJK SC", "Source Han Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", ui-sans-serif, system-ui, sans-serif;
@@ -209,6 +227,110 @@
     font-family: var(--font-interface);
   }
 
+  .brand-display {
+    font-family: var(--font-yangming-title);
+    font-kerning: normal;
+    font-optical-sizing: auto;
+    font-variant-east-asian: proportional-width;
+    font-variation-settings: "wght" 460;
+  }
+
+  .brand-hero-title {
+    font-family: var(--font-yangming-title);
+    font-size: clamp(3.72rem, 11.8vw, 7.7rem);
+    font-weight: 500;
+    font-optical-sizing: auto;
+    font-variant-east-asian: proportional-width;
+    font-variation-settings: "wght" 470;
+    letter-spacing: 0.045em;
+    line-height: 1.02;
+    color: transparent;
+    background: linear-gradient(180deg, rgba(255, 249, 235, 0.98), rgba(244, 235, 221, 0.9) 46%, rgba(216, 183, 111, 0.72));
+    -webkit-background-clip: text;
+    background-clip: text;
+    text-shadow:
+      0 0 1px rgba(244, 235, 221, 0.32),
+      0 18px 42px rgba(0, 0, 0, 0.34),
+      0 0 34px rgba(216, 183, 111, 0.055);
+  }
+
+  .brand-title-line {
+    display: block;
+    white-space: nowrap;
+  }
+
+  .brand-title-phrase {
+    display: inline-block;
+  }
+
+  .brand-title-punct {
+    display: inline-block;
+    margin-left: -0.1em;
+    color: rgba(216, 183, 111, 0.54);
+    font-size: 0.72em;
+    font-variation-settings: "wght" 360;
+    transform: translateY(-0.04em);
+  }
+
+  .brand-card-title {
+    font-family: var(--font-yangming-title);
+    font-size: clamp(2.42rem, 5.3vw, 4.25rem);
+    font-weight: 500;
+    font-optical-sizing: auto;
+    font-variation-settings: "wght" 460;
+    letter-spacing: 0.12em;
+    line-height: 1.08;
+    color: rgba(244, 235, 221, 0.91);
+    text-shadow: 0 0 26px rgba(216, 183, 111, 0.06);
+  }
+
+  .brand-small-title {
+    font-family: var(--font-yangming-title);
+    font-weight: 430;
+    font-variation-settings: "wght" 430;
+    letter-spacing: 0.1em;
+    color: rgba(244, 235, 221, 0.72);
+  }
+
+  .brand-scroll-title {
+    font-family: var(--font-yangming-title);
+    font-weight: 460;
+    font-optical-sizing: auto;
+    font-variation-settings: "wght" 460;
+    letter-spacing: 0.055em;
+  }
+
+  .brand-emotion-title {
+    font-family: var(--font-yangming-hand);
+    font-weight: 500;
+    font-variation-settings: "wght" 500;
+    letter-spacing: 0.14em;
+    color: transparent;
+    background: linear-gradient(180deg, rgba(255, 249, 232, 0.98), rgba(244, 235, 221, 0.82) 42%, rgba(216, 183, 111, 0.68));
+    -webkit-background-clip: text;
+    background-clip: text;
+    text-shadow:
+      0 0 1px rgba(244, 235, 221, 0.3),
+      0 0 30px rgba(216, 183, 111, 0.07);
+  }
+
+  .brand-personality-title {
+    font-family: var(--font-yangming-title);
+    font-weight: 500;
+    font-variation-settings: "wght" 500;
+    letter-spacing: 0.18em;
+    color: rgba(216, 183, 111, 0.86);
+  }
+
+  .brand-seal-mark {
+    font-family: var(--font-yangming-hand);
+    font-weight: 500;
+    font-variation-settings: "wght" 500;
+    letter-spacing: 0;
+    color: rgba(216, 183, 111, 0.72);
+    text-shadow: 0 0 18px rgba(216, 183, 111, 0.08);
+  }
+
   .type-level-1 {
     font-family: var(--font-world);
     font-size: clamp(3.18rem, 12.8vw, 6.25rem);
@@ -273,6 +395,12 @@
   }
 
   @media (min-width: 768px) {
+    .brand-hero-title {
+      font-size: clamp(5.15rem, 7.25vw, 8rem);
+      letter-spacing: 0.038em;
+      line-height: 1;
+    }
+
     .type-level-1 {
       font-size: clamp(4.55rem, 6.55vw, 6.75rem);
       line-height: 1.21;
@@ -280,6 +408,18 @@
 
     .type-level-4 {
       font-size: 0.8rem;
+    }
+  }
+
+  @media (max-width: 420px) {
+    .brand-hero-title {
+      font-size: clamp(3.28rem, 16.4vw, 4.42rem);
+      letter-spacing: 0.018em;
+      line-height: 1.06;
+    }
+
+    .brand-card-title {
+      letter-spacing: 0.08em;
     }
   }
 

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 260" role="img" aria-labelledby="title">
+  <title id="title">阳明照见 C16 小标</title>
+  <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M58 68H116V118H58Z" stroke-width="13"/>
+    <path d="M150 68H212V118H150Z" stroke-width="13"/>
+    <path d="M66 150H206" stroke-width="11"/>
+    <path d="M94 190L78 222M176 190L194 222" stroke-width="11"/>
+  </g>
+</svg>

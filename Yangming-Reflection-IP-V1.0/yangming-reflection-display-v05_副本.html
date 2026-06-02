@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>阳明照骨字系 V0.5 合并定稿首版</title>
+  <style>
+    @font-face {
+      font-family: YangmingDisplayPreview;
+      src: url("../../web-next/public/fonts/NotoSerifSC-Variable.woff2") format("woff2");
+      font-weight: 200 900;
+    }
+
+    :root {
+      color-scheme: dark;
+      --ink: #080807;
+      --paper: #f3ead9;
+      --gold: rgba(216, 183, 111, .64);
+      --line: rgba(217, 189, 122, .12);
+      --display: YangmingDisplayPreview, "Noto Serif SC", "Songti SC", serif;
+      --body: "Noto Sans SC", "PingFang SC", system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--paper);
+      background:
+        radial-gradient(circle at 78% 8%, rgba(216, 183, 111, .045), transparent 28rem),
+        radial-gradient(circle at 12% 84%, rgba(95, 132, 117, .05), transparent 30rem),
+        linear-gradient(180deg, #11100d, var(--ink));
+      font-family: var(--body);
+    }
+
+    main {
+      width: min(1180px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 46px 0 70px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      gap: 22px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--line);
+      color: rgba(244, 235, 221, .42);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+    }
+
+    .preview {
+      width: 100%;
+      margin-top: 34px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: rgba(8, 8, 7, .26);
+    }
+
+    .preview img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .notes {
+      margin-top: 34px;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 1px;
+      border: 1px solid var(--line);
+      background: var(--line);
+    }
+
+    .note {
+      min-height: 148px;
+      padding: 22px;
+      background: rgba(8, 8, 7, .76);
+    }
+
+    .note strong {
+      display: block;
+      color: var(--gold);
+      font-family: var(--display);
+      font-size: 20px;
+      font-weight: 440;
+      letter-spacing: .1em;
+    }
+
+    .note p {
+      margin: 14px 0 0;
+      color: rgba(244, 235, 221, .52);
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    .compliance {
+      margin-top: 34px;
+      color: rgba(244, 235, 221, .38);
+      font-size: 12px;
+      letter-spacing: .08em;
+      text-align: center;
+    }
+
+    @media (max-width: 980px) {
+      header,
+      .notes {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <span>Yangming Reflection Display · V0.5</span>
+      <span>Merge draft</span>
+    </header>
+    <section class="preview" aria-label="阳明照骨字系 V0.5 合并定稿首版">
+      <img src="./yangming-reflection-display-v05.svg" alt="阳明照骨字系 V0.5 合并定稿首版样张" />
+    </section>
+    <section class="notes" aria-label="V0.5 改动说明">
+      <div class="note">
+        <strong>A 主标</strong>
+        <p>锁定 A 为正式主标，B 只做精神符号，C 做小尺寸功能标。</p>
+      </div>
+      <div class="note">
+        <strong>标题双版</strong>
+        <p>标准版服务产品页，宣言版保留更强张力，避免系统失稳。</p>
+      </div>
+      <div class="note">
+        <strong>徽记 + 图标</strong>
+        <p>四个母题同时建立品牌徽记版和 UI 图标版。</p>
+      </div>
+      <div class="note">
+        <strong>数字回归</strong>
+        <p>补回 Day、Pause、Discipline 等真实产品数字语言。</p>
+      </div>
+      <div class="note">
+        <strong>产品归静</strong>
+        <p>象形只入骨，最终回到清楚、克制、可信任的产品系统。</p>
+      </div>
+    </section>
+    <p class="compliance">本系统仅用于交易认知、行为训练与风险教育；不荐股、不喊单、不承诺收益。</p>
+  </main>
+</body>
+</html>

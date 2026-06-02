@@ -1,11 +1,38 @@
 <view class="page-shell">
   <view class="page-content">
+    <view class="training-brand-row">
+      <view class="training-brand-mark brand-zhao-mini">
+        <view class="zhao-eyes">
+          <view class="zhao-eye"></view>
+          <view class="zhao-eye"></view>
+        </view>
+        <view class="zhao-mirror"></view>
+        <view class="zhao-fire">
+          <view class="zhao-fire-dot"></view>
+          <view class="zhao-fire-dot"></view>
+        </view>
+      </view>
+      <view class="training-brand-copy">
+        <text>阳明训练系统</text>
+        <view>停十秒 · 先照心 · 再落行动</view>
+      </view>
+    </view>
     <text class="eyebrow">TRAINING · 事上练</text>
     <view class="page-title">每日修心<br />事上练</view>
     <view class="page-subtitle">{{result ? type + '专属路径' : '未照见时使用通用事上练；完成照见后会自动匹配路径。'}}</view>
 
     <view class="mind-bridge card" bindtap="goMind">
-      <view class="mind-seal">{{mind ? mind.glyph : '照'}}</view>
+      <view class="mind-seal brand-zhao-mini">
+        <view class="zhao-eyes">
+          <view class="zhao-eye"></view>
+          <view class="zhao-eye"></view>
+        </view>
+        <view class="zhao-mirror"></view>
+        <view class="zhao-fire">
+          <view class="zhao-fire-dot"></view>
+          <view class="zhao-fire-dot"></view>
+        </view>
+      </view>
       <view class="mind-copy">
         <text>{{mind ? '今日照心 · ' + mind.name : '先做开盘照心'}}</text>
         <view>{{mindTask || '开盘前先看见此刻之心，再进入今日修行。'}}</view>
@@ -36,7 +63,10 @@
         </button>
       </view>
       <view class="training-field jade">
-        <text>今日观心问题</text>
+        <view class="field-label with-glyph">
+          <view class="mini-glyph mini-glyph-train"></view>
+          <text>今日观心问题</text>
+        </view>
         <view>{{trainingDay.reflectionQuestion}}</view>
       </view>
       <button class="secondary-btn kline-entry-btn" bindtap="goKlineMind">进入 K 线历史训练</button>
@@ -89,7 +119,10 @@
       </view>
 
       <view class="training-field jade">
-        <text>今日事上练</text>
+        <view class="field-label with-glyph">
+          <view class="mini-glyph mini-glyph-train"></view>
+          <text>今日事上练</text>
+        </view>
         <view>{{plan.microTraining}}</view>
       </view>
 
