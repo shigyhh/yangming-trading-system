@@ -1,0 +1,28 @@
+const assert = require("node:assert")
+const { readFileSync } = require("node:fs")
+const { join } = require("node:path")
+
+const root = process.cwd()
+
+const appWxss = readFileSync(join(root, "miniprogram", "app.wxss"), "utf8")
+const homeWxml = readFileSync(join(root, "miniprogram", "pages", "home", "index.wxml"), "utf8")
+const reportWxml = readFileSync(join(root, "miniprogram", "pages", "report", "index.wxml"), "utf8")
+const trainingWxml = readFileSync(join(root, "miniprogram", "pages", "training", "index.wxml"), "utf8")
+const homeWxss = readFileSync(join(root, "miniprogram", "pages", "home", "index.wxss"), "utf8")
+const reportWxss = readFileSync(join(root, "miniprogram", "pages", "report", "index.wxss"), "utf8")
+const trainingWxss = readFileSync(join(root, "miniprogram", "pages", "training", "index.wxss"), "utf8")
+
+assert.ok(appWxss.includes(".brand-zhao-mini"), "global mini mark class should exist")
+assert.ok(appWxss.includes(".zhao-eye"), "mini mark should be built from CSS geometry")
+assert.ok(homeWxml.includes("brand-seal brand-zhao-mini"), "home avatar should use C16 mini mark")
+assert.ok(reportWxml.includes("report-brand-mark brand-zhao-mini"), "report page should use C16 mini mark")
+assert.ok(trainingWxml.includes("training-brand-mark brand-zhao-mini"), "training page should use C16 mini mark")
+assert.ok(trainingWxml.includes("mind-seal brand-zhao-mini"), "training mind bridge should use CSS C16 mark")
+assert.ok(homeWxss.includes(".brand-seal.brand-zhao-mini"), "home seal should disable font text sizing")
+assert.ok(reportWxss.includes(".report-brand-row"), "report brand header should be styled")
+assert.ok(trainingWxss.includes(".training-brand-row"), "training brand header should be styled")
+assert.ok(trainingWxss.includes(".mini-glyph-train"), "training page should include UI glyph geometry")
+assert.equal(homeWxml.includes('<view class="brand-seal">知</view>'), false, "home must not render font-based zhi logo")
+assert.equal(trainingWxml.includes("{{mind ? mind.glyph : '照'}}"), false, "training must not render font-based zhao logo")
+
+console.log("Mini program brand asset guard passed.")

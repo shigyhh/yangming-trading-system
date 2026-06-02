@@ -3,10 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "next dev --webpack",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
+    "test:locked-pre-water": "node --test src/components/home/cinematic-home.test.mjs src/app/assessment-entry/page.test.mjs",
+    "test:home-shell": "node --test src/components/home/cinematic-home.test.mjs",
     "test:admin": "node --test src/features/admin/admin-data.test.mjs",
     "test:report-schema": "node --test ../packages/contracts/assessment-report-schema.test.mjs",
     "test:living-mirror-contract": "node --test ../packages/contracts/living-mirror-contract.test.mjs",
@@ -32,6 +34,9 @@
     "test:i18n": "node --test src/features/i18n/i18n.test.mjs"
   },
   "dependencies": {
+    "@yangming/content": "file:../packages/content",
+    "@yangming/contracts": "file:../packages/contracts",
+    "@yangming/personality": "file:../packages/personality",
     "@base-ui/react": "^1.5.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

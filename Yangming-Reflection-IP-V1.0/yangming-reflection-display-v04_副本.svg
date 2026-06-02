@@ -1,0 +1,269 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1100" viewBox="0 0 1600 1100" role="img" aria-labelledby="title desc">
+  <title id="title">阳明照骨字系 V0.4 象形骨架测试</title>
+  <desc id="desc">阳明心学交易系统的象形骨架测试样张，包含明宋照、象形照、小尺寸照、主标题象形骨势和四个品牌母题符号。</desc>
+  <defs>
+    <style>
+      @font-face {
+        font-family: "YangmingDisplayPreview";
+        src: url("../../web-next/public/fonts/NotoSerifSC-Variable.woff2") format("woff2");
+        font-weight: 200 900;
+      }
+      @font-face {
+        font-family: "YangmingSansPreview";
+        src: url("../../web-next/public/fonts/NotoSansSC-Variable.woff2") format("woff2");
+        font-weight: 100 900;
+      }
+      .latin {
+        font-family: "Avenir Next", "Inter", "Helvetica Neue", Arial, sans-serif;
+        font-size: 14px;
+        font-weight: 650;
+        letter-spacing: .22em;
+        fill: rgba(244, 235, 221, .42);
+      }
+      .section-label {
+        font-family: "YangmingDisplayPreview", "Noto Serif SC", "Songti SC", serif;
+        font-size: 22px;
+        font-weight: 430;
+        letter-spacing: .16em;
+        fill: rgba(216, 183, 111, .66);
+      }
+      .body {
+        font-family: "YangmingSansPreview", "Noto Sans SC", "PingFang SC", sans-serif;
+        font-size: 16px;
+        font-weight: 520;
+        letter-spacing: .06em;
+        fill: rgba(244, 235, 221, .52);
+      }
+      .body-soft {
+        font-family: "YangmingSansPreview", "Noto Sans SC", "PingFang SC", sans-serif;
+        font-size: 14px;
+        font-weight: 520;
+        letter-spacing: .05em;
+        fill: rgba(244, 235, 221, .42);
+      }
+      .display {
+        font-family: "YangmingDisplayPreview", "Noto Serif SC", "Songti SC", serif;
+        font-size: 104px;
+        font-weight: 440;
+        letter-spacing: .012em;
+        fill: #f3ead9;
+      }
+      .display-anchor {
+        font-family: "YangmingDisplayPreview", "Noto Serif SC", "Songti SC", serif;
+        font-size: 104px;
+        font-weight: 455;
+        letter-spacing: .012em;
+        fill: #fff2d6;
+      }
+      .punct {
+        font-family: "YangmingDisplayPreview", "Noto Serif SC", "Songti SC", serif;
+        font-size: 70px;
+        font-weight: 315;
+        fill: rgba(216, 183, 111, .34);
+      }
+      .rule-title {
+        font-family: "YangmingDisplayPreview", "Noto Serif SC", "Songti SC", serif;
+        font-size: 30px;
+        font-weight: 430;
+        letter-spacing: .12em;
+        fill: rgba(244, 235, 221, .84);
+      }
+      .law {
+        font-family: "YangmingDisplayPreview", "Noto Serif SC", "Songti SC", serif;
+        font-size: 34px;
+        font-weight: 430;
+        letter-spacing: .09em;
+        fill: rgba(244, 235, 221, .82);
+      }
+      .small-latin {
+        font-family: "Avenir Next", "Inter", "Helvetica Neue", Arial, sans-serif;
+        font-size: 12px;
+        font-weight: 650;
+        letter-spacing: .18em;
+        fill: rgba(244, 235, 221, .36);
+      }
+    </style>
+
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#11100d"/>
+      <stop offset="54%" stop-color="#080807"/>
+      <stop offset="100%" stop-color="#050504"/>
+    </linearGradient>
+    <linearGradient id="line" x1="0" x2="1">
+      <stop offset="0%" stop-color="rgba(216,183,111,0)"/>
+      <stop offset="50%" stop-color="rgba(216,183,111,.34)"/>
+      <stop offset="100%" stop-color="rgba(216,183,111,0)"/>
+    </linearGradient>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency=".74" numOctaves="2" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer>
+        <feFuncA type="table" tableValues="0 .026"/>
+      </feComponentTransfer>
+    </filter>
+
+    <g id="zhao-ming" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M55 40H119V123H55Z" stroke-width="9.2"/>
+      <path d="M68 68H107M68 96H107" stroke-width="5.2" opacity=".72"/>
+      <path d="M154 42H214" stroke-width="9.2"/>
+      <path d="M184 44C180 68 167 88 146 104" stroke-width="9.2"/>
+      <path d="M154 84H217V123H154Z" stroke-width="9.2"/>
+      <path d="M166 104H206" stroke-width="5" opacity=".7"/>
+      <path d="M60 151H219" stroke-width="7.2"/>
+      <path d="M68 185C58 202 52 216 43 231M112 184C106 201 102 217 98 234M156 184C162 201 166 217 170 234M202 185C212 202 222 216 231 231" stroke-width="7.1"/>
+    </g>
+
+    <g id="zhao-picto" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M46 76C68 48 105 48 126 76C104 103 68 103 46 76Z" stroke-width="8.2"/>
+      <circle cx="87" cy="76" r="12" stroke-width="7.2"/>
+      <path d="M152 52C174 42 204 48 217 72C203 96 174 102 152 92" stroke-width="8.2"/>
+      <path d="M169 76H208" stroke-width="6"/>
+      <path d="M58 139C96 130 154 130 214 139" stroke-width="7.2"/>
+      <path d="M74 177C64 193 55 207 46 222M112 171C105 190 101 205 98 224M152 171C158 190 162 205 166 224M196 177C208 194 216 208 224 222" stroke-width="7.2"/>
+    </g>
+
+    <g id="zhao-small" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M58 60H118V120H58Z" stroke-width="11"/>
+      <path d="M74 90H104" stroke-width="6.8"/>
+      <path d="M146 63H215V118H146Z" stroke-width="11"/>
+      <path d="M160 91H202" stroke-width="6.8"/>
+      <path d="M62 148H214" stroke-width="9"/>
+      <path d="M82 184L65 220M128 178L122 220M172 178L180 220M214 184L236 220" stroke-width="8.8"/>
+    </g>
+
+    <g id="symbol-trade-heart" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M28 72C64 42 112 42 148 72"/>
+      <path d="M28 116C64 146 112 146 148 116"/>
+      <path d="M30 42L150 148M150 42L30 148"/>
+      <path d="M90 84C80 70 58 78 64 98C68 114 86 122 90 132C94 122 112 114 116 98C122 78 100 70 90 84Z"/>
+    </g>
+
+    <g id="symbol-review-action" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M52 52H132V132H52Z"/>
+      <path d="M72 52C48 70 44 116 76 136"/>
+      <path d="M126 130C152 111 151 70 120 50"/>
+      <path d="M44 154C82 136 112 158 148 134"/>
+      <path d="M138 134L150 132L145 144"/>
+    </g>
+
+    <g id="symbol-training-change" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M48 62H126"/>
+      <path d="M58 88H136"/>
+      <path d="M68 114H146"/>
+      <path d="M78 140H156"/>
+      <path d="M56 154C96 130 116 92 132 52"/>
+    </g>
+
+    <g id="symbol-living-mirror-growth" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M38 92C64 62 118 62 144 92C118 120 64 120 38 92Z"/>
+      <path d="M56 142C78 132 104 134 128 144C148 152 160 146 170 138"/>
+      <path d="M92 132V64"/>
+      <path d="M92 91C72 82 66 67 68 50"/>
+      <path d="M92 91C116 80 124 64 122 46"/>
+    </g>
+  </defs>
+
+  <rect width="1600" height="1100" fill="url(#bg)"/>
+  <rect width="1600" height="1100" filter="url(#grain)" opacity=".75"/>
+  <circle cx="1280" cy="164" r="300" fill="rgba(216,183,111,.032)"/>
+  <circle cx="214" cy="872" r="380" fill="rgba(95,132,117,.04)"/>
+  <path d="M0 915C220 846 394 833 562 868C750 908 912 842 1104 860C1260 876 1400 932 1600 875V1100H0Z" fill="rgba(95,132,117,.042)"/>
+
+  <line x1="88" y1="88" x2="1512" y2="88" stroke="url(#line)" stroke-width="1"/>
+  <text x="88" y="58" class="latin">YANGMING BONE-MING DISPLAY · V0.4</text>
+  <text x="1512" y="58" text-anchor="end" class="body">象形入骨 · 不做复古 · 不做玄学</text>
+
+  <g transform="translate(88 134)">
+    <text x="0" y="0" class="section-label">01 / 照字三线测试</text>
+    <rect x="0" y="30" width="430" height="430" rx="30" fill="rgba(8,8,7,.22)" stroke="rgba(217,189,122,.12)"/>
+    <g transform="translate(42 82)">
+      <g transform="translate(0 0)">
+        <rect width="112" height="116" rx="18" fill="rgba(244,235,221,.03)" stroke="rgba(217,189,122,.1)"/>
+        <g transform="translate(17 22) scale(.34)" color="#e8decb"><use href="#zhao-ming"/></g>
+        <text x="56" y="146" text-anchor="middle" class="small-latin">A MING</text>
+      </g>
+      <g transform="translate(136 0)">
+        <rect width="112" height="116" rx="18" fill="rgba(216,183,111,.04)" stroke="rgba(217,189,122,.24)"/>
+        <g transform="translate(16 24) scale(.35)" color="#f3ead9"><use href="#zhao-picto"/></g>
+        <text x="56" y="146" text-anchor="middle" class="small-latin">B PICTO</text>
+      </g>
+      <g transform="translate(272 0)">
+        <rect width="112" height="116" rx="18" fill="rgba(244,235,221,.03)" stroke="rgba(217,189,122,.1)"/>
+        <g transform="translate(16 26) scale(.34)" color="#e8decb"><use href="#zhao-small"/></g>
+        <text x="56" y="146" text-anchor="middle" class="small-latin">C SMALL</text>
+      </g>
+    </g>
+    <text x="42" y="294" class="rule-title">甲骨为骨，不以甲骨为貌。</text>
+    <text x="42" y="340" class="body">A 是正式明宋照；B 取目、日、火、镜面之象；C 服务 favicon / 头像 / 小图标。</text>
+    <text x="42" y="386" class="body-soft">原则：先读成“照”，再感到“光”。不要反过来。</text>
+  </g>
+
+  <g transform="translate(574 134)">
+    <text x="0" y="0" class="section-label">02 / 主标题：象形骨势，只压关键字</text>
+    <path d="M18 96C52 62 104 62 136 96" fill="none" stroke="rgba(216,183,111,.14)" stroke-width="3" stroke-linecap="round"/>
+    <path d="M222 228L338 228M264 198L292 258" fill="none" stroke="rgba(216,183,111,.12)" stroke-width="3" stroke-linecap="round"/>
+    <path d="M508 226C548 204 604 210 634 246" fill="none" stroke="rgba(216,183,111,.12)" stroke-width="3" stroke-linecap="round"/>
+    <text x="0" y="120" class="display-anchor">心</text>
+    <text x="118" y="120" class="display">不静<tspan class="punct" dx="-10" dy="-8">，</tspan></text>
+    <text x="0" y="252" class="display-anchor">交</text>
+    <text x="118" y="252" class="display">易必</text>
+    <text x="446" y="252" class="display-anchor">乱<tspan class="punct" dx="-10" dy="-2">。</tspan></text>
+    <text x="2" y="316" class="body">整句不甲骨化，只让“心 / 交 / 乱”成为品牌锚点。</text>
+    <line x1="0" y1="366" x2="700" y2="366" stroke="url(#line)" stroke-width="1"/>
+    <text x="0" y="420" class="latin">PICTOGRAPHIC STRUCTURE · MODERN PRODUCT ORDER</text>
+  </g>
+
+  <g transform="translate(1210 134)">
+    <text x="0" y="0" class="section-label">03 / 取象规则</text>
+    <rect x="0" y="30" width="302" height="430" rx="28" fill="rgba(8,8,7,.2)" stroke="rgba(217,189,122,.11)"/>
+    <text x="32" y="92" class="rule-title">取象</text>
+    <text x="32" y="132" class="body">取目、日、火、行、回。</text>
+    <text x="32" y="162" class="body">只取结构，不取古皮。</text>
+    <text x="32" y="202" class="rule-title">立骨</text>
+    <text x="32" y="242" class="body">先过黑白、小尺寸、白底。</text>
+    <text x="32" y="272" class="body">再允许极弱氛围。</text>
+    <text x="32" y="312" class="rule-title">减形</text>
+    <text x="32" y="352" class="body">不裂纹、不红印。</text>
+    <text x="32" y="382" class="body">不宣纸黄、不占卜感。</text>
+    <text x="32" y="422" class="rule-title">归静</text>
+    <text x="32" y="462" class="body">回到清楚、克制、可信任。</text>
+  </g>
+
+  <g transform="translate(88 610)">
+    <text x="0" y="0" class="section-label">04 / 四个母题的象形符号系统</text>
+    <line x1="0" y1="38" x2="1424" y2="38" stroke="rgba(217,189,122,.12)"/>
+
+    <g transform="translate(0 92)" color="#e8decb">
+      <text x="0" y="0" class="small-latin">01</text>
+      <g transform="translate(0 34) scale(.58)" stroke-width="7"><use href="#symbol-trade-heart"/></g>
+      <text x="140" y="70" class="law">以交易照人心</text>
+      <text x="140" y="112" class="body-soft">交 + 心：交易处照见第一反应</text>
+    </g>
+
+    <g transform="translate(360 92)" color="#e8decb">
+      <text x="0" y="0" class="small-latin">02</text>
+      <g transform="translate(0 34) scale(.58)" stroke-width="7"><use href="#symbol-review-action"/></g>
+      <text x="140" y="70" class="law">以复盘照行为</text>
+      <text x="140" y="112" class="body-soft">回 + 行：让行为回到证据</text>
+    </g>
+
+    <g transform="translate(720 92)" color="#e8decb">
+      <text x="0" y="0" class="small-latin">03</text>
+      <g transform="translate(0 34) scale(.58)" stroke-width="7"><use href="#symbol-training-change"/></g>
+      <text x="140" y="70" class="law">以训练照变化</text>
+      <text x="140" y="112" class="body-soft">习 + 化：重复中生出微变</text>
+    </g>
+
+    <g transform="translate(1080 92)" color="#e8decb">
+      <text x="0" y="0" class="small-latin">04</text>
+      <g transform="translate(0 34) scale(.58)" stroke-width="7"><use href="#symbol-living-mirror-growth"/></g>
+      <text x="140" y="70" class="law">以活镜照成长</text>
+      <text x="140" y="112" class="body-soft">水 + 目 + 木：记录人格松动</text>
+    </g>
+  </g>
+
+  <g transform="translate(88 986)">
+    <text class="body">合规边界：仅用于交易认知、行为训练与风险教育；不荐股、不喊单、不承诺收益。</text>
+    <text x="1424" text-anchor="end" class="latin">TAKE THE BONE, NOT THE SKIN</text>
+  </g>
+</svg>

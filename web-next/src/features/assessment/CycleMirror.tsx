@@ -2,26 +2,25 @@
 
 import Link from "next/link"
 import { motion, useReducedMotion } from "framer-motion"
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
+import type { CSSProperties } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { cn } from "@/lib/utils"
 
-export type CycleNode = {
+type CycleNode = {
   key: "trigger" | "thought" | "action" | "result" | "retrigger"
   title: string
   short: string
   detail: string
 }
 
-export type CycleMirrorCase = {
+type CycleMirrorCase = {
   id: string
   sourceMirror: string
   title: string
   status: string
   verdict: string
   practice: string
-  dataSourceLabel?: string
-  sourceId?: string
   nodes: CycleNode[]
 }
 
@@ -218,7 +217,6 @@ const cycleThiefDescriptions: Record<string, string> = {
 
 type CycleMirrorProps = {
   initialMirrorId?: string
-  dataCase?: CycleMirrorCase | null
   onMirrorChange?: (mirrorId: string) => void
 }
 
@@ -253,10 +251,9 @@ function getNodeVisual(angle: number) {
   }
 }
 
-export function CycleMirror({ initialMirrorId, dataCase, onMirrorChange }: CycleMirrorProps) {
+export function CycleMirror({ initialMirrorId, onMirrorChange }: CycleMirrorProps) {
   const reduceMotion = useReducedMotion()
-  const fallbackCycle = useMemo(() => resolveCase(initialMirrorId), [initialMirrorId])
-  const cycle = dataCase || fallbackCycle
+  const cycle = useMemo(() => resolveCase(initialMirrorId), [initialMirrorId])
   const [angleOffset, setAngleOffset] = useState(0)
   const [hovered, setHovered] = useState(false)
   const [revealedIndex, setRevealedIndex] = useState<number | null>(null)
@@ -358,7 +355,6 @@ export function CycleMirror({ initialMirrorId, dataCase, onMirrorChange }: Cycle
 
       <header className="cycle-header">
         <p className="source-mirror">{cycle.sourceMirror}之后</p>
-        <p className="cycle-data-source">{cycle.dataSourceLabel || "演示循环"}</p>
         <h1>循环之镜</h1>
         <p>照见你反复犯错的那条因果链。</p>
       </header>
@@ -612,19 +608,6 @@ export function CycleMirror({ initialMirrorId, dataCase, onMirrorChange }: Cycle
           font-weight: 600;
           letter-spacing: 0.18em;
           color: rgba(180, 157, 93, 0.74);
-        }
-
-        .cycle-data-source {
-          margin: -1px 0 0;
-          border: 1px solid rgba(180, 157, 93, 0.18);
-          border-radius: 999px;
-          background: rgba(180, 157, 93, 0.055);
-          padding: 0.34rem 0.72rem;
-          font-family: var(--font-function);
-          font-size: 0.68rem;
-          font-weight: 600;
-          letter-spacing: 0.12em;
-          color: rgba(242, 235, 220, 0.58);
         }
 
         .cycle-header h1 {

@@ -8,7 +8,7 @@
 - `assessment-report.example.json`：符合 schema 的示例报告。
 - `assessment-report-schema.test.mjs`：轻量测试，确保必填字段和合规提示不漂移。
 - `data-binding.d.ts`：测评报告、训练记录、K 线训练记录、复测变化和 admin 列表共用的最小 API 类型。
-- `living-mirror.d.ts`：Sprint 9 之后共用的心镜报告、训练记录、真实交易复盘、活镜成长、助教承接和全球照见层类型。
+- `living-mirror.d.ts`：Sprint 8-19 共用的入照心、心镜报告、训练记录、真实交易复盘、活镜成长、个人循环、心镜之树、助教承接和全球照见层类型。
 - `living-mirror-contract.test.mjs`：轻量测试，确保活镜路线与共享类型包含核心字段、九面心镜和合规边界。
 
-本目录暂不引入运行时依赖，不绑定具体前端或后端构建系统。`web-next` 与 `server` 已开始兼容 `assessment_report_v1`；小程序后续再接入同一结构。
+本目录暂不引入运行时依赖，不绑定具体前端或后端构建系统。`web-next`、小程序、后台和后端后续都应读取同一套 `LivingMirrorClosedLoop` / `MirrorArchive` 数据图：网站负责深度照见，小程序负责每日修行，后台负责助教承接。

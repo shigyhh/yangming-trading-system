@@ -34,6 +34,8 @@ export function StillWaterIntroMirror({ phase }: { phase: string }) {
     let frameId = 0
     let lastAutoDrop = 0
     let pointerIsDown = false
+    let lastPointerDrop = 0
+    let lastPointerPosition: { x: number; y: number } | null = null
     const scale = 3
     const damp = 0.986
 
@@ -162,22 +164,64 @@ export function StillWaterIntroMirror({ phase }: { phase: string }) {
       }
     }
 
+    const getPointerPressure = (event: PointerEvent) => {
+      if (typeof event.pressure === "number" && event.pressure > 0) return event.pressure
+      if (event.pointerType === "mouse") return pointerIsDown || event.buttons ? 0.42 : 0.16
+      return 0.48
+    }
+
+    const stirAtPointer = (event: PointerEvent, mode: "hover" | "press" | "enter") => {
+      const position = pointerPosition(event)
+      const now = performance.now()
+      const minInterval = mode === "press" ? 22 : mode === "enter" ? 0 : 58
+      const distance = lastPointerPosition
+        ? Math.hypot(position.x - lastPointerPosition.x, position.y - lastPointerPosition.y)
+        : 18
+
+      if (mode !== "enter" && now - lastPointerDrop < minInterval && distance < 10) return
+
+      const pressure = getPointerPressure(event)
+      const distanceLift = clamp(distance / 58, 0.36, 1)
+      const force =
+        mode === "press"
+          ? (142 + pressure * 230) * distanceLift
+          : mode === "enter"
+            ? 118
+            : (38 + pressure * 78) * distanceLift
+
+      agitationRef.current = Math.min(
+        1,
+        agitationRef.current +
+          (mode === "press" ? 0.14 + pressure * 0.16 : mode === "enter" ? 0.09 : 0.026 + pressure * 0.035),
+      )
+      drop(position.x, position.y, force)
+      lastPointerPosition = position
+      lastPointerDrop = now
+    }
+
+    const handlePointerEnter = (event: PointerEvent) => {
+      stirAtPointer(event, "enter")
+    }
+
     const handlePointerDown = (event: PointerEvent) => {
       pointerIsDown = true
-      const position = pointerPosition(event)
-      agitationRef.current = Math.min(1, agitationRef.current + 0.34)
-      drop(position.x, position.y, 320)
+      canvas.setPointerCapture?.(event.pointerId)
+      stirAtPointer(event, "press")
     }
 
     const handlePointerMove = (event: PointerEvent) => {
-      if (!pointerIsDown) return
-      const position = pointerPosition(event)
-      agitationRef.current = Math.min(1, agitationRef.current + 0.18)
-      drop(position.x, position.y, 140)
+      stirAtPointer(event, pointerIsDown || event.buttons > 0 ? "press" : "hover")
     }
 
-    const handlePointerUp = () => {
+    const handlePointerUp = (event: PointerEvent) => {
       pointerIsDown = false
+      lastPointerPosition = null
+      if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId)
+    }
+
+    const handlePointerLeave = () => {
+      pointerIsDown = false
+      lastPointerPosition = null
     }
 
     const drawLightField = (time: number, agitation: number) => {
@@ -302,16 +346,22 @@ export function StillWaterIntroMirror({ phase }: { phase: string }) {
     frameId = window.requestAnimationFrame(step)
     const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(resize) : null
     resizeObserver?.observe(shell)
+    canvas.addEventListener("pointerenter", handlePointerEnter)
     canvas.addEventListener("pointerdown", handlePointerDown)
     canvas.addEventListener("pointermove", handlePointerMove)
+    canvas.addEventListener("pointerleave", handlePointerLeave)
+    canvas.addEventListener("pointercancel", handlePointerLeave)
     window.addEventListener("pointerup", handlePointerUp)
 
     return () => {
       window.cancelAnimationFrame(frameId)
       pulseRef.current = null
       resizeObserver?.disconnect()
+      canvas.removeEventListener("pointerenter", handlePointerEnter)
       canvas.removeEventListener("pointerdown", handlePointerDown)
       canvas.removeEventListener("pointermove", handlePointerMove)
+      canvas.removeEventListener("pointerleave", handlePointerLeave)
+      canvas.removeEventListener("pointercancel", handlePointerLeave)
       window.removeEventListener("pointerup", handlePointerUp)
     }
   }, [])

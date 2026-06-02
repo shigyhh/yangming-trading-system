@@ -357,7 +357,7 @@ export function AiFocusSection() {
   useEffect(() => {
     if (!hasEntered) return
 
-    const timer = window.setTimeout(() => setShowMirror(true), 1250)
+    const timer = window.setTimeout(() => setShowMirror(true), 160)
 
     return () => window.clearTimeout(timer)
   }, [hasEntered])
@@ -425,14 +425,6 @@ export function AiFocusSection() {
       className={`loop-page relative z-10 ${showMirror ? "is-mirror-ready" : ""}`}
     >
       <main className={`loop-stage ${showMirror ? "is-mirror-ready" : ""}`}>
-        <motion.div
-          className="loop-intro font-world"
-          animate={{ opacity: showMirror ? 0 : 1, filter: showMirror ? "blur(8px)" : "blur(0px)" }}
-          transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-        >
-          你看见了吗？
-        </motion.div>
-
         {showMirror ? (
           <motion.div
             className={`loop-orbit ${mirrorStage === "ring" || mirrorStage === "question" ? "is-ring-lit" : ""} ${
@@ -543,22 +535,6 @@ export function AiFocusSection() {
           z-index: 2;
           padding: 24px 16px 28px;
           box-sizing: border-box;
-        }
-
-        .loop-intro {
-          position: absolute;
-          left: 50%;
-          top: 50%;
-          z-index: 4;
-          transform: translate(-50%, -50%);
-          white-space: nowrap;
-          font-size: clamp(32px, 5vw, 64px);
-          line-height: 1.2;
-          letter-spacing: 0.08em;
-          font-weight: 300;
-          color: rgba(244, 235, 221, 0.82);
-          text-shadow: 0 0 34px rgba(216, 183, 111, 0.08);
-          pointer-events: none;
         }
 
         .loop-orbit {
@@ -825,11 +801,6 @@ export function AiFocusSection() {
             min-height: 74dvh;
             padding-top: clamp(66px, 9svh, 92px);
             padding-bottom: 22px;
-          }
-
-          .loop-intro {
-            font-size: clamp(34px, 10vw, 48px);
-            letter-spacing: 0.06em;
           }
 
           .loop-orbit {

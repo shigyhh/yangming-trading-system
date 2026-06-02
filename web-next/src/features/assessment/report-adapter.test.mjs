@@ -13,7 +13,7 @@ test("web report generation uses shared personality engine and assessment_report
   const source = `${reportSource}\n${apiClientSource}`
 
   ;[
-    "packages/personality/index.js",
+    "@yangming/personality",
     "buildAssessmentReport",
     "UnifiedAssessmentReport",
     "userId: report.userId || user.userId",

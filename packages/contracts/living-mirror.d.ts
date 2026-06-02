@@ -38,6 +38,140 @@ export type MarketType =
 
 export type CampSuggestionLevel = "self_practice" | "assistant_followup" | "camp_recommended" | string
 
+export type LivingMirrorSurface = "web" | "miniprogram" | "admin" | "server" | "app" | string
+
+export type LivingMirrorLoopStageKey =
+  | "enter_heart"
+  | "nine_behavior_mirrors"
+  | "mirror_report"
+  | "trade_review"
+  | "living_mirror_growth"
+  | "cycle_mirror"
+  | "daily_practice"
+  | "retest_change"
+  | "assistant_handoff"
+  | "share_and_global_reflection"
+
+export type LivingMirrorLoopStage = {
+  key: LivingMirrorLoopStageKey
+  sprint: string
+  name: string
+  purpose: string
+  primarySurface: LivingMirrorSurface
+  inputEntities: string[]
+  outputEntities: string[]
+  nextAction: string
+  complianceGuardrail: string
+}
+
+export type LivingMirrorClosedLoop = {
+  schemaVersion: LivingMirrorSchemaVersion
+  name: "照见活镜成长系统" | string
+  stages: LivingMirrorLoopStage[]
+  sharedEntities: string[]
+  webRole: "深度照见引擎" | string
+  miniprogramRole: "每日修行陪跑器" | string
+  appRole?: "长期陪跑器" | string
+  complianceNotice: string
+}
+
+export type MirrorSpectrumDirection = "rising" | "falling" | "stable" | string
+
+export type MirrorSpectrumEntry = {
+  key: MirrorKey
+  mirror: MirrorName
+  score: number
+  direction: MirrorSpectrumDirection
+  evidenceCount: number
+  lastTriggeredAt?: string
+  note?: string
+}
+
+export type PersonalCycleNodeRole = "trigger" | "thought" | "action" | "result" | "retrigger" | string
+
+export type PersonalCycleNode = {
+  role: PersonalCycleNodeRole
+  text: string
+  mirror?: MirrorName
+  thieves?: HeartThief[]
+  evidenceReviewIds?: string[]
+}
+
+export type PersonalCycle = {
+  id: string
+  userId: string
+  source: "assessment" | "trade_review" | "training" | "retest" | string
+  mirror: MirrorName
+  nodes: PersonalCycleNode[]
+  verdict: string
+  updatedAt: string
+}
+
+export type LivingMirrorGrowthSource =
+  | "assessment"
+  | "training"
+  | "trade_review"
+  | "daily_heart_witness"
+  | "retest"
+  | "assistant_handoff"
+  | string
+
+export type LivingMirrorGrowthSignal = {
+  id: string
+  userId: string
+  growthSource: LivingMirrorGrowthSource
+  mirror: MirrorName
+  delta: number
+  thieves?: HeartThief[]
+  evidenceId?: string
+  note: string
+  createdAt: string
+}
+
+export type HeartMirrorTree = {
+  treeName: "心镜之树" | string
+  growthValue: number
+  conscienceGrowth: number
+  wateringSources: LivingMirrorGrowthSource[]
+  lastWateredAt?: string
+  milestoneText?: string
+}
+
+export type DailyHeartWitness = {
+  id: string
+  userId: string
+  date: string
+  thought: string
+  mirror: MirrorName
+  practiceAction: string
+  completed: boolean
+  sealText?: string
+  createdAt: string
+}
+
+export type RetestChange = {
+  id: string
+  userId: string
+  beforeReportId: string
+  afterReportId: string
+  mirrorDelta: Partial<Record<MirrorKey, number>>
+  thiefDelta: ThiefCountMap
+  insight: string
+  createdAt: string
+}
+
+export type ShareCardSnapshot = {
+  id: string
+  userId: string
+  todayHeartWitness: string
+  mainMirror: MirrorName
+  verdict: string
+  practiceAction: string
+  inviteCode?: string
+  complianceNotice: string
+  createdAt: string
+}
+
 export type User = {
   id: string
   phone: string
@@ -76,9 +210,11 @@ export type MirrorReport = {
   verdict: string
   mainMirror: MirrorName
   subMirror: MirrorName
+  mirrorSpectrum?: MirrorSpectrumEntry[]
   thieves: HeartThief[]
   riskRadar: RiskRadarItem[]
   typicalLoop: string[]
+  typicalCycle?: PersonalCycle
   sevenDayPrescription: SevenDayPrescriptionItem[]
   campSuggestion: CampSuggestion
   complianceNotice: "本报告用于交易心理觉察与训练，不构成投资建议" | string
@@ -93,6 +229,7 @@ export type TrainingRecord = {
   action: string
   completed: boolean
   note: string
+  growthSignal?: LivingMirrorGrowthSignal
   createdAt?: string
   completedAt?: string | null
 }
@@ -122,6 +259,7 @@ export type TradeReview = {
   detectedMirror: MirrorName
   detectedThieves: HeartThief[]
   behaviorTags: string[]
+  personalCycle?: PersonalCycle
   reviewText: string
   createdAt: string
 }
@@ -142,11 +280,16 @@ export type LivingMirrorStats = {
   userId: string
   schemaVersion: LivingMirrorSchemaVersion
   mirrorScores: MirrorScoreMap
+  mirrorSpectrum?: MirrorSpectrumEntry[]
   thiefCounts: ThiefCountMap
   growthTrend: LivingMirrorTrendPoint[]
   trainingCompletionRate: number
   loopRelapseCount: number
   conscienceGrowth: number
+  heartMirrorTree?: HeartMirrorTree
+  lastSignals?: LivingMirrorGrowthSignal[]
+  dailyHeartWitness?: DailyHeartWitness
+  latestPersonalCycle?: PersonalCycle
   lastUpdated: string
 }
 
@@ -257,8 +400,12 @@ export type MirrorArchive = {
   trainingRecords: TrainingRecord[]
   tradeReviews: TradeReview[]
   livingMirrorStats: LivingMirrorStats
+  dailyHeartWitnesses?: DailyHeartWitness[]
+  personalCycles?: PersonalCycle[]
+  retestChanges?: RetestChange[]
   retestReports: MirrorReport[]
   inviteCode?: string
+  shareCards?: ShareCardSnapshot[]
   assistantHandoff?: AssistantHandoff | null
 }
 

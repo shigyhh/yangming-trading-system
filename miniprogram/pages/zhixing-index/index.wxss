@@ -7,7 +7,7 @@
   background:
     radial-gradient(circle at 70% 8%, rgba(211, 168, 79, 0.12), transparent 28%),
     linear-gradient(180deg, #0b1118 0%, #070d11 45%, #030606 100%);
-  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
 }
 
 .index-bg {
@@ -96,7 +96,7 @@
   position: relative;
   z-index: 1;
   color: #f6d886;
-  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
   font-size: 96rpx;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
@@ -171,7 +171,7 @@
 
 .dimension-head text:last-child {
   color: #f6d886;
-  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
   font-size: 30rpx;
   font-weight: 900;
   font-variant-numeric: tabular-nums;

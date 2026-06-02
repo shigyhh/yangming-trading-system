@@ -1,10 +1,18 @@
+@font-face {
+  font-family: "ZX-LXGW";
+  src: url("./assets/fonts/LXGWWenKai-Zhixing.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
 page {
   min-height: 100%;
   color: #f7efdf;
   background:
     radial-gradient(circle at 78% -10%, rgba(201, 157, 76, 0.16), transparent 34%),
     linear-gradient(180deg, #07100e 0%, #0b1413 48%, #111816 100%);
-  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
   letter-spacing: 0;
 }
 
@@ -92,9 +100,65 @@ button > image {
   z-index: 2;
 }
 
+.brand-zhao-mini {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 7rpx;
+  color: rgba(216, 183, 111, 0.78);
+}
+
+.brand-zhao-mini .zhao-eyes {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9rpx;
+}
+
+.brand-zhao-mini .zhao-eye {
+  width: 18rpx;
+  height: 16rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 4rpx;
+  opacity: 0.86;
+}
+
+.brand-zhao-mini .zhao-mirror {
+  width: 46rpx;
+  height: 3rpx;
+  border-radius: 999rpx;
+  background: currentColor;
+  opacity: 0.78;
+}
+
+.brand-zhao-mini .zhao-fire {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 20rpx;
+}
+
+.brand-zhao-mini .zhao-fire-dot {
+  width: 4rpx;
+  height: 20rpx;
+  border-radius: 999rpx;
+  background: currentColor;
+  opacity: 0.7;
+}
+
+.brand-zhao-mini .zhao-fire-dot:first-child {
+  transform: rotate(22deg);
+}
+
+.brand-zhao-mini .zhao-fire-dot:last-child {
+  transform: rotate(-22deg);
+}
+
 .page-shell {
   min-height: 100vh;
-  padding: calc(32rpx + env(safe-area-inset-top)) 32rpx calc(220rpx + env(safe-area-inset-bottom));
+  padding: calc(32rpx + env(safe-area-inset-top)) 32rpx calc(170rpx + env(safe-area-inset-bottom));
   position: relative;
 }
 
@@ -118,7 +182,7 @@ button > image {
 .eyebrow {
   display: block;
   color: #b49355;
-  font-family: "Inter", "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
   font-size: 22rpx;
   font-weight: 800;
   letter-spacing: 0.32em;
@@ -155,7 +219,7 @@ button > image {
 
 .section-title text:last-child {
   color: #b49355;
-  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
   font-size: 24rpx;
   font-weight: 700;
 }
@@ -338,6 +402,9 @@ button > image {
   }
 }
 
+.font-yangming-display,
+.font-brand-display,
+.font-mantra,
 .font-brand,
 .font-heart-proof,
 .font-commandment,
@@ -347,19 +414,33 @@ button > image {
   font-weight: 500;
 }
 
+.font-yangming-display,
+.font-brand-display,
+.font-mantra {
+  letter-spacing: 0.1em;
+}
+
+.font-yangming-hand,
+.font-seal {
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Kaiti SC", "STKaiti", serif;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
 .font-section {
   font-family: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", serif;
   font-weight: 600;
 }
 
+.font-yangming-body,
 .font-body,
 .font-ai,
 .font-panel {
-  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
 }
 
 .font-number {
-  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }

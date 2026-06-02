@@ -1,0 +1,330 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1200" viewBox="0 0 1600 1200" role="img" aria-labelledby="title desc">
+  <title id="title">阳明照骨字系 V0.5 合并定稿首版</title>
+  <desc id="desc">V0.5 合并 V0.3 的产品秩序与 V0.4 的象形骨架，包含响应式 Logo、标题双版本、母题符号双系统、数字系统和产品落地卡片。</desc>
+  <defs>
+    <style>
+      @font-face {
+        font-family: "YangmingDisplayPreview";
+        src: url("../../web-next/public/fonts/NotoSerifSC-Variable.woff2") format("woff2");
+        font-weight: 200 900;
+      }
+      @font-face {
+        font-family: "YangmingSansPreview";
+        src: url("../../web-next/public/fonts/NotoSansSC-Variable.woff2") format("woff2");
+        font-weight: 100 900;
+      }
+      .latin {
+        font-family: "Avenir Next", "Inter", "Helvetica Neue", Arial, sans-serif;
+        font-size: 14px;
+        font-weight: 650;
+        letter-spacing: .22em;
+        fill: rgba(244, 235, 221, .42);
+      }
+      .latin-strong {
+        font-family: "Avenir Next", "Inter", "Helvetica Neue", Arial, sans-serif;
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: .18em;
+        fill: rgba(244, 235, 221, .68);
+      }
+      .section-label {
+        font-family: "YangmingDisplayPreview", "Noto Serif SC", "Songti SC", serif;
+        font-size: 21px;
+        font-weight: 430;
+        letter-spacing: .15em;
+        fill: rgba(216, 183, 111, .68);
+      }
+      .body {
+        font-family: "YangmingSansPreview", "Noto Sans SC", "PingFang SC", sans-serif;
+        font-size: 15px;
+        font-weight: 520;
+        letter-spacing: .045em;
+        fill: rgba(244, 235, 221, .52);
+      }
+      .body-soft {
+        font-family: "YangmingSansPreview", "Noto Sans SC", "PingFang SC", sans-serif;
+        font-size: 13px;
+        font-weight: 520;
+        letter-spacing: .04em;
+        fill: rgba(244, 235, 221, .38);
+      }
+      .display {
+        font-family: "YangmingDisplayPreview", "Noto Serif SC", "Songti SC", serif;
+        font-size: 72px;
+        font-weight: 445;
+        letter-spacing: .016em;
+        fill: #f3ead9;
+      }
+      .display-large {
+        font-family: "YangmingDisplayPreview", "Noto Serif SC", "Songti SC", serif;
+        font-size: 92px;
+        font-weight: 440;
+        letter-spacing: .012em;
+        fill: #f3ead9;
+      }
+      .anchor {
+        font-weight: 455;
+        fill: #fff2d6;
+      }
+      .punct {
+        font-family: "YangmingDisplayPreview", "Noto Serif SC", "Songti SC", serif;
+        font-size: 48px;
+        font-weight: 315;
+        fill: rgba(216, 183, 111, .34);
+      }
+      .punct-large {
+        font-family: "YangmingDisplayPreview", "Noto Serif SC", "Songti SC", serif;
+        font-size: 64px;
+        font-weight: 315;
+        fill: rgba(216, 183, 111, .34);
+      }
+      .law {
+        font-family: "YangmingDisplayPreview", "Noto Serif SC", "Songti SC", serif;
+        font-size: 27px;
+        font-weight: 430;
+        letter-spacing: .08em;
+        fill: rgba(244, 235, 221, .82);
+      }
+      .number {
+        font-family: "Avenir Next", "Inter", "Helvetica Neue", Arial, sans-serif;
+        font-size: 42px;
+        font-weight: 660;
+        letter-spacing: .035em;
+        fill: #f3ead9;
+      }
+      .number-small {
+        font-family: "Avenir Next", "Inter", "Helvetica Neue", Arial, sans-serif;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: .16em;
+        fill: rgba(244, 235, 221, .46);
+      }
+      .dark-display {
+        font-family: "YangmingDisplayPreview", "Noto Serif SC", "Songti SC", serif;
+        font-size: 42px;
+        font-weight: 445;
+        letter-spacing: .012em;
+        fill: #11100d;
+      }
+      .dark-body {
+        font-family: "YangmingSansPreview", "Noto Sans SC", "PingFang SC", sans-serif;
+        font-size: 13px;
+        font-weight: 520;
+        letter-spacing: .04em;
+        fill: rgba(17, 16, 13, .58);
+      }
+    </style>
+
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#11100d"/>
+      <stop offset="56%" stop-color="#080807"/>
+      <stop offset="100%" stop-color="#050504"/>
+    </linearGradient>
+    <linearGradient id="line" x1="0" x2="1">
+      <stop offset="0%" stop-color="rgba(216,183,111,0)"/>
+      <stop offset="50%" stop-color="rgba(216,183,111,.34)"/>
+      <stop offset="100%" stop-color="rgba(216,183,111,0)"/>
+    </linearGradient>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency=".74" numOctaves="2" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer>
+        <feFuncA type="table" tableValues="0 .024"/>
+      </feComponentTransfer>
+    </filter>
+
+    <g id="zhao-main" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M55 40H119V123H55Z" stroke-width="9.2"/>
+      <path d="M68 68H107M68 96H107" stroke-width="5.2" opacity=".72"/>
+      <path d="M154 42H214" stroke-width="9.2"/>
+      <path d="M184 44C180 68 167 88 146 104" stroke-width="9.2"/>
+      <path d="M154 84H217V123H154Z" stroke-width="9.2"/>
+      <path d="M166 104H206" stroke-width="5" opacity=".7"/>
+      <path d="M60 151H219" stroke-width="7.2"/>
+      <path d="M68 185C58 202 52 216 43 231M112 184C106 201 102 217 98 234M156 184C162 201 166 217 170 234M202 185C212 202 222 216 231 231" stroke-width="7.1"/>
+    </g>
+
+    <g id="zhao-spirit" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M46 76C68 48 105 48 126 76C104 103 68 103 46 76Z" stroke-width="8"/>
+      <circle cx="87" cy="76" r="11" stroke-width="6.8"/>
+      <path d="M152 52C174 42 204 48 217 72C203 96 174 102 152 92" stroke-width="8"/>
+      <path d="M169 76H208" stroke-width="5.8"/>
+      <path d="M58 139C96 130 154 130 214 139" stroke-width="7"/>
+      <path d="M74 177C64 193 55 207 46 222M112 171C105 190 101 205 98 224M152 171C158 190 162 205 166 224M196 177C208 194 216 208 224 222" stroke-width="7"/>
+    </g>
+
+    <g id="zhao-small" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M58 60H118V120H58Z" stroke-width="11"/>
+      <path d="M74 90H104" stroke-width="6.8"/>
+      <path d="M146 63H215V118H146Z" stroke-width="11"/>
+      <path d="M160 91H202" stroke-width="6.8"/>
+      <path d="M62 148H214" stroke-width="9"/>
+      <path d="M82 184L65 220M128 178L122 220M172 178L180 220M214 184L236 220" stroke-width="8.8"/>
+    </g>
+
+    <g id="emblem-trade" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M28 72C64 42 112 42 148 72M28 116C64 146 112 146 148 116"/>
+      <path d="M34 48L146 140M146 48L34 140"/>
+      <path d="M90 84C80 70 58 78 64 98C68 114 86 122 90 132C94 122 112 114 116 98C122 78 100 70 90 84Z"/>
+    </g>
+    <g id="emblem-review" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M52 52H132V132H52Z"/>
+      <path d="M72 52C48 70 44 116 76 136M126 130C152 111 151 70 120 50"/>
+      <path d="M44 154C82 136 112 158 148 134M138 134L150 132L145 144"/>
+    </g>
+    <g id="emblem-train" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M48 62H126M58 88H136M68 114H146M78 140H156"/>
+      <path d="M56 154C96 130 116 92 132 52"/>
+    </g>
+    <g id="emblem-growth" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M38 92C64 62 118 62 144 92C118 120 64 120 38 92Z"/>
+      <path d="M56 142C78 132 104 134 128 144C148 152 160 146 170 138"/>
+      <path d="M92 132V64M92 91C72 82 66 67 68 50M92 91C116 80 124 64 122 46"/>
+    </g>
+    <g id="ui-trade" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M30 88H150M90 42V134"/>
+      <circle cx="90" cy="88" r="18"/>
+    </g>
+    <g id="ui-review" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M54 54H132V132H54Z"/>
+      <path d="M50 150C86 134 112 152 148 132"/>
+    </g>
+    <g id="ui-train" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M50 64H132M58 92H140M66 120H148"/>
+      <path d="M144 120L154 110"/>
+    </g>
+    <g id="ui-growth" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M42 92C66 66 116 66 140 92C116 116 66 116 42 92Z"/>
+      <path d="M90 136V74M90 96C72 88 68 74 70 58M90 96C112 86 118 72 116 54"/>
+    </g>
+  </defs>
+
+  <rect width="1600" height="1200" fill="url(#bg)"/>
+  <rect width="1600" height="1200" filter="url(#grain)" opacity=".76"/>
+  <circle cx="1270" cy="172" r="310" fill="rgba(216,183,111,.03)"/>
+  <circle cx="210" cy="970" r="380" fill="rgba(95,132,117,.04)"/>
+  <path d="M0 1006C220 926 430 930 624 964C832 1001 958 914 1164 940C1320 960 1436 1012 1600 962V1200H0Z" fill="rgba(95,132,117,.04)"/>
+
+  <line x1="88" y1="84" x2="1512" y2="84" stroke="url(#line)" stroke-width="1"/>
+  <text x="88" y="56" class="latin">YANGMING REFLECTION DISPLAY · V0.5</text>
+  <text x="1512" y="56" text-anchor="end" class="body">V0.3 产品秩序 + V0.4 象形根性</text>
+
+  <g transform="translate(88 126)">
+    <text x="0" y="0" class="section-label">01 / 响应式 Logo 系统</text>
+    <rect x="0" y="30" width="410" height="430" rx="28" fill="rgba(8,8,7,.22)" stroke="rgba(217,189,122,.12)"/>
+    <g transform="translate(42 78)" color="#f3ead9">
+      <use href="#zhao-main" transform="scale(.58)"/>
+      <text x="170" y="54" class="law">A 主标</text>
+      <text x="170" y="88" class="body">正式品牌、首页、报告封面。</text>
+      <text x="170" y="118" class="body-soft">稳、清楚、长期可信。</text>
+    </g>
+    <g transform="translate(44 232)" color="#e8decb">
+      <rect x="-4" y="-12" width="72" height="72" rx="17" fill="rgba(244,235,221,.035)" stroke="rgba(217,189,122,.12)"/>
+      <use href="#zhao-spirit" transform="translate(9 2) scale(.22)"/>
+      <text x="92" y="16" class="law">B 精神符号</text>
+      <text x="92" y="48" class="body-soft">品牌源头页、片头、徽章，不做主标。</text>
+    </g>
+    <g transform="translate(44 334)" color="#e8decb">
+      <rect x="-4" y="-12" width="72" height="72" rx="17" fill="rgba(244,235,221,.035)" stroke="rgba(217,189,122,.12)"/>
+      <use href="#zhao-small" transform="translate(9 2) scale(.22)"/>
+      <text x="92" y="16" class="law">C 小标</text>
+      <text x="92" y="48" class="body-soft">favicon、小程序头像、App 小尺寸角标。</text>
+    </g>
+  </g>
+
+  <g transform="translate(540 126)">
+    <text x="0" y="0" class="section-label">02 / 标题双版本</text>
+    <rect x="0" y="30" width="520" height="430" rx="28" fill="rgba(8,8,7,.18)" stroke="rgba(217,189,122,.1)"/>
+    <text x="34" y="96" class="latin-strong">STANDARD</text>
+    <text x="34" y="176" class="display">心不静<tspan class="punct" dx="-7" dy="-4">，</tspan></text>
+    <text x="34" y="266" class="display">交易必乱<tspan class="punct" dx="-7">。</tspan></text>
+    <text x="36" y="320" class="body">官网、产品页、课程页默认使用。可读、稳定、可复制。</text>
+    <line x1="34" y1="352" x2="486" y2="352" stroke="rgba(217,189,122,.1)"/>
+    <text x="34" y="396" class="latin">MANIFESTO USES WIDER TENSION ON “乱”</text>
+  </g>
+
+  <g transform="translate(1100 126)">
+    <text x="0" y="0" class="section-label">03 / 产品落地测试</text>
+    <rect x="0" y="30" width="412" height="430" rx="28" fill="rgba(8,8,7,.2)" stroke="rgba(217,189,122,.1)"/>
+    <g transform="translate(30 70)" color="#f3ead9">
+      <use href="#zhao-main" transform="scale(.22)"/>
+      <text x="68" y="20" class="latin-strong">AI 观心系统</text>
+      <text x="68" y="50" class="body-soft">今日心证 · 知而未行</text>
+    </g>
+    <text x="30" y="170" class="law">明知不可追，见涨仍动心。</text>
+    <line x1="30" y1="205" x2="382" y2="205" stroke="rgba(217,189,122,.11)"/>
+    <g transform="translate(30 260)">
+      <text x="0" y="0" class="number-small">DAY</text>
+      <text x="0" y="58" class="number">07</text>
+      <text x="116" y="0" class="number-small">PAUSE</text>
+      <text x="116" y="58" class="number">10s</text>
+      <text x="258" y="0" class="number-small">DISC</text>
+      <text x="258" y="58" class="number">88%</text>
+    </g>
+    <text x="30" y="378" class="body-soft">数字系统回到 V0.3：冷静、清楚、产品化。</text>
+  </g>
+
+  <g transform="translate(88 620)">
+    <text x="0" y="0" class="section-label">04 / 母题符号：品牌徽记版 + UI 图标版</text>
+    <rect x="0" y="30" width="1424" height="382" rx="28" fill="rgba(8,8,7,.14)" stroke="rgba(217,189,122,.1)"/>
+    <line x1="0" y1="116" x2="1424" y2="116" stroke="rgba(217,189,122,.08)"/>
+    <line x1="0" y1="244" x2="1424" y2="244" stroke="rgba(217,189,122,.08)"/>
+    <line x1="356" y1="30" x2="356" y2="412" stroke="rgba(217,189,122,.08)"/>
+    <line x1="712" y1="30" x2="712" y2="412" stroke="rgba(217,189,122,.08)"/>
+    <line x1="1068" y1="30" x2="1068" y2="412" stroke="rgba(217,189,122,.08)"/>
+
+    <g transform="translate(34 76)" color="#e8decb">
+      <text x="0" y="-22" class="small-latin">01 / 交易照人心</text>
+      <use href="#emblem-trade" transform="scale(.36)" stroke-width="8"/>
+      <use href="#ui-trade" transform="translate(86 -3) scale(.28)" stroke-width="9"/>
+      <text x="152" y="18" class="body-soft">交会 + 心点</text>
+    </g>
+    <g transform="translate(390 76)" color="#e8decb">
+      <text x="0" y="-22" class="small-latin">02 / 复盘照行为</text>
+      <use href="#emblem-review" transform="scale(.36)" stroke-width="8"/>
+      <use href="#ui-review" transform="translate(86 -3) scale(.28)" stroke-width="9"/>
+      <text x="152" y="18" class="body-soft">回环 + 证据</text>
+    </g>
+    <g transform="translate(746 76)" color="#e8decb">
+      <text x="0" y="-22" class="small-latin">03 / 训练照变化</text>
+      <use href="#emblem-train" transform="scale(.36)" stroke-width="8"/>
+      <use href="#ui-train" transform="translate(86 -3) scale(.28)" stroke-width="9"/>
+      <text x="152" y="18" class="body-soft">重复 + 微变</text>
+    </g>
+    <g transform="translate(1102 76)" color="#e8decb">
+      <text x="0" y="-22" class="small-latin">04 / 活镜照成长</text>
+      <use href="#emblem-growth" transform="scale(.36)" stroke-width="8"/>
+      <use href="#ui-growth" transform="translate(86 -3) scale(.28)" stroke-width="9"/>
+      <text x="152" y="18" class="body-soft">镜面 + 生长</text>
+    </g>
+
+    <g transform="translate(34 188)">
+      <text x="0" y="0" class="law">以交易照人心</text>
+      <text x="0" y="36" class="body-soft">品牌徽记用于封面，UI 图标用于真实产品。</text>
+    </g>
+    <g transform="translate(390 188)">
+      <text x="0" y="0" class="law">以复盘照行为</text>
+      <text x="0" y="36" class="body-soft">这一组作为克制程度标准参照。</text>
+    </g>
+    <g transform="translate(746 188)">
+      <text x="0" y="0" class="law">以训练照变化</text>
+      <text x="0" y="36" class="body-soft">强化“重复训练”的节奏。</text>
+    </g>
+    <g transform="translate(1102 188)">
+      <text x="0" y="0" class="law">以活镜照成长</text>
+      <text x="0" y="36" class="body-soft">降低莲花感，增加记录感。</text>
+    </g>
+
+    <g transform="translate(34 308)">
+      <text x="0" y="0" class="latin">BRAND EMBLEM</text>
+      <text x="210" y="0" class="latin">UI GLYPH</text>
+      <text x="454" y="0" class="latin">SYMBOLS MUST PASS 24PX</text>
+      <text x="856" y="0" class="latin">NO MYSTIC / NO MARKET PREDICTION</text>
+    </g>
+  </g>
+
+  <g transform="translate(88 1088)">
+    <text class="body">合规边界：仅用于交易认知、行为训练与风险教育；不荐股、不喊单、不承诺收益。</text>
+    <text x="1424" text-anchor="end" class="latin">象形入骨，明宋立身，产品归静。</text>
+  </g>
+</svg>

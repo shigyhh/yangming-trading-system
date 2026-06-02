@@ -99,7 +99,7 @@
 
 .current-meta text {
   color: #f1d27d;
-  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
   font-size: 40rpx;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
@@ -166,7 +166,7 @@
   color: #f6e0aa;
   border: 1rpx solid rgba(201, 157, 76, 0.28);
   background: rgba(201, 157, 76, 0.08);
-  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
   font-size: 21rpx;
   font-weight: 800;
   letter-spacing: 0;
