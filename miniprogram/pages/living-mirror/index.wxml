@@ -1,8 +1,44 @@
 <view class="page-shell">
   <view class="page-content">
     <text class="eyebrow">DATA MIRROR · 活镜采集</text>
-    <view class="page-title">活镜数据<br />训练台</view>
+    <view class="page-title">活镜成长<br />训练台</view>
     <view class="page-subtitle">这里不是报告展示页，而是把每次真实复盘沉淀成九镜变化、心贼频次和下一次训练动作。</view>
+
+    <view class="mirror-bridge card">
+      <view class="bridge-line">复盘，是你写下事实。活镜，是系统照见反复出现的念头。</view>
+      <view class="journey-progress-grid">
+        <view>
+          <text>今日训练</text>
+          <view>{{unifiedJourneyView.dailyPracticeDay}}</view>
+        </view>
+        <view>
+          <text>全年修行</text>
+          <view>{{unifiedJourneyView.annualPracticeDay}}</view>
+        </view>
+        <view>
+          <text>七日复测</text>
+          <view>{{unifiedJourneyView.sevenDayProgress}}</view>
+        </view>
+        <view>
+          <text>今日三印</text>
+          <view>{{unifiedJourneyView.todaySealProgress}}</view>
+        </view>
+      </view>
+      <view class="bridge-map">
+        <view>
+          <text>复盘采集</text>
+          <view>上传截图，写下理由与第一念</view>
+        </view>
+        <view>
+          <text>活镜采集</text>
+          <view>把记录归入九镜六贼与训练动作</view>
+        </view>
+        <view>
+          <text>心镜档案</text>
+          <view>保存长期变化，等待复测校准</view>
+        </view>
+      </view>
+    </view>
 
     <view class="mirror-hero card">
       <view class="lake-glow"></view>
@@ -13,6 +49,44 @@
         <text>最近高频心贼</text>
         <view>{{stats.topThievesText || '待照见'}}</view>
       </view>
+    </view>
+
+    <view class="mirror-tree-card card">
+      <view class="tree-glow"></view>
+      <view class="card-head">
+        <text>活镜树</text>
+        <view>行为证据长出来的树</view>
+      </view>
+      <view class="tree-visual">
+        <view class="tree-crown">
+          <view wx:for="{{mirrorTree.nodes}}" wx:key="key" class="{{item.active ? 'active' : ''}}">
+            <text>{{item.label}}</text>
+            <view>{{item.value}}</view>
+          </view>
+        </view>
+        <view class="tree-trunk">{{mirrorTree.trunk}}</view>
+        <view class="tree-root">{{mirrorTree.root}}</view>
+      </view>
+      <view class="tree-lines">
+        <view>{{mirrorTree.branchText}}</view>
+        <view>{{mirrorTree.leafText}} · {{mirrorTree.ringsText}}</view>
+        <view>{{mirrorTree.shadowText}}</view>
+      </view>
+    </view>
+
+    <view class="evidence-tree-card card">
+      <view class="card-head">
+        <text>闭环证据</text>
+        <view>{{evidenceSummary.total ? evidenceSummary.total + ' 条入树' : '待第一枚心证入树'}}</view>
+      </view>
+      <view wx:if="{{evidenceRows.length}}" class="evidence-tree-list">
+        <view wx:for="{{evidenceRows}}" wx:key="id">
+          <text>{{item.typeLabel}}</text>
+          <view>{{item.title}}</view>
+          <text>{{item.createdAtText}}</text>
+        </view>
+      </view>
+      <view wx:else class="empty-text">完成今日落印后，第一枚心证会长成活镜树的一片叶。</view>
     </view>
 
     <view class="change-card card">
@@ -26,6 +100,42 @@
       </view>
     </view>
 
+    <view class="kline-retest-card card">
+      <view class="card-head">
+        <text>{{klineDayRetest.title}}</text>
+        <view>{{klineDayRetest.stageText}}</view>
+      </view>
+      <view class="retest-line">{{klineDayRetest.mirrorLine}}</view>
+      <view class="retest-grid">
+        <view wx:for="{{klineDayRetest.metrics}}" wx:key="key">
+          <text>{{item.label}}</text>
+          <view>{{item.value}}</view>
+        </view>
+      </view>
+      <view class="retest-insight">{{klineDayRetest.insight}}</view>
+    </view>
+
+    <view class="training-progress-card card">
+      <view class="card-head">
+        <text>训练进度</text>
+        <view>Day {{training7View.currentDay}} · {{training7View.progressText}}</view>
+      </view>
+      <view class="training-bar"><view style="width: {{training7View.progressPercent}}%;"></view></view>
+      <view class="training-today">
+        <text>{{training7View.today.title}}</text>
+        <view>{{training7View.today.boundaryPractice}}</view>
+      </view>
+    </view>
+
+    <view class="loop-card card">
+      <view class="card-head">
+        <text>{{miniLoopProgress.behaviorLoop.title || '循环之镜'}}</text>
+        <view>重复反应路径</view>
+      </view>
+      <view class="loop-line">{{mirrorTree.loopLine}}</view>
+      <view class="loop-next">{{miniLoopProgress.behaviorLoop.nextAction || '完成两次复盘后生成下一次提醒。'}}</view>
+    </view>
+
     <view class="reminder-card card">
       <view class="card-head">
         <text>下一次训练提醒</text>
@@ -34,6 +144,17 @@
       <view class="reminder-line">{{stats.todayReminder || '先完成一条真实复盘，让活镜开始记录。'}}</view>
       <view class="training-line">{{stats.mainTraining || '把第一念记录下来。'}}</view>
       <button class="primary-btn" bindtap="goReview">{{hasRecords ? '继续采集一笔复盘' : '上传第一条记录'}}</button>
+    </view>
+
+    <view class="recommend-card card">
+      <view class="card-head">
+        <text>活镜推荐切片</text>
+        <view>按当前主镜生成</view>
+      </view>
+      <view class="recommend-title">{{klineRecommendation.title}}</view>
+      <view class="recommend-reason">{{klineRecommendation.reason}}</view>
+      <view class="recommend-meta">{{klineRecommendation.marketLabel}} · {{klineRecommendation.timeframeLabel}} · Day {{klineRecommendation.trainingDay}}</view>
+      <button class="primary-btn" bindtap="goRecommendedKline">{{klineRecommendation.actionText}}</button>
     </view>
 
     <view class="recent-card card">
@@ -56,7 +177,7 @@
     <view class="assistant-card card">
       <view class="card-head">
         <text>助教承接摘要</text>
-        <view>本地 mock</view>
+        <view>本地记录</view>
       </view>
       <view class="assistant-grid">
         <view>
@@ -77,6 +198,12 @@
         </view>
       </view>
       <view class="assistant-script">{{stats.assistantHandoff.scriptSuggestion}}</view>
+      <view class="event-timeline" wx:if="{{stats.assistantHandoff.eventTimeline.length}}">
+        <view wx:for="{{stats.assistantHandoff.eventTimeline}}" wx:key="id">
+          <text>{{item.label}}</text>
+          <view>{{item.detail}}</view>
+        </view>
+      </view>
       <button class="ghost-btn" bindtap="goAssistant">去我的页承接</button>
     </view>
 

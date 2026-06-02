@@ -1,7 +1,10 @@
 const {
   getAssessmentResult,
   getTradeReviewRecords,
+  getTraining7State,
   saveTradeReviewRecord,
+  saveTraining7Task,
+  saveInviteConversionEvent,
   todayKey
 } = require("../../utils/store");
 const {
@@ -9,10 +12,13 @@ const {
   BOUNDARY_STATES,
   EMOTION_OPTIONS,
   STAGE_POSITIONS,
+  buildLiveMirrorReminder,
   buildTradeReview,
+  buildTradeReviewClosure,
   buildTradeReviewRecordView
 } = require("../../modules/trade-review/index");
 const { MARKET_PRESETS, TIMEFRAME_PRESETS } = require("../../modules/kline-simulator/index");
+const { syncLocalState, syncTrainingProgress } = require("../../utils/api");
 
 function defaultForm() {
   return {
@@ -23,6 +29,11 @@ function defaultForm() {
     symbol: "",
     entryReason: "",
     exitReason: "",
+    inPlan: "yes",
+    changedPlan: "no",
+    exitPrepared: "yes",
+    afterReaction: "",
+    nextAction: "",
     actionKey: "planned",
     emotion: "平静",
     firstThought: "",
@@ -47,7 +58,10 @@ Page({
     boundaryStates: BOUNDARY_STATES,
     stagePositions: STAGE_POSITIONS,
     report: null,
-    records: []
+    closure: null,
+    latestReviewId: "",
+    records: [],
+    showAdvanced: false
   },
 
   onLoad(options = {}) {
@@ -129,8 +143,28 @@ Page({
     this.patchForm({ exitReason: e.detail.value });
   },
 
+  selectPlanState(e) {
+    this.patchForm({ inPlan: e.currentTarget.dataset.value || "yes" });
+  },
+
+  selectChangedPlan(e) {
+    this.patchForm({ changedPlan: e.currentTarget.dataset.value || "no" });
+  },
+
+  selectExitPrepared(e) {
+    this.patchForm({ exitPrepared: e.currentTarget.dataset.value || "yes" });
+  },
+
   inputThought(e) {
     this.patchForm({ firstThought: e.detail.value });
+  },
+
+  inputAfterReaction(e) {
+    this.patchForm({ afterReaction: e.detail.value });
+  },
+
+  inputNextAction(e) {
+    this.patchForm({ nextAction: e.detail.value });
   },
 
   inputBoundary(e) {
@@ -145,20 +179,58 @@ Page({
     this.setData({ form: Object.assign({}, this.data.form, patch || {}) });
   },
 
+  toggleAdvanced() {
+    this.setData({ showAdvanced: !this.data.showAdvanced });
+  },
+
   generateReview() {
-    const report = buildTradeReview(this.data.form, {
+    const form = this.data.form || {};
+    if (!form.screenshotPath) {
+      wx.showToast({ title: "先上传截图证据", icon: "none" });
+      return;
+    }
+    if (!String(form.firstThought || "").trim()) {
+      wx.showToast({ title: "先写下第一念", icon: "none" });
+      return;
+    }
+    if (!String(form.nextAction || "").trim()) {
+      wx.showToast({ title: "写下下一次动作", icon: "none" });
+      return;
+    }
+    const formForReview = Object.assign({}, form, {
+      actionKey: form.inPlan === "no" ? "impulse" : form.actionKey,
+      boundaryState: form.changedPlan === "yes" || form.exitPrepared === "no" ? "near" : form.boundaryState,
+      entryReason: form.entryReason || (form.inPlan === "no" ? "计划外动作" : "计划内动作"),
+      exitReason: form.exitReason || form.afterReaction || (form.exitPrepared === "yes" ? "已提前写离场条件" : "离场条件未写清"),
+      planBoundary: form.planBoundary || (form.exitPrepared === "yes" ? "已提前写离场条件" : "边界待补充"),
+      reviewNote: form.reviewNote || form.nextAction
+    });
+    const report = buildTradeReview(formForReview, {
       assessment: getAssessmentResult()
     });
     const state = saveTradeReviewRecord(report);
+    const day = (getTraining7State() || {}).currentDay || 1;
+    saveTraining7Task(day, "reaction_record", true);
+    saveInviteConversionEvent("trade_review_completed", {
+      sourcePage: "trade_review",
+      shareCardType: "daily_mantra",
+      relatedMirror: (state.latest || {}).relatedMirror || "",
+      reviewId: (state.latest || {}).id || ""
+    });
+    syncLocalState({ silent: true }).catch(() => {});
+    syncTrainingProgress().catch(() => {});
+    const reminder = buildLiveMirrorReminder(state);
     this.setData({
       report: decorateReport(state.latest),
+      closure: buildTradeReviewClosure(state.latest, reminder),
+      latestReviewId: (state.latest || {}).id || "",
       records: (state.records || []).slice().reverse().slice(0, 5).map(decorateReport)
     });
-    wx.showToast({ title: "复盘已生成", icon: "success" });
+    wx.showToast({ title: "已写入活镜", icon: "success" });
   },
 
   resetForm() {
-    this.setData({ form: defaultForm(), report: null });
+    this.setData({ form: defaultForm(), report: null, closure: null, latestReviewId: "" });
   },
 
   goKlineTraining() {
@@ -176,5 +248,15 @@ Page({
     const id = e.currentTarget.dataset.id || "";
     if (!id) return;
     wx.navigateTo({ url: `/pages/trade-review-detail/index?id=${id}` });
+  },
+
+  goGeneratedDetail() {
+    const id = this.data.latestReviewId || ((this.data.report || {}).id);
+    if (!id) return;
+    wx.navigateTo({ url: `/pages/trade-review-detail/index?id=${id}` });
+  },
+
+  goLivingMirror() {
+    wx.redirectTo({ url: "/pages/living-mirror/index" });
   }
 });

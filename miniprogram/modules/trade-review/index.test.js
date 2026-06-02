@@ -4,6 +4,7 @@ const {
   BOUNDARY_STATES,
   STAGE_POSITIONS,
   buildHistoricalMatch,
+  buildTradeReviewClosure,
   buildLiveMirrorReminder,
   buildLivingMirrorStats,
   buildTradeReview
@@ -41,6 +42,7 @@ const review = buildTradeReview({
 });
 
 assert.strictEqual(review.relatedPersonality, "冲动型");
+assert.strictEqual(review.sourceType, "trade_review");
 assert.strictEqual(review.relatedMirror, "追涨之镜");
 assert.deepStrictEqual(review.heartThieves, ["贪", "急"]);
 assert.strictEqual(review.verdict, "你追的不是行情，是怕被机会抛下的不安。");
@@ -69,6 +71,12 @@ assert.strictEqual(reminder.count, 2);
 assert.notStrictEqual(reminder.highFrequencyThievesText, "待照见");
 assert.ok(reminder.highFrequencyStage);
 assert.ok(reminder.mainTraining.length > 8);
+
+const closure = buildTradeReviewClosure(review, reminder);
+assert.strictEqual(closure.title, "本次复盘已入活镜");
+assert.ok(closure.steps.find((item) => item.key === "living_mirror").done);
+assert.ok(closure.trainingAction.length > 8);
+assert.ok(closure.primaryActionText.includes("活镜"));
 
 const emptyReminder = buildLiveMirrorReminder({ records: [] });
 assert.strictEqual(emptyReminder.hasRecords, false);

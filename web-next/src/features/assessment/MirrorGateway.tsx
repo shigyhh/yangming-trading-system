@@ -948,12 +948,16 @@ export function MirrorGateway({ onComplete }: { onComplete: (mirrorId: string) =
         : "此刻最先浮上来的那一念，是什么？"
 
   useEffect(() => {
-    const nextLiveMirror = buildLiveMirrorState()
+    const timer = window.setTimeout(() => {
+      const nextLiveMirror = buildLiveMirrorState()
 
-    setLiveMirror(nextLiveMirror)
-    if (nextLiveMirror.sourceMirrorId) {
-      setActiveMirrorId(nextLiveMirror.sourceMirrorId)
-    }
+      setLiveMirror(nextLiveMirror)
+      if (nextLiveMirror.sourceMirrorId) {
+        setActiveMirrorId(nextLiveMirror.sourceMirrorId)
+      }
+    }, 0)
+
+    return () => window.clearTimeout(timer)
   }, [])
 
   useEffect(() => {

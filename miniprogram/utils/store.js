@@ -37,7 +37,14 @@ const {
   YM_ANONYMOUS_REACTION_STATS,
   YM_TRADE_REVIEW_RECORDS,
   YM_LIVING_MIRROR_STATS,
-  YM_ASSISTANT_HANDOFF
+  YM_ASSISTANT_HANDOFF,
+  YM_MINI_PROGRAM_BINDING,
+  YM_MINI_LOOP_PROGRESS,
+  YM_MINI_HEART_PROOFS,
+  YM_JOURNEY_STATE,
+  YM_EVIDENCE_LEDGER,
+  YM_DEMO_MODE,
+  YM_DEBUG_MODE
 } = require("../core/storage-keys");
 const REVIEW_KEY = YM_CLOSING_REVIEW;
 const MIND_KEY = YM_OPENING_CHECK;
@@ -49,6 +56,31 @@ const { buildRiskSnapshot } = require("../modules/retest-change/index");
 const { buildCompanionMirror } = require("../modules/companion-mirror/index");
 const { buildSubscriptionPatch, buildSubscriptionView } = require("../modules/subscription/index");
 const { buildLivingMirrorStats } = require("../modules/trade-review/index");
+const { buildTraining7View } = require("../modules/training7/index");
+const {
+  buildMiniProgramBinding,
+  buildMiniLoopProgress,
+  buildMiniDailyPractice,
+  buildMiniHeartProof
+} = require("../modules/mini-loop/index");
+const {
+  readEvidenceLedger,
+  writeEvidenceLedger,
+  recordEvidence,
+  buildEvidenceSummary,
+  buildEvidenceRows,
+  getLatestEvidence,
+  formatRiskLevel
+} = require("../core/evidence-ledger");
+const {
+  readTodayJourney,
+  saveTodayJourney,
+  syncTodayJourney,
+  buildCompletionState,
+  buildClosureEvidenceChainView,
+  buildUnifiedJourneyView,
+  resolveJourneyPagePath
+} = require("../core/journey-state");
 
 function todayKey() {
   const now = new Date();
@@ -151,8 +183,156 @@ function getUserBinding() {
   return buildUserBinding(ensureProfile());
 }
 
+function getMiniProgramBinding() {
+  return read(YM_MINI_PROGRAM_BINDING, buildMiniProgramBinding({
+    userBinding: getUserBinding(),
+    profile: getProfile()
+  }));
+}
+
+function saveMiniBridgeLinkToken(linkToken, extra = {}) {
+  const token = String(linkToken || "").trim();
+  const current = getMiniProgramBinding();
+  const next = buildMiniProgramBinding({
+    userBinding: getUserBinding(),
+    profile: Object.assign({}, getProfile(), {
+      anonymousId: extra.anonymousId || current.anonymousId,
+      openid: extra.openid || current.openid,
+      unionid: extra.unionid || current.unionid,
+      reportId: extra.reportId || current.reportId,
+      linkToken: token || current.linkToken
+    }),
+    linkToken: token || current.linkToken,
+    reportId: extra.reportId || current.reportId
+  });
+  write(YM_MINI_PROGRAM_BINDING, next);
+  if (token || extra.reportId) {
+    updateProfile({
+      linkToken: token || current.linkToken,
+      reportId: extra.reportId || current.reportId,
+      miniBridgeLinkedAt: Date.now()
+    });
+  }
+  return next;
+}
+
 function withUserBinding(record) {
   return Object.assign({}, record || {}, { userBinding: getUserBinding() });
+}
+
+function getDemoMode() {
+  return !!read(YM_DEMO_MODE, false);
+}
+
+function setDemoMode(enabled) {
+  return write(YM_DEMO_MODE, !!enabled);
+}
+
+function getDebugMode() {
+  return !!read(YM_DEBUG_MODE, false);
+}
+
+function setDebugMode(enabled) {
+  return write(YM_DEBUG_MODE, !!enabled);
+}
+
+function getEvidenceLedger() {
+  return readEvidenceLedger();
+}
+
+function saveEvidenceLedger(ledger) {
+  return writeEvidenceLedger(ledger);
+}
+
+function appendEvidence(input = {}) {
+  return recordEvidence(Object.assign({
+    day: todayKey(),
+    personality: ((getAssessmentResult() || {}).primary) || "",
+    heartThief: (((getAssessmentResult() || {}).primaryThieves || [])[0]) || ""
+  }, input || {}));
+}
+
+function getEvidenceSummary(options = {}) {
+  return buildEvidenceSummary(getEvidenceLedger(), Object.assign({ day: todayKey() }, options || {}));
+}
+
+function getJourneySnapshot(extra = {}) {
+  const assessment = getAssessmentResult();
+  const training7 = getTraining7State();
+  const records = (training7 || {}).records || {};
+  const completedDays = Object.keys(records).filter((day) => !!((records[day] || {}).completed)).length;
+  return syncTodayJourney(Object.assign({
+    day: todayKey(),
+    ledger: getEvidenceLedger(),
+    hasReport: !!assessment,
+    mindCheckStarted: getAssessmentAnswers().length > 0,
+    completedDays,
+    hasRetest: !!(getRetestSnapshotState() || {}).retest
+  }, extra || {}));
+}
+
+function saveJourneyCheckpoint(patch = {}) {
+  return saveTodayJourney(Object.assign({}, patch || {}, { updatedAt: Date.now() }), todayKey());
+}
+
+function getTodayCompletionState(extra = {}) {
+  const training7 = getTraining7State();
+  const records = (training7 || {}).records || {};
+  const completedDays = Object.keys(records).filter((day) => !!((records[day] || {}).completed)).length;
+  const seals = getTodayThreeSeals();
+  return buildCompletionState(Object.assign({
+    day: todayKey(),
+    ledger: getEvidenceLedger(),
+    completedDays,
+    thought: seals.thought || "",
+    boundary: seals.boundary || ""
+  }, extra || {}));
+}
+
+function getUnifiedJourneyView(extra = {}) {
+  const day = todayKey();
+  const ledger = getEvidenceLedger();
+  const assessment = getAssessmentResult();
+  const training7View = extra.training7View || buildTraining7View(getTraining7State(), {});
+  const completedDays = Number(extra.completedDays !== undefined ? extra.completedDays : training7View.completedCount || 0);
+  const evidenceSummary = extra.evidenceSummary || buildEvidenceSummary(ledger, { day });
+  const journeyState = extra.journeyState || syncTodayJourney(Object.assign({
+    day,
+    ledger,
+    hasReport: !!assessment,
+    mindCheckStarted: getAssessmentAnswers().length > 0,
+    completedDays,
+    hasRetest: !!(getRetestSnapshotState() || {}).retest
+  }, extra || {}));
+  const seals = getTodayThreeSeals();
+  const completionView = extra.completionView || buildCompletionState(Object.assign({
+    day,
+    ledger,
+    completedDays,
+    thought: seals.thought || "",
+    boundary: seals.boundary || ""
+  }, extra || {}));
+
+  return buildUnifiedJourneyView(Object.assign({}, extra || {}, {
+    day,
+    ledger,
+    evidenceSummary,
+    journeyState,
+    completionView,
+    threeSeals: seals,
+    hasReport: !!assessment || !!extra.hasReport,
+    completedDays,
+    hasRetest: !!(getRetestSnapshotState() || {}).retest || !!extra.hasRetest
+  }));
+}
+
+function getClosureEvidenceChain(extra = {}) {
+  const training7View = extra.training7View || buildTraining7View(getTraining7State(), {});
+  return buildClosureEvidenceChainView(Object.assign({}, extra || {}, {
+    day: todayKey(),
+    ledger: getEvidenceLedger(),
+    completedDays: Number(extra.completedDays !== undefined ? extra.completedDays : training7View.completedCount || 0)
+  }));
 }
 
 function bindRecord(record, userBinding) {
@@ -243,6 +423,19 @@ function saveRetestSnapshot(type, assessment, extra = {}) {
     history: (state.history || []).concat(snapshot).slice(-12),
     updatedAt: Date.now()
   });
+  if (safeType === "retest") {
+    appendEvidence({
+      type: "seven_day_retest",
+      day: todayKey(),
+      stage: "七日复测",
+      personality: (assessment || {}).primary || "",
+      heartThief: (((assessment || {}).primaryThieves || [])[0]) || "",
+      action: "完成七日复测",
+      reflection: (assessment || {}).summary || "复测变化已写入闭环。",
+      sourcePage: extra.source || "assessment",
+      sourceId: `retest_${(assessment || {}).assessmentNo || Date.now()}`
+    });
+  }
   return write(YM_RETEST_SNAPSHOTS, next);
 }
 
@@ -257,6 +450,17 @@ function saveAssessmentResult(result, answers) {
   write(ASSESSMENT_KEY, nextResult);
   write(ASSESSMENT_HISTORY_KEY, history.concat(historyRecord).slice(-12));
   write(ANSWERS_KEY, answers);
+  appendEvidence({
+    type: "mind_report",
+    day: todayKey(),
+    stage: "入照心",
+    personality: result.primary || "",
+    heartThief: ((result.primaryThieves || [])[0]) || "",
+    action: "生成心镜报告",
+    reflection: result.summary || result.oneLine || "心镜报告已成为今日修行的起点。",
+    sourcePage: "assessment",
+    sourceId: result.reportId || `assessment_${assessmentNo}`
+  });
   updateProfile({
     stage: "照见",
     lastAssessmentType: result.primary,
@@ -269,8 +473,20 @@ function saveAssessmentResult(result, answers) {
   if (assessmentNo >= 2) {
     saveRetestSnapshot("retest", historyRecord, { source: "day7_retest_assessment" });
     saveInviteConversionEvent("retest_completed", { assessmentNo });
+    saveAssistantHandoffEvent({
+      type: "retest_completed",
+      label: "复测已完成",
+      detail: `${result.primary || "待照见"} · 第 ${assessmentNo} 次照见`,
+      sourcePage: "assessment"
+    });
   } else {
     saveInviteConversionEvent("assessment_completed", { assessmentNo });
+    saveAssistantHandoffEvent({
+      type: "assessment_completed",
+      label: "首次测评已完成",
+      detail: `${result.primary || "待照见"} · ${result.secondary || "副人格待照见"}`,
+      sourcePage: "assessment"
+    });
   }
   saveCompanionMirrorFromAssessment(historyRecord);
   return nextResult;
@@ -454,6 +670,17 @@ function saveTodayHeartCard(record) {
     records: Object.assign({}, state.records || {}, { [dayKey]: nextRecord }),
     updatedAt: Date.now()
   };
+  appendEvidence({
+    type: "heart_proof_card",
+    day: dayKey,
+    stage: nextRecord.stageName || "今日心证",
+    action: "生成今日心证卡",
+    reflection: nextRecord.heartProof || nextRecord.reflectionQuestion || "今日心证已生成。",
+    zhixingChange: Number(nextRecord.zhixingChange || 3),
+    sourcePage: nextRecord.source || "home",
+    sourceId: dayKey,
+    archived: true
+  });
   return write(HEART_CARD_KEY, next);
 }
 
@@ -482,6 +709,16 @@ function saveTodayReaction(record) {
   const records = getReactionRecords();
   records[todayKey()] = withUserBinding(Object.assign({}, record || {}, { date: todayKey(), updatedAt: Date.now() }));
   write(REACTION_KEY, records);
+  appendEvidence({
+    type: "review_record",
+    day: todayKey(),
+    stage: "交易反应记录",
+    heartThief: (record || {}).tag || "",
+    action: (record || {}).tag || "记录一次交易反应",
+    reflection: (record || {}).note || (record || {}).heartProof || "今日交易反应已记录。",
+    sourcePage: (record || {}).source || "home_reaction_checkin",
+    sourceId: "today_reaction"
+  });
   return records[todayKey()];
 }
 
@@ -590,7 +827,7 @@ function saveTodayKlineMindRecord(record) {
 function getKlineScenarioState() {
   return read(YM_KLINE_SCENARIOS, {
     updatedAt: null,
-    source: "local_mock",
+    source: "local_cache",
     scenarios: []
   });
 }
@@ -598,7 +835,7 @@ function getKlineScenarioState() {
 function saveKlineScenarioState(scenarios) {
   return write(YM_KLINE_SCENARIOS, {
     updatedAt: Date.now(),
-    source: "local_mock",
+    source: "local_cache",
     scenarios: Array.isArray(scenarios) ? scenarios : []
   });
 }
@@ -678,13 +915,312 @@ function getLivingMirrorStats() {
 
 function getAssistantHandoff() {
   const stats = getLivingMirrorStats();
-  return read(YM_ASSISTANT_HANDOFF, (stats || {}).assistantHandoff || {});
+  return buildAssistantHandoffEntity(read(YM_ASSISTANT_HANDOFF, (stats || {}).assistantHandoff || {}), stats);
 }
 
 function saveLivingMirrorStatsFromReviews(tradeReviewState) {
   const stats = write(YM_LIVING_MIRROR_STATS, buildLivingMirrorStats(tradeReviewState || getTradeReviewRecords()));
-  write(YM_ASSISTANT_HANDOFF, (stats || {}).assistantHandoff || {});
+  const current = read(YM_ASSISTANT_HANDOFF, {});
+  const base = Object.assign({}, current, (stats || {}).assistantHandoff || {}, {
+    events: current.events || []
+  });
+  write(YM_ASSISTANT_HANDOFF, buildAssistantHandoffEntity(base, stats));
   return stats;
+}
+
+function getTrainingRecordEntity() {
+  return {
+    training7: getTraining7State(),
+    dailyTraining: getTrainingState(),
+    threeSeals: getThreeSealsRecords(),
+    openingChecks: getOpeningCheckRecords(),
+    intradayBoundaries: getIntradayBoundaryRecords(),
+    klineMindRecords: getKlineMindRecords(),
+    closingReviews: getClosingReviewRecords()
+  };
+}
+
+function getMiniHeartProofState() {
+  return read(YM_MINI_HEART_PROOFS, {
+    latest: null,
+    records: {},
+    updatedAt: null
+  });
+}
+
+function saveMiniHeartProof(proof) {
+  const state = getMiniHeartProofState();
+  const record = withUserBinding(Object.assign({}, proof || {}, {
+    heartProofId: (proof || {}).heartProofId || `hp-${Date.now()}`,
+    updatedAt: Date.now()
+  }));
+  const next = {
+    latest: record,
+    records: Object.assign({}, state.records || {}, { [record.heartProofId]: record }),
+    updatedAt: Date.now()
+  };
+  appendEvidence({
+    type: "heart_proof_card",
+    day: todayKey(),
+    stage: record.sourceType === "trade_review" ? "复盘心证" : "今日心证",
+    action: record.nextActionText || "生成今日心证",
+    reflection: record.proofText || record.reflectionText || "今日心证已生成。",
+    zhixingChange: Number(record.zhixingChange || 3),
+    sourcePage: record.sourceType || "daily_practice",
+    sourceId: record.heartProofId,
+    archived: true
+  });
+  return write(YM_MINI_HEART_PROOFS, next);
+}
+
+function getMiniDailyPractice() {
+  const binding = getMiniProgramBinding();
+  const training7View = buildTraining7View(getTraining7State(), {});
+  return buildMiniDailyPractice({
+    todayKey: todayKey(),
+    binding,
+    assessment: getAssessmentResult(),
+    training7View,
+    threeSeals: getTodayThreeSeals()
+  });
+}
+
+function getMiniLoopProgress() {
+  const binding = getMiniProgramBinding();
+  const training7View = buildTraining7View(getTraining7State(), {});
+  const progress = buildMiniLoopProgress({
+    binding,
+    assessment: getAssessmentResult(),
+    training7View,
+    threeSeals: getTodayThreeSeals(),
+    tradeReviewState: getTradeReviewRecords(),
+    livingMirrorStats: getLivingMirrorStats(),
+    assistantHandoff: getAssistantHandoff(),
+    shareCardState: getShareCardState(),
+    heartProofState: getMiniHeartProofState(),
+    inviteEvents: getInviteEvents(),
+    retestSnapshots: getRetestSnapshotState()
+  });
+  return write(YM_MINI_LOOP_PROGRESS, progress);
+}
+
+function createMiniHeartProofFromDaily(extra = {}) {
+  const practice = getMiniDailyPractice();
+  const day = todayKey();
+  const proof = buildMiniHeartProof(Object.assign({}, extra || {}, {
+    heartProofId: extra.heartProofId || `hp-daily-${day}`,
+    sourceType: "daily_practice",
+    sourceId: practice.dailyGrowthId || `daily-${day}`,
+    binding: getMiniProgramBinding(),
+    thoughtType: practice.thoughtType,
+    reflectionText: practice.reflectionText,
+    proofText: extra.proofText || `我今天照见的是：${practice.reflectionText || "这一念"}。`,
+    nextActionText: extra.nextActionText || "下一次同场景，先停十秒，再写下第一念。"
+  }));
+  return saveMiniHeartProof(proof);
+}
+
+function buildAssistantHandoffEntity(base = {}, stats = getLivingMirrorStats()) {
+  const assessment = getAssessmentResult();
+  const tradeReview = getTradeReviewRecords();
+  const training7 = getTraining7State();
+  const profile = getProfile();
+  const userBinding = getUserBinding();
+  const userId = buildSharedUserId(userBinding);
+  const userIdDisplay = userBinding.userIdDisplay || userId;
+  const completedTrainingDays = countCompletedTrainingDays(training7);
+  const currentMirror = base.currentMirror || (stats || {}).currentMirror || "待照见";
+  const secondaryMirror = base.secondaryMirror || (assessment || {}).secondaryMirror || (assessment || {}).secondary || "待沉淀";
+  const latestReview = (tradeReview || {}).latest || (((tradeReview || {}).records || []).slice(-1)[0]) || {};
+  const highFrequencyThieves = base.highFrequencyThieves || (stats || {}).topThievesText || "待照见";
+  const recentThought = base.recentThought || latestReview.firstThought || "待记录";
+  const suggestedTrainingAction = base.suggestedTrainingAction || (stats || {}).mainTraining || "先完成一次真实复盘。";
+  const riskTags = base.riskTags || [currentMirror, highFrequencyThieves].filter((item) => item && item !== "待照见").join(" · ") || "待沉淀";
+  const riskElevated = !!(currentMirror && currentMirror !== "待照见" && currentMirror !== "良知之镜" && Number((stats || {}).totalReviews || 0) >= 2);
+  const triggers = [
+    { key: "assessment", label: "首次测评", done: !!assessment },
+    { key: "tradeReview", label: "一次真实复盘", done: ((tradeReview || {}).records || []).length > 0 },
+    { key: "streak3", label: "连续 3 天训练", done: completedTrainingDays >= 3 || Number(profile.streak || 0) >= 3 },
+    { key: "riskElevated", label: "活镜风险升高", done: riskElevated }
+  ];
+  const readyCount = triggers.filter((item) => item.done).length;
+  const eventTimeline = buildAssistantEventTimeline({ base, triggers, assessment, tradeReview, training7, stats });
+  const statusText = readyCount >= 2 ? "可承接" : `${readyCount}/4 待沉淀`;
+  const campSuggestion = base.campSuggestion || (completedTrainingDays >= 3 ? "可以进入 7 天连续观心训练。" : "先完成三天训练与三次复盘采集。");
+  const scriptSuggestion = base.scriptSuggestion || (
+    currentMirror === "待照见"
+      ? "先完成一次真实复盘。助教只接住第一念，不急着给方法。"
+      : `你最近明显是${currentMirror}偏强，背后常见念头是：${recentThought}。今天先不谈外在波动，只练一件事：${suggestedTrainingAction}`
+  );
+  const summaryRows = [
+    { label: "统一档案", value: userIdDisplay || "待生成" },
+    { label: "手机号", value: userBinding.phoneMask || "未绑定" },
+    { label: "主人格", value: (assessment || {}).primary || "待照见" },
+    { label: "副人格", value: (assessment || {}).secondary || "待照见" },
+    { label: "活镜主镜", value: currentMirror },
+    { label: "高频心贼", value: highFrequencyThieves },
+    { label: "最近念头", value: recentThought },
+    { label: "主修训练", value: suggestedTrainingAction }
+  ];
+  const handoffSummary = [
+    `${userBinding.phoneMask || "未绑定"} · ${(assessment || {}).primary || "待照见"} / ${(assessment || {}).secondary || "待照见"}`,
+    `活镜：${currentMirror} · 心贼：${highFrequencyThieves}`,
+    `最近念头：${recentThought}`,
+    `今日承接：${suggestedTrainingAction}`
+  ].join("\n");
+  const coachCopyText = [
+    "阳明心学交易系统 · 助教承接摘要",
+    `统一档案：${userIdDisplay || "待生成"}`,
+    `手机号：${userBinding.phoneMask || "未绑定"}`,
+    `主人格：${(assessment || {}).primary || "待照见"}`,
+    `副人格：${(assessment || {}).secondary || "待照见"}`,
+    `当前主镜：${currentMirror}`,
+    `高频心贼：${highFrequencyThieves}`,
+    `最近复盘念头：${recentThought}`,
+    `风险标签：${riskTags}`,
+    `建议训练动作：${suggestedTrainingAction}`,
+    `训练营建议：${campSuggestion}`,
+    `话术建议：${scriptSuggestion}`,
+    `承接状态：${statusText}`
+  ].join("\n");
+  return Object.assign({}, base, {
+    phoneMask: userBinding.phoneMask || "",
+    phoneBound: !!userBinding.phoneBound,
+    userId,
+    userIdDisplay,
+    currentMirror,
+    secondaryMirror,
+    highFrequencyThieves,
+    recentThought,
+    riskTags,
+    suggestedTrainingAction,
+    campSuggestion,
+    scriptSuggestion,
+    summaryRows,
+    handoffSummary,
+    coachCopyText,
+    sharePrompt: base.sharePrompt || "先分享被照见的一念，不炫耀分数，只邀请同修照见自己。",
+    triggers,
+    eventTimeline,
+    events: eventTimeline,
+    lastEventText: (eventTimeline[0] || {}).label || "待沉淀事件",
+    readyCount,
+    ready: readyCount >= 2,
+    statusText
+  });
+}
+
+function buildAssistantEventTimeline({ base = {}, triggers = [], assessment = null, tradeReview = {}, training7 = {}, stats = {} } = {}) {
+  const savedEvents = Array.isArray(base.events) ? base.events : [];
+  const records = (tradeReview || {}).records || [];
+  const latestReview = (tradeReview || {}).latest || records[records.length - 1] || {};
+  const trainingRecords = (training7 || {}).records || {};
+  const derived = [];
+  if (triggers.find((item) => item.key === "assessment" && item.done)) {
+    derived.push({
+      id: "derived-assessment",
+      type: "assessment_completed",
+      label: "首次测评",
+      detail: `${(assessment || {}).primary || "待照见"} · ${(assessment || {}).secondary || "副人格待照见"}`,
+      sourcePage: "assessment",
+      createdAt: ((assessment || {}).savedAt || (assessment || {}).updatedAt || Date.now()) - 4000
+    });
+  }
+  if (triggers.find((item) => item.key === "tradeReview" && item.done)) {
+    derived.push({
+      id: "derived-trade-review",
+      type: "trade_review_created",
+      label: "真实复盘已写入活镜",
+      detail: `${latestReview.relatedMirror || "待照见"} · ${latestReview.firstThought || "第一念待记录"}`,
+      sourcePage: latestReview.sourceType === "kline_training" ? "kline_session" : "trade_review",
+      createdAt: latestReview.createdAt || latestReview.updatedAt || Date.now() - 3000
+    });
+  }
+  if (triggers.find((item) => item.key === "streak3" && item.done)) {
+    derived.push({
+      id: "derived-streak3",
+      type: "streak_3_days",
+      label: "连续三天训练达成",
+      detail: "训练记录已足够生成助教承接话术。",
+      sourcePage: "training7",
+      createdAt: Math.max.apply(null, Object.keys(trainingRecords).map((day) => Number((trainingRecords[day] || {}).updatedAt || 0)).concat([Date.now() - 2000]))
+    });
+  }
+  if (triggers.find((item) => item.key === "riskElevated" && item.done)) {
+    derived.push({
+      id: "derived-risk-elevated",
+      type: "risk_elevated",
+      label: "活镜风险升高",
+      detail: `${(stats || {}).currentMirror || "待照见"} · ${(stats || {}).topThievesText || "待照见"}`,
+      sourcePage: "living_mirror",
+      createdAt: (stats || {}).updatedAt || Date.now() - 1000
+    });
+  }
+  const byId = {};
+  return savedEvents.concat(derived)
+    .filter(Boolean)
+    .map((event) => withUserBinding(Object.assign({
+      id: `event-${Date.now()}`,
+      type: "assistant_event",
+      label: "承接事件",
+      detail: "",
+      sourcePage: "miniprogram",
+      createdAt: Date.now()
+    }, event)))
+    .filter((event) => {
+      const key = event.id || `${event.type}-${event.sourcePage}-${event.createdAt}`;
+      if (byId[key]) return false;
+      byId[key] = true;
+      return true;
+    })
+    .sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0))
+    .slice(0, 12);
+}
+
+function saveAssistantHandoffEvent(event) {
+  const current = read(YM_ASSISTANT_HANDOFF, {});
+  const nextEvent = withUserBinding(Object.assign({
+    id: `handoff-${Date.now()}`,
+    type: "assistant_event",
+    label: "承接事件",
+    detail: "",
+    sourcePage: "miniprogram",
+    createdAt: Date.now()
+  }, event || {}));
+  const events = (current.events || []).filter((item) => item.id !== nextEvent.id).concat(nextEvent).slice(-40);
+  const next = Object.assign({}, current, {
+    events,
+    updatedAt: Date.now()
+  });
+  write(YM_ASSISTANT_HANDOFF, next);
+  return buildAssistantHandoffEntity(next, getLivingMirrorStats());
+}
+
+function buildSharedUserId(userBinding = getUserBinding()) {
+  if (userBinding.userId) return userBinding.userId;
+  if (userBinding.phone) return `phone_${userBinding.phone}`;
+  return `invite_${userBinding.inviteCode || "pending"}`;
+}
+
+function countCompletedTrainingDays(training7 = {}) {
+  const records = training7.records || {};
+  return Object.keys(records).filter((day) => {
+    const record = records[day] || {};
+    const tasks = record.tasks || {};
+    return !!record.completed ||
+      ["reaction", "kline", "checkin"].every((key) => !!tasks[key]) ||
+      ["opening_check", "reaction_record", "daily_practice", "closing_review"].every((key) => !!tasks[key]);
+  }).length;
+}
+
+function applyTrainingRecordEntity(entity = {}) {
+  if (entity.training7 && typeof entity.training7 === "object") write(TRAINING7_KEY, entity.training7);
+  if (entity.dailyTraining && typeof entity.dailyTraining === "object") write(TRAINING_KEY, entity.dailyTraining);
+  if (entity.threeSeals && typeof entity.threeSeals === "object") write(THREE_SEALS_KEY, entity.threeSeals);
+  if (entity.openingChecks && typeof entity.openingChecks === "object") write(MIND_KEY, entity.openingChecks);
+  if (entity.intradayBoundaries && typeof entity.intradayBoundaries === "object") write(YM_INTRADAY_BOUNDARY_RECORDS, entity.intradayBoundaries);
+  if (entity.klineMindRecords && typeof entity.klineMindRecords === "object") write(YM_KLINE_MIND_RECORDS, entity.klineMindRecords);
+  if (entity.closingReviews && typeof entity.closingReviews === "object") write(REVIEW_KEY, entity.closingReviews);
 }
 
 function saveTradeReviewRecord(record) {
@@ -697,7 +1233,36 @@ function saveTradeReviewRecord(record) {
     latest: nextRecord,
     records
   });
+  appendEvidence({
+    type: "review_record",
+    day: nextRecord.tradeDate || todayKey(),
+    stage: ((nextRecord.historicalMatch || {}).stagePosition) || nextRecord.stageGate || "真实交易复盘",
+    personality: nextRecord.relatedMirror || "",
+    heartThief: (nextRecord.heartThieves || [])[0] || "",
+    action: nextRecord.actionLabel || nextRecord.trainingAction || "写入真实复盘",
+    reflection: nextRecord.firstThought || nextRecord.verdict || nextRecord.reviewText || "这次复盘已进入行为证据链。",
+    sourcePage: nextRecord.sourceType === "kline_training" ? "kline_session" : "trade_review",
+    sourceId: nextRecord.id
+  });
   saveLivingMirrorStatsFromReviews(nextState);
+  saveAssistantHandoffEvent({
+    type: nextRecord.sourceType === "kline_training" ? "kline_training_written" : "trade_review_created",
+    label: nextRecord.sourceType === "kline_training" ? "K线训练写入活镜" : "真实复盘写入活镜",
+    detail: `${nextRecord.relatedMirror || "待照见"} · ${nextRecord.firstThought || "第一念待记录"}`,
+    sourcePage: nextRecord.sourceType === "kline_training" ? "kline_session" : "trade_review",
+    relatedMirror: nextRecord.relatedMirror || "",
+    highFrequencyThieves: (nextRecord.heartThieves || []).join("、"),
+    reviewId: nextRecord.id
+  });
+  saveMiniHeartProof(buildMiniHeartProof({
+    sourceType: "trade_review",
+    sourceId: nextRecord.id,
+    binding: getMiniProgramBinding(),
+    reflectionText: nextRecord.firstThought || nextRecord.afterReaction || "",
+    proofText: nextRecord.verdict || nextRecord.oneLine || "这一次复盘照见了下单前的一念。",
+    nextActionText: nextRecord.nextAction || nextRecord.trainingAction || "下一次同场景，先停十秒，再写下第一念。",
+    affectedDimensions: ["awareness", "boundary", "execution", "review"]
+  }));
   return nextState;
 }
 
@@ -736,9 +1301,27 @@ function saveTraining7Task(day, taskKey, done = true) {
     completed,
     updatedAt: Date.now()
   }));
+  if (done && taskKey === "checkin") {
+    appendEvidence({
+      type: "daily_checkin",
+      day: todayKey(),
+      stage: `Day ${safeDay}`,
+      action: "完成今日签到",
+      reflection: "今日修行已开启。",
+      sourcePage: "home",
+      sourceId: "daily_checkin"
+    });
+  }
   const nextDay = completed && safeDay < 7 ? safeDay + 1 : safeDay;
   if (completed) {
     saveGroupPracticeCheckin(safeDay, { completed: true, completedAt: Date.now() });
+    saveAssistantHandoffEvent({
+      type: "training_day_completed",
+      label: `Day ${safeDay} 训练完成`,
+      detail: safeDay >= 7 ? "七日训练已完成，可进入复测与助教承接。" : "今日训练动作已进入连续记录。",
+      sourcePage: "training7",
+      trainingDay: safeDay
+    });
     if (safeDay === 1) saveInviteConversionEvent("day1_completed", { sourcePage: "training7", trainingDay: safeDay });
     if (safeDay === 3) saveInviteConversionEvent("day3_completed", { sourcePage: "training7", trainingDay: safeDay });
     if (safeDay === 7) saveInviteConversionEvent("day7_completed", { sourcePage: "training7", trainingDay: safeDay });
@@ -784,6 +1367,29 @@ function saveTodayThreeSeals(record) {
   }));
   records[todayKey()] = nextRecord;
   write(THREE_SEALS_KEY, records);
+  if (nextRecord.thought || nextRecord.fear || nextRecord.boundary) {
+    appendEvidence({
+      type: "daily_concept",
+      day: todayKey(),
+      stage: "今日之印",
+      action: "写下今日一念",
+      reflection: nextRecord.thought || nextRecord.fear || nextRecord.boundary || "今日观念已记录。",
+      sourcePage: "home_three_seals",
+      sourceId: "daily_concept"
+    });
+  }
+  if (nextRecord.completed) {
+    appendEvidence({
+      type: "daily_seal",
+      day: todayKey(),
+      stage: "今日落印",
+      action: nextRecord.boundary || "落下今日之印",
+      reflection: nextRecord.thought || "今日已照见。",
+      zhixingChange: 3,
+      sourcePage: "home_three_seals",
+      sourceId: "daily_seal"
+    });
+  }
   return nextRecord;
 }
 
@@ -835,6 +1441,15 @@ function saveShareCard(card) {
     records: Object.assign({}, state.records || {}, { [id]: nextCard }),
     updatedAt: Date.now()
   };
+  appendEvidence({
+    type: "share_card",
+    day: nextCard.date || todayKey(),
+    stage: nextCard.typeLabel || "照见分享",
+    action: nextCard.cta || "生成分享卡",
+    reflection: nextCard.headline || nextCard.insight || "一张照见卡已进入卡册。",
+    sourcePage: nextCard.source || "share_card",
+    sourceId: id
+  });
   return write(YM_SHARE_CARDS, next);
 }
 
@@ -945,15 +1560,28 @@ function getInviteConversionSnapshot() {
 function saveInviteEvent(event) {
   const userBinding = getUserBinding();
   const conversion = getInviteConversionSnapshot();
+  const assessment = getAssessmentResult() || {};
+  const stats = getLivingMirrorStats() || {};
+  const shareCardType = (event && (event.shareCardType || event.cardType)) || "unknown";
+  const sourceScene = (event && event.sourceScene) || (event && event.source) || "unknown";
   const nextEvent = Object.assign({}, event || {}, {
     id: (event && event.id) || `invite-${Date.now()}`,
+    direction: (event && event.direction) || ((event && event.activatedAt) ? "inbound" : "outbound"),
     inviteCode: (event && event.inviteCode) || userBinding.inviteCode || "",
     inviterUserId: userBinding.userId || "",
     inviteeUserId: (event && event.inviteeUserId) || "",
-    sourceScene: (event && event.sourceScene) || (event && event.source) || "unknown",
+    sourceScene,
     sourcePage: (event && event.sourcePage) || "",
-    shareCardType: (event && (event.shareCardType || event.cardType)) || "unknown",
+    shareCardType,
+    sourceType: (event && event.sourceType) || shareCardType,
+    sourceId: (event && event.sourceId) || (event && event.shareCardId) || "",
     sourceShareCard: (event && event.shareCardId) || "",
+    attributionId: (event && event.attributionId) || `${userBinding.inviteCode || "INV"}-${shareCardType}-${sourceScene}`,
+    sourcePrimary: (event && event.sourcePrimary) || assessment.primary || "",
+    sourceSecondary: (event && event.sourceSecondary) || assessment.secondary || "",
+    sourceMirror: (event && event.sourceMirror) || stats.currentMirror || assessment.primaryMirror || "",
+    sourceThieves: (event && event.sourceThieves) || stats.topThievesText || ((assessment.primaryThieves || []).join("、")),
+    groupCode: (event && event.groupCode) || (getGroupPracticeState() || {}).groupCode || "",
     activatedAt: (event && event.activatedAt) || null,
     assessmentCompleted: conversion.assessmentCompleted,
     assessmentCount: conversion.assessmentCount,
@@ -966,12 +1594,28 @@ function saveInviteEvent(event) {
     createdAt: (event && event.createdAt) || Date.now()
   });
   const events = getInviteEvents().concat(withUserBinding(nextEvent)).slice(-60);
+  if (nextEvent.direction === "outbound") {
+    saveAssistantHandoffEvent({
+      type: "share_attribution_created",
+      label: "同修分享归因已记录",
+      detail: `${nextEvent.shareCardType} · ${nextEvent.sourceMirror || "待照见"}`,
+      sourcePage: nextEvent.sourcePage || "share_card",
+      attributionId: nextEvent.attributionId
+    });
+  }
   return write(YM_INVITE_EVENTS, events);
 }
 
 function saveInviteConversionEvent(conversionStage, extra = {}) {
   const profile = getProfile();
   if (!profile.inviteSource && !extra.force) return getInviteEvents();
+  saveAssistantHandoffEvent({
+    type: "invite_conversion",
+    label: "同修归因转化",
+    detail: `${conversionStage} · ${profile.inviteSource || extra.inviteCode || "自然进入"}`,
+    sourcePage: extra.sourcePage || "miniprogram",
+    attributionId: `${profile.inviteSource || extra.inviteCode || "INV"}-${conversionStage}`
+  });
   return saveInviteEvent(Object.assign({}, extra || {}, {
     direction: "conversion",
     conversionStage,
@@ -1061,7 +1705,7 @@ function getSubscriptionState() {
     expiresAt: null,
     proofNo: "",
     updatedAt: null,
-    source: "local_mock_subscription"
+    source: "local_subscription"
   });
 }
 
@@ -1081,12 +1725,28 @@ function saveSubscriptionPlan(planKey) {
 }
 
 function getMockUserProfile() {
-  return read(YM_MOCK_USER_PROFILE, {
-    syncState: "本地 mock",
-    reportSource: "网站测评同步占位",
-    inviteCode: (getUserBinding() || {}).inviteCode || "",
-    assistantSummary: "待生成助教承接摘要",
-    updatedAt: null
+  const demoMode = getDemoMode();
+  const fallback = demoMode
+    ? {
+        syncState: "本地演示",
+        reportSource: "网站测评同步占位",
+        inviteCode: (getUserBinding() || {}).inviteCode || "",
+        assistantSummary: "待生成助教承接摘要",
+        updatedAt: null
+      }
+    : {
+        syncState: "本地优先",
+        reportSource: "未同步",
+        inviteCode: (getUserBinding() || {}).inviteCode || "",
+        assistantSummary: "完成测评、复盘或训练后，这里会生成助教承接摘要。",
+        updatedAt: null
+      };
+  const stored = read(YM_MOCK_USER_PROFILE, fallback);
+  if (demoMode) return stored;
+  return Object.assign({}, stored || {}, {
+    syncState: String((stored || {}).syncState || "").includes("mock") ? "本地优先" : (stored || {}).syncState || "本地优先",
+    reportSource: String((stored || {}).reportSource || "").includes("占位") ? "未同步" : (stored || {}).reportSource || "未同步",
+    assistantSummary: (stored || {}).assistantSummary || "完成测评、复盘或训练后，这里会生成助教承接摘要。"
   });
 }
 
@@ -1094,6 +1754,14 @@ function saveMockUserProfile(patch) {
   return write(YM_MOCK_USER_PROFILE, withUserBinding(Object.assign({}, getMockUserProfile(), patch || {}, {
     updatedAt: Date.now()
   })));
+}
+
+function getLocalUserProfile() {
+  return getMockUserProfile();
+}
+
+function saveLocalUserProfile(patch) {
+  return saveMockUserProfile(patch);
 }
 
 function clearMockMvpState() {
@@ -1119,6 +1787,14 @@ function clearMockMvpState() {
     YM_KLINE_REVIEW_REPORTS,
     YM_KLINE_MIRROR_CHALLENGES,
     YM_ANONYMOUS_REACTION_STATS,
+    YM_TRADE_REVIEW_RECORDS,
+    YM_LIVING_MIRROR_STATS,
+    YM_ASSISTANT_HANDOFF,
+    YM_MINI_PROGRAM_BINDING,
+    YM_MINI_LOOP_PROGRESS,
+    YM_MINI_HEART_PROOFS,
+    YM_JOURNEY_STATE,
+    YM_EVIDENCE_LEDGER,
     ASSESSMENT_KEY,
     LEGACY_ASSESSMENT_KEY,
     ANSWERS_KEY,
@@ -1132,6 +1808,10 @@ function clearMockMvpState() {
     syncState: "本地 mock 已重置",
     assistantSummary: "待重新生成助教承接摘要"
   });
+}
+
+function clearLocalMvpState() {
+  return clearMockMvpState();
 }
 
 function getDojoState() {
@@ -1177,12 +1857,15 @@ function clearAssessment() {
 function collectLocalState() {
   const profile = getProfile();
   const userBinding = getUserBinding();
+  const userId = buildSharedUserId(userBinding);
   const mirrorReport = getAssessmentResult();
+  const trainingRecord = getTrainingRecordEntity();
   const tradeReview = getTradeReviewRecords();
   const livingMirrorStats = getLivingMirrorStats();
   const assistantHandoff = getAssistantHandoff();
   return {
     profile,
+    user_id: userId,
     user_binding: userBinding,
     assessment_result: mirrorReport,
     assessment_history: getAssessmentHistory(),
@@ -1191,6 +1874,7 @@ function collectLocalState() {
     zhixing_score: getZhixingScoreState(),
     daily_loop_state: getDailyLoopState(),
     heart_proof_cards: getHeartCardState(),
+    training_record: trainingRecord,
     training7_state: getTraining7State(),
     three_seals_records: getThreeSealsRecords(),
     opening_check_records: getOpeningCheckRecords(),
@@ -1205,6 +1889,12 @@ function collectLocalState() {
     trade_review_records: tradeReview,
     living_mirror_stats: livingMirrorStats,
     assistant_handoff: assistantHandoff,
+    mini_program_binding: getMiniProgramBinding(),
+    mini_loop_progress: getMiniLoopProgress(),
+    mini_daily_practice: getMiniDailyPractice(),
+    mini_heart_proofs: getMiniHeartProofState(),
+    journey_state: read(YM_JOURNEY_STATE, { todayJourney: {}, history: {}, updatedAt: null }),
+    evidence_ledger: getEvidenceLedger(),
     closing_review_records: getClosingReviewRecords(),
     share_cards: getShareCardState(),
     invite_events: getInviteEvents(),
@@ -1230,13 +1920,20 @@ function collectLocalState() {
     },
     shared_entities: {
       User: {
+        userId,
         profile,
         userBinding
       },
       MirrorReport: mirrorReport,
+      TrainingRecord: trainingRecord,
       TradeReview: tradeReview,
       LivingMirrorStats: livingMirrorStats,
-      AssistantHandoff: assistantHandoff
+      AssistantHandoff: assistantHandoff,
+      MiniProgramBinding: getMiniProgramBinding(),
+      MiniLoopProgress: getMiniLoopProgress(),
+      MiniHeartProof: getMiniHeartProofState(),
+      JourneyState: read(YM_JOURNEY_STATE, { todayJourney: {}, history: {}, updatedAt: null }),
+      EvidenceLedger: getEvidenceLedger()
     }
   };
 }
@@ -1249,12 +1946,18 @@ function applyRemoteState(remoteState = {}) {
     if (sharedEntities.User.userBinding && sharedEntities.User.userBinding.phone) bindPhone(sharedEntities.User.userBinding.phone);
   }
   if (sharedEntities.MirrorReport && typeof sharedEntities.MirrorReport === "object") write(ASSESSMENT_KEY, sharedEntities.MirrorReport);
+  if (sharedEntities.TrainingRecord && typeof sharedEntities.TrainingRecord === "object") applyTrainingRecordEntity(sharedEntities.TrainingRecord);
   if (sharedEntities.TradeReview && typeof sharedEntities.TradeReview === "object") {
     write(YM_TRADE_REVIEW_RECORDS, sharedEntities.TradeReview);
     saveLivingMirrorStatsFromReviews(sharedEntities.TradeReview);
   }
   if (sharedEntities.LivingMirrorStats && typeof sharedEntities.LivingMirrorStats === "object") write(YM_LIVING_MIRROR_STATS, sharedEntities.LivingMirrorStats);
   if (sharedEntities.AssistantHandoff && typeof sharedEntities.AssistantHandoff === "object") write(YM_ASSISTANT_HANDOFF, sharedEntities.AssistantHandoff);
+  if (sharedEntities.MiniProgramBinding && typeof sharedEntities.MiniProgramBinding === "object") write(YM_MINI_PROGRAM_BINDING, sharedEntities.MiniProgramBinding);
+  if (sharedEntities.MiniLoopProgress && typeof sharedEntities.MiniLoopProgress === "object") write(YM_MINI_LOOP_PROGRESS, sharedEntities.MiniLoopProgress);
+  if (sharedEntities.MiniHeartProof && typeof sharedEntities.MiniHeartProof === "object") write(YM_MINI_HEART_PROOFS, sharedEntities.MiniHeartProof);
+  if (sharedEntities.JourneyState && typeof sharedEntities.JourneyState === "object") write(YM_JOURNEY_STATE, sharedEntities.JourneyState);
+  if (sharedEntities.EvidenceLedger && typeof sharedEntities.EvidenceLedger === "object") saveEvidenceLedger(sharedEntities.EvidenceLedger);
   if (remoteState.profile) write(PROFILE_KEY, Object.assign({}, ensureProfile(), remoteState.profile));
   if (remoteState.user_binding && remoteState.user_binding.phone) bindPhone(remoteState.user_binding.phone);
   if (remoteState.user_binding && remoteState.user_binding.inviteSource) saveInviteSource(remoteState.user_binding.inviteSource);
@@ -1265,6 +1968,7 @@ function applyRemoteState(remoteState = {}) {
   if (remoteState.zhixing_score && typeof remoteState.zhixing_score === "object") write(ZHIXING_SCORE_KEY, remoteState.zhixing_score);
   if (remoteState.daily_loop_state && typeof remoteState.daily_loop_state === "object") write(DAILY_LOOP_KEY, remoteState.daily_loop_state);
   if (remoteState.heart_proof_cards && typeof remoteState.heart_proof_cards === "object") write(HEART_CARD_KEY, remoteState.heart_proof_cards);
+  if (remoteState.training_record && typeof remoteState.training_record === "object") applyTrainingRecordEntity(remoteState.training_record);
   if (remoteState.training7_state && typeof remoteState.training7_state === "object") write(TRAINING7_KEY, remoteState.training7_state);
   if (remoteState.three_seals_records && typeof remoteState.three_seals_records === "object") write(THREE_SEALS_KEY, remoteState.three_seals_records);
   if (remoteState.opening_check_records && typeof remoteState.opening_check_records === "object") write(MIND_KEY, remoteState.opening_check_records);
@@ -1282,6 +1986,11 @@ function applyRemoteState(remoteState = {}) {
   }
   if (remoteState.living_mirror_stats && typeof remoteState.living_mirror_stats === "object") write(YM_LIVING_MIRROR_STATS, remoteState.living_mirror_stats);
   if (remoteState.assistant_handoff && typeof remoteState.assistant_handoff === "object") write(YM_ASSISTANT_HANDOFF, remoteState.assistant_handoff);
+  if (remoteState.mini_program_binding && typeof remoteState.mini_program_binding === "object") write(YM_MINI_PROGRAM_BINDING, remoteState.mini_program_binding);
+  if (remoteState.mini_loop_progress && typeof remoteState.mini_loop_progress === "object") write(YM_MINI_LOOP_PROGRESS, remoteState.mini_loop_progress);
+  if (remoteState.mini_heart_proofs && typeof remoteState.mini_heart_proofs === "object") write(YM_MINI_HEART_PROOFS, remoteState.mini_heart_proofs);
+  if (remoteState.journey_state && typeof remoteState.journey_state === "object") write(YM_JOURNEY_STATE, remoteState.journey_state);
+  if (remoteState.evidence_ledger && typeof remoteState.evidence_ledger === "object") saveEvidenceLedger(remoteState.evidence_ledger);
   if (remoteState.closing_review_records && typeof remoteState.closing_review_records === "object") write(REVIEW_KEY, remoteState.closing_review_records);
   if (remoteState.share_cards && typeof remoteState.share_cards === "object") write(YM_SHARE_CARDS, remoteState.share_cards);
   if (Array.isArray(remoteState.invite_events)) write(YM_INVITE_EVENTS, remoteState.invite_events);
@@ -1323,6 +2032,26 @@ module.exports = {
   bindPhone,
   saveInviteSource,
   getUserBinding,
+  getMiniProgramBinding,
+  saveMiniBridgeLinkToken,
+  getDemoMode,
+  setDemoMode,
+  getDebugMode,
+  setDebugMode,
+  getEvidenceLedger,
+  saveEvidenceLedger,
+  appendEvidence,
+  getEvidenceSummary,
+  buildEvidenceRows,
+  getLatestEvidence,
+  formatRiskLevel,
+  readTodayJourney,
+  saveJourneyCheckpoint,
+  getJourneySnapshot,
+  getTodayCompletionState,
+  getUnifiedJourneyView,
+  getClosureEvidenceChain,
+  resolveJourneyPagePath,
   getAssessmentResult,
   getAssessmentHistory,
   getRetestSnapshotState,
@@ -1374,8 +2103,15 @@ module.exports = {
   getAnonymousReactionStats,
   getTradeReviewRecords,
   saveTradeReviewRecord,
+  getTrainingRecordEntity,
+  getMiniLoopProgress,
+  getMiniDailyPractice,
+  getMiniHeartProofState,
+  saveMiniHeartProof,
+  createMiniHeartProofFromDaily,
   getLivingMirrorStats,
   getAssistantHandoff,
+  saveAssistantHandoffEvent,
   saveLivingMirrorStatsFromReviews,
   getKlineMindRecords,
   getTodayKlineMindRecord,
@@ -1411,7 +2147,10 @@ module.exports = {
   saveSubscriptionPlan,
   getMockUserProfile,
   saveMockUserProfile,
+  getLocalUserProfile,
+  saveLocalUserProfile,
   clearMockMvpState,
+  clearLocalMvpState,
   getDojoState,
   saveDojoState,
   clearAssessment,

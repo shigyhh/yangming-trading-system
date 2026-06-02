@@ -291,7 +291,57 @@ const MOCK_KLINE_SCENARIOS = [
         ]
       }
     ]
+  },
+  {
+    id: "scene-retest-001",
+    title: "七日复测场景",
+    subtitle: "复看边界触碰时，第一念是否比初测更慢、更清楚",
+    triggerType: "边界再被触碰",
+    relatedPersonalities: ["平衡型", "焦虑型"],
+    trainingDay: 7,
+    candles: [
+      { open: 100, high: 102, low: 99, close: 101 },
+      { open: 101, high: 103, low: 100, close: 102 },
+      { open: 102, high: 104, low: 98, close: 99 },
+      { open: 99, high: 101, low: 96, close: 97 },
+      { open: 97, high: 100, low: 95, close: 99 },
+      { open: 99, high: 103, low: 98, close: 102 }
+    ],
+    checkpoints: [
+      {
+        step: 1,
+        question: "七日之后，同样临近边界，你的第一念是什么？",
+        options: [
+          { id: "old_rush", label: "旧反应又想立刻行动", trait: "冲动型", delayScore: 42, boundaryScore: 48 },
+          { id: "old_hold", label: "还想继续解释边界", trait: "扛单型", delayScore: 44, boundaryScore: 40 },
+          { id: "clear_pause", label: "先停住，写下事实与边界", trait: "平衡型", delayScore: 90, boundaryScore: 90 },
+          { id: "anxious_check", label: "心里发紧，想反复确认", trait: "焦虑型", delayScore: 56, boundaryScore: 60 }
+        ]
+      },
+      {
+        step: 2,
+        question: "复测这一刻，最该保留的训练动作是什么？",
+        options: [
+          { id: "write_first", label: "写下第一念，不急着解释", trait: "平衡型", delayScore: 88, boundaryScore: 88 },
+          { id: "prove_again", label: "想证明这次判断没有错", trait: "偏执型", delayScore: 38, boundaryScore: 42 },
+          { id: "avoid_review", label: "觉得复盘太麻烦", trait: "拖延型", delayScore: 46, boundaryScore: 50 },
+          { id: "follow_noise", label: "想看看外部声音怎么说", trait: "从众型", delayScore: 50, boundaryScore: 52 }
+        ]
+      }
+    ]
   }
+];
+
+const MIRROR_TRAINING_RECOMMENDATIONS = [
+  { pattern: /追涨|冲动|怕错过/, sceneId: "scene-fast-001", title: "入场冲动切片", reason: "主练怕错过升起时，先停十秒再写下边界。" },
+  { pattern: /扛单|边界|抗拒/, sceneId: "scene-boundary-001", title: "边界触碰切片", reason: "主练边界被触碰后，不再临场解释。" },
+  { pattern: /幻想|完美|错过|确认/, sceneId: "scene-fake-001", title: "幻想解释切片", reason: "主练事实不合预期时，写一条反向事实。" },
+  { pattern: /赌性|赌徒|翻本|不甘|证明欲/, sceneId: "scene-loss-streak-001", title: "不甘证明切片", reason: "主练连续不顺后，只记录第一念。" },
+  { pattern: /从众|跟风|外部声音/, sceneId: "scene-missed-001", title: "外部声音切片", reason: "主练把外部声音放到一边，回到自己的依据。" },
+  { pattern: /犹疑|疑|万一/, sceneId: "scene-drop-001", title: "犹疑守界切片", reason: "主练把计划依据写成一句话，减少临场摇摆。" },
+  { pattern: /拖延|不复盘|慢/, sceneId: "scene-sideways-001", title: "三行复盘切片", reason: "主练把复盘缩成触发、第一念、下一次边界。" },
+  { pattern: /焦虑|空仓|回吐|惧/, sceneId: "scene-pullback-001", title: "焦虑收束切片", reason: "主练波动变大时，守住固定观察窗口。" },
+  { pattern: /良知|平衡|守心|知止/, sceneId: "scene-retest-001", title: "七日复测切片", reason: "主练复看同类压力下，第一念是否更慢、更清楚。" }
 ];
 
 function getMarketPreset(key) {
@@ -313,8 +363,8 @@ function decorateScenario(scene, options = {}) {
     ruleTag: market.ruleTag,
     marketSession: market.session,
     paceLabel: timeframe.pace,
-    dataSourceLabel: "历史训练切片",
-    segmentLabel: `${market.label} · ${timeframe.label} · 离线训练样本`,
+    dataSourceLabel: "历史数据待载入",
+    segmentLabel: `${market.label} · ${timeframe.label} · 后端历史数据`,
     candles: (scene.candles || []).map((item) => Object.assign({}, item)),
     mirrorNames: (scene.relatedPersonalities || []).map((type) => getMirrorBinding(type).mirrorName),
     compliance: COMPLIANCE_TEXT
@@ -410,6 +460,11 @@ function buildKlineReview(session, scene, patch) {
     timeframeKey: safeScene.timeframeKey,
     timeframeLabel: safeScene.timeframeLabel,
     ruleTag: safeScene.ruleTag,
+    isRealHistorical: !!safeScene.isRealHistorical,
+    serverSliceId: safeScene.serverSliceId || "",
+    dataSourceLabel: safeScene.dataSourceLabel || "历史训练切片",
+    trainingDay: safeScene.trainingDay || 1,
+    trainingFocus: getTrainingSuggestion(relatedPersonality),
     date: todayKey(),
     primaryReaction: primary.label || "待照见",
     reactionTimeMs: primary.reactionTimeMs || 0,
@@ -438,6 +493,105 @@ function buildKlineReview(session, scene, patch) {
     anonymousStats: buildAnonymousStats(primary, safeScene),
     compliance: COMPLIANCE_TEXT,
     createdAt: Date.now()
+  };
+}
+
+function getKlineRecommendationForMirror(mirrorName, options = {}) {
+  const source = [
+    mirrorName,
+    options.currentMirror,
+    options.primary,
+    options.relatedPersonality
+  ].filter(Boolean).join(" ");
+  const matched = MIRROR_TRAINING_RECOMMENDATIONS.find((item) => item.pattern.test(source)) || MIRROR_TRAINING_RECOMMENDATIONS[0];
+  const marketKey = options.marketKey || "cn";
+  const timeframeKey = options.timeframeKey || "1d";
+  const scene = getKlineScenario(matched.sceneId, { marketKey, timeframeKey });
+  const query = [
+    `sceneId=${encodeURIComponent(scene.id)}`,
+    `market=${encodeURIComponent(marketKey)}`,
+    `timeframe=${encodeURIComponent(timeframeKey)}`,
+    options.symbol ? `symbol=${encodeURIComponent(options.symbol)}` : ""
+  ].filter(Boolean).join("&");
+  return {
+    sceneId: scene.id,
+    title: matched.title,
+    reason: matched.reason,
+    marketKey,
+    marketLabel: scene.marketLabel,
+    timeframeKey,
+    timeframeLabel: scene.timeframeLabel,
+    trainingDay: scene.trainingDay || 1,
+    mirrorName: mirrorName || options.currentMirror || "待照见",
+    actionText: `进入${matched.title}`,
+    path: `/pages/kline-session/index?${query}`,
+    simulatorPath: `/pages/kline-simulator/index?market=${encodeURIComponent(marketKey)}&timeframe=${encodeURIComponent(timeframeKey)}`
+  };
+}
+
+function buildKlineTradeReviewRecord(review = {}) {
+  const scores = review.scores || {};
+  const createdAt = review.createdAt || Date.now();
+  const boundaryState = review.boundaryState || (review.keptBoundary ? "kept" : "near");
+  const boundaryMeta = getBoundaryStateMeta(boundaryState);
+  const historicalMatch = {
+    marketKey: review.marketKey || "cn",
+    marketLabel: review.marketLabel || "历史品类",
+    timeframeKey: review.timeframeKey || "1d",
+    timeframeLabel: review.timeframeLabel || "历史周期",
+    tradeDate: review.date || todayKey(),
+    symbol: review.sceneTitle || "历史盲练切片",
+    stagePosition: review.sceneTitle || review.trigger || "历史盲练切片",
+    stageGate: `Day ${review.trainingDay || 1} · K线事上练`,
+    sourceStatus: review.isRealHistorical ? "真实历史切片已纳入活镜" : "历史数据待后端确认",
+    sourceNote: "来自 K 线观心训练完成记录，会进入活镜成长与助教承接。"
+  };
+  return {
+    id: `tr-from-${review.id || createdAt}`,
+    sourceType: "kline_training",
+    klineReviewId: review.id || "",
+    screenshotPath: "",
+    marketKey: historicalMatch.marketKey,
+    marketLabel: historicalMatch.marketLabel,
+    timeframeKey: historicalMatch.timeframeKey,
+    timeframeLabel: historicalMatch.timeframeLabel,
+    tradeDate: historicalMatch.tradeDate,
+    symbol: historicalMatch.symbol,
+    actionKey: "kline_training",
+    actionLabel: review.primaryReaction || "K线第一反应",
+    emotion: review.emotion || "未记录",
+    entryReason: `历史切片第一反应：${review.primaryReaction || "待照见"}`,
+    exitReason: `边界状态：${review.boundaryStateLabel || boundaryMeta.label}`,
+    firstThought: review.firstThought || review.primaryReaction || "待记录",
+    planBoundary: review.boundary || "计划边界",
+    boundaryState,
+    boundaryStateLabel: review.boundaryStateLabel || boundaryMeta.label,
+    reviewNote: review.insight || "",
+    historicalMatch,
+    relatedPersonality: review.relatedPersonality || "待照见",
+    relatedMirror: review.relatedMirror || "待照见",
+    relatedHeartMirror: review.relatedHeartMirror || "待照见",
+    heartThieves: review.heartThieves || [],
+    virtuePractice: review.virtuePractice || "",
+    stageGate: historicalMatch.stageGate,
+    scores: {
+      awareness: clamp(Number(scores.reviewCompletion || 70) + (review.firstThought ? 4 : -4), 18, 96),
+      boundary: clamp(scores.boundaryKeeping || 60, 18, 96),
+      execution: clamp(scores.planExecution || 60, 18, 96),
+      stability: clamp(scores.emotionalStability || 60, 18, 96),
+      review: clamp(scores.reviewCompletion || 80, 18, 96),
+      personalityCalibration: clamp(((scores.impulseDelay || 60) + (scores.boundaryKeeping || 60)) / 2, 18, 96)
+    },
+    oneLine: review.insight || "这一段照见的不是走势，而是第一念如何牵动动作。",
+    verdict: review.insight || "这一段照见的不是走势，而是第一念如何牵动动作。",
+    trainingAction: review.trainingSuggestion || getKlineRecommendationForMirror(review.relatedMirror).reason,
+    evidenceChain: (review.processEvidence || []).concat([
+      { label: "K线训练", value: review.sceneTitle || "历史切片", detail: `${review.marketLabel || "市场"} · ${review.timeframeLabel || "周期"} · ${review.ruleTag || "规则"}` },
+      { label: "活镜回流", value: review.relatedMirror || "待照见", detail: "训练完成后自动写入活镜成长数据。" }
+    ]),
+    includeInRetest: true,
+    compliance: COMPLIANCE_TEXT,
+    createdAt
   };
 }
 
@@ -579,6 +733,50 @@ function buildKlineChange(reportsState = {}) {
   };
 }
 
+function buildKlineDayRetestComparison(reportsState = {}) {
+  const records = (reportsState.records || [])
+    .slice()
+    .sort((a, b) => Number(a.createdAt || 0) - Number(b.createdAt || 0));
+  const day1 = records.find((item) => Number(item.trainingDay || 0) === 1) || null;
+  const day7 = records.slice().reverse().find((item) => Number(item.trainingDay || 0) === 7) || null;
+  const ready = !!(day1 && day7 && day1.id !== day7.id);
+  const baseline = day1 || records[0] || null;
+  const retest = day7 || null;
+  const metricLabels = [
+    { key: "impulseDelay", label: "冲动延迟度" },
+    { key: "boundaryKeeping", label: "守界度" },
+    { key: "planExecution", label: "计划执行度" },
+    { key: "emotionalStability", label: "稳定度" },
+    { key: "reviewCompletion", label: "复盘度" }
+  ];
+  const metrics = metricLabels.map((metric) => {
+    const before = Number(((baseline || {}).scores || {})[metric.key] || 0);
+    const after = Number(((retest || {}).scores || {})[metric.key] || 0);
+    const delta = Math.round(after - before);
+    return {
+      key: metric.key,
+      label: metric.label,
+      before,
+      after,
+      value: ready ? (delta > 0 ? `提升 ${delta}%` : delta < 0 ? `回落 ${Math.abs(delta)}%` : "持平") : "待 Day7 复测",
+      tone: delta > 0 ? "up" : delta < 0 ? "down" : "flat"
+    };
+  });
+  return {
+    ready,
+    baseline,
+    retest,
+    count: records.length,
+    title: ready ? "Day1 / Day7 K线复测" : "Day1 / Day7 复测待完成",
+    stageText: ready ? `${day1.sceneTitle || "Day1"} → ${day7.sceneTitle || "Day7"}` : `${day1 ? "Day1 已完成" : "待 Day1 初测"} · ${day7 ? "Day7 已完成" : "待 Day7 复测"}`,
+    mirrorLine: ready ? `${day1.relatedMirror || "待照见"} → ${day7.relatedMirror || "待照见"}` : "完成 Day1 与 Day7 历史切片后生成",
+    metrics,
+    insight: ready
+      ? "同类压力再次出现时，系统只看第一念是否更慢、边界是否更清楚。"
+      : "先完成 Day1 入场冲动切片，再在第 7 天完成复测切片。"
+  };
+}
+
 function average(values) {
   const list = (values || []).filter((item) => Number.isFinite(item));
   if (!list.length) return 60;
@@ -604,9 +802,12 @@ module.exports = {
   getTimeframePreset,
   getKlineScenarios,
   getKlineScenario,
+  getKlineRecommendationForMirror,
   createKlineSession,
   recordKlineReaction,
   buildKlineReview,
+  buildKlineTradeReviewRecord,
   createMirrorChallenge,
-  buildKlineChange
+  buildKlineChange,
+  buildKlineDayRetestComparison
 };

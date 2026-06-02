@@ -15,7 +15,22 @@ import {
 import { getPracticePrescription } from "@/features/assessment/practice-change"
 import { buildPreviewAssessmentReport } from "@/features/assessment/preview-report"
 import { getAssessmentTypeLabel, type AssessmentReport } from "@/features/assessment/report"
-import { assessmentStorageKeys, clearAssessmentProgress, getStorage } from "@/features/assessment/storage"
+import {
+  assessmentStorageKeys,
+  clearAssessmentProgress,
+  getStorage,
+  hasSavedPhone,
+  setStorage,
+} from "@/features/assessment/storage"
+import {
+  buildMirrorReport,
+  mirrorReportStorageKey,
+} from "@/features/mirror-report/mirrorReportEngine"
+import {
+  loadMirrorReport,
+  saveMirrorReport,
+} from "@/features/mirror-report/mirrorReportStorage"
+import type { MirrorReport, MirrorReportRiskRadar } from "@/features/mirror-report/mirrorReportTypes"
 
 function clampRisk(value: number) {
   return Math.max(0, Math.min(100, Math.round(value)))
@@ -25,6 +40,29 @@ function getRiskLevel(value: number) {
   if (value >= 68) return "偏强"
   if (value >= 34) return "中等"
   return "较轻"
+}
+
+function makeLocalId(prefix: string) {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return `${prefix}-${crypto.randomUUID()}`
+  }
+
+  return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`
+}
+
+function getAnonymousId() {
+  const existing = getStorage<string>(assessmentStorageKeys.dataBindingUserId, "")
+  if (existing) return existing
+
+  const next = makeLocalId("web")
+  setStorage(assessmentStorageKeys.dataBindingUserId, next)
+  return next
+}
+
+function buildPracticeHref(mirrorReport: MirrorReport, isPreview: boolean) {
+  const query = new URLSearchParams({ reportId: mirrorReport.reportId })
+  if (isPreview) query.set("preview", "1")
+  return `/practice-change?${query.toString()}`
 }
 
 function getHeartRiskItems(report: AssessmentReport) {
@@ -54,48 +92,10 @@ function getTrainingItems(report: AssessmentReport) {
   }))
 }
 
-const heartProofLines: Record<AssessmentReport["primaryType"]["key"], { first: string; second: string }> = {
-  fomo_chaser: {
-    first: "你不是不会等。",
-    second: "你只是怕错过。",
-  },
-  panic_runner: {
-    first: "你不是不会拿。",
-    second: "你只是太怕失去。",
-  },
-  hold_and_hope: {
-    first: "你不是不懂规矩。",
-    second: "你只是不甘认错。",
-  },
-  prove_self: {
-    first: "你不是想赢。",
-    second: "你只是想证明。",
-  },
-  revenge_rescuer: {
-    first: "你不是缺机会。",
-    second: "你只是急着翻回。",
-  },
-  hesitant_watcher: {
-    first: "你不是看不见机会。",
-    second: "你只是太怕选错。",
-  },
-  over_control: {
-    first: "你不是要完美。",
-    second: "你只是怕失控。",
-  },
-  numb_repeat: {
-    first: "你不是没有偏差。",
-    second: "你只是还没回看。",
-  },
-  disciplined_observer: {
-    first: "你不是没有波动。",
-    second: "你只是更早看见。",
-  },
-}
-
 export default function AssessmentResultPage() {
   const router = useRouter()
   const [report, setReport] = useState<AssessmentReport | null>(null)
+  const [mirrorReport, setMirrorReport] = useState<MirrorReport | null>(null)
   const [loaded, setLoaded] = useState(false)
   const [savedMessage, setSavedMessage] = useState("")
   const [isPreview, setIsPreview] = useState(false)
@@ -103,8 +103,14 @@ export default function AssessmentResultPage() {
   useEffect(() => {
     const timer = window.setTimeout(() => {
       const previewMode = new URLSearchParams(window.location.search).get("preview") === "1"
+      const nextReport = previewMode ? buildPreviewAssessmentReport() : getStorage<AssessmentReport | null>(assessmentStorageKeys.report, null)
+      const nextMirrorReport = nextReport
+        ? buildMirrorReport({ report: nextReport, anonymousId: getAnonymousId() })
+        : loadMirrorReport()
+
       setIsPreview(previewMode)
-      setReport(previewMode ? buildPreviewAssessmentReport() : getStorage<AssessmentReport | null>(assessmentStorageKeys.report, null))
+      setReport(nextReport)
+      setMirrorReport(nextMirrorReport)
       setLoaded(true)
     }, 0)
 
@@ -116,6 +122,18 @@ export default function AssessmentResultPage() {
     router.push("/assessment-ritual")
   }
 
+  const saveCurrentMirrorReport = () => {
+    if (!mirrorReport) return
+
+    saveMirrorReport(mirrorReport)
+    if (report) setStorage(assessmentStorageKeys.report, report)
+    setSavedMessage(
+      hasSavedPhone()
+        ? "心镜报告已保存。"
+        : "心镜报告已保存在此设备。绑定手机号后可长期保存心镜档案。",
+    )
+  }
+
   if (!loaded) {
     return (
       <AssessmentShell>
@@ -124,7 +142,18 @@ export default function AssessmentResultPage() {
     )
   }
 
-  if (!report) {
+  if (!report && mirrorReport) {
+    return (
+      <StoredMirrorReportPage
+        mirrorReport={mirrorReport}
+        savedMessage={savedMessage}
+        onSave={saveCurrentMirrorReport}
+        onRestart={restart}
+      />
+    )
+  }
+
+  if (!report || !mirrorReport) {
     return (
       <AssessmentShell>
         <div className="text-center">
@@ -144,37 +173,44 @@ export default function AssessmentResultPage() {
   }
 
   const heartRiskItems = getHeartRiskItems(report)
-  const heartProofLine = heartProofLines[report.primaryType.key]
   const primaryTypeLabel = getAssessmentTypeLabel(report.primaryType.key)
   const secondaryTypeLabel = getAssessmentTypeLabel(report.secondaryType.key)
-  const sourceMirror = report.sourceMirror
-  const proofLine = sourceMirror
-    ? { first: "你最先浮上的那一念：", second: sourceMirror.thought }
-    : heartProofLine
-  const trainingItems = getTrainingItems(report)
+  const practiceHref = buildPracticeHref(mirrorReport, isPreview)
+  const trainingItems = mirrorReport.sevenDayPrescription.length
+    ? mirrorReport.sevenDayPrescription.map((item) => ({
+        day: item.day,
+        title: item.title,
+        note: item.action,
+        prompt: item.completionStandard,
+      }))
+    : getTrainingItems(report)
   const leadTrigger = report.emotionalTriggers[0]
 
   return (
     <AssessmentShell className="py-5 md:py-8" contentWidth="wide">
-      <div className="heart-proof-report mx-auto flex w-full max-w-[1180px] flex-col">
+      <div className="heart-proof-report mx-auto flex w-full max-w-[1180px] flex-col" data-storage-key="ym_mirror_report_v1">
         <section className="proof-hero grid min-h-[calc(100svh-5rem)] items-center gap-8 py-8 lg:grid-cols-[minmax(0,0.92fr)_minmax(420px,1fr)] lg:gap-10">
           <div className="proof-hero-copy">
-            <StatusPill>{isPreview ? "报告卡预览" : "测评心证"}</StatusPill>
+            <StatusPill>{isPreview ? "报告卡预览" : "心镜报告"}</StatusPill>
+            <p className="mt-5 font-function text-xs font-semibold tracking-[.2em] text-[rgba(180,157,93,.82)]">
+              心镜报告：你的交易人格被市场照见。
+            </p>
+            <p className="mt-8 font-function text-xs font-semibold tracking-[.18em] text-[rgba(180,157,93,.68)]">
+              一句话照见
+            </p>
             <p className="proof-hero-line mt-8">
-              {proofLine.first}
-              <br />
-              {proofLine.second}
+              {mirrorReport.headline}
             </p>
             <p className="mt-7 max-w-[34rem] font-story text-[1.06rem] font-light leading-9 tracking-[.045em] text-[rgba(220,212,195,.64)]">
               {report.conclusion}
             </p>
             <div className="mt-8 grid gap-3 sm:grid-cols-2">
-              <PrimaryLink href={isPreview ? "/practice-change?preview=1" : "/practice-change"} className="w-full">
-                开始 7 天事上练 →
+              <PrimaryLink href={practiceHref} className="w-full">
+                进入活镜成长 →
               </PrimaryLink>
-              <SecondaryLink href="/share-card?preview=1" className="w-full">
-                查看分享卡 →
-              </SecondaryLink>
+              <SecondaryButton type="button" onClick={saveCurrentMirrorReport} className="w-full">
+                保存心镜报告
+              </SecondaryButton>
             </div>
           </div>
 
@@ -183,10 +219,32 @@ export default function AssessmentResultPage() {
             primaryTypeLabel={primaryTypeLabel}
             secondaryTypeLabel={secondaryTypeLabel}
             riskItems={heartRiskItems}
+            mirrorReport={mirrorReport}
           />
         </section>
 
         <section className="report-scroll-grid grid gap-4 pb-8 lg:grid-cols-[1fr_1fr] lg:gap-5">
+          <GlassPanel className="proof-panel report-card-surface">
+            <p className="report-kicker">风险雷达</p>
+            <h2 className="mt-4 font-story text-2xl font-light leading-[1.5] tracking-[.08em]">
+              八个维度，只用于照见行为惯性。
+            </h2>
+            <RiskRadarLedger riskRadar={mirrorReport.riskRadar} />
+          </GlassPanel>
+
+          <GlassPanel className="proof-panel report-card-surface">
+            <p className="report-kicker">高危交易剧本</p>
+            <h2 className="mt-4 font-story text-2xl font-light leading-[1.5] tracking-[.08em]">
+              不是判断对错，是看见谁在行动。
+            </h2>
+            <p className="mt-5 font-story text-xl font-light leading-9 tracking-[.05em] text-[rgba(242,235,220,.74)]">
+              {mirrorReport.highRiskScenario}
+            </p>
+            <p className="mt-5 rounded-[8px] border border-[rgba(172,146,83,.12)] bg-white/[.025] px-4 py-3 font-function text-sm leading-7 text-[rgba(220,212,195,.56)]">
+              核心问题：{mirrorReport.coreProblem}
+            </p>
+          </GlassPanel>
+
           <GlassPanel className="proof-panel report-card-surface">
             <p className="report-kicker">情绪触发</p>
             <h2 className="mt-4 font-story text-2xl font-light leading-[1.5] tracking-[.08em]">
@@ -220,6 +278,9 @@ export default function AssessmentResultPage() {
             <div className="grid gap-6 lg:grid-cols-[0.82fr_1.18fr] lg:items-start">
               <div>
                 <p className="report-kicker">七日训练处方</p>
+                <p className="mt-2 font-function text-xs font-semibold tracking-[.18em] text-[rgba(180,157,93,.62)]">
+                  七日处方
+                </p>
                 <h2 className="mt-4 font-story text-[clamp(1.8rem,4vw,2.6rem)] font-light leading-[1.45] tracking-[.08em]">
                   不急着改变结果，
                   <br />
@@ -264,8 +325,8 @@ export default function AssessmentResultPage() {
                 </p>
               </div>
               <div className="grid gap-3 sm:min-w-[280px]">
-                <PrimaryLink href={isPreview ? "/practice-change?preview=1" : "/practice-change"} className="w-full">
-                  进入训练记录 →
+                <PrimaryLink href={practiceHref} className="w-full">
+                  进入活镜成长 →
                 </PrimaryLink>
                 <SecondaryLink href={isPreview ? "/share-card?preview=1" : "/share-card"} className="w-full">
                   生成照见分享卡 →
@@ -278,10 +339,10 @@ export default function AssessmentResultPage() {
                 </SecondaryButton>
                 <SecondaryButton
                   type="button"
-                  onClick={() => setSavedMessage("心证已保存在此设备。")}
+                  onClick={saveCurrentMirrorReport}
                   className="w-full"
                 >
-                  保存心证
+                  保存心镜报告
                 </SecondaryButton>
               </div>
             </div>
@@ -468,11 +529,13 @@ function ReportCoreCard({
   primaryTypeLabel,
   secondaryTypeLabel,
   riskItems,
+  mirrorReport,
 }: {
   report: AssessmentReport
   primaryTypeLabel: string
   secondaryTypeLabel: string
   riskItems: ReturnType<typeof getHeartRiskItems>
+  mirrorReport: MirrorReport
 }) {
   return (
     <GlassPanel className="proof-panel report-core-card overflow-hidden p-0">
@@ -480,14 +543,17 @@ function ReportCoreCard({
         <div className="report-core-ring" aria-hidden="true" />
         <div className="relative z-10">
           <p className="font-function text-xs font-semibold tracking-[.2em] text-[#b49d5d]">AI 观心系统 · 报告卡</p>
+          <p className="mt-4 font-function text-xs font-semibold tracking-[.18em] text-[rgba(180,157,93,.68)]">
+            主人格
+          </p>
           <h1 className="mt-5 font-story text-[clamp(2.2rem,6vw,4.1rem)] font-light leading-[1.25] tracking-[.1em] text-[#f2ebdc]">
-            {primaryTypeLabel}
+            {mirrorReport.primaryPersona || primaryTypeLabel}
             <span className="mt-2 block text-[0.46em] tracking-[.16em] text-[rgba(220,212,195,.46)]">
               主反应人格
             </span>
           </h1>
           <p className="mt-5 font-function text-sm leading-7 text-[rgba(220,212,195,.56)]">
-            副反应：{secondaryTypeLabel} · 训练方向：{report.trainingDirection}
+            副人格：{mirrorReport.secondaryPersona || secondaryTypeLabel} · 置信度：{mirrorReport.confidenceScore} · 训练方向：{report.trainingDirection}
           </p>
         </div>
 
@@ -496,7 +562,9 @@ function ReportCoreCard({
         <div className="relative z-10 grid gap-3 sm:grid-cols-2">
           <ReportMetric label="镜中念头" value={report.firstThoughtDisplay || report.firstThought} />
           <ReportMetric label="风险标签" value={riskItems[0]?.label ?? report.primaryType.risk} />
-          <ReportMetric label="报告结构" value={report.schemaVersion} />
+          <ReportMetric label="报告编号" value={mirrorReport.reportId} />
+          <ReportMetric label="照心编号" value={mirrorReport.assessmentId} />
+          <ReportMetric label="报告结构" value={`${report.schemaVersion} / ${mirrorReportStorageKey}`} />
           <ReportMetric label="合规边界" value={report.complianceNotice} />
         </div>
       </div>
@@ -631,11 +699,147 @@ function RiskRadar({ items }: { items: ReturnType<typeof getHeartRiskItems> }) {
   )
 }
 
+function RiskRadarLedger({ riskRadar }: { riskRadar: MirrorReportRiskRadar }) {
+  const items = [
+    { key: "impulse", label: "冲动反应", value: riskRadar.impulse },
+    { key: "fear", label: "恐惧牵动", value: riskRadar.fear },
+    { key: "ego", label: "证明执念", value: riskRadar.ego },
+    { key: "stopLossExecution", label: "边界执行", value: riskRadar.stopLossExecution },
+    { key: "reviewAbility", label: "复盘觉察", value: riskRadar.reviewAbility },
+    { key: "systemConsistency", label: "系统一致", value: riskRadar.systemConsistency },
+    { key: "riskControl", label: "风险边界", value: riskRadar.riskControl },
+    { key: "independentJudgment", label: "独立判断", value: riskRadar.independentJudgment },
+  ]
+
+  return (
+    <div className="mt-5 grid gap-3">
+      {items.map((item) => (
+        <div key={item.key} className="grid gap-2">
+          <div className="flex items-center justify-between gap-4 font-function text-sm text-[rgba(220,212,195,.66)]">
+            <span>{item.label}</span>
+            <span className="text-[rgba(180,157,93,.78)]">{clampRisk(item.value)}</span>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-white/[.055]">
+            <div
+              className="h-full rounded-full bg-[linear-gradient(90deg,#5F8475,#D8B76F)]"
+              style={{ width: `${clampRisk(item.value)}%` }}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function ReportMetric({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-[8px] border border-[rgba(172,146,83,.12)] bg-white/[.025] px-4 py-3">
       <p className="font-function text-xs tracking-[.14em] text-[rgba(180,157,93,.58)]">{label}</p>
       <p className="mt-2 font-function text-sm leading-6 text-[rgba(242,235,220,.7)]">{value}</p>
     </div>
+  )
+}
+
+function StoredMirrorReportPage({
+  mirrorReport,
+  savedMessage,
+  onSave,
+  onRestart,
+}: {
+  mirrorReport: MirrorReport
+  savedMessage: string
+  onSave: () => void
+  onRestart: () => void
+}) {
+  return (
+    <AssessmentShell className="py-5 md:py-8" contentWidth="wide">
+      <div className="mx-auto w-full max-w-[1080px]">
+        <section className="grid min-h-[calc(100svh-5rem)] items-center gap-6 py-8 lg:grid-cols-[minmax(0,1fr)_380px]">
+          <div>
+            <StatusPill>心镜报告</StatusPill>
+            <p className="mt-5 font-function text-xs font-semibold tracking-[.2em] text-[rgba(180,157,93,.82)]">
+              心镜报告：你的交易人格被市场照见。
+            </p>
+            <p className="mt-8 font-function text-xs font-semibold tracking-[.18em] text-[rgba(180,157,93,.68)]">
+              一句话照见
+            </p>
+            <h1 className="mt-6 font-story text-[clamp(2.6rem,7vw,5.6rem)] font-light leading-[1.32] tracking-[.08em] text-[rgba(242,235,220,.9)]">
+              {mirrorReport.headline}
+            </h1>
+            <p className="mt-7 max-w-[40rem] font-story text-lg font-light leading-9 tracking-[.045em] text-[rgba(220,212,195,.64)]">
+              {mirrorReport.highRiskScenario}
+            </p>
+            <div className="mt-8 grid gap-3 sm:grid-cols-2">
+              <PrimaryLink href={buildPracticeHref(mirrorReport, false)} className="w-full">
+                进入活镜成长 →
+              </PrimaryLink>
+              <SecondaryButton type="button" onClick={onSave} className="w-full">
+                保存心镜报告
+              </SecondaryButton>
+            </div>
+          </div>
+
+          <GlassPanel>
+            <p className="font-function text-xs font-semibold tracking-[.18em] text-[#b49d5d]">主副人格</p>
+            <div className="mt-5 grid gap-3">
+              <ReportMetric label="主人格" value={mirrorReport.primaryPersona} />
+              <ReportMetric label="副人格" value={mirrorReport.secondaryPersona} />
+              <ReportMetric label="置信度" value={`${mirrorReport.confidenceScore}`} />
+              <ReportMetric label="报告编号" value={mirrorReport.reportId} />
+            </div>
+          </GlassPanel>
+        </section>
+
+        <section className="grid gap-4 pb-8 lg:grid-cols-2">
+          <GlassPanel>
+            <p className="font-function text-xs font-semibold tracking-[.18em] text-[#b49d5d]">风险雷达</p>
+            <RiskRadarLedger riskRadar={mirrorReport.riskRadar} />
+          </GlassPanel>
+          <GlassPanel>
+            <p className="font-function text-xs font-semibold tracking-[.18em] text-[#b49d5d]">训练营建议</p>
+            <h2 className="mt-4 font-story text-2xl font-light leading-[1.5] tracking-[.08em]">
+              {mirrorReport.recommendedCamp}
+            </h2>
+            <p className="mt-4 font-function text-sm leading-7 text-[rgba(220,212,195,.56)]">
+              本地已保存报告可继续进入活镜成长；绑定手机号后，后续可长期归档。
+            </p>
+          </GlassPanel>
+          <GlassPanel className="lg:col-span-2">
+            <p className="font-function text-xs font-semibold tracking-[.18em] text-[#b49d5d]">七日处方</p>
+            <div className="mt-5 grid gap-3 md:grid-cols-2">
+              {mirrorReport.sevenDayPrescription.map((item) => (
+                <div key={item.day} className="rounded-[8px] border border-[rgba(172,146,83,.12)] bg-white/[.025] px-4 py-3">
+                  <p className="font-function text-xs font-semibold tracking-[.16em] text-[rgba(180,157,93,.66)]">
+                    DAY {item.day}
+                  </p>
+                  <p className="mt-2 font-story text-lg font-light tracking-[.06em] text-[rgba(242,235,220,.78)]">{item.title}</p>
+                  <p className="mt-2 font-function text-sm leading-7 text-[rgba(220,212,195,.52)]">{item.action}</p>
+                  <p className="mt-3 border-t border-[rgba(172,146,83,.1)] pt-3 font-function text-xs leading-6 text-[rgba(220,212,195,.42)]">
+                    完成标准：{item.completionStandard}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </GlassPanel>
+        </section>
+
+        <div className="grid gap-3 md:grid-cols-2">
+          <SecondaryLink href="/assessment-entry" className="w-full">
+            回到照心入口 →
+          </SecondaryLink>
+          <SecondaryButton type="button" onClick={onRestart} className="w-full">
+            重新照心 →
+          </SecondaryButton>
+        </div>
+        {savedMessage ? (
+          <p className="mt-4 text-center font-function text-xs tracking-[.08em] text-[rgba(220,212,195,.38)]">
+            {savedMessage}
+          </p>
+        ) : null}
+        <ComplianceNote>
+          本报告用于交易心理觉察与训练，不构成投资建议；本系统不荐股、不喊单、不承诺收益。
+        </ComplianceNote>
+      </div>
+    </AssessmentShell>
   )
 }

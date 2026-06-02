@@ -2,7 +2,7 @@
   position: relative;
   min-height: 100vh;
   overflow: hidden;
-  padding: calc(48rpx + env(safe-area-inset-top)) 48rpx calc(170rpx + env(safe-area-inset-bottom));
+  padding: calc(48rpx + env(safe-area-inset-top)) 48rpx calc(220rpx + env(safe-area-inset-bottom));
   color: #f7efdf;
   background:
     radial-gradient(circle at 74% 6%, rgba(211, 168, 79, 0.14), transparent 30%),

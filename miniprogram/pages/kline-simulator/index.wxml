@@ -13,6 +13,14 @@
       </view>
     </view>
 
+    <view class="prescription-card card">
+      <text>人格专属切片</text>
+      <view class="prescription-title">{{recommendation.title}}</view>
+      <view class="prescription-reason">{{recommendation.reason}}</view>
+      <view class="prescription-meta">{{recommendation.marketLabel}} · {{recommendation.timeframeLabel}} · Day {{recommendation.trainingDay}}</view>
+      <button class="primary-btn" bindtap="startRecommended">{{recommendation.actionText}}</button>
+    </view>
+
     <view class="filter-card card">
       <text>历史数据品类</text>
       <scroll-view scroll-x class="chip-strip" show-scrollbar="{{false}}">
@@ -38,10 +46,10 @@
 
     <view class="section-title">历史盲练场景</view>
     <view class="scene-list">
-      <view wx:for="{{scenarios}}" wx:key="id" class="scene-card card" bindtap="startScene" data-id="{{item.id}}">
+      <view wx:for="{{scenarios}}" wx:key="id" class="scene-card card {{item.recommended ? 'recommended' : ''}}" bindtap="startScene" data-id="{{item.id}}">
         <view class="scene-head">
           <text>{{item.title}}</text>
-          <view>Day {{item.trainingDay}}</view>
+          <view>{{item.statusText}}</view>
         </view>
         <view class="scene-meta">{{item.segmentLabel}} · {{item.ruleTag}}</view>
         <view class="scene-subtitle">{{item.subtitle}}</view>

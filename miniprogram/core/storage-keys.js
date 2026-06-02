@@ -25,6 +25,13 @@ const YM_ANONYMOUS_REACTION_STATS = "ym_anonymous_reaction_stats";
 const YM_TRADE_REVIEW_RECORDS = "ym_trade_review_records";
 const YM_LIVING_MIRROR_STATS = "ym_living_mirror_stats";
 const YM_ASSISTANT_HANDOFF = "ym_assistant_handoff";
+const YM_MINI_PROGRAM_BINDING = "ym_mini_program_binding";
+const YM_MINI_LOOP_PROGRESS = "ym_mini_loop_progress";
+const YM_MINI_HEART_PROOFS = "ym_mini_heart_proofs";
+const YM_JOURNEY_STATE = "ym_journey_state";
+const YM_EVIDENCE_LEDGER = "ym_evidence_ledger";
+const YM_DEMO_MODE = "ym_demo_mode";
+const YM_DEBUG_MODE = "ym_debug_mode";
 
 module.exports = {
   YM_DAILY_THREE_SEALS,
@@ -53,5 +60,12 @@ module.exports = {
   YM_ANONYMOUS_REACTION_STATS,
   YM_TRADE_REVIEW_RECORDS,
   YM_LIVING_MIRROR_STATS,
-  YM_ASSISTANT_HANDOFF
+  YM_ASSISTANT_HANDOFF,
+  YM_MINI_PROGRAM_BINDING,
+  YM_MINI_LOOP_PROGRESS,
+  YM_MINI_HEART_PROOFS,
+  YM_JOURNEY_STATE,
+  YM_EVIDENCE_LEDGER,
+  YM_DEMO_MODE,
+  YM_DEBUG_MODE
 };

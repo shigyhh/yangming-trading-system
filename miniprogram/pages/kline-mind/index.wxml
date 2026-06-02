@@ -8,7 +8,7 @@
       </view>
 
       <view class="page-title">K 线历史观心</view>
-      <view class="page-subtitle">接入 A 股、港股、美股、期货、数字货币真实历史 OHLCV；不做实时行情，不做操作功能，只把历史波动用于边界、念头与知行合一训练。</view>
+      <view class="page-subtitle">读取 A 股、港股、美股、期货、数字货币真实历史 OHLCV；不连接实时数据，不做操作功能，只把历史波动用于边界、念头与知行合一训练。</view>
 
       <view class="hero-meta">
         <view>
@@ -87,7 +87,7 @@
       </view>
       <view wx:else class="history-empty">
         <view>历史数据未载入</view>
-        <text>请先同步真实历史数据；未载入前不展示合成片段。</text>
+        <text>请先同步真实历史数据；未载入前不展示占位 K线。</text>
       </view>
 
       <view class="wave-question">

@@ -1,23 +1,18 @@
-const { ensureProfile } = require("./utils/store");
-
-function loadFontFace(family, source, weight) {
-  if (!wx.loadFontFace) return;
-  wx.loadFontFace({
-    family,
-    source,
-    global: true,
-    weight,
-    fail() {}
-  });
-}
+const { ensureProfile, saveSyncStatus } = require("./utils/store");
 
 App({
   onLaunch() {
     ensureProfile();
-    loadFontFace("ZX-LXGW", 'url("assets/fonts/LXGWWenKai-Zhixing.woff2")', "500");
-    loadFontFace("ZX-Harmony", 'url("assets/fonts/HarmonyOS-SansSC-Regular-Zhixing.woff2")', "400");
-    loadFontFace("ZX-Harmony", 'url("assets/fonts/HarmonyOS-SansSC-Medium-Zhixing.woff2")', "500");
-    loadFontFace("ZX-Harmony", 'url("assets/fonts/HarmonyOS-SansSC-Bold-Zhixing.woff2")', "700");
+  },
+  onError() {
+    saveSyncStatus({
+      ok: false,
+      syncing: false,
+      message: "页面连接未完成",
+      fallbackTitle: "连接未完成",
+      fallbackText: "本地档案已保存。可稍后再同步，也可以先继续今日修行。",
+      failedAt: Date.now()
+    });
   },
   globalData: {
     productName: "阳明心学交易系统",

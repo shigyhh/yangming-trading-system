@@ -1,6 +1,6 @@
 <view class="page-shell">
   <view class="page-content">
-    <text class="eyebrow">PROFILE · 我的</text>
+    <text class="eyebrow">PROFILE · 我的心镜</text>
 
     <view class="profile-card card">
       <view class="avatar">心</view>
@@ -25,6 +25,49 @@
       </view>
     </view>
 
+    <view class="evidence-account-card card">
+      <view class="card-album-head">
+        <view>
+          <text>{{closureEvidenceChain.title}}</text>
+          <view>{{closureEvidenceChain.subtitle}}</view>
+        </view>
+        <text>{{closureEvidenceChain.progressText}}</text>
+      </view>
+      <view class="journey-progress-grid">
+        <view>
+          <text>今日训练</text>
+          <view>{{unifiedJourneyView.dailyPracticeDay}}</view>
+        </view>
+        <view>
+          <text>全年修行</text>
+          <view>{{unifiedJourneyView.annualPracticeDay}}</view>
+        </view>
+        <view>
+          <text>七日复测</text>
+          <view>{{unifiedJourneyView.sevenDayProgress}}</view>
+        </view>
+        <view>
+          <text>今日三印</text>
+          <view>{{unifiedJourneyView.todaySealProgress}}</view>
+        </view>
+      </view>
+      <view class="closure-chain-list">
+        <view
+          wx:for="{{closureEvidenceChain.steps}}"
+          wx:key="key"
+          class="{{item.done ? 'done' : item.current ? 'current' : ''}}"
+        >
+          <text>{{item.numberText}}</text>
+          <view>
+            <text>{{item.title}}</text>
+            <view>{{item.detail}}</view>
+          </view>
+          <text>{{item.statusText}}</text>
+        </view>
+      </view>
+      <view class="closure-next-action">下一步：{{closureEvidenceChain.nextActionText}}</view>
+    </view>
+
     <view class="identity-card card">
       <view class="identity-head">
         <view>
@@ -45,33 +88,40 @@
         <button bindtap="savePhoneBinding">{{userBinding.phoneBound ? '更新绑定' : '绑定'}}</button>
       </view>
       <view class="identity-source">邀请码来源：{{userBinding.inviteSource || '自然进入'}}</view>
-      <view class="identity-source">我的同修码：{{userBinding.inviteCode || mockUserProfile.inviteCode || '待生成'}}</view>
+      <view class="identity-source">我的同修码：{{userBinding.inviteCode || localUserProfile.inviteCode || '待生成'}}</view>
+      <view class="identity-source">统一档案ID：{{userBinding.userIdDisplay || '待生成'}}</view>
     </view>
 
-    <view class="mock-sync-card card">
-      <view class="mock-sync-head">
+    <view class="sync-bridge-card card">
+      <view class="sync-bridge-head">
         <view>
           <text>高频陪跑端</text>
-          <view>不是展示端，是活镜数据的日常采集端和训练陪跑端</view>
+          <view>不是展示端，是每日修行、交易复盘与活镜成长的陪跑端</view>
         </view>
         <button bindtap="generateInviteCard">邀同修照见</button>
       </view>
-      <view class="mock-grid">
-        <view>TrainingRecord</view>
-        <view>TradeReview</view>
-        <view>LivingMirrorStats</view>
-        <view>AssistantHandoff</view>
+      <view class="sync-bridge-grid">
+        <view wx:for="{{userDataChain}}" wx:key="*this">{{item}}</view>
       </view>
-      <view class="assistant-summary">{{mockUserProfile.assistantSummary}}</view>
+      <view wx:if="{{debugMode}}" class="debug-grid">
+        <view wx:for="{{debugDataChain}}" wx:key="*this">{{item}}</view>
+      </view>
+      <view class="assistant-summary">{{localUserProfile.assistantSummary}}</view>
     </view>
 
     <view class="handoff-card card">
       <view class="handoff-head">
         <view>
-          <text>助教承接状态</text>
+          <text>助教承接</text>
           <view>{{livingMirrorStats.totalReviews || 0}} 条真实复盘 · {{assistantHandoff.currentMirror || '待照见'}}</view>
         </view>
-        <text>{{userBinding.phoneBound ? '可承接' : '待绑定'}}</text>
+        <text>{{assistantHandoff.statusText || (userBinding.phoneBound ? '可承接' : '待绑定')}}</text>
+      </view>
+      <view class="handoff-triggers">
+        <view wx:for="{{assistantHandoff.triggers}}" wx:key="key" class="{{item.done ? 'done' : ''}}">
+          <text>{{item.done ? '已成' : '待成'}}</text>
+          <view>{{item.label}}</view>
+        </view>
       </view>
       <view class="handoff-grid">
         <view>
@@ -92,6 +142,23 @@
         </view>
       </view>
       <view class="handoff-script">{{assistantHandoff.scriptSuggestion || '完成一次真实复盘后，这里会生成助教承接摘要。'}}</view>
+      <view class="handoff-summary">{{assistantHandoff.handoffSummary || '测评、复盘、训练和活镜变化会在这里汇成助教承接摘要。'}}</view>
+      <view class="handoff-rows" wx:if="{{assistantHandoff.summaryRows && assistantHandoff.summaryRows.length}}">
+        <view wx:for="{{assistantHandoff.summaryRows}}" wx:key="label">
+          <text>{{item.label}}</text>
+          <view>{{item.value}}</view>
+        </view>
+      </view>
+      <view class="handoff-actions">
+        <button bindtap="copyAssistantHandoff">复制承接摘要</button>
+        <button data-type="daily_mantra" bindtap="generateShareCard">生成心证卡</button>
+      </view>
+      <view class="handoff-events" wx:if="{{assistantHandoff.eventTimeline.length}}">
+        <view wx:for="{{assistantHandoff.eventTimeline}}" wx:key="id">
+          <text>{{item.label}}</text>
+          <view>{{item.detail}}</view>
+        </view>
+      </view>
     </view>
 
     <view class="growth-card card" bindtap="tapMenu" data-key="growth">
@@ -179,7 +246,7 @@
         <button class="mini-action {{retentionView.retest.due ? 'due' : ''}}" bindtap="goAssessment">{{retentionView.retest.actionText}}</button>
       </view>
       <view class="time-picker" bindtap="goContent365">
-        <text>365天修行</text>
+        <text>全年修行</text>
         <view>{{retentionView.content365.subtitle}} · {{retentionView.content365.nextText}}</view>
       </view>
     </view>
@@ -187,19 +254,37 @@
     <view class="sync-card card">
       <view class="sync-head">
         <view>
-          <text>后端同步</text>
-          <view>{{syncStatus.message || '未同步'}}{{authUser ? ' · ' + authUser.nickname : ''}}</view>
+          <text>数据同步</text>
+          <view>{{syncView.message}}</view>
         </view>
-        <text class="{{syncStatus.ok ? 'ok' : 'warn'}}">{{syncStatus.ok ? '已连接' : '本地优先'}}</text>
+        <text class="{{syncView.statusClass}}">{{syncView.statusText}}</text>
       </view>
-      <label class="form-label">后端地址</label>
-      <input class="input-field" value="{{apiBase}}" bindinput="inputApiBase" placeholder="http://电脑局域网IP:8787" />
+      <view class="sync-user-tip">{{syncView.detail}}</view>
+      <view wx:if="{{authFallback.visible}}" class="auth-fallback">
+        <text>{{authFallback.title}}</text>
+        <view>{{authFallback.text}}</view>
+        <view class="auth-fallback-actions">
+          <button bindtap="goReportFallback">返回心镜报告</button>
+          <button bindtap="goPracticeFallback">继续今日修行</button>
+          <button bindtap="syncNow">重新连接</button>
+        </view>
+      </view>
       <view class="sync-actions">
-        <button class="ghost-btn" bindtap="saveApiBase">保存地址</button>
-        <button class="secondary-btn" bindtap="pullNow">拉取</button>
-        <button class="primary-btn" bindtap="syncNow">同步</button>
+        <button class="secondary-btn" bindtap="pullNow">拉取档案</button>
+        <button class="primary-btn" bindtap="syncNow">重新连接</button>
       </view>
-      <text class="sync-tip">开发者工具可用 127.0.0.1；手机真机预览请改成电脑局域网 IP，并确认后端服务已启动。</text>
+      <view wx:if="{{debugMode}}" class="debug-sync-panel">
+        <text>开发调试</text>
+        <label class="form-label">后端地址</label>
+        <input class="input-field" value="{{apiBase}}" bindinput="inputApiBase" placeholder="http://电脑局域网IP:8787" />
+        <view class="debug-sync-actions">
+          <button class="ghost-btn" bindtap="saveApiBase">保存地址</button>
+          <button class="secondary-btn" bindtap="pullNow">拉取</button>
+          <button class="primary-btn" bindtap="syncNow">同步</button>
+        </view>
+        <view wx:if="{{syncView.showTechnical}}" class="debug-technical">{{syncView.technicalMessage}}</view>
+        <text class="sync-tip">开发者工具可用 127.0.0.1；手机真机预览请改成电脑局域网 IP，并确认后端服务已启动。</text>
+      </view>
     </view>
 
     <view class="card-album card">
@@ -208,9 +293,10 @@
           <text>我的心证卡册</text>
           <view>{{shareCards.length ? '已沉淀今日照见' : '生成第一张心证卡后会出现在这里'}}</view>
         </view>
-        <button bindtap="generateInviteCard">生成邀请卡</button>
+        <button bindtap="generateInviteCard">邀同修照见</button>
       </view>
       <view class="card-album-actions">
+        <button data-type="daily_mantra" bindtap="generateShareCard">分享心证卡</button>
         <button data-type="personality_mirror" bindtap="generateShareCard">同修镜像卡</button>
         <button data-type="group_practice" bindtap="generateShareCard">群内共修卡</button>
         <button data-type="retest_change" bindtap="generateShareCard">复测变化卡</button>
@@ -302,7 +388,7 @@
       <text>小程序定位</text>
       <view>阳明心学交易系统 · 高频陪跑端：每日心证、训练打卡、交易截图上传、复盘采集、活镜提醒、助教承接与订阅提醒。网页负责深度照见，小程序负责每天采集一次真实反应并推动下一次训练。</view>
     </view>
-    <button class="danger-clear" bindtap="clearMockData">清理本地 mock 训练数据</button>
+    <button class="danger-clear" bindtap="clearLocalData">清理本地训练数据</button>
 
     <compliance-notice />
   </view>

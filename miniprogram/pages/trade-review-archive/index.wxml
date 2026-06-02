@@ -4,6 +4,54 @@
     <view class="page-title">复盘采集<br />行为证据链</view>
     <view class="page-subtitle">每一次上传记录，都会沉淀为历史位置、第一反应、九镜六贼与下一次训练动作。</view>
 
+    <view class="archive-bridge card">
+      <view>复盘采集记录事实，活镜采集照见重复念头，心镜档案保存长期变化。</view>
+    </view>
+
+    <view class="closure-ledger-card card">
+      <view class="ledger-head">
+        <view>
+          <text>{{closureEvidenceChain.title}}</text>
+          <view>{{closureEvidenceChain.subtitle}}</view>
+        </view>
+        <text>{{closureEvidenceChain.progressText}}</text>
+      </view>
+      <view class="closure-chain-list">
+        <view
+          wx:for="{{closureEvidenceChain.steps}}"
+          wx:key="key"
+          class="{{item.done ? 'done' : item.current ? 'current' : ''}}"
+        >
+          <text>{{item.numberText}}</text>
+          <view>
+            <text>{{item.title}}</text>
+            <view>{{item.detail}}</view>
+          </view>
+          <text>{{item.statusText}}</text>
+        </view>
+      </view>
+      <view class="closure-next-action">下一步：{{closureEvidenceChain.nextActionText}}</view>
+    </view>
+
+    <view class="ledger-card card">
+      <view class="ledger-head">
+        <view>
+          <text>心证证据账本</text>
+          <view>{{evidenceSummary.total ? evidenceSummary.total + ' 条证据' : '完成今日落印后，第一枚心证会存入档案。'}}</view>
+        </view>
+        <text>{{evidenceSummary.heartProofCount ? evidenceSummary.heartProofCount + ' 枚心证' : '待落印'}}</text>
+      </view>
+      <view wx:if="{{evidenceRows.length}}" class="ledger-list">
+        <view wx:for="{{evidenceRows}}" wx:key="id" class="ledger-row">
+          <text>{{item.typeLabel}}</text>
+          <view>{{item.title}}</view>
+          <view>{{item.summary}}</view>
+          <text>{{item.createdAtText}}</text>
+        </view>
+      </view>
+      <view wx:else class="ledger-empty">这里还没有心证。完成今日落印后，第一枚心证会存入档案。</view>
+    </view>
+
     <view class="mirror-card card">
       <view class="mirror-head">
         <view>
@@ -68,5 +116,5 @@
 
     <compliance-notice />
   </view>
-  <bottom-tab-bar active="mind" />
+  <bottom-tab-bar active="review" />
 </view>

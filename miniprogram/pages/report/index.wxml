@@ -69,6 +69,19 @@
         <view class="binding-note">{{klineChange.insight}}</view>
       </view>
 
+      <view class="kline-change-card card">
+        <text>{{klineDayRetest.title}}</text>
+        <view class="kline-change-meta">{{klineDayRetest.stageText}}</view>
+        <view class="kline-change-meta">{{klineDayRetest.mirrorLine}}</view>
+        <view class="retest-metrics">
+          <view wx:for="{{klineDayRetest.metrics}}" wx:key="key">
+            <text>{{item.label}}</text>
+            <view>{{item.value}}</view>
+          </view>
+        </view>
+        <view class="binding-note">{{klineDayRetest.insight}}</view>
+      </view>
+
       <view class="mini-report-card card">
         <text>一句话照见</text>
         <view>{{miniReport.oneLine}}</view>
@@ -91,6 +104,14 @@
           <text>心贼</text>
           <view>{{miniReport.heartThievesText}}</view>
         </view>
+      </view>
+
+      <view class="kline-prescription-card card">
+        <text>专属 K线处方</text>
+        <view class="kline-prescription-title">{{klineRecommendation.title}}</view>
+        <view class="kline-prescription-reason">{{klineRecommendation.reason}}</view>
+        <view class="kline-prescription-meta">{{klineRecommendation.marketLabel}} · {{klineRecommendation.timeframeLabel}} · Day {{klineRecommendation.trainingDay}}</view>
+        <button class="primary-btn" bindtap="goKlineSimulator">{{klineRecommendation.actionText}}</button>
       </view>
 
       <view class="mini-report-card card">
@@ -116,7 +137,7 @@
           <view wx:for="{{miniReport.radar}}" wx:key="key">
             <view class="risk-row-head">
               <text>{{item.label}}</text>
-              <text>{{item.value}}</text>
+              <text>{{item.displayValue}}</text>
             </view>
             <view class="risk-bar"><view style="width: {{item.value}}%;"></view></view>
             <view class="risk-level">{{item.level}}</view>

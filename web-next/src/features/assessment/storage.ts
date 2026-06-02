@@ -8,12 +8,20 @@ export const assessmentStorageKeys = {
   questionOrder: "ym_assessment_question_order",
   report: "ym_assessment_report",
   reportCreatedAt: "ym_assessment_report_created_at",
+  mirrorReport: "ym_mirror_report_v1",
   practiceChange: "ym_practice_change",
+  livingMirrorGrowth: "ym_living_mirror_growth_v1",
+  livingMirrorGrowthProfile: "ym_living_mirror_growth_profile_v1",
   sprint10TrainingState: "ym_sprint10_training_state_v1",
   sprint10DailyTrainingDraft: "ym_sprint10_daily_training_state_v1",
   sprint10AssistantSummary: "ym_sprint10_assistant_summary_v1",
+  heartProofs: "ym_heart_proofs_v1",
+  latestHeartProof: "ym_latest_heart_proof_v1",
+  shareCards: "ym_share_cards_v1",
+  latestShareCard: "ym_latest_share_card_v1",
   tradeReviewDraft: "ym_trade_review_draft_v1",
   tradeReviewLastResult: "ym_trade_review_last_result_v1",
+  tradeReviewHistory: "ym_trade_review_history_v1",
   selectedMirrorId: "ym_selected_behavior_mirror",
   dataBindingUserId: "ym_data_binding_user_id",
   dataBindingLastSyncAt: "ym_data_binding_last_sync_at",
@@ -63,12 +71,20 @@ export function clearAssessmentProgress() {
   removeStorage(assessmentStorageKeys.questionOrder)
   removeStorage(assessmentStorageKeys.report)
   removeStorage(assessmentStorageKeys.reportCreatedAt)
+  removeStorage(assessmentStorageKeys.mirrorReport)
   removeStorage(assessmentStorageKeys.practiceChange)
+  removeStorage(assessmentStorageKeys.livingMirrorGrowth)
+  removeStorage(assessmentStorageKeys.livingMirrorGrowthProfile)
   removeStorage(assessmentStorageKeys.sprint10TrainingState)
   removeStorage(assessmentStorageKeys.sprint10DailyTrainingDraft)
   removeStorage(assessmentStorageKeys.sprint10AssistantSummary)
+  removeStorage(assessmentStorageKeys.heartProofs)
+  removeStorage(assessmentStorageKeys.latestHeartProof)
+  removeStorage(assessmentStorageKeys.shareCards)
+  removeStorage(assessmentStorageKeys.latestShareCard)
   removeStorage(assessmentStorageKeys.tradeReviewDraft)
   removeStorage(assessmentStorageKeys.tradeReviewLastResult)
+  removeStorage(assessmentStorageKeys.tradeReviewHistory)
   removeStorage(assessmentStorageKeys.selectedMirrorId)
 }
 

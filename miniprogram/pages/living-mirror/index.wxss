@@ -1,27 +1,128 @@
+.mirror-bridge,
 .mirror-hero,
+.mirror-tree-card,
+.evidence-tree-card,
 .change-card,
+.kline-retest-card,
+.training-progress-card,
 .reminder-card,
+.recommend-card,
 .recent-card,
+.loop-card,
 .assistant-card {
   margin-top: 28rpx;
   padding: 30rpx;
 }
 
+.mirror-bridge text,
+.mirror-bridge view,
 .mirror-hero text,
 .mirror-hero view,
+.mirror-tree-card text,
+.mirror-tree-card view,
+.evidence-tree-card text,
+.evidence-tree-card view,
 .change-card text,
 .change-card view,
+.kline-retest-card text,
+.kline-retest-card view,
+.training-progress-card text,
+.training-progress-card view,
 .reminder-card text,
 .reminder-card view,
 .reminder-card button,
+.recommend-card text,
+.recommend-card view,
+.recommend-card button,
 .recent-card text,
 .recent-card view,
 .recent-card button,
+.loop-card text,
+.loop-card view,
 .assistant-card text,
 .assistant-card view,
 .assistant-card button {
   position: relative;
   z-index: 1;
+}
+
+.mirror-bridge {
+  padding: 24rpx;
+  overflow: hidden;
+  border-color: rgba(88, 194, 173, 0.16);
+  background:
+    radial-gradient(circle at 88% 0%, rgba(88, 194, 173, 0.1), transparent 42%),
+    rgba(255, 255, 255, 0.035);
+}
+
+.bridge-line {
+  color: #fff6e6;
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", serif;
+  font-size: 30rpx;
+  line-height: 1.55;
+  font-weight: 900;
+}
+
+.bridge-map {
+  margin-top: 22rpx;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12rpx;
+}
+
+.journey-progress-grid {
+  margin-top: 22rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10rpx;
+}
+
+.journey-progress-grid > view {
+  min-height: 82rpx;
+  padding: 14rpx 16rpx;
+  border-radius: 16rpx;
+  border: 1rpx solid rgba(216, 183, 111, 0.1);
+  background: rgba(255, 255, 255, 0.032);
+}
+
+.journey-progress-grid text {
+  display: block;
+  color: rgba(216, 183, 111, 0.72);
+  font-size: 19rpx;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.journey-progress-grid view view {
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.82);
+  font-size: 24rpx;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.bridge-map > view {
+  min-height: 132rpx;
+  padding: 18rpx 14rpx;
+  border-radius: 18rpx;
+  border: 1rpx solid rgba(241, 210, 125, 0.1);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.bridge-map text {
+  display: block;
+  color: #f1d27d;
+  font-size: 21rpx;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.bridge-map view view {
+  margin-top: 10rpx;
+  color: rgba(247, 239, 223, 0.62);
+  font-size: 22rpx;
+  line-height: 1.42;
+  font-weight: 800;
 }
 
 .mirror-hero {
@@ -90,6 +191,147 @@
   font-weight: 900;
 }
 
+.mirror-tree-card {
+  overflow: hidden;
+}
+
+.tree-glow {
+  position: absolute;
+  inset: 30rpx 30rpx auto;
+  height: 300rpx;
+  opacity: 0.7;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(216, 183, 111, 0.16), transparent 46%),
+    radial-gradient(circle at 50% 60%, rgba(95, 132, 117, 0.18), transparent 66%);
+  filter: blur(4rpx);
+}
+
+.tree-visual {
+  position: relative;
+  z-index: 1;
+  margin-top: 28rpx;
+  min-height: 360rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.tree-crown {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12rpx;
+}
+
+.tree-crown > view {
+  min-height: 104rpx;
+  padding: 16rpx;
+  border-radius: 24rpx;
+  text-align: center;
+  border: 1rpx solid rgba(216, 183, 111, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.tree-crown > view.active {
+  border-color: rgba(216, 183, 111, 0.34);
+  background: rgba(216, 183, 111, 0.08);
+}
+
+.tree-crown text {
+  display: block;
+  color: #b49355;
+  font-size: 20rpx;
+  font-weight: 900;
+}
+
+.tree-crown view view {
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.82);
+  font-size: 22rpx;
+  line-height: 1.35;
+  font-weight: 800;
+}
+
+.tree-trunk {
+  width: 220rpx;
+  min-height: 88rpx;
+  margin-top: 22rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 999rpx 999rpx 26rpx 26rpx;
+  color: #fff6e6;
+  border: 1rpx solid rgba(216, 183, 111, 0.18);
+  background: linear-gradient(180deg, rgba(216, 183, 111, 0.12), rgba(95, 132, 117, 0.12));
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", serif;
+  font-size: 30rpx;
+  font-weight: 900;
+}
+
+.tree-root {
+  width: 70%;
+  margin-top: 14rpx;
+  padding: 16rpx;
+  border-radius: 999rpx;
+  color: rgba(247, 239, 223, 0.58);
+  border: 1rpx solid rgba(216, 183, 111, 0.12);
+  background: rgba(0, 0, 0, 0.2);
+  font-size: 23rpx;
+  text-align: center;
+}
+
+.tree-lines {
+  position: relative;
+  z-index: 1;
+  margin-top: 18rpx;
+  display: grid;
+  gap: 10rpx;
+}
+
+.tree-lines view {
+  color: rgba(247, 239, 223, 0.62);
+  font-size: 23rpx;
+  line-height: 1.45;
+}
+
+.evidence-tree-list {
+  margin-top: 20rpx;
+  display: grid;
+  gap: 14rpx;
+}
+
+.evidence-tree-list > view {
+  min-width: 240rpx;
+  padding: 18rpx;
+  border-radius: 18rpx;
+  border: 1rpx solid rgba(216, 183, 111, 0.12);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.evidence-tree-list text {
+  display: block;
+  color: #b49355;
+  font-size: 21rpx;
+  font-weight: 900;
+}
+
+.evidence-tree-list view view {
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.76);
+  font-size: 24rpx;
+  line-height: 1.45;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.evidence-tree-list text:last-child {
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.42);
+  font-size: 20rpx;
+}
+
 .card-head {
   display: flex;
   justify-content: space-between;
@@ -135,6 +377,88 @@
   color: #f1d27d;
 }
 
+.retest-line {
+  margin-top: 18rpx;
+  color: #fff6e6;
+  font-size: 28rpx;
+  line-height: 1.45;
+  font-weight: 900;
+}
+
+.retest-grid {
+  margin-top: 18rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12rpx;
+}
+
+.retest-grid > view {
+  padding: 16rpx;
+  border-radius: 18rpx;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.retest-grid text {
+  display: block;
+  color: #b49355;
+  font-size: 20rpx;
+  font-weight: 900;
+}
+
+.retest-grid view view {
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.84);
+  font-size: 24rpx;
+  line-height: 1.35;
+  font-weight: 800;
+}
+
+.retest-insight {
+  margin-top: 18rpx;
+  color: rgba(247, 239, 223, 0.66);
+  font-size: 24rpx;
+  line-height: 1.6;
+}
+
+.training-bar {
+  position: relative;
+  z-index: 1;
+  height: 12rpx;
+  margin-top: 22rpx;
+  overflow: hidden;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.training-bar view {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #73d6bd, #f1d27d);
+}
+
+.training-today {
+  position: relative;
+  z-index: 1;
+  margin-top: 18rpx;
+  padding: 18rpx;
+  border-radius: 18rpx;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.training-today text {
+  display: block;
+  color: #fff6e6;
+  font-size: 27rpx;
+  font-weight: 900;
+}
+
+.training-today view {
+  margin-top: 10rpx;
+  color: rgba(247, 239, 223, 0.62);
+  font-size: 23rpx;
+  line-height: 1.55;
+}
+
 .reminder-line {
   margin-top: 22rpx;
   color: rgba(247, 239, 223, 0.72);
@@ -151,8 +475,47 @@
 }
 
 .reminder-card button,
+.recommend-card button,
 .assistant-card button {
   margin-top: 24rpx;
+}
+
+.recommend-title {
+  margin-top: 24rpx;
+  color: #fff6e6;
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", serif;
+  font-size: 38rpx;
+  line-height: 1.25;
+  font-weight: 900;
+}
+
+.recommend-reason {
+  margin-top: 14rpx;
+  color: rgba(247, 239, 223, 0.7);
+  font-size: 25rpx;
+  line-height: 1.6;
+}
+
+.recommend-meta {
+  margin-top: 18rpx;
+  color: #d8b76f;
+  font-size: 22rpx;
+  font-weight: 900;
+}
+
+.loop-line {
+  margin-top: 22rpx;
+  color: #fff6e6;
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", serif;
+  font-size: 32rpx;
+  line-height: 1.45;
+}
+
+.loop-next {
+  margin-top: 16rpx;
+  color: rgba(247, 239, 223, 0.62);
+  font-size: 24rpx;
+  line-height: 1.6;
 }
 
 .recent-row {
@@ -216,8 +579,43 @@
   line-height: 1.6;
 }
 
+.event-timeline {
+  margin-top: 20rpx;
+  display: grid;
+  gap: 12rpx;
+}
+
+.event-timeline > view {
+  padding: 16rpx 18rpx;
+  border-left: 4rpx solid rgba(216, 183, 111, 0.36);
+  border-radius: 14rpx;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.event-timeline text {
+  display: block;
+  color: #f1d27d;
+  font-size: 22rpx;
+  font-weight: 900;
+}
+
+.event-timeline view view {
+  margin-top: 6rpx;
+  color: rgba(247, 239, 223, 0.62);
+  font-size: 22rpx;
+  line-height: 1.45;
+}
+
 @media (max-width: 340px) {
+  .bridge-map {
+    grid-template-columns: 1fr;
+  }
+
   .assistant-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .retest-grid {
     grid-template-columns: 1fr;
   }
 

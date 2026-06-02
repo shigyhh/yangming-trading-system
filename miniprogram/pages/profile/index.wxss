@@ -175,26 +175,239 @@
   line-height: 1.5;
 }
 
-.mock-sync-card,
+.auth-fallback {
+  position: relative;
+  z-index: 1;
+  margin-top: 18rpx;
+  padding: 20rpx;
+  border-radius: 20rpx;
+  border: 1rpx solid rgba(120, 60, 45, 0.34);
+  background: rgba(120, 60, 45, 0.12);
+}
+
+.auth-fallback text {
+  display: block;
+  color: #f1d27d;
+  font-size: 24rpx;
+  font-weight: 900;
+}
+
+.auth-fallback view {
+  margin-top: 10rpx;
+  color: rgba(247, 239, 223, 0.62);
+  font-size: 23rpx;
+  line-height: 1.5;
+}
+
+.auth-fallback-actions {
+  display: grid;
+  gap: 10rpx;
+}
+
+.auth-fallback-actions button {
+  min-height: 64rpx;
+  border-radius: 999rpx;
+  border: 1rpx solid rgba(216, 183, 111, 0.16);
+  background: rgba(255, 255, 255, 0.035);
+  color: rgba(247, 239, 223, 0.82);
+  font-size: 23rpx;
+  font-weight: 900;
+}
+
+.evidence-account-card,
+.sync-bridge-card,
 .handoff-card,
 .card-album {
   margin-top: 22rpx;
   padding: 26rpx;
 }
 
-.mock-sync-head,
-.mock-grid,
+.evidence-account-list,
+.closure-chain-list,
+.closure-next-action,
+.journey-progress-grid,
+.sync-bridge-head,
+.sync-bridge-grid,
+.debug-grid,
 .assistant-summary,
 .handoff-head,
+.handoff-triggers,
 .handoff-grid,
 .handoff-script,
+.handoff-summary,
+.handoff-rows,
+.handoff-actions,
+.handoff-events,
 .card-album-head,
 .card-album-list {
   position: relative;
   z-index: 1;
 }
 
-.mock-sync-head,
+.evidence-account-list {
+  margin-top: 18rpx;
+  display: grid;
+  gap: 12rpx;
+}
+
+.evidence-account-list > view {
+  min-width: 240rpx;
+  padding: 16rpx;
+  border-radius: 18rpx;
+  border: 1rpx solid rgba(216, 183, 111, 0.12);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.evidence-account-list text {
+  display: block;
+  color: #d8b76f;
+  font-size: 21rpx;
+  font-weight: 900;
+}
+
+.evidence-account-list view view {
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.74);
+  font-size: 23rpx;
+  line-height: 1.45;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.evidence-account-list text:last-child {
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.42);
+  font-size: 20rpx;
+}
+
+.closure-chain-list {
+  margin-top: 20rpx;
+  display: grid;
+  gap: 12rpx;
+}
+
+.journey-progress-grid {
+  margin-top: 20rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10rpx;
+}
+
+.journey-progress-grid > view {
+  min-height: 82rpx;
+  padding: 14rpx 16rpx;
+  border-radius: 16rpx;
+  border: 1rpx solid rgba(216, 183, 111, 0.1);
+  background: rgba(255, 255, 255, 0.032);
+}
+
+.journey-progress-grid text {
+  display: block;
+  color: rgba(216, 183, 111, 0.72);
+  font-size: 19rpx;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.journey-progress-grid view view {
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.82);
+  font-size: 24rpx;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.closure-chain-list > view {
+  min-height: 94rpx;
+  padding: 16rpx;
+  display: grid;
+  grid-template-columns: 46rpx minmax(0, 1fr) 104rpx;
+  gap: 14rpx;
+  align-items: center;
+  border-radius: 18rpx;
+  border: 1rpx solid rgba(247, 239, 223, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.closure-chain-list > view.done {
+  border-color: rgba(88, 194, 173, 0.18);
+  background: rgba(88, 194, 173, 0.055);
+}
+
+.closure-chain-list > view.current {
+  border-color: rgba(216, 183, 111, 0.26);
+  background: rgba(216, 183, 111, 0.07);
+}
+
+.closure-chain-list > view > text:first-child {
+  width: 42rpx;
+  height: 42rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 999rpx;
+  color: rgba(247, 239, 223, 0.58);
+  border: 1rpx solid rgba(216, 183, 111, 0.16);
+  font-size: 20rpx;
+  font-weight: 900;
+}
+
+.closure-chain-list > view.done > text:first-child,
+.closure-chain-list > view.current > text:first-child {
+  color: #11130d;
+  border-color: transparent;
+  background: linear-gradient(180deg, #ead089, #c69846);
+}
+
+.closure-chain-list view view text {
+  display: block;
+  color: #fff6e6;
+  font-size: 24rpx;
+  line-height: 1.35;
+  font-weight: 900;
+}
+
+.closure-chain-list view view view {
+  margin-top: 6rpx;
+  color: rgba(247, 239, 223, 0.5);
+  font-size: 21rpx;
+  line-height: 1.4;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.closure-chain-list > view > text:last-child {
+  color: rgba(247, 239, 223, 0.42);
+  font-size: 20rpx;
+  line-height: 1.35;
+  text-align: right;
+  font-weight: 900;
+}
+
+.closure-chain-list > view.done > text:last-child {
+  color: rgba(88, 194, 173, 0.86);
+}
+
+.closure-chain-list > view.current > text:last-child {
+  color: #f1d27d;
+}
+
+.closure-next-action {
+  margin-top: 18rpx;
+  padding: 16rpx 18rpx;
+  border-left: 4rpx solid rgba(216, 183, 111, 0.44);
+  border-radius: 14rpx;
+  color: rgba(247, 239, 223, 0.72);
+  background: rgba(216, 183, 111, 0.055);
+  font-size: 23rpx;
+  line-height: 1.5;
+  font-weight: 900;
+}
+
+.sync-bridge-head,
 .handoff-head,
 .card-album-head {
   display: flex;
@@ -203,7 +416,7 @@
   gap: 18rpx;
 }
 
-.mock-sync-head view text,
+.sync-bridge-head view text,
 .handoff-head view text,
 .card-album-head view text {
   display: block;
@@ -213,7 +426,7 @@
   letter-spacing: 0.14em;
 }
 
-.mock-sync-head view view,
+.sync-bridge-head view view,
 .handoff-head view view,
 .card-album-head view view {
   margin-top: 10rpx;
@@ -222,7 +435,7 @@
   line-height: 1.5;
 }
 
-.mock-sync-head button,
+.sync-bridge-head button,
 .card-album-head button {
   min-width: 176rpx;
   min-height: 64rpx;
@@ -246,6 +459,43 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12rpx;
+}
+
+.handoff-triggers {
+  margin-top: 18rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10rpx;
+}
+
+.handoff-triggers > view {
+  padding: 12rpx 14rpx;
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  border-radius: 16rpx;
+  color: rgba(247, 239, 223, 0.52);
+  border: 1rpx solid rgba(216, 183, 111, 0.09);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.handoff-triggers > view.done {
+  color: rgba(216, 183, 111, 0.88);
+  border-color: rgba(216, 183, 111, 0.2);
+  background: rgba(216, 183, 111, 0.06);
+}
+
+.handoff-triggers text {
+  flex: 0 0 auto;
+  font-size: 19rpx;
+  font-weight: 900;
+}
+
+.handoff-triggers view view {
+  min-width: 0;
+  font-size: 21rpx;
+  line-height: 1.35;
+  font-weight: 800;
 }
 
 .handoff-grid > view {
@@ -280,20 +530,131 @@
   line-height: 1.55;
 }
 
-.mock-grid {
+.handoff-summary {
+  margin-top: 14rpx;
+  padding: 18rpx;
+  border-radius: 18rpx;
+  color: rgba(247, 239, 223, 0.72);
+  border: 1rpx solid rgba(216, 183, 111, 0.12);
+  background:
+    linear-gradient(135deg, rgba(216, 183, 111, 0.08), rgba(95, 132, 117, 0.04)),
+    rgba(255, 255, 255, 0.025);
+  font-size: 22rpx;
+  line-height: 1.62;
+  white-space: pre-wrap;
+}
+
+.handoff-rows {
+  margin-top: 14rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10rpx;
+}
+
+.handoff-rows > view {
+  min-height: 98rpx;
+  padding: 14rpx 16rpx;
+  border-radius: 16rpx;
+  border: 1rpx solid rgba(216, 183, 111, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.handoff-rows text {
+  display: block;
+  color: rgba(216, 183, 111, 0.82);
+  font-size: 19rpx;
+  font-weight: 900;
+}
+
+.handoff-rows view view {
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.72);
+  font-size: 21rpx;
+  line-height: 1.42;
+  font-weight: 800;
+  word-break: break-all;
+}
+
+.handoff-actions {
+  margin-top: 16rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12rpx;
+}
+
+.handoff-actions button {
+  min-height: 74rpx;
+  border-radius: 999rpx;
+  color: rgba(247, 239, 223, 0.8);
+  border: 1rpx solid rgba(216, 183, 111, 0.18);
+  background: rgba(216, 183, 111, 0.05);
+  font-size: 23rpx;
+  font-weight: 900;
+}
+
+.handoff-actions button:first-child {
+  color: #11130d;
+  border-color: rgba(216, 183, 111, 0.36);
+  background: linear-gradient(180deg, #ead089, #c69846);
+}
+
+.handoff-events {
+  margin-top: 18rpx;
+  display: grid;
+  gap: 12rpx;
+}
+
+.handoff-events > view {
+  padding: 16rpx 18rpx;
+  border-left: 4rpx solid rgba(216, 183, 111, 0.34);
+  border-radius: 14rpx;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.handoff-events text {
+  display: block;
+  color: #f1d27d;
+  font-size: 21rpx;
+  font-weight: 900;
+}
+
+.handoff-events view view {
+  margin-top: 6rpx;
+  color: rgba(247, 239, 223, 0.62);
+  font-size: 22rpx;
+  line-height: 1.45;
+}
+
+.sync-bridge-grid {
   margin-top: 22rpx;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12rpx;
 }
 
-.mock-grid view {
+.sync-bridge-grid view,
+.debug-grid view {
   padding: 14rpx 16rpx;
   border-radius: 16rpx;
   color: rgba(247, 239, 223, 0.72);
   border: 1rpx solid rgba(216, 183, 111, 0.12);
   background: rgba(216, 183, 111, 0.04);
   font-size: 22rpx;
+}
+
+.debug-grid {
+  margin-top: 14rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10rpx;
+}
+
+.debug-grid view {
+  color: rgba(247, 239, 223, 0.4);
+  border-style: dashed;
+  background: rgba(255, 255, 255, 0.025);
+  font-size: 20rpx;
+  font-family: Menlo, Consolas, monospace;
 }
 
 .assistant-summary {
@@ -617,6 +978,8 @@
 .sync-card label,
 .sync-card input,
 .sync-actions,
+.sync-user-tip,
+.debug-sync-panel,
 .sync-tip {
   position: relative;
   z-index: 1;
@@ -667,8 +1030,58 @@
 .sync-actions {
   margin-top: 18rpx;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 12rpx;
+}
+
+.sync-user-tip {
+  margin-top: 14rpx;
+  color: rgba(247, 239, 223, 0.54);
+  font-size: 23rpx;
+  line-height: 1.55;
+}
+
+.debug-sync-panel {
+  margin-top: 18rpx;
+  padding: 18rpx;
+  border-radius: 18rpx;
+  border: 1rpx dashed rgba(216, 183, 111, 0.18);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.debug-sync-panel > text:first-child {
+  display: block;
+  color: rgba(216, 183, 111, 0.78);
+  font-size: 21rpx;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.debug-sync-actions {
+  margin-top: 14rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10rpx;
+}
+
+.debug-sync-actions .ghost-btn,
+.debug-sync-actions .secondary-btn,
+.debug-sync-actions .primary-btn {
+  min-height: 68rpx;
+  padding: 0 10rpx;
+  font-size: 22rpx;
+}
+
+.debug-technical {
+  margin-top: 14rpx;
+  padding: 14rpx 16rpx;
+  border-radius: 14rpx;
+  color: rgba(247, 239, 223, 0.48);
+  background: rgba(0, 0, 0, 0.2);
+  font-size: 20rpx;
+  line-height: 1.45;
+  font-family: Menlo, Consolas, monospace;
+  word-break: break-all;
 }
 
 @media (max-width: 340px) {
@@ -688,6 +1101,10 @@
   }
 
   .sync-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .debug-sync-actions {
     grid-template-columns: 1fr;
   }
 
