@@ -2,7 +2,25 @@
   <view class="page-content">
     <text class="eyebrow">COLLECT · 活镜采集</text>
     <view class="page-title">真实复盘<br />采集</view>
-    <view class="page-subtitle">30 秒把截图、理由和第一念写入活镜数据；系统再映射九镜六贼，生成下一次训练动作。</view>
+    <view class="page-subtitle">先记录一笔真实交易：截图、理由和第一念。系统会把它沉淀成活镜证据，照见反复出现的念头。</view>
+
+    <view class="concept-bridge card">
+      <view class="bridge-line">复盘，是你写下事实。活镜，是系统照见反复出现的念头。</view>
+      <view class="bridge-steps">
+        <view>
+          <text>复盘采集</text>
+          <view>记录一笔真实交易</view>
+        </view>
+        <view>
+          <text>活镜采集</text>
+          <view>沉淀成行为证据</view>
+        </view>
+        <view>
+          <text>心镜档案</text>
+          <view>长期保存你的变化</view>
+        </view>
+      </view>
+    </view>
 
     <view class="upload-card card">
       <text>交易记录截图</text>
@@ -11,18 +29,43 @@
       </view>
       <view wx:else class="upload-empty">支持 K线、分时、交易记录、持仓截图；先留住真实证据。</view>
       <button class="primary-btn" bindtap="chooseImage">{{form.screenshotPath ? '重新选择截图' : '拍照 / 选择截图'}}</button>
-      <view class="upload-note">MVP 先保存截图与手动字段；后续由服务端识别并匹配分时与多周期位置，继续校准活镜数据。</view>
+      <view class="upload-note">MVP 先保存截图与手动字段；后续由服务端识别并匹配分时与多周期位置，继续校准活镜证据。</view>
     </view>
 
     <view class="quick-review-card card">
-      <text>30 秒采集三问</text>
-      <view>少填字段，先把真实念头留下；每一次都会进入活镜成长数据。</view>
-      <input value="{{form.entryReason}}" bindinput="inputEntryReason" placeholder="为什么进场？例：怕错过 / 按计划 / 群里说" />
-      <input value="{{form.exitReason}}" bindinput="inputExitReason" placeholder="为什么离场？例：怕回吐 / 守规则 / 再确认" />
-      <textarea value="{{form.firstThought}}" bindinput="inputThought" placeholder="当时最大的念头是什么？" />
+      <text>60 秒复盘采集</text>
+      <view>这笔交易，是计划在下单，还是念头在下单？只记录行为，不评价外在波动。</view>
+
+      <view class="quick-label">这笔交易是否在原计划内？</view>
+      <view class="mini-choice">
+        <button class="{{form.inPlan === 'yes' ? 'active' : ''}}" data-value="yes" bindtap="selectPlanState">在计划内</button>
+        <button class="{{form.inPlan === 'no' ? 'active' : ''}}" data-value="no" bindtap="selectPlanState">计划外</button>
+      </view>
+
+      <textarea value="{{form.firstThought}}" bindinput="inputThought" placeholder="下单前最强的一念是什么？例：怕错过 / 不甘心 / 想证明" />
+
+      <view class="quick-label">有没有临盘改计划？</view>
+      <view class="mini-choice">
+        <button class="{{form.changedPlan === 'no' ? 'active' : ''}}" data-value="no" bindtap="selectChangedPlan">没有</button>
+        <button class="{{form.changedPlan === 'yes' ? 'active' : ''}}" data-value="yes" bindtap="selectChangedPlan">有改动</button>
+      </view>
+
+      <view class="quick-label">有没有提前写离场条件？</view>
+      <view class="mini-choice">
+        <button class="{{form.exitPrepared === 'yes' ? 'active' : ''}}" data-value="yes" bindtap="selectExitPrepared">已写清</button>
+        <button class="{{form.exitPrepared === 'no' ? 'active' : ''}}" data-value="no" bindtap="selectExitPrepared">未写清</button>
+      </view>
+
+      <input value="{{form.afterReaction}}" bindinput="inputAfterReaction" placeholder="交易后第一反应是什么？例：后悔 / 松一口气 / 想再来一次" />
+      <textarea value="{{form.nextAction}}" bindinput="inputNextAction" placeholder="下一次同场景先做什么？例：先停十秒，写下第一念" />
     </view>
 
-    <view class="form-card card">
+    <view class="split-actions quick-actions">
+      <button class="ghost-btn" bindtap="toggleAdvanced">{{showAdvanced ? '收起补充项' : '补充历史锚点'}}</button>
+      <button class="primary-btn" bindtap="generateReview">写入活镜证据</button>
+    </view>
+
+    <view wx:if="{{showAdvanced}}" class="form-card card">
       <text>历史数据锚点</text>
       <view class="field-label">数据品类</view>
       <scroll-view scroll-x class="chip-strip" show-scrollbar="{{false}}">
@@ -48,7 +91,7 @@
       </view>
     </view>
 
-    <view class="form-card card">
+    <view wx:if="{{showAdvanced}}" class="form-card card">
       <text>当时反应</text>
       <view class="field-label">阶段位置</view>
       <view class="choice-grid">
@@ -83,9 +126,9 @@
       <textarea value="{{form.reviewNote}}" bindinput="inputNote" placeholder="回看这条记录，你照见了什么？" />
     </view>
 
-    <view class="split-actions">
+    <view wx:if="{{showAdvanced}}" class="split-actions">
       <button class="ghost-btn" bindtap="resetForm">重新填写</button>
-      <button class="primary-btn" bindtap="generateReview">写入活镜数据</button>
+      <button class="primary-btn" bindtap="generateReview">写入活镜证据</button>
     </view>
 
     <view wx:if="{{report}}" class="report-card card">
@@ -139,7 +182,28 @@
         <text>针对训练</text>
         <view>{{report.trainingAction}}</view>
       </view>
-      <button class="ghost-btn" bindtap="goKlineTraining">进入同品类 K线盲练</button>
+      <view wx:if="{{closure}}" class="closure-card">
+        <text>{{closure.title}}</text>
+        <view class="closure-proof">{{closure.proofLine}}</view>
+        <view class="closure-mirror">{{closure.mirrorLine}}</view>
+        <view class="closure-steps">
+          <view wx:for="{{closure.steps}}" wx:key="key" class="{{item.done ? 'done' : ''}}">
+            <text>{{item.label}}</text>
+            <view>{{item.value}}</view>
+          </view>
+        </view>
+        <view class="closure-next">
+          <text>下一次只练</text>
+          <view>{{closure.trainingAction}}</view>
+        </view>
+      </view>
+      <view class="split-actions result-actions">
+        <button class="ghost-btn" bindtap="goGeneratedDetail">{{closure.detailActionText || '查看证据详情'}}</button>
+        <button class="primary-btn" bindtap="goLivingMirror">{{closure.primaryActionText || '查看活镜成长'}}</button>
+      </view>
+      <view class="single-action">
+        <button class="ghost-btn" bindtap="goKlineTraining">{{closure.klineActionText || '进入同品类 K线盲练'}}</button>
+      </view>
     </view>
 
     <view wx:if="{{records.length}}" class="recent-card card">
@@ -155,5 +219,5 @@
 
     <compliance-notice />
   </view>
-  <bottom-tab-bar active="mind" />
+  <bottom-tab-bar active="review" />
 </view>

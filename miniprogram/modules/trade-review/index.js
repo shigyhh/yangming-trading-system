@@ -154,6 +154,8 @@ function inferType(input = {}) {
   const stage = getOption(STAGE_POSITIONS, input.stagePositionKey);
   const emotionType = EMOTION_TYPE_MAP[input.emotion] || "";
   const boundary = getOption(BOUNDARY_STATES, input.boundaryState);
+  if (input.changedPlan === "yes" || input.inPlan === "no") return "冲动型";
+  if (input.exitPrepared === "no") return "拖延型";
   if (boundary.key === "lost" && action.type !== "平衡型") return action.type;
   if (emotionType && emotionType !== "平衡型") return emotionType;
   if (action.type !== "平衡型") return action.type;
@@ -165,6 +167,8 @@ function matchKeywordMirrorRule(input = {}) {
     input.entryReason,
     input.exitReason,
     input.firstThought,
+    input.afterReaction,
+    input.nextAction,
     input.reviewNote,
     input.planBoundary
   ].filter(Boolean).join(" ");
@@ -196,12 +200,15 @@ function buildProcessScores(input = {}, type) {
   const boundary = getOption(BOUNDARY_STATES, input.boundaryState);
   const reactionPenalty = action.type === "平衡型" ? 0 : 14;
   const emotionPenalty = input.emotion && input.emotion !== "平静" ? 8 : 0;
+  const planPenalty = input.inPlan === "no" ? 14 : 0;
+  const changedPlanPenalty = input.changedPlan === "yes" ? 12 : 0;
+  const exitPenalty = input.exitPrepared === "no" ? 10 : 0;
   return {
-    awareness: clamp(70 + (input.firstThought ? 12 : -8) + (input.reviewNote ? 8 : 0), 20, 96),
-    boundary: clamp(boundary.score, 18, 96),
-    execution: clamp(action.score + (boundary.key === "kept" ? 6 : -10), 18, 96),
-    stability: clamp(82 - reactionPenalty - emotionPenalty, 18, 96),
-    review: clamp(input.reviewNote ? 86 : 62, 18, 96),
+    awareness: clamp(70 + (input.firstThought ? 12 : -8) + (input.nextAction ? 8 : 0), 20, 96),
+    boundary: clamp(boundary.score - exitPenalty, 18, 96),
+    execution: clamp(action.score + (boundary.key === "kept" ? 6 : -10) - planPenalty - changedPlanPenalty, 18, 96),
+    stability: clamp(82 - reactionPenalty - emotionPenalty - changedPlanPenalty, 18, 96),
+    review: clamp(input.nextAction || input.afterReaction ? 86 : 62, 18, 96),
     personalityCalibration: clamp(type === "平衡型" ? 76 : 66, 18, 96)
   };
 }
@@ -233,6 +240,7 @@ function buildTradeReview(input = {}, context = {}) {
   const boundary = getOption(BOUNDARY_STATES, input.boundaryState);
   const report = {
     id: input.id || `tr-${Date.now()}`,
+    sourceType: "trade_review",
     screenshotPath: input.screenshotPath || "",
     marketKey: historicalMatch.marketKey,
     marketLabel: historicalMatch.marketLabel,
@@ -245,6 +253,11 @@ function buildTradeReview(input = {}, context = {}) {
     emotion: input.emotion || "未记录",
     entryReason: input.entryReason || "未记录",
     exitReason: input.exitReason || "未记录",
+    inPlan: input.inPlan || "yes",
+    changedPlan: input.changedPlan || "no",
+    exitPrepared: input.exitPrepared || "yes",
+    afterReaction: input.afterReaction || "未记录",
+    nextAction: input.nextAction || "",
     firstThought: input.firstThought || "未记录",
     planBoundary: input.planBoundary || "未记录",
     boundaryState: boundary.key,
@@ -278,7 +291,8 @@ function buildTradeReviewRecordView(record = {}) {
     scoreRows: Object.keys(scores).map((key) => ({
       key,
       label: SCORE_LABELS[key] || key,
-      value: scores[key]
+      value: scores[key],
+      displayValue: formatScoreLevel(scores[key])
     })),
     createdAtText: formatDateTime(record.createdAt || record.updatedAt),
     archiveTitle: `${record.tradeDate || "未填日期"} · ${record.marketLabel || historicalMatch.marketLabel || "待定位"}`,
@@ -286,6 +300,56 @@ function buildTradeReviewRecordView(record = {}) {
     stageLine: `${historicalMatch.stagePosition || record.stageGate || "待定位"} · ${record.relatedMirror || "待照见"}`,
     sourceLine: historicalMatch.sourceStatus || "待服务端匹配历史分时"
   });
+}
+
+function formatScoreLevel(score) {
+  const value = clamp(score, 0, 100);
+  if (value <= 20) return `较低 · ${value}`;
+  if (value <= 40) return `轻微 · ${value}`;
+  if (value <= 60) return `中等 · ${value}`;
+  if (value <= 80) return `明显 · ${value}`;
+  return `强烈 · ${value}`;
+}
+
+function buildTradeReviewClosure(record = {}, reminder = {}) {
+  const heartThieves = record.heartThieves || [];
+  const mirrorName = record.relatedMirror || "待照见";
+  const trainingAction = reminder.mainTraining || record.trainingAction || "把第一念记录下来。";
+  return {
+    title: "本次复盘已入活镜",
+    mirrorLine: `${mirrorName} · ${heartThieves.length ? heartThieves.join("、") : (record.virtuePractice || "知止、守心、执行")}`,
+    trainingAction,
+    proofLine: record.oneLine || record.verdict || "这条记录已经进入行为证据链。",
+    steps: [
+      {
+        key: "evidence",
+        label: "截图证据",
+        value: record.screenshotPath ? "已留存" : "待补图",
+        done: !!record.screenshotPath
+      },
+      {
+        key: "mirror",
+        label: "行为镜",
+        value: mirrorName,
+        done: !!record.relatedMirror
+      },
+      {
+        key: "living_mirror",
+        label: "活镜成长",
+        value: reminder.statusText || "已写入",
+        done: true
+      },
+      {
+        key: "next_training",
+        label: "下一练",
+        value: trainingAction,
+        done: !!trainingAction
+      }
+    ],
+    primaryActionText: "查看活镜成长",
+    detailActionText: "查看证据详情",
+    klineActionText: "同品类 K线盲练"
+  };
 }
 
 function buildLiveMirrorReminder(tradeReviewState = {}) {
@@ -354,9 +418,12 @@ function buildEvidenceChain({ input, action, boundary, historicalMatch, binding,
   return [
     { label: "截图记录", value: input.screenshotPath ? "已上传" : "待上传", detail: "用于保留真实交易记录证据。" },
     { label: "历史位置", value: historicalMatch.stagePosition, detail: `${historicalMatch.marketLabel} · ${historicalMatch.timeframeLabel} · ${historicalMatch.sourceStatus}` },
+    { label: "计划状态", value: input.inPlan === "no" ? "计划外" : "计划内", detail: input.changedPlan === "yes" ? "曾临盘改计划。" : "未记录临盘改计划。" },
     { label: "建仓理由", value: input.entryReason || "待补充", detail: "用于照见行动前的第一层依据。" },
     { label: "离场理由", value: input.exitReason || "待补充", detail: "用于照见边界触碰后的反应。" },
+    { label: "离场条件", value: input.exitPrepared === "no" ? "未写清" : "已写清", detail: "用于照见边界是否提前立住。" },
     { label: "第一反应", value: action.label, detail: input.firstThought || "第一念待补充。" },
+    { label: "事后反应", value: input.afterReaction || "待补充", detail: input.nextAction || "下一次动作待补充。" },
     { label: "守界状态", value: boundary.label, detail: input.planBoundary || "边界待补充。" },
     { label: "九镜六贼", value: binding.mirrorName, detail: (binding.thieves || []).length ? `对应：${binding.thieves.join("、")}` : (binding.virtue || "知止、守心、执行") },
     { label: "档案联通", value: (context.assessment || {}).primary || "待照见", detail: "会进入小程序、网页与后续 App 的行为证据链。" }
@@ -507,6 +574,7 @@ module.exports = {
   buildHistoricalMatch,
   buildTradeReview,
   buildTradeReviewRecordView,
+  buildTradeReviewClosure,
   buildLiveMirrorReminder,
   buildLivingMirrorStats
 };

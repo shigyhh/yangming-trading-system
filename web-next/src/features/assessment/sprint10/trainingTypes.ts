@@ -31,6 +31,23 @@ export interface DailyTrainingState {
   baselineScores: BaselineScores
 }
 
+export interface DailyGrowthState {
+  growthRecordId: string
+  reportId: string
+  userId?: string
+  anonymousId: string
+  trainingDay: number
+  checkinType: CheckinType | null
+  thoughtType: ThoughtType | null
+  reflectionText: string
+  holdProgress: number
+  isCompleted: boolean
+  completedAt: string | null
+  completedDays: number
+  klineMindCount: number
+  reflectionCount: number
+}
+
 export interface EvidenceResult {
   evidenceItems: string[]
   dailySealText: string

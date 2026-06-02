@@ -27,6 +27,8 @@ const state = {
     inviteSource: "ZX567877"
   },
   user_binding: {
+    userId: "phone_13812345678",
+    userIdDisplay: "phone_138****5678",
     phone: "13812345678",
     phoneMask: "138****5678",
     inviteSource: "ZX567877",
@@ -174,6 +176,14 @@ const sharePayload = buildShareCardBindingPayload({
 });
 assert.strictEqual(sharePayload.channel, "ZX567877");
 assert.strictEqual(sharePayload.source_channel, "微信小程序MVP");
+
+const localIdentityPayload = buildShareCardBindingPayload({
+  auth: {},
+  state,
+  event: { shareCardType: "daily_mantra" }
+});
+assert.strictEqual(localIdentityPayload.user.userId, "phone_13812345678");
+assert.strictEqual(localIdentityPayload.user.maskedPhone, "138****5678");
 
 const forbiddenPhrases = ["推荐买入", "推荐卖出", "必赚", "稳赚", "收益保证", "喊单", "抄底", "逃顶"];
 const serialized = JSON.stringify({ assessmentPayload, retestPayload, trainingPayload, klinePayload, sharePayload });

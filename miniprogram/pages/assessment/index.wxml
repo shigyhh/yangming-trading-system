@@ -7,7 +7,7 @@
     <view class="mode-card card">
       <view class="mode-head">
         <text>照见深度</text>
-        <view>{{bankSource}}</view>
+        <view>{{bankSource}} · 首次建议 27 题</view>
       </view>
       <view class="mode-grid">
         <button

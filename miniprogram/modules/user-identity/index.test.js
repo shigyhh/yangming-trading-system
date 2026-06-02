@@ -11,6 +11,13 @@ const binding = buildUserBinding({ phone: "13812345678", inviteSource: "ZX123456
 assert.strictEqual(binding.phoneBound, true);
 assert.strictEqual(binding.phoneMask, "138****5678");
 assert.strictEqual(binding.inviteSource, "ZX123456");
+assert.strictEqual(binding.userId, "phone_13812345678");
+assert.strictEqual(binding.userIdDisplay, "phone_138****5678");
+
+const anonymousBinding = buildUserBinding({ inviteCode: "ZX202777" });
+assert.strictEqual(anonymousBinding.phoneBound, false);
+assert.strictEqual(anonymousBinding.userId, "invite_ZX202777");
+assert.strictEqual(anonymousBinding.userIdDisplay, "invite_ZX202777");
 
 const handoff = summarizeAssistantHandoff({
   profile: { phone: "13812345678", inviteSource: "ZX123456" },

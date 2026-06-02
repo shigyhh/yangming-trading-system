@@ -4,8 +4,8 @@
   right: 0;
   bottom: 0;
   z-index: 60;
-  min-height: calc(150rpx + env(safe-area-inset-bottom));
-  padding: 18rpx 22rpx 0;
+  min-height: calc(158rpx + env(safe-area-inset-bottom));
+  padding: 18rpx 22rpx 8rpx;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   border-top: 1rpx solid rgba(194, 145, 65, 0.075);
@@ -98,7 +98,7 @@
 
 .safe-bottom {
   grid-column: 1 / -1;
-  height: env(safe-area-inset-bottom);
+  height: calc(env(safe-area-inset-bottom) + 12rpx);
 }
 
 @keyframes tabLightSweep {
@@ -117,7 +117,7 @@
 
 @media (max-width: 340px) {
   .tabbar {
-    min-height: calc(142rpx + env(safe-area-inset-bottom));
+    min-height: calc(150rpx + env(safe-area-inset-bottom));
     padding-left: 14rpx;
     padding-right: 14rpx;
   }

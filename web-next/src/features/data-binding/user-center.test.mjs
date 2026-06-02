@@ -24,6 +24,18 @@ test("user center reads data binding summary with local fallback", async () => {
     "K 线心念记录",
     "复测雷达",
     "测评、训练、复测、邀请码、助教摘要与分享卡",
+    "活镜成长",
+    "九镜强度",
+    "心贼频次",
+    "真实交易复盘明细",
+    "style jsx global",
+    ".archive-page .archive-dashboard-grid",
+    "grid-template-columns: repeat(12, minmax(0, 1fr))",
+    ".archive-page .archive-user-card",
+    ".archive-page .archive-proof-card",
+    "mirror_archive",
+    "living_mirror_stats",
+    "trade_reviews",
   ].forEach((token) => {
     assert.equal(`${apiClient}\n${archivePage}`.includes(token), true, `missing token: ${token}`)
   })

@@ -15,6 +15,39 @@
       "handoffAt": "2026-05-28 10:16",
       "note": "已发送测评报告卡与今日停十秒训练提醒。"
     },
+    "livingMirrorStats": {
+      "mirrorScores": {
+        "chasing": 68,
+        "holding_loss": 24,
+        "fantasy": 18,
+        "gambling": 12,
+        "following": 36,
+        "hesitation": 22,
+        "procrastination": 8,
+        "anxiety": 52,
+        "conscience": 47
+      },
+      "thiefCounts": {
+        "贪": 2,
+        "急": 2,
+        "惧": 1
+      },
+      "trainingCompletionRate": 29,
+      "loopRelapseCount": 1,
+      "conscienceGrowth": 47,
+      "lastUpdated": "2026-05-30T18:20:00.000Z"
+    },
+    "tradeReviews": [
+      {
+        "id": "review-adm-001-1",
+        "tradeDate": "2026-05-30",
+        "detectedMirror": "追涨之镜",
+        "strongestThought": "怕错过",
+        "reviewText": "这次复盘照见的是追涨之镜，最明显的一念是怕错过。先记录触发与反应，再回到停十秒训练。",
+        "behaviorTags": ["追涨", "怕错过", "截图复盘"],
+        "createdAt": "2026-05-30T18:20:00.000Z"
+      }
+    ],
     "report": {
       "title": "交易人格照见报告",
       "heartThief": "怕错过",
@@ -124,6 +157,39 @@
       "handoffAt": "2026-05-30 15:02",
       "note": "已提示一错一改，等待查看训练记录与复测变化。"
     },
+    "livingMirrorStats": {
+      "mirrorScores": {
+        "chasing": 18,
+        "holding_loss": 16,
+        "fantasy": 28,
+        "gambling": 8,
+        "following": 12,
+        "hesitation": 44,
+        "procrastination": 36,
+        "anxiety": 24,
+        "conscience": 71
+      },
+      "thiefCounts": {
+        "疑": 1,
+        "昧": 1,
+        "守心": 2
+      },
+      "trainingCompletionRate": 86,
+      "loopRelapseCount": 1,
+      "conscienceGrowth": 71,
+      "lastUpdated": "2026-05-30T20:10:00.000Z"
+    },
+    "tradeReviews": [
+      {
+        "id": "review-adm-003-1",
+        "tradeDate": "2026-05-30",
+        "detectedMirror": "犹疑之镜",
+        "strongestThought": "想等更完美",
+        "reviewText": "这次复盘照见的是犹疑之镜，最明显的一念是想等更完美。先把事实、念头和下一步动作分开记录。",
+        "behaviorTags": ["犹疑", "复盘减负", "一错一改"],
+        "createdAt": "2026-05-30T20:10:00.000Z"
+      }
+    ],
     "report": {
       "title": "交易人格照见报告",
       "heartThief": "苛责求全",

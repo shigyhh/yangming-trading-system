@@ -5,6 +5,7 @@ import test from "node:test"
 const mockDataUrl = new URL("./admin-mock-data.json", import.meta.url)
 const adminDataUrl = new URL("./admin-data.ts", import.meta.url)
 const adminPageUrl = new URL("../../app/admin/page.tsx", import.meta.url)
+const adminDetailPageUrl = new URL("../../app/admin/[id]/page.tsx", import.meta.url)
 const requiredListFields = [
   "phone",
   "assessmentTime",
@@ -24,6 +25,8 @@ test("admin mock users expose required MVP list and detail fields", async () => 
   assert.ok(Array.isArray(users))
   assert.ok(users.length >= 3)
   assert.ok(users.some((user) => user.assistant.status === "待复盘"))
+  assert.ok(users.some((user) => user.livingMirrorStats?.mirrorScores))
+  assert.ok(users.some((user) => user.tradeReviews?.length))
 
   users.forEach((user) => {
     requiredListFields.forEach((field) => {
@@ -39,6 +42,7 @@ test("admin mock users expose required MVP list and detail fields", async () => 
     assert.ok(Array.isArray(user.trainingRecords))
     assert.ok(Array.isArray(user.klineRecords))
     assert.ok(Array.isArray(user.retestComparisons))
+    assert.ok(Array.isArray(user.tradeReviews || []))
     assert.equal(typeof user.retestChange.changeNote, "string")
     assert.ok(allowedStatuses.has(user.assistant.status))
   })
@@ -47,7 +51,8 @@ test("admin mock users expose required MVP list and detail fields", async () => 
 test("admin page exposes filters, sorting and follow-up queue helpers", async () => {
   const adminData = await readFile(adminDataUrl, "utf8")
   const adminPage = await readFile(adminPageUrl, "utf8")
-  const source = `${adminData}\n${adminPage}`
+  const adminDetailPage = await readFile(adminDetailPageUrl, "utf8")
+  const source = `${adminData}\n${adminPage}\n${adminDetailPage}`
 
   ;[
     "normalizeAdminFilters",
@@ -64,6 +69,12 @@ test("admin page exposes filters, sorting and follow-up queue helpers", async ()
     "跟进建议",
     "klineRecords",
     "retestComparisons",
+    "livingMirrorStats",
+    "tradeReviews",
+    "活镜成长",
+    "真实交易复盘",
+    "九镜强度",
+    "心贼频次",
   ].forEach((token) => {
     assert.equal(source.includes(token), true, `missing token: ${token}`)
   })

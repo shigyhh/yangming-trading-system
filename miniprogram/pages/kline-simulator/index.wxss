@@ -3,6 +3,7 @@
   padding: 28rpx;
 }
 
+.prescription-card,
 .filter-card {
   margin-top: 24rpx;
   padding: 26rpx;
@@ -10,6 +11,9 @@
 
 .intro-card text,
 .intro-card view,
+.prescription-card text,
+.prescription-card view,
+.prescription-card button,
 .filter-card text,
 .chip-strip {
   position: relative;
@@ -40,6 +44,41 @@
 
 .intro-actions button {
   margin-top: 0;
+}
+
+.prescription-card > text {
+  display: block;
+  color: #f1d27d;
+  font-size: 23rpx;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.prescription-title {
+  margin-top: 18rpx;
+  color: #fff6e6;
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", serif;
+  font-size: 40rpx;
+  line-height: 1.25;
+  font-weight: 900;
+}
+
+.prescription-reason {
+  margin-top: 12rpx;
+  color: rgba(247, 239, 223, 0.68);
+  font-size: 25rpx;
+  line-height: 1.6;
+}
+
+.prescription-meta {
+  margin-top: 16rpx;
+  color: #d8b76f;
+  font-size: 22rpx;
+  font-weight: 900;
+}
+
+.prescription-card button {
+  margin-top: 22rpx;
 }
 
 .filter-card > text {
@@ -95,6 +134,13 @@
 
 .scene-card {
   padding: 28rpx;
+}
+
+.scene-card.recommended {
+  border-color: rgba(216, 183, 111, 0.32);
+  background:
+    radial-gradient(circle at 88% 0%, rgba(216, 183, 111, 0.13), transparent 38%),
+    rgba(255, 255, 255, 0.045);
 }
 
 .scene-head,

@@ -69,7 +69,7 @@
         <text>过程评分</text>
         <view wx:for="{{scoreRows}}" wx:key="key" class="score-row">
           <view>{{item.label}}</view>
-          <text>{{item.value}}</text>
+          <text>{{item.displayValue}}</text>
           <view class="score-bar"><view style="width: {{item.value}}%;"></view></view>
         </view>
       </view>

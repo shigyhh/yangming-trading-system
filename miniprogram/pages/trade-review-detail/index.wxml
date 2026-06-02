@@ -80,7 +80,7 @@
         <text>过程质量</text>
         <view wx:for="{{record.scoreRows}}" wx:key="key" class="score-row">
           <view>{{item.label}}</view>
-          <text>{{item.value}}</text>
+          <text>{{item.displayValue}}</text>
           <view class="score-bar"><view style="width: {{item.value}}%;"></view></view>
         </view>
       </view>
@@ -108,5 +108,5 @@
 
     <compliance-notice />
   </view>
-  <bottom-tab-bar active="mind" />
+  <bottom-tab-bar active="review" />
 </view>

@@ -99,14 +99,26 @@ export type TrainingRecord = {
 
 export type TradeReview = {
   id: string
+  reviewId?: string
   userId: string
+  anonymousId?: string
+  reportId?: string
   imageUrl: string
   tradeDate: string
   symbolMasked?: string
   marketType?: MarketType
+  direction?: "buy" | "sell" | "close" | "observe" | string
+  wasPlanned?: boolean | null
   buyReason: string
   sellReason: string
   strongestThought: string
+  emotionIntensity?: number
+  hadExitRule?: boolean | null
+  changedPlanDuringTrade?: boolean | null
+  postTradeReaction?: "regret" | "relief" | "anger" | "numb" | "clear" | "other" | string | null
+  exposedRisk?: string
+  nextAction?: string
+  resultOptional?: "profit" | "loss" | "flat" | "not_disclosed" | string
   detectedMirror: MirrorName
   detectedThieves: HeartThief[]
   behaviorTags: string[]
@@ -136,6 +148,88 @@ export type LivingMirrorStats = {
   loopRelapseCount: number
   conscienceGrowth: number
   lastUpdated: string
+}
+
+export type LivingMirrorGrowthProfile = {
+  schemaVersion: "living_mirror_growth_profile_v1"
+  growth_profile_id: string
+  growthProfileId?: string
+  userId?: string
+  anonymousId: string
+  reportId?: string
+  primaryPersona: string
+  secondaryPersona: string
+  highFrequencyThought: {
+    label: string
+    count: number
+    evidenceIds: string[]
+  }
+  repeatedBehaviors: Array<{
+    label: string
+    count: number
+    evidenceIds: string[]
+  }>
+  affectedDimensions: Array<{
+    label: string
+    weight: number
+    sourceTypes: string[]
+    evidenceIds: string[]
+  }>
+  trainingContinuity: {
+    completedDays: number
+    totalDays: number
+    currentStreak: number
+    heartProofCount: number
+    tradeReviewCount: number
+    behaviorLoopCount?: number
+    retestChangeCount: number
+    statusText: string
+  }
+  heartProofCount?: number
+  tradeReviewCount?: number
+  retestSummary?: string
+  nextCycleFocus?: string
+  mirrorLifeStage: {
+    key: string
+    title: string
+    treeStage: string
+    growthLevel: number
+    description: string
+    nextActionText: string
+  }
+  complianceText: "本成长谱仅用于交易心理觉察、复盘训练与行为管理，不构成投资建议。" | string
+  updatedAt: string
+}
+
+export type BehaviorLoopEvidenceSource = {
+  sourceType: "trade_review" | "heart_proof" | "daily_growth" | "mirror_report" | string
+  sourceId: string
+  label: string
+  createdAt: string
+}
+
+export type BehaviorLoop = {
+  id: string
+  behavior_loop_id: string
+  behaviorLoopId?: string
+  userId?: string
+  anonymousId: string
+  sourceType: "trade_review" | "heart_proof" | "daily_growth" | "mirror_report" | string
+  sourceId: string
+  sourceMirror: MirrorName | string
+  trigger: string
+  thought: string
+  action: string
+  result: string
+  selfStory: string
+  repeatCount: number
+  affectedDimensions: string[]
+  repeatRisk: string
+  loopBreakAction: string
+  evidenceSources: BehaviorLoopEvidenceSource[]
+  complianceText: "仅用于交易行为复盘与心理训练，不构成任何投资建议。" | string
+  createdAt: string
+  updatedAt: string
 }
 
 export type AssistantHandoffStatus = "pending" | "accepted" | "reviewing" | "closed" | string
@@ -196,4 +290,3 @@ export type GlobalMirrorHeatmapRow = {
   percentage: number
   complianceNotice: "仅为交易心理觉察数据，不构成投资建议" | string
 }
-

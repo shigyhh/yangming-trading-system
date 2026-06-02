@@ -1,3 +1,4 @@
+.concept-bridge,
 .upload-card,
 .quick-review-card,
 .form-card,
@@ -7,6 +8,9 @@
   padding: 28rpx;
 }
 
+.concept-bridge,
+.concept-bridge text,
+.concept-bridge view,
 .upload-card > text,
 .quick-review-card > text,
 .form-card > text,
@@ -19,6 +23,8 @@
 .quick-review-card view,
 .quick-review-card input,
 .quick-review-card textarea,
+.quick-label,
+.mini-choice,
 .field-label,
 .chip-strip,
 .field-grid,
@@ -33,10 +39,59 @@
 .score-list,
 .evidence-list,
 .training-action,
+.closure-card,
 .recent-head,
 .recent-row {
   position: relative;
   z-index: 1;
+}
+
+.concept-bridge {
+  padding: 24rpx;
+  overflow: hidden;
+  border-color: rgba(88, 194, 173, 0.16);
+  background:
+    radial-gradient(circle at 92% 8%, rgba(88, 194, 173, 0.1), transparent 40%),
+    rgba(255, 255, 255, 0.035);
+}
+
+.bridge-line {
+  color: #fff6e6;
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", serif;
+  font-size: 30rpx;
+  line-height: 1.55;
+  font-weight: 900;
+}
+
+.bridge-steps {
+  margin-top: 22rpx;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12rpx;
+}
+
+.bridge-steps > view {
+  min-height: 118rpx;
+  padding: 18rpx 14rpx;
+  border-radius: 18rpx;
+  border: 1rpx solid rgba(241, 210, 125, 0.1);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.bridge-steps text {
+  display: block;
+  color: #f1d27d;
+  font-size: 21rpx;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.bridge-steps view view {
+  margin-top: 10rpx;
+  color: rgba(247, 239, 223, 0.62);
+  font-size: 22rpx;
+  line-height: 1.42;
+  font-weight: 800;
 }
 
 .upload-card > text,
@@ -59,6 +114,40 @@
   line-height: 1.5;
 }
 
+.quick-label {
+  margin-top: 24rpx;
+  color: #d8b76f;
+  font-size: 23rpx;
+  font-weight: 900;
+}
+
+.mini-choice {
+  margin-top: 12rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12rpx;
+}
+
+.mini-choice button {
+  min-height: 70rpx;
+  border-radius: 999rpx;
+  color: rgba(247, 239, 223, 0.68);
+  border: 1rpx solid rgba(247, 239, 223, 0.12);
+  background: rgba(255, 255, 255, 0.045);
+  font-size: 24rpx;
+  font-weight: 900;
+}
+
+.mini-choice button.active {
+  color: #11140f;
+  border-color: rgba(241, 210, 125, 0.68);
+  background: linear-gradient(180deg, #f1d27d, #c99d4c);
+}
+
+.mini-choice button::after {
+  display: none;
+}
+
 .quick-review-card input,
 .quick-review-card textarea {
   width: 100%;
@@ -79,6 +168,12 @@
 
 .quick-review-card textarea {
   min-height: 130rpx;
+}
+
+@media (max-width: 360px) {
+  .bridge-steps {
+    grid-template-columns: 1fr;
+  }
 }
 
 .upload-preview {
@@ -259,6 +354,7 @@
 .score-list,
 .evidence-list,
 .training-action,
+.closure-card,
 .recent-row {
   margin-top: 18rpx;
 }
@@ -266,6 +362,7 @@
 .match-card text,
 .verdict-card text,
 .training-action text,
+.closure-card > text,
 .evidence-list text,
 .mirror-grid text {
   color: #b49355;
@@ -277,6 +374,7 @@
 .match-card view,
 .verdict-card view,
 .training-action view,
+.closure-card view,
 .evidence-list view view,
 .mirror-grid view view {
   margin-top: 8rpx;
@@ -284,6 +382,73 @@
   font-size: 24rpx;
   line-height: 1.5;
   font-weight: 800;
+}
+
+.closure-card {
+  padding: 22rpx;
+  border-radius: 20rpx;
+  border: 1rpx solid rgba(216, 183, 111, 0.18);
+  background:
+    radial-gradient(circle at 88% 0%, rgba(216, 183, 111, 0.12), transparent 44%),
+    rgba(255, 255, 255, 0.035);
+}
+
+.closure-proof {
+  color: #fff6e6 !important;
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", serif;
+  font-size: 29rpx !important;
+  line-height: 1.5 !important;
+}
+
+.closure-mirror {
+  color: #58c2ad !important;
+  font-size: 23rpx !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.08em;
+}
+
+.closure-steps {
+  margin-top: 18rpx;
+  display: grid;
+  gap: 10rpx;
+}
+
+.closure-steps > view {
+  min-height: 74rpx;
+  padding: 14rpx 16rpx;
+  display: grid;
+  grid-template-columns: 132rpx 1fr;
+  gap: 14rpx;
+  align-items: center;
+  border-radius: 16rpx;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.closure-steps > view.done {
+  border: 1rpx solid rgba(88, 194, 173, 0.2);
+}
+
+.closure-steps text,
+.closure-next text {
+  color: #d8b76f;
+  font-size: 21rpx;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+.closure-steps view view,
+.closure-next view {
+  margin-top: 0 !important;
+  color: rgba(247, 239, 223, 0.72) !important;
+  font-size: 23rpx !important;
+  line-height: 1.45 !important;
+}
+
+.closure-next {
+  margin-top: 18rpx;
+  padding: 18rpx;
+  border-left: 4rpx solid rgba(88, 194, 173, 0.7);
+  background: rgba(88, 194, 173, 0.07);
 }
 
 .mirror-grid {

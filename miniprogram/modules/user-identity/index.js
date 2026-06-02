@@ -23,13 +23,18 @@ function buildInviteCode(profile = {}) {
 function buildUserBinding(profile = {}, extra = {}) {
   const phone = normalizePhone(profile.phone);
   const phoneBound = isValidPhone(phone);
+  const inviteCode = profile.inviteCode || buildInviteCode(profile);
+  const userId = extra.userId || profile.userId || (phoneBound ? `phone_${phone}` : `invite_${inviteCode || "pending"}`);
+  const userIdDisplay = phoneBound ? `phone_${maskPhone(phone)}` : `invite_${inviteCode || "pending"}`;
   return {
+    userId,
+    userIdDisplay,
     phone: phoneBound ? phone : "",
     phoneMask: phoneBound ? maskPhone(phone) : "未绑定",
     phoneBound,
     inviteSource: profile.inviteSource || "",
     inviteSourceAt: profile.inviteSourceAt || null,
-    inviteCode: profile.inviteCode || buildInviteCode(profile),
+    inviteCode,
     sourceChannel: extra.sourceChannel || "wechat_miniprogram",
     boundAt: profile.phoneBoundAt || null
   };

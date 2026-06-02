@@ -8,6 +8,18 @@ import { getAdminUserByIdForPage } from "@/features/admin/admin-data"
 
 export const dynamic = "force-dynamic"
 
+const mirrorScoreLabels: Record<string, string> = {
+  chasing: "追涨之镜",
+  holding_loss: "扛单之镜",
+  fantasy: "幻想之镜",
+  gambling: "赌性之镜",
+  following: "从众之镜",
+  hesitation: "犹疑之镜",
+  procrastination: "拖延之镜",
+  anxiety: "焦虑之镜",
+  conscience: "良知之镜",
+}
+
 export default async function AdminUserDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const { user, source } = await getAdminUserByIdForPage(id)
@@ -221,6 +233,91 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
           </article>
         </section>
 
+        <section className="grid gap-4 lg:grid-cols-[.95fr_1.05fr]">
+          <article className="rounded-lg border border-[rgba(217,189,122,.16)] bg-[#11100D]/78 p-5">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="font-story text-xl tracking-[.04em]">活镜成长</h2>
+              <span className="rounded-full border border-[rgba(217,189,122,.14)] px-3 py-1 font-function text-xs text-[rgba(244,235,221,.48)]">
+                九镜强度
+              </span>
+            </div>
+            {user.livingMirrorStats ? (
+              <>
+                <div className="mt-5 grid gap-3 md:grid-cols-3">
+                  <ReportField label="训练完成率" value={`${user.livingMirrorStats.trainingCompletionRate}%`} />
+                  <ReportField label="良知成长值" value={`${user.livingMirrorStats.conscienceGrowth}`} />
+                  <ReportField label="循环复发次数" value={`${user.livingMirrorStats.loopRelapseCount}`} />
+                </div>
+                <div className="mt-5 grid gap-3">
+                  {getTopMirrorScores(user.livingMirrorStats.mirrorScores).map(([key, value]) => (
+                    <RadarLine key={key} label={mirrorScoreLabels[key] || key} value={Number(value)} />
+                  ))}
+                </div>
+                <div className="mt-5">
+                  <p className="font-function text-xs text-[rgba(244,235,221,.44)]">心贼频次</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {getTopThiefCounts(user.livingMirrorStats.thiefCounts).length ? (
+                      getTopThiefCounts(user.livingMirrorStats.thiefCounts).map(([label, count]) => (
+                        <span key={label} className="rounded-full border border-[rgba(216,183,111,.18)] bg-[rgba(216,183,111,.07)] px-3 py-1 font-function text-xs text-[rgba(216,183,111,.78)]">
+                          {label} · {count}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="font-function text-sm text-[rgba(244,235,221,.48)]">等待更多训练和复盘证据。</span>
+                    )}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <p className="mt-5 rounded-lg border border-[rgba(217,189,122,.1)] bg-white/[.025] px-4 py-5 font-function text-sm leading-7 text-[rgba(244,235,221,.56)]">
+                暂无活镜成长数据。完成训练或真实交易复盘后，这里展示九镜强度、心贼频次和良知成长值。
+              </p>
+            )}
+          </article>
+
+          <article className="rounded-lg border border-[rgba(217,189,122,.16)] bg-[#11100D]/78 p-5">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="font-story text-xl tracking-[.04em]">真实交易复盘</h2>
+              <span className="rounded-full border border-[rgba(217,189,122,.14)] px-3 py-1 font-function text-xs text-[rgba(244,235,221,.48)]">
+                {user.tradeReviews?.length || 0} 条
+              </span>
+            </div>
+            <div className="mt-5 grid gap-3">
+              {user.tradeReviews?.length ? (
+                user.tradeReviews.map((review) => (
+                  <article key={review.id} className="rounded-lg border border-[rgba(217,189,122,.1)] bg-white/[.025] p-4">
+                    <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                      <h3 className="font-function text-sm font-medium text-[#F4EBDD]">
+                        {review.detectedMirror} · {review.tradeDate}
+                      </h3>
+                      <span className="font-mono text-xs text-[rgba(244,235,221,.42)]">
+                        {formatDetailTime(review.createdAt)}
+                      </span>
+                    </div>
+                    <p className="mt-3 font-function text-sm leading-7 text-[rgba(244,235,221,.64)]">
+                      第一念：{review.strongestThought}
+                    </p>
+                    <p className="mt-2 font-function text-xs leading-6 text-[rgba(244,235,221,.48)]">
+                      {review.reviewText}
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {review.behaviorTags.map((tag) => (
+                        <span key={tag} className="rounded-full border border-[rgba(95,132,117,.18)] bg-[rgba(95,132,117,.08)] px-2.5 py-1 font-function text-[0.68rem] text-[rgba(174,205,191,.8)]">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </article>
+                ))
+              ) : (
+                <p className="rounded-lg border border-[rgba(217,189,122,.1)] bg-white/[.025] px-4 py-5 font-function text-sm leading-7 text-[rgba(244,235,221,.56)]">
+                  暂无真实交易复盘。用户上传截图并完成三问后，这里会出现心镜映射和行为证据。
+                </p>
+              )}
+            </div>
+          </article>
+        </section>
+
         <p className="rounded-lg border border-[rgba(217,189,122,.14)] bg-black/20 px-4 py-3 text-center font-function text-xs leading-6 text-[rgba(244,235,221,.46)]">
           本后台仅用于交易认知、行为训练与风险教育的运营承接；不荐股、不喊单、不承诺收益。
         </p>
@@ -267,4 +364,29 @@ function RadarLine({ label, value }: { label: string; value: number }) {
 function formatDelta(delta: number) {
   if (delta === 0) return "持平"
   return `${delta > 0 ? "上升" : "下降"} ${Math.abs(delta)}%`
+}
+
+function getTopMirrorScores(scores: Record<string, number>) {
+  return Object.entries(scores)
+    .filter(([, value]) => Number(value) > 0)
+    .sort((a, b) => Number(b[1]) - Number(a[1]))
+    .slice(0, 5)
+}
+
+function getTopThiefCounts(counts: Record<string, number>) {
+  return Object.entries(counts)
+    .filter(([, value]) => Number(value) > 0)
+    .sort((a, b) => Number(b[1]) - Number(a[1]))
+    .slice(0, 6)
+}
+
+function formatDetailTime(value: string) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value || "待记录"
+  return date.toLocaleString("zh-CN", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  })
 }

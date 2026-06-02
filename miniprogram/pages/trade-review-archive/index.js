@@ -1,4 +1,4 @@
-const { getTradeReviewRecords } = require("../../utils/store");
+const { getTradeReviewRecords, getEvidenceSummary, getClosureEvidenceChain } = require("../../utils/store");
 const {
   buildLiveMirrorReminder,
   buildTradeReviewRecordView
@@ -8,7 +8,10 @@ Page({
   data: {
     reminder: buildLiveMirrorReminder(getTradeReviewRecords()),
     records: [],
-    hasRecords: false
+    hasRecords: false,
+    evidenceSummary: getEvidenceSummary({ limit: 8 }),
+    evidenceRows: [],
+    closureEvidenceChain: getClosureEvidenceChain()
   },
 
   onShow() {
@@ -21,10 +24,14 @@ Page({
       .slice()
       .sort((a, b) => Number(b.createdAt || b.updatedAt || 0) - Number(a.createdAt || a.updatedAt || 0))
       .map(buildTradeReviewRecordView);
+    const evidenceSummary = getEvidenceSummary({ limit: 8 });
     this.setData({
       reminder: buildLiveMirrorReminder(state),
       records,
-      hasRecords: records.length > 0
+      hasRecords: records.length > 0,
+      evidenceSummary,
+      evidenceRows: evidenceSummary.rows || [],
+      closureEvidenceChain: getClosureEvidenceChain()
     });
   },
 

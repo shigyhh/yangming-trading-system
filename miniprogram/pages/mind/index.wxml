@@ -1,8 +1,7 @@
-<view class="mind-shell" bindtap="createRipple">
+<view class="mind-shell">
   <view class="mind-bg mist"></view>
   <view class="mind-bg grain"></view>
   <view class="mind-bg halo"></view>
-  <view wx:if="{{ripple}}" class="mind-ripple" style="left: {{ripple.x}}px; top: {{ripple.y}}px;"></view>
 
   <view class="mind-content">
     <view class="mind-head">

@@ -9,6 +9,8 @@ import { assessmentQuestions } from "@/features/assessment/questions"
 import { compareRiskRadarSnapshots, reconcilePracticeChangeWithReport, type PracticeChangeState } from "@/features/assessment/practice-change"
 import { generateAssessmentReport, type AssessmentAnswer } from "@/features/assessment/report"
 import { assessmentStorageKeys, getStorage, setStorage } from "@/features/assessment/storage"
+import { recomputeAndSaveGrowthProfile } from "@/features/living-mirror-growth/growthProfileStorage"
+import { buildRetestChangeFromComparisons, upsertRetestChange } from "@/features/living-mirror-growth/retestChangeStorage"
 
 function hasEnoughAnswers(answers: AssessmentAnswer[]) {
   return answers.length > 0
@@ -44,7 +46,16 @@ export default function AssessmentGeneratingPage() {
       setStorage(assessmentStorageKeys.practiceChange, nextPractice)
       const comparison = compareRiskRadarSnapshots(nextPractice.baselineReport, nextPractice.retestReport)
       if (comparison.length) {
+        const anonymousId = getStorage<string>(assessmentStorageKeys.dataBindingUserId, "local-anonymous")
+        const retestChange = upsertRetestChange(buildRetestChangeFromComparisons(comparison, {
+          anonymousId,
+          reportId: report.reportId,
+          createdAt: report.createdAt,
+          trainingEvidenceSummary: `七日训练已完成，复测生成 ${comparison.length} 项变化证明。`,
+        }))
+
         void syncRetestResultBinding({ report, comparison })
+        recomputeAndSaveGrowthProfile({ retestChanges: [retestChange], retestComparisons: comparison, now: report.createdAt })
       }
     }
     void syncAssessmentReportBinding({
