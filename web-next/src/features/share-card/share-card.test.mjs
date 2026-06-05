@@ -56,9 +56,10 @@ test("Sprint13 share card uses report, heart proof and retest sources", async ()
 })
 
 test("Sprint13 share card copy is restrained and compliant", async () => {
+  const page = await readFile(pageUrl, "utf8")
   const component = await readFile(componentUrl, "utf8")
   const engine = await readFile(engineUrl, "utf8")
-  const source = `${component}\n${engine}`
+  const source = `${page}\n${component}\n${engine}`
 
   ;[
     "市场照见人心",
@@ -71,6 +72,12 @@ test("Sprint13 share card copy is restrained and compliant", async () => {
     "本内容仅用于交易心理训练，不构成投资建议",
     "分享照见",
     "不分享标签",
+    "YangmingC16Mark",
+    "YangmingZhaoSeal",
+    "阳明照见分享卡小标",
+    "阳明照见分享卡主照印水印",
+    "share-poster-mark",
+    "share-poster-zhao-watermark",
   ].forEach((token) => {
     assert.equal(source.includes(token), true, `missing copy token: ${token}`)
   })

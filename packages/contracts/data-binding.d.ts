@@ -2,12 +2,14 @@ import type {
   AssistantHandoff,
   DailyHeartWitness,
   LivingMirrorClosedLoop,
+  LivingMirrorProfile,
   LivingMirrorStats,
   MirrorArchive,
   MirrorReport,
   PersonalCycle,
   RetestChange,
   ShareCardSnapshot,
+  TrainingPrescriptionDispatch,
   TradeReview,
 } from "./living-mirror"
 
@@ -258,6 +260,8 @@ export type DataBindingAssessmentResponse = {
   report: DataBindingAssessmentReport
   mirror_report: MirrorReport
   living_mirror_stats: LivingMirrorStats
+  living_mirror_profile?: LivingMirrorProfile
+  training_prescription?: TrainingPrescriptionDispatch | null
   living_mirror_loop?: LivingMirrorClosedLoop
   admin_user: DataBindingAdminUser
 }
@@ -266,6 +270,8 @@ export type DataBindingTrainingResponse = {
   user: DataBindingPublicUser
   record: DataBindingTrainingRecord
   living_mirror_stats: LivingMirrorStats
+  living_mirror_profile?: LivingMirrorProfile
+  training_prescription?: TrainingPrescriptionDispatch | null
   daily_heart_witness?: DailyHeartWitness
   admin_user: DataBindingAdminUser
 }
@@ -274,6 +280,8 @@ export type DataBindingKLineResponse = {
   user: DataBindingPublicUser
   record: DataBindingKLineRecord
   living_mirror_stats: LivingMirrorStats
+  living_mirror_profile?: LivingMirrorProfile
+  training_prescription?: TrainingPrescriptionDispatch | null
   personal_cycle?: PersonalCycle
   admin_user: DataBindingAdminUser
 }
@@ -289,6 +297,8 @@ export type DataBindingRetestResponse = {
   }
   comparison: DataBindingRetestComparison[]
   living_mirror_stats: LivingMirrorStats
+  living_mirror_profile?: LivingMirrorProfile
+  training_prescription?: TrainingPrescriptionDispatch | null
   retest_change?: RetestChange
   admin_user: DataBindingAdminUser
 }
@@ -306,6 +316,8 @@ export type DataBindingUserSummaryResponse = {
   kline_records: DataBindingKLineRecord[]
   trade_reviews: TradeReview[]
   living_mirror_stats: LivingMirrorStats | null
+  living_mirror_profile: LivingMirrorProfile | null
+  training_prescription: TrainingPrescriptionDispatch | null
   living_mirror_loop?: LivingMirrorClosedLoop
   daily_heart_witnesses?: DailyHeartWitness[]
   personal_cycles?: PersonalCycle[]
@@ -390,6 +402,8 @@ export type DataBindingAdminUser = {
     strongestThought: string
     reviewText: string
     behaviorTags: string[]
+    crossEndStatus?: string
+    crossEndStatusText?: string
     createdAt: string
   }>
   assistantHandoff?: AssistantHandoff | null
@@ -402,8 +416,17 @@ export type DataBindingTradeReviewResponse = {
   user: DataBindingPublicUser
   review: TradeReview
   living_mirror_stats: LivingMirrorStats
+  living_mirror_profile: LivingMirrorProfile
+  training_prescription?: TrainingPrescriptionDispatch | null
   personal_cycle?: PersonalCycle
   admin_user: DataBindingAdminUser
+}
+
+export type DataBindingTrainingPrescriptionResponse = {
+  user: DataBindingPublicUser
+  training_prescription: TrainingPrescriptionDispatch
+  living_mirror_profile?: LivingMirrorProfile | null
+  admin_user?: DataBindingAdminUser
 }
 
 export type DataBindingShareCardResponse = {

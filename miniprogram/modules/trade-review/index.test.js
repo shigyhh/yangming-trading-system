@@ -4,6 +4,8 @@ const {
   BOUNDARY_STATES,
   STAGE_POSITIONS,
   buildHistoricalMatch,
+  buildHistoricalMatchFromMarketContext,
+  applyServerTradeReviewResult,
   buildTradeReviewClosure,
   buildLiveMirrorReminder,
   buildLivingMirrorStats,
@@ -24,6 +26,25 @@ const match = buildHistoricalMatch({
 assert.strictEqual(match.marketLabel, "数字货币");
 assert.strictEqual(match.timeframeLabel, "5分钟");
 assert.strictEqual(match.stagePosition, "开盘加速段");
+
+const serverMatch = buildHistoricalMatchFromMarketContext({
+  status: "ready",
+  marketKey: "cn_equity",
+  marketLabel: "A股",
+  timeframeKey: "1d",
+  timeframeLabel: "日线",
+  tradeDate: "2026-06-01",
+  symbolMasked: "****19",
+  positionLabel: "A股 · 日线 · 2026-05-01 至 2026-06-01 · 阶段上行 · 区间上沿 · 波动放大",
+  sourceStatus: "历史片段已载入",
+  dataStart: "2026-05-01",
+  dataEnd: "2026-06-01",
+  candleCount: 40
+}, { stagePositionKey: "near_boundary" });
+assert.strictEqual(serverMatch.marketKey, "cn");
+assert.strictEqual(serverMatch.timeframeKey, "1d");
+assert.strictEqual(serverMatch.historyMatched, true);
+assert.ok(serverMatch.stagePosition.includes("阶段上行"));
 
 const review = buildTradeReview({
   marketKey: "cn",
@@ -50,6 +71,38 @@ assert.strictEqual(review.includeInRetest, true);
 assert.ok(review.scores.boundary > 0);
 assert.ok(review.evidenceChain.length >= 6);
 assert.ok(review.oneLine.includes("照见"));
+assert.strictEqual(review.crossEndStatusText, "待回看");
+assert.ok(review.crossEndStatusSteps.some((item) => item.label === "待训练"));
+
+const syncedReview = applyServerTradeReviewResult(review, {
+  review: {
+    id: review.id,
+    detectedMirror: "追涨之镜",
+    detectedThieves: ["贪", "急"],
+    marketContext: {
+      status: "ready",
+      marketKey: "cn_equity",
+      marketLabel: "A股",
+      timeframeKey: "1d",
+      timeframeLabel: "日线",
+      tradeDate: "2026-06-01",
+      symbolMasked: "****19",
+      positionLabel: "A股 · 日线 · 2026-05-01 至 2026-06-01 · 阶段上行 · 区间上沿 · 波动放大",
+      sourceStatus: "历史片段已载入",
+      candleCount: 40
+    }
+  },
+  living_mirror_profile: {
+    currentMainMirror: "追涨之镜",
+    tripleReflection: {
+      title: "三证互照"
+    }
+  }
+});
+assert.strictEqual(syncedReview.historicalMatch.sourceStatus, "历史片段已载入");
+assert.strictEqual(syncedReview.marketContext.status, "ready");
+assert.strictEqual(syncedReview.serverLivingMirrorProfile.currentMainMirror, "追涨之镜");
+assert.strictEqual(syncedReview.crossEndStatusText, "待训练");
 
 const secondReview = buildTradeReview({
   marketKey: "cn",
@@ -74,7 +127,7 @@ assert.ok(reminder.mainTraining.length > 8);
 
 const closure = buildTradeReviewClosure(review, reminder);
 assert.strictEqual(closure.title, "本次复盘已入活镜");
-assert.ok(closure.steps.find((item) => item.key === "living_mirror").done);
+assert.ok(closure.steps.find((item) => item.key === "archived").done);
 assert.ok(closure.trainingAction.length > 8);
 assert.ok(closure.primaryActionText.includes("活镜"));
 

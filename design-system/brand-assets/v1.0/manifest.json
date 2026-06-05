@@ -10,6 +10,20 @@
       "component": "web-next/src/components/brand/yangming-mark.tsx#YangmingA1Mark",
       "note": "Original vector paths. No font outline dependency."
     },
+    "zhaoSeal": {
+      "status": "final",
+      "source": "web-next/src/components/brand/yangming-zhao-seal.tsx",
+      "component": "web-next/src/components/brand/yangming-zhao-seal.tsx#YangmingZhaoSeal",
+      "note": "Unified Zhao seal wrapper for completion stamps, share cards and short-video materials. It must render the A1 vector mark, never font text."
+    },
+    "characterMarks": {
+      "status": "supporting",
+      "source": "web-next/src/components/brand/yangming-character-mark.tsx",
+      "component": "web-next/src/components/brand/yangming-character-mark.tsx#YangmingCharacterMark",
+      "content": "packages/content/brand-character-system.js",
+      "characters": ["心", "知", "行", "止", "证", "复", "练", "界"],
+      "note": "Supporting zhao-bone character marks for modules and product actions. They must not be used as logos, avatars or main brand marks."
+    },
     "markC16": {
       "status": "final",
       "source": "web-next/public/brand/yangming-c16.svg",

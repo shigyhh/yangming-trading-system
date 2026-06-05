@@ -43,6 +43,7 @@ export const config = {
   smsCodeMaxAttempts: Number(process.env.SMS_CODE_MAX_ATTEMPTS || 5),
   smsWebhookUrl: process.env.SMS_WEBHOOK_URL || "",
   smsWebhookToken: process.env.SMS_WEBHOOK_TOKEN || "",
+  tradeReviewOcrProvider: process.env.TRADE_REVIEW_OCR_PROVIDER || "",
   smsSignName: process.env.SMS_SIGN_NAME || "",
   smsTemplateCode: process.env.SMS_TEMPLATE_CODE || "",
   aliyunAccessKeyId: process.env.ALIYUN_ACCESS_KEY_ID || "",

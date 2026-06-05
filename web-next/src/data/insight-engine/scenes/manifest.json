@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "targetSceneCount": 36,
+  "filenamePattern": "scene-XX-slug.json",
+  "recordFlow": [
+    "scene",
+    "thought",
+    "reflection",
+    "thief",
+    "evidence",
+    "practice"
+  ],
+  "recordFields": [
+    "sceneId",
+    "sceneName",
+    "mirrorId",
+    "intensity",
+    "thought",
+    "reflection",
+    "thief",
+    "evidence",
+    "practice"
+  ],
+  "scenes": [
+    {
+      "sceneId": "scene-01-chase-surge",
+      "sceneName": "急涨时",
+      "sceneOrder": 1,
+      "status": "draft",
+      "file": "scene-01-chase-surge.json"
+    }
+  ]
+}

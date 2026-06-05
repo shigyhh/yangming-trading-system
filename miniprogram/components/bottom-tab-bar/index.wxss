@@ -5,9 +5,9 @@
   bottom: 0;
   z-index: 60;
   min-height: calc(158rpx + env(safe-area-inset-bottom));
-  padding: 18rpx 22rpx 8rpx;
+  padding: 18rpx 18rpx 8rpx;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   border-top: 1rpx solid rgba(194, 145, 65, 0.075);
   background:
     radial-gradient(circle at 50% 0%, rgba(218, 178, 86, 0.055), transparent 56%),
@@ -22,7 +22,7 @@
   justify-items: center;
   gap: 7rpx;
   color: rgba(247, 239, 223, 0.32);
-  font-size: 20rpx;
+  font-size: 19rpx;
   font-weight: 600;
   transition: transform 0.16s ease, opacity 0.16s ease;
 }
@@ -34,8 +34,8 @@
 .mark {
   position: relative;
   overflow: hidden;
-  width: 48rpx;
-  height: 48rpx;
+  width: 46rpx;
+  height: 46rpx;
   display: grid;
   place-items: center;
   border-radius: 16rpx;
@@ -48,7 +48,7 @@
     inset 0 1rpx 0 rgba(255, 247, 231, 0.052),
     inset 0 -5rpx 9rpx rgba(0, 0, 0, 0.16);
   font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", "STSong", serif;
-  font-size: 26rpx;
+  font-size: 25rpx;
   font-weight: 500;
 }
 

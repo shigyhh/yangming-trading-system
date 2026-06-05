@@ -1,0 +1,74 @@
+[
+  {
+    "mirrorId": "chase",
+    "mirrorName": "追涨之镜",
+    "thief": "贪 · 急",
+    "thiefExplain": [
+      "手比规则快，怕慢一步，怕再次错过。"
+    ]
+  },
+  {
+    "mirrorId": "hold",
+    "mirrorName": "扛单之镜",
+    "thief": "痴 · 执",
+    "thiefExplain": [
+      "把希望当判断，不愿承认已经变形。"
+    ]
+  },
+  {
+    "mirrorId": "fantasy",
+    "mirrorName": "幻想之镜",
+    "thief": "痴 · 贪",
+    "thiefExplain": [
+      "用愿望替代事实，用故事安慰自己。"
+    ]
+  },
+  {
+    "mirrorId": "gamble",
+    "mirrorName": "赌性之镜",
+    "thief": "贪 · 急 · 痴",
+    "thiefExplain": [
+      "亏后急着翻回，不愿慢慢修正。"
+    ]
+  },
+  {
+    "mirrorId": "herd",
+    "mirrorName": "从众之镜",
+    "thief": "疑 · 怯",
+    "thiefExplain": [
+      "把责任交给热闹，害怕独自承担。"
+    ]
+  },
+  {
+    "mirrorId": "hesitate",
+    "mirrorName": "犹疑之镜",
+    "thief": "疑 · 惧",
+    "thiefExplain": [
+      "看见信号仍不敢行动，想要不会犯错的保证。"
+    ]
+  },
+  {
+    "mirrorId": "delay",
+    "mirrorName": "拖延之镜",
+    "thief": "懒 · 痴",
+    "thiefExplain": [
+      "逃避复盘，逃避再次看见失控。"
+    ]
+  },
+  {
+    "mirrorId": "anxiety",
+    "mirrorName": "焦虑之镜",
+    "thief": "惧 · 急",
+    "thiefExplain": [
+      "害怕回吐，情绪先于规则行动。"
+    ]
+  },
+  {
+    "mirrorId": "liangzhi",
+    "mirrorName": "良知之镜",
+    "thief": "未现",
+    "thiefExplain": [
+      "念头起时仍知道该做什么，并愿意按规则行动。"
+    ]
+  }
+]

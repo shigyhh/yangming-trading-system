@@ -1,11 +1,11 @@
 <view class="page-shell">
   <view class="page-content">
     <text class="eyebrow">LIVE MIRROR · 档案</text>
-    <view class="page-title">复盘采集<br />行为证据链</view>
+    <view class="page-title">真实复盘<br />行为印记</view>
     <view class="page-subtitle">每一次上传记录，都会沉淀为历史位置、第一反应、九镜六贼与下一次训练动作。</view>
 
     <view class="archive-bridge card">
-      <view>复盘采集记录事实，活镜采集照见重复念头，心镜档案保存长期变化。</view>
+      <view>复盘，是你写下事实。活镜，是系统照见反复出现的念头。心镜档案，保存长期变化。</view>
     </view>
 
     <view class="closure-ledger-card card">
@@ -36,8 +36,8 @@
     <view class="ledger-card card">
       <view class="ledger-head">
         <view>
-          <text>心证证据账本</text>
-          <view>{{evidenceSummary.total ? evidenceSummary.total + ' 条证据' : '完成今日落印后，第一枚心证会存入档案。'}}</view>
+          <text>心证记录</text>
+          <view>{{evidenceSummary.total ? evidenceSummary.total + ' 条记录' : '完成今日落印后，第一枚心证会存入档案。'}}</view>
         </view>
         <text>{{evidenceSummary.heartProofCount ? evidenceSummary.heartProofCount + ' 枚心证' : '待落印'}}</text>
       </view>
@@ -79,7 +79,7 @@
       </view>
       <view class="split-actions">
         <button class="ghost-btn" bindtap="goUpload">{{reminder.primaryActionText}}</button>
-        <button class="primary-btn" bindtap="goKlineTraining">进入同品类训练</button>
+        <button class="primary-btn" bindtap="goKlineTraining">进入 K 线观心</button>
       </view>
     </view>
 
@@ -103,6 +103,7 @@
         </view>
         <view class="record-side">
           <text>{{item.heartThievesText}}</text>
+          <text>{{item.statusLine}}</text>
           <view>{{item.createdAtText}}</view>
         </view>
       </button>
@@ -110,7 +111,7 @@
 
     <view wx:else class="empty-card card">
       <view>活镜还没有真实记录</view>
-      <text>先上传一条交易记录截图，系统会生成第一条行为证据链。</text>
+      <text>先上传一条交易记录截图，系统会生成第一条行为印记。</text>
       <button class="primary-btn" bindtap="goUpload">上传第一条记录</button>
     </view>
 

@@ -1,0 +1,1802 @@
+[
+  {
+    "id": "chase_evidence_01",
+    "mirrorId": "chase",
+    "mirrorName": "追涨之镜",
+    "scene": "surge",
+    "sourceScene": "急涨时",
+    "intensity": 1,
+    "text": "我看见自己不是在追行情，而是在追那个不想再慢一步的自己。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "chase_evidence_02",
+    "mirrorId": "chase",
+    "mirrorName": "追涨之镜",
+    "scene": "plunge",
+    "sourceScene": "急跌时",
+    "intensity": 2,
+    "text": "我看见手快的时候，往往是心里怕慢。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "chase_evidence_03",
+    "mirrorId": "chase",
+    "mirrorName": "追涨之镜",
+    "scene": "beforeStop",
+    "sourceScene": "止损时",
+    "intensity": 3,
+    "text": "我承认，最急的不是机会，而是不甘心。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "chase_evidence_04",
+    "mirrorId": "chase",
+    "mirrorName": "追涨之镜",
+    "scene": "floatingGain",
+    "sourceScene": "浮盈时",
+    "intensity": 4,
+    "text": "我看见自己想证明果断，却差点丢掉规则。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "chase_evidence_05",
+    "mirrorId": "chase",
+    "mirrorName": "追涨之镜",
+    "scene": "missed",
+    "sourceScene": "踏空时",
+    "intensity": 5,
+    "text": "我今天照见：踏空的痛会伪装成机会。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "chase_evidence_06",
+    "mirrorId": "chase",
+    "mirrorName": "追涨之镜",
+    "scene": "lossStreak",
+    "sourceScene": "亏损后",
+    "intensity": 1,
+    "text": "我看见自己害怕旁观，所以想立刻上车。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "chase_evidence_07",
+    "mirrorId": "chase",
+    "mirrorName": "追涨之镜",
+    "scene": "review",
+    "sourceScene": "复盘时",
+    "intensity": 2,
+    "text": "我承认，我怕的不是行情走远，是自己又被甩下。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "chase_evidence_08",
+    "mirrorId": "chase",
+    "mirrorName": "追涨之镜",
+    "scene": "surge",
+    "sourceScene": "开盘时",
+    "intensity": 3,
+    "text": "我看见冲动来得很快，规则声音很小。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "chase_evidence_09",
+    "mirrorId": "chase",
+    "mirrorName": "追涨之镜",
+    "scene": "review",
+    "sourceScene": "临盘改计划",
+    "intensity": 4,
+    "text": "我今天知道，急不是信号。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "chase_evidence_10",
+    "mirrorId": "chase",
+    "mirrorName": "追涨之镜",
+    "scene": "lossStreak",
+    "sourceScene": "连续亏损时",
+    "intensity": 5,
+    "text": "我看见自己把强势误认成命令。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "chase_evidence_11",
+    "mirrorId": "chase",
+    "mirrorName": "追涨之镜",
+    "scene": "winStreak",
+    "sourceScene": "连续盈利后",
+    "intensity": 1,
+    "text": "我承认，那个不想慢一步的我，比K线更强。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "chase_evidence_12",
+    "mirrorId": "chase",
+    "mirrorName": "追涨之镜",
+    "scene": "missed",
+    "sourceScene": "空仓时",
+    "intensity": 2,
+    "text": "我看见追涨背后，是对落后的恐惧。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "chase_evidence_13",
+    "mirrorId": "chase",
+    "mirrorName": "追涨之镜",
+    "scene": "surge",
+    "sourceScene": "急涨时",
+    "intensity": 3,
+    "text": "我知道自己最该练的，是错过也不乱。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "chase_evidence_14",
+    "mirrorId": "chase",
+    "mirrorName": "追涨之镜",
+    "scene": "plunge",
+    "sourceScene": "急跌时",
+    "intensity": 4,
+    "text": "我看见我不是没有规则，是急起来不用规则。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "chase_evidence_15",
+    "mirrorId": "chase",
+    "mirrorName": "追涨之镜",
+    "scene": "beforeStop",
+    "sourceScene": "止损时",
+    "intensity": 5,
+    "text": "我今天照见：不追第一口气，是修心。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "chase_evidence_16",
+    "mirrorId": "chase",
+    "mirrorName": "追涨之镜",
+    "scene": "floatingGain",
+    "sourceScene": "浮盈时",
+    "intensity": 1,
+    "text": "我承认自己想被行情带走。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "chase_evidence_17",
+    "mirrorId": "chase",
+    "mirrorName": "追涨之镜",
+    "scene": "missed",
+    "sourceScene": "踏空时",
+    "intensity": 2,
+    "text": "我看见不甘心正在推动下单。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "chase_evidence_18",
+    "mirrorId": "chase",
+    "mirrorName": "追涨之镜",
+    "scene": "lossStreak",
+    "sourceScene": "亏损后",
+    "intensity": 3,
+    "text": "我知道，看见急，就是第一次停下。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "chase_evidence_19",
+    "mirrorId": "chase",
+    "mirrorName": "追涨之镜",
+    "scene": "review",
+    "sourceScene": "复盘时",
+    "intensity": 4,
+    "text": "我今天的心证：心动不等于行动。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "chase_evidence_20",
+    "mirrorId": "chase",
+    "mirrorName": "追涨之镜",
+    "scene": "surge",
+    "sourceScene": "开盘时",
+    "intensity": 5,
+    "text": "我看见真正要止住的，是急。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hold_evidence_01",
+    "mirrorId": "hold",
+    "mirrorName": "扛单之镜",
+    "scene": "surge",
+    "sourceScene": "急涨时",
+    "intensity": 1,
+    "text": "我看见自己不是在等反弹，而是在等市场证明我没错。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hold_evidence_02",
+    "mirrorId": "hold",
+    "mirrorName": "扛单之镜",
+    "scene": "plunge",
+    "sourceScene": "急跌时",
+    "intensity": 2,
+    "text": "我承认，我扛的是面子，不只是仓位。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hold_evidence_03",
+    "mirrorId": "hold",
+    "mirrorName": "扛单之镜",
+    "scene": "beforeStop",
+    "sourceScene": "止损时",
+    "intensity": 3,
+    "text": "我看见亏损坐实前，心会拼命找理由。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hold_evidence_04",
+    "mirrorId": "hold",
+    "mirrorName": "扛单之镜",
+    "scene": "floatingGain",
+    "sourceScene": "浮盈时",
+    "intensity": 4,
+    "text": "我今天照见：希望不是规则。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hold_evidence_05",
+    "mirrorId": "hold",
+    "mirrorName": "扛单之镜",
+    "scene": "missed",
+    "sourceScene": "踏空时",
+    "intensity": 5,
+    "text": "我看见自己不止损，是不愿面对判断变形。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hold_evidence_06",
+    "mirrorId": "hold",
+    "mirrorName": "扛单之镜",
+    "scene": "lossStreak",
+    "sourceScene": "亏损后",
+    "intensity": 1,
+    "text": "我知道再等等，有时就是逃避。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hold_evidence_07",
+    "mirrorId": "hold",
+    "mirrorName": "扛单之镜",
+    "scene": "review",
+    "sourceScene": "复盘时",
+    "intensity": 2,
+    "text": "我承认，我怕的不是卖出，是认错。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hold_evidence_08",
+    "mirrorId": "hold",
+    "mirrorName": "扛单之镜",
+    "scene": "surge",
+    "sourceScene": "开盘时",
+    "intensity": 3,
+    "text": "我看见仓位变重以后，心就不自由了。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hold_evidence_09",
+    "mirrorId": "hold",
+    "mirrorName": "扛单之镜",
+    "scene": "review",
+    "sourceScene": "临盘改计划",
+    "intensity": 4,
+    "text": "我今天知道，止损不是失败，是边界。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hold_evidence_10",
+    "mirrorId": "hold",
+    "mirrorName": "扛单之镜",
+    "scene": "lossStreak",
+    "sourceScene": "连续亏损时",
+    "intensity": 5,
+    "text": "我看见自己把幻想当耐心。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hold_evidence_11",
+    "mirrorId": "hold",
+    "mirrorName": "扛单之镜",
+    "scene": "winStreak",
+    "sourceScene": "连续盈利后",
+    "intensity": 1,
+    "text": "我承认，回本念头会绑住我。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hold_evidence_12",
+    "mirrorId": "hold",
+    "mirrorName": "扛单之镜",
+    "scene": "missed",
+    "sourceScene": "空仓时",
+    "intensity": 2,
+    "text": "我看见不认错会让小错变成惯性。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hold_evidence_13",
+    "mirrorId": "hold",
+    "mirrorName": "扛单之镜",
+    "scene": "surge",
+    "sourceScene": "急涨时",
+    "intensity": 3,
+    "text": "我今天照见：先执行，再解释。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hold_evidence_14",
+    "mirrorId": "hold",
+    "mirrorName": "扛单之镜",
+    "scene": "plunge",
+    "sourceScene": "急跌时",
+    "intensity": 4,
+    "text": "我知道，亏损不能和我谈条件。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hold_evidence_15",
+    "mirrorId": "hold",
+    "mirrorName": "扛单之镜",
+    "scene": "beforeStop",
+    "sourceScene": "止损时",
+    "intensity": 5,
+    "text": "我看见自己在等价格，也在等自尊回来。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hold_evidence_16",
+    "mirrorId": "hold",
+    "mirrorName": "扛单之镜",
+    "scene": "floatingGain",
+    "sourceScene": "浮盈时",
+    "intensity": 1,
+    "text": "我承认，装死不是系统。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hold_evidence_17",
+    "mirrorId": "hold",
+    "mirrorName": "扛单之镜",
+    "scene": "missed",
+    "sourceScene": "踏空时",
+    "intensity": 2,
+    "text": "我看见扛单会偷走下一次机会。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hold_evidence_18",
+    "mirrorId": "hold",
+    "mirrorName": "扛单之镜",
+    "scene": "lossStreak",
+    "sourceScene": "亏损后",
+    "intensity": 3,
+    "text": "我今天的心证：错了即止。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hold_evidence_19",
+    "mirrorId": "hold",
+    "mirrorName": "扛单之镜",
+    "scene": "review",
+    "sourceScene": "复盘时",
+    "intensity": 4,
+    "text": "我知道，真正该放下的是执。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hold_evidence_20",
+    "mirrorId": "hold",
+    "mirrorName": "扛单之镜",
+    "scene": "surge",
+    "sourceScene": "开盘时",
+    "intensity": 5,
+    "text": "我看见不卖的理由里，很多不是事实。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "fantasy_evidence_01",
+    "mirrorId": "fantasy",
+    "mirrorName": "幻想之镜",
+    "scene": "surge",
+    "sourceScene": "急涨时",
+    "intensity": 1,
+    "text": "我看见自己不是相信行情，而是在相信一个让我舒服的故事。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "fantasy_evidence_02",
+    "mirrorId": "fantasy",
+    "mirrorName": "幻想之镜",
+    "scene": "plunge",
+    "sourceScene": "急跌时",
+    "intensity": 2,
+    "text": "我承认，愿望会伪装成逻辑。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "fantasy_evidence_03",
+    "mirrorId": "fantasy",
+    "mirrorName": "幻想之镜",
+    "scene": "beforeStop",
+    "sourceScene": "止损时",
+    "intensity": 3,
+    "text": "我看见“这次不一样”常常是心贼开口。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "fantasy_evidence_04",
+    "mirrorId": "fantasy",
+    "mirrorName": "幻想之镜",
+    "scene": "floatingGain",
+    "sourceScene": "浮盈时",
+    "intensity": 4,
+    "text": "我今天照见：事实弱了，故事会变响。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "fantasy_evidence_05",
+    "mirrorId": "fantasy",
+    "mirrorName": "幻想之镜",
+    "scene": "missed",
+    "sourceScene": "踏空时",
+    "intensity": 5,
+    "text": "我知道自己会用想象遮住规则。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "fantasy_evidence_06",
+    "mirrorId": "fantasy",
+    "mirrorName": "幻想之镜",
+    "scene": "lossStreak",
+    "sourceScene": "亏损后",
+    "intensity": 1,
+    "text": "我承认，我想要一个不用面对错误的理由。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "fantasy_evidence_07",
+    "mirrorId": "fantasy",
+    "mirrorName": "幻想之镜",
+    "scene": "review",
+    "sourceScene": "复盘时",
+    "intensity": 2,
+    "text": "我看见自己拿着的不是证据，而是期待。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "fantasy_evidence_08",
+    "mirrorId": "fantasy",
+    "mirrorName": "幻想之镜",
+    "scene": "surge",
+    "sourceScene": "开盘时",
+    "intensity": 3,
+    "text": "我今天知道，故事不能替我止损。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "fantasy_evidence_09",
+    "mirrorId": "fantasy",
+    "mirrorName": "幻想之镜",
+    "scene": "review",
+    "sourceScene": "临盘改计划",
+    "intensity": 4,
+    "text": "我看见幻想让错误显得有意义。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "fantasy_evidence_10",
+    "mirrorId": "fantasy",
+    "mirrorName": "幻想之镜",
+    "scene": "lossStreak",
+    "sourceScene": "连续亏损时",
+    "intensity": 5,
+    "text": "我承认，舒服的解释最危险。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "fantasy_evidence_11",
+    "mirrorId": "fantasy",
+    "mirrorName": "幻想之镜",
+    "scene": "winStreak",
+    "sourceScene": "连续盈利后",
+    "intensity": 1,
+    "text": "我看见自己把未来想得太满，把当下看得太轻。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "fantasy_evidence_12",
+    "mirrorId": "fantasy",
+    "mirrorName": "幻想之镜",
+    "scene": "missed",
+    "sourceScene": "空仓时",
+    "intensity": 2,
+    "text": "我今天照见：只看事实，不看愿望。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "fantasy_evidence_13",
+    "mirrorId": "fantasy",
+    "mirrorName": "幻想之镜",
+    "scene": "surge",
+    "sourceScene": "急涨时",
+    "intensity": 3,
+    "text": "我知道，逻辑要经得起价格验证。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "fantasy_evidence_14",
+    "mirrorId": "fantasy",
+    "mirrorName": "幻想之镜",
+    "scene": "plunge",
+    "sourceScene": "急跌时",
+    "intensity": 4,
+    "text": "我看见自己在等梦继续。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "fantasy_evidence_15",
+    "mirrorId": "fantasy",
+    "mirrorName": "幻想之镜",
+    "scene": "beforeStop",
+    "sourceScene": "止损时",
+    "intensity": 5,
+    "text": "我承认，我不是在坚持，是在维护幻象。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "fantasy_evidence_16",
+    "mirrorId": "fantasy",
+    "mirrorName": "幻想之镜",
+    "scene": "floatingGain",
+    "sourceScene": "浮盈时",
+    "intensity": 1,
+    "text": "我看见行情不配合故事时，我会更想编故事。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "fantasy_evidence_17",
+    "mirrorId": "fantasy",
+    "mirrorName": "幻想之镜",
+    "scene": "missed",
+    "sourceScene": "踏空时",
+    "intensity": 2,
+    "text": "我今天的心证：照破幻想。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "fantasy_evidence_18",
+    "mirrorId": "fantasy",
+    "mirrorName": "幻想之镜",
+    "scene": "lossStreak",
+    "sourceScene": "亏损后",
+    "intensity": 3,
+    "text": "我知道，该醒的时候不能再装睡。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "fantasy_evidence_19",
+    "mirrorId": "fantasy",
+    "mirrorName": "幻想之镜",
+    "scene": "review",
+    "sourceScene": "复盘时",
+    "intensity": 4,
+    "text": "我看见想象空间会放大贪念。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "fantasy_evidence_20",
+    "mirrorId": "fantasy",
+    "mirrorName": "幻想之镜",
+    "scene": "surge",
+    "sourceScene": "开盘时",
+    "intensity": 5,
+    "text": "我承认，事实才是镜子。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "gamble_evidence_01",
+    "mirrorId": "gamble",
+    "mirrorName": "赌性之镜",
+    "scene": "surge",
+    "sourceScene": "急涨时",
+    "intensity": 1,
+    "text": "我看见自己不是在交易，而是在和那个输不起的自己较劲。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "gamble_evidence_02",
+    "mirrorId": "gamble",
+    "mirrorName": "赌性之镜",
+    "scene": "plunge",
+    "sourceScene": "急跌时",
+    "intensity": 2,
+    "text": "我承认，翻本念头起来时，规则会退场。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "gamble_evidence_03",
+    "mirrorId": "gamble",
+    "mirrorName": "赌性之镜",
+    "scene": "beforeStop",
+    "sourceScene": "止损时",
+    "intensity": 3,
+    "text": "我看见亏损后的第一笔最危险。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "gamble_evidence_04",
+    "mirrorId": "gamble",
+    "mirrorName": "赌性之镜",
+    "scene": "floatingGain",
+    "sourceScene": "浮盈时",
+    "intensity": 4,
+    "text": "我今天照见：不甘心不是信号。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "gamble_evidence_05",
+    "mirrorId": "gamble",
+    "mirrorName": "赌性之镜",
+    "scene": "missed",
+    "sourceScene": "踏空时",
+    "intensity": 5,
+    "text": "我知道，想一次回来，是心在赌。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "gamble_evidence_06",
+    "mirrorId": "gamble",
+    "mirrorName": "赌性之镜",
+    "scene": "lossStreak",
+    "sourceScene": "亏损后",
+    "intensity": 1,
+    "text": "我承认，我想赢回的是自尊。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "gamble_evidence_07",
+    "mirrorId": "gamble",
+    "mirrorName": "赌性之镜",
+    "scene": "review",
+    "sourceScene": "复盘时",
+    "intensity": 2,
+    "text": "我看见重仓有时只是急着止痛。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "gamble_evidence_08",
+    "mirrorId": "gamble",
+    "mirrorName": "赌性之镜",
+    "scene": "surge",
+    "sourceScene": "开盘时",
+    "intensity": 3,
+    "text": "我今天知道，亏后暂停也是执行。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "gamble_evidence_09",
+    "mirrorId": "gamble",
+    "mirrorName": "赌性之镜",
+    "scene": "review",
+    "sourceScene": "临盘改计划",
+    "intensity": 4,
+    "text": "我看见市场没有欠我一笔回本。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "gamble_evidence_10",
+    "mirrorId": "gamble",
+    "mirrorName": "赌性之镜",
+    "scene": "lossStreak",
+    "sourceScene": "连续亏损时",
+    "intensity": 5,
+    "text": "我承认，我不该拿下一笔治疗上一笔。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "gamble_evidence_11",
+    "mirrorId": "gamble",
+    "mirrorName": "赌性之镜",
+    "scene": "winStreak",
+    "sourceScene": "连续盈利后",
+    "intensity": 1,
+    "text": "我看见赌性会把风险伪装成勇敢。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "gamble_evidence_12",
+    "mirrorId": "gamble",
+    "mirrorName": "赌性之镜",
+    "scene": "missed",
+    "sourceScene": "空仓时",
+    "intensity": 2,
+    "text": "我今天照见：先停，才有主。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "gamble_evidence_13",
+    "mirrorId": "gamble",
+    "mirrorName": "赌性之镜",
+    "scene": "surge",
+    "sourceScene": "急涨时",
+    "intensity": 3,
+    "text": "我知道，翻本最容易扩大伤口。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "gamble_evidence_14",
+    "mirrorId": "gamble",
+    "mirrorName": "赌性之镜",
+    "scene": "plunge",
+    "sourceScene": "急跌时",
+    "intensity": 4,
+    "text": "我看见自己想证明还行。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "gamble_evidence_15",
+    "mirrorId": "gamble",
+    "mirrorName": "赌性之镜",
+    "scene": "beforeStop",
+    "sourceScene": "止损时",
+    "intensity": 5,
+    "text": "我承认，输不起的时候不适合下单。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "gamble_evidence_16",
+    "mirrorId": "gamble",
+    "mirrorName": "赌性之镜",
+    "scene": "floatingGain",
+    "sourceScene": "浮盈时",
+    "intensity": 1,
+    "text": "我看见亏损后的心比行情更危险。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "gamble_evidence_17",
+    "mirrorId": "gamble",
+    "mirrorName": "赌性之镜",
+    "scene": "missed",
+    "sourceScene": "踏空时",
+    "intensity": 2,
+    "text": "我今天的心证：止于规则。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "gamble_evidence_18",
+    "mirrorId": "gamble",
+    "mirrorName": "赌性之镜",
+    "scene": "lossStreak",
+    "sourceScene": "亏损后",
+    "intensity": 3,
+    "text": "我知道，暂停不是怂，是守心。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "gamble_evidence_19",
+    "mirrorId": "gamble",
+    "mirrorName": "赌性之镜",
+    "scene": "review",
+    "sourceScene": "复盘时",
+    "intensity": 4,
+    "text": "我看见赌气会变成交易。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "gamble_evidence_20",
+    "mirrorId": "gamble",
+    "mirrorName": "赌性之镜",
+    "scene": "surge",
+    "sourceScene": "开盘时",
+    "intensity": 5,
+    "text": "我承认，我要先从不甘里出来。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "herd_evidence_01",
+    "mirrorId": "herd",
+    "mirrorName": "从众之镜",
+    "scene": "surge",
+    "sourceScene": "急涨时",
+    "intensity": 1,
+    "text": "我看见自己不是相信别人，而是在逃避独自承担结果。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "herd_evidence_02",
+    "mirrorId": "herd",
+    "mirrorName": "从众之镜",
+    "scene": "plunge",
+    "sourceScene": "急跌时",
+    "intensity": 2,
+    "text": "我承认，人多让我安心，也让我失去主见。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "herd_evidence_03",
+    "mirrorId": "herd",
+    "mirrorName": "从众之镜",
+    "scene": "beforeStop",
+    "sourceScene": "止损时",
+    "intensity": 3,
+    "text": "我看见群里的热闹会盖住自己的规则。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "herd_evidence_04",
+    "mirrorId": "herd",
+    "mirrorName": "从众之镜",
+    "scene": "floatingGain",
+    "sourceScene": "浮盈时",
+    "intensity": 4,
+    "text": "我今天照见：别人的确定不等于我的依据。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "herd_evidence_05",
+    "mirrorId": "herd",
+    "mirrorName": "从众之镜",
+    "scene": "missed",
+    "sourceScene": "踏空时",
+    "intensity": 5,
+    "text": "我知道，账户只能由我负责。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "herd_evidence_06",
+    "mirrorId": "herd",
+    "mirrorName": "从众之镜",
+    "scene": "lossStreak",
+    "sourceScene": "亏损后",
+    "intensity": 1,
+    "text": "我承认，我怕一个人错。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "herd_evidence_07",
+    "mirrorId": "herd",
+    "mirrorName": "从众之镜",
+    "scene": "review",
+    "sourceScene": "复盘时",
+    "intensity": 2,
+    "text": "我看见自己想把责任交给共识。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "herd_evidence_08",
+    "mirrorId": "herd",
+    "mirrorName": "从众之镜",
+    "scene": "surge",
+    "sourceScene": "开盘时",
+    "intensity": 3,
+    "text": "我今天知道，先写自己的判断。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "herd_evidence_09",
+    "mirrorId": "herd",
+    "mirrorName": "从众之镜",
+    "scene": "review",
+    "sourceScene": "临盘改计划",
+    "intensity": 4,
+    "text": "我看见从众最舒服，也最容易失控。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "herd_evidence_10",
+    "mirrorId": "herd",
+    "mirrorName": "从众之镜",
+    "scene": "lossStreak",
+    "sourceScene": "连续亏损时",
+    "intensity": 5,
+    "text": "我承认，我跟的是安全感。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "herd_evidence_11",
+    "mirrorId": "herd",
+    "mirrorName": "从众之镜",
+    "scene": "winStreak",
+    "sourceScene": "连续盈利后",
+    "intensity": 1,
+    "text": "我看见别人喊得越响，我越该安静。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "herd_evidence_12",
+    "mirrorId": "herd",
+    "mirrorName": "从众之镜",
+    "scene": "missed",
+    "sourceScene": "空仓时",
+    "intensity": 2,
+    "text": "我今天照见：不把热闹当系统。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "herd_evidence_13",
+    "mirrorId": "herd",
+    "mirrorName": "从众之镜",
+    "scene": "surge",
+    "sourceScene": "急涨时",
+    "intensity": 3,
+    "text": "我知道，独立承担才是训练。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "herd_evidence_14",
+    "mirrorId": "herd",
+    "mirrorName": "从众之镜",
+    "scene": "plunge",
+    "sourceScene": "急跌时",
+    "intensity": 4,
+    "text": "我看见自己怕落单。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "herd_evidence_15",
+    "mirrorId": "herd",
+    "mirrorName": "从众之镜",
+    "scene": "beforeStop",
+    "sourceScene": "止损时",
+    "intensity": 5,
+    "text": "我承认，跟随不能替代判断。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "herd_evidence_16",
+    "mirrorId": "herd",
+    "mirrorName": "从众之镜",
+    "scene": "floatingGain",
+    "sourceScene": "浮盈时",
+    "intensity": 1,
+    "text": "我看见人群会把疑心变成冲动。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "herd_evidence_17",
+    "mirrorId": "herd",
+    "mirrorName": "从众之镜",
+    "scene": "missed",
+    "sourceScene": "踏空时",
+    "intensity": 2,
+    "text": "我今天的心证：独立承担。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "herd_evidence_18",
+    "mirrorId": "herd",
+    "mirrorName": "从众之镜",
+    "scene": "lossStreak",
+    "sourceScene": "亏损后",
+    "intensity": 3,
+    "text": "我知道，先问规则，再听声音。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "herd_evidence_19",
+    "mirrorId": "herd",
+    "mirrorName": "从众之镜",
+    "scene": "review",
+    "sourceScene": "复盘时",
+    "intensity": 4,
+    "text": "我看见自己的答案被外界盖住了。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "herd_evidence_20",
+    "mirrorId": "herd",
+    "mirrorName": "从众之镜",
+    "scene": "surge",
+    "sourceScene": "开盘时",
+    "intensity": 5,
+    "text": "我承认，我要把心收回来。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hesitate_evidence_01",
+    "mirrorId": "hesitate",
+    "mirrorName": "犹疑之镜",
+    "scene": "surge",
+    "sourceScene": "急涨时",
+    "intensity": 1,
+    "text": "我看见自己不是谨慎，而是在用再等等保护自己不犯错。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hesitate_evidence_02",
+    "mirrorId": "hesitate",
+    "mirrorName": "犹疑之镜",
+    "scene": "plunge",
+    "sourceScene": "急跌时",
+    "intensity": 2,
+    "text": "我承认，我想要一个不会错的保证。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hesitate_evidence_03",
+    "mirrorId": "hesitate",
+    "mirrorName": "犹疑之镜",
+    "scene": "beforeStop",
+    "sourceScene": "止损时",
+    "intensity": 3,
+    "text": "我看见规则到了，心还想退。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hesitate_evidence_04",
+    "mirrorId": "hesitate",
+    "mirrorName": "犹疑之镜",
+    "scene": "floatingGain",
+    "sourceScene": "浮盈时",
+    "intensity": 4,
+    "text": "我今天照见：万一两个字会偷走执行。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hesitate_evidence_05",
+    "mirrorId": "hesitate",
+    "mirrorName": "犹疑之镜",
+    "scene": "missed",
+    "sourceScene": "踏空时",
+    "intensity": 5,
+    "text": "我知道，交易没有百分百确定。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hesitate_evidence_06",
+    "mirrorId": "hesitate",
+    "mirrorName": "犹疑之镜",
+    "scene": "lossStreak",
+    "sourceScene": "亏损后",
+    "intensity": 1,
+    "text": "我承认，我怕行动以后没有借口。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hesitate_evidence_07",
+    "mirrorId": "hesitate",
+    "mirrorName": "犹疑之镜",
+    "scene": "review",
+    "sourceScene": "复盘时",
+    "intensity": 2,
+    "text": "我看见自己不敢相信计划。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hesitate_evidence_08",
+    "mirrorId": "hesitate",
+    "mirrorName": "犹疑之镜",
+    "scene": "surge",
+    "sourceScene": "开盘时",
+    "intensity": 3,
+    "text": "我今天知道，只问是不是规则内。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hesitate_evidence_09",
+    "mirrorId": "hesitate",
+    "mirrorName": "犹疑之镜",
+    "scene": "review",
+    "sourceScene": "临盘改计划",
+    "intensity": 4,
+    "text": "我看见犹疑会伪装成稳健。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hesitate_evidence_10",
+    "mirrorId": "hesitate",
+    "mirrorName": "犹疑之镜",
+    "scene": "lossStreak",
+    "sourceScene": "连续亏损时",
+    "intensity": 5,
+    "text": "我承认，我不是缺信号，是缺承担。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hesitate_evidence_11",
+    "mirrorId": "hesitate",
+    "mirrorName": "犹疑之镜",
+    "scene": "winStreak",
+    "sourceScene": "连续盈利后",
+    "intensity": 1,
+    "text": "我看见自己等市场替我决定。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hesitate_evidence_12",
+    "mirrorId": "hesitate",
+    "mirrorName": "犹疑之镜",
+    "scene": "missed",
+    "sourceScene": "空仓时",
+    "intensity": 2,
+    "text": "我今天照见：见机即行。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hesitate_evidence_13",
+    "mirrorId": "hesitate",
+    "mirrorName": "犹疑之镜",
+    "scene": "surge",
+    "sourceScene": "急涨时",
+    "intensity": 3,
+    "text": "我知道，错也要错在规则内。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hesitate_evidence_14",
+    "mirrorId": "hesitate",
+    "mirrorName": "犹疑之镜",
+    "scene": "plunge",
+    "sourceScene": "急跌时",
+    "intensity": 4,
+    "text": "我看见完美点位是个陷阱。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hesitate_evidence_15",
+    "mirrorId": "hesitate",
+    "mirrorName": "犹疑之镜",
+    "scene": "beforeStop",
+    "sourceScene": "止损时",
+    "intensity": 5,
+    "text": "我承认，我怕犯错，所以错过执行。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hesitate_evidence_16",
+    "mirrorId": "hesitate",
+    "mirrorName": "犹疑之镜",
+    "scene": "floatingGain",
+    "sourceScene": "浮盈时",
+    "intensity": 1,
+    "text": "我看见再确认有时就是退缩。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hesitate_evidence_17",
+    "mirrorId": "hesitate",
+    "mirrorName": "犹疑之镜",
+    "scene": "missed",
+    "sourceScene": "踏空时",
+    "intensity": 2,
+    "text": "我今天的心证：知而要行。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hesitate_evidence_18",
+    "mirrorId": "hesitate",
+    "mirrorName": "犹疑之镜",
+    "scene": "lossStreak",
+    "sourceScene": "亏损后",
+    "intensity": 3,
+    "text": "我知道，行动是训练的一部分。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hesitate_evidence_19",
+    "mirrorId": "hesitate",
+    "mirrorName": "犹疑之镜",
+    "scene": "review",
+    "sourceScene": "复盘时",
+    "intensity": 4,
+    "text": "我看见犹疑背后是惧。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "hesitate_evidence_20",
+    "mirrorId": "hesitate",
+    "mirrorName": "犹疑之镜",
+    "scene": "surge",
+    "sourceScene": "开盘时",
+    "intensity": 5,
+    "text": "我承认，我要练的是执行。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "delay_evidence_01",
+    "mirrorId": "delay",
+    "mirrorName": "拖延之镜",
+    "scene": "surge",
+    "sourceScene": "急涨时",
+    "intensity": 1,
+    "text": "我看见自己不是没时间，是不想面对今天那个没守住规则的我。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "delay_evidence_02",
+    "mirrorId": "delay",
+    "mirrorName": "拖延之镜",
+    "scene": "plunge",
+    "sourceScene": "急跌时",
+    "intensity": 2,
+    "text": "我承认，拖延是在逃避照见。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "delay_evidence_03",
+    "mirrorId": "delay",
+    "mirrorName": "拖延之镜",
+    "scene": "beforeStop",
+    "sourceScene": "止损时",
+    "intensity": 3,
+    "text": "我看见不复盘，问题会换个地方回来。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "delay_evidence_04",
+    "mirrorId": "delay",
+    "mirrorName": "拖延之镜",
+    "scene": "floatingGain",
+    "sourceScene": "浮盈时",
+    "intensity": 4,
+    "text": "我今天照见：三分钟也比逃一天强。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "delay_evidence_05",
+    "mirrorId": "delay",
+    "mirrorName": "拖延之镜",
+    "scene": "missed",
+    "sourceScene": "踏空时",
+    "intensity": 5,
+    "text": "我知道，记录不是惩罚，是训练。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "delay_evidence_06",
+    "mirrorId": "delay",
+    "mirrorName": "拖延之镜",
+    "scene": "lossStreak",
+    "sourceScene": "亏损后",
+    "intensity": 1,
+    "text": "我承认，我怕把真相写下来。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "delay_evidence_07",
+    "mirrorId": "delay",
+    "mirrorName": "拖延之镜",
+    "scene": "review",
+    "sourceScene": "复盘时",
+    "intensity": 2,
+    "text": "我看见自己想忘掉最该记住的那一笔。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "delay_evidence_08",
+    "mirrorId": "delay",
+    "mirrorName": "拖延之镜",
+    "scene": "surge",
+    "sourceScene": "开盘时",
+    "intensity": 3,
+    "text": "我今天知道，今日即省。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "delay_evidence_09",
+    "mirrorId": "delay",
+    "mirrorName": "拖延之镜",
+    "scene": "review",
+    "sourceScene": "临盘改计划",
+    "intensity": 4,
+    "text": "我看见拖延让当下舒服，让未来更乱。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "delay_evidence_10",
+    "mirrorId": "delay",
+    "mirrorName": "拖延之镜",
+    "scene": "lossStreak",
+    "sourceScene": "连续亏损时",
+    "intensity": 5,
+    "text": "我承认，不写就会重复。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "delay_evidence_11",
+    "mirrorId": "delay",
+    "mirrorName": "拖延之镜",
+    "scene": "winStreak",
+    "sourceScene": "连续盈利后",
+    "intensity": 1,
+    "text": "我看见自己把累当借口。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "delay_evidence_12",
+    "mirrorId": "delay",
+    "mirrorName": "拖延之镜",
+    "scene": "missed",
+    "sourceScene": "空仓时",
+    "intensity": 2,
+    "text": "我今天照见：不求完整，只求不逃。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "delay_evidence_13",
+    "mirrorId": "delay",
+    "mirrorName": "拖延之镜",
+    "scene": "surge",
+    "sourceScene": "急涨时",
+    "intensity": 3,
+    "text": "我知道，复盘是把失控变成处方。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "delay_evidence_14",
+    "mirrorId": "delay",
+    "mirrorName": "拖延之镜",
+    "scene": "plunge",
+    "sourceScene": "急跌时",
+    "intensity": 4,
+    "text": "我看见今天不看，明天更难看。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "delay_evidence_15",
+    "mirrorId": "delay",
+    "mirrorName": "拖延之镜",
+    "scene": "beforeStop",
+    "sourceScene": "止损时",
+    "intensity": 5,
+    "text": "我承认，我在推迟改变。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "delay_evidence_16",
+    "mirrorId": "delay",
+    "mirrorName": "拖延之镜",
+    "scene": "floatingGain",
+    "sourceScene": "浮盈时",
+    "intensity": 1,
+    "text": "我看见心贼喜欢藏在明天。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "delay_evidence_17",
+    "mirrorId": "delay",
+    "mirrorName": "拖延之镜",
+    "scene": "missed",
+    "sourceScene": "踏空时",
+    "intensity": 2,
+    "text": "我今天的心证：立刻记录。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "delay_evidence_18",
+    "mirrorId": "delay",
+    "mirrorName": "拖延之镜",
+    "scene": "lossStreak",
+    "sourceScene": "亏损后",
+    "intensity": 3,
+    "text": "我知道，一笔也可以开始。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "delay_evidence_19",
+    "mirrorId": "delay",
+    "mirrorName": "拖延之镜",
+    "scene": "review",
+    "sourceScene": "复盘时",
+    "intensity": 4,
+    "text": "我看见不面对会扩大循环。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "delay_evidence_20",
+    "mirrorId": "delay",
+    "mirrorName": "拖延之镜",
+    "scene": "surge",
+    "sourceScene": "开盘时",
+    "intensity": 5,
+    "text": "我承认，我要把这笔照出来。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "anxiety_evidence_01",
+    "mirrorId": "anxiety",
+    "mirrorName": "焦虑之镜",
+    "scene": "surge",
+    "sourceScene": "急涨时",
+    "intensity": 1,
+    "text": "我看见自己不是在保护利润，而是在保护那颗害怕失去的心。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "anxiety_evidence_02",
+    "mirrorId": "anxiety",
+    "mirrorName": "焦虑之镜",
+    "scene": "plunge",
+    "sourceScene": "急跌时",
+    "intensity": 2,
+    "text": "我承认，我卖掉的是承受波动的能力。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "anxiety_evidence_03",
+    "mirrorId": "anxiety",
+    "mirrorName": "焦虑之镜",
+    "scene": "beforeStop",
+    "sourceScene": "止损时",
+    "intensity": 3,
+    "text": "我看见浮盈一动，心就想逃。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "anxiety_evidence_04",
+    "mirrorId": "anxiety",
+    "mirrorName": "焦虑之镜",
+    "scene": "floatingGain",
+    "sourceScene": "浮盈时",
+    "intensity": 4,
+    "text": "我今天照见：不到规则位，不让情绪平仓。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "anxiety_evidence_05",
+    "mirrorId": "anxiety",
+    "mirrorName": "焦虑之镜",
+    "scene": "missed",
+    "sourceScene": "踏空时",
+    "intensity": 5,
+    "text": "我知道，焦虑不是卖出信号。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "anxiety_evidence_06",
+    "mirrorId": "anxiety",
+    "mirrorName": "焦虑之镜",
+    "scene": "lossStreak",
+    "sourceScene": "亏损后",
+    "intensity": 1,
+    "text": "我承认，我害怕从赢变回普通。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "anxiety_evidence_07",
+    "mirrorId": "anxiety",
+    "mirrorName": "焦虑之镜",
+    "scene": "review",
+    "sourceScene": "复盘时",
+    "intensity": 2,
+    "text": "我看见自己想用落袋停止不安。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "anxiety_evidence_08",
+    "mirrorId": "anxiety",
+    "mirrorName": "焦虑之镜",
+    "scene": "surge",
+    "sourceScene": "开盘时",
+    "intensity": 3,
+    "text": "我今天知道，守住波动也是训练。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "anxiety_evidence_09",
+    "mirrorId": "anxiety",
+    "mirrorName": "焦虑之镜",
+    "scene": "review",
+    "sourceScene": "临盘改计划",
+    "intensity": 4,
+    "text": "我看见小赚让我安心，却可能破坏系统。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "anxiety_evidence_10",
+    "mirrorId": "anxiety",
+    "mirrorName": "焦虑之镜",
+    "scene": "lossStreak",
+    "sourceScene": "连续亏损时",
+    "intensity": 5,
+    "text": "我承认，利润不是我的安全感。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "anxiety_evidence_11",
+    "mirrorId": "anxiety",
+    "mirrorName": "焦虑之镜",
+    "scene": "winStreak",
+    "sourceScene": "连续盈利后",
+    "intensity": 1,
+    "text": "我看见心先跑了，手才跟着卖。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "anxiety_evidence_12",
+    "mirrorId": "anxiety",
+    "mirrorName": "焦虑之镜",
+    "scene": "missed",
+    "sourceScene": "空仓时",
+    "intensity": 2,
+    "text": "我今天照见：先看规则，不看情绪。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "anxiety_evidence_13",
+    "mirrorId": "anxiety",
+    "mirrorName": "焦虑之镜",
+    "scene": "surge",
+    "sourceScene": "急涨时",
+    "intensity": 3,
+    "text": "我知道，波动不是敌人。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "anxiety_evidence_14",
+    "mirrorId": "anxiety",
+    "mirrorName": "焦虑之镜",
+    "scene": "plunge",
+    "sourceScene": "急跌时",
+    "intensity": 4,
+    "text": "我看见自己拿不住，不是行情问题。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "anxiety_evidence_15",
+    "mirrorId": "anxiety",
+    "mirrorName": "焦虑之镜",
+    "scene": "beforeStop",
+    "sourceScene": "止损时",
+    "intensity": 5,
+    "text": "我承认，我需要训练承受力。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "anxiety_evidence_16",
+    "mirrorId": "anxiety",
+    "mirrorName": "焦虑之镜",
+    "scene": "floatingGain",
+    "sourceScene": "浮盈时",
+    "intensity": 1,
+    "text": "我看见害怕回吐会替我做决定。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "anxiety_evidence_17",
+    "mirrorId": "anxiety",
+    "mirrorName": "焦虑之镜",
+    "scene": "missed",
+    "sourceScene": "踏空时",
+    "intensity": 2,
+    "text": "我今天的心证：守住波动。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "anxiety_evidence_18",
+    "mirrorId": "anxiety",
+    "mirrorName": "焦虑之镜",
+    "scene": "lossStreak",
+    "sourceScene": "亏损后",
+    "intensity": 3,
+    "text": "我知道，计划内的回撤可以承受。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "anxiety_evidence_19",
+    "mirrorId": "anxiety",
+    "mirrorName": "焦虑之镜",
+    "scene": "review",
+    "sourceScene": "复盘时",
+    "intensity": 4,
+    "text": "我看见卖出之前先要看心。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "anxiety_evidence_20",
+    "mirrorId": "anxiety",
+    "mirrorName": "焦虑之镜",
+    "scene": "surge",
+    "sourceScene": "开盘时",
+    "intensity": 5,
+    "text": "我承认，我不让惧替我出场。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "liangzhi_evidence_01",
+    "mirrorId": "liangzhi",
+    "mirrorName": "良知之镜",
+    "scene": "surge",
+    "sourceScene": "急涨时",
+    "intensity": 1,
+    "text": "我看见自己不是没有情绪，而是情绪起来时还能看见规则。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "liangzhi_evidence_02",
+    "mirrorId": "liangzhi",
+    "mirrorName": "良知之镜",
+    "scene": "plunge",
+    "sourceScene": "急跌时",
+    "intensity": 2,
+    "text": "我承认，能停一下，就是有主。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "liangzhi_evidence_03",
+    "mirrorId": "liangzhi",
+    "mirrorName": "良知之镜",
+    "scene": "beforeStop",
+    "sourceScene": "止损时",
+    "intensity": 3,
+    "text": "我看见规则可以大过那一刻的冲动。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "liangzhi_evidence_04",
+    "mirrorId": "liangzhi",
+    "mirrorName": "良知之镜",
+    "scene": "floatingGain",
+    "sourceScene": "浮盈时",
+    "intensity": 4,
+    "text": "我今天照见：看见念头而不跟随。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "liangzhi_evidence_05",
+    "mirrorId": "liangzhi",
+    "mirrorName": "良知之镜",
+    "scene": "missed",
+    "sourceScene": "踏空时",
+    "intensity": 5,
+    "text": "我知道，空仓也可以是执行。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "liangzhi_evidence_06",
+    "mirrorId": "liangzhi",
+    "mirrorName": "良知之镜",
+    "scene": "lossStreak",
+    "sourceScene": "亏损后",
+    "intensity": 1,
+    "text": "我承认，我不需要用这一笔证明自己。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "liangzhi_evidence_07",
+    "mirrorId": "liangzhi",
+    "mirrorName": "良知之镜",
+    "scene": "review",
+    "sourceScene": "复盘时",
+    "intensity": 2,
+    "text": "我看见自己可以慢一点。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "liangzhi_evidence_08",
+    "mirrorId": "liangzhi",
+    "mirrorName": "良知之镜",
+    "scene": "surge",
+    "sourceScene": "开盘时",
+    "intensity": 3,
+    "text": "我今天知道，心动不必行动。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "liangzhi_evidence_09",
+    "mirrorId": "liangzhi",
+    "mirrorName": "良知之镜",
+    "scene": "review",
+    "sourceScene": "临盘改计划",
+    "intensity": 4,
+    "text": "我看见不做计划外交易，也是一种力量。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "liangzhi_evidence_10",
+    "mirrorId": "liangzhi",
+    "mirrorName": "良知之镜",
+    "scene": "lossStreak",
+    "sourceScene": "连续亏损时",
+    "intensity": 5,
+    "text": "我承认，良知不是没有念头，是知道该止。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "liangzhi_evidence_11",
+    "mirrorId": "liangzhi",
+    "mirrorName": "良知之镜",
+    "scene": "winStreak",
+    "sourceScene": "连续盈利后",
+    "intensity": 1,
+    "text": "我看见这一次守住，会成为下一次凭据。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "liangzhi_evidence_12",
+    "mirrorId": "liangzhi",
+    "mirrorName": "良知之镜",
+    "scene": "missed",
+    "sourceScene": "空仓时",
+    "intensity": 2,
+    "text": "我今天照见：让规则做主。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "liangzhi_evidence_13",
+    "mirrorId": "liangzhi",
+    "mirrorName": "良知之镜",
+    "scene": "surge",
+    "sourceScene": "急涨时",
+    "intensity": 3,
+    "text": "我知道，先停三息就有空间。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "liangzhi_evidence_14",
+    "mirrorId": "liangzhi",
+    "mirrorName": "良知之镜",
+    "scene": "plunge",
+    "sourceScene": "急跌时",
+    "intensity": 4,
+    "text": "我看见自己没有被情绪带走。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "liangzhi_evidence_15",
+    "mirrorId": "liangzhi",
+    "mirrorName": "良知之镜",
+    "scene": "beforeStop",
+    "sourceScene": "止损时",
+    "intensity": 5,
+    "text": "我承认，这一次清醒比输赢更重要。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "liangzhi_evidence_16",
+    "mirrorId": "liangzhi",
+    "mirrorName": "良知之镜",
+    "scene": "floatingGain",
+    "sourceScene": "浮盈时",
+    "intensity": 1,
+    "text": "我看见心里还有一盏灯。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "liangzhi_evidence_17",
+    "mirrorId": "liangzhi",
+    "mirrorName": "良知之镜",
+    "scene": "missed",
+    "sourceScene": "踏空时",
+    "intensity": 2,
+    "text": "我今天的心证：知止守心。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "liangzhi_evidence_18",
+    "mirrorId": "liangzhi",
+    "mirrorName": "良知之镜",
+    "scene": "lossStreak",
+    "sourceScene": "亏损后",
+    "intensity": 3,
+    "text": "我知道，按计划做就是功夫。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "liangzhi_evidence_19",
+    "mirrorId": "liangzhi",
+    "mirrorName": "良知之镜",
+    "scene": "review",
+    "sourceScene": "复盘时",
+    "intensity": 4,
+    "text": "我看见自己可以不跟着情绪走。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  },
+  {
+    "id": "liangzhi_evidence_20",
+    "mirrorId": "liangzhi",
+    "mirrorName": "良知之镜",
+    "scene": "surge",
+    "sourceScene": "开盘时",
+    "intensity": 5,
+    "text": "我承认，这一刻就是事上练。",
+    "complianceNote": "本系统用于交易心理觉察与行为训练，不构成投资建议。"
+  }
+]

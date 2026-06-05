@@ -357,7 +357,7 @@
 
 .record-side text {
   display: block;
-  max-width: 58%;
+  max-width: 44%;
   color: #f1d27d;
   font-size: 23rpx;
   font-weight: 900;
@@ -365,6 +365,17 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+.record-side text:nth-of-type(2) {
+  max-width: 132rpx;
+  padding: 6rpx 12rpx;
+  border-radius: 999rpx;
+  color: rgba(216, 183, 111, 0.82);
+  border: 1rpx solid rgba(216, 183, 111, 0.14);
+  background: rgba(216, 183, 111, 0.055);
+  font-size: 20rpx;
+  text-align: center;
 }
 
 .record-side view {

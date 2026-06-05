@@ -16,9 +16,10 @@ import { getI18nBundle, listSupportedLocales } from "../services/i18n.js";
 import { getQuestionBankStats } from "../services/questionBank.js";
 import { consumeWechatAuthCode, createWechatAuthUrl } from "../services/wechatAuth.js";
 import { advanceZhixingReplaySession, finishZhixingReplaySession, getZhixingReplaySession, listZhixingReplayResults, startZhixingReplaySession, submitZhixingReplayDecision } from "../services/zhixingReplay.js";
-import { generateShareCardBinding, getAdminUserFromBindings, getDataBindingUserSummary, getInviteSourceStatsBinding, getRetestComparisonBinding, getShareCardBinding, getUserReportBinding, listAdminUsersFromBindings, saveAssessmentReportBinding, saveKLineRecordBinding, saveRetestResultBinding, saveTradeReviewBinding, saveTrainingRecordBinding, syncAssistantSummaryToFeishuBinding, updateAssistantHandoffBinding } from "../services/dataBinding.js";
+import { dispatchTrainingPrescriptionBinding, generateShareCardBinding, getAdminUserFromBindings, getDataBindingUserSummary, getInviteSourceStatsBinding, getRetestComparisonBinding, getShareCardBinding, getTrainingPrescriptionBinding, getUserReportBinding, listAdminUsersFromBindings, listTradeReviewBindings, saveAssessmentReportBinding, saveKLineRecordBinding, saveRetestResultBinding, saveTradeReviewBinding, saveTrainingRecordBinding, syncAssistantSummaryToFeishuBinding, updateAssistantHandoffBinding } from "../services/dataBinding.js";
 import { getGlobalReflectionToday, listGlobalReflectionChoices, submitGlobalReflectionVote } from "../services/globalReflection.js";
 import { buildHistoricalKlineSlice, downloadHistoricalKline, getHistoricalKlineRules, listHistoricalKlineCatalog, listHistoricalKlineInstruments, revealHistoricalKlineSlice } from "../services/historicalKline.js";
+import { buildTradeReviewOcrDraft } from "../services/tradeReviewOcr.js";
 
 export async function route(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
@@ -82,10 +83,12 @@ export async function route(req, res) {
         data_binding_user_report: "GET /api/v1/data-binding/users/:user_id/report",
         data_binding_training_record: "POST /api/v1/data-binding/users/:user_id/training-records",
         data_binding_kline_record: "POST /api/v1/data-binding/users/:user_id/kline-records",
-        data_binding_trade_review: "POST /api/v1/data-binding/users/:user_id/trade-reviews",
+        data_binding_trade_review: "GET|POST /api/v1/data-binding/users/:user_id/trade-reviews",
+        data_binding_trade_review_ocr: "POST /api/v1/data-binding/users/:user_id/trade-review-ocr",
         data_binding_retest: "POST /api/v1/data-binding/users/:user_id/retests",
         data_binding_retest_comparison: "GET /api/v1/data-binding/users/:user_id/retest-comparison",
         data_binding_user_summary: "GET /api/v1/data-binding/users/:user_id/summary",
+        data_binding_training_prescription: "GET|POST /api/v1/data-binding/users/:user_id/training-prescription",
         admin_users: "GET /api/v1/admin/users",
         admin_user_detail: "GET /api/v1/admin/users/:user_id",
         admin_assistant_handoff: "POST /api/v1/admin/users/:user_id/assistant-handoff",
@@ -254,6 +257,12 @@ export async function route(req, res) {
   }
 
   const dataBindingTradeReviewMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/trade-reviews$/);
+  if (req.method === "GET" && dataBindingTradeReviewMatch) {
+    const result = await listTradeReviewBindings(dataBindingTradeReviewMatch[1]);
+    if (!result) return sendJson(res, 404, { ok: false, error: "用户不存在" });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
   if (req.method === "POST" && dataBindingTradeReviewMatch) {
     const body = await readJson(req);
     const result = await saveTradeReviewBinding({
@@ -262,6 +271,17 @@ export async function route(req, res) {
       source: body.source || body.source_channel || "api"
     });
     return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const dataBindingTradeReviewOcrMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/trade-review-ocr$/);
+  if (req.method === "POST" && dataBindingTradeReviewOcrMatch) {
+    const body = await readJson(req);
+    const ocrDraft = await buildTradeReviewOcrDraft({
+      user: { ...(body.user || {}), userId: dataBindingTradeReviewOcrMatch[1] },
+      image: body.image || {},
+      source: body.source || body.source_channel || "api"
+    });
+    return sendJson(res, 200, { ok: true, ocr_draft: ocrDraft });
   }
 
   const dataBindingRetestMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/retests$/);
@@ -287,6 +307,22 @@ export async function route(req, res) {
     const summary = await getDataBindingUserSummary(dataBindingSummaryMatch[1]);
     if (!summary) return sendJson(res, 404, { ok: false, error: "用户不存在" });
     return sendJson(res, 200, { ok: true, ...summary });
+  }
+
+  const dataBindingPrescriptionMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/training-prescription$/);
+  if (req.method === "GET" && dataBindingPrescriptionMatch) {
+    const result = await getTrainingPrescriptionBinding(dataBindingPrescriptionMatch[1]);
+    if (!result) return sendJson(res, 404, { ok: false, error: "用户不存在" });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "POST" && dataBindingPrescriptionMatch) {
+    const body = await readJson(req);
+    const result = await dispatchTrainingPrescriptionBinding(dataBindingPrescriptionMatch[1], {
+      source: body.source || body.source_channel || "web-next"
+    });
+    if (!result) return sendJson(res, 404, { ok: false, error: "用户不存在" });
+    return sendJson(res, 200, { ok: true, ...result });
   }
 
   const dataBindingShareCardMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/share-card$/);

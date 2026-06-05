@@ -155,6 +155,7 @@ export const adminApiEndpoints = [
   "POST /api/v1/data-binding/users/:user_id/trade-reviews",
   "POST /api/v1/data-binding/users/:user_id/retests",
   "GET /api/v1/data-binding/users/:user_id/retest-comparison",
+  "GET|POST /api/v1/data-binding/users/:user_id/training-prescription",
   "GET /api/v1/admin/users",
   "GET /api/v1/admin/users/:user_id",
   "POST /api/v1/admin/users/:user_id/assistant-handoff",

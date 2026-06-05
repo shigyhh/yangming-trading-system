@@ -20,7 +20,7 @@ export function HeroSection() {
     <section
       id="hero"
       aria-label="阳明心学交易系统首屏"
-      className="relative z-10 w-full overflow-hidden text-left md:min-h-[100svh]"
+      className="relative z-10 w-full overflow-hidden text-left md:min-h-[min(100svh,920px)] xl:min-h-[min(100svh,980px)]"
     >
       <div className="hero-quiet-field" aria-hidden="true">
         <span className="hero-quiet-moon" />
@@ -30,7 +30,7 @@ export function HeroSection() {
         <span className="hero-quiet-dust hero-quiet-dust-two" />
       </div>
 
-      <div className="relative z-10 mx-auto grid w-full max-w-[1500px] items-start gap-10 px-5 pb-10 pt-[6.75rem] md:min-h-[100svh] md:px-8 md:pb-16 md:pt-28 lg:grid-cols-[minmax(0,760px)_minmax(420px,520px)] lg:justify-center lg:gap-16 lg:pt-36 xl:gap-20">
+      <div className="relative z-10 mx-auto grid w-full max-w-[1500px] items-start gap-10 px-5 pb-10 pt-[6.75rem] md:min-h-[min(100svh,920px)] md:px-8 md:pb-14 md:pt-28 lg:grid-cols-[minmax(0,760px)_minmax(420px,520px)] lg:justify-center lg:gap-16 lg:pt-32 xl:min-h-[min(100svh,980px)] xl:gap-20">
         <motion.div
           className="w-full max-w-[760px] lg:flex lg:min-h-[560px] lg:flex-col"
           initial={{ opacity: 0, y: 22, filter: "blur(10px)" }}

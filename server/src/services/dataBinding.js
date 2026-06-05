@@ -3,6 +3,7 @@ import { buildShareCardConclusion, buildShareCardTrainingFocus, shareCardContent
 import { config } from "../config.js";
 import { readJsonFile, replaceRuntimeRecords, runtimeFile } from "../lib/store.js";
 import { syncReportToFeishu } from "./feishu.js";
+import { buildHistoricalKlineSlice } from "./historicalKline.js";
 
 const users = new Map();
 const DATA_BINDING_FILE = "data-binding-users.json";
@@ -71,6 +72,8 @@ export async function saveAssessmentReportBinding({ user = {}, report = {}, answ
     report: normalizedReport,
     mirror_report: record.mirror_report,
     living_mirror_stats: record.living_mirror_stats,
+    living_mirror_profile: record.living_mirror_profile,
+    training_prescription: record.training_prescription,
     admin_user: toAdminUser(record)
   };
 }
@@ -101,6 +104,8 @@ export async function saveTrainingRecordBinding({ user = {}, record = {}, practi
     user: publicUser(userRecord),
     record: trainingRecord,
     living_mirror_stats: userRecord.living_mirror_stats,
+    living_mirror_profile: userRecord.living_mirror_profile,
+    training_prescription: userRecord.training_prescription,
     admin_user: toAdminUser(userRecord)
   };
 }
@@ -136,6 +141,8 @@ export async function saveKLineRecordBinding({ user = {}, record = {}, source = 
     user: publicUser(userRecord),
     record: klineRecord,
     living_mirror_stats: userRecord.living_mirror_stats,
+    living_mirror_profile: userRecord.living_mirror_profile,
+    training_prescription: userRecord.training_prescription,
     admin_user: toAdminUser(userRecord)
   };
 }
@@ -163,6 +170,8 @@ export async function saveRetestResultBinding({ user = {}, report = {}, comparis
     retest: userRecord.retests[userRecord.retests.length - 1],
     comparison: radarComparison,
     living_mirror_stats: userRecord.living_mirror_stats,
+    living_mirror_profile: userRecord.living_mirror_profile,
+    training_prescription: userRecord.training_prescription,
     admin_user: toAdminUser(userRecord)
   };
 }
@@ -172,7 +181,7 @@ export async function saveTradeReviewBinding({ user = {}, review = {}, source = 
   const profile = normalizeUserProfile(user);
   const userRecord = ensureUser(profile);
   const now = new Date().toISOString();
-  const tradeReview = normalizeTradeReview(review, userRecord, now, source);
+  const tradeReview = await normalizeTradeReview(review, userRecord, now, source);
 
   userRecord.trade_reviews = mergeById(userRecord.trade_reviews, [tradeReview])
     .sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
@@ -184,7 +193,24 @@ export async function saveTradeReviewBinding({ user = {}, review = {}, source = 
     user: publicUser(userRecord),
     review: tradeReview,
     living_mirror_stats: userRecord.living_mirror_stats,
+    living_mirror_profile: userRecord.living_mirror_profile,
+    training_prescription: userRecord.training_prescription,
     admin_user: toAdminUser(userRecord)
+  };
+}
+
+export async function listTradeReviewBindings(userId) {
+  await ensureDataBindingLoaded();
+  const record = findUserRecord(userId);
+  if (!record) return null;
+
+  return {
+    user: publicUser(record),
+    trade_reviews: record.trade_reviews || [],
+    living_mirror_stats: record.living_mirror_stats || refreshLivingMirrorState(record, { updateTrend: false }),
+    living_mirror_profile: record.living_mirror_profile || buildLivingMirrorProfile(record),
+    training_prescription: record.training_prescription || buildTrainingPrescription(record),
+    assistant_summary: record.assistant_summary || null
   };
 }
 
@@ -208,6 +234,8 @@ export async function getDataBindingUserSummary(userId) {
     kline_records: record.kline_records,
     trade_reviews: record.trade_reviews || [],
     living_mirror_stats: record.living_mirror_stats || null,
+    living_mirror_profile: record.living_mirror_profile || buildLivingMirrorProfile(record),
+    training_prescription: record.training_prescription || buildTrainingPrescription(record),
     retests: record.retests,
     retest_comparison: getLatestRetestComparison(record),
     assistant_summary: record.assistant_summary || null,
@@ -215,6 +243,43 @@ export async function getDataBindingUserSummary(userId) {
     share_card: record.share_card || null,
     admin_user: toAdminUser(record),
     mirror_archive: buildMirrorArchive(record)
+  };
+}
+
+export async function getTrainingPrescriptionBinding(userId) {
+  await ensureDataBindingLoaded();
+  const record = findUserRecord(userId);
+  if (!record) return null;
+
+  record.training_prescription = record.training_prescription || buildTrainingPrescription(record);
+  return {
+    user: publicUser(record),
+    training_prescription: record.training_prescription,
+    living_mirror_profile: record.living_mirror_profile || buildLivingMirrorProfile(record),
+    admin_user: toAdminUser(record)
+  };
+}
+
+export async function dispatchTrainingPrescriptionBinding(userId, { source = "web-next" } = {}) {
+  await ensureDataBindingLoaded();
+  const record = findUserRecord(userId);
+  if (!record) return null;
+
+  const now = new Date().toISOString();
+  record.training_prescription = buildTrainingPrescription(record, {
+    ...(record.training_prescription || {}),
+    source,
+    status: "dispatched",
+    dispatchedAt: now
+  });
+  record.updated_at = now;
+  await persistDataBindingUsers();
+
+  return {
+    user: publicUser(record),
+    training_prescription: record.training_prescription,
+    living_mirror_profile: record.living_mirror_profile || buildLivingMirrorProfile(record),
+    admin_user: toAdminUser(record)
   };
 }
 
@@ -431,6 +496,8 @@ function normalizePersistedUserRecord(record) {
     mirror_report: record?.mirror_report || null,
     trade_reviews: Array.isArray(record?.trade_reviews) ? record.trade_reviews : [],
     living_mirror_stats: record?.living_mirror_stats || null,
+    living_mirror_profile: record?.living_mirror_profile || null,
+    training_prescription: record?.training_prescription || null,
     practice_state: record?.practice_state || null,
     assistant: normalizeAssistant(record?.assistant),
     assistant_summary: record?.assistant_summary || null,
@@ -509,6 +576,8 @@ function ensureUser(profile) {
     mirror_report: null,
     trade_reviews: [],
     living_mirror_stats: null,
+    living_mirror_profile: null,
+    training_prescription: null,
     practice_state: null,
     assistant: {
       status: "待承接",
@@ -553,6 +622,8 @@ function mergeUserRecords(canonical, incoming) {
   canonical.retests = mergeById(canonical.retests, incoming.retests)
     .sort((a, b) => new Date(a.saved_at || 0).getTime() - new Date(b.saved_at || 0).getTime());
   canonical.mirror_report = chooseLatestByTime(canonical.mirror_report, incoming.mirror_report, "createdAt");
+  canonical.training_prescription = chooseLatestByTime(canonical.training_prescription, incoming.training_prescription, "dispatchedAt")
+    || chooseLatestByTime(canonical.training_prescription, incoming.training_prescription, "createdAt");
   canonical.trade_reviews = mergeById(canonical.trade_reviews, incoming.trade_reviews)
     .sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
   canonical.practice_state = canonical.practice_state || incoming.practice_state;
@@ -765,7 +836,7 @@ function normalizeTrainingRecord(record, fallbackTime) {
   };
 }
 
-function normalizeTradeReview(review, userRecord, fallbackTime, source) {
+async function normalizeTradeReview(review, userRecord, fallbackTime, source) {
   const buyReason = cleanText(review.buyReason || review.buy_reason || "", 260);
   const sellReason = cleanText(review.sellReason || review.sell_reason || "", 260);
   const strongestThought = cleanText(review.strongestThought || review.strongest_thought || "", 180);
@@ -780,23 +851,283 @@ function normalizeTradeReview(review, userRecord, fallbackTime, source) {
     review.reviewText || review.review_text || buildTradeReviewText({ detectedMirror, detectedThieves, strongestThought }),
     320
   );
+  const rawSymbol = cleanText(review.lookupSymbol || review.lookup_symbol || review.symbol || review.symbol_raw || review.symbolMasked || review.symbol_masked || "", 80);
+  const tradeDate = cleanText(review.tradeDate || review.trade_date || fallbackTime.slice(0, 10), 40);
+  const marketType = cleanText(review.marketType || review.market_type || "other", 40);
+  const timeframeKey = cleanText(review.timeframeKey || review.timeframe_key || "1d", 24);
+  const marketContext = await buildTradeReviewMarketContext({
+    id: review.id || "",
+    marketType,
+    timeframeKey,
+    tradeDate,
+    symbol: rawSymbol
+  });
 
-  return {
+  const normalized = {
     id: String(review.id || crypto.randomUUID()),
     userId: userRecord.id,
     imageUrl: cleanText(review.imageUrl || review.image_url || "", 240),
-    tradeDate: cleanText(review.tradeDate || review.trade_date || fallbackTime.slice(0, 10), 40),
-    symbolMasked: cleanText(review.symbolMasked || review.symbol_masked || maskTradeSymbol(review.symbol || review.symbol_raw || ""), 40),
-    marketType: cleanText(review.marketType || review.market_type || "other", 40),
+    tradeDate,
+    symbolMasked: cleanText(review.symbolMasked || review.symbol_masked || maskTradeSymbol(rawSymbol), 40),
+    marketType,
+    timeframeKey,
     buyReason,
     sellReason,
     strongestThought,
+    wasPlanned: normalizeOptionalBoolean(review.wasPlanned ?? review.was_planned),
+    hadExitRule: normalizeOptionalBoolean(review.hadExitRule ?? review.had_exit_rule),
+    changedPlanDuringTrade: normalizeOptionalBoolean(review.changedPlanDuringTrade ?? review.changed_plan_during_trade),
     detectedMirror,
     detectedThieves,
     behaviorTags,
+    nextAction: cleanText(review.nextAction || review.next_action || "", 180),
     reviewText,
+    ocrDraft: normalizeTradeReviewOcrDraft(review.ocrDraft || review.ocr_draft || null),
+    marketContext,
     createdAt: review.createdAt || review.created_at || fallbackTime,
     source
+  };
+  return withTradeReviewCrossEndStatus(normalized, userRecord);
+}
+
+function withTradeReviewCrossEndStatus(review = {}, record = {}) {
+  const status = buildTradeReviewCrossEndStatus(review, record);
+  return {
+    ...review,
+    crossEndStatus: status.key,
+    crossEndStatusText: status.label,
+    crossEndStatusSteps: status.steps,
+    statusUpdatedAt: status.updatedAt
+  };
+}
+
+function buildTradeReviewCrossEndStatus(review = {}, record = {}) {
+  const confirmed = Boolean(cleanText(review.strongestThought || review.strongest_thought || "", 180)) &&
+    Boolean(cleanText(review.buyReason || review.buy_reason || review.sellReason || review.sell_reason || review.imageUrl || review.image_url || "", 260));
+  const marketStatus = review.marketContext?.status || review.market_context?.status || "";
+  const marketReviewed = marketStatus === "ready";
+  const mirrored = Boolean(review.detectedMirror || review.detected_mirror) && Boolean(review.reviewText || review.review_text);
+  const archived = Boolean(review.id);
+  const trained = hasTrainingAfterReview(record, review);
+  const retested = hasRetestAfterReview(record, review);
+  const source = cleanText(review.source || "server", 40);
+  const steps = [
+    buildReviewStatusStep("pending_confirmation", "待确认", confirmed, !confirmed, "截图、自述与第一念等待确认。", source),
+    buildReviewStatusStep("pending_market_review", "待回看", marketReviewed, confirmed && !marketReviewed, "等待历史位置回看完成。", source),
+    buildReviewStatusStep("mirrored", "已照见", mirrored, confirmed && marketReviewed && !mirrored, "九镜六贼已生成照见结果。", source),
+    buildReviewStatusStep("archived", "已入镜", archived, confirmed && marketReviewed && mirrored && !archived, "真实记录已写入活镜档案。", source),
+    buildReviewStatusStep("training_pending", "待训练", trained, confirmed && marketReviewed && mirrored && archived && !trained, "等待对应训练动作完成。", source),
+    buildReviewStatusStep("trained", "已训练", trained, trained && !retested, "训练动作已回流到这条记录。", source),
+    buildReviewStatusStep("retested", "已复测", retested, retested, "复测变化已回看。", source)
+  ];
+  const current = steps.find((step) => step.current) || steps.slice().reverse().find((step) => step.done) || steps[0];
+  return {
+    key: current.key,
+    label: current.label,
+    steps,
+    updatedAt: new Date().toISOString()
+  };
+}
+
+function buildReviewStatusStep(key, label, done, current, detail, source) {
+  return {
+    key,
+    label,
+    done: Boolean(done),
+    current: Boolean(current),
+    detail,
+    source
+  };
+}
+
+function hasTrainingAfterReview(record = {}, review = {}) {
+  const reviewTime = toTime(review.createdAt || review.created_at || review.tradeDate || review.trade_date);
+  return (record.training_records || []).some((item) => {
+    if (item.status && item.status !== "completed") return false;
+    const trainingTime = toTime(item.recorded_at || item.recordedAt || item.date_key || item.dateKey);
+    return !reviewTime || !trainingTime || trainingTime >= reviewTime;
+  });
+}
+
+function hasRetestAfterReview(record = {}, review = {}) {
+  const reviewTime = toTime(review.createdAt || review.created_at || review.tradeDate || review.trade_date);
+  return (record.retests || []).some((item) => {
+    const retestTime = toTime(item.saved_at || item.savedAt || item.report?.createdAt);
+    return !reviewTime || !retestTime || retestTime >= reviewTime;
+  });
+}
+
+function toTime(value) {
+  const date = new Date(value || 0);
+  const time = date.getTime();
+  return Number.isNaN(time) ? 0 : time;
+}
+
+async function buildTradeReviewMarketContext({ id = "", marketType = "", timeframeKey = "1d", tradeDate = "", symbol = "" } = {}) {
+  const marketKey = toKlineMarketKey(marketType);
+  const safeSymbol = cleanLookupSymbol(symbol);
+  const safeTimeframe = toKlineTimeframeKey(timeframeKey);
+  const base = {
+    schemaVersion: "trade_review_market_context_v1",
+    status: "",
+    marketKey,
+    timeframeKey: safeTimeframe,
+    tradeDate: cleanText(tradeDate, 40),
+    symbolMasked: safeSymbol ? maskTradeSymbol(safeSymbol) : "",
+    sourceStatus: "",
+    positionLabel: "",
+    dataStart: "",
+    dataEnd: "",
+    candleCount: 0,
+    source: "",
+    rulesSummary: "",
+    complianceNotice: "仅用于回看当时市场环境与交易心理反应，不构成投资建议。"
+  };
+  if (!safeSymbol) {
+    return {
+      ...base,
+      status: "missing_symbol",
+      sourceStatus: "未提供可回看标的",
+      positionLabel: "手动复盘优先"
+    };
+  }
+
+  try {
+    const { slice } = await buildHistoricalKlineSlice({
+      marketKey,
+      symbol: safeSymbol,
+      timeframeKey: safeTimeframe,
+      windowSize: 40,
+      mode: "boundary",
+      blind: false,
+      seed: `${id || safeSymbol}:${tradeDate || ""}`,
+      endDate: tradeDate || "",
+      anchor: "end"
+    });
+    return {
+      ...base,
+      status: "ready",
+      marketKey: slice.market.key,
+      marketLabel: slice.market.label,
+      timeframeKey: slice.timeframe.key,
+      timeframeLabel: slice.timeframe.label,
+      sourceStatus: "历史片段已载入",
+      positionLabel: buildMarketPositionLabel(slice),
+      dataStart: slice.data_range?.start || "",
+      dataEnd: slice.data_range?.end || "",
+      candleCount: slice.visible_count || 0,
+      source: slice.source || "",
+      rulesSummary: slice.rules?.session || "",
+      reviewPrompt: slice.training?.review_prompt || ""
+    };
+  } catch (error) {
+    return {
+      ...base,
+      status: error && error.statusCode === 404 ? "missing_cache" : "failed",
+      sourceStatus: error && error.message ? cleanText(error.message, 160) : "历史片段暂未载入",
+      positionLabel: "先完成手动复盘，待历史数据载入后回看"
+    };
+  }
+}
+
+function toKlineMarketKey(value) {
+  const text = String(value || "").toLowerCase();
+  if (["a_share", "cn", "cn_equity", "ashare"].includes(text)) return "cn_equity";
+  if (["hk_stock", "hk", "hk_equity"].includes(text)) return "hk_equity";
+  if (["us_stock", "us", "us_equity"].includes(text)) return "us_equity";
+  if (["futures", "future"].includes(text)) return "futures";
+  if (["crypto", "digital_currency"].includes(text)) return "crypto";
+  return "cn_equity";
+}
+
+function toKlineTimeframeKey(value) {
+  const text = String(value || "1d").toLowerCase();
+  if (text === "1m" || text === "1mo") return "1mo";
+  if (["5m", "10m", "30m", "60m", "1d", "1w", "1y"].includes(text)) return text;
+  return "1d";
+}
+
+function cleanLookupSymbol(value) {
+  const text = cleanText(value, 80);
+  if (!text || text.includes("*")) return "";
+  return text;
+}
+
+function buildMarketPositionLabel(slice) {
+  const range = slice.data_range || {};
+  const market = slice.market?.label || "历史市场";
+  const timeframe = slice.timeframe?.label || "周期";
+  const stage = analyzeKlineStage(slice.candles || []);
+  const rangeText = range.start || range.end ? `${range.start || "起点"} 至 ${range.end || "终点"}` : "历史片段";
+  return `${market} · ${timeframe} · ${rangeText} · ${stage}`;
+}
+
+function analyzeKlineStage(candles = []) {
+  const rows = (candles || [])
+    .map((item) => ({
+      open: Number(item.open),
+      high: Number(item.high),
+      low: Number(item.low),
+      close: Number(item.close),
+      volume: Number(item.volume || 0)
+    }))
+    .filter((item) => [item.open, item.high, item.low, item.close].every(Number.isFinite));
+  if (rows.length < 3) return "阶段位置待补全";
+
+  const first = rows[0];
+  const last = rows[rows.length - 1];
+  const closeValues = rows.map((item) => item.close);
+  const highValues = rows.map((item) => item.high);
+  const lowValues = rows.map((item) => item.low);
+  const high = Math.max(...highValues);
+  const low = Math.min(...lowValues);
+  const range = high - low;
+  const locationRatio = range > 0 ? (last.close - low) / range : 0.5;
+  const location = locationRatio >= 0.68 ? "区间上沿" : locationRatio <= 0.32 ? "区间下沿" : "区间中部";
+  const changeRatio = first.close ? (last.close - first.close) / first.close : 0;
+  const direction = changeRatio >= 0.035 ? "阶段上行" : changeRatio <= -0.035 ? "阶段回落" : "阶段震荡";
+  const recent = rows.slice(-8);
+  const recentAmplitude = average(recent.map((item) => {
+    const base = item.open || item.close || 1;
+    return Math.abs(item.high - item.low) / base;
+  }));
+  const amplitude = recentAmplitude >= 0.035 ? "波动放大" : recentAmplitude <= 0.012 ? "波动收敛" : "波动平稳";
+
+  return `${direction} · ${location} · ${amplitude}`;
+}
+
+function average(values = []) {
+  const rows = (values || []).map(Number).filter(Number.isFinite);
+  if (!rows.length) return 0;
+  return rows.reduce((sum, value) => sum + value, 0) / rows.length;
+}
+
+function normalizeOptionalBoolean(value) {
+  if (value === true || value === false) return value;
+  if (value === "true" || value === "yes") return true;
+  if (value === "false" || value === "no") return false;
+  return null;
+}
+
+function normalizeTradeReviewOcrDraft(draft) {
+  if (!draft || typeof draft !== "object") return null;
+  const fields = draft.fields && typeof draft.fields === "object" ? draft.fields : {};
+  return {
+    id: cleanText(draft.id || "", 80),
+    status: cleanText(draft.status || "pending_confirmation", 40),
+    provider: cleanText(draft.provider || "manual_confirmation", 60),
+    confidence: clampPercent(draft.confidence),
+    needsUserConfirmation: draft.needsUserConfirmation !== false && draft.needs_user_confirmation !== false,
+    fields: {
+      tradeDate: cleanText(fields.tradeDate || fields.trade_date || "", 40),
+      marketType: cleanText(fields.marketType || fields.market_type || "", 40),
+      marketKey: cleanText(fields.marketKey || fields.market_key || "", 40),
+      timeframeKey: cleanText(fields.timeframeKey || fields.timeframe_key || "", 40),
+      symbol: cleanText(fields.symbol || "", 40),
+      rawText: cleanText(fields.rawText || fields.raw_text || "", 500)
+    },
+    message: cleanText(draft.message || "", 160),
+    createdAt: cleanText(draft.createdAt || draft.created_at || "", 40)
   };
 }
 
@@ -890,6 +1221,7 @@ function refreshLivingMirrorState(record, { updateTrend = true } = {}) {
   if (!record.mirror_report && record.assessment?.report) {
     record.mirror_report = buildMirrorReportFromAssessment(record.assessment.report, record);
   }
+  record.trade_reviews = (record.trade_reviews || []).map((review) => withTradeReviewCrossEndStatus(review, record));
 
   const now = new Date().toISOString();
   const completedCount = (record.training_records || []).filter((item) => item.status === "completed").length;
@@ -923,8 +1255,345 @@ function refreshLivingMirrorState(record, { updateTrend = true } = {}) {
     conscienceGrowth,
     lastUpdated: now
   };
+  record.living_mirror_profile = buildLivingMirrorProfile(record);
+  record.training_prescription = buildTrainingPrescription(record, record.training_prescription || {});
 
   return record.living_mirror_stats;
+}
+
+function buildLivingMirrorProfile(record = {}) {
+  const now = new Date().toISOString();
+  const assessmentMirror = normalizeMirrorName(record.mirror_report?.mainMirror || "");
+  const klineMirror = getTopMirrorFromKlineRecords(record.kline_records || [], assessmentMirror);
+  const tradeMirror = getTopMirrorFromTradeReviews(record.trade_reviews || []);
+  const rows = [
+    buildProfileSourceRow("assessment", "九镜测评", assessmentMirror, record.mirror_report ? "已入档" : "待测评", record.mirror_report?.id || ""),
+    buildProfileSourceRow("kline", "K线盲练", klineMirror.mirror, klineMirror.count ? `${klineMirror.count} 次显现` : "待训练", ""),
+    buildProfileSourceRow("trade", "真实交易记录", tradeMirror.mirror, tradeMirror.count ? `${tradeMirror.count} 次显现` : "待复盘", "")
+  ];
+  const triple = buildTripleReflection(rows);
+  const marketContexts = (record.trade_reviews || [])
+    .slice(-5)
+    .reverse()
+    .map((review) => review.marketContext)
+    .filter(Boolean);
+
+  return {
+    schemaVersion: "living_mirror_profile_v1",
+    userId: record.id,
+    currentMainMirror: triple.mainMirror,
+    currentStage: resolveLivingMirrorStage(record, triple),
+    sources: rows,
+    tripleReflection: triple,
+    marketContexts,
+    latestMarketContext: marketContexts[0] || null,
+    trainingFocus: buildProfileTrainingFocus(triple.mainMirror),
+    sourceCounts: {
+      assessment: record.mirror_report ? 1 : 0,
+      klineBlind: (record.kline_records || []).length,
+      tradeReview: (record.trade_reviews || []).length
+    },
+    updatedAt: now,
+    complianceNotice: "本画像仅用于交易心理觉察、复盘训练与行为管理，不构成投资建议。"
+  };
+}
+
+function buildProfileSourceRow(key, name, mirror, statusText, sourceId = "") {
+  return {
+    key,
+    name,
+    mirror: mirror || "待照见",
+    statusText,
+    sourceId
+  };
+}
+
+function getTopMirrorFromTradeReviews(reviews = []) {
+  return topMirror(reviews.map((review) => review.detectedMirror || ""));
+}
+
+function getTopMirrorFromKlineRecords(records = [], fallbackMirror = "") {
+  const mirrors = (records || []).map((record) => inferMirrorName([
+    record.reaction,
+    record.scene,
+    record.feedback,
+    record.process_insight,
+    record.training_suggestion
+  ], fallbackMirror || "良知之镜"));
+  return topMirror(mirrors);
+}
+
+function topMirror(values = []) {
+  const counts = values.reduce((result, value) => {
+    const mirror = normalizeMirrorName(value || "");
+    if (!mirror) return result;
+    result[mirror] = (result[mirror] || 0) + 1;
+    return result;
+  }, {});
+  return Object.keys(counts)
+    .map((mirror) => ({ mirror, count: counts[mirror] }))
+    .sort((a, b) => b.count - a.count || a.mirror.localeCompare(b.mirror))[0] || { mirror: "", count: 0 };
+}
+
+function buildTripleReflection(rows = []) {
+  const mirrors = rows.map((row) => row.mirror).filter((mirror) => mirror && mirror !== "待照见");
+  const counts = mirrors.reduce((result, mirror) => {
+    result[mirror] = (result[mirror] || 0) + 1;
+    return result;
+  }, {});
+  const top = Object.keys(counts)
+    .map((mirror) => ({ mirror, count: counts[mirror] }))
+    .sort((a, b) => b.count - a.count || a.mirror.localeCompare(b.mirror))[0];
+  const state = resolveTripleState({ mirrors, top, uniqueCount: Object.keys(counts).length });
+  const mainMirror = top?.mirror || mirrors[0] || "待照见";
+  const insight = buildTripleVerificationInsight({ rows, state, mainMirror });
+  return {
+    version: "triple-reflection-v1",
+    title: "三证互照",
+    state: state.key,
+    stateLabel: state.label,
+    mainMirror,
+    rows,
+    conclusion: insight.conclusion,
+    unifiedConclusion: insight.unifiedConclusion,
+    proofLine: insight.proofLine,
+    evidenceLevel: insight.evidenceLevel,
+    evidenceLevelText: insight.evidenceLevelText,
+    matchedSources: insight.matchedSources,
+    conflictSources: insight.conflictSources,
+    missingSources: insight.missingSources,
+    nextCalibration: insight.nextCalibration,
+    prescription: buildProfileTrainingFocus(mainMirror),
+    updatedAt: new Date().toISOString()
+  };
+}
+
+function resolveTripleState({ mirrors, top, uniqueCount }) {
+  if (!mirrors.length) return { key: "empty", label: "待入镜" };
+  if (mirrors.length < 3) return { key: "insufficient", label: "待补全" };
+  if (top?.count === 3) return { key: "aligned", label: "三路同向" };
+  if (top?.count === 2) return { key: "partial", label: "两路同向" };
+  if (uniqueCount >= 3) return { key: "conflict", label: "需要校准" };
+  return { key: "insufficient", label: "待补全" };
+}
+
+function buildTripleVerificationInsight({ rows = [], state = {}, mainMirror = "待照见" } = {}) {
+  const activeRows = rows.filter((row) => row.mirror && row.mirror !== "待照见");
+  const matchedSources = activeRows.filter((row) => row.mirror === mainMirror).map(toTripleSourceSummary);
+  const conflictSources = activeRows.filter((row) => row.mirror !== mainMirror).map(toTripleSourceSummary);
+  const missingSources = rows.filter((row) => !row.mirror || row.mirror === "待照见").map((row) => ({
+    key: row.key,
+    name: row.name,
+    statusText: row.statusText
+  }));
+  const formula = activeRows.length
+    ? activeRows.map((row) => `${row.name}：${row.mirror}`).join(" + ")
+    : "九镜测评 + K线盲练 + 真实交易记录";
+  const missingText = missingSources.map((row) => row.name).join("、");
+
+  if (state.key === "empty") {
+    return {
+      evidenceLevel: "empty",
+      evidenceLevelText: "待入镜",
+      proofLine: `${formula} → 待生成主镜`,
+      unifiedConclusion: "三证尚未形成",
+      conclusion: "先完成九镜测评、K线盲练或真实交易记录，活镜画像会开始生成。",
+      matchedSources,
+      conflictSources,
+      missingSources,
+      nextCalibration: "先完成九镜测评，再做一次K线盲练和一条真实复盘。"
+    };
+  }
+
+  if (state.key === "aligned") {
+    return {
+      evidenceLevel: "strong",
+      evidenceLevelText: "强印证",
+      proofLine: `${formula} → ${mainMirror}增强`,
+      unifiedConclusion: `${mainMirror}增强`,
+      conclusion: `九镜测评、K线盲练、真实交易记录都指向「${mainMirror}」，「${mainMirror}」增强。`,
+      matchedSources,
+      conflictSources,
+      missingSources,
+      nextCalibration: `主修保持在「${mainMirror}」，下一次用真实复盘检验训练是否回流到行为。`
+    };
+  }
+
+  if (state.key === "partial") {
+    return {
+      evidenceLevel: "medium",
+      evidenceLevelText: "两路印证",
+      proofLine: `${formula} → ${mainMirror}增强，待${missingText || "第三路"}校准`,
+      unifiedConclusion: `${mainMirror}增强，仍需校准`,
+      conclusion: `${matchedSources.map((row) => row.name).join("、")}共同指向「${mainMirror}」，「${mainMirror}」增强；${missingText || "剩余一路"}还需要补齐。`,
+      matchedSources,
+      conflictSources,
+      missingSources,
+      nextCalibration: missingText ? `下一步补齐${missingText}，验证主镜是否继续同向。` : "下一步补一条真实复盘，继续校准主镜。"
+    };
+  }
+
+  if (state.key === "conflict") {
+    return {
+      evidenceLevel: "calibration",
+      evidenceLevelText: "需要校准",
+      proofLine: `${formula} → 三路不一致`,
+      unifiedConclusion: "主镜暂不强化",
+      conclusion: `${rows.map((row) => `${row.name}是「${row.mirror || "待照见"}」`).join("，")}。认知、压力盲练与真实交易记录暂不一致，先回看压力下的第一念。`,
+      matchedSources,
+      conflictSources,
+      missingSources,
+      nextCalibration: "先做一次同主题K线盲练，再上传一条真实交易记录校准。"
+    };
+  }
+
+  return {
+    evidenceLevel: "insufficient",
+    evidenceLevelText: "待补全",
+    proofLine: `${formula} → ${mainMirror}待校准`,
+    unifiedConclusion: `${mainMirror}待校准`,
+    conclusion: `当前主线暂指向「${mainMirror}」，还需要补齐${missingText || "K线盲练或真实交易记录"}。`,
+    matchedSources,
+    conflictSources,
+    missingSources,
+    nextCalibration: missingText ? `下一步补齐${missingText}。` : "下一步补一条真实复盘或K线盲练。"
+  };
+}
+
+function toTripleSourceSummary(row) {
+  return {
+    key: row.key,
+    name: row.name,
+    mirror: row.mirror,
+    statusText: row.statusText
+  };
+}
+
+function resolveLivingMirrorStage(record, triple) {
+  if (!record.mirror_report) return "待入照心";
+  if (!(record.trade_reviews || []).length) return "待真实复盘";
+  if (triple.state === "aligned" || triple.state === "partial") return "主线显影";
+  if (triple.state === "conflict") return "需要校准";
+  return "持续入镜";
+}
+
+function buildProfileTrainingFocus(mainMirror) {
+  const focusMap = {
+    "追涨之镜": "边界前停十秒，先写第一念。",
+    "扛单之镜": "边界触碰时，只回看原先写下的规则。",
+    "幻想之镜": "先写反向事实，再进入复盘。",
+    "赌性之镜": "动作变大前，先记录那一口不甘。",
+    "从众之镜": "外部声音变热时，先回到自己的计划。",
+    "犹疑之镜": "允许一次小步验证，不追求完美确认。",
+    "拖延之镜": "只做三分钟复盘，先把事实落下。",
+    "焦虑之镜": "固定观察窗口外，只记录念头。",
+    "良知之镜": "保持每日一省，让稳定继续有根。"
+  };
+  return focusMap[mainMirror] || "先留下真实记录，再让系统校准下一练。";
+}
+
+function buildTrainingPrescription(record = {}, previous = {}) {
+  const now = new Date().toISOString();
+  const profile = record.living_mirror_profile || buildLivingMirrorProfile(record);
+  const triple = profile.tripleReflection || {};
+  const rawMirror = profile.currentMainMirror || triple.mainMirror || "";
+  const mirror = rawMirror && rawMirror !== "待照见" ? normalizeMirrorName(rawMirror) : "待照见";
+  const day = resolveTrainingPrescriptionDay(record);
+  const action = cleanText(triple.nextCalibration || profile.trainingFocus || buildProfileTrainingFocus(mirror), 180);
+  const marketContext = profile.latestMarketContext || (record.trade_reviews || []).slice(-1)[0]?.marketContext || null;
+  const status = previous.status === "dispatched" || previous.status === "received" ? previous.status : "ready";
+  const createdAt = previous.createdAt || previous.created_at || now;
+
+  return {
+    schemaVersion: "training_prescription_v1",
+    id: previous.id || `tp-${record.id || "user"}-${day}-${createdAt.slice(0, 10)}`,
+    userId: record.id || "",
+    source: previous.source || "server",
+    status,
+    day,
+    mirror,
+    title: buildTrainingPrescriptionTitle(mirror, triple),
+    reason: cleanText(triple.proofLine || triple.conclusion || "根据活镜画像生成今日训练。", 220),
+    action,
+    reflectionPrompt: buildTrainingPrescriptionPrompt(mirror),
+    klinePractice: buildTrainingPrescriptionKlinePractice({ mirror, marketContext }),
+    steps: buildTrainingPrescriptionSteps({ mirror, action }),
+    sourceProfile: {
+      currentMainMirror: profile.currentMainMirror || "",
+      evidenceLevelText: triple.evidenceLevelText || "",
+      proofLine: triple.proofLine || ""
+    },
+    createdAt,
+    dispatchedAt: previous.dispatchedAt || previous.dispatched_at || "",
+    receivedAt: previous.receivedAt || previous.received_at || "",
+    complianceNotice: "本处方仅用于交易心理训练与复盘管理，不构成投资建议。"
+  };
+}
+
+function resolveTrainingPrescriptionDay(record = {}) {
+  const trainingDays = (record.training_records || [])
+    .map((item) => Number(item.day || 0))
+    .filter((day) => day > 0);
+  const latestDay = trainingDays.length ? Math.max(...trainingDays) : 0;
+  const reviewCount = (record.trade_reviews || []).length;
+  const next = Math.max(latestDay || 1, Math.min(7, reviewCount || 1));
+  return Math.max(1, Math.min(7, next));
+}
+
+function buildTrainingPrescriptionTitle(mirror, triple = {}) {
+  const stage = triple.evidenceLevelText || "活镜校准";
+  if (!mirror || mirror === "待照见") return `${stage} · 今日先留下一条真实复盘`;
+  return `${stage} · 主修${mirror}`;
+}
+
+function buildTrainingPrescriptionPrompt(mirror) {
+  const promptMap = {
+    "追涨之镜": "今天哪一个瞬间最怕错过？停下后看见了什么？",
+    "扛单之镜": "今天边界被触碰时，心里最不愿承认的是什么？",
+    "幻想之镜": "今天有没有把希望当成事实？请写下一条反向事实。",
+    "赌性之镜": "今天哪一口不甘最想放大动作？先把它写下来。",
+    "从众之镜": "今天哪一句外部声音最牵动你？回到自己的计划了吗？",
+    "犹疑之镜": "今天有没有为了完美确认而迟迟不动？最小一步是什么？",
+    "拖延之镜": "今天哪一次复盘被拖走了？先写三分钟事实。",
+    "焦虑之镜": "今天哪个结果最让你担心？身体反应是什么？",
+    "良知之镜": "今天哪一次守住了自己？把这个动作留下来。"
+  };
+  return promptMap[mirror] || "今天最值得记录的一念是什么？";
+}
+
+function buildTrainingPrescriptionKlinePractice({ mirror, marketContext } = {}) {
+  const marketKey = marketContext?.marketKey || "cn_equity";
+  const timeframeKey = marketContext?.timeframeKey || "1d";
+  const symbolMasked = marketContext?.symbolMasked || "";
+  return {
+    marketKey,
+    timeframeKey,
+    symbolMasked,
+    actionText: "进入历史K线观心",
+    reason: mirror && mirror !== "待照见"
+      ? `用同类历史片段观察「${mirror}」下的第一反应。`
+      : "先用历史片段建立压力反应基线。"
+  };
+}
+
+function buildTrainingPrescriptionSteps({ mirror, action } = {}) {
+  return [
+    {
+      key: "review",
+      label: "真实复盘",
+      action: "记录一条真实交易行为，写下当时第一念。"
+    },
+    {
+      key: "kline",
+      label: "K线观心",
+      action: mirror && mirror !== "待照见" ? `完成一次「${mirror}」同类盲练。` : "完成一次历史K线盲练。"
+    },
+    {
+      key: "practice",
+      label: "今日修行",
+      action: action || "把今天照见的一念写入心证。"
+    }
+  ];
 }
 
 function buildMirrorScores(record, { completedCount, klineCount, tradeReviewCount }) {
@@ -1208,6 +1877,8 @@ function toAdminTradeReview(review) {
     strongestThought: review.strongestThought,
     reviewText: review.reviewText,
     behaviorTags: review.behaviorTags || [],
+    crossEndStatus: review.crossEndStatus || "",
+    crossEndStatusText: review.crossEndStatusText || "",
     createdAt: review.createdAt
   };
 }

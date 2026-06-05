@@ -5,7 +5,17 @@
 
   <view class="mind-content">
     <view class="mind-head">
-      <view class="seal">照</view>
+      <view class="seal brand-zhao-mini" aria-label="阳明照见开盘照心小标">
+        <view class="zhao-eyes">
+          <view class="zhao-eye"></view>
+          <view class="zhao-eye"></view>
+        </view>
+        <view class="zhao-mirror"></view>
+        <view class="zhao-fire">
+          <view class="zhao-fire-dot"></view>
+          <view class="zhao-fire-dot"></view>
+        </view>
+      </view>
       <view>
         <text>开盘照心</text>
         <view>AI 观心仪 · 今日第一关</view>

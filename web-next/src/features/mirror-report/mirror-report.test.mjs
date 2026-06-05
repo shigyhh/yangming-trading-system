@@ -55,7 +55,7 @@ test("assessment result page renders and saves the mirror report", async () => {
     "进入活镜成长",
     "buildMirrorReport",
     "saveMirrorReport",
-    "ym_mirror_report_v1",
+    "mirrorReportStorageKey",
     "reportId",
     "assessmentId",
     "sevenDayPrescription",

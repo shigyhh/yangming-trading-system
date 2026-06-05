@@ -146,6 +146,40 @@ function buildKLineBindingPayload({ auth = {}, state = {}, progress = null, trai
   };
 }
 
+function buildTradeReviewBindingPayload({ auth = {}, state = {}, review = null } = {}) {
+  const sourceReview = review || getLatestTradeReview(state);
+  if (!sourceReview) return null;
+
+  return {
+    user: buildDataBindingUser(auth, state),
+    review: {
+      id: String(sourceReview.id || sourceReview.reviewId || sourceReview.review_id || `mp-trade-review-${Date.now()}`),
+      reviewId: String(sourceReview.id || sourceReview.reviewId || sourceReview.review_id || ""),
+      imageUrl: pickText(sourceReview.imageUrl, sourceReview.image_url, sourceReview.screenshotPath, sourceReview.screenshot_path),
+      tradeDate: pickText(sourceReview.tradeDate, sourceReview.trade_date, sourceReview.date, toIso(sourceReview.createdAt || Date.now()).slice(0, 10)),
+      symbol: pickText(sourceReview.symbol, sourceReview.symbolMasked, sourceReview.symbol_masked),
+      marketType: normalizeMarketType(sourceReview.marketType || sourceReview.market_type || sourceReview.marketKey || sourceReview.marketLabel),
+      timeframeKey: pickText(sourceReview.timeframeKey, sourceReview.timeframe_key, sourceReview.period, sourceReview.cycle, "1d"),
+      buyReason: pickText(sourceReview.buyReason, sourceReview.buy_reason, sourceReview.entryReason, sourceReview.actionLabel),
+      sellReason: pickText(sourceReview.sellReason, sourceReview.sell_reason, sourceReview.exitReason, sourceReview.afterReaction, sourceReview.reviewNote),
+      strongestThought: pickText(sourceReview.strongestThought, sourceReview.strongest_thought, sourceReview.firstThought, sourceReview.actionLabel),
+      wasPlanned: normalizeBoolean(sourceReview.wasPlanned, sourceReview.was_planned, sourceReview.inPlan === "yes" ? true : sourceReview.inPlan === "no" ? false : null),
+      hadExitRule: normalizeBoolean(sourceReview.hadExitRule, sourceReview.had_exit_rule, sourceReview.exitPrepared === "yes" ? true : sourceReview.exitPrepared === "no" ? false : null),
+      changedPlanDuringTrade: normalizeBoolean(sourceReview.changedPlanDuringTrade, sourceReview.changed_plan_during_trade, sourceReview.changedPlan === "yes" ? true : sourceReview.changedPlan === "no" ? false : null),
+      detectedMirror: pickText(sourceReview.detectedMirror, sourceReview.detected_mirror, sourceReview.relatedMirror),
+      detectedThieves: Array.isArray(sourceReview.detectedThieves || sourceReview.detected_thieves)
+        ? (sourceReview.detectedThieves || sourceReview.detected_thieves)
+        : (sourceReview.heartThieves || []),
+      behaviorTags: buildTradeReviewBehaviorTags(sourceReview),
+      reviewText: pickText(sourceReview.reviewText, sourceReview.review_text, sourceReview.verdict, sourceReview.oneLine, sourceReview.reviewNote, sourceReview.trainingAction),
+      nextAction: pickText(sourceReview.nextAction, sourceReview.trainingAction),
+      ocrDraft: sourceReview.ocrDraft || sourceReview.ocr_draft || null,
+      createdAt: toIso(sourceReview.createdAt || sourceReview.updatedAt || Date.now())
+    },
+    source: SOURCE
+  };
+}
+
 function buildShareCardBindingPayload({ auth = {}, state = {}, event = null } = {}) {
   const user = buildDataBindingUser(auth, state);
   const latestCard = (state.share_cards || {}).latest || getLatestRecord((state.share_cards || {}).records);
@@ -163,6 +197,44 @@ function buildShareCardBindingPayload({ auth = {}, state = {}, event = null } = 
   };
 }
 
+function getLatestTradeReview(state = {}) {
+  const tradeState = state.trade_review_records || state.shared_entities?.TradeReview || {};
+  return tradeState.latest || getLatestRecord(tradeState.records) || null;
+}
+
+function buildTradeReviewBehaviorTags(sourceReview = {}) {
+  return [
+    sourceReview.sourceType === "kline_training" ? "K线盲练" : "真实复盘",
+    sourceReview.actionLabel,
+    sourceReview.emotion,
+    sourceReview.boundaryStateLabel,
+    sourceReview.stageGate
+  ]
+    .map((item) => pickText(item))
+    .filter(Boolean)
+    .slice(0, 8);
+}
+
+function normalizeBoolean() {
+  for (let index = 0; index < arguments.length; index += 1) {
+    const value = arguments[index];
+    if (value === true || value === false) return value;
+    if (value === "yes" || value === "true") return true;
+    if (value === "no" || value === "false") return false;
+  }
+  return null;
+}
+
+function normalizeMarketType(value) {
+  const text = String(value || "").toLowerCase();
+  if (["cn", "cn_equity", "a_share", "ashare"].includes(text) || String(value || "").includes("A股")) return "a_share";
+  if (["hk", "hk_equity", "hk_stock"].includes(text) || String(value || "").includes("港股")) return "hk_stock";
+  if (["us", "us_equity", "us_stock"].includes(text) || String(value || "").includes("美股")) return "us_stock";
+  if (["futures", "future"].includes(text) || String(value || "").includes("期货")) return "futures";
+  if (["crypto", "digital_currency"].includes(text) || String(value || "").includes("数字货币")) return "crypto";
+  return text || "other";
+}
+
 function buildDataBindingUser(auth = {}, state = {}) {
   const profile = state.profile || {};
   const binding = state.user_binding || {};
@@ -170,7 +242,7 @@ function buildDataBindingUser(auth = {}, state = {}) {
   const rawPhone = binding.phone || profile.phone || authUser.phone || authUser.contact || "";
   const maskedPhone = binding.phoneMask || profile.phoneMask || authUser.phone_mask || maskPhone(rawPhone);
   const phoneTail = getPhoneTail(rawPhone, maskedPhone);
-  const userId = String(authUser.id || binding.userId || binding.user_id || profile.userId || profile.openid || `mp-${Date.now()}`);
+  const userId = String(binding.userId || binding.user_id || state.user_id || profile.userId || profile.openid || authUser.id || `mp-${Date.now()}`);
 
   return {
     userId,
@@ -489,6 +561,7 @@ module.exports = {
   shouldSyncRetest,
   buildTrainingBindingPayload,
   buildKLineBindingPayload,
+  buildTradeReviewBindingPayload,
   buildShareCardBindingPayload,
   normalizeAssessmentReportForBinding,
   buildDataBindingUser

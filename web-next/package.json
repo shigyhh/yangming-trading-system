@@ -7,7 +7,7 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
-    "test:locked-pre-water": "node --test src/components/home/cinematic-home.test.mjs src/app/assessment-entry/page.test.mjs",
+    "test:locked-pre-water": "node --test src/components/home/cinematic-home.test.mjs src/app/assessment-entry/page.test.mjs src/app/assessment-login/page.test.mjs",
     "test:home-shell": "node --test src/components/home/cinematic-home.test.mjs",
     "test:admin": "node --test src/features/admin/admin-data.test.mjs",
     "test:report-schema": "node --test ../packages/contracts/assessment-report-schema.test.mjs",

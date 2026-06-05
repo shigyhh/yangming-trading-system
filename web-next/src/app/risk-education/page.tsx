@@ -26,9 +26,6 @@ export default function RiskEducationPage() {
           回到首页
         </Link>
 
-        <p className="font-function text-xs font-semibold tracking-[.24em] text-[#d8b76f]/62">
-          风险教育
-        </p>
         <h1 className="font-worldview mt-5 text-[clamp(3.2rem,10vw,7.2rem)] font-light leading-[1.1] tracking-[.02em] text-[rgba(244,235,221,.92)]">
           先立边界，
           <br />

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 
+import { YangmingA1Mark } from "@/components/brand/yangming-mark"
 import {
   AssessmentShell,
   PrimaryButton,
@@ -10,9 +11,11 @@ import {
 import {
   assessmentStorageKeys,
   clearAssessmentDraft,
+  consumeSkipEntryOpeningRitualOnce,
   getSavedNickname,
   getSavedPhoneTail,
   hasSavedPhone,
+  markAssessmentGatewayOnce,
   setStorage,
 } from "@/features/assessment/storage"
 
@@ -22,7 +25,7 @@ export default function AssessmentEntryPage() {
   const [nickname, setNickname] = useState("")
   const [nicknameDraft, setNicknameDraft] = useState("")
   const [isEditingName, setIsEditingName] = useState(false)
-  const [showOpeningRitual, setShowOpeningRitual] = useState(true)
+  const [showOpeningRitual, setShowOpeningRitual] = useState(() => !consumeSkipEntryOpeningRitualOnce())
   const isRoutingRef = useRef(false)
 
   useEffect(() => {
@@ -54,6 +57,7 @@ export default function AssessmentEntryPage() {
 
     if (savedPhone) {
       clearAssessmentDraft()
+      markAssessmentGatewayOnce()
     }
 
     router.push(target)
@@ -75,7 +79,7 @@ export default function AssessmentEntryPage() {
           <div className="ritual-opening-water ritual-opening-water-still" aria-hidden="true" />
 
           <div className="ritual-still-seal" aria-hidden="true">
-            <span>照</span>
+            <YangmingA1Mark className="ritual-seal-mark" />
           </div>
 
           <p className="ritual-opening-copy">此心一照，妄念自明。</p>
@@ -85,7 +89,7 @@ export default function AssessmentEntryPage() {
           <div className="ritual-entry-breath" aria-hidden="true" />
 
           <div className="ritual-late-seal" aria-hidden="true">
-            <span>照</span>
+            <YangmingA1Mark className="ritual-seal-mark" />
           </div>
 
           <h1 className="ritual-line ritual-line-main ritual-line-1">
@@ -127,7 +131,7 @@ export default function AssessmentEntryPage() {
             ) : null}
 
             <PrimaryButton type="button" onClick={startAssessment} className="w-full">
-              我准备好了
+              照见此心
             </PrimaryButton>
 
             <p className="ritual-entry-note">只为省察此心，不为评判对错。</p>
@@ -264,22 +268,13 @@ export default function AssessmentEntryPage() {
           filter: blur(28px);
         }
 
-        .ritual-still-seal span {
+        .ritual-still-seal :global(.ritual-seal-mark) {
           position: relative;
           z-index: 2;
-          font-family: var(--font-world);
-          font-size: clamp(4.3rem, 16vw, 6.4rem);
-          font-weight: 300;
-          letter-spacing: 0.16em;
-          color: rgba(242, 235, 220, 0.74);
-          transform: translateX(0.08em);
-        }
-
-        .ritual-still-seal span {
-          font-family: var(--font-yangming-hand), var(--font-world), serif;
-          font-size: clamp(4.9rem, 17vw, 7.1rem);
-          font-weight: 500;
+          width: clamp(4.9rem, 17vw, 7.1rem);
+          height: auto;
           color: rgba(242, 235, 220, 0.82);
+          transform: translateX(0.02em);
           text-shadow: 0 0 30px rgba(216, 183, 111, 0.12);
         }
 
@@ -320,15 +315,13 @@ export default function AssessmentEntryPage() {
           filter: blur(20px);
         }
 
-        .ritual-late-seal span {
+        .ritual-late-seal :global(.ritual-seal-mark) {
           position: relative;
           z-index: 2;
-          font-family: var(--font-world);
-          font-size: clamp(3rem, 8vw, 4.2rem);
-          font-weight: 300;
-          letter-spacing: 0.16em;
+          width: clamp(3rem, 8vw, 4.2rem);
+          height: auto;
           color: rgba(242, 235, 220, 0.7);
-          transform: translateX(0.08em);
+          transform: translateX(0.02em);
         }
 
         .ritual-opening-copy {

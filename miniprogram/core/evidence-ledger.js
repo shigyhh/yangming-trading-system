@@ -182,8 +182,8 @@ function buildEvidenceRows(records = [], options = {}) {
   return records.slice(0, limit).map((item) => ({
     id: item.id,
     type: item.type,
-    typeLabel: EVIDENCE_TYPE_LABELS[item.type] || "证据",
-    title: item.action || EVIDENCE_TYPE_LABELS[item.type] || "闭环证据",
+    typeLabel: EVIDENCE_TYPE_LABELS[item.type] || "印记",
+    title: item.action || EVIDENCE_TYPE_LABELS[item.type] || "闭环印记",
     summary: shortText(item.reflection || item.stage || item.personality || "已写入心镜档案"),
     meta: [item.day, item.personality, item.heartThief].filter(Boolean).join(" · "),
     createdAtText: formatDateTime(item.createdAt),

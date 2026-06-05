@@ -1,6 +1,7 @@
 const {
   collectLocalState,
   applyRemoteState,
+  applyTrainingPrescriptionDispatch,
   getProfile,
   saveSyncStatus
 } = require("./store");
@@ -10,7 +11,9 @@ const {
   shouldSyncRetest,
   buildTrainingBindingPayload,
   buildKLineBindingPayload,
-  buildShareCardBindingPayload
+  buildTradeReviewBindingPayload,
+  buildShareCardBindingPayload,
+  buildDataBindingUser
 } = require("./data-binding-adapter");
 
 const API_BASE_KEY = "zhixing_api_base";
@@ -278,6 +281,80 @@ async function syncTrainingProgress(progress = null) {
   }
 }
 
+async function syncTradeReviewRecord(review = null) {
+  try {
+    const auth = await ensureAuth();
+    const state = collectLocalState();
+    const payload = buildTradeReviewBindingPayload({ auth, state, review });
+    if (!payload) {
+      return { ok: true, skipped: true, reason: "暂无真实复盘" };
+    }
+    return request({
+      path: `/api/v1/data-binding/users/${encodeURIComponent(payload.user.userId)}/trade-reviews`,
+      method: "POST",
+      token: auth.access_token,
+      data: payload
+    });
+  } catch (error) {
+    saveConnectionFallback(error);
+    throw error;
+  }
+}
+
+async function requestTradeReviewOcrDraft({ imagePath = "", imageMeta = {} } = {}) {
+  try {
+    const auth = await ensureAuth();
+    const state = collectLocalState();
+    const user = buildDataBindingUser(auth, state);
+    return request({
+      path: `/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/trade-review-ocr`,
+      method: "POST",
+      token: auth.access_token,
+      data: {
+        user,
+        image: {
+          localPath: imagePath,
+          fileName: imageMeta.fileName || "",
+          size: imageMeta.size || 0,
+          width: imageMeta.width || 0,
+          height: imageMeta.height || 0
+        },
+        source: "miniprogram"
+      }
+    });
+  } catch (error) {
+    saveConnectionFallback(error);
+    throw error;
+  }
+}
+
+async function pullTrainingPrescription({ silent = true } = {}) {
+  try {
+    const auth = await ensureAuth();
+    const state = collectLocalState();
+    const user = buildDataBindingUser(auth, state);
+    const result = await request({
+      path: `/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/training-prescription`,
+      method: "GET",
+      token: auth.access_token
+    });
+    const prescription = applyTrainingPrescriptionDispatch(result);
+    saveSyncStatus({
+      ok: true,
+      syncing: false,
+      message: "已接收今日训练",
+      userId: user.userId,
+      syncedAt: Date.now()
+    });
+    if (!silent) wx.showToast({ title: "已接收今日训练", icon: "success" });
+    return prescription;
+  } catch (error) {
+    saveConnectionFallback(error);
+    if (!silent) wx.showToast({ title: "连接未完成，本地已保存", icon: "none" });
+    throw error;
+  }
+}
+
 async function syncShareAttribution(event = null) {
   try {
     const auth = await ensureAuth();
@@ -361,6 +438,9 @@ module.exports = {
   syncCheckIn,
   syncAssessmentReport,
   syncTrainingProgress,
+  syncTradeReviewRecord,
+  requestTradeReviewOcrDraft,
+  pullTrainingPrescription,
   syncShareAttribution,
   fetchKlineTrainingSlice
 };

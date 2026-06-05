@@ -3,35 +3,112 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 
 const source = readFileSync(new URL("./MirrorGateway.tsx", import.meta.url), "utf8")
+const zhaoxinSource = readFileSync(new URL("./ZhaoxinRitualFlow.tsx", import.meta.url), "utf8")
+const heartLakeSource = readFileSync(new URL("./HeartLakeEngine.tsx", import.meta.url), "utf8")
+const stillWaterSource = readFileSync(new URL("./StillWaterIntroMirror.tsx", import.meta.url), "utf8")
 const assessmentPage = readFileSync(new URL("../../app/assessment/page.tsx", import.meta.url), "utf8")
 
-test("mirror gateway keeps the fixed moon-heart nine-mirror sequence", () => {
+test("assessment keeps the locked mirror gateway and mounts the heart lake ritual inside it", () => {
+  assert.match(assessmentPage, /MirrorGateway/)
+  assert.match(assessmentPage, /<MirrorGateway/)
+  assert.doesNotMatch(assessmentPage, /HeartMoonNineMirrorsScene/)
+  assert.match(source, /StillWaterIntroMirror/)
+  assert.match(source, /HeartLakeEngine/)
+  assert.match(source, /ZhaoxinRitualFlow/)
+  assert.match(source, /showZhaoxinFlow/)
+  assert.match(source, /initialScene="surge"/)
+  assert.match(source, /initialIntensity=\{3\}/)
+  assert.doesNotMatch(source, /<RitualCanvas/)
+  assert.ok(
+    source.indexOf("<StillWaterIntroMirror") < source.indexOf("<HeartLakeEngine"),
+    "still water intro must mount before the heart lake engine",
+  )
+  assert.ok(
+    source.indexOf("<HeartLakeEngine") < source.indexOf("<ZhaoxinRitualFlow"),
+    "lake engine must mount before the ritual flow inside the gateway",
+  )
+  assert.match(source, /triggerRippleKey=\{rippleKey\}/)
+})
+
+test("mirror gateway keeps the fixed heart-lake prelude before nine-mirror flow", () => {
   const requiredCopy = [
-    "明月照心",
-    "九镜照念",
-    "水面入静",
-    "先不判断行情。",
-    "先看见这一念。",
-    "「再不上车就来不及了。」",
-    "九镜响应",
-    "追涨之镜正在发亮。",
-    "照见此念",
-    "追涨之镜入湖。",
-    "照回情绪收益",
-    "心贼现形",
-    "贪 · 急",
-    "今日心证",
-    "心随涨动",
-    "良知收束",
-    "知善知恶是良知",
-    "为善去恶是格物",
-    "今日已照见",
-    "进入循环之镜",
+    "市场还在那里",
+    "行情还在那里",
+    "此刻，",
+    "你心里起了什么念？",
+    "一念未起时，",
+    "此心本自清明。",
   ]
 
   for (const text of requiredCopy) {
     assert.match(source, new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")))
   }
+
+  assert.match(source, /still-water-gateway-copy/)
+  assert.match(source, /STILL_WATER_ENTRY_ANCHOR/)
+  assert.doesNotMatch(source, /若这一念截中你，就按下照见。/)
+  assert.doesNotMatch(source, /<button[^>]*>\\s*照见此念\\s*<\/button>/)
+  assert.doesNotMatch(source, /currentCopy\.kicker/)
+  assert.doesNotMatch(source, /currentCopy\.main/)
+})
+
+test("assessment ritual viewport does not horizontally offset the full-screen layers", () => {
+  const gatewayRule = source.match(/\.moon-heart-gateway \{[\s\S]*?\n        \}/)?.[0] ?? ""
+  const zhaoxinRootRule = zhaoxinSource.match(/\.zhaoxin-ritual-flow \{[\s\S]*?\n        \}/)?.[0] ?? ""
+  const zhaoxinGatewayRule =
+    source.match(/\.moon-heart-gateway\.is-zhaoxin-flow :global\(\.zhaoxin-ritual-flow\) \{[\s\S]*?\n        \}/)?.[0] ??
+    ""
+
+  assert.match(assessmentPage, /<AssessmentShell className="p-0 md:p-0" contentWidth="wide">/)
+  assert.doesNotMatch(gatewayRule, /left:\s*50%/)
+  assert.doesNotMatch(gatewayRule, /translateX\(-50%\)/)
+  assert.doesNotMatch(zhaoxinRootRule, /left:\s*50%/)
+  assert.doesNotMatch(zhaoxinRootRule, /translateX\(-50%\)/)
+  assert.match(zhaoxinGatewayRule, /transform:\s*none;/)
+})
+
+test("one-thought lake owns the resonance confirm button", () => {
+  assert.match(zhaoxinSource, /is-thought-confirm/)
+  assert.match(zhaoxinSource, /照见此念/)
+  assert.match(zhaoxinSource, /若这一念正是你，请轻触照见。/)
+  assert.match(zhaoxinSource, /confirmThought/)
+  assert.match(zhaoxinSource, /stage === "thought"/)
+  assert.match(zhaoxinSource, /insightThoughts/)
+  assert.match(zhaoxinSource, /insightReflections/)
+  assert.match(zhaoxinSource, /insightEvidences/)
+  assert.match(zhaoxinSource, /insightPractices/)
+  assert.match(zhaoxinSource, /insightMirrors/)
+  assert.match(zhaoxinSource, /randomThoughtIndex/)
+  assert.match(zhaoxinSource, /setSelectedScene\(thoughtScene\)/)
+  assert.match(zhaoxinSource, /setSelectedIntensity\(thoughtIntensity\)/)
+})
+
+test("heart lake has natural moving glints and pressure-based pointer ripples", () => {
+  assert.match(heartLakeSource, /import \* as THREE from "three"/)
+  assert.match(heartLakeSource, /EffectComposer/)
+  assert.match(heartLakeSource, /UnrealBloomPass/)
+  assert.match(heartLakeSource, /PerspectiveCamera/)
+  assert.match(heartLakeSource, /PlaneGeometry/)
+  assert.match(heartLakeSource, /ShaderMaterial/)
+  assert.match(heartLakeSource, /u_rippleStrength/)
+  assert.match(heartLakeSource, /u_entryProgress/)
+  assert.match(heartLakeSource, /normalFromHeight/)
+  assert.match(heartLakeSource, /moonBandLayer/)
+  assert.match(heartLakeSource, /rippleRing/)
+  assert.match(heartLakeSource, /onPointerMove/)
+  assert.match(heartLakeSource, /event\.pressure/)
+  assert.match(heartLakeSource, /triggerPointerRipple\(event\.clientX, event\.clientY, "move"/)
+  assert.match(heartLakeSource, /triggerPointerRipple\(event\.clientX, event\.clientY, "press"/)
+  assert.doesNotMatch(heartLakeSource, /compileShader/)
+  assert.doesNotMatch(heartLakeSource, /gl\.drawArrays/)
+})
+
+test("still water intro keeps touch ripples without periodic center ripples", () => {
+  assert.match(stillWaterSource, /stirAtPointer/)
+  assert.match(stillWaterSource, /pointermove/)
+  assert.doesNotMatch(stillWaterSource, /lastAutoDrop/)
+  assert.doesNotMatch(stillWaterSource, /autoInterval/)
+  assert.doesNotMatch(stillWaterSource, /for \(let ring = 0; ring < 8/)
 })
 
 test("mirror gateway presents emotional payoff before naming the thieves", () => {

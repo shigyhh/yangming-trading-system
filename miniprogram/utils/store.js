@@ -44,7 +44,8 @@ const {
   YM_JOURNEY_STATE,
   YM_EVIDENCE_LEDGER,
   YM_DEMO_MODE,
-  YM_DEBUG_MODE
+  YM_DEBUG_MODE,
+  YM_TRAINING_PRESCRIPTION
 } = require("../core/storage-keys");
 const REVIEW_KEY = YM_CLOSING_REVIEW;
 const MIND_KEY = YM_OPENING_CHECK;
@@ -56,6 +57,11 @@ const { buildRiskSnapshot } = require("../modules/retest-change/index");
 const { buildCompanionMirror } = require("../modules/companion-mirror/index");
 const { buildSubscriptionPatch, buildSubscriptionView } = require("../modules/subscription/index");
 const { buildLivingMirrorStats } = require("../modules/trade-review/index");
+const { applyServerTradeReviewResult, withTradeReviewCrossEndStatus } = require("../modules/trade-review/index");
+const {
+  buildZhixingStability,
+  buildTripleReflection
+} = require("../modules/zhixing-stability/index");
 const { buildTraining7View } = require("../modules/training7/index");
 const {
   buildMiniProgramBinding,
@@ -909,8 +915,41 @@ function getTradeReviewRecords() {
   });
 }
 
+function buildLivingMirrorStatsEntity(tradeReviewState) {
+  const safeTradeReviewState = tradeReviewState || getTradeReviewRecords();
+  const training7State = getTraining7State();
+  const training7View = buildTraining7View(training7State, {});
+  const context = {
+    assessment: getAssessmentResult() || {},
+    tradeReviewState: safeTradeReviewState,
+    klineReviewReports: getKlineReviewReports(),
+    klineMindRecords: getKlineMindRecords(),
+    training7State,
+    training7View
+  };
+  const stats = buildLivingMirrorStats(safeTradeReviewState);
+  return Object.assign({}, stats, {
+    zhixingStability: buildZhixingStability(context),
+    tripleReflection: buildTripleReflection(context)
+  });
+}
+
+function normalizeLivingMirrorStats(stats, tradeReviewState) {
+  const generated = buildLivingMirrorStatsEntity(tradeReviewState || getTradeReviewRecords());
+  const current = stats && typeof stats === "object" ? stats : {};
+  const serverProfile = current.serverLivingMirrorProfile || current.livingMirrorProfile || null;
+  const serverTriple = normalizeServerTripleReflection(serverProfile, current.tripleReflection || generated.tripleReflection);
+  return Object.assign({}, generated, current, {
+    zhixingStability: current.zhixingStability || generated.zhixingStability,
+    tripleReflection: serverTriple,
+    serverLivingMirrorProfile: serverProfile,
+    livingMirrorProfile: serverProfile,
+    latestMarketContext: current.latestMarketContext || (serverProfile || {}).latestMarketContext || null
+  });
+}
+
 function getLivingMirrorStats() {
-  return read(YM_LIVING_MIRROR_STATS, buildLivingMirrorStats(getTradeReviewRecords()));
+  return normalizeLivingMirrorStats(read(YM_LIVING_MIRROR_STATS, null), getTradeReviewRecords());
 }
 
 function getAssistantHandoff() {
@@ -919,7 +958,13 @@ function getAssistantHandoff() {
 }
 
 function saveLivingMirrorStatsFromReviews(tradeReviewState) {
-  const stats = write(YM_LIVING_MIRROR_STATS, buildLivingMirrorStats(tradeReviewState || getTradeReviewRecords()));
+  const previous = read(YM_LIVING_MIRROR_STATS, {});
+  const serverProfile = (previous || {}).serverLivingMirrorProfile || (previous || {}).livingMirrorProfile || null;
+  const stats = write(YM_LIVING_MIRROR_STATS, mergeServerLivingMirrorProfile(
+    buildLivingMirrorStatsEntity(tradeReviewState || getTradeReviewRecords()),
+    serverProfile,
+    (previous || {}).latestMarketContext || null
+  ));
   const current = read(YM_ASSISTANT_HANDOFF, {});
   const base = Object.assign({}, current, (stats || {}).assistantHandoff || {}, {
     events: current.events || []
@@ -928,9 +973,132 @@ function saveLivingMirrorStatsFromReviews(tradeReviewState) {
   return stats;
 }
 
+function normalizeServerTripleReflection(profile, fallback = {}) {
+  const triple = profile && (profile.tripleReflection || profile.triple_reflection);
+  if (!triple || typeof triple !== "object") return fallback || {};
+  return Object.assign({}, fallback || {}, triple, {
+    rows: (triple.rows || triple.sources || []).map((row) => ({
+      key: row.key || "",
+      name: row.name === "真实复盘" ? "真实记录" : (row.name || ""),
+      mirror: row.mirror || "待照见",
+      statusText: row.statusText || row.status_text || ""
+    })),
+    updatedAt: triple.updatedAt || triple.updated_at || Date.now()
+  });
+}
+
+function mergeServerLivingMirrorProfile(stats = {}, profile = null, marketContext = null) {
+  if (!profile || typeof profile !== "object") return stats;
+  const triple = normalizeServerTripleReflection(profile, stats.tripleReflection);
+  return Object.assign({}, stats, {
+    currentMirror: profile.currentMainMirror || profile.current_main_mirror || stats.currentMirror,
+    mainTraining: profile.trainingFocus || profile.training_focus || stats.mainTraining,
+    tripleReflection: triple,
+    serverLivingMirrorProfile: profile,
+    livingMirrorProfile: profile,
+    latestMarketContext: profile.latestMarketContext || profile.latest_market_context || marketContext || stats.latestMarketContext || null
+  });
+}
+
+function applyTradeReviewBindingResult(reviewId, result = {}) {
+  const state = getTradeReviewRecords();
+  const serverReview = result.review || result.trade_review || {};
+  const profile = result.living_mirror_profile || result.livingMirrorProfile || null;
+  const targetId = String(reviewId || serverReview.id || serverReview.reviewId || serverReview.review_id || "");
+  if (!targetId && !profile) return { tradeReviewState: state, stats: getLivingMirrorStats(), latest: state.latest || null };
+
+  let found = false;
+  const records = (state.records || []).map((record) => {
+    if (String(record.id || "") !== targetId) return record;
+    found = true;
+    return applyServerTradeReviewResult(record, result);
+  });
+  const latest = state.latest && String(state.latest.id || "") === targetId
+    ? applyServerTradeReviewResult(state.latest, result)
+    : (found ? records.find((record) => String(record.id || "") === targetId) || state.latest : state.latest);
+  const nextState = write(YM_TRADE_REVIEW_RECORDS, {
+    latest,
+    records: found ? records : (state.records || [])
+  });
+  const marketContext = (serverReview.marketContext || serverReview.market_context || (profile || {}).latestMarketContext || null);
+  const stats = write(YM_LIVING_MIRROR_STATS, mergeServerLivingMirrorProfile(
+    buildLivingMirrorStatsEntity(nextState),
+    profile,
+    marketContext
+  ));
+  return {
+    tradeReviewState: nextState,
+    stats,
+    latest,
+    profile,
+    marketContext
+  };
+}
+
+function getTrainingPrescription() {
+  return read(YM_TRAINING_PRESCRIPTION, null);
+}
+
+function normalizeTrainingPrescriptionDispatch(prescription = {}) {
+  if (!prescription || typeof prescription !== "object") return null;
+  const day = Math.max(1, Math.min(7, Number(prescription.day || 1)));
+  return withUserBinding(Object.assign({}, prescription, {
+    schemaVersion: prescription.schemaVersion || prescription.schema_version || "training_prescription_v1",
+    id: String(prescription.id || `mp-training-prescription-${Date.now()}`),
+    day,
+    status: prescription.status || "received",
+    mirror: prescription.mirror || "待照见",
+    title: prescription.title || "今日训练处方",
+    reason: prescription.reason || "根据活镜画像生成今日训练。",
+    action: prescription.action || "先照见第一念，再完成一次真实复盘。",
+    reflectionPrompt: prescription.reflectionPrompt || prescription.reflection_prompt || "今天最值得记录的一念是什么？",
+    klinePractice: prescription.klinePractice || prescription.kline_practice || null,
+    steps: Array.isArray(prescription.steps) ? prescription.steps : [],
+    receivedAt: prescription.receivedAt || prescription.received_at || Date.now(),
+    updatedAt: Date.now(),
+    complianceNotice: prescription.complianceNotice || "本处方仅用于交易心理训练与复盘管理，不构成投资建议。"
+  }));
+}
+
+function saveTrainingPrescription(prescription = {}) {
+  const normalized = normalizeTrainingPrescriptionDispatch(prescription);
+  if (!normalized) return getTrainingPrescription();
+  write(YM_TRAINING_PRESCRIPTION, normalized);
+  saveMindProfile({
+    current_stage: "事上练",
+    current_stage_key: "shishanglian",
+    personality_type: normalized.mirror,
+    today_training: normalized.action,
+    today_commandment: normalized.title
+  });
+  const state = getTraining7State();
+  const records = Object.assign({}, state.records || {});
+  const day = normalized.day;
+  records[day] = withUserBinding(Object.assign({}, records[day] || {}, {
+    day,
+    dateKey: todayKey(),
+    title: normalized.title,
+    note: normalized.action,
+    serverPrescription: normalized,
+    updatedAt: Date.now()
+  }));
+  saveTraining7State({
+    currentDay: Math.max(1, Math.min(7, day)),
+    serverPrescription: normalized,
+    records
+  });
+  return normalized;
+}
+
+function applyTrainingPrescriptionDispatch(payload = {}) {
+  const prescription = payload.training_prescription || payload.trainingPrescription || payload;
+  return saveTrainingPrescription(prescription);
+}
+
 function getTrainingRecordEntity() {
   return {
     training7: getTraining7State(),
+    serverPrescription: getTrainingPrescription(),
     dailyTraining: getTrainingState(),
     threeSeals: getThreeSealsRecords(),
     openingChecks: getOpeningCheckRecords(),
@@ -1046,7 +1214,7 @@ function buildAssistantHandoffEntity(base = {}, stats = getLivingMirrorStats()) 
   const readyCount = triggers.filter((item) => item.done).length;
   const eventTimeline = buildAssistantEventTimeline({ base, triggers, assessment, tradeReview, training7, stats });
   const statusText = readyCount >= 2 ? "可承接" : `${readyCount}/4 待沉淀`;
-  const campSuggestion = base.campSuggestion || (completedTrainingDays >= 3 ? "可以进入 7 天连续观心训练。" : "先完成三天训练与三次复盘采集。");
+  const campSuggestion = base.campSuggestion || (completedTrainingDays >= 3 ? "可以进入 7 天连续观心训练。" : "先完成三天训练与三次真实复盘。");
   const scriptSuggestion = base.scriptSuggestion || (
     currentMirror === "待照见"
       ? "先完成一次真实复盘。助教只接住第一念，不急着给方法。"
@@ -1215,6 +1383,7 @@ function countCompletedTrainingDays(training7 = {}) {
 
 function applyTrainingRecordEntity(entity = {}) {
   if (entity.training7 && typeof entity.training7 === "object") write(TRAINING7_KEY, entity.training7);
+  if (entity.serverPrescription && typeof entity.serverPrescription === "object") applyTrainingPrescriptionDispatch(entity.serverPrescription);
   if (entity.dailyTraining && typeof entity.dailyTraining === "object") write(TRAINING_KEY, entity.dailyTraining);
   if (entity.threeSeals && typeof entity.threeSeals === "object") write(THREE_SEALS_KEY, entity.threeSeals);
   if (entity.openingChecks && typeof entity.openingChecks === "object") write(MIND_KEY, entity.openingChecks);
@@ -1240,7 +1409,7 @@ function saveTradeReviewRecord(record) {
     personality: nextRecord.relatedMirror || "",
     heartThief: (nextRecord.heartThieves || [])[0] || "",
     action: nextRecord.actionLabel || nextRecord.trainingAction || "写入真实复盘",
-    reflection: nextRecord.firstThought || nextRecord.verdict || nextRecord.reviewText || "这次复盘已进入行为证据链。",
+    reflection: nextRecord.firstThought || nextRecord.verdict || nextRecord.reviewText || "这次复盘已进入行为印记。",
     sourcePage: nextRecord.sourceType === "kline_training" ? "kline_session" : "trade_review",
     sourceId: nextRecord.id
   });
@@ -1314,6 +1483,7 @@ function saveTraining7Task(day, taskKey, done = true) {
   }
   const nextDay = completed && safeDay < 7 ? safeDay + 1 : safeDay;
   if (completed) {
+    markLatestTradeReviewTrainingCompleted(safeDay);
     saveGroupPracticeCheckin(safeDay, { completed: true, completedAt: Date.now() });
     saveAssistantHandoffEvent({
       type: "training_day_completed",
@@ -1327,6 +1497,29 @@ function saveTraining7Task(day, taskKey, done = true) {
     if (safeDay === 7) saveInviteConversionEvent("day7_completed", { sourcePage: "training7", trainingDay: safeDay });
   }
   return saveTraining7State({ currentDay: nextDay, records });
+}
+
+function markLatestTradeReviewTrainingCompleted(day) {
+  const state = getTradeReviewRecords();
+  const records = (state.records || []).slice();
+  if (!records.length) return state;
+  const latest = records
+    .slice()
+    .sort((a, b) => Number(b.createdAt || b.updatedAt || 0) - Number(a.createdAt || a.updatedAt || 0))[0];
+  if (!latest) return state;
+  const nextLatest = withTradeReviewCrossEndStatus(Object.assign({}, latest, {
+    trainingCompleted: true,
+    trainingCompletedDay: day,
+    trainingCompletedAt: Date.now(),
+    updatedAt: Date.now()
+  }), { trainingCompleted: true, force: true });
+  const nextRecords = records.map((record) => record.id === latest.id ? nextLatest : record);
+  const nextState = write(YM_TRADE_REVIEW_RECORDS, {
+    latest: (state.latest || {}).id === latest.id ? nextLatest : state.latest,
+    records: nextRecords
+  });
+  saveLivingMirrorStatsFromReviews(nextState);
+  return nextState;
 }
 
 function saveTraining7Reflection(day, reflection) {
@@ -1795,6 +1988,7 @@ function clearMockMvpState() {
     YM_MINI_HEART_PROOFS,
     YM_JOURNEY_STATE,
     YM_EVIDENCE_LEDGER,
+    YM_TRAINING_PRESCRIPTION,
     ASSESSMENT_KEY,
     LEGACY_ASSESSMENT_KEY,
     ANSWERS_KEY,
@@ -1863,6 +2057,7 @@ function collectLocalState() {
   const tradeReview = getTradeReviewRecords();
   const livingMirrorStats = getLivingMirrorStats();
   const assistantHandoff = getAssistantHandoff();
+  const trainingPrescription = getTrainingPrescription();
   return {
     profile,
     user_id: userId,
@@ -1889,6 +2084,7 @@ function collectLocalState() {
     trade_review_records: tradeReview,
     living_mirror_stats: livingMirrorStats,
     assistant_handoff: assistantHandoff,
+    training_prescription: trainingPrescription,
     mini_program_binding: getMiniProgramBinding(),
     mini_loop_progress: getMiniLoopProgress(),
     mini_daily_practice: getMiniDailyPractice(),
@@ -1929,6 +2125,7 @@ function collectLocalState() {
       TradeReview: tradeReview,
       LivingMirrorStats: livingMirrorStats,
       AssistantHandoff: assistantHandoff,
+      TrainingPrescription: trainingPrescription,
       MiniProgramBinding: getMiniProgramBinding(),
       MiniLoopProgress: getMiniLoopProgress(),
       MiniHeartProof: getMiniHeartProofState(),
@@ -1953,6 +2150,7 @@ function applyRemoteState(remoteState = {}) {
   }
   if (sharedEntities.LivingMirrorStats && typeof sharedEntities.LivingMirrorStats === "object") write(YM_LIVING_MIRROR_STATS, sharedEntities.LivingMirrorStats);
   if (sharedEntities.AssistantHandoff && typeof sharedEntities.AssistantHandoff === "object") write(YM_ASSISTANT_HANDOFF, sharedEntities.AssistantHandoff);
+  if (sharedEntities.TrainingPrescription && typeof sharedEntities.TrainingPrescription === "object") applyTrainingPrescriptionDispatch(sharedEntities.TrainingPrescription);
   if (sharedEntities.MiniProgramBinding && typeof sharedEntities.MiniProgramBinding === "object") write(YM_MINI_PROGRAM_BINDING, sharedEntities.MiniProgramBinding);
   if (sharedEntities.MiniLoopProgress && typeof sharedEntities.MiniLoopProgress === "object") write(YM_MINI_LOOP_PROGRESS, sharedEntities.MiniLoopProgress);
   if (sharedEntities.MiniHeartProof && typeof sharedEntities.MiniHeartProof === "object") write(YM_MINI_HEART_PROOFS, sharedEntities.MiniHeartProof);
@@ -1986,6 +2184,7 @@ function applyRemoteState(remoteState = {}) {
   }
   if (remoteState.living_mirror_stats && typeof remoteState.living_mirror_stats === "object") write(YM_LIVING_MIRROR_STATS, remoteState.living_mirror_stats);
   if (remoteState.assistant_handoff && typeof remoteState.assistant_handoff === "object") write(YM_ASSISTANT_HANDOFF, remoteState.assistant_handoff);
+  if (remoteState.training_prescription && typeof remoteState.training_prescription === "object") applyTrainingPrescriptionDispatch(remoteState.training_prescription);
   if (remoteState.mini_program_binding && typeof remoteState.mini_program_binding === "object") write(YM_MINI_PROGRAM_BINDING, remoteState.mini_program_binding);
   if (remoteState.mini_loop_progress && typeof remoteState.mini_loop_progress === "object") write(YM_MINI_LOOP_PROGRESS, remoteState.mini_loop_progress);
   if (remoteState.mini_heart_proofs && typeof remoteState.mini_heart_proofs === "object") write(YM_MINI_HEART_PROOFS, remoteState.mini_heart_proofs);
@@ -2103,6 +2302,10 @@ module.exports = {
   getAnonymousReactionStats,
   getTradeReviewRecords,
   saveTradeReviewRecord,
+  applyTradeReviewBindingResult,
+  getTrainingPrescription,
+  saveTrainingPrescription,
+  applyTrainingPrescriptionDispatch,
   getTrainingRecordEntity,
   getMiniLoopProgress,
   getMiniDailyPractice,

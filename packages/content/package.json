@@ -19,6 +19,18 @@
       "import": "./brand.js",
       "default": "./brand.js"
     },
+    "./brand-character-system": {
+      "import": "./brand-character-system.js",
+      "default": "./brand-character-system.js"
+    },
+    "./home-insight": {
+      "import": "./home-insight.js",
+      "default": "./home-insight.js"
+    },
+    "./one-thought": {
+      "import": "./one-thought.js",
+      "default": "./one-thought.js"
+    },
     "./i18n": {
       "import": "./i18n.js",
       "default": "./i18n.js"

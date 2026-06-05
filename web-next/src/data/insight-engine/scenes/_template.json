@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "scene-XX-slug",
+  "sceneName": "场景名",
+  "sceneOrder": 0,
+  "status": "draft",
+  "records": [
+    {
+      "sceneId": "scene-XX-slug",
+      "sceneName": "场景名",
+      "mirrorId": "mirror-id",
+      "intensity": 1,
+      "thought": "",
+      "reflection": "",
+      "thief": "",
+      "evidence": "",
+      "practice": ""
+    }
+  ]
+}

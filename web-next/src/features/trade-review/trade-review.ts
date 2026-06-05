@@ -1,5 +1,12 @@
 import type { HeartThief, MirrorName, TradeReview } from "@yangming/contracts/living-mirror"
 
+import { assessmentStorageKeys, getStorage, setStorage } from "@/features/assessment/storage"
+import {
+  getThoughtDimensions,
+  getThoughtLabel,
+  normalizeThoughtType,
+} from "@/features/living-mirror-growth/behaviorLoopEngine"
+
 export type TradeReviewDraft = {
   imageUrl: string
   imageName: string
@@ -19,9 +26,13 @@ export type TradeReviewMapping = {
   nextPracticeText: string
 }
 
+export type TradeReviewThoughtType = "fomo" | "chase" | "wait_pullback" | "ask_others" | "abandon_plan" | "revenge" | "fear" | "ego" | string
+
 export const tradeReviewStorageKey = "ym_trade_review_draft_v1"
 export const tradeReviewLastResultStorageKey = "ym_trade_review_last_result_v1"
+export const tradeReviewHistoryStorageKey = assessmentStorageKeys.tradeReviewHistory
 export const tradeReviewApiEndpoint = "POST /api/v1/data-binding/users/:user_id/trade-reviews"
+export const tradeReviewComplianceText = "本系统仅用于交易心理训练与行为复盘，不预测行情，不提供买卖建议，不构成任何投资建议。"
 
 export const initialTradeReviewDraft: TradeReviewDraft = {
   imageUrl: "",
@@ -88,8 +99,10 @@ export function buildTradeReviewPayload(draft: TradeReviewDraft): Partial<TradeR
   return {
     imageUrl: draft.imageUrl,
     tradeDate: draft.tradeDate,
+    lookupSymbol: draft.symbolMasked.trim(),
     symbolMasked: maskSymbol(draft.symbolMasked),
     marketType: draft.marketType,
+    timeframeKey: "1d",
     buyReason: draft.buyReason.trim(),
     sellReason: draft.sellReason.trim(),
     strongestThought: draft.strongestThought.trim(),
@@ -98,6 +111,51 @@ export function buildTradeReviewPayload(draft: TradeReviewDraft): Partial<TradeR
     behaviorTags: mapping.behaviorTags,
     reviewText: mapping.reviewText,
   }
+}
+
+export function loadTradeReviewHistory() {
+  return getStorage<TradeReview[]>(tradeReviewHistoryStorageKey, [])
+}
+
+export function upsertTradeReviewHistory(review: TradeReview | null) {
+  if (!review) return loadTradeReviewHistory()
+
+  const reviewId = getTradeReviewId(review)
+  const stored = loadTradeReviewHistory()
+  const next = [
+    ...stored.filter((item) => getTradeReviewId(item) !== reviewId),
+    review,
+  ].sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())
+
+  setStorage(tradeReviewHistoryStorageKey, next)
+  return next
+}
+
+export function getTradeReviewThoughtLabel(thoughtType?: TradeReviewThoughtType | string | null) {
+  return getThoughtLabel(normalizeThoughtType(thoughtType))
+}
+
+export function getTradeReviewAffectedDimensions(thoughtType?: TradeReviewThoughtType | string | null) {
+  return getThoughtDimensions(normalizeThoughtType(thoughtType))
+}
+
+export function buildTradeReviewProofText(thoughtType?: TradeReviewThoughtType | string | null) {
+  const thoughtLabel = getTradeReviewThoughtLabel(thoughtType)
+  return `这笔复盘照见的是：${thoughtLabel}。真正的问题不是行情对错，而是当时哪一念先于规则行动。`
+}
+
+export function buildTradeReviewNextActionText(thoughtType?: TradeReviewThoughtType | string | null, fallback?: string | null) {
+  const trimmedFallback = String(fallback || "").trim()
+  if (trimmedFallback) return trimmedFallback
+
+  const normalized = normalizeThoughtType(thoughtType)
+  if (normalized === "fomo") return "下一次看到计划外拉升，先停十秒，再写下这一念是否在原计划内。"
+  if (normalized === "revenge") return "下一次亏损后，先离开屏幕三分钟，再决定是否继续复盘。"
+  if (normalized === "ask_others") return "下一次想问别人前，先写下自己的方向和理由。"
+  if (normalized === "abandon_plan") return "下一次想临盘改计划时，先确认这是条件变化，还是情绪变化。"
+  if (normalized === "fear") return "下一次害怕失去时，先写下真正害怕的是什么，再回看原规则。"
+  if (normalized === "ego") return "下一次想证明自己时，先区分事实变化和自我证明。"
+  return "下一次同场景，先停一息，记录念头，再回到规则。"
 }
 
 export function inferTradeReviewMirror(text: string): MirrorName {
@@ -111,6 +169,10 @@ export function inferTradeReviewMirror(text: string): MirrorName {
   if (/幻想|证明|一定会|执念/.test(text)) return "幻想之镜"
   if (/纪律|良知|守住|知行/.test(text)) return "良知之镜"
   return "追涨之镜"
+}
+
+function getTradeReviewId(review: TradeReview) {
+  return review.reviewId || review.id
 }
 
 function inferHeartThieves(text: string, mirror: MirrorName): HeartThief[] {

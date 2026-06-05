@@ -49,7 +49,7 @@
       </view>
 
       <view class="evidence-card card">
-        <text>事上练证据</text>
+        <text>事上练印记</text>
         <view wx:for="{{review.processEvidence}}" wx:key="label" class="evidence-row">
           <view>
             <text>{{item.label}}</text>

@@ -193,5 +193,5 @@
 
     <compliance-notice />
   </view>
-  <bottom-tab-bar active="review" />
+  <bottom-tab-bar active="training" />
 </view>

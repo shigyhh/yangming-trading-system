@@ -32,7 +32,6 @@ export function StillWaterIntroMirror({ phase }: { phase: string }) {
     let simCanvas = document.createElement("canvas")
     let simContext = simCanvas.getContext("2d")
     let frameId = 0
-    let lastAutoDrop = 0
     let pointerIsDown = false
     let lastPointerDrop = 0
     let lastPointerPosition: { x: number; y: number } | null = null
@@ -237,25 +236,12 @@ export function StillWaterIntroMirror({ phase }: { phase: string }) {
       context.fillStyle = breath
       context.fillRect(0, 0, width, height)
 
-      for (let ring = 0; ring < 8; ring += 1) {
-        const radius = pool.radius * (0.18 + ring * 0.125)
-        context.beginPath()
-        for (let point = 0; point <= 88; point += 1) {
-          const progress = point / 88
-          const angle = Math.PI * (0.18 + progress * 0.64)
-          const wobble =
-            1 +
-            Math.sin(angle * 4 + time * 0.27 + ring) * (0.01 + agitation * 0.012) +
-            Math.sin(angle * 9 - time * 0.19 + ring * 2) * (0.006 + agitation * 0.007)
-          const x = pool.x + Math.cos(angle) * radius * 1.46 * wobble
-          const y = pool.y + Math.sin(angle) * radius * 0.58 * wobble + ring * 0.8
-          if (point === 0) context.moveTo(x, y)
-          else context.lineTo(x, y)
-        }
-        context.strokeStyle = `rgba(190, 212, 220, ${0.022 + agitation * 0.012 - ring * 0.0017})`
-        context.lineWidth = 0.7
-        context.stroke()
-      }
+      const mist = context.createRadialGradient(pool.x, pool.y, pool.radius * 0.12, pool.x, pool.y, pool.radius * 1.32)
+      mist.addColorStop(0, `rgba(190, 212, 220, ${0.018 + agitation * 0.018})`)
+      mist.addColorStop(0.42, `rgba(95, 132, 117, ${0.012 + agitation * 0.01})`)
+      mist.addColorStop(1, "rgba(0, 0, 0, 0)")
+      context.fillStyle = mist
+      context.fillRect(0, 0, width, height)
       context.restore()
     }
 
@@ -324,16 +310,6 @@ export function StillWaterIntroMirror({ phase }: { phase: string }) {
 
       drawLightField(time, agitation)
 
-      const autoInterval = 3450 - agitation * 1200
-      if (now - lastAutoDrop > autoInterval) {
-        drop(
-          pool.x + Math.sin(time * 0.7) * pool.radius * 0.08,
-          pool.y + Math.cos(time * 0.6) * pool.radius * 0.06,
-          54 + agitation * 64,
-        )
-        lastAutoDrop = now
-      }
-
       const swap = h0
       h0 = h1
       h1 = swap
@@ -341,8 +317,6 @@ export function StillWaterIntroMirror({ phase }: { phase: string }) {
     }
 
     resize()
-    const pool = getPool()
-    drop(pool.x, pool.y, 120)
     frameId = window.requestAnimationFrame(step)
     const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(resize) : null
     resizeObserver?.observe(shell)

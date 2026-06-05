@@ -4,50 +4,69 @@ import test from "node:test"
 
 const pageUrl = new URL("../../app/trade-review/page.tsx", import.meta.url)
 const featureUrl = new URL("./trade-review.ts", import.meta.url)
+const assessmentStorageUrl = new URL("../assessment/storage.ts", import.meta.url)
 const apiClientUrl = new URL("../data-binding/api-client.ts", import.meta.url)
 const heartProofEngineUrl = new URL("../heart-proof/heartProofEngine.ts", import.meta.url)
 const heartProofStorageUrl = new URL("../heart-proof/heartProofStorage.ts", import.meta.url)
+const behaviorLoopEngineUrl = new URL("../living-mirror-growth/behaviorLoopEngine.ts", import.meta.url)
 const behaviorLoopStorageUrl = new URL("../living-mirror-growth/behaviorLoopStorage.ts", import.meta.url)
+const growthProfileEngineUrl = new URL("../living-mirror-growth/growthProfileEngine.ts", import.meta.url)
 const growthProfileStorageUrl = new URL("../living-mirror-growth/growthProfileStorage.ts", import.meta.url)
 const archiveEngineUrl = new URL("../mirror-archive/archiveEngine.ts", import.meta.url)
 const contractUrl = new URL("../../../../packages/contracts/data-binding.d.ts", import.meta.url)
 const forbiddenPhrases = ["推荐买入", "推荐卖出", "必赚", "稳赚", "收益保证", "抄底", "逃顶", "行情判断"]
 
-test("trade review page captures eight behavior questions and creates review heart proof", async () => {
+test("trade review page captures screenshot-based three-question review and creates review records", async () => {
   const page = await readFile(pageUrl, "utf8")
   const feature = await readFile(featureUrl, "utf8")
+  const assessmentStorage = await readFile(assessmentStorageUrl, "utf8")
   const apiClient = await readFile(apiClientUrl, "utf8")
   const heartProofEngine = await readFile(heartProofEngineUrl, "utf8")
   const heartProofStorage = await readFile(heartProofStorageUrl, "utf8")
+  const behaviorLoopEngine = await readFile(behaviorLoopEngineUrl, "utf8")
   const behaviorLoopStorage = await readFile(behaviorLoopStorageUrl, "utf8")
+  const growthProfileEngine = await readFile(growthProfileEngineUrl, "utf8")
   const growthProfileStorage = await readFile(growthProfileStorageUrl, "utf8")
   const archiveEngine = await readFile(archiveEngineUrl, "utf8")
   const contract = await readFile(contractUrl, "utf8")
-  const source = `${page}\n${feature}\n${apiClient}\n${heartProofEngine}\n${heartProofStorage}\n${behaviorLoopStorage}\n${growthProfileStorage}\n${archiveEngine}\n${contract}`
+  const source = `${page}\n${feature}\n${assessmentStorage}\n${apiClient}\n${heartProofEngine}\n${heartProofStorage}\n${behaviorLoopEngine}\n${behaviorLoopStorage}\n${growthProfileEngine}\n${growthProfileStorage}\n${archiveEngine}\n${contract}`
 
   ;[
     "真实交易复盘",
-    "这笔交易，是计划在下单，还是念头在下单？",
-    "不评价行情，不判断买卖对错，只记录交易行为和当时的一念。",
-    "这笔交易是否在原计划内？",
-    "下单前最强的一念是什么？",
-    "下单时情绪强度是多少？",
-    "是否提前写过止损/离场条件？",
-    "是否临盘改计划？",
-    "交易后第一反应是什么？",
-    "这笔交易暴露了哪个人格风险？",
-    "下一次同场景你要先做什么？",
-    "复盘心证预览",
-    "生成复盘心证",
+    "YangmingCharacterMark",
+    "复字，真实复盘，回看行为",
+    "复盘页 / 回看行为",
+    "真实交易复盘 MVP",
+    "以复盘照行为",
+    "以活镜照成长",
+    "上传一张截图，写下三句真实自述",
+    "截图记录",
+    "上传交易截图 / K 线截图 / 交易记录截图",
+    "第一版只保存截图与自述，不自动识别行情。",
+    "复盘三问",
+    "reviewQuestionPrompts.buyReason",
+    "reviewQuestionPrompts.sellReason",
+    "reviewQuestionPrompts.strongestThought",
+    "为什么进入？",
+    "为什么离开？",
+    "当时最大的念头是什么？",
+    "写入活镜成长",
+    "先完成截图与三问",
+    "心镜映射预览",
+    "心贼显影",
+    "活镜成长",
+    "最近复盘",
+    "进入活镜中枢",
     "syncTradeReviewBinding",
     "DataBindingTradeReviewPayload",
     "POST /api/v1/data-binding/users/:user_id/trade-reviews",
-    "inferTradeReviewMirror",
+    "inferTradeReviewMapping",
     "TradeReviewDraft",
     "buildTradeReviewPayload",
+    "lookupSymbol",
+    "timeframeKey",
     "reviewId",
     "heartProofId",
-    "review_heart_proof",
     'sourceType: "trade_review"',
     "buildTradeReviewHeartProof",
     "saveHeartProof",
@@ -63,19 +82,17 @@ test("trade review page captures eight behavior questions and creates review hea
     "loadTradeReviewHistory",
     "upsertTradeReviewHistory",
     "ym_trade_review_history_v1",
-    "loadMirrorReport",
-    "HeartProofCard",
     "loadHeartProofs",
     "tradeReviewLastResultStorageKey",
     "loadMirrorArchiveData",
     "/trade-review",
     "复盘心证已生成",
-    "这笔交易照见的是：",
+    "这笔复盘照见的是：",
     "真正的问题不是行情对错，而是当时哪一念先于规则行动。",
-    "下一次同场景，只练一个动作：",
-    "循环之镜已显影",
-    "你可以去查看自己反复出现的触发 → 一念 → 行为 → 结果。",
-    "这条复盘已入档。继续记录真实交易后，系统会识别你的重复循环。",
+    "循环之镜显影",
+    "你正在重复的循环是：",
+    "循环之镜已经从真实证据中生成。",
+    "完成一次真实交易复盘后，这里会沉淀为个人循环。",
   ].forEach((token) => {
     assert.equal(source.includes(token), true, `missing token: ${token}`)
   })

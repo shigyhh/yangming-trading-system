@@ -23,6 +23,8 @@ export const assessmentStorageKeys = {
   tradeReviewLastResult: "ym_trade_review_last_result_v1",
   tradeReviewHistory: "ym_trade_review_history_v1",
   selectedMirrorId: "ym_selected_behavior_mirror",
+  skipEntryOpeningRitualOnce: "ym_skip_entry_opening_ritual_once",
+  assessmentGatewayOnce: "ym_assessment_gateway_once",
   dataBindingUserId: "ym_data_binding_user_id",
   dataBindingLastSyncAt: "ym_data_binding_last_sync_at",
 } as const
@@ -93,4 +95,24 @@ export function clearAssessmentDraft() {
   removeStorage(assessmentStorageKeys.currentIndex)
   removeStorage(assessmentStorageKeys.questionOrder)
   removeStorage(assessmentStorageKeys.selectedMirrorId)
+}
+
+export function markSkipEntryOpeningRitualOnce() {
+  setStorage(assessmentStorageKeys.skipEntryOpeningRitualOnce, true)
+}
+
+export function consumeSkipEntryOpeningRitualOnce() {
+  const shouldSkip = getStorage<boolean>(assessmentStorageKeys.skipEntryOpeningRitualOnce, false)
+  removeStorage(assessmentStorageKeys.skipEntryOpeningRitualOnce)
+  return shouldSkip
+}
+
+export function markAssessmentGatewayOnce() {
+  setStorage(assessmentStorageKeys.assessmentGatewayOnce, true)
+}
+
+export function consumeAssessmentGatewayOnce() {
+  const shouldEnterGateway = getStorage<boolean>(assessmentStorageKeys.assessmentGatewayOnce, false)
+  removeStorage(assessmentStorageKeys.assessmentGatewayOnce)
+  return shouldEnterGateway
 }

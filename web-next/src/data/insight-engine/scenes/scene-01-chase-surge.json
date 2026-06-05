@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "scene-01-chase-surge",
+  "sceneName": "急涨时",
+  "sceneOrder": 1,
+  "status": "draft",
+  "records": [
+    {
+      "sceneId": "scene-01-chase-surge",
+      "sceneName": "急涨时",
+      "mirrorId": "chase",
+      "intensity": 3,
+      "thought": "我不能又慢一步。",
+      "reflection": "你怕的不是错过行情，而是再次证明自己比别人慢。",
+      "thief": "贪 · 急",
+      "evidence": "我看见自己不是在追行情，而是在追那个不想再慢一步的自己。",
+      "practice": "下次急涨前，先把手离开鼠标十秒，只问：这是规则，还是怕慢？"
+    }
+  ]
+}

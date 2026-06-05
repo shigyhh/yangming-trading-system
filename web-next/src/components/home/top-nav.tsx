@@ -6,6 +6,12 @@ import type { MouseEvent } from "react"
 import { YangmingA1Mark } from "@/components/brand/yangming-mark"
 import { FlowButton } from "@/components/home/flow-button"
 
+const navLinks = [
+  { label: "成长谱", href: "/living-mirror-growth" },
+  { label: "循环之镜", href: "/cycle-mirror" },
+  { label: "档案馆", href: "/mirror-archive" },
+] as const
+
 export function TopNav() {
   function enterWorldview(event: MouseEvent<HTMLAnchorElement>) {
     const target = document.getElementById("personality")
@@ -33,7 +39,18 @@ export function TopNav() {
             <em className="type-level-4 mt-1 text-[0.62rem] not-italic text-muted-cream opacity-42">见行情 · 见心 · 见人格</em>
           </span>
         </a>
-        <div className="hidden sm:block">
+        <div className="hidden items-center gap-2 md:flex">
+          <div className="hidden items-center gap-1 lg:flex">
+            {navLinks.map((item) => (
+              <a
+                key={item.href}
+                href={item.href}
+                className="rounded-full px-3 py-2 font-function text-xs font-semibold tracking-[.16em] text-[rgba(220,212,195,.42)] no-underline transition duration-500 hover:bg-[rgba(217,189,122,.035)] hover:text-[rgba(244,235,221,.78)]"
+              >
+                {item.label}
+              </a>
+            ))}
+          </div>
           <FlowButton href="#personality" variant="ghost" className="min-h-10 px-5 opacity-58 hover:opacity-90" onClick={enterWorldview}>
             开始照见
           </FlowButton>
