@@ -1,7 +1,10 @@
 "use client"
 
+import type { CSSProperties } from "react"
 import { useEffect, useMemo, useState } from "react"
 
+import { YangmingC16Mark } from "@/components/brand/yangming-mark"
+import { YangmingZhaoSeal } from "@/components/brand/yangming-zhao-seal"
 import {
   AssessmentShell,
   ComplianceNote,
@@ -162,9 +165,37 @@ export default function ShareCardPage() {
           <GlassPanel className="share-preview-panel overflow-hidden p-0">
             <article className="share-poster" aria-label="照见分享卡预览">
               <div className="share-poster-ring" aria-hidden="true" />
+              <YangmingZhaoSeal
+                decorative
+                className="share-poster-zhao-watermark"
+                size="hero"
+                title="阳明照见分享卡主照印水印"
+                style={
+                  {
+                    position: "absolute",
+                    right: "-11%",
+                    top: "21%",
+                    zIndex: 1,
+                    width: "58%",
+                    height: "auto",
+                    aspectRatio: "1",
+                    opacity: 0.42,
+                    transform: "rotate(-8deg)",
+                    pointerEvents: "none",
+                    "--zhao-seal-color": "rgba(216, 183, 111, 0.18)",
+                    "--zhao-seal-border": "rgba(216, 183, 111, 0.13)",
+                    "--zhao-seal-glow": "rgba(216, 183, 111, 0.035)",
+                  } as CSSProperties
+                }
+              />
               <div className="share-poster-top">
-                <p>YANGMING TRADING MIND</p>
-                <span>{isPreview ? "PREVIEW" : "REFLECTION"}</span>
+                <div className="share-poster-brand">
+                  <span className="share-poster-mark">
+                    <YangmingC16Mark className="size-7" title="阳明照见分享卡小标" />
+                  </span>
+                  <p>YANGMING MIND MIRROR</p>
+                </div>
+                <span className="share-poster-state">{isPreview ? "PREVIEW" : "REFLECTION"}</span>
               </div>
               <div className="share-poster-title">
                 <h2>{card.title}</h2>
@@ -304,6 +335,7 @@ export default function ShareCardPage() {
           align-items: center;
           justify-content: space-between;
           gap: 1rem;
+          min-height: 2.45rem;
           font-family: var(--font-function);
           font-size: 0.66rem;
           font-weight: 700;
@@ -311,11 +343,38 @@ export default function ShareCardPage() {
           color: rgba(216, 183, 111, 0.72);
         }
 
-        .share-poster-top p {
-          margin: 0;
+        .share-poster-brand {
+          display: flex;
+          align-items: center;
+          gap: 0.7rem;
+          min-width: 0;
         }
 
-        .share-poster-top span {
+        .share-poster-mark {
+          display: grid;
+          width: 2.35rem;
+          height: 2.35rem;
+          flex: 0 0 auto;
+          place-items: center;
+          border: 1px solid rgba(216, 183, 111, 0.22);
+          border-radius: 8px;
+          color: rgba(216, 183, 111, 0.78);
+          background:
+            radial-gradient(circle at 50% 42%, rgba(216, 183, 111, 0.14), transparent 62%),
+            rgba(255, 255, 255, 0.034);
+          box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.06),
+            0 0 28px rgba(216, 183, 111, 0.055);
+        }
+
+        .share-poster-top p {
+          margin: 0;
+          min-width: 0;
+          color: rgba(216, 183, 111, 0.74);
+        }
+
+        .share-poster-state {
+          flex: 0 0 auto;
           border: 1px solid rgba(216, 183, 111, 0.16);
           border-radius: 999px;
           padding: 0.28rem 0.5rem;
@@ -437,8 +496,14 @@ export default function ShareCardPage() {
         }
 
         @media (max-width: 520px) {
+          .share-preview-wrap {
+            width: calc(100vw - 2.5rem);
+            max-width: calc(100vw - 2.5rem);
+          }
+
           .share-poster {
             min-height: 500px;
+            width: 100%;
             padding: 1rem;
           }
 

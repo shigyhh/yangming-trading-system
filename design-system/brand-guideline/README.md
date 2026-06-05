@@ -1,12 +1,12 @@
 # 阳明照见 Brand Guideline V1.0
 
-这套规范从 V1.0 Preflight 拆成六章，用于设计、前端、小程序、内容和合规协作。核心不是再加风格，而是把已经成立的品牌原点固定下来。
+这套规范从 V1.0 Preflight 拆成八章，用于设计、前端、小程序、内容和合规协作。核心不是再加风格，而是把已经成立的品牌原点固定下来。
 
 先读：
 
 - [00 字体与字形来源防护](./00-font-ip-provenance.md)
 
-六章：
+八章：
 
 1. [Logo Final](./01-logo-system.md)
 2. [Typography Final](./02-typography-system.md)
@@ -14,6 +14,8 @@
 4. [Symbol System](./04-symbol-system.md)
 5. [Numeric System](./05-numeric-system.md)
 6. [Compliance Language](./06-compliance-language.md)
+7. [Brand Usage Boundary](./07-brand-usage-boundary.md)
+8. [Zhao Character System](./08-zhao-character-system.md)
 
 品牌宪法：
 

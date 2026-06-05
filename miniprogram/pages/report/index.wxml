@@ -1,7 +1,7 @@
 <view class="page-shell">
   <view class="page-content">
     <view class="report-brand-row">
-      <view class="report-brand-mark brand-zhao-mini">
+      <view class="report-brand-mark brand-zhao-mini" aria-label="阳明照见报告小标">
         <view class="zhao-eyes">
           <view class="zhao-eye"></view>
           <view class="zhao-eye"></view>
@@ -137,7 +137,7 @@
       </view>
 
       <view class="evidence-card card">
-        <text>行为证据链</text>
+        <text>行为印记链</text>
         <view class="evidence-mantra">问卷照见倾向，K线照见反应，复盘照见模式，训练照见变化。</view>
         <view wx:for="{{evidenceChain}}" wx:key="source" class="evidence-row">
           <view class="evidence-weight">{{item.weight}}</view>

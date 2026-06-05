@@ -1,9 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 
-import { YangmingA1Mark, YangmingGlyph } from "@/components/brand/yangming-mark"
+import { YangmingCharacterMark } from "@/components/brand/yangming-character-mark"
+import { YangmingC16Mark, YangmingGlyph } from "@/components/brand/yangming-mark"
+import { YangmingZhaoSeal } from "@/components/brand/yangming-zhao-seal"
 import {
   AssessmentShell,
   ComplianceNote,
@@ -17,6 +19,10 @@ import { getPracticePrescription } from "@/features/assessment/practice-change"
 import { buildPreviewAssessmentReport } from "@/features/assessment/preview-report"
 import { getAssessmentTypeLabel, type AssessmentReport } from "@/features/assessment/report"
 import { assessmentStorageKeys, clearAssessmentProgress, getStorage } from "@/features/assessment/storage"
+import { getDataBindingUserProfile } from "@/features/data-binding/api-client"
+import { buildMirrorReport, mirrorReportStorageKey } from "@/features/mirror-report/mirrorReportEngine"
+import { loadMirrorReport, saveMirrorReport } from "@/features/mirror-report/mirrorReportStorage"
+import type { MirrorReport } from "@/features/mirror-report/mirrorReportTypes"
 
 function clampRisk(value: number) {
   return Math.max(0, Math.min(100, Math.round(value)))
@@ -100,12 +106,26 @@ export default function AssessmentResultPage() {
   const [loaded, setLoaded] = useState(false)
   const [savedMessage, setSavedMessage] = useState("")
   const [isPreview, setIsPreview] = useState(false)
+  const [savedMirrorReportId, setSavedMirrorReportId] = useState("")
+
+  const mirrorReport = useMemo(() => {
+    if (!report) return null
+
+    const profile = getDataBindingUserProfile()
+    return buildMirrorReport({
+      report,
+      anonymousId: profile.userId,
+    })
+  }, [report])
+
+  const mirrorReportSaved = Boolean(mirrorReport && savedMirrorReportId === mirrorReport.reportId)
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
       const previewMode = new URLSearchParams(window.location.search).get("preview") === "1"
       setIsPreview(previewMode)
       setReport(previewMode ? buildPreviewAssessmentReport() : getStorage<AssessmentReport | null>(assessmentStorageKeys.report, null))
+      setSavedMirrorReportId(loadMirrorReport()?.reportId ?? "")
       setLoaded(true)
     }, 0)
 
@@ -117,6 +137,14 @@ export default function AssessmentResultPage() {
     router.push("/assessment-ritual")
   }
 
+  const handleSaveMirrorReport = () => {
+    if (!mirrorReport) return
+
+    saveMirrorReport(mirrorReport)
+    setSavedMirrorReportId(mirrorReport.reportId)
+    setSavedMessage("心镜报告已保存。它会作为训练、复盘、复测变化的第一条基线。")
+  }
+
   if (!loaded) {
     return (
       <AssessmentShell>
@@ -125,7 +153,7 @@ export default function AssessmentResultPage() {
     )
   }
 
-  if (!report) {
+  if (!report || !mirrorReport) {
     return (
       <AssessmentShell>
         <div className="text-center">
@@ -160,7 +188,7 @@ export default function AssessmentResultPage() {
       <div className="heart-proof-report mx-auto flex w-full max-w-[1180px] flex-col">
         <section className="proof-hero grid min-h-[calc(100svh-5rem)] items-center gap-8 py-8 lg:grid-cols-[minmax(0,0.92fr)_minmax(420px,1fr)] lg:gap-10">
           <div className="proof-hero-copy">
-            <StatusPill>{isPreview ? "报告卡预览" : "测评心证"}</StatusPill>
+            <StatusPill>{isPreview ? "心镜报告 · 报告卡预览" : "心镜报告"}</StatusPill>
             <p className="proof-hero-line mt-8">
               {proofLine.first}
               <br />
@@ -181,9 +209,11 @@ export default function AssessmentResultPage() {
 
           <ReportCoreCard
             report={report}
+            mirrorReport={mirrorReport}
             primaryTypeLabel={primaryTypeLabel}
             secondaryTypeLabel={secondaryTypeLabel}
             riskItems={heartRiskItems}
+            isSaved={mirrorReportSaved}
           />
         </section>
 
@@ -263,26 +293,27 @@ export default function AssessmentResultPage() {
                 <p className="mt-4 font-function text-sm leading-7 text-[rgba(220,212,195,.54)]">
                   报告不是给人格下结论，而是帮你把反应模式变成可观察、可训练、可复盘的路径。
                 </p>
+                <div className="completion-seal-track mt-5" aria-label="完成盖印进度">
+                  <CompletionStepSeal label="已照见" description="报告生成" active />
+                  <CompletionStepSeal label="已存档" description="保存报告" active={mirrorReportSaved} />
+                  <CompletionStepSeal label="待事上练" description="七日训练" active={false} />
+                </div>
               </div>
               <div className="grid gap-3 sm:min-w-[280px]">
                 <PrimaryLink href={isPreview ? "/practice-change?preview=1" : "/practice-change"} className="w-full">
                   进入训练记录 →
                 </PrimaryLink>
+                <SecondaryButton type="button" onClick={handleSaveMirrorReport} className="w-full">
+                  保存心镜报告
+                </SecondaryButton>
                 <SecondaryLink href={isPreview ? "/share-card?preview=1" : "/share-card"} className="w-full">
                   生成照见分享卡 →
                 </SecondaryLink>
-                <SecondaryLink href="/observing-archive" className="w-full">
-                  进入观心档案 →
+                <SecondaryLink href="/living-mirror-growth" className="w-full">
+                  进入活镜成长 →
                 </SecondaryLink>
                 <SecondaryButton type="button" onClick={restart} className="w-full">
                   重新照心 →
-                </SecondaryButton>
-                <SecondaryButton
-                  type="button"
-                  onClick={() => setSavedMessage("心证已保存在此设备。")}
-                  className="w-full"
-                >
-                  保存心证
                 </SecondaryButton>
               </div>
             </div>
@@ -408,6 +439,11 @@ export default function AssessmentResultPage() {
           animation: proof-panel-in 620ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
 
+        .completion-seal-track {
+          display: grid;
+          gap: 0.7rem;
+        }
+
         @media (max-width: 760px) {
           .proof-hero {
             min-height: auto;
@@ -466,33 +502,92 @@ export default function AssessmentResultPage() {
 
 function ReportCoreCard({
   report,
+  mirrorReport,
   primaryTypeLabel,
   secondaryTypeLabel,
   riskItems,
+  isSaved,
 }: {
   report: AssessmentReport
+  mirrorReport: MirrorReport
   primaryTypeLabel: string
   secondaryTypeLabel: string
   riskItems: ReturnType<typeof getHeartRiskItems>
+  isSaved: boolean
 }) {
   return (
     <GlassPanel className="proof-panel report-core-card overflow-hidden p-0">
       <div className="relative grid gap-6 px-5 py-6 sm:px-7 sm:py-7">
         <div className="report-core-ring" aria-hidden="true" />
-        <div className="relative z-10">
-          <div className="flex items-center justify-between gap-4">
-            <p className="font-function text-xs font-semibold tracking-[.2em] text-[#b49d5d]">AI 观心系统 · 报告卡</p>
-            <YangmingA1Mark className="size-10 shrink-0 text-[rgba(216,183,111,.72)]" title="阳明照见报告主标" />
+        <div className="report-core-mist" aria-hidden="true" />
+        <div className="report-seal-layer" aria-label="心镜报告照字印章">
+          <ZhaoCompletionSeal label="已照见" />
+          {isSaved ? <ZhaoCompletionSeal label="已存档" tone="cinnabar" /> : null}
+        </div>
+        <div className="relative z-10" data-storage-key={mirrorReportStorageKey}>
+          <div className="report-core-brand">
+            <div className="report-core-brand-copy">
+              <span>心镜报告</span>
+              <p>YANGMING MIND MIRROR REPORT</p>
+            </div>
+            <span className="report-core-mark">
+              <YangmingC16Mark className="size-8" title="阳明照见心镜报告小标" />
+            </span>
           </div>
+          <p className="mt-4 font-function text-xs leading-6 tracking-[.08em] text-[rgba(220,212,195,.44)]">
+            你的交易人格被市场照见，但这不是定论，是训练的起点。
+          </p>
+          <div className="mt-5 flex flex-wrap gap-2 font-function text-[0.68rem] tracking-[.12em] text-[rgba(220,212,195,.4)]">
+            <span className="report-id-pill">报告编号 {mirrorReport.reportId}</span>
+            <span className="report-id-pill">测评编号 {mirrorReport.assessmentId}</span>
+          </div>
+          <p className="mt-7 font-function text-xs font-semibold tracking-[.2em] text-[#b49d5d]">
+            AI 观心系统 · 报告卡
+          </p>
           <h1 className="mt-5 font-story text-[clamp(2.2rem,6vw,4.1rem)] font-light leading-[1.25] tracking-[.1em] text-[#f2ebdc]">
             {primaryTypeLabel}
             <span className="mt-2 block text-[0.46em] tracking-[.16em] text-[rgba(220,212,195,.46)]">
-              主反应人格
+              主人格
             </span>
           </h1>
+          <div className="report-summary-grid mt-5">
+            <ReportSummary label="副人格" value={secondaryTypeLabel} />
+            <ReportSummary label="置信度" value={`${mirrorReport.confidenceScore}%`} />
+          </div>
           <p className="mt-5 font-function text-sm leading-7 text-[rgba(220,212,195,.56)]">
             副反应：{secondaryTypeLabel} · 训练方向：{report.trainingDirection}
           </p>
+        </div>
+
+        <div className="report-insight relative z-10">
+          <div className="report-character-heading">
+            <YangmingCharacterMark
+              character="证"
+              label="证字，心证证据，落回证据"
+              roleText="证据"
+              size="sm"
+              tier="method"
+            />
+            <span>一句话照见 · 心证证据</span>
+          </div>
+          <p>{mirrorReport.headline}</p>
+        </div>
+
+        <div className="report-script relative z-10">
+          <span>高危交易剧本</span>
+          <p>{mirrorReport.highRiskScenario}</p>
+        </div>
+
+        <div className="relative z-10 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="report-kicker">风险雷达</p>
+            <p className="mt-2 font-function text-xs leading-5 text-[rgba(220,212,195,.42)]">
+              不显示收益、不预测行情，只照见反应模式强弱。
+            </p>
+          </div>
+          <span className="font-function text-xs tracking-[.14em] text-[rgba(180,157,93,.62)]">
+            七日处方 · {mirrorReport.sevenDayPrescription.length} 日
+          </span>
         </div>
 
         <RiskRadar items={riskItems} />
@@ -506,10 +601,22 @@ function ReportCoreCard({
       </div>
       <style jsx>{`
         .report-core-card {
+          position: relative;
           background:
             radial-gradient(circle at 24% 10%, rgba(216, 183, 111, 0.14), transparent 18rem),
             radial-gradient(circle at 80% 24%, rgba(95, 132, 117, 0.13), transparent 18rem),
             linear-gradient(180deg, rgba(17, 16, 13, 0.88), rgba(8, 8, 7, 0.94));
+        }
+
+        .report-core-mist {
+          position: absolute;
+          inset: 0;
+          background-image:
+            linear-gradient(rgba(216, 183, 111, 0.028) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(216, 183, 111, 0.02) 1px, transparent 1px);
+          background-size: 42px 42px;
+          mask-image: radial-gradient(circle at 52% 38%, black, transparent 78%);
+          pointer-events: none;
         }
 
         .report-core-ring {
@@ -522,6 +629,141 @@ function ReportCoreCard({
             inset 0 0 72px rgba(0, 0, 0, 0.32);
           opacity: 0.72;
           animation: report-breathe 6.8s ease-in-out infinite;
+        }
+
+        .report-seal-layer {
+          position: absolute;
+          right: 1.4rem;
+          top: 10.2rem;
+          z-index: 3;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.75rem;
+          justify-content: flex-end;
+          pointer-events: none;
+        }
+
+        .report-core-brand {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 1rem;
+        }
+
+        .report-core-brand-copy span {
+          display: block;
+          font-family: var(--font-story);
+          font-size: 1.05rem;
+          font-weight: 300;
+          letter-spacing: 0.16em;
+          color: rgba(242, 235, 220, 0.86);
+        }
+
+        .report-core-brand-copy p {
+          margin: 0.35rem 0 0;
+          font-family: var(--font-function);
+          font-size: 0.68rem;
+          font-weight: 700;
+          letter-spacing: 0.18em;
+          color: rgba(216, 183, 111, 0.58);
+        }
+
+        .report-core-mark {
+          display: grid;
+          width: 3rem;
+          height: 3rem;
+          flex: 0 0 auto;
+          place-items: center;
+          border: 1px solid rgba(216, 183, 111, 0.22);
+          border-radius: 8px;
+          color: rgba(216, 183, 111, 0.8);
+          background:
+            radial-gradient(circle at 50% 42%, rgba(216, 183, 111, 0.16), transparent 62%),
+            rgba(255, 255, 255, 0.034);
+          box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.06),
+            0 0 34px rgba(216, 183, 111, 0.06);
+        }
+
+        .report-id-pill {
+          border: 1px solid rgba(172, 146, 83, 0.13);
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.025);
+          padding: 0.32rem 0.52rem;
+        }
+
+        .report-summary-grid {
+          display: grid;
+          gap: 0.65rem;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .report-insight,
+        .report-script {
+          border: 1px solid rgba(172, 146, 83, 0.13);
+          border-radius: 8px;
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.018)),
+            rgba(0, 0, 0, 0.12);
+          padding: 1rem;
+        }
+
+        .report-insight {
+          border-left: 2px solid rgba(216, 183, 111, 0.46);
+        }
+
+        .report-character-heading {
+          display: flex;
+          align-items: center;
+          gap: 0.85rem;
+        }
+
+        .report-script {
+          border-color: rgba(95, 132, 117, 0.2);
+          background:
+            linear-gradient(180deg, rgba(95, 132, 117, 0.075), rgba(255, 255, 255, 0.014)),
+            rgba(0, 0, 0, 0.12);
+        }
+
+        .report-insight span,
+        .report-script span {
+          display: block;
+          font-family: var(--font-function);
+          font-size: 0.68rem;
+          font-weight: 700;
+          letter-spacing: 0.16em;
+          color: rgba(180, 157, 93, 0.72);
+        }
+
+        .report-insight p,
+        .report-script p {
+          margin: 0.72rem 0 0;
+          font-family: var(--font-story);
+          font-size: 1.08rem;
+          font-weight: 300;
+          line-height: 1.72;
+          letter-spacing: 0.04em;
+          color: rgba(242, 235, 220, 0.8);
+        }
+
+        .report-script p {
+          font-family: var(--font-function);
+          font-size: 0.9rem;
+          color: rgba(220, 212, 195, 0.58);
+        }
+
+        @media (max-width: 520px) {
+          .report-seal-layer {
+            right: 1rem;
+            top: 14rem;
+            opacity: 0.78;
+            transform: scale(0.72);
+            transform-origin: top right;
+          }
+
+          .report-summary-grid {
+            grid-template-columns: 1fr;
+          }
         }
 
         @keyframes report-breathe {
@@ -538,6 +780,92 @@ function ReportCoreCard({
         }
       `}</style>
     </GlassPanel>
+  )
+}
+
+function ZhaoCompletionSeal({ label, tone = "gold" }: { label: string; tone?: "gold" | "cinnabar" }) {
+  const rotation = tone === "cinnabar" ? "rotate(8deg)" : "rotate(-10deg)"
+
+  return (
+    <YangmingZhaoSeal
+      label={label}
+      showLabel
+      size="md"
+      tone={tone}
+      title={`${label}照字完成印`}
+      style={{ transform: rotation }}
+    />
+  )
+}
+
+function CompletionStepSeal({
+  active,
+  description,
+  label,
+}: {
+  active: boolean
+  description: string
+  label: string
+}) {
+  return (
+    <div className={`completion-step-seal ${active ? "active" : ""}`}>
+      <YangmingZhaoSeal
+        className="completion-step-zhao"
+        size="xs"
+        tone={active ? "gold" : "ink"}
+        title={`${label}照字步骤印`}
+        style={{ opacity: active ? 1 : 0.58 }}
+      />
+      <div>
+        <strong>{label}</strong>
+        <p>{description}</p>
+      </div>
+      <style jsx>{`
+        .completion-step-seal {
+          display: flex;
+          align-items: center;
+          gap: 0.7rem;
+          border: 1px solid rgba(172, 146, 83, 0.12);
+          border-radius: 8px;
+          background: rgba(255, 255, 255, 0.02);
+          padding: 0.65rem 0.75rem;
+          opacity: 0.52;
+        }
+
+        .completion-step-seal.active {
+          border-color: rgba(216, 183, 111, 0.26);
+          background:
+            radial-gradient(circle at 12% 50%, rgba(216, 183, 111, 0.08), transparent 5rem),
+            rgba(255, 255, 255, 0.026);
+          opacity: 1;
+        }
+
+        .completion-step-seal strong {
+          display: block;
+          font-family: var(--font-function);
+          font-size: 0.78rem;
+          letter-spacing: 0.12em;
+          color: rgba(242, 235, 220, 0.76);
+        }
+
+        .completion-step-seal p {
+          margin: 0.2rem 0 0;
+          font-family: var(--font-function);
+          font-size: 0.72rem;
+          letter-spacing: 0.08em;
+          color: rgba(220, 212, 195, 0.42);
+        }
+      `}</style>
+    </div>
+  )
+}
+
+function ReportSummary({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[8px] border border-[rgba(172,146,83,.12)] bg-white/[.025] px-3 py-2">
+      <p className="font-function text-[0.66rem] tracking-[.14em] text-[rgba(180,157,93,.58)]">{label}</p>
+      <p className="mt-1 font-function text-sm leading-6 text-[rgba(242,235,220,.72)]">{value}</p>
+    </div>
   )
 }
 

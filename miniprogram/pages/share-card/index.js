@@ -25,6 +25,8 @@ const {
   getShareCardAlbum,
   getEvidenceSummary,
   getUnifiedJourneyView,
+  getTodayHeartCard,
+  getSyncStatus,
   saveShareCard,
   saveInviteEvent
 } = require("../../utils/store");
@@ -34,6 +36,8 @@ const { buildShareCardPreview, buildShareCardList, normalizeType } = require("..
 const { buildLessonView } = require("../../modules/classroom/index");
 const { buildSevenDayChange } = require("../../modules/retest-change/index");
 const { syncShareAttribution } = require("../../utils/api");
+
+const LOAD_TIMEOUT_MS = 6000;
 
 function cleanLine(value, fallback = "") {
   return String(value || fallback || "").replace(/\s+/g, " ").trim();
@@ -65,6 +69,101 @@ function buildPosterCard(card = {}, context = {}) {
   });
 }
 
+function buildFallbackView(type) {
+  if (type === "network") {
+    return {
+      type,
+      title: "暂时没有同步成功",
+      lines: [
+        "你的本地记录不会丢失。",
+        "可以稍后重试，或先回到今日继续修行。"
+      ],
+      primaryText: "重新加载",
+      secondaryText: "回到今日"
+    };
+  }
+  return {
+    type: "not_generated",
+    title: "今日心证尚未生成",
+    lines: [
+      "先完成今日照心，",
+      "再生成属于今天的一张心证卡。"
+    ],
+    primaryText: "开始今日照心",
+    secondaryText: "返回今日"
+  };
+}
+
+function safeEvidenceSummary() {
+  try {
+    return getEvidenceSummary({ limit: 4 });
+  } catch (error) {
+    return { total: 0, rows: [] };
+  }
+}
+
+function safeAlbum() {
+  try {
+    return getShareCardAlbum().slice(0, 6);
+  } catch (error) {
+    return [];
+  }
+}
+
+function shouldShowLocalSyncHint() {
+  try {
+    const status = getSyncStatus();
+    return !status.ok && status.message !== "未同步";
+  } catch (error) {
+    return false;
+  }
+}
+
+function buildLocalHeartCard(record = {}) {
+  const headline = cleanLine(record.heartProof, "今日心证已生成");
+  const practice = cleanLine(record.trainingAction || record.commandment, "今日只守住这一念。");
+  return Object.assign({
+    id: `local-heart-card-${record.dayKey || Date.now()}`,
+    type: "daily_mantra",
+    typeLabel: "今日心证卡",
+    title: "今日心证卡",
+    headline,
+    body: `今日修行：${practice}`,
+    insight: cleanLine(record.reflectionQuestion, "这张心证已保存在本地，稍后会继续同步。"),
+    cta: "查看今日心证",
+    shareTitle: "今日心证：先照见自己，再进入事上练心。",
+    compliance: "本系统用于交易心理觉察与训练，不提供投资建议，不预测行情，不构成任何操作依据。",
+    createdAt: record.updatedAt || record.completedAt || Date.now()
+  }, record.shareTitle ? { shareTitle: record.shareTitle } : {});
+}
+
+function buildLocalContext(record = {}) {
+  const dailyContent = {
+    id: record.dayId || record.dayKey || "今日",
+    heartProof: record.heartProof || "今日心证已生成",
+    trainingAction: record.trainingAction || record.commandment || "今日只守住这一念。",
+    stageName: record.stageName || "今日修行"
+  };
+  return {
+    dailyContent,
+    training7View: {
+      today: {
+        title: record.stageName || "今日修行",
+        boundaryPractice: dailyContent.trainingAction,
+        mantra: dailyContent.heartProof
+      }
+    },
+    unifiedJourneyView: {
+      dailyPracticeDayText: record.dayId || "每日一页 · 照见本心"
+    },
+    threeSeals: {},
+    assessment: {},
+    livingMirrorStats: {},
+    evidenceSummary: safeEvidenceSummary(),
+    evidenceRows: (safeEvidenceSummary().rows || [])
+  };
+}
+
 Page({
   data: {
     type: "daily_mantra",
@@ -76,11 +175,17 @@ Page({
     sourceScene: "share_card_page",
     saved: false,
     posterMode: false,
-    evidenceSummary: getEvidenceSummary({ limit: 4 }),
-    evidenceRows: []
+    loadStatus: "loading",
+    evidenceSummary: safeEvidenceSummary(),
+    evidenceRows: [],
+    fallbackView: null,
+    localSyncHint: ""
   },
 
   onLoad(options = {}) {
+    if (wx.showShareMenu) {
+      wx.showShareMenu({ withShareTicket: true, menus: ["shareAppMessage"] });
+    }
     const type = normalizeType(options.type);
     this.setData({
       type,
@@ -92,6 +197,10 @@ Page({
 
   onShow() {
     this.refreshCard();
+  },
+
+  onUnload() {
+    clearTimeout(this.loadTimer);
   },
 
   buildContext() {
@@ -147,9 +256,69 @@ Page({
   },
 
   refreshCard() {
-    const context = this.buildContext();
+    this.beginPageLoad();
+    const localResult = this.getLocalHeartCardResult();
+    let context;
+    try {
+      context = this.buildContext();
+    } catch (error) {
+      if (localResult) {
+        this.finishPageLoad(Object.assign({}, localResult, {
+          loadStatus: "success",
+          fallbackView: null,
+          posterMode: false,
+          localSyncHint: "本地心证已保存，稍后同步。"
+        }));
+        return;
+      }
+      const evidenceSummary = safeEvidenceSummary();
+      this.finishPageLoad({
+        loadStatus: "failed",
+        fallbackView: buildFallbackView("network"),
+        cardTypes: buildShareCardList({}).map((item) => ({
+          type: item.type,
+          title: item.typeLabel,
+          active: item.type === this.data.type
+        })),
+        album: safeAlbum(),
+        evidenceSummary,
+        evidenceRows: [],
+        saved: false,
+        localSyncHint: ""
+      });
+      return;
+    }
+    if (this.data.type === "daily_mantra" && localResult) {
+      this.finishPageLoad(Object.assign({}, localResult, {
+        loadStatus: "success",
+        fallbackView: null,
+        localSyncHint: shouldShowLocalSyncHint() ? "本地心证已保存，稍后同步。" : ""
+      }));
+      return;
+    }
     const card = buildShareCardPreview(this.data.type, context);
-    this.setData({
+    if (this.data.type === "daily_mantra" && !context.openingCheck) {
+      this.finishPageLoad({
+        loadStatus: "empty",
+        card,
+        posterCard: buildPosterCard(card, context),
+        cardTypes: buildShareCardList(context).map((item) => ({
+          type: item.type,
+          title: item.typeLabel,
+          active: item.type === this.data.type
+        })),
+        album: safeAlbum(),
+        evidenceSummary: context.evidenceSummary,
+        evidenceRows: context.evidenceRows,
+        saved: false,
+        posterMode: false,
+        fallbackView: buildFallbackView("not_generated"),
+        localSyncHint: ""
+      });
+      return;
+    }
+    this.finishPageLoad({
+      loadStatus: "success",
       card,
       posterCard: buildPosterCard(card, context),
       cardTypes: buildShareCardList(context).map((item) => ({
@@ -157,16 +326,69 @@ Page({
         title: item.typeLabel,
         active: item.type === this.data.type
       })),
-      album: getShareCardAlbum().slice(0, 6),
+      album: safeAlbum(),
       evidenceSummary: context.evidenceSummary,
       evidenceRows: context.evidenceRows,
-      saved: false
+      saved: false,
+      fallbackView: null,
+      localSyncHint: ""
     });
   },
 
+  getLocalHeartCardResult() {
+    if (this.data.type !== "daily_mantra") return null;
+    let localRecord = null;
+    try {
+      localRecord = getTodayHeartCard();
+    } catch (error) {
+      localRecord = null;
+    }
+    if (!localRecord || !localRecord.completed) return null;
+    const context = buildLocalContext(localRecord);
+    const card = buildLocalHeartCard(localRecord);
+    return {
+      card,
+      posterCard: buildPosterCard(card, context),
+      cardTypes: buildShareCardList(context).map((item) => ({
+        type: item.type,
+        title: item.typeLabel,
+        active: item.type === this.data.type
+      })),
+      album: safeAlbum(),
+      evidenceSummary: context.evidenceSummary,
+      evidenceRows: context.evidenceRows || [],
+      saved: false,
+      localSyncHint: shouldShowLocalSyncHint() ? "本地心证已保存，稍后同步。" : ""
+    };
+  },
+
+  beginPageLoad() {
+    clearTimeout(this.loadTimer);
+    this.setData({
+      loadStatus: "loading",
+      fallbackView: null,
+      localSyncHint: ""
+    });
+    this.loadTimer = setTimeout(() => {
+      if (this.data.loadStatus !== "loading") return;
+      this.finishPageLoad({
+        loadStatus: "failed",
+        fallbackView: buildFallbackView("network"),
+        posterMode: false,
+        localSyncHint: ""
+      });
+    }, LOAD_TIMEOUT_MS);
+  },
+
+  finishPageLoad(patch = {}) {
+    clearTimeout(this.loadTimer);
+    this.setData(patch);
+  },
+
   switchType(e) {
-    this.setData({ type: normalizeType(e.currentTarget.dataset.type) });
-    this.refreshCard();
+    this.setData({ type: normalizeType(e.currentTarget.dataset.type) }, () => {
+      this.refreshCard();
+    });
   },
 
   saveCard() {
@@ -189,7 +411,7 @@ Page({
     }
     const evidenceSummary = getEvidenceSummary({ limit: 4 });
     this.setData({
-      album: getShareCardAlbum().slice(0, 6),
+      album: safeAlbum(),
       evidenceSummary,
       evidenceRows: evidenceSummary.rows || [],
       saved: true,
@@ -219,7 +441,21 @@ Page({
     });
   },
 
+  handleFallbackPrimary() {
+    const fallback = this.data.fallbackView || {};
+    if (fallback.type === "network") {
+      this.refreshCard();
+      return;
+    }
+    wx.navigateTo({ url: "/pages/mind/index" });
+  },
+
+  handleFallbackSecondary() {
+    this.goHome();
+  },
+
   openPosterMode() {
+    if (this.data.loadStatus !== "success" || this.data.fallbackView) return;
     this.setData({ posterMode: true });
   },
 

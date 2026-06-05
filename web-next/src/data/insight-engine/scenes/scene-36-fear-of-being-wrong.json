@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "scene_36",
+  "sceneName": "害怕认错",
+  "sceneOrder": 36,
+  "status": "active",
+  "mirrorId": "fear_of_being_wrong",
+  "thief": "执 · 痴",
+  "items": [
+    {
+      "id": "scene_36_001",
+      "tradeMoment": "行情已经走坏时",
+      "os": "再等等。",
+      "hiddenThought": "我不想错。",
+      "reflection": "你等的不是机会，你等的是不用认错。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_36_002",
+      "tradeMoment": "本该止损时",
+      "os": "先不急。",
+      "hiddenThought": "也许还能回来。",
+      "reflection": "你开始把希望当成判断。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_36_003",
+      "tradeMoment": "看着亏损扩大时",
+      "os": "不可能这么差。",
+      "hiddenThought": "我应该没看错。",
+      "reflection": "真正让你难受的，不是亏损，是错了。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_36_004",
+      "tradeMoment": "别人提醒风险时",
+      "os": "再观察一下。",
+      "hiddenThought": "我不服。",
+      "reflection": "你不是在观察市场，你在保护面子。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_36_005",
+      "tradeMoment": "已经明显不对时",
+      "os": "万一呢。",
+      "hiddenThought": "给我一次机会。",
+      "reflection": "很多执念，都藏在“万一”里。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_36_006",
+      "tradeMoment": "账户继续变差时",
+      "os": "我再看看。",
+      "hiddenThought": "我还不能认。",
+      "reflection": "规则已经接受现实，你还没有。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_36_007",
+      "tradeMoment": "想卖又不卖时",
+      "os": "先放着。",
+      "hiddenThought": "我不想承认。",
+      "reflection": "你放不下的不是仓位，是自尊。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_36_008",
+      "tradeMoment": "回看买入逻辑时",
+      "os": "当时也没错。",
+      "hiddenThought": "问题不在我。",
+      "reflection": "你开始替自己辩护，而不是面对事实。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_36_009",
+      "tradeMoment": "准备认错时",
+      "os": "算了，再等等。",
+      "hiddenThought": "太难受了。",
+      "reflection": "认错最痛的，从来不是亏损，而是承认。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_36_010",
+      "tradeMoment": "收盘以后",
+      "os": "明天再说。",
+      "hiddenThought": "希望明天改变。",
+      "reflection": "你把今天的问题，交给了明天的幻想。",
+      "intensity": 4
+    }
+  ],
+  "thiefExplain": [
+    "执，是已经知道不对，却不愿放下。",
+    "痴，是把希望当成现实。"
+  ],
+  "evidences": [
+    "我看见自己不是输给市场，我输给了不肯认错。",
+    "我真正放不下的，不是仓位，是面子。",
+    "我开始用解释代替调整。",
+    "我以为自己在坚持，其实我在执着。",
+    "我终于看见，让我停不下来的不是机会，是不甘心承认自己错了。"
+  ],
+  "practices": [
+    "允许自己看错一次。",
+    "不把亏损等同于失败。",
+    "问自己：如果这不是我的持仓，我会怎么做？",
+    "记录一次及时认错的证据。",
+    "练习一句话：认错，不等于认输。"
+  ],
+  "coreStatement": "最难承认的，\n\n不是亏损。\n\n而是，\n\n自己错了。"
+}

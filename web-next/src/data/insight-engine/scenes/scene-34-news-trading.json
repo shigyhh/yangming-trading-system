@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "scene_34",
+  "sceneName": "消息面交易",
+  "sceneOrder": 34,
+  "status": "active",
+  "mirrorId": "news_trading",
+  "thief": "从 · 急 · 疑",
+  "items": [
+    {
+      "id": "scene_34_001",
+      "tradeMoment": "看到一条利好消息时",
+      "os": "这消息挺猛。",
+      "hiddenThought": "应该会涨。",
+      "reflection": "你还没验证消息，心已经开始上涨了。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_34_002",
+      "tradeMoment": "群里开始转发消息时",
+      "os": "大家都在传。",
+      "hiddenThought": "应该不是假的。",
+      "reflection": "你开始用转发次数代替判断。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_34_003",
+      "tradeMoment": "看到标题很刺激时",
+      "os": "这不得起飞。",
+      "hiddenThought": "机会来了。",
+      "reflection": "标题越刺激，越容易让情绪先下单。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_34_004",
+      "tradeMoment": "打开行情看到异动时",
+      "os": "果然有反应。",
+      "hiddenThought": "消息是真的。",
+      "reflection": "你开始寻找证明消息正确的证据。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_34_005",
+      "tradeMoment": "准备下单时",
+      "os": "先买点看看。",
+      "hiddenThought": "万一是真的呢。",
+      "reflection": "你买的不是逻辑，你买的是万一。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_34_006",
+      "tradeMoment": "看到别人已经买入时",
+      "os": "人家都上了。",
+      "hiddenThought": "我不能慢。",
+      "reflection": "真正让你急的，不是消息，是别人已经行动。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_34_007",
+      "tradeMoment": "消息继续发酵时",
+      "os": "后面肯定还有。",
+      "hiddenThought": "这才刚开始。",
+      "reflection": "你开始用想象补全行情。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_34_008",
+      "tradeMoment": "买入以后",
+      "os": "等公告落地。",
+      "hiddenThought": "应该还有利好。",
+      "reflection": "买入之后，你开始希望消息继续保护你。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_34_009",
+      "tradeMoment": "走势不如预期时",
+      "os": "消息没兑现？",
+      "hiddenThought": "我是不是被套了。",
+      "reflection": "当消息撑不住价格，你才开始看风险。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_34_010",
+      "tradeMoment": "收盘以后",
+      "os": "看晚上怎么发酵。",
+      "hiddenThought": "希望别出问题。",
+      "reflection": "你已经把交易交给了未知消息。",
+      "intensity": 4
+    }
+  ],
+  "thiefExplain": [
+    "从，是把别人的传播当成自己的判断。",
+    "急，是消息还没验证，动作已经先发生。",
+    "疑，是没有独立逻辑，只能不断等新消息确认。"
+  ],
+  "evidences": [
+    "我看见自己不是在研究消息，我是在被消息牵着走。",
+    "我真正害怕的，不是消息错，是自己错过消息。",
+    "我开始用转发热度代替交易逻辑。",
+    "我以为自己在抓信息差，其实我在追情绪差。",
+    "我终于看见，让我下单的不是事实，是消息带来的想象。"
+  ],
+  "practices": [
+    "看到消息后先确认来源。",
+    "不因单条消息直接下单。",
+    "写下：没有这条消息，我还会买吗？",
+    "记录一次看到利好却没有立刻买入的证据。",
+    "练习一句话：消息不是系统。"
+  ],
+  "coreStatement": "你交易的不是消息。\n\n你交易的是，\n\n消息带来的想象。"
+}

@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "scene_30",
+  "sceneName": "看对不敢买",
+  "sceneOrder": 30,
+  "status": "active",
+  "mirrorId": "see_right_no_buy",
+  "thief": "疑 · 怯",
+  "items": [
+    {
+      "id": "scene_30_001",
+      "tradeMoment": "信号出现以后",
+      "os": "再等等。",
+      "hiddenThought": "我怕买错。",
+      "reflection": "你不是没看见机会，你是不敢承担买错的结果。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_30_002",
+      "tradeMoment": "看着它开始上涨时",
+      "os": "先别急。",
+      "hiddenThought": "万一是假突破。",
+      "reflection": "你开始用谨慎保护恐惧。",
+      "intensity": 3
+    },
+    {
+      "id": "scene_30_003",
+      "tradeMoment": "明明想买却停住时",
+      "os": "再确认一下。",
+      "hiddenThought": "我还不敢。",
+      "reflection": "很多踏空，不是因为没看见，而是因为不敢动。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_30_004",
+      "tradeMoment": "价格越走越强时",
+      "os": "不会真起来吧。",
+      "hiddenThought": "我可能又错过了。",
+      "reflection": "你已经开始后悔，但手还是不敢动。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_30_005",
+      "tradeMoment": "看着买点过去时",
+      "os": "刚才该买的。",
+      "hiddenThought": "我又怂了。",
+      "reflection": "你责怪的不是行情，是那个关键时刻停住的自己。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_30_006",
+      "tradeMoment": "看到别人进场时",
+      "os": "他们都敢上。",
+      "hiddenThought": "为什么我不敢。",
+      "reflection": "真正刺痛你的，不是上涨，是别人敢做而你不敢。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_30_007",
+      "tradeMoment": "盯了很久以后",
+      "os": "我还是不买了。",
+      "hiddenThought": "输不起。",
+      "reflection": "你放弃的不是一笔交易，是承担结果的勇气。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_30_008",
+      "tradeMoment": "它继续上涨时",
+      "os": "又看飞了。",
+      "hiddenThought": "我怎么总这样。",
+      "reflection": "最难受的不是看错，是看对了却没有行动。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_30_009",
+      "tradeMoment": "回看原计划时",
+      "os": "计划明明写了。",
+      "hiddenThought": "我没执行。",
+      "reflection": "计划没有输，输的是临盘那一秒的胆怯。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_30_010",
+      "tradeMoment": "收盘以后",
+      "os": "下次一定买。",
+      "hiddenThought": "希望下次敢。",
+      "reflection": "你已经说过很多次：下次一定。",
+      "intensity": 3
+    }
+  ],
+  "thiefExplain": [
+    "疑，是明明看见信号，却总想再确认一次。",
+    "怯，是害怕承担买错后的结果。"
+  ],
+  "evidences": [
+    "我看见自己不是没机会，我是没有行动。",
+    "我真正害怕的，不是行情错，是自己要为判断负责。",
+    "我一直在等确定性，可市场从不提供确定性。",
+    "我以为自己在谨慎，其实我在逃避。",
+    "我终于看见，看对不敢买，照见的是胆怯。"
+  ],
+  "practices": [
+    "信号出现后，先执行规则，再评价结果。",
+    "写下：我刚才不敢买的真实原因。",
+    "不用“再等等”包装恐惧。",
+    "记录一次按计划买入的证据。",
+    "练习一句话：允许买错，不允许永远不敢。"
+  ],
+  "coreStatement": "最可惜的不是看错。\n\n是看对了，\n\n却不敢行动。"
+}

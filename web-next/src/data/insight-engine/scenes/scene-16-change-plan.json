@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "scene_16",
+  "sceneName": "临盘改计划",
+  "sceneOrder": 16,
+  "status": "active",
+  "mirrorId": "change_plan",
+  "thief": "急 · 疑",
+  "items": [
+    {
+      "id": "scene_16_001",
+      "tradeMoment": "开盘后走势和预期不同时",
+      "os": "先看看再说。",
+      "hiddenThought": "计划可能不对。",
+      "reflection": "你开始怀疑的，不是行情，是自己的计划。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_16_002",
+      "tradeMoment": "本该买入却犹豫时",
+      "os": "等一下。",
+      "hiddenThought": "再确认一下。",
+      "reflection": "很多计划，不是错在执行，而是死在犹豫。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_16_003",
+      "tradeMoment": "本该止损却没止时",
+      "os": "再等等。",
+      "hiddenThought": "也许会回来。",
+      "reflection": "计划已经说该走，情绪却想留下。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_16_004",
+      "tradeMoment": "行情突然加速时",
+      "os": "计划先放一放。",
+      "hiddenThought": "机会来了。",
+      "reflection": "你开始相信眼前，而不是相信计划。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_16_005",
+      "tradeMoment": "盘中波动很大时",
+      "os": "先改一下。",
+      "hiddenThought": "原计划不适合。",
+      "reflection": "真正改变你的，不是市场，是情绪。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_16_006",
+      "tradeMoment": "看到别人做法不同时",
+      "os": "要不换个思路。",
+      "hiddenThought": "会不会他们对。",
+      "reflection": "你开始把别人的动作当成自己的信号。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_16_007",
+      "tradeMoment": "原计划亏损时",
+      "os": "这次特殊。",
+      "hiddenThought": "应该破例。",
+      "reflection": "几乎所有失控，都是从“这次特殊”开始的。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_16_008",
+      "tradeMoment": "临近下单时",
+      "os": "算了改一下。",
+      "hiddenThought": "这样更稳。",
+      "reflection": "你以为自己在优化，其实你在逃避不确定。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_16_009",
+      "tradeMoment": "交易结束后",
+      "os": "早知道按原计划。",
+      "hiddenThought": "我又改了。",
+      "reflection": "最痛的不是亏损，是背叛了自己。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_16_010",
+      "tradeMoment": "收盘复盘时",
+      "os": "下次不改了。",
+      "hiddenThought": "希望记住。",
+      "reflection": "真正的问题不是计划不好，而是你总想临时改变计划。",
+      "intensity": 4
+    }
+  ],
+  "thiefExplain": [
+    "急，是总觉得眼前机会比计划重要。",
+    "疑，是总觉得原计划不够好。"
+  ],
+  "evidences": [
+    "我看见自己不是在适应市场，我是在怀疑自己。",
+    "我真正放弃的，不是计划，是信任。",
+    "我总觉得临盘判断更聪明。",
+    "我以为自己在优化，其实我在动摇。",
+    "我终于看见，让我失控的不是行情，是不相信计划。"
+  ],
+  "practices": [
+    "开盘前写下计划，盘中不修改。",
+    "每次想改计划时，先记录原因。",
+    "区分规则变化和情绪变化。",
+    "记录一次按计划执行到底的证据。",
+    "练习一句话：计划是用来执行的，不是用来临时怀疑的。"
+  ],
+  "coreStatement": "真正毁掉计划的，\n\n不是行情变化。\n\n而是你总觉得，\n\n这次可以例外。"
+}

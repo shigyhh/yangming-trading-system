@@ -1,5 +1,5 @@
 {
-  "navigationBarTitleText": "复盘采集",
+  "navigationBarTitleText": "真实复盘",
   "usingComponents": {
     "bottom-tab-bar": "/components/bottom-tab-bar/index",
     "compliance-notice": "/components/compliance-notice/index"

@@ -41,6 +41,10 @@ const requiredPageTokens = [
   "YangmingGlyph",
   "YANGMING TRAINING",
   "停十秒 · 先照心 · 再落行动",
+  "YangmingCharacterMark",
+  "止字，停十秒训练，先照心",
+  "练字，七日训练完成态，事上训练",
+  "七日训练完成态",
 ]
 const requiredSprint10Tokens = [
   "export type CheckinType",

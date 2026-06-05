@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "scene_12",
+  "sceneName": "连续盈利后膨胀",
+  "sceneOrder": 12,
+  "status": "active",
+  "mirrorId": "overconfidence",
+  "thief": "傲 · 贪",
+  "items": [
+    {
+      "id": "scene_12_001",
+      "tradeMoment": "连续赚了几笔以后",
+      "os": "今天状态真好。",
+      "hiddenThought": "我找到感觉了。",
+      "reflection": "你开始相信的不是系统，是自己。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_12_002",
+      "tradeMoment": "再次准备开仓时",
+      "os": "再来一笔。",
+      "hiddenThought": "今天顺得很。",
+      "reflection": "连续盈利以后，最危险的往往不是亏损，而是自信。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_12_003",
+      "tradeMoment": "看到账户不断新高时",
+      "os": "手感来了。",
+      "hiddenThought": "我懂市场了。",
+      "reflection": "你开始把运气，当成能力。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_12_004",
+      "tradeMoment": "仓位越来越大时",
+      "os": "这次多上点。",
+      "hiddenThought": "机会难得。",
+      "reflection": "赚钱以后，你开始放松风控。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_12_005",
+      "tradeMoment": "连续做对几次以后",
+      "os": "这票我看透了。",
+      "hiddenThought": "我不会错。",
+      "reflection": "当你觉得自己不会错的时候，风险已经来了。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_12_006",
+      "tradeMoment": "看着利润继续增长时",
+      "os": "今天就是我的盘。",
+      "hiddenThought": "我状态无敌。",
+      "reflection": "市场没有变，是你的心开始膨胀了。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_12_007",
+      "tradeMoment": "再次盈利以后",
+      "os": "这也太简单了。",
+      "hiddenThought": "我终于开窍了。",
+      "reflection": "真正危险的，不是赚钱，是开始轻视风险。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_12_008",
+      "tradeMoment": "准备加大仓位时",
+      "os": "不上重仓可惜了。",
+      "hiddenThought": "我不能浪费机会。",
+      "reflection": "你开始用盈利为冲动背书。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_12_009",
+      "tradeMoment": "看着别人还在犹豫时",
+      "os": "他们不敢上。",
+      "hiddenThought": "我比他们强。",
+      "reflection": "你开始比较，而且开始相信自己高于市场。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_12_010",
+      "tradeMoment": "收盘以后",
+      "os": "今天真准。",
+      "hiddenThought": "我已经掌握节奏了。",
+      "reflection": "赚钱以后，人最容易忘记敬畏。",
+      "intensity": 4
+    }
+  ],
+  "thiefExplain": [
+    "傲，是开始高估自己。",
+    "贪，是开始高估机会。"
+  ],
+  "evidences": [
+    "我看见自己不是在执行系统，我开始相信自己。",
+    "我真正危险的时候，不是在亏损以后，而是在盈利以后。",
+    "我把连续赚钱，当成了自己变强的证据。",
+    "我以为自己看懂了市场，其实只是市场暂时配合了我。",
+    "我终于看见，膨胀比亏损更容易毁掉纪律。"
+  ],
+  "practices": [
+    "连续盈利后主动减仓一次。",
+    "连续盈利后暂停加仓。",
+    "写下：如果今天亏损，我还会这么想吗？",
+    "提醒自己：赚钱不代表看对，亏钱也不代表看错。",
+    "练习一句话：敬畏市场，比证明自己更重要。"
+  ],
+  "coreStatement": "真正危险的，\n\n不是亏损以后怀疑自己。\n\n而是盈利以后，\n\n开始相信自己不会错。"
+}

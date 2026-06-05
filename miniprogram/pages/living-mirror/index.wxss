@@ -1,5 +1,8 @@
 .mirror-bridge,
 .mirror-hero,
+.stability-card,
+.triple-card,
+.server-prescription-card,
 .mirror-tree-card,
 .evidence-tree-card,
 .change-card,
@@ -18,6 +21,13 @@
 .mirror-bridge view,
 .mirror-hero text,
 .mirror-hero view,
+.stability-card text,
+.stability-card view,
+.triple-card text,
+.triple-card view,
+.server-prescription-card text,
+.server-prescription-card view,
+.server-prescription-card button,
 .mirror-tree-card text,
 .mirror-tree-card view,
 .evidence-tree-card text,
@@ -188,6 +198,213 @@
   margin-top: 8rpx;
   color: rgba(247, 239, 223, 0.9);
   font-size: 30rpx;
+  font-weight: 900;
+}
+
+.stability-card {
+  overflow: hidden;
+  border-color: rgba(88, 194, 173, 0.16);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(88, 194, 173, 0.12), transparent 42%),
+    rgba(255, 255, 255, 0.035);
+}
+
+.stability-score {
+  margin-top: 24rpx;
+  display: flex;
+  align-items: flex-end;
+  gap: 10rpx;
+}
+
+.stability-score text {
+  color: #fff6e6;
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", serif;
+  font-size: 72rpx;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.stability-score view {
+  padding-bottom: 8rpx;
+  color: rgba(247, 239, 223, 0.46);
+  font-size: 24rpx;
+  font-weight: 800;
+}
+
+.stability-summary {
+  margin-top: 18rpx;
+  color: rgba(247, 239, 223, 0.78);
+  font-size: 25rpx;
+  line-height: 1.52;
+  font-weight: 800;
+}
+
+.stability-dimension-list {
+  margin-top: 24rpx;
+  display: grid;
+  gap: 18rpx;
+}
+
+.stability-dimension-row {
+  padding: 18rpx;
+  border-radius: 20rpx;
+  border: 1rpx solid rgba(241, 210, 125, 0.1);
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.dimension-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14rpx;
+}
+
+.dimension-title text {
+  color: rgba(247, 239, 223, 0.84);
+  font-size: 24rpx;
+  font-weight: 900;
+}
+
+.dimension-title view {
+  color: #f1d27d;
+  font-size: 22rpx;
+  font-weight: 900;
+}
+
+.dimension-bar {
+  height: 8rpx;
+  margin-top: 14rpx;
+  overflow: hidden;
+  border-radius: 999rpx;
+  background: rgba(247, 239, 223, 0.08);
+}
+
+.dimension-bar view {
+  height: 100%;
+  border-radius: 999rpx;
+  background: linear-gradient(90deg, rgba(95, 132, 117, 0.9), rgba(216, 183, 111, 0.94));
+}
+
+.dimension-hint {
+  margin-top: 12rpx;
+  color: rgba(247, 239, 223, 0.48);
+  font-size: 21rpx;
+  line-height: 1.42;
+}
+
+.stability-foot {
+  margin-top: 20rpx;
+  color: rgba(88, 194, 173, 0.86);
+  font-size: 23rpx;
+  line-height: 1.45;
+  font-weight: 900;
+}
+
+.triple-card {
+  border-color: rgba(216, 183, 111, 0.16);
+  background:
+    radial-gradient(circle at 88% 0%, rgba(216, 183, 111, 0.12), transparent 42%),
+    rgba(255, 255, 255, 0.035);
+}
+
+.server-prescription-card {
+  border-color: rgba(95, 132, 117, 0.18);
+  background:
+    radial-gradient(circle at 18% 0%, rgba(95, 132, 117, 0.13), transparent 42%),
+    rgba(255, 255, 255, 0.035);
+}
+
+.prescription-title {
+  margin-top: 22rpx;
+  color: #fff6e6;
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", serif;
+  font-size: 34rpx;
+  line-height: 1.42;
+  font-weight: 900;
+}
+
+.prescription-action {
+  margin-top: 14rpx;
+  color: rgba(247, 239, 223, 0.72);
+  font-size: 24rpx;
+  line-height: 1.52;
+  font-weight: 800;
+}
+
+.prescription-meta {
+  margin-top: 20rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+}
+
+.prescription-meta text {
+  padding: 8rpx 16rpx;
+  border-radius: 999rpx;
+  border: 1rpx solid rgba(216, 183, 111, 0.13);
+  color: rgba(216, 183, 111, 0.78);
+  background: rgba(0, 0, 0, 0.16);
+  font-size: 21rpx;
+  font-weight: 900;
+}
+
+.triple-conclusion {
+  margin-top: 22rpx;
+  color: #fff6e6;
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", serif;
+  font-size: 32rpx;
+  line-height: 1.5;
+  font-weight: 900;
+}
+
+.triple-row-list {
+  margin-top: 22rpx;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12rpx;
+}
+
+.triple-row {
+  min-height: 142rpx;
+  padding: 18rpx 14rpx;
+  border-radius: 18rpx;
+  border: 1rpx solid rgba(241, 210, 125, 0.1);
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.triple-row text:first-child {
+  display: block;
+  color: #b49355;
+  font-size: 20rpx;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+
+.triple-row view {
+  margin-top: 10rpx;
+  color: rgba(247, 239, 223, 0.86);
+  font-size: 23rpx;
+  line-height: 1.36;
+  font-weight: 900;
+}
+
+.triple-row text:last-child {
+  margin-top: 10rpx;
+  display: block;
+  color: rgba(247, 239, 223, 0.46);
+  font-size: 20rpx;
+  line-height: 1.35;
+}
+
+.triple-prescription {
+  margin-top: 20rpx;
+  padding: 18rpx 20rpx;
+  border-left: 4rpx solid rgba(88, 194, 173, 0.52);
+  border-radius: 12rpx;
+  color: rgba(247, 239, 223, 0.82);
+  background: rgba(88, 194, 173, 0.07);
+  font-size: 24rpx;
+  line-height: 1.45;
   font-weight: 900;
 }
 

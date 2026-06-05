@@ -32,6 +32,7 @@ const YM_JOURNEY_STATE = "ym_journey_state";
 const YM_EVIDENCE_LEDGER = "ym_evidence_ledger";
 const YM_DEMO_MODE = "ym_demo_mode";
 const YM_DEBUG_MODE = "ym_debug_mode";
+const YM_TRAINING_PRESCRIPTION = "ym_training_prescription";
 
 module.exports = {
   YM_DAILY_THREE_SEALS,
@@ -67,5 +68,6 @@ module.exports = {
   YM_JOURNEY_STATE,
   YM_EVIDENCE_LEDGER,
   YM_DEMO_MODE,
-  YM_DEBUG_MODE
+  YM_DEBUG_MODE,
+  YM_TRAINING_PRESCRIPTION
 };

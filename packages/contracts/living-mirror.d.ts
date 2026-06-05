@@ -234,6 +234,35 @@ export type TrainingRecord = {
   completedAt?: string | null
 }
 
+export type TradeReviewCrossEndStatusKey =
+  | "pending_confirmation"
+  | "pending_market_review"
+  | "mirrored"
+  | "archived"
+  | "training_pending"
+  | "trained"
+  | "retested"
+  | string
+
+export type TradeReviewCrossEndStatusText =
+  | "待确认"
+  | "待回看"
+  | "已照见"
+  | "已入镜"
+  | "待训练"
+  | "已训练"
+  | "已复测"
+  | string
+
+export type TradeReviewCrossEndStatusStep = {
+  key: TradeReviewCrossEndStatusKey
+  label: TradeReviewCrossEndStatusText
+  done: boolean
+  current: boolean
+  detail: string
+  source: "miniprogram" | "web-next" | "server" | "admin" | string
+}
+
 export type TradeReview = {
   id: string
   reviewId?: string
@@ -242,8 +271,10 @@ export type TradeReview = {
   reportId?: string
   imageUrl: string
   tradeDate: string
+  lookupSymbol?: string
   symbolMasked?: string
   marketType?: MarketType
+  timeframeKey?: string
   direction?: "buy" | "sell" | "close" | "observe" | string
   wasPlanned?: boolean | null
   buyReason: string
@@ -261,6 +292,62 @@ export type TradeReview = {
   behaviorTags: string[]
   personalCycle?: PersonalCycle
   reviewText: string
+  ocrDraft?: TradeReviewOcrDraft | null
+  marketContext?: TradeReviewMarketContext | null
+  crossEndStatus?: TradeReviewCrossEndStatusKey
+  crossEndStatusText?: TradeReviewCrossEndStatusText
+  crossEndStatusSteps?: TradeReviewCrossEndStatusStep[]
+  statusUpdatedAt?: string
+  createdAt: string
+}
+
+export type TradeReviewMarketContextStatus = "ready" | "missing_symbol" | "missing_cache" | "failed" | string
+
+export type TradeReviewMarketContext = {
+  schemaVersion: "trade_review_market_context_v1" | string
+  status: TradeReviewMarketContextStatus
+  marketKey: string
+  marketLabel?: string
+  timeframeKey: string
+  timeframeLabel?: string
+  tradeDate: string
+  symbolMasked: string
+  sourceStatus: string
+  positionLabel: string
+  dataStart: string
+  dataEnd: string
+  candleCount: number
+  source: string
+  rulesSummary: string
+  reviewPrompt?: string
+  complianceNotice: "仅用于回看当时市场环境与交易心理反应，不构成投资建议。" | string
+}
+
+export type TradeReviewOcrStatus =
+  | "provider_not_configured"
+  | "provider_pending"
+  | "pending_confirmation"
+  | "confirmed"
+  | "failed"
+  | string
+
+export type TradeReviewOcrDraft = {
+  id: string
+  userId?: string
+  status: TradeReviewOcrStatus
+  provider: string
+  confidence: number
+  needsUserConfirmation: boolean
+  fields: {
+    tradeDate: string
+    marketType: string
+    marketKey?: string
+    timeframeKey?: string
+    symbol: string
+    rawText?: string
+  }
+  message: string
+  complianceNotice: "本内容仅用于交易心理复盘与行为训练，不构成投资建议。" | string
   createdAt: string
 }
 
@@ -290,7 +377,150 @@ export type LivingMirrorStats = {
   lastSignals?: LivingMirrorGrowthSignal[]
   dailyHeartWitness?: DailyHeartWitness
   latestPersonalCycle?: PersonalCycle
+  zhixingStability?: ZhixingStability
+  tripleReflection?: TripleReflection
   lastUpdated: string
+}
+
+export type LivingMirrorProfileSourceRow = {
+  key: "assessment" | "kline" | "trade" | string
+  name: "九镜测评" | "K线盲练" | "真实复盘" | string
+  mirror: MirrorName | string
+  statusText: string
+  sourceId?: string
+}
+
+export type LivingMirrorProfile = {
+  schemaVersion: "living_mirror_profile_v1" | string
+  userId: string
+  currentMainMirror: MirrorName | string
+  currentStage: string
+  sources: LivingMirrorProfileSourceRow[]
+  tripleReflection: TripleReflection
+  marketContexts: TradeReviewMarketContext[]
+  latestMarketContext: TradeReviewMarketContext | null
+  trainingFocus: string
+  sourceCounts: {
+    assessment: number
+    klineBlind: number
+    tradeReview: number
+  }
+  updatedAt: string
+  complianceNotice: "本画像仅用于交易心理觉察、复盘训练与行为管理，不构成投资建议。" | string
+}
+
+export type ZhixingStabilityDimensionKey =
+  | "planClarity"
+  | "boundaryExecution"
+  | "intradayStability"
+  | "reviewCompletion"
+  | "trainingCompletion"
+  | string
+
+export type ZhixingStabilityDimension = {
+  key: ZhixingStabilityDimensionKey
+  name: "计划清晰度" | "边界执行度" | "临盘稳定度" | "复盘完成度" | "训练完成度" | string
+  score: number
+  scoreText: string
+  level: string
+  sourceText: string
+  hint: string
+  hasData: boolean
+}
+
+export type ZhixingStability = {
+  version: "zhixing-stability-v1" | string
+  title: "知行稳定度" | string
+  total: number
+  totalText: string
+  level: string
+  summary: string
+  dimensions: ZhixingStabilityDimension[]
+  sourceCounts: {
+    tradeReviewCount: number
+    klineBlindCount: number
+    klineMindCount: number
+    trainingDayCount: number
+  }
+  riskLine: string
+  improvementLine: string
+  updatedAt: string | number
+}
+
+export type TripleReflectionState = "empty" | "insufficient" | "aligned" | "partial" | "conflict" | string
+
+export type TripleReflectionRow = {
+  key: "assessment" | "kline" | "trade" | string
+  name: "九镜测评" | "K线盲练" | "真实交易记录" | "真实记录" | string
+  mirror: MirrorName | string
+  statusText: string
+}
+
+export type TripleReflectionSourceSummary = {
+  key: "assessment" | "kline" | "trade" | string
+  name: string
+  mirror?: MirrorName | string
+  statusText: string
+}
+
+export type TripleReflection = {
+  version: "triple-reflection-v1" | string
+  title: "三证互照" | string
+  state: TripleReflectionState
+  stateLabel: string
+  mainMirror: MirrorName | string
+  rows: TripleReflectionRow[]
+  conclusion: string
+  unifiedConclusion?: string
+  proofLine?: string
+  evidenceLevel?: "empty" | "insufficient" | "medium" | "strong" | "calibration" | string
+  evidenceLevelText?: string
+  matchedSources?: TripleReflectionSourceSummary[]
+  conflictSources?: TripleReflectionSourceSummary[]
+  missingSources?: TripleReflectionSourceSummary[]
+  nextCalibration?: string
+  prescription: string
+  updatedAt: string | number
+}
+
+export type TrainingPrescriptionStep = {
+  key: string
+  label: string
+  action: string
+  completed?: boolean
+}
+
+export type TrainingPrescriptionKLinePractice = {
+  marketKey: string
+  timeframeKey: string
+  symbolMasked?: string
+  actionText: string
+  reason: string
+}
+
+export type TrainingPrescriptionDispatch = {
+  schemaVersion: "training_prescription_v1" | string
+  id: string
+  userId: string
+  source: SourcePlatform
+  status: "ready" | "dispatched" | "received" | string
+  day: number
+  mirror: MirrorName | string
+  title: string
+  reason: string
+  action: string
+  reflectionPrompt: string
+  klinePractice?: TrainingPrescriptionKLinePractice
+  steps: TrainingPrescriptionStep[]
+  sourceProfile?: {
+    currentMainMirror?: MirrorName | string
+    evidenceLevelText?: string
+    proofLine?: string
+  }
+  createdAt: string
+  dispatchedAt?: string
+  receivedAt?: string
+  complianceNotice: "本处方仅用于交易心理训练与复盘管理，不构成投资建议。" | string
 }
 
 export type LivingMirrorGrowthProfile = {

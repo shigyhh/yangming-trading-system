@@ -5,8 +5,10 @@ import {
   generateShareCardBinding,
   getDataBindingUserSummary,
   getInviteSourceStatsBinding,
+  listTradeReviewBindings,
   getRetestComparisonBinding,
   getShareCardBinding,
+  getTrainingPrescriptionBinding,
   listAdminUsersFromBindings,
   resetDataBindingForTests,
   saveAssessmentReportBinding,
@@ -14,10 +16,12 @@ import {
   saveRetestResultBinding,
   saveTradeReviewBinding,
   saveTrainingRecordBinding,
+  dispatchTrainingPrescriptionBinding,
   syncAssistantSummaryToFeishuBinding,
   unloadDataBindingForTests,
   updateAssistantHandoffBinding
 } from "../src/services/dataBinding.js";
+import { buildTradeReviewOcrDraft } from "../src/services/tradeReviewOcr.js";
 
 const forbiddenPhrases = ["推荐买入", "推荐卖出", "必赚", "稳赚", "收益保证", "喊单", "抄底", "逃顶"];
 
@@ -89,14 +93,40 @@ test("data binding service stores assessment, training, kline and retest in runt
     review: {
       imageUrl: "/uploads/reviews/review-001.png",
       tradeDate: "2026-06-01",
-      symbol: "600519",
+      lookupSymbol: "600519",
+      symbolMasked: "****19",
       marketType: "a_share",
+      timeframeKey: "1d",
       buyReason: "看到快速拉升，担心错过机会。",
       sellReason: "回看后发现当时没有写清边界。",
       strongestThought: "怕错过",
-      behaviorTags: ["截图复盘"]
+      behaviorTags: ["截图复盘"],
+      wasPlanned: false,
+      changedPlanDuringTrade: true,
+      hadExitRule: false,
+      ocrDraft: {
+        status: "provider_not_configured",
+        provider: "manual_confirmation",
+        confidence: 0,
+        needsUserConfirmation: true,
+        fields: {
+          tradeDate: "",
+          marketType: "",
+          symbol: ""
+        },
+        message: "识别服务未连接，先手动确认字段。"
+      }
     },
     source: "web-next"
+  });
+  const tradeReviewList = await listTradeReviewBindings(user.userId);
+  const ocrDraft = await buildTradeReviewOcrDraft({
+    user,
+    image: {
+      fileName: "review-001.png",
+      size: 1024
+    },
+    source: "miniprogram"
   });
   const retest = await saveRetestResultBinding({ user, report: retestReport });
   const handoff = await updateAssistantHandoffBinding(user.userId, {
@@ -132,6 +162,11 @@ test("data binding service stores assessment, training, kline and retest in runt
 
   const summary = await getDataBindingUserSummary(user.userId);
   const aliasSummary = await getDataBindingUserSummary("web-local-merge-001");
+  const prescription = await getTrainingPrescriptionBinding(user.userId);
+  const dispatchedPrescription = await dispatchTrainingPrescriptionBinding(user.userId, {
+    source: "web-next"
+  });
+  const summaryAfterDispatch = await getDataBindingUserSummary(user.userId);
   const fetchedShareCard = await getShareCardBinding(user.userId);
   const inviteStats = await getInviteSourceStatsBinding();
   const admins = await listAdminUsersFromBindings();
@@ -156,6 +191,31 @@ test("data binding service stores assessment, training, kline and retest in runt
   assert.equal(kline.record.process_insight, "你已经看见第一念，下一步是让手慢半拍。");
   assert.equal(tradeReview.review.detectedMirror, "追涨之镜");
   assert.equal(tradeReview.review.symbolMasked, "****19");
+  assert.equal(tradeReview.review.timeframeKey, "1d");
+  assert.equal(tradeReview.review.wasPlanned, false);
+  assert.equal(tradeReview.review.changedPlanDuringTrade, true);
+  assert.equal(tradeReview.review.hadExitRule, false);
+  assert.equal(tradeReview.review.ocrDraft.status, "provider_not_configured");
+  assert.ok(["待回看", "待训练"].includes(tradeReview.review.crossEndStatusText));
+  assert.ok(tradeReview.review.crossEndStatusSteps.some((step) => step.label === "待确认"));
+  assert.ok(tradeReview.review.crossEndStatusSteps.some((step) => step.label === "已入镜"));
+  assert.equal(tradeReview.review.marketContext.schemaVersion, "trade_review_market_context_v1");
+  assert.equal(tradeReview.review.marketContext.marketKey, "cn_equity");
+  assert.ok(["ready", "missing_cache", "failed"].includes(tradeReview.review.marketContext.status));
+  if (tradeReview.review.marketContext.status === "ready") {
+    assert.match(tradeReview.review.marketContext.positionLabel, /阶段|区间|波动/);
+  }
+  assert.equal(tradeReview.living_mirror_profile.schemaVersion, "living_mirror_profile_v1");
+  assert.equal(tradeReview.living_mirror_profile.sourceCounts.tradeReview, 1);
+  assert.equal(tradeReview.living_mirror_profile.latestMarketContext.status, tradeReview.review.marketContext.status);
+  assert.equal(tradeReview.living_mirror_profile.tripleReflection.unifiedConclusion, "追涨之镜增强");
+  assert.ok(tradeReview.living_mirror_profile.tripleReflection.proofLine.includes("→ 追涨之镜增强"));
+  assert.equal(tradeReviewList.trade_reviews.length, 1);
+  assert.equal(tradeReviewList.trade_reviews[0].id, tradeReview.review.id);
+  assert.equal(tradeReviewList.trade_reviews[0].crossEndStatusText, tradeReview.review.crossEndStatusText);
+  assert.equal(tradeReviewList.living_mirror_profile.tripleReflection.title, "三证互照");
+  assert.equal(ocrDraft.status, "provider_not_configured");
+  assert.equal(ocrDraft.needsUserConfirmation, true);
   assert.ok(tradeReview.living_mirror_stats.mirrorScores.chasing >= 0);
   assert.ok(tradeReview.living_mirror_stats.thiefCounts["贪"] >= 1);
   assert.ok(summary.admin_user.klineRecords[0].disciplineAction.includes("过程质量"));
@@ -176,11 +236,27 @@ test("data binding service stores assessment, training, kline and retest in runt
   assert.equal(aliasSummary.training_records.length, 2);
   assert.equal(summary.kline_records.length, 1);
   assert.equal(summary.trade_reviews.length, 1);
+  assert.equal(summary.trade_reviews[0].crossEndStatusText, "已复测");
   assert.equal(summary.mirror_report.mainMirror, "追涨之镜");
   assert.equal(summary.mirror_report.schemaVersion, "living_mirror_v1");
   assert.equal(summary.living_mirror_stats.schemaVersion, "living_mirror_v1");
+  assert.equal(summary.living_mirror_profile.currentMainMirror, "追涨之镜");
+  assert.equal(summary.living_mirror_profile.sourceCounts.assessment, 1);
+  assert.equal(summary.living_mirror_profile.sourceCounts.klineBlind, 1);
+  assert.equal(summary.living_mirror_profile.sourceCounts.tradeReview, 1);
+  assert.equal(summary.living_mirror_profile.tripleReflection.evidenceLevel, "strong");
+  assert.ok(summary.living_mirror_profile.tripleReflection.conclusion.includes("追涨之镜"));
+  assert.equal(summary.training_prescription.schemaVersion, "training_prescription_v1");
+  assert.equal(summary.training_prescription.mirror, "追涨之镜");
+  assert.equal(summary.training_prescription.status, "ready");
+  assert.equal(prescription.training_prescription.action, summary.training_prescription.action);
+  assert.equal(dispatchedPrescription.training_prescription.status, "dispatched");
+  assert.equal(dispatchedPrescription.training_prescription.source, "web-next");
+  assert.ok(dispatchedPrescription.training_prescription.dispatchedAt);
+  assert.equal(summaryAfterDispatch.training_prescription.status, "dispatched");
   assert.equal(summary.mirror_archive.tradeReviews.length, 1);
   assert.equal(summary.admin_user.tradeReviews[0].detectedMirror, "追涨之镜");
+  assert.equal(summary.admin_user.tradeReviews[0].crossEndStatusText, "已复测");
   assert.ok(summary.admin_user.livingMirrorStats.conscienceGrowth > 0);
   assert.equal(summary.assistant_summary.primaryType, "冲动型");
   assert.equal(summary.admin_user.klineRecords.length, 1);
@@ -198,6 +274,8 @@ test("data binding service stores assessment, training, kline and retest in runt
   assert.equal(reloadedSummary.kline_records.length, 1);
   assert.equal(reloadedSummary.trade_reviews.length, 1);
   assert.equal(reloadedSummary.living_mirror_stats.loopRelapseCount, 1);
+  assert.equal(reloadedSummary.living_mirror_profile.latestMarketContext.schemaVersion, "trade_review_market_context_v1");
+  assert.equal(reloadedSummary.training_prescription.status, "dispatched");
   assert.equal(reloadedSummary.admin_user.assistant.owner, "助教明远");
   assert.equal(reloadedSummary.admin_user.assistantSummary.primaryType, "冲动型");
   assert.equal(reloadedSummary.feishu_sync.status, "dry_run");

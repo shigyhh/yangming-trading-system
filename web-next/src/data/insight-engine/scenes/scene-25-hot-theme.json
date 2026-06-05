@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "scene_25",
+  "sceneName": "热点追逐",
+  "sceneOrder": 25,
+  "status": "active",
+  "mirrorId": "hot_theme",
+  "thief": "贪 · 从 · 急",
+  "items": [
+    {
+      "id": "scene_25_001",
+      "tradeMoment": "看到热点板块大涨时",
+      "os": "这波不能错过。",
+      "hiddenThought": "终于轮到我了。",
+      "reflection": "真正吸引你的，不是逻辑，是热闹。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_25_002",
+      "tradeMoment": "热点霸屏时",
+      "os": "这几天全在说它。",
+      "hiddenThought": "应该不会错。",
+      "reflection": "当所有人都在讨论的时候，你最容易失去判断。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_25_003",
+      "tradeMoment": "看着涨停潮时",
+      "os": "赶紧上车。",
+      "hiddenThought": "再晚没机会了。",
+      "reflection": "你追的不是热点，你是在逃离错过。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_25_004",
+      "tradeMoment": "打开榜单时",
+      "os": "就它了。",
+      "hiddenThought": "肯定有人接力。",
+      "reflection": "你开始把别人的动作，当成自己的理由。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_25_005",
+      "tradeMoment": "热点持续发酵时",
+      "os": "这次不一样。",
+      "hiddenThought": "还能涨。",
+      "reflection": "每一个热点，都让人相信自己遇到了例外。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_25_006",
+      "tradeMoment": "群里疯狂讨论时",
+      "os": "大家都在做。",
+      "hiddenThought": "我不能落下。",
+      "reflection": "刺激你的不是机会，是群体情绪。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_25_007",
+      "tradeMoment": "下单前最后几秒",
+      "os": "先买再说。",
+      "hiddenThought": "赚了再研究。",
+      "reflection": "当你先买再说的时候，研究已经失去意义。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_25_008",
+      "tradeMoment": "买入以后",
+      "os": "果然强。",
+      "hiddenThought": "我跟对了。",
+      "reflection": "热点最容易放大人的侥幸。",
+      "intensity": 3
+    },
+    {
+      "id": "scene_25_009",
+      "tradeMoment": "热点继续上涨时",
+      "os": "还得加。",
+      "hiddenThought": "这波没结束。",
+      "reflection": "赚钱以后，你开始越来越相信热点。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_25_010",
+      "tradeMoment": "收盘以后",
+      "os": "明天继续冲。",
+      "hiddenThought": "我已经上车了。",
+      "reflection": "当你持仓以后，你开始希望热点永远存在。",
+      "intensity": 4
+    }
+  ],
+  "thiefExplain": [
+    "贪，是总觉得热点里还有没赚到的钱。",
+    "从，是把群体情绪当成判断依据。",
+    "急，是害怕慢一步就错过。"
+  ],
+  "evidences": [
+    "我看见自己不是在研究热点，我是在追热点。",
+    "我真正害怕的，不是热点结束，是自己没参与。",
+    "我开始用热度代替逻辑。",
+    "我以为自己在抓机会，其实我在追热闹。",
+    "我终于看见，让我冲进去的不是逻辑，是不甘心错过。"
+  ],
+  "practices": [
+    "热点出现后先观察一天。",
+    "不因为热度提高仓位。",
+    "问自己：如果没人讨论它，我还会买吗？",
+    "记录一次放弃追热点的证据。",
+    "练习一句话：热度不是理由。"
+  ],
+  "coreStatement": "你追的不是热点。\n\n你追的是，\n\n不想错过热点的自己。"
+}

@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react"
 import type { MouseEvent } from "react"
 import { useRouter } from "next/navigation"
 
+import { YangmingA1Mark } from "@/components/brand/yangming-mark"
+
 export function PersonalityEntrySection() {
   const router = useRouter()
   const sectionRef = useRef<HTMLElement | null>(null)
@@ -77,7 +79,16 @@ export function PersonalityEntrySection() {
       {isEntering ? (
         <div className="home-ritual-transition" role="status" aria-label="照心将启">
           <div className="home-ritual-seal" aria-hidden="true">
-            <span>照</span>
+            <YangmingA1Mark
+              className="ritual-seal-mark"
+              title="阳明照见入照印"
+              style={{
+                width: "calc(92 * var(--sprint7-rpx))",
+                height: "auto",
+                color: "rgba(242, 235, 220, 0.78)",
+                filter: "drop-shadow(0 0 calc(18 * var(--sprint7-rpx)) rgba(216, 183, 111, 0.1))",
+              }}
+            />
           </div>
           <p>此心一照，妄念自明。</p>
         </div>
@@ -330,16 +341,13 @@ export function PersonalityEntrySection() {
           animation: ritual-lamp-spread 2200ms cubic-bezier(0.22, 1, 0.36, 1) both;
         }
 
-        .home-ritual-seal span {
+        .home-ritual-seal :global(.ritual-seal-mark) {
           position: relative;
           z-index: 2;
-          font-family: var(--font-yangming-hand), var(--font-world), serif;
-          font-size: calc(72 * var(--sprint7-rpx));
-          font-weight: 500;
-          letter-spacing: 0;
-          font-variation-settings: "wght" 500;
+          width: calc(92 * var(--sprint7-rpx));
+          height: auto;
           color: rgba(242, 235, 220, 0.78);
-          transform: translateX(calc(1 * var(--sprint7-rpx)));
+          filter: drop-shadow(0 0 calc(18 * var(--sprint7-rpx)) rgba(216, 183, 111, 0.1));
         }
 
         .home-ritual-transition p {

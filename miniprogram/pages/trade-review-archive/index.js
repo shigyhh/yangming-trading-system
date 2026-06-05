@@ -46,9 +46,6 @@ Page({
   },
 
   goKlineTraining() {
-    const latest = (this.data.reminder || {}).latest || {};
-    wx.navigateTo({
-      url: `/pages/kline-simulator/index?market=${latest.marketKey || "cn"}&timeframe=${latest.timeframeKey || "1d"}`
-    });
+    wx.navigateTo({ url: "/pages/kline-mind/index" });
   }
 });

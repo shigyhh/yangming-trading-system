@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "scene_15",
+  "sceneName": "空仓焦虑",
+  "sceneOrder": 15,
+  "status": "active",
+  "mirrorId": "empty_position",
+  "thief": "急 · 贪",
+  "items": [
+    {
+      "id": "scene_15_001",
+      "tradeMoment": "看着行情上涨时",
+      "os": "又涨了。",
+      "hiddenThought": "我又空仓。",
+      "reflection": "最难受的不是上涨，是你没参与。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_15_002",
+      "tradeMoment": "打开软件时",
+      "os": "今天又没买。",
+      "hiddenThought": "我是不是错过了。",
+      "reflection": "你开始怀疑的，不是行情，是自己。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_15_003",
+      "tradeMoment": "看着自选股上涨时",
+      "os": "这票我看过。",
+      "hiddenThought": "我本来可以上。",
+      "reflection": "真正让你难受的，是你曾经看见过。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_15_004",
+      "tradeMoment": "看着别人赚钱时",
+      "os": "别人又吃到了。",
+      "hiddenThought": "为什么总不是我。",
+      "reflection": "刺痛你的不是行情，是比较。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_15_005",
+      "tradeMoment": "连续空仓几天以后",
+      "os": "总得做点什么。",
+      "hiddenThought": "我不能一直空着。",
+      "reflection": "你开始为了交易而交易。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_15_006",
+      "tradeMoment": "看着市场热闹时",
+      "os": "今天总得买一个吧。",
+      "hiddenThought": "不然白看一天。",
+      "reflection": "当你开始“总得买一个”，规则已经退场了。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_15_007",
+      "tradeMoment": "看到强势股时",
+      "os": "我是不是太谨慎了。",
+      "hiddenThought": "我又慢了。",
+      "reflection": "你把纪律误认为胆小。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_15_008",
+      "tradeMoment": "空仓期间刷群时",
+      "os": "大家都有票。",
+      "hiddenThought": "就我没有。",
+      "reflection": "真正让你难受的，是自己被排除在外。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_15_009",
+      "tradeMoment": "临近收盘时",
+      "os": "不买点不甘心。",
+      "hiddenThought": "今天白过了。",
+      "reflection": "你开始用仓位证明自己的存在感。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_15_010",
+      "tradeMoment": "关软件之前",
+      "os": "明天一定上。",
+      "hiddenThought": "我不能再错过。",
+      "reflection": "你害怕的不是空仓，你害怕的是再次错过。",
+      "intensity": 4
+    }
+  ],
+  "thiefExplain": [
+    "急，是看见机会就想参与。",
+    "贪，是总觉得外面还有自己没赚到的钱。"
+  ],
+  "evidences": [
+    "我看见自己不是在寻找机会，我是在逃离空仓的不安。",
+    "我真正难受的，不是没赚钱，是没参与。",
+    "我开始为了有仓位而交易，而不是为了有机会而交易。",
+    "我把纪律当成胆小，把等待当成错过。",
+    "我终于看见，空仓焦虑来自不甘心。"
+  ],
+  "practices": [
+    "记录一次空仓却没有乱买的证据。",
+    "写下：今天不交易，损失了什么？",
+    "提醒自己：空仓也是一种仓位。",
+    "不因为无聊而开仓。",
+    "练习一句话：没有机会，比错误机会更好。"
+  ],
+  "coreStatement": "你焦虑的不是空仓。\n\n你焦虑的是，\n\n别人在赚钱，\n\n而你没有参与。"
+}

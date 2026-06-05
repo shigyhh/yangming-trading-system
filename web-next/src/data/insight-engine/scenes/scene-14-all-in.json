@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "scene_14",
+  "sceneName": "梭哈冲动",
+  "sceneOrder": 14,
+  "status": "active",
+  "mirrorId": "all_in",
+  "thief": "贪 · 赌 · 急",
+  "items": [
+    {
+      "id": "scene_14_001",
+      "tradeMoment": "看见自认为确定机会时",
+      "os": "干一把。",
+      "hiddenThought": "这次不一样。",
+      "reflection": "所有梭哈的人，都觉得这次不一样。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_14_002",
+      "tradeMoment": "准备下单时",
+      "os": "全上。",
+      "hiddenThought": "机会难得。",
+      "reflection": "当你想全上的时候，风险已经被你忽略了。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_14_003",
+      "tradeMoment": "看到账户余额时",
+      "os": "留着也没用。",
+      "hiddenThought": "不如拼一次。",
+      "reflection": "你开始把风控看成阻碍。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_14_004",
+      "tradeMoment": "仓位越来越大时",
+      "os": "搞票大的。",
+      "hiddenThought": "小打小闹没意思。",
+      "reflection": "你已经不满足于赚钱，你开始追求刺激。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_14_005",
+      "tradeMoment": "连续赚钱以后",
+      "os": "这次必须狠狠干。",
+      "hiddenThought": "我要赚大的。",
+      "reflection": "你放大的不是仓位，是欲望。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_14_006",
+      "tradeMoment": "看着机会时",
+      "os": "错过太可惜。",
+      "hiddenThought": "我受不了。",
+      "reflection": "真正让你梭哈的，不是机会，是害怕错过。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_14_007",
+      "tradeMoment": "下单前最后几秒",
+      "os": "拼了。",
+      "hiddenThought": "赌这一把。",
+      "reflection": "当你开始拼了，系统已经退场了。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_14_008",
+      "tradeMoment": "看着行情顺着自己走时",
+      "os": "果然没错。",
+      "hiddenThought": "我看懂了。",
+      "reflection": "赚钱以后，人最容易高估自己。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_14_009",
+      "tradeMoment": "准备继续加码时",
+      "os": "再干大点。",
+      "hiddenThought": "这次赚够。",
+      "reflection": "贪婪最大的特点，就是永远觉得还不够。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_14_010",
+      "tradeMoment": "收盘之前",
+      "os": "这一把翻身。",
+      "hiddenThought": "我要改变命运。",
+      "reflection": "你已经不在交易，你开始赌人生。",
+      "intensity": 5
+    }
+  ],
+  "thiefExplain": [
+    "贪，是总觉得赚得还不够。",
+    "赌，是开始相信一把改变结果。",
+    "急，是想一次解决所有问题。"
+  ],
+  "evidences": [
+    "我看见自己不是在把握机会，我是在放大欲望。",
+    "我真正害怕的，不是亏损，是赚得不够多。",
+    "我开始相信一次机会可以改变一切。",
+    "我以为自己在提高收益，其实我在放弃风控。",
+    "我终于看见，梭哈来自贪婪，而不是确定性。"
+  ],
+  "practices": [
+    "单笔仓位不因感觉而放大。",
+    "下单前重新计算最大亏损。",
+    "写下：如果亏损发生，我还能接受吗？",
+    "记录一次放弃梭哈的证据。",
+    "练习一句话：活下来，比赚大的更重要。"
+  ],
+  "coreStatement": "你梭哈的不是仓位。\n\n你梭哈的是，\n\n自己的欲望。"
+}

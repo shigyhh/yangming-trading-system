@@ -72,7 +72,7 @@ assert.strictEqual(completion.boundary, "追涨前停十秒");
 assert.strictEqual(completion.zhixingChangeText, "+3");
 assert.strictEqual(completion.retestText, "距离七日复测还差 6 日");
 assert.strictEqual(completion.heartProofText, "已生成第 1 枚心证");
-assert.deepStrictEqual(completion.actions.map((item) => item.text), ["查看今日心证卡", "存入活镜档案", "邀请一位同修同行"]);
+assert.deepStrictEqual(completion.actions.map((item) => item.text), ["看心证卡", "看活镜"]);
 
 let closureChain = buildClosureEvidenceChainView({ ledger, day, completedDays: 1 });
 assert.strictEqual(closureChain.steps.length, 6);

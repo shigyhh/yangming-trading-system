@@ -12,6 +12,7 @@ import type {
   DataBindingTradeReviewPayload,
   DataBindingTradeReviewResponse,
   DataBindingTrainingPayload,
+  DataBindingTrainingPrescriptionResponse,
   DataBindingTrainingResponse,
   DataBindingUserProfile,
   DataBindingUserSummaryResponse,
@@ -161,6 +162,16 @@ export async function syncTradeReviewBinding(review: Partial<TradeReview>) {
 export async function fetchDataBindingSummary() {
   const user = getDataBindingUserProfile()
   return requestGetJson<DataBindingSummaryResponse>(`/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/summary`)
+}
+
+export async function dispatchTrainingPrescriptionBinding() {
+  const user = getDataBindingUserProfile()
+  return requestJson<{ source: string }, DataBindingTrainingPrescriptionResponse>(
+    `/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/training-prescription`,
+    {
+      source: "web-next",
+    },
+  )
 }
 
 export async function generateShareCardBinding() {

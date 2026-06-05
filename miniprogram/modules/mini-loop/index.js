@@ -168,7 +168,7 @@ function buildBehaviorLoop(tradeReviewState = {}) {
       ready: false,
       title: "循环之镜待生成",
       line: "完成两次真实复盘后，系统会照见重复出现的行为循环。",
-      trigger: "待采集",
+      trigger: "待记录",
       thought: "待照见",
       mirror: "待照见",
       thieves: "待照见",
@@ -206,14 +206,14 @@ function buildLivingMirrorTree(context = {}) {
     root: "心镜报告",
     trunk: currentMirror,
     branchText: `九镜主枝：${currentMirror}`,
-    leafText: `${leafCount} 片行为证据叶`,
+    leafText: `${leafCount} 片行为印记叶`,
     ringsText: `七日年轮 ${progress.completedDays || 0}/7`,
     shadowText: `高频心贼：${topThieves}`,
     loopLine: loop.line,
     nodes: [
       { key: "root", label: "根", value: "我是谁", active: !!context.assessment },
       { key: "trunk", label: "干", value: currentMirror, active: Number(stats.totalReviews || 0) > 0 },
-      { key: "leaf", label: "叶", value: `${leafCount} 次证据`, active: leafCount > 0 },
+      { key: "leaf", label: "叶", value: `${leafCount} 次印记`, active: leafCount > 0 },
       { key: "seal", label: "印", value: progress.retestUnlocked ? "可复测" : "继续七日", active: progress.retestUnlocked }
     ]
   };

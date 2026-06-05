@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from "react"
 
+import { YangmingCharacterMark } from "@/components/brand/yangming-character-mark"
 import {
   AssessmentShell,
   ComplianceNote,
@@ -22,6 +23,7 @@ import {
   reviewQuestionPrompts,
   tradeReviewLastResultStorageKey,
   tradeReviewStorageKey,
+  upsertTradeReviewHistory,
   type TradeReviewDraft,
 } from "@/features/trade-review/trade-review"
 import type { LivingMirrorStats, TradeReview } from "@yangming/contracts/living-mirror"
@@ -113,7 +115,8 @@ export default function TradeReviewPage() {
       setLastReview(result.data.review)
       setLivingStats(result.data.living_mirror_stats)
       setStorage(tradeReviewLastResultStorageKey, result.data.review)
-      setMessage("已写入活镜成长。真实交易复盘已成为你的修行证据。")
+      upsertTradeReviewHistory(result.data.review)
+      setMessage("已写入活镜成长。真实交易复盘已写入你的修行记录。")
     } else {
       setMessage(`${result.error}。草稿已保留，server 启动后可再次落档。`)
     }
@@ -134,6 +137,16 @@ export default function TradeReviewPage() {
       <div className="trade-review-page mx-auto w-full max-w-[1440px]">
         <section className="trade-review-hero">
           <div>
+            <div className="trade-review-character-state" aria-label="复字真实复盘状态">
+              <YangmingCharacterMark
+                character="复"
+                label="复字，真实复盘，回看行为"
+                roleText="回看"
+                size="sm"
+                tier="method"
+              />
+              <span>复盘页 / 回看行为</span>
+            </div>
             <StatusPill>真实交易复盘 MVP</StatusPill>
             <h1 className="trade-review-title mt-8 font-story font-light leading-[1.08] tracking-[.08em]">
               以复盘照行为，
@@ -158,7 +171,7 @@ export default function TradeReviewPage() {
 
         <section className="trade-review-grid mt-6">
           <GlassPanel className="trade-review-upload-panel">
-            <p className="font-function text-xs font-semibold tracking-[.18em] text-[#b49d5d]">截图证据</p>
+            <p className="font-function text-xs font-semibold tracking-[.18em] text-[#b49d5d]">截图记录</p>
             <label className="mt-5 flex min-h-[340px] cursor-pointer flex-col items-center justify-center rounded-[8px] border border-dashed border-[rgba(180,157,93,.28)] bg-black/20 p-5 text-center transition hover:border-[rgba(216,183,111,.48)]">
               {draft.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -317,12 +330,17 @@ export default function TradeReviewPage() {
               </>
             ) : (
               <p className="mt-5 font-function text-sm leading-7 text-[rgba(220,212,195,.55)]">
-                暂无真实交易复盘。先上传一张截图，留下一次行为证据。
+                暂无真实交易复盘。先上传一张截图，留下一次行为记录。
               </p>
             )}
-            <SecondaryLink href="/observing-archive" className="mt-5 w-full">
-              回到心镜档案馆 →
-            </SecondaryLink>
+            <div className="mt-5 grid gap-3">
+              <SecondaryLink href="/living-mirror-center" className="w-full">
+                进入活镜中枢 →
+              </SecondaryLink>
+              <SecondaryLink href="/observing-archive" className="w-full">
+                回到心镜档案馆 →
+              </SecondaryLink>
+            </div>
           </GlassPanel>
         </section>
 
@@ -340,6 +358,22 @@ export default function TradeReviewPage() {
           display: grid;
           gap: 1.25rem;
           align-items: end;
+        }
+
+        .trade-review-character-state {
+          display: flex;
+          width: fit-content;
+          align-items: center;
+          gap: 0.85rem;
+          margin-bottom: 1.2rem;
+        }
+
+        .trade-review-character-state span {
+          font-family: var(--font-function);
+          font-size: 0.72rem;
+          font-weight: 700;
+          letter-spacing: 0.16em;
+          color: rgba(220, 212, 195, 0.42);
         }
 
         .trade-review-title {

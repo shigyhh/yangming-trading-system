@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "scene_01",
+  "sceneName": "急涨追高",
+  "sceneOrder": 1,
+  "status": "active",
+  "mirrorId": "chase",
+  "thief": "贪 · 急",
+  "items": [
+    {
+      "id": "scene_01_001",
+      "tradeMoment": "看着价格突然拉升时",
+      "os": "卧槽，真拉了。",
+      "hiddenThought": "我又慢了。",
+      "reflection": "这一声卧槽，不是惊讶，是后悔。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_01_002",
+      "tradeMoment": "发现自己还没买进去时",
+      "os": "我又没上车。",
+      "hiddenThought": "怎么又是我。",
+      "reflection": "你难受的不是没上车，是别人已经上车了。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_01_003",
+      "tradeMoment": "刚打开软件看到它起飞时",
+      "os": "怎么刚看就起飞了。",
+      "hiddenThought": "别人又比我快。",
+      "reflection": "你不是怕它涨，你是怕自己又一次错过。",
+      "intensity": 3
+    },
+    {
+      "id": "scene_01_004",
+      "tradeMoment": "看着涨幅越来越接近涨停时",
+      "os": "再不买要涨停了。",
+      "hiddenThought": "我不想再错过。",
+      "reflection": "真正让你着急的，不是涨停，是后悔又要来了。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_01_005",
+      "tradeMoment": "手放到买入键前",
+      "os": "不追又要后悔。",
+      "hiddenThought": "我受不了那种感觉。",
+      "reflection": "你追的不是机会，你是在逃离后悔。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_01_006",
+      "tradeMoment": "犹豫几秒后准备下单时",
+      "os": "算了，先进。",
+      "hiddenThought": "我不想再当旁观者。",
+      "reflection": "规则还没说话，情绪已经下单了。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_01_007",
+      "tradeMoment": "看到它又比自己预期先涨时",
+      "os": "怎么每次都差一步。",
+      "hiddenThought": "我是不是不行。",
+      "reflection": "你不是第一次差一步，所以这一次格外难受。",
+      "intensity": 3
+    },
+    {
+      "id": "scene_01_008",
+      "tradeMoment": "想等回调却越看越急时",
+      "os": "怕是不会回调了。",
+      "hiddenThought": "机会不会等我。",
+      "reflection": "你已经开始幻想，而不是判断。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_01_009",
+      "tradeMoment": "看到群里别人晒盈利时",
+      "os": "别人都吃肉了。",
+      "hiddenThought": "为什么总不是我。",
+      "reflection": "刺痛你的不是上涨，是比较。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_01_010",
+      "tradeMoment": "看着它越涨越远时",
+      "os": "我又慢了。",
+      "hiddenThought": "我总是落后。",
+      "reflection": "你怕的不是慢，你怕的是自己总是慢。",
+      "intensity": 3
+    }
+  ],
+  "thiefExplain": [
+    "贪，是想抓住这一波，不想再看别人赚钱。",
+    "急，是还没等规则确认，心已经先冲出去了。"
+  ],
+  "evidences": [
+    "我看见自己不是在追行情，我是在追那个不想落后的自己。",
+    "我真正受不了的，不是上涨，是别人动了，我还在原地。",
+    "我以为自己在抓机会，其实是在逃避踏空后的难受。",
+    "我终于看见，追进去的不是仓位，是不甘心。",
+    "这一刻，我先看见了手快之前的那一念。"
+  ],
+  "practices": [
+    "急涨时先停三息。",
+    "不追第一口气。",
+    "想买前，先写下：我现在是在按规则，还是怕错过？",
+    "记录一次看见拉升但没有立刻追进去的证据。",
+    "允许机会过去，不允许情绪替我下单。"
+  ],
+  "coreStatement": "你追的不是上涨。你追的是，那个不想再错过的自己。"
+}

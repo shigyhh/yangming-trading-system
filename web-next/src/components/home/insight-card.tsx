@@ -2,21 +2,23 @@
 
 import { Eye } from "lucide-react"
 import { motion } from "framer-motion"
+import { getHomeDailyInsightCard } from "@yangming/content/home-insight"
 
 import { YangmingGlyph } from "@/components/brand/yangming-mark"
 import { Badge } from "@/components/ui/badge"
 import { KLineSpirit } from "@/components/home/kline-spirit"
-
-const orbitItems = [
-  { glyph: "review", label: "心学关卡", value: "事上练" },
-  { glyph: "train", label: "今日动作", value: "停十秒" },
-] as const
 
 const glyphKindByIndex = ["trade", "review", "train", "growth"] as const
 
 const energyBars = [0.44, 0.28, 0.54, 0.34, 0.48]
 
 export function InsightCard() {
+  const dailyInsight = getHomeDailyInsightCard()
+  const orbitItems = [
+    { glyph: "review" as const, label: dailyInsight.stageLabel, value: dailyInsight.stageValue },
+    { glyph: "train" as const, label: dailyInsight.actionLabel, value: dailyInsight.actionValue },
+  ]
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 34, rotateX: 3 }}
@@ -52,7 +54,7 @@ export function InsightCard() {
             <div>
               <p className="type-level-4 opacity-62">今日心证</p>
               <h2 className="brand-card-title mt-2 md:mt-3">
-                知而未行
+                {dailyInsight.heartProof}
               </h2>
             </div>
           </div>
@@ -63,9 +65,9 @@ export function InsightCard() {
           animate={{ y: [0, -1, 0] }}
           transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
         >
-          <p className="type-level-4 opacity-54">临盘照见</p>
+          <p className="type-level-4 opacity-54">{dailyInsight.reflectionTitle}</p>
           <p className="font-story mt-2 text-[1.12rem] font-light leading-[1.9] text-[rgba(244,235,221,.68)] md:mt-3 md:text-[1.48rem]">
-            明知不可追，见涨仍动心。
+            {dailyInsight.reflectionText}
           </p>
         </motion.div>
 
@@ -84,14 +86,14 @@ export function InsightCard() {
           ))}
         </div>
 
-        <div className="instrument-pane relative z-10 mt-5 hidden rounded-3xl border border-[rgba(217,189,122,.04)] bg-[linear-gradient(90deg,rgba(95,132,117,.04),rgba(216,183,111,.018))] p-5 opacity-58 md:block">
-          <p className="type-level-4">触发 · 念头 · 动作 · 复测</p>
+        <div className="instrument-pane relative z-10 mt-5 hidden rounded-3xl border border-[rgba(217,189,122,.075)] bg-[linear-gradient(90deg,rgba(95,132,117,.07),rgba(216,183,111,.04))] p-5 opacity-78 shadow-[inset_0_1px_0_rgba(255,255,255,.025)] md:block">
+          <p className="type-level-4 text-[rgba(216,183,111,.58)]">触发 · 念头 · 动作 · 复测</p>
           <div className="mt-4 grid grid-cols-4 gap-2">
             {[0, 1, 2, 3].map((item) => (
               <motion.i
                 key={item}
-                className="flex h-6 items-center justify-center rounded-full text-[rgba(216,183,111,.34)]"
-                animate={{ opacity: [0.22, 0.58, 0.22], scaleX: [0.72, 1, 0.72] }}
+                className="flex h-7 items-center justify-center rounded-full text-[rgba(216,183,111,.62)] drop-shadow-[0_0_10px_rgba(216,183,111,.12)]"
+                animate={{ opacity: [0.42, 0.82, 0.42], scaleX: [0.82, 1, 0.82] }}
                 transition={{
                   duration: 9,
                   repeat: Infinity,

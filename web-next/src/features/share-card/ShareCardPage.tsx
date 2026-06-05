@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 
+import { YangmingC16Mark } from "@/components/brand/yangming-mark"
 import {
   AssessmentShell,
   ComplianceNote,
@@ -283,8 +284,13 @@ function SharePoster({ card, source }: { card: ShareCard; source: ShareCardSourc
       <article className="share-poster">
         <div className="share-poster-ripple" aria-hidden="true" />
         <div className="share-poster-top">
-          <p>YANGMING MIND MIRROR</p>
-          <span>{source.label}</span>
+          <div className="share-poster-brand">
+            <span className="share-poster-mark">
+              <YangmingC16Mark className="size-7" title="阳明照见分享卡小标" />
+            </span>
+            <p>YANGMING MIND MIRROR</p>
+          </div>
+          <span className="share-poster-state">{source.label}</span>
         </div>
 
         <div className="share-poster-title">
@@ -371,6 +377,7 @@ function SharePoster({ card, source }: { card: ShareCard; source: ShareCardSourc
           align-items: center;
           justify-content: space-between;
           gap: 1rem;
+          min-height: 2.45rem;
           font-family: var(--font-function);
           font-size: 0.66rem;
           font-weight: 700;
@@ -378,11 +385,38 @@ function SharePoster({ card, source }: { card: ShareCard; source: ShareCardSourc
           color: rgba(216, 183, 111, 0.72);
         }
 
-        .share-poster-top p {
-          margin: 0;
+        .share-poster-brand {
+          display: flex;
+          align-items: center;
+          gap: 0.7rem;
+          min-width: 0;
         }
 
-        .share-poster-top span {
+        .share-poster-mark {
+          display: grid;
+          width: 2.35rem;
+          height: 2.35rem;
+          flex: 0 0 auto;
+          place-items: center;
+          border: 1px solid rgba(216, 183, 111, 0.22);
+          border-radius: 8px;
+          color: rgba(216, 183, 111, 0.78);
+          background:
+            radial-gradient(circle at 50% 42%, rgba(216, 183, 111, 0.14), transparent 62%),
+            rgba(255, 255, 255, 0.034);
+          box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.06),
+            0 0 28px rgba(216, 183, 111, 0.055);
+        }
+
+        .share-poster-top p {
+          margin: 0;
+          min-width: 0;
+          color: rgba(216, 183, 111, 0.74);
+        }
+
+        .share-poster-state {
+          flex: 0 0 auto;
           border: 1px solid rgba(216, 183, 111, 0.16);
           border-radius: 999px;
           padding: 0.28rem 0.5rem;

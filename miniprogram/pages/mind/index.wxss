@@ -60,15 +60,32 @@
 .seal {
   width: 82rpx;
   height: 82rpx;
-  display: grid;
-  place-items: center;
+  display: flex;
   border-radius: 24rpx;
   color: #f6d886;
   border: 1rpx solid rgba(241, 210, 125, 0.36);
   background: rgba(255, 255, 255, 0.045);
-  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", serif;
-  font-size: 42rpx;
-  font-weight: 900;
+  font-size: 0;
+}
+
+.seal.brand-zhao-mini .zhao-eye {
+  width: 16rpx;
+  height: 14rpx;
+  border-width: 2rpx;
+}
+
+.seal.brand-zhao-mini .zhao-mirror {
+  width: 40rpx;
+  height: 2rpx;
+}
+
+.seal.brand-zhao-mini .zhao-fire {
+  gap: 17rpx;
+}
+
+.seal.brand-zhao-mini .zhao-fire-dot {
+  width: 3rpx;
+  height: 17rpx;
 }
 
 .mind-head text {

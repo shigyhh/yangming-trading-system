@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "scene_08",
+  "sceneName": "扛单死撑",
+  "sceneOrder": 8,
+  "status": "active",
+  "mirrorId": "hold",
+  "thief": "痴 · 执",
+  "items": [
+    {
+      "id": "scene_08_001",
+      "tradeMoment": "已经亏损很多以后",
+      "os": "现在卖给谁？",
+      "hiddenThought": "我不能认输。",
+      "reflection": "你舍不得卖的不是股票，你舍不得的是认错。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_08_002",
+      "tradeMoment": "看到账户越来越绿时",
+      "os": "都亏这么多了。",
+      "hiddenThought": "现在走太亏了。",
+      "reflection": "亏损越大，你越舍不得承认。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_08_003",
+      "tradeMoment": "再次打开账户时",
+      "os": "再等等。",
+      "hiddenThought": "万一回来呢。",
+      "reflection": "你等的不是上涨，你等的是希望。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_08_004",
+      "tradeMoment": "看着继续下跌时",
+      "os": "我不信。",
+      "hiddenThought": "不可能一直跌。",
+      "reflection": "你已经开始和现实较劲。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_08_005",
+      "tradeMoment": "连续阴线以后",
+      "os": "总会弹一下。",
+      "hiddenThought": "给我一次机会。",
+      "reflection": "你一直在等一个体面离场的理由。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_08_006",
+      "tradeMoment": "想卖又没卖时",
+      "os": "今天不卖。",
+      "hiddenThought": "我还没准备好。",
+      "reflection": "规则已经说该走，情绪还不肯走。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_08_007",
+      "tradeMoment": "跌破重要位置时",
+      "os": "再看两天。",
+      "hiddenThought": "也许会变好。",
+      "reflection": "你把今天的问题交给了明天。",
+      "intensity": 3
+    },
+    {
+      "id": "scene_08_008",
+      "tradeMoment": "已经明显走坏时",
+      "os": "拉红我就走。",
+      "hiddenThought": "我只想少亏一点。",
+      "reflection": "你等的不是拉红，你等的是不用认错。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_08_009",
+      "tradeMoment": "看着成本线时",
+      "os": "总会回来。",
+      "hiddenThought": "我还没输。",
+      "reflection": "你把希望当成了判断。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_08_010",
+      "tradeMoment": "关软件之前",
+      "os": "先放着。",
+      "hiddenThought": "以后再说。",
+      "reflection": "真正困住你的，不是股票，是执念。",
+      "intensity": 3
+    }
+  ],
+  "thiefExplain": [
+    "痴，是把希望当判断。",
+    "执，是已经知道有问题，却不肯放手。"
+  ],
+  "evidences": [
+    "我看见自己不是在持有，我是在等待奇迹。",
+    "我真正舍不得的，不是仓位，是面子。",
+    "我一直在等市场改变，却没有让自己改变。",
+    "我害怕的不是亏损，是承认亏损。",
+    "我终于看见，让我停不下来的不是股票，是执念。"
+  ],
+  "practices": [
+    "写下：如果今天没有持仓，我还会买吗？",
+    "重新评估这笔交易，不评估成本，只评估事实。",
+    "记录一次面对亏损时的真实感受。",
+    "把“会回来”改成“为什么会回来？”",
+    "练习一句话：接受现实，比等待奇迹更有力量。"
+  ],
+  "coreStatement": "你扛的不是仓位。\n\n你扛的是，\n\n不甘心。"
+}

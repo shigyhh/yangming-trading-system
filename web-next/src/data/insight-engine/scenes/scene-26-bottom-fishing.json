@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "scene_26",
+  "sceneName": "抄底冲动",
+  "sceneOrder": 26,
+  "status": "active",
+  "mirrorId": "bottom_fishing",
+  "thief": "贪 · 痴 · 急",
+  "items": [
+    {
+      "id": "scene_26_001",
+      "tradeMoment": "看着连续大跌时",
+      "os": "跌这么多了。",
+      "hiddenThought": "应该到底了。",
+      "reflection": "你开始把跌得多，当成上涨的理由。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_26_002",
+      "tradeMoment": "再次下跌时",
+      "os": "这位置差不多了。",
+      "hiddenThought": "不可能再跌了。",
+      "reflection": "市场从来不知道什么叫“差不多”。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_26_003",
+      "tradeMoment": "看着恐慌盘出现时",
+      "os": "机会来了。",
+      "hiddenThought": "别人怕我不怕。",
+      "reflection": "你开始把勇敢和冲动混在一起。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_26_004",
+      "tradeMoment": "跌停附近时",
+      "os": "这不捡钱吗。",
+      "hiddenThought": "这种机会不多。",
+      "reflection": "你以为自己在捡便宜，其实你在接情绪。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_26_005",
+      "tradeMoment": "看着继续下杀时",
+      "os": "再跌我就加。",
+      "hiddenThought": "成本会更低。",
+      "reflection": "你越来越在意价格，越来越忽略风险。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_26_006",
+      "tradeMoment": "准备抄底时",
+      "os": "先进去一点。",
+      "hiddenThought": "万一反弹呢。",
+      "reflection": "真正让你下单的，不是确定性，是侥幸。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_26_007",
+      "tradeMoment": "看到跌幅扩大时",
+      "os": "杀过头了。",
+      "hiddenThought": "肯定会修复。",
+      "reflection": "你开始用希望解释走势。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_26_008",
+      "tradeMoment": "买入以后",
+      "os": "反弹一下就够。",
+      "hiddenThought": "我又赌对了。",
+      "reflection": "你买的不是反转，你买的是幻想。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_26_009",
+      "tradeMoment": "继续下跌时",
+      "os": "怎么还跌。",
+      "hiddenThought": "不应该啊。",
+      "reflection": "你以为自己在抄底，其实你只是在猜底。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_26_010",
+      "tradeMoment": "收盘以后",
+      "os": "明天总该反弹了。",
+      "hiddenThought": "今天应该是最低点。",
+      "reflection": "当你开始预测最低点时，市场已经把你带离了规则。",
+      "intensity": 4
+    }
+  ],
+  "thiefExplain": [
+    "贪，是总觉得便宜就有机会。",
+    "痴，是把希望当成事实。",
+    "急，是急着抢在反弹前进去。"
+  ],
+  "evidences": [
+    "我看见自己不是在等待机会，我是在抢机会。",
+    "我真正相信的，不是规则，是反弹。",
+    "我开始把跌幅当成理由。",
+    "我以为自己在逆向思考，其实我在猜测。",
+    "我终于看见，让我抄底的不是逻辑，是贪念。"
+  ],
+  "practices": [
+    "不因为跌幅大而买入。",
+    "等确认信号出现后再行动。",
+    "问自己：如果它今天不反弹，我还会买吗？",
+    "记录一次忍住没抄底的证据。",
+    "练习一句话：跌得多，不等于该涨。"
+  ],
+  "coreStatement": "你抄的不是底。\n\n你抄的是，\n\n自己对反弹的幻想。"
+}

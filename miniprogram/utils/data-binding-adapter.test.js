@@ -8,6 +8,7 @@ const {
   shouldSyncRetest,
   buildTrainingBindingPayload,
   buildKLineBindingPayload,
+  buildTradeReviewBindingPayload,
   buildShareCardBindingPayload
 } = require("./data-binding-adapter");
 
@@ -129,12 +130,39 @@ const state = {
       createdAt: 1764547200000
     },
     records: {}
+  },
+  trade_review_records: {
+    latest: {
+      id: "tr-local-001",
+      screenshotPath: "wxfile://review-001.png",
+      tradeDate: "2026-06-01",
+      marketKey: "cn",
+      symbol: "600519",
+      entryReason: "看到波动变快，心里怕错过。",
+      exitReason: "回看后发现边界没有提前写清。",
+      firstThought: "怕错过",
+      inPlan: "no",
+      changedPlan: "yes",
+      exitPrepared: "no",
+      relatedMirror: "追涨之镜",
+      heartThieves: ["贪", "急"],
+      actionLabel: "计划外动作",
+      emotion: "急躁",
+      verdict: "这次复盘照见的是怕错过带动动作。",
+      nextAction: "边界前停十秒，先写第一念。",
+      ocrDraft: {
+        status: "provider_not_configured",
+        needsUserConfirmation: true
+      },
+      createdAt: 1764547400000
+    },
+    records: []
   }
 };
 
 const assessmentPayload = buildAssessmentBindingPayload({ auth, state });
 assert.strictEqual(assessmentPayload.source, "miniprogram");
-assert.strictEqual(assessmentPayload.user.userId, "mp-user-001");
+assert.strictEqual(assessmentPayload.user.userId, "phone_13812345678");
 assert.strictEqual(assessmentPayload.user.maskedPhone, "138****5678");
 assert.strictEqual(assessmentPayload.report.schemaVersion, "assessment_report_v1");
 assert.strictEqual(assessmentPayload.report.primaryType.label, "冲动型");
@@ -169,6 +197,20 @@ assert.ok(klinePayload.record.scene.includes("边界触碰"));
 assert.strictEqual(klinePayload.record.reaction, "急躁");
 assert.strictEqual(klinePayload.record.disciplineAction, "停十秒");
 
+const tradeReviewPayload = buildTradeReviewBindingPayload({ auth, state });
+assert.ok(tradeReviewPayload);
+assert.strictEqual(tradeReviewPayload.user.userId, "phone_13812345678");
+assert.strictEqual(tradeReviewPayload.review.id, "tr-local-001");
+assert.strictEqual(tradeReviewPayload.review.marketType, "a_share");
+assert.strictEqual(tradeReviewPayload.review.symbol, "600519");
+assert.strictEqual(tradeReviewPayload.review.timeframeKey, "1d");
+assert.strictEqual(tradeReviewPayload.review.detectedMirror, "追涨之镜");
+assert.deepStrictEqual(tradeReviewPayload.review.detectedThieves, ["贪", "急"]);
+assert.strictEqual(tradeReviewPayload.review.wasPlanned, false);
+assert.strictEqual(tradeReviewPayload.review.hadExitRule, false);
+assert.strictEqual(tradeReviewPayload.review.changedPlanDuringTrade, true);
+assert.strictEqual(tradeReviewPayload.review.ocrDraft.status, "provider_not_configured");
+
 const sharePayload = buildShareCardBindingPayload({
   auth,
   state,
@@ -186,7 +228,7 @@ assert.strictEqual(localIdentityPayload.user.userId, "phone_13812345678");
 assert.strictEqual(localIdentityPayload.user.maskedPhone, "138****5678");
 
 const forbiddenPhrases = ["推荐买入", "推荐卖出", "必赚", "稳赚", "收益保证", "喊单", "抄底", "逃顶"];
-const serialized = JSON.stringify({ assessmentPayload, retestPayload, trainingPayload, klinePayload, sharePayload });
+const serialized = JSON.stringify({ assessmentPayload, retestPayload, trainingPayload, klinePayload, tradeReviewPayload, sharePayload });
 forbiddenPhrases.forEach((phrase) => {
   assert.strictEqual(serialized.includes(phrase), false, `payload should not include ${phrase}`);
 });
@@ -194,6 +236,10 @@ forbiddenPhrases.forEach((phrase) => {
 const apiSource = fs.readFileSync(path.join(__dirname, "api.js"), "utf8");
 assert.ok(apiSource.includes("/api/v1/data-binding/assessment-report"));
 assert.ok(apiSource.includes("/api/v1/data-binding/users/"));
+assert.ok(apiSource.includes("/trade-reviews"));
+assert.ok(apiSource.includes("/trade-review-ocr"));
+assert.ok(apiSource.includes("/training-prescription"));
+assert.ok(apiSource.includes("pullTrainingPrescription"));
 assert.strictEqual(apiSource.includes("/assessment-report`"), false);
 assert.strictEqual(apiSource.includes("/training-progress`"), false);
 assert.strictEqual(apiSource.includes("/share-attribution`"), false);

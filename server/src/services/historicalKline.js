@@ -396,7 +396,8 @@ export async function buildHistoricalKlineSlice({
   blind = true,
   seed = "",
   startDate = "",
-  endDate = ""
+  endDate = "",
+  anchor = ""
 } = {}) {
   const market = getMarket(marketKey);
   const timeframe = getTimeframe(timeframeKey || market.defaultTimeframe);
@@ -424,13 +425,15 @@ export async function buildHistoricalKlineSlice({
   }
 
   const rng = createSeededRng([market.key, instrument.symbol, timeframe.key, trainingMode.key, personality?.label || "", gate?.key || "", seed || ""].join(":"));
-  const startIndex = chooseSliceStartIndex(candles, {
-    windowSize: safeWindowSize,
-    mode: trainingMode.key,
-    personality,
-    gate,
-    rng
-  });
+  const startIndex = anchor === "end"
+    ? Math.max(0, candles.length - safeWindowSize)
+    : chooseSliceStartIndex(candles, {
+      windowSize: safeWindowSize,
+      mode: trainingMode.key,
+      personality,
+      gate,
+      rng
+    });
   const segment = candles.slice(startIndex, startIndex + safeWindowSize);
   const sliceId = buildSliceId({
     marketKey: market.key,

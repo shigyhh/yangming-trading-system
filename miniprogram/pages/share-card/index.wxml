@@ -2,7 +2,7 @@
   <view class="share-bg mist"></view>
   <view class="share-bg grain"></view>
 
-  <view wx:if="{{!posterMode}}" class="share-content">
+  <view wx:if="{{!posterMode || loadStatus !== 'success' || fallbackView}}" class="share-content">
     <view class="nav-head">
       <button class="nav-back" bindtap="goBack">‹</button>
       <view class="head">
@@ -12,10 +12,10 @@
           <view class="head-subtitle">被照见之后，才自然愿意分享。</view>
         </view>
       </view>
-      <button class="poster-entry" bindtap="openPosterMode">海报模式</button>
+      <button wx:if="{{loadStatus === 'success' && !fallbackView}}" class="poster-entry" bindtap="openPosterMode">海报模式</button>
     </view>
 
-    <scroll-view scroll-x class="type-strip" show-scrollbar="{{false}}">
+    <scroll-view wx:if="{{loadStatus !== 'loading'}}" scroll-x class="type-strip" show-scrollbar="{{false}}">
       <button
         wx:for="{{cardTypes}}"
         wx:key="type"
@@ -25,63 +25,94 @@
       >{{item.title}}</button>
     </scroll-view>
 
-    <view class="card-preview">
-      <view class="card-top">
-        <view>
-          <text class="card-top-label">{{card.typeLabel}}</text>
-          <view class="card-top-brand">阳明心学交易系统</view>
-        </view>
-        <view class="mini-seal">知</view>
+    <view wx:if="{{loadStatus === 'loading'}}" class="heart-proof-loading">
+      <view class="loading-breath"></view>
+      <text>加载中</text>
+      <view>正在读取今日心证。</view>
+    </view>
+
+    <view wx:elif="{{fallbackView}}" class="heart-proof-fallback">
+      <view class="fallback-seal">照</view>
+      <text>{{fallbackView.title}}</text>
+      <view class="fallback-lines">
+        <view wx:for="{{fallbackView.lines}}" wx:key="*this">{{item}}</view>
       </view>
-      <view class="headline">{{card.headline}}</view>
-      <view class="body">{{card.body}}</view>
-      <view class="metrics" wx:if="{{card.metrics && card.metrics.length}}">
-        <view wx:for="{{card.metrics}}" wx:key="label" class="metric-row">
-          <text class="metric-label">{{item.label}}</text>
-          <view class="metric-value">{{item.value}}</view>
-          <text wx:if="{{item.trend}}" class="metric-trend">{{item.trend}}</text>
-        </view>
-      </view>
-      <view class="insight">{{card.insight}}</view>
-      <view class="card-foot">
-        <text class="card-cta">{{card.cta}}</text>
-        <view class="card-source">同修照见</view>
+      <view class="fallback-actions">
+        <button class="primary" bindtap="handleFallbackPrimary">{{fallbackView.primaryText}}</button>
+        <button class="secondary" bindtap="handleFallbackSecondary">{{fallbackView.secondaryText}}</button>
       </view>
     </view>
 
-    <view class="share-actions">
-      <button class="secondary" bindtap="saveCard">{{saved ? '已存入卡册' : '保存心证卡'}}</button>
-      <button class="primary" open-type="share" bindtap="inviteCompanion">邀一位同修同行</button>
-    </view>
-    <button class="poster-action" bindtap="openPosterMode">进入纯净海报截图</button>
-    <button class="ghost copy-action" bindtap="copyShareText">复制分享文案</button>
-
-    <view class="ledger-card">
-      <view class="album-head">
-        <text class="album-title">来自闭环证据</text>
-        <view class="album-link">{{evidenceSummary.total ? evidenceSummary.total + ' 条证据' : '今日落印后生成第一条证据'}}</view>
-      </view>
-      <view wx:if="{{evidenceRows.length}}" class="ledger-list">
-        <view wx:for="{{evidenceRows}}" wx:key="id" class="ledger-row">
-          <text class="ledger-type">{{item.typeLabel}}</text>
-          <view class="ledger-title">{{item.title}}</view>
+    <block wx:else>
+      <view wx:if="{{localSyncHint}}" class="local-sync-hint">{{localSyncHint}}</view>
+      <view class="card-preview">
+        <view class="card-top">
+          <view>
+            <text class="card-top-label">{{card.typeLabel}}</text>
+            <view class="card-top-brand">阳明心学交易系统</view>
+          </view>
+          <view class="mini-seal brand-zhao-mini" aria-label="阳明照见分享卡小标">
+            <view class="zhao-eyes">
+              <view class="zhao-eye"></view>
+              <view class="zhao-eye"></view>
+            </view>
+            <view class="zhao-mirror"></view>
+            <view class="zhao-fire">
+              <view class="zhao-fire-dot"></view>
+              <view class="zhao-fire-dot"></view>
+            </view>
+          </view>
+        </view>
+        <view class="headline">{{card.headline}}</view>
+        <view class="body">{{card.body}}</view>
+        <view class="metrics" wx:if="{{card.metrics && card.metrics.length}}">
+          <view wx:for="{{card.metrics}}" wx:key="label" class="metric-row">
+            <text class="metric-label">{{item.label}}</text>
+            <view class="metric-value">{{item.value}}</view>
+            <text wx:if="{{item.trend}}" class="metric-trend">{{item.trend}}</text>
+          </view>
+        </view>
+        <view class="insight">{{card.insight}}</view>
+        <view class="card-foot">
+          <text class="card-cta">{{card.cta}}</text>
+          <view class="card-source">同修照见</view>
         </view>
       </view>
-      <view wx:else class="ledger-empty">这里还没有心证。完成今日落印后，第一枚心证会存入档案。</view>
-    </view>
 
-    <view class="album-card" wx:if="{{album.length}}">
-      <view class="album-head">
-        <text class="album-title">我的心证卡册</text>
-        <view class="album-link" bindtap="goProfile">去用户中心</view>
+      <view class="share-actions">
+        <button class="secondary" bindtap="saveCard">{{saved ? '已存入卡册' : '保存心证卡'}}</button>
+        <button class="primary" open-type="share" bindtap="inviteCompanion">邀一位同修同行</button>
       </view>
-      <view class="album-list">
-        <view wx:for="{{album}}" wx:key="id" class="album-row">
-          <text class="album-type">{{item.typeLabel}}</text>
-          <view class="album-value">{{item.headline}}</view>
+      <button class="poster-action" bindtap="openPosterMode">进入纯净海报截图</button>
+      <button class="ghost copy-action" bindtap="copyShareText">复制分享文案</button>
+
+      <view class="ledger-card">
+        <view class="album-head">
+          <text class="album-title">来自闭环记录</text>
+          <view class="album-link">{{evidenceSummary.total ? evidenceSummary.total + ' 条记录' : '今日落印后生成第一条记录'}}</view>
+        </view>
+        <view wx:if="{{evidenceRows.length}}" class="ledger-list">
+          <view wx:for="{{evidenceRows}}" wx:key="id" class="ledger-row">
+            <text class="ledger-type">{{item.typeLabel}}</text>
+            <view class="ledger-title">{{item.title}}</view>
+          </view>
+        </view>
+        <view wx:else class="ledger-empty">这里还没有心证。完成今日落印后，第一枚心证会存入档案。</view>
+      </view>
+
+      <view class="album-card" wx:if="{{album.length}}">
+        <view class="album-head">
+          <text class="album-title">我的心证卡册</text>
+          <view class="album-link" bindtap="goProfile">去用户中心</view>
+        </view>
+        <view class="album-list">
+          <view wx:for="{{album}}" wx:key="id" class="album-row">
+            <text class="album-type">{{item.typeLabel}}</text>
+            <view class="album-value">{{item.headline}}</view>
+          </view>
         </view>
       </view>
-    </view>
+    </block>
 
     <view class="compliance-card">{{card.compliance}}</view>
     <button class="ghost" bindtap="goHome">回到今日陪跑</button>
@@ -91,7 +122,17 @@
     <view class="poster-card poster-master">
       <view class="poster-ink"></view>
       <view class="poster-brand">
-        <view class="poster-brand-seal">知</view>
+        <view class="poster-brand-seal brand-zhao-mini" aria-label="阳明照见分享卡海报小标">
+          <view class="zhao-eyes">
+            <view class="zhao-eye"></view>
+            <view class="zhao-eye"></view>
+          </view>
+          <view class="zhao-mirror"></view>
+          <view class="zhao-fire">
+            <view class="zhao-fire-dot"></view>
+            <view class="zhao-fire-dot"></view>
+          </view>
+        </view>
         <view class="poster-brand-copy">
           <text class="poster-brand-title">{{posterCard.brandTitle}}</text>
           <view class="poster-brand-subtitle">{{posterCard.brandSubtitle}}</view>
@@ -130,5 +171,5 @@
     </view>
   </view>
 
-  <bottom-tab-bar wx:if="{{!posterMode}}" active="zhixing" />
+  <bottom-tab-bar wx:if="{{!posterMode || loadStatus !== 'success' || fallbackView}}" active="profile" />
 </view>

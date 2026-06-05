@@ -161,7 +161,7 @@ export default function AssessmentPage() {
 
   if (currentIndex === 0 && answers.length === 0) {
     return (
-      <AssessmentShell className="py-5" contentWidth="wide">
+      <AssessmentShell className="p-0 md:p-0" contentWidth="wide">
         <MirrorGateway
           onComplete={(mirrorId) => {
             const mirrorReport = generateMirrorReport(mirrorId)

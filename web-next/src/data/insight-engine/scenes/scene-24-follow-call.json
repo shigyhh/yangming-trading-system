@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "scene_24",
+  "sceneName": "别人喊单依赖",
+  "sceneOrder": 24,
+  "status": "active",
+  "mirrorId": "follow_call",
+  "thief": "从 · 疑",
+  "items": [
+    {
+      "id": "scene_24_001",
+      "tradeMoment": "群里有人喊单时",
+      "os": "跟不跟。",
+      "hiddenThought": "他应该比我懂。",
+      "reflection": "你开始把判断交给别人。",
+      "intensity": 3
+    },
+    {
+      "id": "scene_24_002",
+      "tradeMoment": "看见老师发观点时",
+      "os": "先跟一点。",
+      "hiddenThought": "总比自己瞎做好。",
+      "reflection": "你不是相信逻辑，你是在借别人的确定性。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_24_003",
+      "tradeMoment": "群里很多人回复时",
+      "os": "大家都上了。",
+      "hiddenThought": "应该不会错。",
+      "reflection": "当所有人都在的时候，你最容易失去自己。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_24_004",
+      "tradeMoment": "自己没想法时",
+      "os": "看看老师怎么说。",
+      "hiddenThought": "我拿不准。",
+      "reflection": "你越来越依赖答案，而不是判断。",
+      "intensity": 3
+    },
+    {
+      "id": "scene_24_005",
+      "tradeMoment": "老师继续看多时",
+      "os": "那就拿着。",
+      "hiddenThought": "他都没走。",
+      "reflection": "你已经把自己的仓位交给别人管理。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_24_006",
+      "tradeMoment": "行情不对时",
+      "os": "再等等。",
+      "hiddenThought": "老师还没说。",
+      "reflection": "你开始等待别人的决定，而不是自己的决定。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_24_007",
+      "tradeMoment": "出现亏损时",
+      "os": "老师怎么还没说。",
+      "hiddenThought": "他是不是看错了。",
+      "reflection": "当结果不好时，你开始寻找责任人。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_24_008",
+      "tradeMoment": "群里意见不一致时",
+      "os": "到底听谁的。",
+      "hiddenThought": "我不会判断。",
+      "reflection": "真正的问题不是谁对，是你从来没建立自己的判断。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_24_009",
+      "tradeMoment": "交易结束以后",
+      "os": "又跟错了。",
+      "hiddenThought": "我怎么总信别人。",
+      "reflection": "你责怪的不是别人，你责怪的是自己没有主见。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_24_010",
+      "tradeMoment": "关软件之前",
+      "os": "下次还是得靠自己。",
+      "hiddenThought": "可我还是不敢。",
+      "reflection": "你知道问题在哪，却还没有准备承担判断的代价。",
+      "intensity": 4
+    }
+  ],
+  "thiefExplain": [
+    "从，是习惯跟随别人。",
+    "疑，是不相信自己的判断。"
+  ],
+  "evidences": [
+    "我看见自己不是在交易，我是在借别人的信心。",
+    "我真正害怕的，不是亏损，是自己做决定。",
+    "我开始依赖答案，而不是训练判断。",
+    "我以为自己在学习，其实我在跟随。",
+    "我终于看见，让我下单的不是逻辑，是依赖。"
+  ],
+  "practices": [
+    "每次下单前写下自己的理由。",
+    "不因为别人说而交易。",
+    "问自己：如果没人告诉我，我会买吗？",
+    "记录一次独立完成的交易决策。",
+    "练习一句话：判断可以错，但必须是我的判断。"
+  ],
+  "coreStatement": "你依赖的不是老师。\n\n你依赖的是，\n\n别人替你承担判断。"
+}

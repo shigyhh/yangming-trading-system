@@ -3,9 +3,19 @@
 .quick-review-card,
 .form-card,
 .report-card,
+.record-flow,
 .recent-card {
-  margin-top: 26rpx;
-  padding: 28rpx;
+  margin-top: 22rpx;
+  padding: 24rpx;
+}
+
+.page-title {
+  line-height: 1.12;
+}
+
+.page-subtitle {
+  font-size: 25rpx;
+  line-height: 1.58;
 }
 
 .concept-bridge,
@@ -15,6 +25,9 @@
 .quick-review-card > text,
 .form-card > text,
 .report-card > text,
+.record-flow,
+.record-flow text,
+.record-flow view,
 .recent-card > text,
 .upload-empty,
 .upload-preview,
@@ -47,7 +60,7 @@
 }
 
 .concept-bridge {
-  padding: 24rpx;
+  padding: 22rpx;
   overflow: hidden;
   border-color: rgba(88, 194, 173, 0.16);
   background:
@@ -58,8 +71,8 @@
 .bridge-line {
   color: #fff6e6;
   font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", serif;
-  font-size: 30rpx;
-  line-height: 1.55;
+  font-size: 27rpx;
+  line-height: 1.48;
   font-weight: 900;
 }
 
@@ -94,6 +107,95 @@
   font-weight: 800;
 }
 
+.record-flow {
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 8% 0%, rgba(216, 183, 111, 0.08), transparent 40%),
+    rgba(255, 255, 255, 0.03);
+}
+
+.record-flow-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18rpx;
+}
+
+.record-flow-head > text {
+  color: #f1d27d;
+  font-size: 24rpx;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+.record-flow-head > view {
+  color: rgba(247, 239, 223, 0.44);
+  font-size: 20rpx;
+  font-weight: 800;
+}
+
+.record-flow-list {
+  margin-top: 18rpx;
+  display: grid;
+  gap: 10rpx;
+}
+
+.record-flow-row {
+  min-height: 82rpx;
+  padding: 14rpx 16rpx;
+  display: grid;
+  grid-template-columns: 58rpx minmax(0, 1fr);
+  gap: 14rpx;
+  align-items: center;
+  border-radius: 18rpx;
+  border: 1rpx solid rgba(247, 239, 223, 0.08);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.record-flow-row > text {
+  width: 48rpx;
+  height: 48rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: rgba(247, 239, 223, 0.42);
+  border: 1rpx solid rgba(247, 239, 223, 0.1);
+  font-size: 18rpx;
+  font-weight: 900;
+}
+
+.record-flow-row > view > text {
+  display: block;
+  color: rgba(247, 239, 223, 0.74);
+  font-size: 24rpx;
+  font-weight: 900;
+  line-height: 1.35;
+}
+
+.record-flow-row > view > view {
+  margin-top: 6rpx;
+  color: rgba(247, 239, 223, 0.44);
+  font-size: 20rpx;
+  line-height: 1.35;
+  font-weight: 700;
+}
+
+.record-flow-row.current {
+  border-color: rgba(216, 183, 111, 0.24);
+  background: rgba(216, 183, 111, 0.055);
+}
+
+.record-flow-row.current > text,
+.record-flow-row.done > text {
+  color: #11140f;
+  border-color: rgba(241, 210, 125, 0.68);
+  background: linear-gradient(180deg, #f1d27d, #c99d4c);
+}
+
+.record-flow-row.done > view > text {
+  color: rgba(255, 246, 230, 0.92);
+}
+
 .upload-card > text,
 .quick-review-card > text,
 .form-card > text,
@@ -110,12 +212,12 @@
 .quick-review-card > view {
   margin-top: 12rpx;
   color: rgba(247, 239, 223, 0.56);
-  font-size: 23rpx;
+  font-size: 22rpx;
   line-height: 1.5;
 }
 
 .quick-label {
-  margin-top: 24rpx;
+  margin-top: 20rpx;
   color: #d8b76f;
   font-size: 23rpx;
   font-weight: 900;
@@ -167,7 +269,7 @@
 }
 
 .quick-review-card textarea {
-  min-height: 130rpx;
+  min-height: 112rpx;
 }
 
 @media (max-width: 360px) {
@@ -177,7 +279,7 @@
 }
 
 .upload-preview {
-  height: 300rpx;
+  height: 250rpx;
   margin-top: 18rpx;
   overflow: hidden;
   border-radius: 20rpx;
@@ -190,7 +292,7 @@
 }
 
 .upload-empty {
-  min-height: 168rpx;
+  min-height: 128rpx;
   margin-top: 18rpx;
   display: grid;
   place-items: center;
@@ -208,8 +310,50 @@
 .upload-note {
   margin-top: 14rpx;
   color: rgba(247, 239, 223, 0.48);
-  font-size: 22rpx;
-  line-height: 1.55;
+  font-size: 20rpx;
+  line-height: 1.45;
+}
+
+.result-rite {
+  padding: 20rpx;
+  display: grid;
+  grid-template-columns: 64rpx minmax(0, 1fr);
+  gap: 16rpx;
+  align-items: center;
+  border-radius: 22rpx;
+  border: 1rpx solid rgba(88, 194, 173, 0.18);
+  background:
+    radial-gradient(circle at 12% 20%, rgba(88, 194, 173, 0.18), transparent 38%),
+    rgba(88, 194, 173, 0.055);
+}
+
+.result-seal {
+  width: 64rpx;
+  height: 64rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: rgba(255, 236, 205, 0.92);
+  border: 2rpx solid rgba(154, 73, 48, 0.64);
+  background: rgba(120, 60, 45, 0.32);
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", serif;
+  font-size: 30rpx;
+  transform: rotate(-8deg);
+}
+
+.result-rite text {
+  display: block;
+  color: rgba(247, 239, 223, 0.92);
+  font-size: 28rpx;
+  font-weight: 900;
+  line-height: 1.35;
+}
+
+.result-rite view view {
+  margin-top: 6rpx;
+  color: rgba(247, 239, 223, 0.52);
+  font-size: 21rpx;
+  line-height: 1.45;
 }
 
 .field-label {
@@ -348,6 +492,12 @@
   font-weight: 900;
 }
 
+.single-action {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12rpx;
+}
+
 .match-card,
 .verdict-card,
 .mirror-grid,
@@ -407,6 +557,18 @@
   letter-spacing: 0.08em;
 }
 
+.closure-status {
+  display: inline-flex;
+  margin-top: 14rpx;
+  padding: 8rpx 16rpx;
+  border-radius: 999rpx;
+  color: rgba(216, 183, 111, 0.86) !important;
+  border: 1rpx solid rgba(216, 183, 111, 0.16);
+  background: rgba(216, 183, 111, 0.06);
+  font-size: 21rpx !important;
+  font-weight: 900 !important;
+}
+
 .closure-steps {
   margin-top: 18rpx;
   display: grid;
@@ -426,6 +588,11 @@
 
 .closure-steps > view.done {
   border: 1rpx solid rgba(88, 194, 173, 0.2);
+}
+
+.closure-steps > view.current {
+  border: 1rpx solid rgba(216, 183, 111, 0.24);
+  background: rgba(216, 183, 111, 0.06);
 }
 
 .closure-steps text,

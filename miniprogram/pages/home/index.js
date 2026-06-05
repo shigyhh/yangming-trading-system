@@ -720,6 +720,77 @@ function buildJourneyResumeView(journeyState = {}) {
   });
 }
 
+function buildHomeFocusView({ primaryAction = {}, miniHomeView = {}, journeyState = {}, completionView = {} } = {}) {
+  const key = primaryAction.key || miniHomeView.primaryActionKey || journeyState.currentStep || "mind";
+  const defaultText = primaryAction.text || miniHomeView.primaryText || journeyState.nextActionText || "照见今日";
+  const byKey = {
+    mind: {
+      title: "先照见今日这一念",
+      body: "先把状态照清楚。",
+      primaryText: "进入照心"
+    },
+    "trade-review": {
+      title: "上传一条真实记录",
+      body: "复盘，是你写下事实；活镜，是系统照见反复出现的念头。",
+      primaryText: "上传真实记录"
+    },
+    seal: {
+      title: "落下今日三印",
+      body: "写下一念、一惧、一界。",
+      primaryText: "落印"
+    },
+    "heart-proof": {
+      title: "生成今日心证卡",
+      body: "把这一次照见收成心证。",
+      primaryText: "生成心证卡"
+    },
+    archive: {
+      title: "存入活镜档案",
+      body: "把今日心证写入活镜。",
+      primaryText: "存入档案"
+    },
+    "living-mirror": {
+      title: "回看活镜变化",
+      body: "看见本次照见如何进入长期印记。",
+      primaryText: "看活镜"
+    }
+  };
+  const current = byKey[key] || {
+    title: miniHomeView.stateHint || journeyState.title || "今日下一步",
+    body: primaryAction.hint || journeyState.progressLabel || "只守住当下这一步。",
+    primaryText: defaultText
+  };
+  const showThreeSeals = key === "seal" || [
+    "daily_practice_started",
+    "daily_checkin_done",
+    "daily_concept_done"
+  ].includes(journeyState.currentStep);
+  const isClosedToday = !!(completionView || {}).done && (
+    primaryAction.stateLabel === "已完成" || primaryAction.key === "living-mirror"
+  );
+  const linkByKey = {
+    mind: [{ key: "trade-review", text: "真实复盘" }],
+    "trade-review": [{ key: "living-mirror", text: "看活镜" }],
+    seal: [{ key: "trade-review", text: "真实复盘" }],
+    "heart-proof": [{ key: "living-mirror", text: "看活镜" }],
+    archive: [{ key: "living-mirror", text: "看活镜" }],
+    "living-mirror": []
+  };
+  const links = linkByKey[key] || [];
+
+  return {
+    key,
+    eyebrow: "当前一步",
+    statusLine: primaryAction.stateLabel || miniHomeView.stateLabel || "今日下一步",
+    title: current.title,
+    body: current.body || primaryAction.hint || miniHomeView.primaryHint || "",
+    primaryText: current.primaryText || defaultText,
+    links,
+    showThreeSeals: !!showThreeSeals && !isClosedToday,
+    done: isClosedToday
+  };
+}
+
 function buildHomePrimaryAction({ unifiedView = {}, mind = null, evidenceSummary = {} } = {}) {
   const todayByType = (evidenceSummary || {}).todayByType || {};
   const hasReview = !!unifiedView.hasReviewToday || Number(todayByType.review_record || 0) > 0;
@@ -727,29 +798,29 @@ function buildHomePrimaryAction({ unifiedView = {}, mind = null, evidenceSummary
   const hasHeartProof = !!unifiedView.hasHeartProof;
   const hasArchived = !!unifiedView.hasArchived;
 
-  if (!mind) {
-    return {
-      key: "mind",
-      text: "开始照心",
-      hint: "先照见今日状态，再进入真实动作。",
-      stateLabel: "未照心",
-      stateHint: "今日先不急，先照见此心。"
-    };
-  }
   if (!hasReview) {
     return {
       key: "trade-review",
-      text: "做60秒真实复盘",
-      hint: "刚刚交易过，就先记录当时第一念。",
+      text: "上传真实记录",
+      hint: "先留住当时第一念。",
       stateLabel: "待复盘",
-      stateHint: "把真实动作写入活镜，今天才有证据。"
+      stateHint: "把真实动作写入活镜，今天才有可回看的记录。"
+    };
+  }
+  if (!mind) {
+    return {
+      key: "mind",
+      text: "照见今日",
+      hint: "先照见这一念。",
+      stateLabel: "待照心",
+      stateHint: "真实记录已留住，下一步照见今日状态。"
     };
   }
   if (!hasSeal) {
     return {
       key: "seal",
       text: "落下今日之印",
-      hint: "复盘已入账，最后把一念、一惧、一界落下。",
+      hint: "落下一念、一惧、一界。",
       stateLabel: "待落印",
       stateHint: "把今日照见落成一枚可归档的印。"
     };
@@ -758,7 +829,7 @@ function buildHomePrimaryAction({ unifiedView = {}, mind = null, evidenceSummary
     return {
       key: "heart-proof",
       text: "生成今日心证卡",
-      hint: "今日之印已落下，回看这一次照见。",
+      hint: "收成今日心证。",
       stateLabel: "已落印",
       stateHint: "今日之印已落下，心证等待回看。"
     };
@@ -767,7 +838,7 @@ function buildHomePrimaryAction({ unifiedView = {}, mind = null, evidenceSummary
     return {
       key: "archive",
       text: "存入活镜档案",
-      hint: "心证卡已生成，把它沉入活镜档案。",
+      hint: "沉入活镜档案。",
       stateLabel: "待入档",
       stateHint: "今日心证等待进入长期档案。"
     };
@@ -775,7 +846,7 @@ function buildHomePrimaryAction({ unifiedView = {}, mind = null, evidenceSummary
   return {
     key: "heart-proof",
     text: "查看今日心证",
-    hint: "今日闭环已完成，可以回看心证或进入档案。",
+    hint: "今日闭环已完成。",
     stateLabel: "已完成",
     stateHint: "今日照见、复盘与活镜已经形成记录。"
   };
@@ -806,7 +877,12 @@ function applyJourneyToMiniHomeView(miniHomeView = {}, journeyState = {}, comple
       ? growthParts.join(" · ")
       : byType.mind_report
         ? "心镜报告已入档。完成今日落印后，第一枚心证会存入档案。"
-        : "证据正在沉淀，下一步先完成今日落印。");
+        : "心证正在沉淀，下一步先完成今日落印。");
+  const todayOneThought = primaryAction.key === "trade-review"
+    ? "上传一条真实记录，先照见一次第一念。"
+    : primaryAction.key === "mind"
+    ? "先看见今日这一念。"
+    : miniHomeView.todayOneThought;
   return Object.assign({}, miniHomeView, {
     title: unifiedView.title || journeyState.title || miniHomeView.title,
     stateLabel,
@@ -816,6 +892,7 @@ function applyJourneyToMiniHomeView(miniHomeView = {}, journeyState = {}, comple
     primaryText: primaryAction.text || unifiedView.nextActionText || journeyState.nextActionText || miniHomeView.primaryText,
     primaryHint: primaryAction.hint || "",
     primaryActionKey: primaryAction.key || "",
+    todayOneThought,
     dayText: unifiedView.dayText || miniHomeView.dayText,
     livingMirrorFeedback: unifiedView.livingMirrorFeedback || (byType.daily_seal ? "本次照见已写入活镜" : miniHomeView.livingMirrorFeedback),
     growthText,
@@ -841,7 +918,7 @@ function normalizeRetentionView(retentionView = {}, unifiedView = {}, loopSteps 
       : unifiedView.stateLabel === "已归卷"
         ? "今日照见已入活镜，继续看见重复反应。"
         : hasPractice
-          ? "今日进度从心证、复盘与活镜证据统一计算。"
+          ? "今日进度从心证、复盘与活镜记录统一计算。"
           : "完成今日落印后，第一枚心证会存入档案。",
     loop,
     content365: Object.assign({}, retentionView.content365 || {}, {
@@ -852,7 +929,7 @@ function normalizeRetentionView(retentionView = {}, unifiedView = {}, loopSteps 
     longTraining: Object.assign({}, retentionView.longTraining || {}, {
       title: hasPractice ? `${unifiedView.yearlyDay}日累计修行` : "个人修行待开启",
       progress: unifiedView.yearlyProgress !== undefined ? unifiedView.yearlyProgress : ((retentionView.longTraining || {}).progress || 0),
-      subtitle: hasPractice ? "由心证、复盘与活镜证据共同沉淀" : "完成今日落印后开始累计"
+      subtitle: hasPractice ? "由心证、复盘与活镜记录共同沉淀" : "完成今日落印后开始累计"
     }),
     retest: Object.assign({}, retentionView.retest || {}, {
       due: !!unifiedView.canRetest,
@@ -931,7 +1008,8 @@ function buildHeroTasks({ reactionRecord = null, training = {}, dailyContent = {
   const sevenDayTasks = Array.isArray(trainingDay.tasks) ? trainingDay.tasks : [];
   if (sevenDayTasks.length) {
     return {
-      trainingButtonText: `${training.completed ? "继续" : "开始"}第 ${trainingDay.day || 1} 天训练`,
+      trainingButtonText: training.completed ? "继续训练" : "开始训练",
+      klineDone: !!(training.completed || (klineMindRecord && klineMindRecord.completed)),
       list: sevenDayTasks.map((task) => Object.assign({}, task, {
         status: task.done ? "已完成" : "待完成"
       }))
@@ -939,8 +1017,10 @@ function buildHeroTasks({ reactionRecord = null, training = {}, dailyContent = {
   }
   const steps = (training || {}).steps || {};
   const dayNumber = Number((dailyContent || {}).dayNumber || 1);
+  const klineDone = !!(steps.trigger || training.completed || (klineMindRecord && klineMindRecord.completed));
   return {
-    trainingButtonText: `进入第 ${dayNumber} 天训练`,
+    trainingButtonText: dayNumber > 1 ? "继续训练" : "开始训练",
+    klineDone,
     list: [
       {
         key: "reaction",
@@ -951,8 +1031,8 @@ function buildHeroTasks({ reactionRecord = null, training = {}, dailyContent = {
       {
         key: "kline",
         title: "完成一次 K 线历史训练",
-        status: steps.trigger || training.completed || (klineMindRecord && klineMindRecord.completed) ? "已完成" : "待完成",
-        done: !!(steps.trigger || training.completed || (klineMindRecord && klineMindRecord.completed))
+        status: klineDone ? "已完成" : "待完成",
+        done: klineDone
       },
       {
         key: "checkin",
@@ -1035,10 +1115,17 @@ Page({
     journeyResumeView: buildJourneyResumeView(getJourneySnapshot({ lastPage: "home" })),
     unifiedJourneyView: initialUnifiedJourneyView,
     completionView: getTodayCompletionState(),
+    homeFocusView: buildHomeFocusView({
+      primaryAction: { key: "mind", text: "照见今日" },
+      miniHomeView: INITIAL_MINI_HOME_VIEW,
+      journeyState: getJourneySnapshot({ lastPage: "home" }),
+      completionView: getTodayCompletionState()
+    }),
     evidenceSummary: getEvidenceSummary({ limit: 4 }),
     closureEvidenceChain: getClosureEvidenceChain(),
     cardGenerating: false,
-    userBinding: getUserBinding()
+    userBinding: getUserBinding(),
+    entryRitualVisible: false
   },
 
   onLoad(options = {}) {
@@ -1062,10 +1149,30 @@ Page({
 
   onShow() {
     this.loadEntryState();
+    this.maybeShowEntryRitual();
   },
 
   onUnload() {
     clearTimeout(this.sealEffectTimer);
+    clearTimeout(this.entryRitualTimer);
+  },
+
+  maybeShowEntryRitual() {
+    const currentDay = todayKey();
+    const stored = getStoredEntryState();
+    const today = ((stored || {}).daily || {})[currentDay] || {};
+    if (today.entryRitualSeen) return;
+    this.saveTodayEntryState({ entryRitualSeen: true });
+    this.setData({ entryRitualVisible: true });
+    clearTimeout(this.entryRitualTimer);
+    this.entryRitualTimer = setTimeout(() => {
+      this.setData({ entryRitualVisible: false });
+    }, 980);
+  },
+
+  closeEntryRitual() {
+    clearTimeout(this.entryRitualTimer);
+    this.setData({ entryRitualVisible: false });
   },
 
   loadEntryState() {
@@ -1250,6 +1357,12 @@ Page({
       evidenceSummary
     });
     const miniHomeView = applyJourneyToMiniHomeView(finalRawMiniHomeView, journeyState, completionView, evidenceSummary, unifiedJourneyView, primaryAction);
+    const homeFocusView = buildHomeFocusView({
+      primaryAction,
+      miniHomeView,
+      journeyState,
+      completionView
+    });
     const unifiedLoopSteps = normalizeLoopSteps(loopState.steps, unifiedJourneyView, {
       mind,
       training,
@@ -1291,6 +1404,7 @@ Page({
       liveMirrorReminder,
       miniLoopProgress,
       miniHomeView,
+      homeFocusView,
       journeyState,
       journeyResumeView: buildJourneyResumeView(journeyState),
       unifiedJourneyView,
@@ -1747,7 +1861,27 @@ Page({
     wx.redirectTo({ url: "/pages/living-mirror/index" });
   },
 
-  goMiniPrimary() {
+  handleHomeFocusLink(e) {
+    const action = e.currentTarget.dataset.action;
+    if (action === "trade-review") {
+      this.goTradeReview();
+      return;
+    }
+    if (action === "living-mirror") {
+      this.goLivingMirror();
+      return;
+    }
+    if (action === "profile") {
+      this.goProfile();
+    }
+  },
+
+  goMiniPrimary(e) {
+    const primaryText = String(((e || {}).currentTarget || {}).dataset.primaryText || (this.data.miniHomeView || {}).primaryText || "");
+    if (/照见|照心/.test(primaryText)) {
+      wx.redirectTo({ url: "/pages/mind/index" });
+      return;
+    }
     const actionKey = (this.data.miniHomeView || {}).primaryActionKey || "";
     if (actionKey === "mind") {
       wx.redirectTo({ url: "/pages/mind/index" });
@@ -1766,7 +1900,7 @@ Page({
       return;
     }
     if (actionKey === "archive") {
-      this.goLivingMirror();
+      this.archiveTodayHeartProof();
       return;
     }
     if (actionKey === "living-mirror") {
@@ -1815,10 +1949,10 @@ Page({
       this.goShareCard({ currentTarget: { dataset: { type: "companion_invite" } } });
       return;
     }
-    if ((this.data.completionView || {}).archiveReady) {
-      this.goLivingMirror();
-      return;
-    }
+    this.archiveTodayHeartProof();
+  },
+
+  archiveTodayHeartProof() {
     appendEvidence({
       type: "heart_proof_card",
       day: todayKey(),
@@ -1827,7 +1961,7 @@ Page({
       reflection: (this.data.completionView || {}).thought || "今日心证已存入活镜档案。",
       zhixingChange: 3,
       sourcePage: "home_archive_action",
-      sourceId: "today_archive",
+      sourceId: todayKey(),
       archived: true
     });
     this.loadEntryState();

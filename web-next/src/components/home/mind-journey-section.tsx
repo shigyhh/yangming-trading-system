@@ -100,7 +100,7 @@ function getMomentSpeech(moment: JourneyMoment) {
   return moment.lines.join("")
 }
 
-const momentGap = 6.12
+const momentGap = 5.2
 
 const dust = [
   ["10%", "22%", "0s"],
@@ -116,7 +116,7 @@ export function MindJourneySection() {
   const [reflectionMoments, setReflectionMoments] = useState(defaultReflectionMoments)
   const moments = useMemo(() => buildJourneyMoments(reflectionMoments), [reflectionMoments])
   const journeyNarration = useMemo(() => `心性探索长卷：${moments.map(getMomentSpeech).join("")}`, [moments])
-  const sectionMinHeight = `${Math.max(720, moments.length * 72)}svh`
+  const sectionMinHeight = `${Math.max(500, moments.length * 52)}svh`
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -230,7 +230,7 @@ export function MindJourneySection() {
         const timeline = gsap.timeline({
           scrollTrigger: {
             trigger: rootRef.current,
-            start: "top 82%",
+            start: "top 94%",
             end: "bottom bottom",
             scrub: 1.8,
           },

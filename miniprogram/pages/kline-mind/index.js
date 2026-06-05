@@ -10,7 +10,9 @@ const {
   saveTraining7Task,
   getKlineHistoryCache,
   getTodayKlineMindRecord,
-  saveTodayKlineMindRecord
+  saveTodayKlineMindRecord,
+  saveTradeReviewRecord,
+  saveInviteConversionEvent
 } = require("../../utils/store");
 const { syncLocalState, syncTrainingProgress } = require("../../utils/api");
 const { buildTraining7View } = require("../../modules/training7/index");
@@ -18,6 +20,55 @@ const {
   buildKlineMindSession,
   buildKlineMindRecord
 } = require("../../modules/kline-mind/index");
+const { buildKlineTradeReviewRecord: buildKlineMirrorRecord } = require("../../modules/kline-simulator/index");
+
+function inferHeartThieves(text) {
+  const value = String(text || "");
+  if (/错过|急|冲动/.test(value)) return ["贪", "急"];
+  if (/认错|解释|扛/.test(value)) return ["痴", "慢"];
+  if (/不甘|夺回|证明/.test(value)) return ["急", "痴"];
+  if (/确定|焦虑|反复/.test(value)) return ["惧", "疑"];
+  return ["疑"];
+}
+
+function buildMirrorReviewFromKline(record = {}, session = {}, assessment = {}) {
+  const market = session.market || {};
+  const timeframe = (session.timeframeOptions || []).find((item) => item.key === record.timeframeKey) || {};
+  const prescription = session.prescription || {};
+  const mirror = assessment.primaryMirror || assessment.primary || session.personalityType || "待照见";
+  const score = Number(record.score || 72);
+  return buildKlineMirrorRecord({
+    id: `kline-mind-${record.date || Date.now()}`,
+    date: record.date,
+    marketKey: record.marketKey,
+    marketLabel: record.marketName || market.name || "历史品类",
+    timeframeKey: record.timeframeKey,
+    timeframeLabel: timeframe.label || record.timeframeKey || "历史周期",
+    trainingDay: record.day || session.day || 1,
+    sceneTitle: `${record.marketName || market.name || "历史品类"} · ${timeframe.label || record.timeframeKey || "历史周期"}`,
+    trigger: session.prompt || market.mindQuestion || "历史 K 线观心",
+    primaryReaction: record.firstReaction,
+    emotion: record.bodySignal,
+    firstThought: record.insightLine || record.firstReaction,
+    boundary: record.boundaryChoice,
+    boundaryState: "kept",
+    boundaryStateLabel: record.boundaryChoice || "已记录守界动作",
+    insight: record.insightLine,
+    relatedPersonality: session.personalityType || mirror,
+    relatedMirror: mirror,
+    relatedHeartMirror: mirror,
+    heartThieves: inferHeartThieves(`${record.firstReaction} ${prescription.heartThief} ${prescription.watchPoint}`),
+    trainingSuggestion: prescription.boundaryPractice || record.boundaryChoice || "下一次先停十秒，再写下第一念。",
+    isRealHistorical: !!session.hasHistoricalData,
+    scores: {
+      boundaryKeeping: Math.max(18, Math.min(96, score)),
+      planExecution: record.boundaryChoice ? 76 : 58,
+      emotionalStability: record.bodySignal ? 72 : 58,
+      reviewCompletion: record.insightLine ? 84 : 62,
+      impulseDelay: record.firstReaction ? 68 : 50
+    }
+  });
+}
 
 function buildForm(record = {}, session = {}) {
   return {
@@ -39,7 +90,10 @@ Page({
     session: buildKlineMindSession({}),
     form: buildForm(),
     savedRecord: null,
-    saving: false
+    saving: false,
+    showSelectors: false,
+    showGuide: false,
+    showBodySignal: false
   },
 
   onShow() {
@@ -73,7 +127,8 @@ Page({
       trainingDay,
       session,
       form,
-      savedRecord: klineMindRecord && klineMindRecord.updatedAt ? klineMindRecord : null
+      savedRecord: klineMindRecord && klineMindRecord.updatedAt ? klineMindRecord : null,
+      showBodySignal: !!form.bodySignal
     });
   },
 
@@ -136,6 +191,18 @@ Page({
     this.setData({ "form.insightLine": e.detail.value });
   },
 
+  toggleSelectors() {
+    this.setData({ showSelectors: !this.data.showSelectors });
+  },
+
+  toggleGuide() {
+    this.setData({ showGuide: !this.data.showGuide });
+  },
+
+  toggleBodySignal() {
+    this.setData({ showBodySignal: !this.data.showBodySignal });
+  },
+
   saveRecord() {
     if (this.data.saving) return;
     if (!(this.data.session || {}).hasHistoricalData) {
@@ -159,6 +226,8 @@ Page({
     this.setData({ saving: true });
     const record = buildKlineMindRecord(form, this.data.session);
     const saved = saveTodayKlineMindRecord(record);
+    const mirrorRecord = buildMirrorReviewFromKline(saved, this.data.session, this.data.assessment || {});
+    const mirrorState = saveTradeReviewRecord(mirrorRecord);
     const training = getTodayTraining();
     const steps = Object.assign({}, training.steps || {}, {
       trigger: true,
@@ -171,9 +240,16 @@ Page({
       mindTask: (this.data.session.prescription || {}).boundaryPractice || ""
     }));
     saveTraining7Task((this.data.training7View || {}).currentDay || record.day || 1, "daily_practice", true);
+    saveTraining7Task((this.data.training7View || {}).currentDay || record.day || 1, "kline", true);
+    saveInviteConversionEvent("kline_training_completed", {
+      sourcePage: "kline_mind",
+      shareCardType: "kline_insight",
+      trainingDay: record.day || 1,
+      relatedMirror: ((mirrorState || {}).latest || {}).relatedMirror || ""
+    });
     syncLocalState({ silent: true }).catch(() => {});
     syncTrainingProgress().catch(() => {});
-    wx.showToast({ title: "观心已记录", icon: "success" });
+    wx.showToast({ title: "已写入活镜", icon: "success" });
     this.setData({ savedRecord: saved, saving: false });
     this.load();
   },
@@ -192,5 +268,9 @@ Page({
 
   goHome() {
     wx.redirectTo({ url: "/pages/home/index" });
+  },
+
+  goLivingMirror() {
+    wx.redirectTo({ url: "/pages/living-mirror/index" });
   }
 });

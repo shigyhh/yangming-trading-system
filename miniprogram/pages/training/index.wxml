@@ -1,7 +1,7 @@
 <view class="page-shell">
   <view class="page-content">
     <view class="training-brand-row">
-      <view class="training-brand-mark brand-zhao-mini">
+      <view class="training-brand-mark brand-zhao-mini" aria-label="阳明照见训练小标">
         <view class="zhao-eyes">
           <view class="zhao-eye"></view>
           <view class="zhao-eye"></view>
@@ -22,7 +22,7 @@
     <view class="page-subtitle">{{result ? type + '专属路径' : '未照见时使用通用事上练；完成照见后会自动匹配路径。'}}</view>
 
     <view class="mind-bridge card" bindtap="goMind">
-      <view class="mind-seal brand-zhao-mini">
+      <view class="mind-seal brand-zhao-mini" aria-label="开盘照心小标">
         <view class="zhao-eyes">
           <view class="zhao-eye"></view>
           <view class="zhao-eye"></view>

@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "scene_02",
+  "sceneName": "踏空焦虑",
+  "sceneOrder": 2,
+  "status": "active",
+  "mirrorId": "hesitate",
+  "thief": "疑 · 怯 · 急",
+  "items": [
+    {
+      "id": "scene_02_001",
+      "tradeMoment": "看着它连续上涨时",
+      "os": "卧槽，又涨了。",
+      "hiddenThought": "我又错过了。",
+      "reflection": "这一声卧槽，不是惊讶，是后悔。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_02_002",
+      "tradeMoment": "打开软件看见涨幅时",
+      "os": "怎么又没买。",
+      "hiddenThought": "我当时到底在等什么。",
+      "reflection": "最难受的不是没买，是你知道自己本来想买。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_02_003",
+      "tradeMoment": "回看昨天的自选股时",
+      "os": "早知道昨天就买了。",
+      "hiddenThought": "我又把机会放走了。",
+      "reflection": "你后悔的不是昨天，你后悔的是昨天那个没敢动的自己。",
+      "intensity": 3
+    },
+    {
+      "id": "scene_02_004",
+      "tradeMoment": "看着自己关注很久的票上涨时",
+      "os": "我盯了这么久啊。",
+      "hiddenThought": "为什么还是没做。",
+      "reflection": "你付出了关注，却没有付出行动。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_02_005",
+      "tradeMoment": "看着它继续上涨时",
+      "os": "又是我看着涨。",
+      "hiddenThought": "为什么总是别人赚到。",
+      "reflection": "最难受的不是上涨，是你又一次站在旁边看着它涨。",
+      "intensity": 3
+    },
+    {
+      "id": "scene_02_006",
+      "tradeMoment": "涨起来以后回忆买点时",
+      "os": "刚才就该上。",
+      "hiddenThought": "我又犹豫了。",
+      "reflection": "你责怪的不是机会，你责怪的是那个刚才没按下去的人。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_02_007",
+      "tradeMoment": "看见别人晒盈利时",
+      "os": "别人都吃到了。",
+      "hiddenThought": "怎么总不是我。",
+      "reflection": "真正刺痛你的，从来不是行情，是比较。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_02_008",
+      "tradeMoment": "关掉软件又打开时",
+      "os": "我真服了自己。",
+      "hiddenThought": "我是不是不行。",
+      "reflection": "这一刻，你开始攻击自己，而不是照见自己。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_02_009",
+      "tradeMoment": "看着它越涨越高时",
+      "os": "再追是不是晚了？",
+      "hiddenThought": "我不想再错过一次。",
+      "reflection": "踏空后最危险的，不是错过，是后悔完又想追进去。",
+      "intensity": 3
+    },
+    {
+      "id": "scene_02_010",
+      "tradeMoment": "看着趋势越来越强时",
+      "os": "不会还要继续涨吧？",
+      "hiddenThought": "机会不会等我。",
+      "reflection": "你怕的不是它继续涨，你怕的是自己再次被甩在后面。",
+      "intensity": 4
+    }
+  ],
+  "thiefExplain": [
+    "疑：明明已经看见，却总觉得再等等、再确认一下。",
+    "怯：不是不想做，是不敢承担做错的结果。",
+    "急：错过以后，心又急着追回来。"
+  ],
+  "evidences": [
+    "我看见自己不是没机会，我是没有行动。",
+    "我真正难受的，不是踏空，是别人赚到了，而我没有。",
+    "我一直在等确定性，可市场从不提供确定性。",
+    "我害怕做错，所以连做对的机会也一起放掉了。",
+    "我终于看见，踏空之后最危险的，是带着后悔去追。"
+  ],
+  "practices": [
+    "记录一次看对却没做的交易。",
+    "写下当时没有执行的真实原因。",
+    "下一次信号出现，先执行规则，再评价结果。",
+    "如果已经踏空，不立刻追，先停三息。",
+    "今天只练一件事：看见以后，敢迈出第一步。"
+  ],
+  "coreStatement": "最折磨人的，\n\n从来不是看错。\n\n而是看对了，\n\n却什么都没做。"
+}

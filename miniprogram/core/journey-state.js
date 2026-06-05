@@ -73,7 +73,7 @@ const STEP_META = {
     title: "今日已落印",
     nextActionText: "进入心镜长卷",
     nextPage: "mirror-scroll",
-    progressLabel: "证据已入档"
+    progressLabel: "心证已入档"
   },
   share_ready: {
     title: "今日已落印",
@@ -286,9 +286,8 @@ function buildCompletionState(input = {}) {
     retestText: retestRemaining > 0 ? `距离七日复测还差 ${retestRemaining} 日` : "七日已满，可以复测",
     archiveReady: !!proof,
     actions: [
-      { key: "card", text: "查看今日心证卡", primary: true },
-      { key: "archive", text: "存入活镜档案" },
-      { key: "share", text: "邀请一位同修同行" }
+      { key: "card", text: "看心证卡", primary: true },
+      { key: "archive", text: "看活镜" }
     ]
   };
 }
@@ -325,7 +324,7 @@ function buildChainStep({ key, index, title, done, current, statusText, detail, 
     current: isCurrent,
     pending: !isDone && !isCurrent,
     statusText: statusText || (isDone ? "已完成" : isCurrent ? "当前一步" : "待完成"),
-    detail: detail || (isDone ? "已写入证据链" : "完成后会写入心镜档案"),
+    detail: detail || (isDone ? "已写入心证链" : "完成后会写入心镜档案"),
     actionText: actionText || ""
   };
 }
@@ -409,8 +408,8 @@ function buildClosureEvidenceChainView(input = {}) {
   const activeStep = steps.find((step) => step.current) || steps.find((step) => !step.done) || steps[steps.length - 1];
 
   return {
-    title: "闭环证据链",
-    subtitle: completedCount >= 5 && !retest ? "今日证据已成链，等待七日复测。" : "每完成一步，都会留下可回看的证据。",
+    title: "闭环心证链",
+    subtitle: completedCount >= 5 && !retest ? "今日心证已成链，等待七日复测。" : "每完成一步，都会留下可回看的心证。",
     progressText: `${completedCount}/6`,
     completedCount,
     totalCount: 6,

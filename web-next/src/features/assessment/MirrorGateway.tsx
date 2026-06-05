@@ -5,6 +5,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { cn } from "@/lib/utils"
 
+import HeartLakeEngine, { type LakeMode } from "./HeartLakeEngine"
+import { StillWaterIntroMirror } from "./StillWaterIntroMirror"
+import ZhaoxinRitualFlow from "./ZhaoxinRitualFlow"
+
 type MirrorGatewayProps = {
   onComplete: (mirrorId: string) => void
 }
@@ -74,7 +78,10 @@ type RitualCopy = {
   seal?: string
 }
 
+type PreludeStep = "market" | "question" | "clear"
+
 const MAIN_MIRROR_ID: MirrorId = "chasing"
+const STILL_WATER_ENTRY_ANCHOR = "still-water-intro-mirror"
 
 const getNow = () => (typeof performance !== "undefined" ? performance.now() : Date.now())
 
@@ -872,11 +879,16 @@ export function MirrorGateway({ onComplete }: MirrorGatewayProps) {
   const [holdProgress, setHoldProgress] = useState(0)
   const [isHoldingWater, setIsHoldingWater] = useState(false)
   const [pulse, setPulse] = useState(0)
+  const [showZhaoxinFlow, setShowZhaoxinFlow] = useState(false)
+  const [isLakeSettled, setIsLakeSettled] = useState(false)
+  const [lakeMode, setLakeMode] = useState<LakeMode>("still")
+  const [rippleKey, setRippleKey] = useState(0)
+  const [preludeStep, setPreludeStep] = useState<PreludeStep>("market")
   const holdFrameRef = useRef<number | null>(null)
   const currentCopy = ritualCopyByPhase[phase]
-  const canSeeThought = phase === "mirrorsResponding"
-  const canHoldWater = phase === "conscienceReady"
-  const canEnterCycle = phase === "complete"
+  const canHoldWater = false
+  const canEnterCycle = false
+  const stillWaterPhase = preludeStep === "market" ? "openingSelf" : "question"
 
   const copyClassName = useMemo(
     () =>
@@ -901,16 +913,37 @@ export function MirrorGateway({ onComplete }: MirrorGatewayProps) {
     }
   }, [])
 
+  const enterThoughtLake = useCallback(() => {
+    setPulse((current) => current + 1)
+    setLakeMode("thought")
+    setRippleKey((current) => current + 1)
+    setIsLakeSettled(false)
+    setShowZhaoxinFlow(true)
+  }, [])
+
   useEffect(() => {
-    const delay = phaseAutoDelay[phase]
-    if (!delay) return undefined
+    if (!showZhaoxinFlow) return undefined
 
-    const nextPhase = phaseOrder[getPhaseIndex(phase) + 1]
-    if (!nextPhase) return undefined
+    const timer = window.setTimeout(() => setIsLakeSettled(true), 3600)
 
-    const timer = window.setTimeout(() => goToPhase(nextPhase), delay)
     return () => window.clearTimeout(timer)
-  }, [goToPhase, phase])
+  }, [showZhaoxinFlow])
+
+  useEffect(() => {
+    if (showZhaoxinFlow) return undefined
+
+    const timers = [
+      window.setTimeout(() => setPreludeStep("question"), 2600),
+      window.setTimeout(() => setPreludeStep("clear"), 5600),
+      window.setTimeout(() => enterThoughtLake(), 8400),
+    ]
+
+    return () => {
+      for (const timer of timers) {
+        window.clearTimeout(timer)
+      }
+    }
+  }, [enterThoughtLake, showZhaoxinFlow])
 
   useEffect(() => {
     if (!canHoldWater || !isHoldingWater) return undefined
@@ -936,11 +969,13 @@ export function MirrorGateway({ onComplete }: MirrorGatewayProps) {
     }
   }, [canHoldWater, goToPhase, isHoldingWater])
 
-  const revealThought = () => {
-    if (!canSeeThought) return
-    setPulse((current) => current + 1)
-    goToPhase("mainMirrorAbsorbing")
-  }
+  const updateLakeMode = useCallback((mode: LakeMode) => {
+    setLakeMode(mode)
+  }, [])
+
+  const triggerZhaoxinRipple = useCallback(() => {
+    setRippleKey((current) => current + 1)
+  }, [])
 
   const startHolding = () => {
     if (!canHoldWater) return
@@ -956,12 +991,6 @@ export function MirrorGateway({ onComplete }: MirrorGatewayProps) {
   }
 
   const handleCanvasPointerDown = (event: ReactPointerEvent<HTMLCanvasElement>) => {
-    if (canSeeThought) {
-      event.currentTarget.setPointerCapture?.(event.pointerId)
-      revealThought()
-      return
-    }
-
     if (canHoldWater) {
       event.currentTarget.setPointerCapture?.(event.pointerId)
       startHolding()
@@ -973,27 +1002,59 @@ export function MirrorGateway({ onComplete }: MirrorGatewayProps) {
   }
 
   return (
-    <section className={cn("moon-heart-gateway", `is-${phase}`)} aria-label="明月照心 · 九镜照念">
-      <RitualCanvas
-        phase={phase}
-        phaseStartedAt={phaseStartedAt}
-        holdProgress={holdProgress}
-        pulse={pulse}
-        onWaterPointerDown={handleCanvasPointerDown}
-        onWaterPointerUp={handleCanvasPointerUp}
-      />
+    <section
+      className={cn("moon-heart-gateway", `is-${phase}`, showZhaoxinFlow && "is-zhaoxin-flow")}
+      data-lake-state={showZhaoxinFlow ? (isLakeSettled ? "settled" : "arriving") : "prelude"}
+      aria-label="照入此心"
+      data-flow-anchor={STILL_WATER_ENTRY_ANCHOR}
+    >
+      <StillWaterIntroMirror phase={stillWaterPhase} />
 
-      <div className="ritual-title" aria-hidden="true">
-        <span>明月照心</span>
-        <i />
-        <span>九镜照念</span>
-      </div>
+      {showZhaoxinFlow ? (
+        <>
+          <HeartLakeEngine
+            lakeMode={lakeMode}
+            triggerRippleKey={rippleKey}
+            opacity={lakeMode === "still" ? 0.72 : isLakeSettled ? 0.82 : 0.7}
+            moonPathIntensity={lakeMode === "still" ? 0.58 : isLakeSettled ? 0.7 : 0.48}
+            bloomScale={lakeMode === "liangzhi" ? 0.64 : isLakeSettled ? 0.72 : 0.48}
+            className="mirror-gateway-heart-lake"
+          />
+          <ZhaoxinRitualFlow
+            initialScene="surge"
+            initialIntensity={3}
+            onEnterCycle={() => onComplete(MAIN_MIRROR_ID)}
+            onLakeModeChange={updateLakeMode}
+            onRipple={triggerZhaoxinRipple}
+          />
+        </>
+      ) : null}
 
-      <div key={phase} className={copyClassName} aria-live="polite">
-        <small>{currentCopy.kicker}</small>
-        <h1>{currentCopy.main}</h1>
-        {currentCopy.sub ? <p>{currentCopy.sub}</p> : null}
-      </div>
+      {!showZhaoxinFlow ? (
+        <div key={preludeStep} className={`still-water-gateway-copy is-${preludeStep}`} aria-live="polite">
+          {preludeStep === "market" ? (
+            <h1>
+              市场还在那里
+              <br />
+              行情还在那里
+            </h1>
+          ) : null}
+          {preludeStep === "question" ? (
+            <h1>
+              此刻，
+              <br />
+              你心里起了什么念？
+            </h1>
+          ) : null}
+          {preludeStep === "clear" ? (
+            <h1>
+              一念未起时，
+              <br />
+              此心本自清明。
+            </h1>
+          ) : null}
+        </div>
+      ) : null}
 
       {phase === "thiefRevealed" ? (
         <div key="thief-detail" className="thief-detail" aria-label="心贼解释">
@@ -1004,12 +1065,6 @@ export function MirrorGateway({ onComplete }: MirrorGatewayProps) {
             </span>
           ))}
         </div>
-      ) : null}
-
-      {canSeeThought ? (
-        <button type="button" className="ritual-action" onClick={revealThought}>
-          照见此念
-        </button>
       ) : null}
 
       {canHoldWater ? (
@@ -1036,9 +1091,9 @@ export function MirrorGateway({ onComplete }: MirrorGatewayProps) {
       <style jsx>{`
         .moon-heart-gateway {
           position: relative;
-          width: 100vw;
+          width: 100%;
+          max-width: 100vw;
           min-height: calc(100svh - 2.5rem);
-          margin-left: calc(50% - 50vw);
           overflow: hidden;
           isolation: isolate;
           background:
@@ -1059,7 +1114,7 @@ export function MirrorGateway({ onComplete }: MirrorGatewayProps) {
           pointer-events: none;
         }
 
-        .nine-mirror-canvas {
+        :global(.nine-mirror-canvas) {
           position: absolute;
           inset: 0;
           z-index: 1;
@@ -1071,28 +1126,81 @@ export function MirrorGateway({ onComplete }: MirrorGatewayProps) {
           -webkit-tap-highlight-color: transparent;
         }
 
-        .ritual-title {
+        .moon-heart-gateway :global(.still-water-intro) {
+          z-index: 0;
+          transition:
+            opacity 1800ms cubic-bezier(0.16, 1, 0.3, 1),
+            filter 1800ms cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .moon-heart-gateway.is-zhaoxin-flow :global(.still-water-intro) {
+          opacity: 0.5;
+          filter: brightness(0.9) blur(0.4px);
+        }
+
+        .moon-heart-gateway.is-zhaoxin-flow[data-lake-state="settled"] :global(.still-water-intro) {
+          opacity: 0.32;
+          filter: brightness(0.72) blur(1.8px);
+        }
+
+        .moon-heart-gateway :global(.mirror-gateway-heart-lake) {
+          z-index: 2;
+          mix-blend-mode: normal;
+          pointer-events: auto;
+          filter: saturate(0.86) brightness(0.88) blur(2.2px);
+          transform: scale(1.025);
+          transform-origin: 50% 54%;
+          transition:
+            filter 3200ms cubic-bezier(0.16, 1, 0.3, 1),
+            transform 4200ms cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .moon-heart-gateway[data-lake-state="settled"] :global(.mirror-gateway-heart-lake) {
+          filter: saturate(0.92) brightness(0.96) blur(0);
+          transform: scale(1);
+        }
+
+        .moon-heart-gateway.is-zhaoxin-flow :global(.zhaoxin-ritual-flow) {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          min-height: 100%;
+          margin-left: 0;
+          transform: none;
+        }
+
+        .still-water-gateway-copy {
           position: absolute;
           left: 50%;
-          top: clamp(1.15rem, 2.4vw, 1.9rem);
-          z-index: 8;
-          display: flex;
-          align-items: center;
-          gap: clamp(0.74rem, 2vw, 1.18rem);
-          font-family: var(--font-function);
-          font-size: clamp(0.64rem, 1.6vw, 0.78rem);
-          font-weight: 600;
-          letter-spacing: 0.22em;
-          color: rgba(216, 183, 111, 0.46);
-          text-indent: 0.22em;
-          transform: translateX(-50%);
+          top: clamp(66%, 73svh, 78%);
+          z-index: 9;
+          width: min(36rem, calc(100vw - 2rem));
+          transform: translate(-50%, -50%);
+          text-align: center;
           pointer-events: none;
         }
 
-        .ritual-title i {
-          width: 3.8rem;
-          height: 1px;
-          background: linear-gradient(90deg, transparent, rgba(216, 183, 111, 0.36), transparent);
+        .still-water-gateway-copy h1 {
+          margin: 0;
+          color: rgba(232, 228, 210, 0.74);
+          font-family: var(--font-narrative);
+          font-size: clamp(1.18rem, 2.7vw, 2.35rem);
+          font-weight: 360;
+          font-variation-settings: "wght" 360;
+          line-height: 1.72;
+          letter-spacing: 0.085em;
+          text-shadow:
+            0 0 28px rgba(216, 183, 111, 0.08),
+            0 18px 54px rgba(0, 0, 0, 0.78);
+          animation: still-copy-rise 1180ms cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .still-water-gateway-copy.is-question {
+          top: clamp(67%, 74svh, 79%);
+        }
+
+        .still-water-gateway-copy.is-clear h1 {
+          color: rgba(244, 235, 221, 0.78);
         }
 
         .ritual-copy {
@@ -1232,26 +1340,27 @@ export function MirrorGateway({ onComplete }: MirrorGatewayProps) {
         .ritual-action {
           position: absolute;
           left: 50%;
-          bottom: clamp(1.6rem, 5svh, 3.5rem);
+          bottom: clamp(4.4rem, 8.6svh, 6.8rem);
           z-index: 10;
-          min-width: min(74vw, 360px);
-          min-height: 58px;
-          padding: 0 2.2rem;
+          min-width: min(58vw, 340px);
+          min-height: 60px;
+          padding: 0 2.4rem;
           overflow: hidden;
-          border: 1px solid rgba(216, 183, 111, 0.34);
+          border: 1px solid rgba(216, 183, 111, 0.48);
           border-radius: 999px;
           background:
-            linear-gradient(180deg, rgba(216, 183, 111, 0.78), rgba(154, 124, 55, 0.86)),
-            radial-gradient(ellipse at 50% 0%, rgba(255, 244, 203, 0.36), transparent 62%);
-          color: rgba(4, 4, 3, 0.9);
-          font-family: var(--font-function);
-          font-size: clamp(0.92rem, 2.2vw, 1.02rem);
-          font-weight: 700;
-          letter-spacing: 0.18em;
-          text-indent: 0.18em;
+            linear-gradient(180deg, rgba(48, 43, 28, 0.72), rgba(10, 11, 8, 0.84)),
+            radial-gradient(ellipse at 50% 0%, rgba(216, 183, 111, 0.18), transparent 66%);
+          color: rgba(242, 220, 168, 0.92);
+          font-family: var(--font-narrative);
+          font-size: clamp(0.92rem, 1.8vw, 1.12rem);
+          font-weight: 400;
+          letter-spacing: 0.46em;
+          text-indent: 0.46em;
           box-shadow:
-            0 18px 54px rgba(0, 0, 0, 0.46),
-            inset 0 1px 0 rgba(255, 255, 255, 0.24);
+            0 18px 54px rgba(0, 0, 0, 0.54),
+            0 0 34px rgba(216, 183, 111, 0.08),
+            inset 0 1px 0 rgba(255, 255, 255, 0.12);
           transform: translateX(-50%);
           transition:
             transform 180ms ease,
@@ -1260,10 +1369,28 @@ export function MirrorGateway({ onComplete }: MirrorGatewayProps) {
           -webkit-tap-highlight-color: transparent;
         }
 
+        .ritual-action-hint {
+          position: absolute;
+          left: 50%;
+          bottom: clamp(1.9rem, 4svh, 3rem);
+          z-index: 10;
+          width: min(86vw, 28rem);
+          margin: 0;
+          transform: translateX(-50%);
+          color: rgba(220, 212, 195, 0.34);
+          font-family: var(--font-narrative);
+          font-size: clamp(0.78rem, 1.45vw, 0.95rem);
+          font-weight: 360;
+          line-height: 1.8;
+          letter-spacing: 0.08em;
+          text-align: center;
+          pointer-events: none;
+        }
+
         .ritual-action:hover,
         .ritual-action:focus-visible {
-          border-color: rgba(242, 220, 168, 0.56);
-          filter: brightness(1.06);
+          border-color: rgba(242, 220, 168, 0.68);
+          filter: brightness(1.08);
           outline: none;
         }
 
@@ -1306,6 +1433,20 @@ export function MirrorGateway({ onComplete }: MirrorGatewayProps) {
             opacity: 1;
             filter: blur(0);
             transform: translate(-50%, -50%);
+          }
+        }
+
+        @keyframes still-copy-rise {
+          from {
+            opacity: 0;
+            filter: blur(16px);
+            transform: translateY(24px);
+          }
+
+          to {
+            opacity: 1;
+            filter: blur(0);
+            transform: translateY(0);
           }
         }
 

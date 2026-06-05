@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "scene_29",
+  "sceneName": "解套执念",
+  "sceneOrder": 29,
+  "status": "active",
+  "mirrorId": "unlock_obsession",
+  "thief": "执 · 痴",
+  "items": [
+    {
+      "id": "scene_29_001",
+      "tradeMoment": "被套很久以后",
+      "os": "解套我就走。",
+      "hiddenThought": "我一天都不想拿了。",
+      "reflection": "你等的不是机会，你等的是解脱。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_29_002",
+      "tradeMoment": "股价接近成本时",
+      "os": "快到了。",
+      "hiddenThought": "终于熬到了。",
+      "reflection": "你开始把解套当成目标，而不是交易。",
+      "intensity": 3
+    },
+    {
+      "id": "scene_29_003",
+      "tradeMoment": "看着亏损缩小时",
+      "os": "再涨一点。",
+      "hiddenThought": "马上自由了。",
+      "reflection": "你已经不在看趋势，你只在看成本线。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_29_004",
+      "tradeMoment": "快回本时",
+      "os": "先别卖。",
+      "hiddenThought": "说不定还能赚。",
+      "reflection": "很多人死在快解套的时候。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_29_005",
+      "tradeMoment": "刚回到成本附近时",
+      "os": "总算回来了。",
+      "hiddenThought": "再也不碰了。",
+      "reflection": "你放不下的不是股票，是这段痛苦经历。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_29_006",
+      "tradeMoment": "再次回落时",
+      "os": "怎么又下去了。",
+      "hiddenThought": "就差一点。",
+      "reflection": "最折磨人的，不是亏损，是差一点解套。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_29_007",
+      "tradeMoment": "看着价格反复震荡时",
+      "os": "我等了这么久。",
+      "hiddenThought": "不能白等。",
+      "reflection": "你开始用过去的时间证明继续等待。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_29_008",
+      "tradeMoment": "已经失去逻辑时",
+      "os": "我就想解套。",
+      "hiddenThought": "其他都不重要。",
+      "reflection": "当解套变成目标，规则就消失了。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_29_009",
+      "tradeMoment": "看着成本线时",
+      "os": "回来就行。",
+      "hiddenThought": "别让我亏着走。",
+      "reflection": "你真正放不下的，是不愿意接受亏损。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_29_010",
+      "tradeMoment": "关软件之前",
+      "os": "解套我一定卖。",
+      "hiddenThought": "这次说真的。",
+      "reflection": "你已经说过很多次：解套我就卖。",
+      "intensity": 4
+    }
+  ],
+  "thiefExplain": [
+    "执，是把解套变成唯一目标。",
+    "痴，是把希望当成未来。"
+  ],
+  "evidences": [
+    "我看见自己不是在等机会，我是在等解套。",
+    "我真正放不下的，不是仓位，是痛苦。",
+    "我开始用成本线代替规则线。",
+    "我以为自己在坚持，其实我在执着。",
+    "我终于看见，让我停不下来的不是行情，是不甘心。"
+  ],
+  "practices": [
+    "不用成本线决定买卖。",
+    "问自己：如果今天没有持仓，我还会买吗？",
+    "重新评估逻辑，而不是成本。",
+    "记录一次放弃解套执念的证据。",
+    "练习一句话：市场不负责让我解套。"
+  ],
+  "coreStatement": "你等的不是解套。\n\n你等的是，\n\n结束这段不甘心。"
+}

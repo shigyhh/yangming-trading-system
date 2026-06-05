@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "scene_XX",
+  "sceneName": "场景名",
+  "sceneOrder": 0,
+  "status": "draft",
+  "mirrorId": "mirror-id",
+  "thief": "",
+  "items": [
+    {
+      "id": "scene_XX_001",
+      "tradeMoment": "",
+      "os": "",
+      "hiddenThought": "",
+      "reflection": "",
+      "intensity": 1
+    }
+  ],
+  "thiefExplain": [
+    ""
+  ],
+  "evidences": [
+    ""
+  ],
+  "practices": [
+    ""
+  ],
+  "coreStatement": ""
+}

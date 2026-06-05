@@ -1,6 +1,6 @@
 <view class="page-shell">
   <view class="page-content">
-    <text class="eyebrow">DATA MIRROR · 活镜采集</text>
+    <text class="eyebrow">LIVING MIRROR · 行为印记</text>
     <view class="page-title">活镜成长<br />训练台</view>
     <view class="page-subtitle">这里不是报告展示页，而是把每次真实复盘沉淀成九镜变化、心贼频次和下一次训练动作。</view>
 
@@ -26,11 +26,11 @@
       </view>
       <view class="bridge-map">
         <view>
-          <text>复盘采集</text>
+          <text>真实复盘</text>
           <view>上传截图，写下理由与第一念</view>
         </view>
         <view>
-          <text>活镜采集</text>
+          <text>活镜照见</text>
           <view>把记录归入九镜六贼与训练动作</view>
         </view>
         <view>
@@ -42,20 +42,76 @@
 
     <view class="mirror-hero card">
       <view class="lake-glow"></view>
-      <view class="mirror-label">采集生成主镜</view>
+      <view class="mirror-label">复盘生成主镜</view>
       <view class="mirror-name">{{stats.currentMirror || '活镜未点亮'}}</view>
-      <view class="mirror-count">{{hasRecords ? stats.totalReviews + ' 条复盘采集' : '上传第一条记录后生成'}}</view>
+      <view class="mirror-count">{{hasRecords ? stats.totalReviews + ' 条真实复盘' : '上传第一条记录后生成'}}</view>
       <view class="thief-line">
         <text>最近高频心贼</text>
         <view>{{stats.topThievesText || '待照见'}}</view>
       </view>
     </view>
 
+    <view class="stability-card card">
+      <view class="card-head">
+        <text>知行稳定度</text>
+        <view>{{zhixingStability.level}}</view>
+      </view>
+      <view class="stability-score">
+        <text>{{zhixingStability.totalText}}</text>
+        <view>/ 100</view>
+      </view>
+      <view class="stability-summary">{{zhixingStability.summary}}</view>
+      <view class="stability-dimension-list">
+        <view wx:for="{{zhixingStability.dimensions}}" wx:key="key" class="stability-dimension-row">
+          <view class="dimension-title">
+            <text>{{item.name}}</text>
+            <view>{{item.scoreText}}</view>
+          </view>
+          <view class="dimension-bar"><view style="width: {{item.score}}%;"></view></view>
+          <view class="dimension-hint">{{item.hint}}</view>
+        </view>
+      </view>
+      <view class="stability-foot">{{zhixingStability.riskLine}}</view>
+    </view>
+
+    <view class="triple-card card">
+      <view class="card-head">
+        <text>三证互照</text>
+        <view>{{tripleReflection.evidenceLevelText || tripleReflection.stateLabel}}</view>
+      </view>
+      <view wx:if="{{tripleReflection.unifiedConclusion}}" class="triple-conclusion">{{tripleReflection.unifiedConclusion}}</view>
+      <view wx:if="{{tripleReflection.proofLine}}" class="triple-prescription">{{tripleReflection.proofLine}}</view>
+      <view class="triple-conclusion">{{tripleReflection.conclusion}}</view>
+      <view class="triple-row-list">
+        <view wx:for="{{tripleReflection.rows}}" wx:key="key" class="triple-row">
+          <text>{{item.name}}</text>
+          <view>{{item.mirror}}</view>
+          <text>{{item.statusText}}</text>
+        </view>
+      </view>
+      <view class="triple-prescription">{{tripleReflection.nextCalibration || tripleReflection.prescription}}</view>
+    </view>
+
+    <view class="server-prescription-card card">
+      <view class="card-head">
+        <text>中枢今日训练</text>
+        <view>{{prescriptionStatusText}}</view>
+      </view>
+      <view class="prescription-title">{{serverPrescription.title || '等待网页中枢下发'}}</view>
+      <view class="prescription-action">{{serverPrescription.action || '完成测评、K线观心或真实复盘后，网页中枢会生成今日训练。'}}</view>
+      <view class="prescription-meta">
+        <text>{{serverPrescription.mirror || '待照见'}}</text>
+        <text>Day {{serverPrescription.day || training7View.currentDay}}</text>
+        <text>{{serverPrescription.klinePractice.actionText || 'K线观心待生成'}}</text>
+      </view>
+      <button class="primary-btn" bindtap="receiveServerPrescription">接收今日训练</button>
+    </view>
+
     <view class="mirror-tree-card card">
       <view class="tree-glow"></view>
       <view class="card-head">
         <text>活镜树</text>
-        <view>行为证据长出来的树</view>
+        <view>真实记录长出来的树</view>
       </view>
       <view class="tree-visual">
         <view class="tree-crown">
@@ -76,7 +132,7 @@
 
     <view class="evidence-tree-card card">
       <view class="card-head">
-        <text>闭环证据</text>
+        <text>闭环印记</text>
         <view>{{evidenceSummary.total ? evidenceSummary.total + ' 条入树' : '待第一枚心证入树'}}</view>
       </view>
       <view wx:if="{{evidenceRows.length}}" class="evidence-tree-list">
@@ -91,7 +147,7 @@
 
     <view class="change-card card">
       <view class="card-head">
-        <text>7 天采集变化</text>
+        <text>7 天印记变化</text>
         <view>只看反应模式，不绑定结果</view>
       </view>
       <view class="change-row" wx:for="{{stats.mirrorTrendRows}}" wx:key="mirror">
@@ -143,7 +199,7 @@
       </view>
       <view class="reminder-line">{{stats.todayReminder || '先完成一条真实复盘，让活镜开始记录。'}}</view>
       <view class="training-line">{{stats.mainTraining || '把第一念记录下来。'}}</view>
-      <button class="primary-btn" bindtap="goReview">{{hasRecords ? '继续采集一笔复盘' : '上传第一条记录'}}</button>
+      <button class="primary-btn" bindtap="goReview">{{hasRecords ? '继续记录一笔复盘' : '上传第一条记录'}}</button>
     </view>
 
     <view class="recommend-card card">
@@ -159,7 +215,7 @@
 
     <view class="recent-card card">
       <view class="card-head">
-        <text>最近三次采集</text>
+        <text>最近三次复盘</text>
         <view bindtap="goArchive">进入档案</view>
       </view>
       <view wx:if="{{stats.recentThree.length}}">
@@ -171,7 +227,7 @@
           bindtap="goDetail"
         >{{item.line}}</button>
       </view>
-      <view wx:else class="empty-text">还没有采集记录。先上传一张截图，照见第一次真实反应。</view>
+      <view wx:else class="empty-text">还没有复盘记录。先上传一张截图，照见第一次真实反应。</view>
     </view>
 
     <view class="assistant-card card">

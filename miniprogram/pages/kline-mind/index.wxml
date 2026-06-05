@@ -7,10 +7,14 @@
         <view>{{savedRecord && savedRecord.completed ? '已观心' : '待观心'}}</view>
       </view>
 
-      <view class="page-title">K 线历史观心</view>
-      <view class="page-subtitle">读取 A 股、港股、美股、期货、数字货币真实历史 OHLCV；不连接实时数据，不做操作功能，只把历史波动用于边界、念头与知行合一训练。</view>
+      <view class="page-title">今日 K 线观心</view>
+      <view class="page-subtitle">看一段真实历史 K 线，记录第一反应；不连接实时数据，不做当下判断。</view>
+      <view class="kline-one-thing">
+        <text>今日只练</text>
+        <view>{{session.prescription.boundaryPractice}}</view>
+      </view>
 
-      <view class="hero-meta">
+      <view wx:if="{{false}}" class="hero-meta">
         <view>
           <text>今日</text>
           <view>Day {{session.day}} · {{trainingDay.title}}</view>
@@ -25,7 +29,15 @@
         </view>
       </view>
 
-      <view class="market-rail">
+      <view class="slice-switch">
+        <view>
+          <text>{{session.market.name}} · {{session.timeframeLabel}}</text>
+          <view>{{session.market.rule}}</view>
+        </view>
+        <button bindtap="toggleSelectors">{{showSelectors ? '收起' : '切换'}}</button>
+      </view>
+
+      <view wx:if="{{showSelectors}}" class="market-rail">
         <button
           wx:for="{{session.marketOptions}}"
           wx:key="key"
@@ -38,7 +50,7 @@
         </button>
       </view>
 
-      <view class="timeframe-rail">
+      <view wx:if="{{showSelectors}}" class="timeframe-rail">
         <button
           wx:for="{{session.timeframeOptions}}"
           wx:key="key"
@@ -97,7 +109,11 @@
       </view>
     </view>
 
-    <view class="method-card card">
+    <view class="guide-toggle">
+      <button class="ghost-btn" bindtap="toggleGuide">{{showGuide ? '收起训练说明' : '查看训练说明'}}</button>
+    </view>
+
+    <view wx:if="{{showGuide}}" class="method-card card">
       <view class="section-kicker">TRAINING SYSTEM</view>
       <view class="method-title">训练方法详解</view>
       <view class="method-list">
@@ -118,6 +134,11 @@
     <view class="practice-card card">
       <view class="section-kicker">MIND RECORD</view>
       <view class="practice-title">这一刻，先看见自己</view>
+      <view class="practice-flow">
+        <text>选一念</text>
+        <text>守一界</text>
+        <text>写一句</text>
+      </view>
 
       <view class="field-block">
         <text>第一反应</text>
@@ -135,7 +156,11 @@
         </view>
       </view>
 
-      <view class="field-block">
+      <view class="field-mini-toggle">
+        <button class="ghost-btn" bindtap="toggleBodySignal">{{showBodySignal ? '收起身体感受' : '补身体感受'}}</button>
+      </view>
+
+      <view wx:if="{{showBodySignal}}" class="field-block compact-field">
         <text>身体感受</text>
         <view class="option-grid compact">
           <button
@@ -178,10 +203,10 @@
         />
       </view>
 
-      <button class="primary-btn save-btn" bindtap="saveRecord">{{savedRecord && savedRecord.completed ? '更新训练记录' : '完成 K 线训练记录'}}</button>
+      <button class="primary-btn save-btn" bindtap="saveRecord">{{savedRecord && savedRecord.completed ? '更新活镜记录' : '写入活镜'}}</button>
     </view>
 
-    <view class="prescription-card card">
+    <view wx:if="{{showGuide}}" class="prescription-card card">
       <view class="section-kicker">PERSONAL PATH</view>
       <view class="prescription-title">{{session.prescription.title}}</view>
       <view class="drill-card">
@@ -210,7 +235,7 @@
       </view>
     </view>
 
-    <view class="gate-card card">
+    <view wx:if="{{showGuide}}" class="gate-card card">
       <view class="section-kicker">SIX GATES</view>
       <view class="gate-title">六大关口训练地图</view>
       <view class="gate-list">
@@ -226,17 +251,22 @@
     </view>
 
     <view wx:if="{{savedRecord && savedRecord.completed}}" class="completion-card card">
+      <view class="completion-mark">照</view>
       <view>
-        <text>今日观心完成度</text>
-        <view>{{savedRecord.score}}</view>
+        <text>K 线观心已写入活镜</text>
+        <view>{{savedRecord.insightLine}}</view>
       </view>
-      <text>这个数值只衡量觉察、守界、记录完整度，不关联外在结果。</text>
+      <text>只记录第一反应、守界动作与复盘完整度，不关联外在结果。</text>
+      <view class="completion-actions">
+        <button class="ghost-btn" bindtap="goHome">回今日</button>
+        <button class="primary-btn" bindtap="goLivingMirror">看活镜</button>
+      </view>
     </view>
 
-    <view class="split-actions">
-      <button class="ghost-btn" bindtap="goTraining">回到 7 天训练</button>
+    <view class="path-links">
+      <button class="ghost-btn" bindtap="goTraining">7 天训练</button>
       <button wx:if="{{training7View.canRetest}}" class="secondary-btn" bindtap="goRetest">进入复测</button>
-      <button wx:else class="secondary-btn" bindtap="goReport">查看人格报告</button>
+      <button wx:else class="secondary-btn" bindtap="goReport">人格报告</button>
     </view>
 
     <compliance-notice />

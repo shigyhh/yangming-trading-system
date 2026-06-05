@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "scene_05",
+  "sceneName": "卖晚懊恼",
+  "sceneOrder": 5,
+  "status": "active",
+  "mirrorId": "regret",
+  "thief": "贪 · 悔",
+  "items": [
+    {
+      "id": "scene_05_001",
+      "tradeMoment": "看着利润开始回吐时",
+      "os": "刚才就该卖。",
+      "hiddenThought": "我又贪了。",
+      "reflection": "你后悔的不是没卖，你后悔的是自己又想多赚一点。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_05_002",
+      "tradeMoment": "利润越来越少时",
+      "os": "怎么没走。",
+      "hiddenThought": "我总是不甘心。",
+      "reflection": "真正让你难受的，不是回吐，是你明明想走却没走。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_05_003",
+      "tradeMoment": "红盘变小的时候",
+      "os": "又坐电梯了。",
+      "hiddenThought": "到手的又飞了。",
+      "reflection": "你不是第一次坐电梯，所以这一次格外疼。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_05_004",
+      "tradeMoment": "看着利润一点点缩水时",
+      "os": "白拿这么久。",
+      "hiddenThought": "我又守了个寂寞。",
+      "reflection": "你觉得自己失去的，不只是利润，还有时间。",
+      "intensity": 3
+    },
+    {
+      "id": "scene_05_005",
+      "tradeMoment": "回看刚才高点时",
+      "os": "我刚才在等什么。",
+      "hiddenThought": "我还想再多一点。",
+      "reflection": "你等的不是信号，你等的是更完美的结果。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_05_006",
+      "tradeMoment": "从赚很多变成赚很少时",
+      "os": "真难受。",
+      "hiddenThought": "我本来可以赚更多。",
+      "reflection": "最难受的不是赚少了，是看见自己本来可以赚更多。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_05_007",
+      "tradeMoment": "看着账户回吐时",
+      "os": "早知道就卖了。",
+      "hiddenThought": "我为什么总这样。",
+      "reflection": "你已经说过很多次“早知道”。",
+      "intensity": 3
+    },
+    {
+      "id": "scene_05_008",
+      "tradeMoment": "回看走势时",
+      "os": "又没卖在高点。",
+      "hiddenThought": "我是不是拿不住。",
+      "reflection": "你开始怀疑的已经不是卖点，是自己。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_05_009",
+      "tradeMoment": "收盘以后",
+      "os": "这波白做了。",
+      "hiddenThought": "我还是不够好。",
+      "reflection": "赚到的部分，被后悔全部盖住了。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_05_010",
+      "tradeMoment": "关软件之前",
+      "os": "下次一定卖。",
+      "hiddenThought": "可我下次还会犹豫。",
+      "reflection": "真正困住你的，不是行情，是执念。",
+      "intensity": 3
+    }
+  ],
+  "thiefExplain": [
+    "贪，是赚到了还想赚更多。",
+    "悔，是事情已经过去，却一直停在如果刚才。"
+  ],
+  "evidences": [
+    "我看见自己不是因为回吐难受，我是因为没卖在最好的位置难受。",
+    "我真正放不下的，不是利润，是那个更完美的结果。",
+    "我一直盯着失去的部分，忘了已经赚到的部分。",
+    "我以为自己在复盘卖点，其实我在责怪自己。",
+    "我终于看见，让我痛苦的不是回吐，是执念。"
+  ],
+  "practices": [
+    "记录一次按计划持有的交易。",
+    "不用最高点评价卖点。",
+    "不用结果评价过程。",
+    "提醒自己：赚到属于自己的部分已经足够。",
+    "练习一句话：市场不会把最高点提前告诉我。"
+  ],
+  "coreStatement": "你后悔的不是没卖。\n\n你后悔的是，\n\n没有卖在最好的位置。"
+}

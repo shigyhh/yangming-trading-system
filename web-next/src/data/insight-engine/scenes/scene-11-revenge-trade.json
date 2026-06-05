@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "scene_11",
+  "sceneName": "连续亏损后翻本",
+  "sceneOrder": 11,
+  "status": "active",
+  "mirrorId": "revenge_trade",
+  "thief": "急 · 贪 · 痴",
+  "items": [
+    {
+      "id": "scene_11_001",
+      "tradeMoment": "连续亏了几笔以后",
+      "os": "再来一笔。",
+      "hiddenThought": "我不甘心。",
+      "reflection": "你不是在找机会，你是在找安慰。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_11_002",
+      "tradeMoment": "准备关软件时",
+      "os": "这一笔回来我就停。",
+      "hiddenThought": "我想翻回来。",
+      "reflection": "你已经说过很多次：这一笔回来我就停。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_11_003",
+      "tradeMoment": "看着账户越来越难看时",
+      "os": "今天不能这样结束。",
+      "hiddenThought": "我接受不了。",
+      "reflection": "你接受不了的不是亏损，是今天就这样结束。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_11_004",
+      "tradeMoment": "连续止损以后",
+      "os": "总得给我一次吧。",
+      "hiddenThought": "怎么可能一直错。",
+      "reflection": "这一刻，你已经开始向市场讨公平。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_11_005",
+      "tradeMoment": "再次准备下单时",
+      "os": "再试一次。",
+      "hiddenThought": "这次一定行。",
+      "reflection": "你真正相信的，已经不是系统，是运气。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_11_006",
+      "tradeMoment": "看着亏损记录时",
+      "os": "就差一点。",
+      "hiddenThought": "我明明快对了。",
+      "reflection": "你已经连续说了很多次：就差一点。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_11_007",
+      "tradeMoment": "情绪越来越重时",
+      "os": "我得弄回来。",
+      "hiddenThought": "我不能输。",
+      "reflection": "你想翻回来的，不只是钱。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_11_008",
+      "tradeMoment": "再次打开交易软件时",
+      "os": "怎么可能一直亏。",
+      "hiddenThought": "总会轮到我。",
+      "reflection": "市场不会因为你委屈，就改变方向。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_11_009",
+      "tradeMoment": "明知道不该做时",
+      "os": "最后一把。",
+      "hiddenThought": "这次真结束。",
+      "reflection": "很多失控，都是从最后一把开始的。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_11_010",
+      "tradeMoment": "收盘前",
+      "os": "我还没输。",
+      "hiddenThought": "我不能认输。",
+      "reflection": "真正让你停不下来的，不是机会，是不甘心。",
+      "intensity": 5
+    }
+  ],
+  "thiefExplain": [
+    "急，是不愿慢慢修复，只想立刻翻回来。",
+    "贪，是想一次把失去的全部拿回来。",
+    "痴，是已经脱离系统，开始相信运气。"
+  ],
+  "evidences": [
+    "我看见自己不是在交易，我是在翻本。",
+    "我真正放不下的，不是亏损，是那口气。",
+    "我以为自己在找机会，其实我在找安慰。",
+    "连续亏损以后，最危险的不是市场，是情绪。",
+    "我终于看见，让我停不下来的不是机会，是不甘心。"
+  ],
+  "practices": [
+    "连续亏损后暂停下一笔交易。",
+    "离开盘面十五分钟。",
+    "写下：我最不甘心什么。",
+    "今天不以赚钱为目标，只以守规则为目标。",
+    "练习一句话：输一笔不可怕，失去自己才可怕。"
+  ],
+  "coreStatement": "你不是在找机会。\n\n你是在找安慰。"
+}

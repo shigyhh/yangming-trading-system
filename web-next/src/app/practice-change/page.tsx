@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 
+import { YangmingCharacterMark } from "@/components/brand/yangming-character-mark"
 import { YangmingC16Mark, YangmingGlyph } from "@/components/brand/yangming-mark"
 import {
   AssessmentShell,
@@ -168,10 +169,19 @@ export default function PracticeChangePage() {
         </p>
 
         <GlassPanel className="mt-8">
-          <p className="flex items-center gap-2 font-function text-xs font-semibold tracking-[.18em] text-[#b49d5d]">
-            <YangmingGlyph kind="train" className="size-4 text-[rgba(216,183,111,.68)]" />
-            <span>今日事上练</span>
-          </p>
+          <div className="practice-character-heading" aria-label="止字停十秒训练状态">
+            <YangmingCharacterMark
+              character="止"
+              label="止字，停十秒训练，先照心"
+              roleText="停顿"
+              size="sm"
+              tier="method"
+            />
+            <div>
+              <p>今日事上练</p>
+              <span>停十秒 / 先照心 / 再落行动</span>
+            </div>
+          </div>
           <h2 className="mt-4 font-story text-2xl font-light leading-[1.45] tracking-[.08em]">
             {nextPractice ? `第 ${nextPractice.day} 日：${nextPractice.title}` : "七日已满，复看心证。"}
           </h2>
@@ -276,7 +286,19 @@ export default function PracticeChangePage() {
         </GlassPanel>
 
         <GlassPanel className="mt-4">
-          <p className="font-function text-xs font-semibold tracking-[.18em] text-[#b49d5d]">变化心证</p>
+          <div className="practice-character-heading" aria-label="练字七日训练完成态">
+            <YangmingCharacterMark
+              character="练"
+              label="练字，七日训练完成态，事上训练"
+              roleText="训练"
+              size="sm"
+              tier="method"
+            />
+            <div>
+              <p>变化心证</p>
+              <span>七日训练完成态</span>
+            </div>
+          </div>
           <h2 className="mt-4 font-story text-2xl font-light leading-[1.55] tracking-[.08em]">
             {isSevenDaysComplete
               ? "七日已过，复看此心。"
@@ -341,6 +363,30 @@ export default function PracticeChangePage() {
           border-top: 1px solid rgba(172, 146, 83, 0.12);
           padding-top: 1.1rem;
           text-align: left;
+        }
+
+        .practice-character-heading {
+          display: flex;
+          align-items: center;
+          gap: 0.9rem;
+        }
+
+        .practice-character-heading p {
+          margin: 0;
+          font-family: var(--font-function);
+          font-size: 0.76rem;
+          font-weight: 700;
+          letter-spacing: 0.18em;
+          color: #b49d5d;
+        }
+
+        .practice-character-heading span {
+          display: block;
+          margin-top: 0.28rem;
+          font-family: var(--font-function);
+          font-size: 0.68rem;
+          letter-spacing: 0.08em;
+          color: rgba(220, 212, 195, 0.4);
         }
 
         .practice-action-steps p {

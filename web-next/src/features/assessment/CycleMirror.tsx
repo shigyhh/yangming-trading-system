@@ -7,20 +7,22 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { cn } from "@/lib/utils"
 
-type CycleNode = {
+export type CycleNode = {
   key: "trigger" | "thought" | "action" | "result" | "retrigger"
   title: string
   short: string
   detail: string
 }
 
-type CycleMirrorCase = {
+export type CycleMirrorCase = {
   id: string
   sourceMirror: string
   title: string
   status: string
   verdict: string
   practice: string
+  dataSourceLabel?: string
+  sourceId?: string
   nodes: CycleNode[]
 }
 
