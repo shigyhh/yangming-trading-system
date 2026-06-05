@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "scene_22",
+  "sceneName": "复盘逃避",
+  "sceneOrder": 22,
+  "status": "active",
+  "mirrorId": "avoid_review",
+  "thief": "懒 · 逃",
+  "items": [
+    {
+      "id": "scene_22_001",
+      "tradeMoment": "收盘以后",
+      "os": "明天再看吧。",
+      "hiddenThought": "我不想面对。",
+      "reflection": "你拖延的不是复盘，你拖延的是现实。",
+      "intensity": 3
+    },
+    {
+      "id": "scene_22_002",
+      "tradeMoment": "打开复盘表时",
+      "os": "今天有点累。",
+      "hiddenThought": "不想看这些。",
+      "reflection": "真正让你累的，不是复盘，是面对错误。",
+      "intensity": 3
+    },
+    {
+      "id": "scene_22_003",
+      "tradeMoment": "想写交易记录时",
+      "os": "今天没啥好记的。",
+      "hiddenThought": "写了也难受。",
+      "reflection": "你不是没内容，你是不想面对内容。",
+      "intensity": 3
+    },
+    {
+      "id": "scene_22_004",
+      "tradeMoment": "看到账户亏损时",
+      "os": "不看了。",
+      "hiddenThought": "看了更烦。",
+      "reflection": "逃避不会减少亏损，只会减少成长。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_22_005",
+      "tradeMoment": "准备复盘时",
+      "os": "周末再说。",
+      "hiddenThought": "今天不想想。",
+      "reflection": "很多问题，都是从“以后再说”开始的。",
+      "intensity": 3
+    },
+    {
+      "id": "scene_22_006",
+      "tradeMoment": "想回看交易时",
+      "os": "都过去了。",
+      "hiddenThought": "反正改不了。",
+      "reflection": "你开始把放弃包装成释怀。",
+      "intensity": 3
+    },
+    {
+      "id": "scene_22_007",
+      "tradeMoment": "看到错误交易时",
+      "os": "算了。",
+      "hiddenThought": "我不想承认。",
+      "reflection": "真正让你难受的，不是错误，是看见错误。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_22_008",
+      "tradeMoment": "连续亏损以后",
+      "os": "没心情复盘。",
+      "hiddenThought": "我已经够难受了。",
+      "reflection": "越难受的时候，越需要复盘。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_22_009",
+      "tradeMoment": "打开软件又关闭时",
+      "os": "下次再认真弄。",
+      "hiddenThought": "今天先放过自己。",
+      "reflection": "你已经说过很多次：下次。",
+      "intensity": 3
+    },
+    {
+      "id": "scene_22_010",
+      "tradeMoment": "睡觉之前",
+      "os": "明天开始。",
+      "hiddenThought": "希望明天不一样。",
+      "reflection": "你期待改变，却回避改变的入口。",
+      "intensity": 4
+    }
+  ],
+  "thiefExplain": [
+    "懒，是不愿面对复杂和麻烦。",
+    "逃，是不愿面对真实结果。"
+  ],
+  "evidences": [
+    "我看见自己不是没时间复盘，我是不想面对复盘。",
+    "我真正逃避的，不是记录，是结果。",
+    "我开始用拖延缓解不舒服。",
+    "我以为自己在休息，其实我在回避成长。",
+    "我终于看见，不复盘的代价是重复同样的错误。"
+  ],
+  "practices": [
+    "收盘后先记录三句话。",
+    "复盘只写事实，不评价自己。",
+    "记录当天最失败的一笔交易。",
+    "记录当天最正确的一笔交易。",
+    "练习一句话：复盘不是审判，是照见。"
+  ],
+  "coreStatement": "你逃避的不是复盘。\n\n你逃避的是，\n\n看见真实的自己。"
+}

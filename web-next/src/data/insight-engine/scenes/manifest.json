@@ -3,31 +3,296 @@
   "targetSceneCount": 36,
   "filenamePattern": "scene-XX-slug.json",
   "recordFlow": [
-    "scene",
-    "thought",
+    "tradeMoment",
+    "os",
     "reflection",
     "thief",
     "evidence",
-    "practice"
+    "practice",
+    "coreStatement"
   ],
-  "recordFields": [
+  "contentRecordFields": [
+    "id",
+    "tradeMoment",
+    "os",
+    "hiddenThought",
+    "reflection",
+    "intensity"
+  ],
+  "sceneRecordFields": [
     "sceneId",
     "sceneName",
     "mirrorId",
-    "intensity",
+    "thief",
+    "items",
+    "thiefExplain",
+    "evidences",
+    "practices",
+    "coreStatement"
+  ],
+  "liveRecordFields": [
+    "action",
+    "scene",
     "thought",
-    "reflection",
+    "hiddenThought",
+    "mirror",
     "thief",
     "evidence",
     "practice"
   ],
   "scenes": [
     {
-      "sceneId": "scene-01-chase-surge",
-      "sceneName": "急涨时",
+      "sceneId": "scene_01",
+      "sceneName": "急涨追高",
       "sceneOrder": 1,
-      "status": "draft",
+      "status": "active",
       "file": "scene-01-chase-surge.json"
+    },
+    {
+      "sceneId": "scene_02",
+      "sceneName": "踏空焦虑",
+      "sceneOrder": 2,
+      "status": "active",
+      "file": "scene-02-missed.json"
+    },
+    {
+      "sceneId": "scene_03",
+      "sceneName": "买少后悔",
+      "sceneOrder": 3,
+      "status": "active",
+      "file": "scene-03-small-position.json"
+    },
+    {
+      "sceneId": "scene_04",
+      "sceneName": "卖飞懊恼",
+      "sceneOrder": 4,
+      "status": "active",
+      "file": "scene-04-sold-too-early.json"
+    },
+    {
+      "sceneId": "scene_05",
+      "sceneName": "卖晚懊恼",
+      "sceneOrder": 5,
+      "status": "active",
+      "file": "scene-05-sold-too-late.json"
+    },
+    {
+      "sceneId": "scene_06",
+      "sceneName": "浮盈回吐恐惧",
+      "sceneOrder": 6,
+      "status": "active",
+      "file": "scene-06-floating-gain-fear.json"
+    },
+    {
+      "sceneId": "scene_07",
+      "sceneName": "不愿止损",
+      "sceneOrder": 7,
+      "status": "active",
+      "file": "scene-07-unwilling-stop-loss.json"
+    },
+    {
+      "sceneId": "scene_08",
+      "sceneName": "扛单死撑",
+      "sceneOrder": 8,
+      "status": "active",
+      "file": "scene-08-hold-loss.json"
+    },
+    {
+      "sceneId": "scene_09",
+      "sceneName": "补仓摊平",
+      "sceneOrder": 9,
+      "status": "active",
+      "file": "scene-09-average-down.json"
+    },
+    {
+      "sceneId": "scene_10",
+      "sceneName": "越跌越补",
+      "sceneOrder": 10,
+      "status": "active",
+      "file": "scene-10-more-average-down.json"
+    },
+    {
+      "sceneId": "scene_11",
+      "sceneName": "连续亏损后翻本",
+      "sceneOrder": 11,
+      "status": "active",
+      "file": "scene-11-revenge-trade.json"
+    },
+    {
+      "sceneId": "scene_12",
+      "sceneName": "连续盈利后膨胀",
+      "sceneOrder": 12,
+      "status": "active",
+      "file": "scene-12-overconfidence.json"
+    },
+    {
+      "sceneId": "scene_13",
+      "sceneName": "重仓冲动",
+      "sceneOrder": 13,
+      "status": "active",
+      "file": "scene-13-heavy-position.json"
+    },
+    {
+      "sceneId": "scene_14",
+      "sceneName": "梭哈冲动",
+      "sceneOrder": 14,
+      "status": "active",
+      "file": "scene-14-all-in.json"
+    },
+    {
+      "sceneId": "scene_15",
+      "sceneName": "空仓焦虑",
+      "sceneOrder": 15,
+      "status": "active",
+      "file": "scene-15-empty-position.json"
+    },
+    {
+      "sceneId": "scene_16",
+      "sceneName": "临盘改计划",
+      "sceneOrder": 16,
+      "status": "active",
+      "file": "scene-16-change-plan.json"
+    },
+    {
+      "sceneId": "scene_17",
+      "sceneName": "止损后又涨",
+      "sceneOrder": 17,
+      "status": "active",
+      "file": "scene-17-stop-loss-regret.json"
+    },
+    {
+      "sceneId": "scene_18",
+      "sceneName": "止盈后继续涨",
+      "sceneOrder": 18,
+      "status": "active",
+      "file": "scene-18-profit-regret.json"
+    },
+    {
+      "sceneId": "scene_19",
+      "sceneName": "开盘冲动",
+      "sceneOrder": 19,
+      "status": "active",
+      "file": "scene-19-open-impulse.json"
+    },
+    {
+      "sceneId": "scene_20",
+      "sceneName": "尾盘冲动",
+      "sceneOrder": 20,
+      "status": "active",
+      "file": "scene-20-close-impulse.json"
+    },
+    {
+      "sceneId": "scene_21",
+      "sceneName": "收盘后后悔",
+      "sceneOrder": 21,
+      "status": "active",
+      "file": "scene-21-after-close-regret.json"
+    },
+    {
+      "sceneId": "scene_22",
+      "sceneName": "复盘逃避",
+      "sceneOrder": 22,
+      "status": "active",
+      "file": "scene-22-avoid-review.json"
+    },
+    {
+      "sceneId": "scene_23",
+      "sceneName": "消息刺激",
+      "sceneOrder": 23,
+      "status": "active",
+      "file": "scene-23-news-trigger.json"
+    },
+    {
+      "sceneId": "scene_24",
+      "sceneName": "别人喊单依赖",
+      "sceneOrder": 24,
+      "status": "active",
+      "file": "scene-24-follow-call.json"
+    },
+    {
+      "sceneId": "scene_25",
+      "sceneName": "热点追逐",
+      "sceneOrder": 25,
+      "status": "active",
+      "file": "scene-25-hot-theme.json"
+    },
+    {
+      "sceneId": "scene_26",
+      "sceneName": "抄底冲动",
+      "sceneOrder": 26,
+      "status": "active",
+      "file": "scene-26-bottom-fishing.json"
+    },
+    {
+      "sceneId": "scene_27",
+      "sceneName": "高位接盘",
+      "sceneOrder": 27,
+      "status": "active",
+      "file": "scene-27-high-buy.json"
+    },
+    {
+      "sceneId": "scene_28",
+      "sceneName": "回本执念",
+      "sceneOrder": 28,
+      "status": "active",
+      "file": "scene-28-breakeven-obsession.json"
+    },
+    {
+      "sceneId": "scene_29",
+      "sceneName": "解套执念",
+      "sceneOrder": 29,
+      "status": "active",
+      "file": "scene-29-unlock-obsession.json"
+    },
+    {
+      "sceneId": "scene_30",
+      "sceneName": "看对不敢买",
+      "sceneOrder": 30,
+      "status": "active",
+      "file": "scene-30-see-right-no-buy.json"
+    },
+    {
+      "sceneId": "scene_31",
+      "sceneName": "买后立刻后悔",
+      "sceneOrder": 31,
+      "status": "active",
+      "file": "scene-31-instant-regret.json"
+    },
+    {
+      "sceneId": "scene_32",
+      "sceneName": "频繁看账户",
+      "sceneOrder": 32,
+      "status": "active",
+      "file": "scene-32-account-checking.json"
+    },
+    {
+      "sceneId": "scene_33",
+      "sceneName": "频繁换股",
+      "sceneOrder": 33,
+      "status": "active",
+      "file": "scene-33-stock-hopping.json"
+    },
+    {
+      "sceneId": "scene_34",
+      "sceneName": "消息面交易",
+      "sceneOrder": 34,
+      "status": "active",
+      "file": "scene-34-news-trading.json"
+    },
+    {
+      "sceneId": "scene_35",
+      "sceneName": "恐惧持有",
+      "sceneOrder": 35,
+      "status": "active",
+      "file": "scene-35-fear-holding.json"
+    },
+    {
+      "sceneId": "scene_36",
+      "sceneName": "害怕认错",
+      "sceneOrder": 36,
+      "status": "active",
+      "file": "scene-36-fear-of-being-wrong.json"
     }
-  ]
+  ],
+  "legacySceneFiles": []
 }

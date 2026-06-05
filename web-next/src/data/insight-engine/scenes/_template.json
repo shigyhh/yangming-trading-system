@@ -1,20 +1,29 @@
 {
   "schemaVersion": 1,
-  "sceneId": "scene-XX-slug",
+  "sceneId": "scene_XX",
   "sceneName": "场景名",
   "sceneOrder": 0,
   "status": "draft",
-  "records": [
+  "mirrorId": "mirror-id",
+  "thief": "",
+  "items": [
     {
-      "sceneId": "scene-XX-slug",
-      "sceneName": "场景名",
-      "mirrorId": "mirror-id",
-      "intensity": 1,
-      "thought": "",
+      "id": "scene_XX_001",
+      "tradeMoment": "",
+      "os": "",
+      "hiddenThought": "",
       "reflection": "",
-      "thief": "",
-      "evidence": "",
-      "practice": ""
+      "intensity": 1
     }
-  ]
+  ],
+  "thiefExplain": [
+    ""
+  ],
+  "evidences": [
+    ""
+  ],
+  "practices": [
+    ""
+  ],
+  "coreStatement": ""
 }

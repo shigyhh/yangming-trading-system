@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "scene_17",
+  "sceneName": "止损后又涨",
+  "sceneOrder": 17,
+  "status": "active",
+  "mirrorId": "stop_loss_regret",
+  "thief": "悔 · 疑",
+  "items": [
+    {
+      "id": "scene_17_001",
+      "tradeMoment": "刚止损以后",
+      "os": "卖完就涨。",
+      "hiddenThought": "我是不是卖错了。",
+      "reflection": "最难受的不是止损，是止损以后它涨了。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_17_002",
+      "tradeMoment": "看着价格拉回时",
+      "os": "我就知道。",
+      "hiddenThought": "我本来没错。",
+      "reflection": "你开始用结果否定规则。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_17_003",
+      "tradeMoment": "看着继续上涨时",
+      "os": "白割了。",
+      "hiddenThought": "我又当韭菜了。",
+      "reflection": "你责怪的不是行情，你责怪的是自己。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_17_004",
+      "tradeMoment": "回看卖点时",
+      "os": "再等等就好了。",
+      "hiddenThought": "我太急了。",
+      "reflection": "你开始幻想另一个结果。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_17_005",
+      "tradeMoment": "看着突破前高时",
+      "os": "怎么偏偏今天。",
+      "hiddenThought": "为什么总是我。",
+      "reflection": "你开始觉得市场在针对你。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_17_006",
+      "tradeMoment": "看着涨幅扩大时",
+      "os": "我真服了。",
+      "hiddenThought": "我总是卖飞。",
+      "reflection": "这一刻，你开始攻击自己，而不是复盘自己。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_17_007",
+      "tradeMoment": "打开交割单时",
+      "os": "我割在最低点。",
+      "hiddenThought": "我是不是不会做。",
+      "reflection": "一次止损，你开始否定整个自己。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_17_008",
+      "tradeMoment": "再次想买回去时",
+      "os": "要不要追回来。",
+      "hiddenThought": "我不甘心。",
+      "reflection": "止损后最危险的，不是后悔，是追回去。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_17_009",
+      "tradeMoment": "看着别人还在持有时",
+      "os": "他们怎么没卖。",
+      "hiddenThought": "为什么总是我。",
+      "reflection": "真正刺痛你的，不是上涨，是比较。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_17_010",
+      "tradeMoment": "收盘以后",
+      "os": "下次不止损了。",
+      "hiddenThought": "止损根本没用。",
+      "reflection": "你开始怀疑的，不是这笔交易，是规则本身。",
+      "intensity": 5
+    }
+  ],
+  "thiefExplain": [
+    "悔，是不断停留在如果刚才。",
+    "疑，是开始怀疑规则、怀疑自己。"
+  ],
+  "evidences": [
+    "我看见自己不是因为止损难受，我是因为止损以后它涨了难受。",
+    "我真正放不下的，不是亏损，是那个如果不卖的结果。",
+    "我开始用结果评价规则。",
+    "我以为自己在复盘，其实我在后悔。",
+    "我终于看见，止损后最大的敌人不是市场，是追回去的冲动。"
+  ],
+  "practices": [
+    "止损后当天不追回。",
+    "记录一次按规则止损的证据。",
+    "不用后续走势评价当时决策。",
+    "写下：如果重来一次，我还会按规则止损吗？",
+    "练习一句话：规则的价值，不靠一笔交易证明。"
+  ],
+  "coreStatement": "最难受的不是止损。\n\n是止损以后，\n\n它涨了。"
+}

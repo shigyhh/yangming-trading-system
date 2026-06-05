@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "scene_20",
+  "sceneName": "尾盘冲动",
+  "sceneOrder": 20,
+  "status": "active",
+  "mirrorId": "close_impulse",
+  "thief": "急 · 贪",
+  "items": [
+    {
+      "id": "scene_20_001",
+      "tradeMoment": "临近收盘时",
+      "os": "今天总得买点。",
+      "hiddenThought": "不然白看一天。",
+      "reflection": "你开始为了有仓位而交易。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_20_002",
+      "tradeMoment": "尾盘突然拉升时",
+      "os": "再不上来不及了。",
+      "hiddenThought": "明天可能高开。",
+      "reflection": "你开始幻想明天，而不是判断今天。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_20_003",
+      "tradeMoment": "看着行情最后冲刺时",
+      "os": "搞一笔再说。",
+      "hiddenThought": "不能空着过夜。",
+      "reflection": "你不是在抓机会，你是在逃离空仓。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_20_004",
+      "tradeMoment": "收盘前几分钟",
+      "os": "不买有点亏。",
+      "hiddenThought": "今天不能空手。",
+      "reflection": "你开始把不交易当成损失。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_20_005",
+      "tradeMoment": "看着别人都在买时",
+      "os": "人家都进了。",
+      "hiddenThought": "就我没动。",
+      "reflection": "真正让你着急的，不是行情，是比较。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_20_006",
+      "tradeMoment": "收盘倒计时时",
+      "os": "先上车。",
+      "hiddenThought": "明天再说。",
+      "reflection": "很多冲动，都喜欢把问题留给明天。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_20_007",
+      "tradeMoment": "准备下单时",
+      "os": "错过今天又得等。",
+      "hiddenThought": "我受不了等待。",
+      "reflection": "你开始为了结束等待而交易。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_20_008",
+      "tradeMoment": "最后一分钟",
+      "os": "买了再说。",
+      "hiddenThought": "总比没买强。",
+      "reflection": "当你说“买了再说”，规则已经离场了。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_20_009",
+      "tradeMoment": "下单以后",
+      "os": "明天应该有戏。",
+      "hiddenThought": "希望别白买。",
+      "reflection": "你开始用希望支撑决定。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_20_010",
+      "tradeMoment": "收盘以后",
+      "os": "又是尾盘买的。",
+      "hiddenThought": "我还是没忍住。",
+      "reflection": "真正让你后悔的，不是尾盘，是冲动。",
+      "intensity": 5
+    }
+  ],
+  "thiefExplain": [
+    "急，是害怕等待。",
+    "贪，是总觉得还有最后一次机会。"
+  ],
+  "evidences": [
+    "我看见自己不是在抓机会，我是在结束焦虑。",
+    "我真正受不了的，不是空仓，是等待。",
+    "我开始为了交易而交易。",
+    "我以为自己在利用尾盘，其实我在逃离不安。",
+    "我终于看见，尾盘冲动来自害怕错过。"
+  ],
+  "practices": [
+    "收盘前十分钟不新增仓位。",
+    "尾盘想买时先写下理由。",
+    "问自己：如果明天不开盘，我还会买吗？",
+    "记录一次尾盘忍住没买的证据。",
+    "练习一句话：空仓过夜，不是失败。"
+  ],
+  "coreStatement": "你冲进去的，\n\n不是机会。\n\n你冲进去的是，\n\n对等待的不耐烦。"
+}

@@ -1,6 +1,6 @@
 "use client"
 
-import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react"
+import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import {
   createLivingMirrorGrowthRecord,
@@ -8,11 +8,43 @@ import {
   oneThoughtScenes,
 } from "@yangming/content/one-thought"
 
-import insightEvidences from "@/data/insight-engine/evidences.json"
 import insightMirrors from "@/data/insight-engine/mirrors.json"
-import insightPractices from "@/data/insight-engine/practices.json"
-import insightReflections from "@/data/insight-engine/reflections.json"
-import insightThoughts from "@/data/insight-engine/thoughts.json"
+import scene01Insight from "@/data/insight-engine/scenes/scene-01-chase-surge.json"
+import scene02Insight from "@/data/insight-engine/scenes/scene-02-missed.json"
+import scene03Insight from "@/data/insight-engine/scenes/scene-03-small-position.json"
+import scene04Insight from "@/data/insight-engine/scenes/scene-04-sold-too-early.json"
+import scene05Insight from "@/data/insight-engine/scenes/scene-05-sold-too-late.json"
+import scene06Insight from "@/data/insight-engine/scenes/scene-06-floating-gain-fear.json"
+import scene07Insight from "@/data/insight-engine/scenes/scene-07-unwilling-stop-loss.json"
+import scene08Insight from "@/data/insight-engine/scenes/scene-08-hold-loss.json"
+import scene09Insight from "@/data/insight-engine/scenes/scene-09-average-down.json"
+import scene10Insight from "@/data/insight-engine/scenes/scene-10-more-average-down.json"
+import scene11Insight from "@/data/insight-engine/scenes/scene-11-revenge-trade.json"
+import scene12Insight from "@/data/insight-engine/scenes/scene-12-overconfidence.json"
+import scene13Insight from "@/data/insight-engine/scenes/scene-13-heavy-position.json"
+import scene14Insight from "@/data/insight-engine/scenes/scene-14-all-in.json"
+import scene15Insight from "@/data/insight-engine/scenes/scene-15-empty-position.json"
+import scene16Insight from "@/data/insight-engine/scenes/scene-16-change-plan.json"
+import scene17Insight from "@/data/insight-engine/scenes/scene-17-stop-loss-regret.json"
+import scene18Insight from "@/data/insight-engine/scenes/scene-18-profit-regret.json"
+import scene19Insight from "@/data/insight-engine/scenes/scene-19-open-impulse.json"
+import scene20Insight from "@/data/insight-engine/scenes/scene-20-close-impulse.json"
+import scene21Insight from "@/data/insight-engine/scenes/scene-21-after-close-regret.json"
+import scene22Insight from "@/data/insight-engine/scenes/scene-22-avoid-review.json"
+import scene23Insight from "@/data/insight-engine/scenes/scene-23-news-trigger.json"
+import scene24Insight from "@/data/insight-engine/scenes/scene-24-follow-call.json"
+import scene25Insight from "@/data/insight-engine/scenes/scene-25-hot-theme.json"
+import scene26Insight from "@/data/insight-engine/scenes/scene-26-bottom-fishing.json"
+import scene27Insight from "@/data/insight-engine/scenes/scene-27-high-buy.json"
+import scene28Insight from "@/data/insight-engine/scenes/scene-28-breakeven-obsession.json"
+import scene29Insight from "@/data/insight-engine/scenes/scene-29-unlock-obsession.json"
+import scene30Insight from "@/data/insight-engine/scenes/scene-30-see-right-no-buy.json"
+import scene31Insight from "@/data/insight-engine/scenes/scene-31-instant-regret.json"
+import scene32Insight from "@/data/insight-engine/scenes/scene-32-account-checking.json"
+import scene33Insight from "@/data/insight-engine/scenes/scene-33-stock-hopping.json"
+import scene34Insight from "@/data/insight-engine/scenes/scene-34-news-trading.json"
+import scene35Insight from "@/data/insight-engine/scenes/scene-35-fear-holding.json"
+import scene36Insight from "@/data/insight-engine/scenes/scene-36-fear-of-being-wrong.json"
 
 import type { LakeMode } from "./HeartLakeEngine"
 
@@ -53,13 +85,39 @@ type InsightThoughtEntry = {
   mirrorId: string
   mirrorName: string
   scene: string
+  sceneName: string
   sourceScene: string
   intensity: number
   text: string
+  tradeMoment: string
+  reflection: string
+  thief: string
+  thiefExplain: string[]
+  evidence: string
+  practice: string
+  coreStatement: string
   complianceNote?: string
 }
 
-type InsightContentEntry = InsightThoughtEntry
+type InsightSceneItem = {
+  id: string
+  tradeMoment: string
+  os: string
+  reflection: string
+  intensity: number
+}
+
+type InsightSceneEntry = {
+  sceneId: string
+  sceneName: string
+  mirrorId: string
+  thief: string
+  items: InsightSceneItem[]
+  thiefExplain: string[]
+  evidences: string[]
+  practices: string[]
+  coreStatement: string
+}
 
 type InsightMirrorEntry = {
   mirrorId: string
@@ -163,11 +221,83 @@ const tradingSceneKeys: TradingScene[] = [
   "review",
 ]
 
-const insightThoughtLibrary = insightThoughts as InsightThoughtEntry[]
-const insightReflectionLibrary = insightReflections as InsightContentEntry[]
-const insightEvidenceLibrary = insightEvidences as InsightContentEntry[]
-const insightPracticeLibrary = insightPractices as InsightContentEntry[]
+const insightSceneLibrary = [
+  scene01Insight as InsightSceneEntry,
+  scene02Insight as InsightSceneEntry,
+  scene03Insight as InsightSceneEntry,
+  scene04Insight as InsightSceneEntry,
+  scene05Insight as InsightSceneEntry,
+  scene06Insight as InsightSceneEntry,
+  scene07Insight as InsightSceneEntry,
+  scene08Insight as InsightSceneEntry,
+  scene09Insight as InsightSceneEntry,
+  scene10Insight as InsightSceneEntry,
+  scene11Insight as InsightSceneEntry,
+  scene12Insight as InsightSceneEntry,
+  scene13Insight as InsightSceneEntry,
+  scene14Insight as InsightSceneEntry,
+  scene15Insight as InsightSceneEntry,
+  scene16Insight as InsightSceneEntry,
+  scene17Insight as InsightSceneEntry,
+  scene18Insight as InsightSceneEntry,
+  scene19Insight as InsightSceneEntry,
+  scene20Insight as InsightSceneEntry,
+  scene21Insight as InsightSceneEntry,
+  scene22Insight as InsightSceneEntry,
+  scene23Insight as InsightSceneEntry,
+  scene24Insight as InsightSceneEntry,
+  scene25Insight as InsightSceneEntry,
+  scene26Insight as InsightSceneEntry,
+  scene27Insight as InsightSceneEntry,
+  scene28Insight as InsightSceneEntry,
+  scene29Insight as InsightSceneEntry,
+  scene30Insight as InsightSceneEntry,
+  scene31Insight as InsightSceneEntry,
+  scene32Insight as InsightSceneEntry,
+  scene33Insight as InsightSceneEntry,
+  scene34Insight as InsightSceneEntry,
+  scene35Insight as InsightSceneEntry,
+  scene36Insight as InsightSceneEntry,
+]
 const insightMirrorLibrary = insightMirrors as InsightMirrorEntry[]
+const insightSceneKeyById: Record<string, TradingScene> = {
+  scene_01: "surge",
+  scene_02: "missed",
+  scene_03: "floatingGain",
+  scene_04: "floatingGain",
+  scene_05: "floatingGain",
+  scene_06: "floatingGain",
+  scene_07: "beforeStop",
+  scene_08: "floatingLoss",
+  scene_09: "floatingLoss",
+  scene_10: "floatingLoss",
+  scene_11: "lossStreak",
+  scene_12: "winStreak",
+  scene_13: "surge",
+  scene_14: "surge",
+  scene_15: "missed",
+  scene_16: "review",
+  scene_17: "beforeStop",
+  scene_18: "floatingGain",
+  scene_19: "surge",
+  scene_20: "surge",
+  scene_21: "review",
+  scene_22: "review",
+  scene_23: "crowdNoise",
+  scene_24: "crowdNoise",
+  scene_25: "crowdNoise",
+  scene_26: "plunge",
+  scene_27: "surge",
+  scene_28: "floatingLoss",
+  scene_29: "floatingLoss",
+  scene_30: "missed",
+  scene_31: "review",
+  scene_32: "review",
+  scene_33: "crowdNoise",
+  scene_34: "crowdNoise",
+  scene_35: "floatingGain",
+  scene_36: "beforeStop",
+}
 
 function normalizeTradingScene(scene: string): TradingScene {
   return tradingSceneKeys.includes(scene as TradingScene) ? (scene as TradingScene) : "surge"
@@ -176,6 +306,34 @@ function normalizeTradingScene(scene: string): TradingScene {
 function normalizeTradingIntensity(intensity: number): TradingIntensity {
   return [1, 2, 3, 4, 5].includes(intensity) ? (intensity as TradingIntensity) : 3
 }
+
+function sceneKeyForInsightScene(sceneId: string): TradingScene {
+  return insightSceneKeyById[sceneId] ?? "surge"
+}
+
+function mirrorNameForId(mirrorId: string) {
+  return insightMirrorLibrary.find((mirror) => mirror.mirrorId === mirrorId)?.mirrorName ?? mirrorId
+}
+
+const insightThoughtLibrary = insightSceneLibrary.flatMap((scene) =>
+  scene.items.map((item, index) => ({
+    id: item.id,
+    mirrorId: scene.mirrorId,
+    mirrorName: mirrorNameForId(scene.mirrorId),
+    scene: sceneKeyForInsightScene(scene.sceneId),
+    sceneName: scene.sceneName,
+    sourceScene: item.tradeMoment,
+    intensity: item.intensity,
+    text: item.os,
+    tradeMoment: item.tradeMoment,
+    reflection: item.reflection,
+    thief: scene.thief,
+    thiefExplain: scene.thiefExplain,
+    evidence: scene.evidences[index % scene.evidences.length] ?? scene.evidences[0] ?? "",
+    practice: scene.practices[index % scene.practices.length] ?? scene.practices[0] ?? "",
+    coreStatement: scene.coreStatement,
+  })),
+) satisfies InsightThoughtEntry[]
 
 function randomThoughtIndex(exceptIndex = -1) {
   if (insightThoughtLibrary.length <= 1) return 0
@@ -204,22 +362,6 @@ function splitInsightText(text: string) {
 
   if (current.trim()) lines.push(current.trim())
   return (lines.length > 0 ? lines : [text]).slice(0, 3)
-}
-
-function pickInsightContent(
-  library: InsightContentEntry[],
-  mirrorId: string,
-  scene: TradingScene,
-  intensity: TradingIntensity,
-) {
-  return (
-    library.find((item) => item.mirrorId === mirrorId && item.scene === scene && item.intensity === intensity) ??
-    library.find((item) => item.mirrorId === mirrorId && item.scene === scene) ??
-    library.find((item) => item.mirrorId === mirrorId && item.intensity === intensity) ??
-    library.find((item) => item.mirrorId === mirrorId) ??
-    library.find((item) => item.scene === scene) ??
-    library[0]
-  )
 }
 
 function mirrorDetailForKey(mirrorId: string) {
@@ -588,8 +730,39 @@ const mirrorLife: Record<
 
 const sceneFloatTags = oneThoughtScenes as SceneFloatTag[]
 
+const mirrorEchoKeyByInsightMirrorId: Record<string, string> = {
+  account_checking: "anxiety",
+  after_close_regret: "delay",
+  average_down: "hold",
+  all_in: "gamble",
+  avoid_review: "delay",
+  bottom_fishing: "gamble",
+  breakeven_obsession: "hold",
+  change_plan: "hesitate",
+  close_impulse: "chase",
+  empty_position: "anxiety",
+  follow_call: "herd",
+  heavy_position: "gamble",
+  hot_theme: "herd",
+  high_buy: "chase",
+  instant_regret: "anxiety",
+  news_trigger: "herd",
+  news_trading: "herd",
+  open_impulse: "chase",
+  overconfidence: "gamble",
+  profit_regret: "fantasy",
+  revenge_trade: "gamble",
+  see_right_no_buy: "hesitate",
+  stop_loss_regret: "hesitate",
+  stock_hopping: "anxiety",
+  fear_holding: "anxiety",
+  fear_of_being_wrong: "hold",
+  unlock_obsession: "hold",
+}
+
 function mirrorForKey(mirrorKey: string) {
-  return mirrorEchoes.find((mirror) => mirror.key === mirrorKey) ?? mirrorEchoes[0]
+  const mirrorEchoKey = mirrorEchoKeyByInsightMirrorId[mirrorKey] ?? mirrorKey
+  return mirrorEchoes.find((mirror) => mirror.key === mirrorEchoKey) ?? mirrorEchoes[0]
 }
 
 function modeForStage(stage: Stage): LakeMode {
@@ -642,10 +815,6 @@ export default function ZhaoxinRitualFlow({
   const mirrorStageTimerRefs = useRef<number[]>([])
   const revealTimerRefs = useRef<number[]>([])
   const liangzhiHoldTimerRef = useRef<number | null>(null)
-  const sceneDrivenMirror = useMemo(
-    () => getSceneDrivenMirror({ sceneKey: selectedScene, intensity: selectedIntensity }),
-    [selectedIntensity, selectedScene],
-  )
   const previewMirror = mirrorForKey(previewMirrorId)
   const selectedMirror = mirrorForKey(selectedMirrorId)
   const selectedMirrorDetail = mirrorDetailForKey(selectedMirrorId)
@@ -657,49 +826,48 @@ export default function ZhaoxinRitualFlow({
       mirrorId: currentThoughtEntry.mirrorId,
       mirrorName: currentThoughtEntry.mirrorName,
       sceneKey: normalizeTradingScene(currentThoughtEntry.scene),
+      sceneName: currentThoughtEntry.sceneName,
       sceneLabel: currentThoughtEntry.sourceScene,
       intensity: normalizeTradingIntensity(currentThoughtEntry.intensity),
       text: currentThoughtEntry.text,
+      tradeMoment: currentThoughtEntry.tradeMoment,
+      reflection: currentThoughtEntry.reflection,
+      thief: currentThoughtEntry.thief,
+      thiefExplain: currentThoughtEntry.thiefExplain,
+      evidence: currentThoughtEntry.evidence,
+      practice: currentThoughtEntry.practice,
+      coreStatement: currentThoughtEntry.coreStatement,
       complianceNote: currentThoughtEntry.complianceNote,
     }),
     [currentThoughtEntry],
   )
   const selectedContent = useMemo(() => {
-    const reflection = pickInsightContent(
-      insightReflectionLibrary,
-      selectedMirrorId,
-      selectedScene,
-      selectedIntensity,
-    )
-    const evidence = pickInsightContent(insightEvidenceLibrary, selectedMirrorId, selectedScene, selectedIntensity)
-    const practice = pickInsightContent(insightPracticeLibrary, selectedMirrorId, selectedScene, selectedIntensity)
-
     return {
       mirrorKey: selectedMirrorId,
       sceneKey: selectedScene,
-      sceneLabel: selectedSceneDetail.label,
+      sceneLabel: selectedThought.tradeMoment,
       intensity: selectedIntensity,
       reflection: {
-        text: reflection.text,
-        lines: splitInsightText(reflection.text),
+        text: selectedThought.reflection,
+        lines: splitInsightText(selectedThought.reflection),
       },
       evidence: {
-        text: evidence.text,
+        text: selectedThought.evidence,
       },
       practice: {
-        text: practice.text,
+        text: selectedThought.practice,
       },
-      complianceNote: reflection.complianceNote ?? evidence.complianceNote ?? practice.complianceNote,
+      complianceNote: selectedThought.complianceNote,
     }
-  }, [selectedIntensity, selectedMirrorId, selectedScene, selectedSceneDetail.label])
+  }, [selectedIntensity, selectedMirrorId, selectedScene, selectedThought])
   const selectedInsightBase = mirrorInsights[selectedMirror.key] ?? mirrorInsights.chase
   const selectedInsight = {
     ...selectedInsightBase,
     mirrorName: selectedMirrorDetail.mirrorName ?? selectedInsightBase.mirrorName,
     thought: selectedThought.text,
     reflection: selectedContent.reflection.lines,
-    thief: selectedMirrorDetail.thief ?? selectedMirror.thief,
-    thiefExplain: selectedMirrorDetail.thiefExplain ?? selectedInsightBase.thiefExplain,
+    thief: selectedThought.thief || selectedMirrorDetail.thief || selectedMirror.thief,
+    thiefExplain: selectedThought.thiefExplain.length > 0 ? selectedThought.thiefExplain : selectedMirrorDetail.thiefExplain ?? selectedInsightBase.thiefExplain,
     evidence: selectedContent.evidence.text,
     practice: selectedContent.practice.text,
   }
@@ -769,6 +937,7 @@ export default function ZhaoxinRitualFlow({
     (mirror: MirrorEcho) => {
       if (stage !== "mirrors" || isMirrorAbsorbing) return
 
+      setIsRevealPaused(false)
       setSelectedMirrorId(mirror.key)
       setPreviewMirrorId(mirror.key)
       setIsMirrorAbsorbing(true)
@@ -786,6 +955,7 @@ export default function ZhaoxinRitualFlow({
       const focusDuration = Math.max(1180, Math.min(1480, absorbDuration + 420))
 
       absorbTimerRef.current = window.setTimeout(() => {
+        setIsRevealPaused(false)
         setStage("thief")
         setIsMirrorAbsorbing(false)
         setRevealStep("thought")
@@ -958,11 +1128,22 @@ export default function ZhaoxinRitualFlow({
     setSelectedMirrorId(mirror.key)
     setPreviewMirrorId(mirror.key)
     setMirrorsCanInteract(false)
+    setIsRevealPaused(false)
     setRevealStep("idle")
     setGrowthRecord(null)
     onRipple?.()
     onLakeModeChange?.(mirror.lakeMode)
     setStage("mirrors")
+  }
+
+  const pauseReveal = () => {
+    if (stage === "thief" && revealStep !== "thought") {
+      setIsRevealPaused(true)
+    }
+  }
+
+  const resumeReveal = () => {
+    setIsRevealPaused(false)
   }
 
   const clearLiangzhiHold = () => {
@@ -1063,13 +1244,18 @@ export default function ZhaoxinRitualFlow({
 
       <div
         className={`zhaoxin-copy is-${stage} is-reveal-${revealStep}`}
-        onPointerEnter={() => setIsRevealPaused(true)}
-        onPointerLeave={() => setIsRevealPaused(false)}
+        onPointerEnter={pauseReveal}
+        onPointerLeave={resumeReveal}
       >
         <div
           key={`${stage}-${stage === "scene" ? selectedSceneDetail.key : stage === "mirrors" ? previewMirrorId : revealStep}`}
           className="zhaoxin-copy-inner"
         >
+          {stage === "thought" ? (
+            <div className="thought-stage-sign" aria-label="起念时刻">
+              <strong>{selectedThought.tradeMoment}</strong>
+            </div>
+          ) : null}
           {stage === "thief" && revealStep === "thief" ? (
             <h1 className="thief-title">
               <span className="thief-prefix">心贼</span>
@@ -1114,9 +1300,7 @@ export default function ZhaoxinRitualFlow({
 
       {stage === "mirrors" ? (
         <div
-          className={`mirror-echo-field ${isMirrorAbsorbing ? "is-absorbing" : ""} ${
-            mirrorsCanInteract ? "is-hint-visible" : ""
-          }`}
+          className={`mirror-echo-field ${isMirrorAbsorbing ? "is-absorbing" : ""}`}
           aria-label="九镜隐现"
         >
           {mirrorEchoes.map((mirror) => {
@@ -1137,9 +1321,6 @@ export default function ZhaoxinRitualFlow({
               </div>
             )
           })}
-          <p className="mirror-touch-hint">
-            {mirrorsCanInteract ? "那一句一念，正在照亮最贴近的一面心镜。" : "九镜从湖面远处浮现。"}
-          </p>
         </div>
       ) : null}
 
@@ -1158,8 +1339,8 @@ export default function ZhaoxinRitualFlow({
             type="button"
             className="ritual-next is-thought-confirm"
             onClick={confirmThought}
-            onPointerEnter={() => setIsRevealPaused(true)}
-            onPointerLeave={() => setIsRevealPaused(false)}
+            onPointerEnter={pauseReveal}
+            onPointerLeave={resumeReveal}
           >
             照见此念
           </button>
@@ -1342,11 +1523,37 @@ export default function ZhaoxinRitualFlow({
         }
 
         .zhaoxin-copy.is-thought {
-          top: 33.5%;
+          top: 30.6%;
           width: min(42rem, calc(100vw - 2rem));
+          isolation: isolate;
+        }
+
+        .zhaoxin-copy.is-thought::before {
+          content: "";
+          position: absolute;
+          left: 50%;
+          top: clamp(-10rem, -16svh, -6rem);
+          z-index: -1;
+          width: min(86vw, 54rem);
+          height: min(56svh, 34rem);
+          transform: translate(-50%, 0);
+          border-radius: 43% 57% 52% 48% / 58% 42% 56% 44%;
+          background:
+            radial-gradient(ellipse 62% 72% at 49% 44%, rgba(137, 169, 174, 0.12), rgba(77, 121, 130, 0.066) 34%, rgba(15, 44, 52, 0.026) 62%, transparent 82%),
+            radial-gradient(ellipse 38% 64% at 40% 34%, rgba(200, 222, 218, 0.05), transparent 68%),
+            radial-gradient(ellipse 34% 58% at 64% 58%, rgba(65, 112, 122, 0.045), transparent 72%),
+            radial-gradient(ellipse 74% 34% at 50% 80%, rgba(26, 68, 78, 0.04), transparent 76%);
+          -webkit-mask-image: radial-gradient(ellipse 72% 78% at 50% 50%, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.66) 46%, rgba(0, 0, 0, 0.24) 72%, transparent 100%);
+          mask-image: radial-gradient(ellipse 72% 78% at 50% 50%, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.66) 46%, rgba(0, 0, 0, 0.24) 72%, transparent 100%);
+          clip-path: polygon(9% 5%, 78% 0%, 96% 34%, 88% 76%, 62% 100%, 18% 91%, 0% 48%);
+          filter: blur(30px);
+          opacity: 0.58;
+          pointer-events: none;
         }
 
         .zhaoxin-copy.is-thought .zhaoxin-copy-inner {
+          position: relative;
+          z-index: 1;
           animation: sceneThoughtRise 1800ms cubic-bezier(0.16, 1, 0.3, 1) both;
         }
 
@@ -1361,6 +1568,26 @@ export default function ZhaoxinRitualFlow({
           text-shadow:
             0 0 28px rgba(216, 183, 111, 0.16),
             0 20px 64px rgba(0, 0, 0, 0.82);
+        }
+
+        .thought-stage-sign {
+          margin-bottom: clamp(0.75rem, 1.65svh, 1.15rem);
+          font-family: var(--font-serif, "Songti SC", serif);
+          color: rgba(216, 183, 111, 0.6);
+          text-align: center;
+          text-shadow:
+            0 0 22px rgba(216, 183, 111, 0.12),
+            0 18px 48px rgba(0, 0, 0, 0.8);
+        }
+
+        .thought-stage-sign strong {
+          display: block;
+          font-size: clamp(0.92rem, 1.5vw, 1.16rem);
+          font-weight: 400;
+          line-height: 1.5;
+          letter-spacing: 0.18em;
+          text-indent: 0.18em;
+          color: rgba(232, 204, 132, 0.66);
         }
 
         .scene-float-field {
@@ -1966,32 +2193,6 @@ export default function ZhaoxinRitualFlow({
 
         .mirror-echo-field.is-absorbing .mirror-echo:not(.is-selected) {
           animation: mirrorEchoSleep 720ms ease forwards;
-        }
-
-        .mirror-touch-hint {
-          position: absolute;
-          left: 50%;
-          bottom: clamp(5.8rem, 13vh, 7.8rem);
-          z-index: 8;
-          width: max-content;
-          max-width: calc(100vw - 2rem);
-          margin: 0;
-          transform: translateX(-50%) translateY(8px);
-          color: rgba(232, 228, 210, 0.34);
-          font-size: clamp(0.72rem, 1.4vw, 0.86rem);
-          line-height: 1.8;
-          letter-spacing: 0.18em;
-          text-align: center;
-          opacity: 0;
-          transition:
-            opacity 680ms ease,
-            transform 680ms ease;
-          pointer-events: none;
-        }
-
-        .mirror-echo-field.is-hint-visible .mirror-touch-hint {
-          opacity: 1;
-          transform: translateX(-50%) translateY(0);
         }
 
         .zhaoxin-ritual-flow.is-focusing .zhaoxin-copy.is-mirrors {
@@ -3366,7 +3567,17 @@ export default function ZhaoxinRitualFlow({
           }
 
           .zhaoxin-copy.is-thought {
-            top: 35%;
+            top: 31%;
+          }
+
+          .thought-stage-sign {
+            margin-bottom: 0.82rem;
+          }
+
+          .thought-stage-sign strong {
+            font-size: clamp(0.92rem, 4.4vw, 1.12rem);
+            letter-spacing: 0.28em;
+            text-indent: 0.28em;
           }
 
           .zhaoxin-copy h1 {

@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "scene_28",
+  "sceneName": "回本执念",
+  "sceneOrder": 28,
+  "status": "active",
+  "mirrorId": "breakeven_obsession",
+  "thief": "执 · 痴",
+  "items": [
+    {
+      "id": "scene_28_001",
+      "tradeMoment": "账户深套以后",
+      "os": "回本我就走。",
+      "hiddenThought": "我不想亏钱离场。",
+      "reflection": "你等的不是机会，你等的是不用承认亏损。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_28_002",
+      "tradeMoment": "看着价格反弹时",
+      "os": "快到了。",
+      "hiddenThought": "终于有希望了。",
+      "reflection": "你开始把回本当成目标，而不是规则。",
+      "intensity": 3
+    },
+    {
+      "id": "scene_28_003",
+      "tradeMoment": "离成本越来越近时",
+      "os": "再等等。",
+      "hiddenThought": "马上回本了。",
+      "reflection": "很多人不是死在亏损里，而是死在快回本的时候。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_28_004",
+      "tradeMoment": "反弹途中时",
+      "os": "回本再卖。",
+      "hiddenThought": "不能亏着走。",
+      "reflection": "你已经不在交易，你在和成本较劲。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_28_005",
+      "tradeMoment": "价格再次回落时",
+      "os": "怎么又下来了。",
+      "hiddenThought": "就差一点。",
+      "reflection": "你最痛苦的不是亏损，是差一点。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_28_006",
+      "tradeMoment": "看着成本线时",
+      "os": "先回本再说。",
+      "hiddenThought": "我不能输。",
+      "reflection": "你真正放不下的，不是钱，是输赢。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_28_007",
+      "tradeMoment": "本来能止损时",
+      "os": "再给一次机会。",
+      "hiddenThought": "回本就结束。",
+      "reflection": "回本执念最擅长的，就是让人无限延期。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_28_008",
+      "tradeMoment": "已经扛了很久时",
+      "os": "都等这么久了。",
+      "hiddenThought": "不能白等。",
+      "reflection": "你开始用过去的等待，证明继续等待。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_28_009",
+      "tradeMoment": "账户继续被套时",
+      "os": "我就想回本。",
+      "hiddenThought": "其他都不重要。",
+      "reflection": "当回本变成执念，风险已经看不见了。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_28_010",
+      "tradeMoment": "关软件之前",
+      "os": "回本我一定走。",
+      "hiddenThought": "这次说真的。",
+      "reflection": "你已经说过很多次：回本我就走。",
+      "intensity": 4
+    }
+  ],
+  "thiefExplain": [
+    "执，是把回本变成唯一目标。",
+    "痴，是把希望当成未来。"
+  ],
+  "evidences": [
+    "我看见自己不是在等机会，我是在等回本。",
+    "我真正放不下的，不是仓位，是亏损。",
+    "我开始用成本线代替规则线。",
+    "我以为自己在坚持，其实我在执着。",
+    "我终于看见，让我停不下来的不是行情，是不甘心。"
+  ],
+  "practices": [
+    "不用成本线决定交易。",
+    "问自己：如果今天没有持仓，我会买吗？",
+    "重新评估风险，而不是成本。",
+    "记录一次放弃回本执念的证据。",
+    "练习一句话：市场不认识我的成本。"
+  ],
+  "coreStatement": "你等的不是回本。\n\n你等的是，\n\n不用承认自己错了。"
+}

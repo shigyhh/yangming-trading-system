@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "scene_21",
+  "sceneName": "收盘后后悔",
+  "sceneOrder": 21,
+  "status": "active",
+  "mirrorId": "after_close_regret",
+  "thief": "悔 · 执",
+  "items": [
+    {
+      "id": "scene_21_001",
+      "tradeMoment": "收盘以后打开账户时",
+      "os": "我今天到底在干嘛。",
+      "hiddenThought": "我又搞砸了。",
+      "reflection": "真正让你难受的，不是行情，是自己。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_21_002",
+      "tradeMoment": "回看买点时",
+      "os": "当时怎么没买。",
+      "hiddenThought": "我又犹豫了。",
+      "reflection": "你责怪的不是机会，你责怪的是那个没敢动的自己。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_21_003",
+      "tradeMoment": "回看卖点时",
+      "os": "当时怎么卖了。",
+      "hiddenThought": "我又卖早了。",
+      "reflection": "后悔最大的特点，就是永远知道答案。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_21_004",
+      "tradeMoment": "看着当天走势时",
+      "os": "我本来能赚。",
+      "hiddenThought": "都怪我自己。",
+      "reflection": "你开始用结果惩罚自己。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_21_005",
+      "tradeMoment": "翻看成交记录时",
+      "os": "这笔根本不该做。",
+      "hiddenThought": "我怎么又这样。",
+      "reflection": "最难受的不是亏损，是重复同样的错误。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_21_006",
+      "tradeMoment": "看到错过的大行情时",
+      "os": "白看一天。",
+      "hiddenThought": "我又没抓住。",
+      "reflection": "你觉得浪费的不是时间，是机会。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_21_007",
+      "tradeMoment": "看着账户余额时",
+      "os": "又白忙活。",
+      "hiddenThought": "今天毫无意义。",
+      "reflection": "你开始用盈亏评价自己的一天。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_21_008",
+      "tradeMoment": "复盘过程中",
+      "os": "早知道就好了。",
+      "hiddenThought": "为什么没想到。",
+      "reflection": "后悔最擅长做的，就是制造另一个完美结果。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_21_009",
+      "tradeMoment": "关软件之前",
+      "os": "下次一定。",
+      "hiddenThought": "希望别再犯。",
+      "reflection": "你已经说过很多次：下次一定。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_21_010",
+      "tradeMoment": "睡前回想交易时",
+      "os": "真不该。",
+      "hiddenThought": "我放不下。",
+      "reflection": "真正让你睡不着的，不是交易，是执念。",
+      "intensity": 5
+    }
+  ],
+  "thiefExplain": [
+    "悔，是不断停留在如果当时。",
+    "执，是事情已经结束，却始终不肯放下。"
+  ],
+  "evidences": [
+    "我看见自己不是在复盘，我是在后悔。",
+    "我真正放不下的，不是行情，是结果。",
+    "我一直在想如果当时，却忽略了当时的自己。",
+    "我开始用结果评价过程。",
+    "我终于看见，让我痛苦的不是交易，是执念。"
+  ],
+  "practices": [
+    "复盘时记录事实，不记录幻想。",
+    "不用收盘后的走势评价盘中的决定。",
+    "写下：当时我为什么这样做？",
+    "接受那个信息不完整的自己。",
+    "练习一句话：复盘是为了成长，不是为了后悔。"
+  ],
+  "coreStatement": "收盘后最折磨人的，\n\n不是亏损。\n\n而是脑子里，\n\n永远有另一个更好的结果。"
+}

@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "scene_31",
+  "sceneName": "买后立刻后悔",
+  "sceneOrder": 31,
+  "status": "active",
+  "mirrorId": "instant_regret",
+  "thief": "疑 · 怯",
+  "items": [
+    {
+      "id": "scene_31_001",
+      "tradeMoment": "刚买进去以后",
+      "os": "我买它干嘛。",
+      "hiddenThought": "好像不对。",
+      "reflection": "你不是买完才后悔，你是买之前就不确定。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_31_002",
+      "tradeMoment": "下单刚成交时",
+      "os": "怎么突然慌了。",
+      "hiddenThought": "我是不是冲动了。",
+      "reflection": "真正让你难受的，不是行情，是自己的不确定。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_31_003",
+      "tradeMoment": "看着价格波动时",
+      "os": "不会买错了吧。",
+      "hiddenThought": "我又乱来了。",
+      "reflection": "你开始用恐惧审判刚刚的自己。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_31_004",
+      "tradeMoment": "买入后一分钟",
+      "os": "要不先出来。",
+      "hiddenThought": "亏一点算了。",
+      "reflection": "买前怕错过，买后怕犯错。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_31_005",
+      "tradeMoment": "看着盘口变化时",
+      "os": "感觉不太对。",
+      "hiddenThought": "我想撤退。",
+      "reflection": "你不是在分析行情，你在寻找逃跑理由。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_31_006",
+      "tradeMoment": "价格小幅回落时",
+      "os": "完了。",
+      "hiddenThought": "果然买错。",
+      "reflection": "你把一分钟波动，当成最终答案。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_31_007",
+      "tradeMoment": "看着账户浮亏时",
+      "os": "我怎么又这样。",
+      "hiddenThought": "我总买错。",
+      "reflection": "一笔交易，你开始否定整个自己。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_31_008",
+      "tradeMoment": "看着价格又拉回去时",
+      "os": "还好没卖。",
+      "hiddenThought": "吓死我了。",
+      "reflection": "你的情绪比行情波动得更快。",
+      "intensity": 3
+    },
+    {
+      "id": "scene_31_009",
+      "tradeMoment": "回看买点时",
+      "os": "当时到底怎么想的。",
+      "hiddenThought": "我自己都说不清。",
+      "reflection": "很多后悔，来自没有明确理由就下单。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_31_010",
+      "tradeMoment": "收盘以后",
+      "os": "明天再看吧。",
+      "hiddenThought": "希望没问题。",
+      "reflection": "真正的问题不是买错，而是从来没有真正确信过。",
+      "intensity": 4
+    }
+  ],
+  "thiefExplain": [
+    "疑，是总在怀疑自己的判断。",
+    "怯，是害怕承担判断错误的后果。"
+  ],
+  "evidences": [
+    "我看见自己不是买错了，我是不相信自己。",
+    "我真正害怕的，不是亏损，是证明自己错了。",
+    "我买前没有信心，买后自然没有安全感。",
+    "我以为自己在分析，其实我在恐惧。",
+    "我终于看见，让我痛苦的不是交易，是怀疑。"
+  ],
+  "practices": [
+    "下单前写下明确买入理由。",
+    "买入后30分钟内不重复判断。",
+    "不用一分钟波动评价交易。",
+    "记录一次按计划持有的证据。",
+    "练习一句话：怀疑不能代替规则。"
+  ],
+  "coreStatement": "买后立刻后悔。\n\n往往不是因为买错。\n\n而是因为，\n\n你从来没有真正相信过自己。"
+}

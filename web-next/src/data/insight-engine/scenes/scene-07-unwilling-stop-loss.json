@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "scene_07",
+  "sceneName": "不愿止损",
+  "sceneOrder": 7,
+  "status": "active",
+  "mirrorId": "hold",
+  "thief": "痴 · 执",
+  "items": [
+    {
+      "id": "scene_07_001",
+      "tradeMoment": "跌到止损位时",
+      "os": "再等等。",
+      "hiddenThought": "还没到最坏的时候。",
+      "reflection": "你等的不是反弹，你等的是不用认错。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_07_002",
+      "tradeMoment": "准备点击卖出时",
+      "os": "现在卖就真亏了。",
+      "hiddenThought": "我不想亏。",
+      "reflection": "你怕的不是亏损，你怕的是亏损变成事实。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_07_003",
+      "tradeMoment": "看着继续下跌时",
+      "os": "还能回来。",
+      "hiddenThought": "应该还有机会。",
+      "reflection": "你已经开始把希望当判断。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_07_004",
+      "tradeMoment": "再次跌破支撑时",
+      "os": "先不卖。",
+      "hiddenThought": "万一拉回去呢。",
+      "reflection": "你不是看好，你是不舍得。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_07_005",
+      "tradeMoment": "打开账户时",
+      "os": "再给它一次机会。",
+      "hiddenThought": "也许这次不一样。",
+      "reflection": "你给它机会，其实是在给自己逃避认错的机会。",
+      "intensity": 3
+    },
+    {
+      "id": "scene_07_006",
+      "tradeMoment": "看着账户越来越绿时",
+      "os": "我不信这么倒霉。",
+      "hiddenThought": "不可能这么差。",
+      "reflection": "你开始和现实讨价还价。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_07_007",
+      "tradeMoment": "价格继续创新低时",
+      "os": "反弹一下我就走。",
+      "hiddenThought": "给我一次机会。",
+      "reflection": "你一直在等一个体面离场的理由。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_07_008",
+      "tradeMoment": "已经明显走坏时",
+      "os": "再看一会儿。",
+      "hiddenThought": "我还没准备好。",
+      "reflection": "规则已经说该走，情绪还不肯走。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_07_009",
+      "tradeMoment": "亏损越来越大时",
+      "os": "先扛着。",
+      "hiddenThought": "总会回来。",
+      "reflection": "你扛的不是仓位，你扛的是不甘心。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_07_010",
+      "tradeMoment": "关软件之前",
+      "os": "不急。",
+      "hiddenThought": "明天再说。",
+      "reflection": "你把今天的问题交给了明天。",
+      "intensity": 3
+    }
+  ],
+  "thiefExplain": [
+    "痴，是把希望当判断。",
+    "执，是已经知道错了，却还不肯放手。"
+  ],
+  "evidences": [
+    "我看见自己不是在等反弹，我是在等市场证明我没错。",
+    "我真正舍不得的，不是仓位，是面子。",
+    "规则已经看见风险，情绪却还想继续幻想。",
+    "我一直想避免亏损，最后却放大了亏损。",
+    "我终于看见，让我停不下来的不是市场，是执念。"
+  ],
+  "practices": [
+    "触发止损后，先执行，再解释。",
+    "今天记录一次按规则离场。",
+    "写下：我舍不得什么？",
+    "允许自己看错，不允许自己逃避。",
+    "练习一句话：错了就认，认了就走。"
+  ],
+  "coreStatement": "你等的不是反弹。\n\n你等的是，\n\n不用承认自己错了。"
+}

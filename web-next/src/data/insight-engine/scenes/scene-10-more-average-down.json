@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "sceneId": "scene_10",
+  "sceneName": "越跌越补",
+  "sceneOrder": 10,
+  "status": "active",
+  "mirrorId": "average_down",
+  "thief": "痴 · 执 · 贪",
+  "items": [
+    {
+      "id": "scene_10_001",
+      "tradeMoment": "再次下跌以后",
+      "os": "再补一点。",
+      "hiddenThought": "这样成本就下来了。",
+      "reflection": "你补的不是仓位，你补的是希望。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_10_002",
+      "tradeMoment": "看着账户继续亏损时",
+      "os": "跌这么多了。",
+      "hiddenThought": "应该差不多到底了。",
+      "reflection": "你开始把跌得多，当成上涨的理由。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_10_003",
+      "tradeMoment": "再次准备加仓时",
+      "os": "这里肯定有支撑。",
+      "hiddenThought": "不可能一直跌。",
+      "reflection": "你已经开始寻找坚持的理由，而不是寻找事实。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_10_004",
+      "tradeMoment": "看到价格继续下跌时",
+      "os": "再买一点。",
+      "hiddenThought": "拉一下就回本。",
+      "reflection": "你盯着的已经不是行情，是成本线。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_10_005",
+      "tradeMoment": "看着成本越来越低时",
+      "os": "这下差不多了。",
+      "hiddenThought": "再跌也有限。",
+      "reflection": "每一次补仓，你都在告诉自己同样的话。",
+      "intensity": 4
+    },
+    {
+      "id": "scene_10_006",
+      "tradeMoment": "再次加仓以后",
+      "os": "反正都这样了。",
+      "hiddenThought": "只能补了。",
+      "reflection": "当你开始说“反正”，规则已经离开了。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_10_007",
+      "tradeMoment": "看着仓位越来越重时",
+      "os": "我再摊一下。",
+      "hiddenThought": "总会回来。",
+      "reflection": "你不是在重新判断，你是在保护原来的判断。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_10_008",
+      "tradeMoment": "跌破预期位置时",
+      "os": "再补最后一次。",
+      "hiddenThought": "这次真是最后一次。",
+      "reflection": "很多人失控，都是从“最后一次”开始的。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_10_009",
+      "tradeMoment": "已经严重亏损以后",
+      "os": "这里应该到底了。",
+      "hiddenThought": "我不能错。",
+      "reflection": "你越来越想证明自己，而不是保护自己。",
+      "intensity": 5
+    },
+    {
+      "id": "scene_10_010",
+      "tradeMoment": "关软件之前",
+      "os": "总会回来的。",
+      "hiddenThought": "我还没输。",
+      "reflection": "你已经把希望当成了判断。",
+      "intensity": 4
+    }
+  ],
+  "thiefExplain": [
+    "痴，是把希望当事实。",
+    "执，是已经错了，却还想证明自己没错。",
+    "贪，是想用更大的仓位把亏损一次补回来。"
+  ],
+  "evidences": [
+    "我看见自己不是在补仓，我是在补希望。",
+    "我真正舍不得的，不是资金，是原来的判断。",
+    "我一直想降低成本，却没有重新评估风险。",
+    "我以为自己在修正交易，其实我在保护执念。",
+    "我终于看见，让我继续买的不是机会，是舍不得认错。"
+  ],
+  "practices": [
+    "补仓前重新写一次进场理由。",
+    "问自己：如果今天没有持仓，我还会买吗？",
+    "记录一次想补仓却没有补的时刻。",
+    "把注意力从成本线移回规则线。",
+    "练习一句话：市场不认识我的成本。"
+  ],
+  "coreStatement": "你补的不是仓位。\n\n你补的是，\n\n不肯认错的希望。"
+}

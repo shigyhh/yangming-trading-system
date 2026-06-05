@@ -134,7 +134,7 @@ export function HeartMoonNineMirrorsScene({ onComplete, onLakeModeChange, onRipp
 
         .heart-moon-nine-mirrors-scene :global(.heart-moon-lake-engine) {
           z-index: 2;
-          mix-blend-mode: screen;
+          mix-blend-mode: normal;
           pointer-events: auto;
         }
 
