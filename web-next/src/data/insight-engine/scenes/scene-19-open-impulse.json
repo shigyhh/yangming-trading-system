@@ -9,15 +9,15 @@
   "items": [
     {
       "id": "scene_19_001",
-      "tradeMoment": "刚开盘看到异动时",
-      "os": "卧槽，动了。",
+      "tradeMoment": "开盘刚跳出异动时",
+      "os": "我次奥，动了。",
       "hiddenThought": "我不能错过。",
       "reflection": "开盘最危险的不是波动，是冲动。",
       "intensity": 4
     },
     {
       "id": "scene_19_002",
-      "tradeMoment": "开盘第一根拉升时",
+      "tradeMoment": "第一根K线猛拉时",
       "os": "先进去再说。",
       "hiddenThought": "晚了就没了。",
       "reflection": "规则还没说话，情绪已经下单了。",
@@ -25,7 +25,7 @@
     },
     {
       "id": "scene_19_003",
-      "tradeMoment": "看到涨幅迅速扩大时",
+      "tradeMoment": "涨幅开局就放大时",
       "os": "再不上来不及了。",
       "hiddenThought": "我又要踏空。",
       "reflection": "你追的不是机会，你是在逃离后悔。",
@@ -33,7 +33,7 @@
     },
     {
       "id": "scene_19_004",
-      "tradeMoment": "看着盘口跳动时",
+      "tradeMoment": "盘口数字飞快跳动时",
       "os": "干了。",
       "hiddenThought": "先抢进去。",
       "reflection": "很多错误，不是因为看错，而是因为太快。",
@@ -41,7 +41,7 @@
     },
     {
       "id": "scene_19_005",
-      "tradeMoment": "开盘几分钟后",
+      "tradeMoment": "开盘几分钟就坐不住时",
       "os": "今天肯定有戏。",
       "hiddenThought": "机会来了。",
       "reflection": "你开始把希望当判断。",
@@ -49,7 +49,7 @@
     },
     {
       "id": "scene_19_006",
-      "tradeMoment": "看到别人已经进场时",
+      "tradeMoment": "看到别人已进场时",
       "os": "人家都上了。",
       "hiddenThought": "我不能落后。",
       "reflection": "真正让你急的，不是行情，是比较。",
@@ -57,7 +57,7 @@
     },
     {
       "id": "scene_19_007",
-      "tradeMoment": "下单前最后几秒",
+      "tradeMoment": "下单前最后一秒时",
       "os": "不管了。",
       "hiddenThought": "先买再说。",
       "reflection": "当你说“不管了”的时候，纪律已经离场了。",
@@ -65,7 +65,7 @@
     },
     {
       "id": "scene_19_008",
-      "tradeMoment": "买入以后",
+      "tradeMoment": "刚买进去就松口气时",
       "os": "应该没问题。",
       "hiddenThought": "我赌对了。",
       "reflection": "冲动最大的特点，就是事后替自己找理由。",
@@ -73,7 +73,7 @@
     },
     {
       "id": "scene_19_009",
-      "tradeMoment": "回看买点时",
+      "tradeMoment": "回看开盘买点时",
       "os": "我刚才怎么进的。",
       "hiddenThought": "太快了。",
       "reflection": "你开始意识到，自己不是按计划买的。",
@@ -81,7 +81,7 @@
     },
     {
       "id": "scene_19_010",
-      "tradeMoment": "收盘复盘时",
+      "tradeMoment": "收盘复盘看到开盘那笔时",
       "os": "开盘又冲动了。",
       "hiddenThought": "我总是管不住手。",
       "reflection": "真正让你亏钱的，不是开盘，是控制不住自己。",

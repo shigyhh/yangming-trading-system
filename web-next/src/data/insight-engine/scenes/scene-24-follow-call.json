@@ -9,7 +9,7 @@
   "items": [
     {
       "id": "scene_24_001",
-      "tradeMoment": "群里有人喊单时",
+      "tradeMoment": "群里有人直接喊票时",
       "os": "跟不跟。",
       "hiddenThought": "他应该比我懂。",
       "reflection": "你开始把判断交给别人。",
@@ -17,7 +17,7 @@
     },
     {
       "id": "scene_24_002",
-      "tradeMoment": "看见老师发观点时",
+      "tradeMoment": "看到老师发新观点时",
       "os": "先跟一点。",
       "hiddenThought": "总比自己瞎做好。",
       "reflection": "你不是相信逻辑，你是在借别人的确定性。",
@@ -25,7 +25,7 @@
     },
     {
       "id": "scene_24_003",
-      "tradeMoment": "群里很多人回复时",
+      "tradeMoment": "群里一堆人回复跟了时",
       "os": "大家都上了。",
       "hiddenThought": "应该不会错。",
       "reflection": "当所有人都在的时候，你最容易失去自己。",
@@ -33,7 +33,7 @@
     },
     {
       "id": "scene_24_004",
-      "tradeMoment": "自己没想法时",
+      "tradeMoment": "自己没想法想等答案时",
       "os": "看看老师怎么说。",
       "hiddenThought": "我拿不准。",
       "reflection": "你越来越依赖答案，而不是判断。",
@@ -41,7 +41,7 @@
     },
     {
       "id": "scene_24_005",
-      "tradeMoment": "老师继续看多时",
+      "tradeMoment": "老师继续说还能拿时",
       "os": "那就拿着。",
       "hiddenThought": "他都没走。",
       "reflection": "你已经把自己的仓位交给别人管理。",
@@ -49,7 +49,7 @@
     },
     {
       "id": "scene_24_006",
-      "tradeMoment": "行情不对时",
+      "tradeMoment": "行情不对还等别人说时",
       "os": "再等等。",
       "hiddenThought": "老师还没说。",
       "reflection": "你开始等待别人的决定，而不是自己的决定。",
@@ -57,7 +57,7 @@
     },
     {
       "id": "scene_24_007",
-      "tradeMoment": "出现亏损时",
+      "tradeMoment": "亏损后等老师发话时",
       "os": "老师怎么还没说。",
       "hiddenThought": "他是不是看错了。",
       "reflection": "当结果不好时，你开始寻找责任人。",
@@ -65,7 +65,7 @@
     },
     {
       "id": "scene_24_008",
-      "tradeMoment": "群里意见不一致时",
+      "tradeMoment": "群里意见开始打架时",
       "os": "到底听谁的。",
       "hiddenThought": "我不会判断。",
       "reflection": "真正的问题不是谁对，是你从来没建立自己的判断。",
@@ -73,7 +73,7 @@
     },
     {
       "id": "scene_24_009",
-      "tradeMoment": "交易结束以后",
+      "tradeMoment": "交易结束发现跟错时",
       "os": "又跟错了。",
       "hiddenThought": "我怎么总信别人。",
       "reflection": "你责怪的不是别人，你责怪的是自己没有主见。",
@@ -81,7 +81,7 @@
     },
     {
       "id": "scene_24_010",
-      "tradeMoment": "关软件之前",
+      "tradeMoment": "关软件前想靠自己时",
       "os": "下次还是得靠自己。",
       "hiddenThought": "可我还是不敢。",
       "reflection": "你知道问题在哪，却还没有准备承担判断的代价。",

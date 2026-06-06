@@ -421,10 +421,11 @@ export function AiFocusSection() {
     <section
       ref={sectionRef}
       id="ai-focus"
+      data-home-roll="ai-focus"
       aria-label="循环之镜交易心理回路"
       className={`loop-page relative z-10 ${showMirror ? "is-mirror-ready" : ""}`}
     >
-      <main className={`loop-stage ${showMirror ? "is-mirror-ready" : ""}`}>
+      <main data-home-roll-plane className={`loop-stage ${showMirror ? "is-mirror-ready" : ""}`}>
         {showMirror ? (
           <motion.div
             className={`loop-orbit ${mirrorStage === "ring" || mirrorStage === "question" ? "is-ring-lit" : ""} ${

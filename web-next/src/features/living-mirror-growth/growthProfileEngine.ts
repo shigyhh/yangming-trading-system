@@ -835,8 +835,8 @@ function buildGrowthArchiveItems(
       anonymousId: loop.anonymousId,
       type: "behavior_loop" as const,
       sourceId: loop.behaviorLoopId,
-      detailHref: "/cycle-mirror",
-      title: "循环之镜",
+      detailHref: "/mirror-archive",
+      title: "循环识别记录",
       summary: `已沉淀 ${loop.repeatCount || 1} 次：${loop.trigger} -> ${loop.thought} -> ${loop.loopBreakAction}。`,
       tags: [String(loop.sourceMirror), loop.thought, ...(loop.affectedDimensions || [])].filter(Boolean).slice(0, 5),
       createdAt: loop.updatedAt,
@@ -898,10 +898,10 @@ function buildGrowthScrollEvents(
     ...behaviorLoops.map((loop) => ({
       id: `scroll_behavior_loop_${loop.behaviorLoopId}`,
       type: "behavior_loop" as const,
-      nodeLabel: "循环之镜节点",
+      nodeLabel: "循环识别节点",
       sourceId: loop.behaviorLoopId,
-      detailHref: "/cycle-mirror",
-      title: "循环之镜显影",
+      detailHref: "/mirror-archive",
+      title: "循环识别显影",
       summary: `你正在重复的循环是：${loop.trigger} → ${loop.thought} → ${loop.action}。`,
       thoughtText: loop.thought,
       actionText: loop.loopBreakAction,
@@ -1233,7 +1233,7 @@ function buildSourceEvidence(input: LivingMirrorGrowthProfileInput, now: string)
     evidence.push({
       id: loop.behaviorLoopId,
       sourceType: "behavior_loop",
-      label: "循环之镜",
+      label: "循环识别",
       summary: `已沉淀 ${loop.repeatCount || 1} 次：触发「${loop.trigger}」；一念「${loop.thought}」；破环动作「${loop.loopBreakAction}」。`,
       createdAt: loop.updatedAt || loop.createdAt || now,
     })

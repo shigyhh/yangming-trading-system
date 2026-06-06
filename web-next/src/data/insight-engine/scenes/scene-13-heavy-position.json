@@ -9,7 +9,7 @@
   "items": [
     {
       "id": "scene_13_001",
-      "tradeMoment": "看到机会时",
+      "tradeMoment": "看到一个自认好机会时",
       "os": "这次得上重仓。",
       "hiddenThought": "机会难得。",
       "reflection": "你开始觉得，这一次和以前不一样。",
@@ -17,7 +17,7 @@
     },
     {
       "id": "scene_13_002",
-      "tradeMoment": "准备下单时",
+      "tradeMoment": "下单前想把仓位打满时",
       "os": "不上重仓可惜了。",
       "hiddenThought": "我不想错过大的。",
       "reflection": "你已经开始害怕赚少，而不是害怕亏损。",
@@ -25,7 +25,7 @@
     },
     {
       "id": "scene_13_003",
-      "tradeMoment": "看着行情配合自己时",
+      "tradeMoment": "行情正好顺着判断走时",
       "os": "这票稳。",
       "hiddenThought": "这次错不了。",
       "reflection": "当你觉得稳的时候，风险往往已经被忽略。",
@@ -33,7 +33,7 @@
     },
     {
       "id": "scene_13_004",
-      "tradeMoment": "仓位越来越大时",
+      "tradeMoment": "仓位滑块越拉越高时",
       "os": "干脆多上点。",
       "hiddenThought": "一次做够。",
       "reflection": "你开始用欲望替代风控。",
@@ -41,7 +41,7 @@
     },
     {
       "id": "scene_13_005",
-      "tradeMoment": "连续看对几次以后",
+      "tradeMoment": "连续看对后胆子变大时",
       "os": "这次机会太好了。",
       "hiddenThought": "不重仓对不起自己。",
       "reflection": "你高估的不是机会，你高估的是自己。",
@@ -49,7 +49,7 @@
     },
     {
       "id": "scene_13_006",
-      "tradeMoment": "下单前最后几秒",
+      "tradeMoment": "下单前最后几秒时",
       "os": "拼一把。",
       "hiddenThought": "赚大的机会来了。",
       "reflection": "当你开始拼一把，系统已经退场了。",
@@ -57,7 +57,7 @@
     },
     {
       "id": "scene_13_007",
-      "tradeMoment": "想加大仓位时",
+      "tradeMoment": "想把仓位再加重时",
       "os": "这种机会一年没几次。",
       "hiddenThought": "错过太可惜。",
       "reflection": "几乎所有重仓冲动，都认为自己遇到了例外。",
@@ -65,7 +65,7 @@
     },
     {
       "id": "scene_13_008",
-      "tradeMoment": "看着别人仓位很大时",
+      "tradeMoment": "看到别人重仓盈利时",
       "os": "人家都敢上。",
       "hiddenThought": "我不能太怂。",
       "reflection": "你开始和别人比胆子，而不是比规则。",
@@ -73,7 +73,7 @@
     },
     {
       "id": "scene_13_009",
-      "tradeMoment": "已经下单以后",
+      "tradeMoment": "下单后还嫌仓位轻时",
       "os": "搞大一点。",
       "hiddenThought": "小仓位没意思。",
       "reflection": "仓位越来越大，敬畏越来越少。",
@@ -81,7 +81,7 @@
     },
     {
       "id": "scene_13_010",
-      "tradeMoment": "关掉软件之前",
+      "tradeMoment": "关软件前想着干票大的时",
       "os": "这一把要干票大的。",
       "hiddenThought": "我要赚回来。",
       "reflection": "你想放大的，不只是利润，还有欲望。",

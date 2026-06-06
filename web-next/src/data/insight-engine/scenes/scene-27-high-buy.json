@@ -9,7 +9,7 @@
   "items": [
     {
       "id": "scene_27_001",
-      "tradeMoment": "看着股价连续大涨时",
+      "tradeMoment": "看着它连拉几天时",
       "os": "还能涨吧。",
       "hiddenThought": "我不能错过。",
       "reflection": "真正让你下单的，不是确定性，是害怕错过。",
@@ -17,7 +17,7 @@
     },
     {
       "id": "scene_27_002",
-      "tradeMoment": "涨了很多以后",
+      "tradeMoment": "已经涨很多还在涨时",
       "os": "这次不一样。",
       "hiddenThought": "还能再翻一倍。",
       "reflection": "每一个高位接盘的人，都觉得自己不是最后一个。",
@@ -25,7 +25,7 @@
     },
     {
       "id": "scene_27_003",
-      "tradeMoment": "看着别人赚钱时",
+      "tradeMoment": "看到别人高位赚钱时",
       "os": "我也得上。",
       "hiddenThought": "不能只有我没有。",
       "reflection": "刺激你的不是行情，是比较。",
@@ -33,7 +33,7 @@
     },
     {
       "id": "scene_27_004",
-      "tradeMoment": "看到涨停板时",
+      "tradeMoment": "盯着涨停板封住时",
       "os": "太强了。",
       "hiddenThought": "肯定还有人接。",
       "reflection": "你开始相信强势，而不是风险。",
@@ -41,7 +41,7 @@
     },
     {
       "id": "scene_27_005",
-      "tradeMoment": "准备下单时",
+      "tradeMoment": "高位准备点买入时",
       "os": "先买一点。",
       "hiddenThought": "万一继续涨呢。",
       "reflection": "你不是在评估机会，你是在安慰自己。",
@@ -49,7 +49,7 @@
     },
     {
       "id": "scene_27_006",
-      "tradeMoment": "看着价格不断新高时",
+      "tradeMoment": "价格不断刷新高时",
       "os": "现在不上以后更贵。",
       "hiddenThought": "今天就是机会。",
       "reflection": "你开始把上涨当成买入理由。",
@@ -57,7 +57,7 @@
     },
     {
       "id": "scene_27_007",
-      "tradeMoment": "群里都在讨论时",
+      "tradeMoment": "群里都说还能走时",
       "os": "大家都看好。",
       "hiddenThought": "应该不会错。",
       "reflection": "当所有人都看好时，你最容易放弃独立判断。",
@@ -65,7 +65,7 @@
     },
     {
       "id": "scene_27_008",
-      "tradeMoment": "买入以后",
+      "tradeMoment": "买入后看它还很强时",
       "os": "果然强。",
       "hiddenThought": "我赶上了。",
       "reflection": "高位接盘最大的危险，是短暂的正确。",
@@ -73,7 +73,7 @@
     },
     {
       "id": "scene_27_009",
-      "tradeMoment": "开始回落时",
+      "tradeMoment": "高位开始回落时",
       "os": "正常调整。",
       "hiddenThought": "很快还会涨。",
       "reflection": "你开始用希望解释风险。",
@@ -81,7 +81,7 @@
     },
     {
       "id": "scene_27_010",
-      "tradeMoment": "收盘以后",
+      "tradeMoment": "收盘后还盼继续冲时",
       "os": "明天继续冲。",
       "hiddenThought": "我不是最后一个。",
       "reflection": "所有人都希望后面还有人接，而没人觉得自己是最后一个。",

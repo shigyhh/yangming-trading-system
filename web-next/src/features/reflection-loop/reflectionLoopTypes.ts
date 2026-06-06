@@ -2,13 +2,16 @@ export type LivingMirrorLoopNodeId =
   | "enter_reflection"
   | "mirror_manifestation"
   | "mirror_report"
-  | "daily_growth"
+  | "daily_thought"
+  | "reflection_back"
+  | "heart_thief"
+  | "heart_proof"
+  | "daily_practice"
+  | "conscience_seal"
   | "trade_review"
-  | "growth_profile"
-  | "behavior_loop"
+  | "mirror_archive"
+  | "mirror_scroll"
   | "retest_change"
-  | "assistant_handoff"
-  | "share_global"
   | "next_enter_reflection"
 
 export type LivingMirrorLoopStatus = "done" | "active" | "locked"
@@ -34,13 +37,18 @@ export interface LivingMirrorLoopInput {
   hasAssessment: boolean
   hasPersonaResult: boolean
   hasMirrorReport: boolean
+  hasDailyThought: boolean
+  hasReflectionBack: boolean
+  hasHeartThief: boolean
+  hasHeartProof: boolean
+  hasDailyPractice: boolean
+  hasConscienceSeal: boolean
+  hasMirrorArchive: boolean
+  hasMirrorScroll: boolean
   completedGrowthDays: number
   hasTradeReview: boolean
-  hasGrowthProfile: boolean
   hasBehaviorLoop: boolean
   hasRetest: boolean
-  hasAssistantHandoff: boolean
-  hasShareOrGlobalReflection: boolean
 }
 
 export interface LivingMirrorLoopNode extends LoopNode {

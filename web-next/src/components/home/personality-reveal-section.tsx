@@ -241,6 +241,12 @@ export function PersonalityRevealSection() {
           data-personality-mountain
           aria-hidden="true"
           className="absolute inset-x-[-14vw] bottom-[5vh] h-[46vh] opacity-[.04] blur-[3px]"
+          style={{
+            WebkitMaskImage:
+              "radial-gradient(ellipse 84% 66% at 50% 76%, #000 0%, rgba(0,0,0,.54) 48%, transparent 82%)",
+            maskImage:
+              "radial-gradient(ellipse 84% 66% at 50% 76%, #000 0%, rgba(0,0,0,.54) 48%, transparent 82%)",
+          }}
           animate={{ x: ["0vw", "1.1vw", "0vw"], y: ["0vh", "-.8vh", "0vh"] }}
           transition={{ duration: 38, repeat: Infinity, ease: "easeInOut" }}
         >

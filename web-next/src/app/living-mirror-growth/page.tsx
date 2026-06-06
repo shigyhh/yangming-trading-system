@@ -143,17 +143,17 @@ export default function LivingMirrorGrowthPage() {
           </GlassPanel>
 
           <GlassPanel className="growth-loop-card min-w-[240px]">
-            <p className="font-function text-xs font-semibold tracking-[.18em] text-[#d8b76f]">相关循环入口</p>
+            <p className="font-function text-xs font-semibold tracking-[.18em] text-[#d8b76f]">底层循环识别</p>
             {profile.topBehaviorLoopIds.length ? (
               <>
                 <h2 className="mt-4 font-story text-3xl font-light tracking-[.08em] text-[rgba(244,235,221,.88)]">
                   已识别 {profile.topBehaviorLoopIds.length} 条循环
                 </h2>
                 <p className="mt-4 line-clamp-3 font-function text-sm leading-7 text-[rgba(220,212,195,.58)]">
-                  系统已经从真实复盘和心证中提炼出重复模式，可以进入循环之镜查看触发、一念、行为和破环动作。
+                  系统已经从日课心证和真实复盘中提炼出重复模式；它会回流到今日修行和复测变化里，给出更针对性的训练。
                 </p>
-                <PrimaryLink href="/cycle-mirror" className="mt-6 w-full">
-                  查看循环之镜
+                <PrimaryLink href="/trade-review" className="mt-6 w-full">
+                  补真实复盘
                 </PrimaryLink>
               </>
             ) : (

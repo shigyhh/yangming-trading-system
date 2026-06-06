@@ -30,10 +30,10 @@ coreStatement
   "items": [
     {
       "id": "scene_01_001",
-      "tradeMoment": "看着价格突然拉升时",
-      "os": "卧槽，真拉了。",
+      "tradeMoment": "盘中突然拉出长阳时",
+      "os": "我次奥，真拉了。",
       "hiddenThought": "我又慢了。",
-      "reflection": "这一声卧槽，不是惊讶，是后悔。",
+      "reflection": "这一声我次奥，不是惊讶，是后悔。",
       "intensity": 4
     }
   ],

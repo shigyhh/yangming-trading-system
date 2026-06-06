@@ -157,12 +157,12 @@ const LAKE_STATES: Record<LakeMode, LakeState> = {
     speed: 0.1,
     freq: 0.55,
     whirlpool: 0,
-    shininess: 300,
-    bloom: 2.2,
-    maskWidth: 0.45,
-    colorR: 0.88,
-    colorG: 0.94,
-    colorB: 1,
+    shininess: 170,
+    bloom: 1.35,
+    maskWidth: 0.34,
+    colorR: 0.64,
+    colorG: 0.72,
+    colorB: 0.78,
   },
 }
 

@@ -236,6 +236,12 @@ export function StorySections() {
         data-story-depth
         aria-hidden="true"
         className="absolute inset-x-[-16vw] top-[10vh] h-[46vh] opacity-[.05] blur-[2.4px]"
+        style={{
+          WebkitMaskImage:
+            "radial-gradient(ellipse 84% 66% at 50% 72%, #000 0%, rgba(0,0,0,.52) 48%, transparent 82%)",
+          maskImage:
+            "radial-gradient(ellipse 84% 66% at 50% 72%, #000 0%, rgba(0,0,0,.52) 48%, transparent 82%)",
+        }}
         animate={{ x: ["-.8vw", ".8vw", "-.8vw"], y: ["0vh", "-.5vh", "0vh"] }}
         transition={{ duration: 32, repeat: Infinity, ease: "easeInOut" }}
       >

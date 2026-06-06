@@ -9,7 +9,7 @@
   "items": [
     {
       "id": "scene_03_001",
-      "tradeMoment": "看着账户开始盈利时",
+      "tradeMoment": "账户刚开始浮盈时",
       "os": "买少了。",
       "hiddenThought": "我又怂了。",
       "reflection": "你难受的不是赚少了，是你觉得自己本来可以赚更多。",
@@ -17,7 +17,7 @@
     },
     {
       "id": "scene_03_002",
-      "tradeMoment": "看着股价继续上涨时",
+      "tradeMoment": "看着股价继续往上推时",
       "os": "早知道多买点。",
       "hiddenThought": "我胆子还是不够。",
       "reflection": "你后悔的不是仓位，是那个关键时刻没敢上的自己。",
@@ -25,7 +25,7 @@
     },
     {
       "id": "scene_03_003",
-      "tradeMoment": "看着别人晒收益时",
+      "tradeMoment": "看到别人晒重仓收益时",
       "os": "这点仓有什么用。",
       "hiddenThought": "别人都比我敢。",
       "reflection": "真正刺痛你的，不是收益，是比较。",
@@ -33,7 +33,7 @@
     },
     {
       "id": "scene_03_004",
-      "tradeMoment": "股价继续创新高时",
+      "tradeMoment": "股价继续刷新高点时",
       "os": "应该重仓的。",
       "hiddenThought": "我又保守了。",
       "reflection": "你开始用结果否定当时的自己。",
@@ -41,7 +41,7 @@
     },
     {
       "id": "scene_03_005",
-      "tradeMoment": "回看买入记录时",
+      "tradeMoment": "回看自己那笔小仓位时",
       "os": "我当时到底怕什么。",
       "hiddenThought": "我不相信自己。",
       "reflection": "你责怪的不是机会，你责怪的是自己的犹豫。",
@@ -49,7 +49,7 @@
     },
     {
       "id": "scene_03_006",
-      "tradeMoment": "看着利润越来越大时",
+      "tradeMoment": "看着利润越滚越大时",
       "os": "仓位太轻了。",
       "hiddenThought": "白看对了。",
       "reflection": "你不是没赚到，你只是一直盯着没赚到的部分。",
@@ -57,7 +57,7 @@
     },
     {
       "id": "scene_03_007",
-      "tradeMoment": "看到涨幅远超预期时",
+      "tradeMoment": "涨幅远超自己预期时",
       "os": "这波没吃到位。",
       "hiddenThought": "我又浪费机会了。",
       "reflection": "你放不下的不是利润，是那个更完美的结果。",
@@ -65,7 +65,7 @@
     },
     {
       "id": "scene_03_008",
-      "tradeMoment": "复盘时回看走势",
+      "tradeMoment": "复盘时盯着那段主升时",
       "os": "怎么就买这么点。",
       "hiddenThought": "我还是不够狠。",
       "reflection": "你以为自己在复盘仓位，其实你在责怪自己。",
@@ -73,7 +73,7 @@
     },
     {
       "id": "scene_03_009",
-      "tradeMoment": "看着别人满仓收益时",
+      "tradeMoment": "看到别人满仓吃到时",
       "os": "别人一把顶我十把。",
       "hiddenThought": "为什么总不是我。",
       "reflection": "这一刻，利润已经不重要了，比较才重要。",
@@ -81,7 +81,7 @@
     },
     {
       "id": "scene_03_010",
-      "tradeMoment": "收盘以后",
+      "tradeMoment": "收盘后回看整段走势时",
       "os": "白看对了。",
       "hiddenThought": "我配不上机会。",
       "reflection": "你真正难受的，不是仓位轻，是觉得自己没有抓住属于自己的机会。",

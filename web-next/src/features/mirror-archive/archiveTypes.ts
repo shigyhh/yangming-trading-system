@@ -4,6 +4,7 @@ export type ArchiveItemType =
   | "growth_record"
   | "trade_review"
   | "heart_proof"
+  | "one_thought_record"
   | "retest"
   | "behavior_loop"
 
@@ -24,6 +25,7 @@ export interface MirrorArchiveSummary {
   reportCount: number
   completedDays: number
   heartProofCount: number
+  oneThoughtRecordCount: number
   tradeReviewCount: number
   growthProfileCount: number
   retestCount: number
@@ -40,6 +42,7 @@ export interface MirrorArchiveData {
     growthRecords: ArchiveItem[]
     tradeReviews: ArchiveItem[]
     heartProofs: ArchiveItem[]
+    oneThoughtRecords: ArchiveItem[]
     retests: ArchiveItem[]
     behaviorLoops: ArchiveItem[]
   }

@@ -9,7 +9,7 @@
   "items": [
     {
       "id": "scene_11_001",
-      "tradeMoment": "连续亏了几笔以后",
+      "tradeMoment": "连亏几笔后盯着账户时",
       "os": "再来一笔。",
       "hiddenThought": "我不甘心。",
       "reflection": "你不是在找机会，你是在找安慰。",
@@ -17,7 +17,7 @@
     },
     {
       "id": "scene_11_002",
-      "tradeMoment": "准备关软件时",
+      "tradeMoment": "准备关软件又停住时",
       "os": "这一笔回来我就停。",
       "hiddenThought": "我想翻回来。",
       "reflection": "你已经说过很多次：这一笔回来我就停。",
@@ -25,7 +25,7 @@
     },
     {
       "id": "scene_11_003",
-      "tradeMoment": "看着账户越来越难看时",
+      "tradeMoment": "看着当天亏损刺眼时",
       "os": "今天不能这样结束。",
       "hiddenThought": "我接受不了。",
       "reflection": "你接受不了的不是亏损，是今天就这样结束。",
@@ -33,7 +33,7 @@
     },
     {
       "id": "scene_11_004",
-      "tradeMoment": "连续止损以后",
+      "tradeMoment": "连续止损后心不服时",
       "os": "总得给我一次吧。",
       "hiddenThought": "怎么可能一直错。",
       "reflection": "这一刻，你已经开始向市场讨公平。",
@@ -41,7 +41,7 @@
     },
     {
       "id": "scene_11_005",
-      "tradeMoment": "再次准备下单时",
+      "tradeMoment": "又把下单界面打开时",
       "os": "再试一次。",
       "hiddenThought": "这次一定行。",
       "reflection": "你真正相信的，已经不是系统，是运气。",
@@ -49,7 +49,7 @@
     },
     {
       "id": "scene_11_006",
-      "tradeMoment": "看着亏损记录时",
+      "tradeMoment": "翻看一串亏损记录时",
       "os": "就差一点。",
       "hiddenThought": "我明明快对了。",
       "reflection": "你已经连续说了很多次：就差一点。",
@@ -57,7 +57,7 @@
     },
     {
       "id": "scene_11_007",
-      "tradeMoment": "情绪越来越重时",
+      "tradeMoment": "情绪顶到胸口时",
       "os": "我得弄回来。",
       "hiddenThought": "我不能输。",
       "reflection": "你想翻回来的，不只是钱。",
@@ -65,7 +65,7 @@
     },
     {
       "id": "scene_11_008",
-      "tradeMoment": "再次打开交易软件时",
+      "tradeMoment": "又重新打开交易软件时",
       "os": "怎么可能一直亏。",
       "hiddenThought": "总会轮到我。",
       "reflection": "市场不会因为你委屈，就改变方向。",
@@ -73,7 +73,7 @@
     },
     {
       "id": "scene_11_009",
-      "tradeMoment": "明知道不该做时",
+      "tradeMoment": "明知不该还想点时",
       "os": "最后一把。",
       "hiddenThought": "这次真结束。",
       "reflection": "很多失控，都是从最后一把开始的。",
@@ -81,7 +81,7 @@
     },
     {
       "id": "scene_11_010",
-      "tradeMoment": "收盘前",
+      "tradeMoment": "收盘前还想扳回来时",
       "os": "我还没输。",
       "hiddenThought": "我不能认输。",
       "reflection": "真正让你停不下来的，不是机会，是不甘心。",

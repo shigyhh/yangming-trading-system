@@ -41,13 +41,14 @@ export function PersonalityEntrySection() {
     <section
       ref={sectionRef}
       id="personality-entry"
+      data-home-roll="personality-entry"
       aria-label="照心仪式入口"
       className={`sprint8-page ${isRitualReady ? "is-ritual-ready" : ""}`}
     >
       <div className="bg-glow bg-glow-top" />
       <div className="bg-glow bg-glow-bottom" />
 
-      <div className="content content-compact">
+      <div data-home-roll-plane className="content content-compact">
         <div className="top-copy">
           <span className="line line-main ritual-step ritual-step-2">照见，</span>
           <span className="line line-main ritual-step ritual-step-2">最先动的那一念。</span>
@@ -99,7 +100,7 @@ export function PersonalityEntrySection() {
           --sprint7-rpx: clamp(0.52px, calc(100vw / 750), 0.95px);
           position: relative;
           z-index: 10;
-          min-height: 78svh;
+          min-height: auto;
           margin-top: clamp(-104px, -12svh, -58px);
           overflow: hidden;
           background: transparent;
@@ -110,13 +111,13 @@ export function PersonalityEntrySection() {
           content: "";
           position: absolute;
           z-index: 0;
-          inset: 0 0 -18svh;
+          inset: 0;
           background:
             radial-gradient(ellipse at 50% 30%, rgba(70, 67, 55, 0.12), transparent 38%),
-            radial-gradient(ellipse at 50% 78%, rgba(112, 94, 45, 0.12), transparent 36%),
-            linear-gradient(180deg, rgba(5, 5, 4, 0), rgba(5, 5, 4, 0.2) 46%, rgba(5, 5, 4, 0.08) 74%, rgba(5, 5, 4, 0));
-          -webkit-mask-image: linear-gradient(180deg, transparent 0%, transparent 8%, #000 30%, #000 84%, transparent 100%);
-          mask-image: linear-gradient(180deg, transparent 0%, transparent 8%, #000 30%, #000 84%, transparent 100%);
+            radial-gradient(ellipse at 50% 76%, rgba(112, 94, 45, 0.1), transparent 34%),
+            linear-gradient(180deg, rgba(5, 5, 4, 0), rgba(5, 5, 4, 0.18) 46%, rgba(5, 5, 4, 0));
+          -webkit-mask-image: linear-gradient(180deg, transparent 0%, transparent 8%, #000 30%, #000 76%, transparent 100%);
+          mask-image: linear-gradient(180deg, transparent 0%, transparent 8%, #000 30%, #000 76%, transparent 100%);
           pointer-events: none;
         }
 
@@ -137,21 +138,21 @@ export function PersonalityEntrySection() {
         }
 
         .bg-glow-bottom {
-          bottom: calc(120 * var(--sprint7-rpx));
-          width: calc(720 * var(--sprint7-rpx));
-          height: calc(420 * var(--sprint7-rpx));
-          background: rgba(141, 114, 45, 0.11);
+          bottom: calc(42 * var(--sprint7-rpx));
+          width: calc(560 * var(--sprint7-rpx));
+          height: calc(260 * var(--sprint7-rpx));
+          background: rgba(141, 114, 45, 0.08);
           animation: breathe 5.6s ease-in-out infinite;
         }
 
         .content {
           position: relative;
           z-index: 2;
-          min-height: 78svh;
+          min-height: auto;
           box-sizing: border-box;
           max-width: 1040px;
           margin: 0 auto;
-          padding: calc(70 * var(--sprint7-rpx)) 28px calc(64 * var(--sprint7-rpx));
+          padding: calc(70 * var(--sprint7-rpx)) 28px calc(44 * var(--sprint7-rpx));
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -159,7 +160,7 @@ export function PersonalityEntrySection() {
 
         .content-compact {
           justify-content: center;
-          min-height: 62svh;
+          min-height: auto;
         }
 
         .top-copy {

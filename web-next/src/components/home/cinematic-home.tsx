@@ -3,6 +3,7 @@
 import { AmbientSound } from "@/components/home/ambient-sound"
 import { AiFocusSection } from "@/components/home/ai-focus-section"
 import { HeroSection } from "@/components/home/hero-section"
+import { HomePerspectiveField } from "@/components/home/home-perspective-field"
 import { InkMountainBackground } from "@/components/home/ink-mountain-background"
 import { MindJourneySection } from "@/components/home/mind-journey-section"
 import { PersonalityEntrySection } from "@/components/home/personality-entry-section"
@@ -11,9 +12,10 @@ import { WaterRippleField } from "@/components/home/water-ripple-field"
 
 export function CinematicHome() {
   return (
-    <main className="relative min-h-screen overflow-x-clip bg-ink text-cream [animation:home-breath_18s_ease-in-out_infinite]">
+    <main className="heart-lake-world relative min-h-screen overflow-x-clip bg-[var(--ym-bg-dark-ink)] text-[var(--ym-text-primary)] [animation:home-breath_18s_ease-in-out_infinite]">
       <div className="pointer-events-none fixed inset-0 z-50 bg-ink [animation:entry-veil_2.8s_cubic-bezier(.22,1,.36,1)_forwards]" />
       <InkMountainBackground />
+      <HomePerspectiveField />
       <WaterRippleField />
       <TopNav />
       <HeroSection />

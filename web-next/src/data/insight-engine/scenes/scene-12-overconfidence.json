@@ -9,7 +9,7 @@
   "items": [
     {
       "id": "scene_12_001",
-      "tradeMoment": "连续赚了几笔以后",
+      "tradeMoment": "连赚几笔后手感发热时",
       "os": "今天状态真好。",
       "hiddenThought": "我找到感觉了。",
       "reflection": "你开始相信的不是系统，是自己。",
@@ -17,7 +17,7 @@
     },
     {
       "id": "scene_12_002",
-      "tradeMoment": "再次准备开仓时",
+      "tradeMoment": "盈利后又想开一笔时",
       "os": "再来一笔。",
       "hiddenThought": "今天顺得很。",
       "reflection": "连续盈利以后，最危险的往往不是亏损，而是自信。",
@@ -25,7 +25,7 @@
     },
     {
       "id": "scene_12_003",
-      "tradeMoment": "看到账户不断新高时",
+      "tradeMoment": "账户不断刷新高点时",
       "os": "手感来了。",
       "hiddenThought": "我懂市场了。",
       "reflection": "你开始把运气，当成能力。",
@@ -33,7 +33,7 @@
     },
     {
       "id": "scene_12_004",
-      "tradeMoment": "仓位越来越大时",
+      "tradeMoment": "仓位越做越大时",
       "os": "这次多上点。",
       "hiddenThought": "机会难得。",
       "reflection": "赚钱以后，你开始放松风控。",
@@ -41,7 +41,7 @@
     },
     {
       "id": "scene_12_005",
-      "tradeMoment": "连续做对几次以后",
+      "tradeMoment": "连续做对后觉得看透时",
       "os": "这票我看透了。",
       "hiddenThought": "我不会错。",
       "reflection": "当你觉得自己不会错的时候，风险已经来了。",
@@ -49,7 +49,7 @@
     },
     {
       "id": "scene_12_006",
-      "tradeMoment": "看着利润继续增长时",
+      "tradeMoment": "利润顺着自己往上走时",
       "os": "今天就是我的盘。",
       "hiddenThought": "我状态无敌。",
       "reflection": "市场没有变，是你的心开始膨胀了。",
@@ -57,7 +57,7 @@
     },
     {
       "id": "scene_12_007",
-      "tradeMoment": "再次盈利以后",
+      "tradeMoment": "又一笔盈利到账时",
       "os": "这也太简单了。",
       "hiddenThought": "我终于开窍了。",
       "reflection": "真正危险的，不是赚钱，是开始轻视风险。",
@@ -65,7 +65,7 @@
     },
     {
       "id": "scene_12_008",
-      "tradeMoment": "准备加大仓位时",
+      "tradeMoment": "准备把仓位加大时",
       "os": "不上重仓可惜了。",
       "hiddenThought": "我不能浪费机会。",
       "reflection": "你开始用盈利为冲动背书。",
@@ -81,7 +81,7 @@
     },
     {
       "id": "scene_12_010",
-      "tradeMoment": "收盘以后",
+      "tradeMoment": "收盘后回看全红记录时",
       "os": "今天真准。",
       "hiddenThought": "我已经掌握节奏了。",
       "reflection": "赚钱以后，人最容易忘记敬畏。",

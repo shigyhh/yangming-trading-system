@@ -9,7 +9,7 @@
   "items": [
     {
       "id": "scene_22_001",
-      "tradeMoment": "收盘以后",
+      "tradeMoment": "收盘后看见复盘提醒时",
       "os": "明天再看吧。",
       "hiddenThought": "我不想面对。",
       "reflection": "你拖延的不是复盘，你拖延的是现实。",
@@ -17,7 +17,7 @@
     },
     {
       "id": "scene_22_002",
-      "tradeMoment": "打开复盘表时",
+      "tradeMoment": "打开复盘表又想关掉时",
       "os": "今天有点累。",
       "hiddenThought": "不想看这些。",
       "reflection": "真正让你累的，不是复盘，是面对错误。",
@@ -33,7 +33,7 @@
     },
     {
       "id": "scene_22_004",
-      "tradeMoment": "看到账户亏损时",
+      "tradeMoment": "看到当天亏损时",
       "os": "不看了。",
       "hiddenThought": "看了更烦。",
       "reflection": "逃避不会减少亏损，只会减少成长。",
@@ -41,7 +41,7 @@
     },
     {
       "id": "scene_22_005",
-      "tradeMoment": "准备复盘时",
+      "tradeMoment": "准备复盘却开始拖延时",
       "os": "周末再说。",
       "hiddenThought": "今天不想想。",
       "reflection": "很多问题，都是从“以后再说”开始的。",
@@ -49,7 +49,7 @@
     },
     {
       "id": "scene_22_006",
-      "tradeMoment": "想回看交易时",
+      "tradeMoment": "想回看交易录像时",
       "os": "都过去了。",
       "hiddenThought": "反正改不了。",
       "reflection": "你开始把放弃包装成释怀。",
@@ -57,7 +57,7 @@
     },
     {
       "id": "scene_22_007",
-      "tradeMoment": "看到错误交易时",
+      "tradeMoment": "看到那笔错误交易时",
       "os": "算了。",
       "hiddenThought": "我不想承认。",
       "reflection": "真正让你难受的，不是错误，是看见错误。",
@@ -65,7 +65,7 @@
     },
     {
       "id": "scene_22_008",
-      "tradeMoment": "连续亏损以后",
+      "tradeMoment": "连亏后不想打开记录时",
       "os": "没心情复盘。",
       "hiddenThought": "我已经够难受了。",
       "reflection": "越难受的时候，越需要复盘。",
@@ -73,7 +73,7 @@
     },
     {
       "id": "scene_22_009",
-      "tradeMoment": "打开软件又关闭时",
+      "tradeMoment": "打开软件又立刻关掉时",
       "os": "下次再认真弄。",
       "hiddenThought": "今天先放过自己。",
       "reflection": "你已经说过很多次：下次。",
@@ -81,7 +81,7 @@
     },
     {
       "id": "scene_22_010",
-      "tradeMoment": "睡觉之前",
+      "tradeMoment": "睡前想起还没复盘时",
       "os": "明天开始。",
       "hiddenThought": "希望明天不一样。",
       "reflection": "你期待改变，却回避改变的入口。",

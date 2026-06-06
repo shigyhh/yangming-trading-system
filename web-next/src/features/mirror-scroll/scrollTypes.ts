@@ -6,6 +6,7 @@ export type MirrorScrollNodeType =
   | "trade_review"
   | "behavior_loop"
   | "heart_proof"
+  | "one_thought_record"
   | "retest"
   | "retest_change"
 
@@ -36,6 +37,7 @@ export interface MirrorScrollSummary {
   dayCount: number
   nodeCount: number
   heartProofCount: number
+  oneThoughtRecordCount: number
   tradeReviewCount: number
   behaviorLoopCount: number
   retestCount: number

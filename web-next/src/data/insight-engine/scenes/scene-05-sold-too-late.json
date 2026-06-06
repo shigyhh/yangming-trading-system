@@ -9,7 +9,7 @@
   "items": [
     {
       "id": "scene_05_001",
-      "tradeMoment": "看着利润开始回吐时",
+      "tradeMoment": "浮盈开始往回吐时",
       "os": "刚才就该卖。",
       "hiddenThought": "我又贪了。",
       "reflection": "你后悔的不是没卖，你后悔的是自己又想多赚一点。",
@@ -17,7 +17,7 @@
     },
     {
       "id": "scene_05_002",
-      "tradeMoment": "利润越来越少时",
+      "tradeMoment": "看着利润越来越少时",
       "os": "怎么没走。",
       "hiddenThought": "我总是不甘心。",
       "reflection": "真正让你难受的，不是回吐，是你明明想走却没走。",
@@ -25,7 +25,7 @@
     },
     {
       "id": "scene_05_003",
-      "tradeMoment": "红盘变小的时候",
+      "tradeMoment": "红盘一点点缩小时",
       "os": "又坐电梯了。",
       "hiddenThought": "到手的又飞了。",
       "reflection": "你不是第一次坐电梯，所以这一次格外疼。",
@@ -33,7 +33,7 @@
     },
     {
       "id": "scene_05_004",
-      "tradeMoment": "看着利润一点点缩水时",
+      "tradeMoment": "盯着盈利慢慢缩水时",
       "os": "白拿这么久。",
       "hiddenThought": "我又守了个寂寞。",
       "reflection": "你觉得自己失去的，不只是利润，还有时间。",
@@ -41,7 +41,7 @@
     },
     {
       "id": "scene_05_005",
-      "tradeMoment": "回看刚才高点时",
+      "tradeMoment": "回看刚才最高点时",
       "os": "我刚才在等什么。",
       "hiddenThought": "我还想再多一点。",
       "reflection": "你等的不是信号，你等的是更完美的结果。",
@@ -49,7 +49,7 @@
     },
     {
       "id": "scene_05_006",
-      "tradeMoment": "从赚很多变成赚很少时",
+      "tradeMoment": "从大赚变成小赚时",
       "os": "真难受。",
       "hiddenThought": "我本来可以赚更多。",
       "reflection": "最难受的不是赚少了，是看见自己本来可以赚更多。",
@@ -57,7 +57,7 @@
     },
     {
       "id": "scene_05_007",
-      "tradeMoment": "看着账户回吐时",
+      "tradeMoment": "看着账户利润回吐时",
       "os": "早知道就卖了。",
       "hiddenThought": "我为什么总这样。",
       "reflection": "你已经说过很多次“早知道”。",
@@ -65,7 +65,7 @@
     },
     {
       "id": "scene_05_008",
-      "tradeMoment": "回看走势时",
+      "tradeMoment": "复盘时回看高点时",
       "os": "又没卖在高点。",
       "hiddenThought": "我是不是拿不住。",
       "reflection": "你开始怀疑的已经不是卖点，是自己。",
@@ -73,7 +73,7 @@
     },
     {
       "id": "scene_05_009",
-      "tradeMoment": "收盘以后",
+      "tradeMoment": "收盘后发现白忙一场时",
       "os": "这波白做了。",
       "hiddenThought": "我还是不够好。",
       "reflection": "赚到的部分，被后悔全部盖住了。",
@@ -81,7 +81,7 @@
     },
     {
       "id": "scene_05_010",
-      "tradeMoment": "关软件之前",
+      "tradeMoment": "关软件前反复懊悔时",
       "os": "下次一定卖。",
       "hiddenThought": "可我下次还会犹豫。",
       "reflection": "真正困住你的，不是行情，是执念。",

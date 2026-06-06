@@ -59,7 +59,7 @@ export default function MirrorScrollPage() {
               <ScrollMeta label="长卷节点" value={`${scrollData.summary.nodeCount} 枚`} />
               <ScrollMeta label="今日心证" value={`${scrollData.summary.heartProofCount} 枚`} />
               <ScrollMeta label="真实复盘" value={`${scrollData.summary.tradeReviewCount} 次`} />
-              <ScrollMeta label="循环之镜" value={`${scrollData.summary.behaviorLoopCount} 个`} />
+              <ScrollMeta label="循环识别" value={`${scrollData.summary.behaviorLoopCount} 个`} />
             </div>
           </GlassPanel>
         </section>
