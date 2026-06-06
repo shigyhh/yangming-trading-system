@@ -7,6 +7,7 @@ import { YangmingA1Mark } from "@/components/brand/yangming-mark"
 import { FlowButton } from "@/components/home/flow-button"
 
 const navLinks = [
+  { label: "知行心卷", href: "/zhixing-scroll" },
   { label: "一念心湖", href: "/one-thought-lake" },
   { label: "成长谱", href: "/living-mirror-growth" },
   { label: "真实复盘", href: "/trade-review" },
@@ -58,8 +59,8 @@ export function TopNav() {
         </div>
       </nav>
       <div className="one-thought-bottom-nav md:hidden" aria-label="底部轻导航">
+        <a href="/zhixing-scroll">心卷</a>
         <a href="/one-thought-lake">心湖</a>
-        <a href="/mirror-archive">档案</a>
         <a href="#personality" onClick={enterWorldview}>照见</a>
       </div>
       <style jsx>{`
