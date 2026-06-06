@@ -98,6 +98,7 @@ export default function MirrorArchivePage() {
           <ArchiveStat label="成长谱数量" value={`${summary.growthProfileCount}`} />
           <ArchiveStat label="已训练天数" value={`${summary.completedDays}`} />
           <ArchiveStat label="心证数量" value={`${summary.heartProofCount}`} />
+          <ArchiveStat label="一念记录数" value={`${summary.oneThoughtRecordCount}`} />
           <ArchiveStat label="真实复盘数量" value={`${summary.tradeReviewCount}`} />
           <ArchiveStat label="循环识别数" value={`${summary.behaviorLoopCount}`} />
         </section>
@@ -109,6 +110,7 @@ export default function MirrorArchivePage() {
           <ArchiveSection title="我的活镜成长" items={sections.growthRecords} emptyText="完成今日修行后，活镜成长记录会留在这里。" />
           <ArchiveSection title="我的真实复盘" items={sections.tradeReviews} emptyText="完成真实交易复盘后，复盘记录会留在这里。" />
           <ArchiveSection title="我的今日心证" items={sections.heartProofs} emptyText="每日落印或复盘完成后，心证会留在这里。" />
+          <ArchiveSection title="我的一念记录" items={sections.oneThoughtRecords} emptyText="完成今日落印后，这一念会按日期留在这里。" />
           <ArchiveSection title="我的复测变化" items={sections.retests} emptyText="完成七日复测后，复测变化会留在这里。" />
         </section>
 

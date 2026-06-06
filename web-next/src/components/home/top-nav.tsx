@@ -7,6 +7,7 @@ import { YangmingA1Mark } from "@/components/brand/yangming-mark"
 import { FlowButton } from "@/components/home/flow-button"
 
 const navLinks = [
+  { label: "一念心湖", href: "/one-thought-lake" },
   { label: "成长谱", href: "/living-mirror-growth" },
   { label: "真实复盘", href: "/trade-review" },
   { label: "档案馆", href: "/mirror-archive" },
@@ -56,6 +57,60 @@ export function TopNav() {
           </FlowButton>
         </div>
       </nav>
+      <div className="one-thought-bottom-nav md:hidden" aria-label="底部轻导航">
+        <a href="/one-thought-lake">心湖</a>
+        <a href="/mirror-archive">档案</a>
+        <a href="#personality" onClick={enterWorldview}>照见</a>
+      </div>
+      <style jsx>{`
+        .one-thought-bottom-nav {
+          position: fixed;
+          right: 4.8rem;
+          bottom: max(0.85rem, env(safe-area-inset-bottom));
+          left: 0.9rem;
+          z-index: 42;
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 0.28rem;
+          border: 1px solid rgba(217, 189, 122, 0.1);
+          border-radius: 999px;
+          background: rgba(8, 8, 7, 0.42);
+          box-shadow: 0 18px 48px rgba(0, 0, 0, 0.22);
+          padding: 0.28rem;
+          backdrop-filter: blur(22px);
+        }
+
+        .one-thought-bottom-nav a {
+          display: inline-flex;
+          min-height: 2.25rem;
+          align-items: center;
+          justify-content: center;
+          border-radius: 999px;
+          color: rgba(220, 212, 195, 0.5);
+          font-family: var(--font-sans, system-ui, sans-serif);
+          font-size: 0.72rem;
+          font-weight: 700;
+          letter-spacing: 0.16em;
+          text-decoration: none;
+          transition: background 500ms ease, color 500ms ease;
+        }
+
+        .one-thought-bottom-nav a:first-child {
+          background: rgba(216, 183, 111, 0.08);
+          color: rgba(216, 183, 111, 0.78);
+        }
+
+        .one-thought-bottom-nav a:hover {
+          background: rgba(217, 189, 122, 0.08);
+          color: rgba(244, 235, 221, 0.84);
+        }
+
+        @media (min-width: 768px) {
+          .one-thought-bottom-nav {
+            display: none;
+          }
+        }
+      `}</style>
     </motion.header>
   )
 }

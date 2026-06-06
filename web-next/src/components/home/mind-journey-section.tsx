@@ -100,7 +100,7 @@ function getMomentSpeech(moment: JourneyMoment) {
   return moment.lines.join("")
 }
 
-const momentGap = 5.2
+const momentGap = 7.2
 
 const dust = [
   ["10%", "22%", "0s"],
@@ -300,6 +300,19 @@ export function MindJourneySection() {
                 },
                 startAt
               )
+
+              timeline.to(
+                scene,
+                {
+                  opacity: 0,
+                  y: -10,
+                  scale: 1.004,
+                  filter: "blur(2px)",
+                  duration: 0.72,
+                  ease: "power2.inOut",
+                },
+                startAt + 1.42
+              )
             }
 
             if (emotion) {
@@ -314,6 +327,19 @@ export function MindJourneySection() {
                   ease: "power3.out",
                 },
                 startAt + 1.68
+              )
+
+              timeline.to(
+                emotion,
+                {
+                  opacity: 0,
+                  y: -10,
+                  scale: 1.004,
+                  filter: "blur(2px)",
+                  duration: 0.72,
+                  ease: "power2.inOut",
+                },
+                startAt + 2.92
               )
             }
 
@@ -500,6 +526,7 @@ export function MindJourneySection() {
   return (
     <section
       id="personality"
+      data-home-roll="mind-journey"
       ref={rootRef}
       aria-label="心性探索长卷"
       className="relative z-10 overflow-clip px-4 md:px-8"
@@ -507,11 +534,20 @@ export function MindJourneySection() {
     >
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,8,7,.01),rgba(8,8,7,.18)_22%,rgba(8,8,7,.34)_68%,rgba(8,8,7,.1))]" />
 
-      <div className="sticky top-0 mx-auto grid min-h-[100svh] w-full max-w-[1240px] place-items-center py-24 md:py-28">
+      <div
+        data-home-roll-plane
+        className="sticky top-0 mx-auto grid min-h-[100svh] w-full max-w-[1240px] place-items-center py-24 md:py-28"
+      >
         <motion.div
           data-journey-mountain
           aria-hidden="true"
           className="absolute inset-x-[-18vw] bottom-[3vh] h-[42vh] opacity-[.028] blur-[2.8px]"
+          style={{
+            WebkitMaskImage:
+              "radial-gradient(ellipse 84% 66% at 50% 76%, #000 0%, rgba(0,0,0,.52) 48%, transparent 82%)",
+            maskImage:
+              "radial-gradient(ellipse 84% 66% at 50% 76%, #000 0%, rgba(0,0,0,.52) 48%, transparent 82%)",
+          }}
           animate={{ x: ["0vw", "1.2vw", "0vw"], y: ["0vh", "-.9vh", "0vh"] }}
           transition={{ duration: 42, repeat: Infinity, ease: "easeInOut" }}
         >

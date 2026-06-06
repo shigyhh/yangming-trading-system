@@ -17,13 +17,16 @@ import { assessmentStorageKeys, getStorage } from "@/features/assessment/storage
 import { getDataBindingUserProfile } from "@/features/data-binding/api-client"
 import { loadHeartProofs, loadLatestHeartProof } from "@/features/heart-proof/heartProofStorage"
 import type { HeartProof } from "@/features/heart-proof/heartProofTypes"
-import { buildMirrorReport, mirrorReportStorageKey } from "@/features/mirror-report/mirrorReportEngine"
+import { buildMirrorReport } from "@/features/mirror-report/mirrorReportEngine"
 import { loadMirrorReport, saveMirrorReport } from "@/features/mirror-report/mirrorReportStorage"
 import {
   createTodayOneThoughtSnapshot,
+  buildOneThoughtGrowthProfile,
+  loadOneThoughtRecords,
   TODAY_ONE_THOUGHT_CONFIRM_LIMIT,
   TODAY_ONE_THOUGHT_STORAGE_KEY,
   todayOneThoughtSourceItems,
+  type OneThoughtGrowthProfile,
   type TodayOneThoughtSnapshot,
   type TodayOneThoughtSourceItem,
   type TodayOneThoughtStoredState,
@@ -50,6 +53,7 @@ type TodaySeeingReport = {
   occurrenceCount: number
   recentMoments: string[]
   latestProof?: HeartProof | null
+  growthProfile: OneThoughtGrowthProfile
 }
 
 const seeingMirrorById: Record<string, SeeingMirror> = {
@@ -172,6 +176,11 @@ function getRecentMoments(thought: TodayOneThoughtSourceItem, heartProofs: Heart
 function buildTodaySeeingReport(thought: TodayOneThoughtSnapshot, heartProofs: HeartProof[], latestProof: HeartProof | null): TodaySeeingReport {
   const mirror = getSeeingMirror(thought.mirrorId)
   const activeThieves = normalizeThieves(thought.thief, thought.mirrorId)
+  const growthProfile = buildOneThoughtGrowthProfile({
+    userId: "local-anonymous",
+    period: "7d",
+    records: loadOneThoughtRecords(),
+  })
 
   return {
     thought,
@@ -182,6 +191,7 @@ function buildTodaySeeingReport(thought: TodayOneThoughtSnapshot, heartProofs: H
     occurrenceCount: countThoughtOccurrences(thought, heartProofs),
     recentMoments: getRecentMoments(thought, heartProofs),
     latestProof,
+    growthProfile,
   }
 }
 
@@ -299,15 +309,18 @@ export default function AssessmentResultPage() {
   }
 
   const { thought } = todayReport
+  const hasGrowthRecords = todayReport.growthProfile.topThoughts.length > 0
+  const growthTopThought = todayReport.growthProfile.topThoughts[0]?.os || thought.os
+  const growthTopThief = todayReport.growthProfile.thiefTrend[0]?.thief || todayReport.primaryThief
+  const growthPrompt = hasGrowthRecords
+    ? todayReport.growthProfile.growthPrompt
+    : `你今天先照见：「${growthTopThought}」\n这一念背后，是${growthTopThief}。`
 
   return (
     <AssessmentShell className="p-0 md:p-0" contentWidth="wide">
       <main
         className="seeing-report"
         data-active-act={activeAct}
-        data-assessment-id={mirrorReport.assessmentId}
-        data-report-id={mirrorReport.reportId}
-        data-storage-key={mirrorReportStorageKey}
         aria-label={isPreview ? "今日照见报告预览" : "今日照见报告"}
       >
         <div className="heart-lake-veil" aria-hidden="true" />
@@ -363,7 +376,7 @@ export default function AssessmentResultPage() {
               <span
                 key={item.glyph}
                 className={`${item.active ? "is-active" : ""} ${item.primary ? "is-primary" : ""}`}
-                style={{ "--i": index } as CSSProperties}
+                style={{ "--i": index, "--thief-delay": `${420 + index * 80}ms` } as CSSProperties}
               >
                 {item.glyph}
               </span>
@@ -376,18 +389,34 @@ export default function AssessmentResultPage() {
               <strong>{todayReport.primaryThief}</strong>
             </h2>
             <p className="act-note">
-              {todayReport.activeThieves.length > 1 ? `同起者：${todayReport.activeThieves.join(" · ")}` : thought.thief}
+              不是给你定名，是让你看见：这一刻，谁在牵动你的手。
             </p>
           </div>
           <button type="button" className="act-scroll-cue" onClick={(event) => { event.stopPropagation(); scrollToAct(3) }}>
+            我的照见
+          </button>
+        </section>
+
+        <section
+          className={`seeing-act act-my-seeing ${isActVisible(3) ? "is-visible" : ""}`}
+          data-act="3"
+          onClick={() => scrollToAct(4)}
+        >
+          <div className="my-seeing-ripple" aria-hidden="true" />
+          <div className="act-copy my-seeing-copy">
+            <p className="act-kicker">照见 · 我的照见</p>
+            <h2>我今天看见：</h2>
+            <p className="my-seeing-line">{thought.evidence}</p>
+          </div>
+          <button type="button" className="act-scroll-cue" onClick={(event) => { event.stopPropagation(); scrollToAct(4) }}>
             看见九镜
           </button>
         </section>
 
         <section
-          className={`seeing-act act-nine-mirror ${isActVisible(3) ? "is-visible" : ""}`}
-          data-act="3"
-          onClick={() => scrollToAct(4)}
+          className={`seeing-act act-nine-mirror ${isActVisible(4) ? "is-visible" : ""}`}
+          data-act="4"
+          onClick={() => scrollToAct(5)}
         >
           <div className="mirror-field" aria-label="九镜显影">
             {mirrorRooms.map((room) => (
@@ -408,15 +437,15 @@ export default function AssessmentResultPage() {
               只是你最常进入的房间。
             </p>
           </div>
-          <button type="button" className="act-scroll-cue" onClick={(event) => { event.stopPropagation(); scrollToAct(4) }}>
+          <button type="button" className="act-scroll-cue" onClick={(event) => { event.stopPropagation(); scrollToAct(5) }}>
             展开七日
           </button>
         </section>
 
         <section
-          className={`seeing-act act-seven-days ${isActVisible(4) ? "is-visible" : ""}`}
-          data-act="4"
-          onClick={() => scrollToAct(5)}
+          className={`seeing-act act-seven-days ${isActVisible(5) ? "is-visible" : ""}`}
+          data-act="5"
+          onClick={() => scrollToAct(6)}
         >
           <div className="act-copy">
             <p className="act-kicker">第五幕 · 未来七日，只修这一念</p>
@@ -435,12 +464,12 @@ export default function AssessmentResultPage() {
               </div>
             ))}
           </div>
-          <button type="button" className="act-scroll-cue" onClick={(event) => { event.stopPropagation(); scrollToAct(5) }}>
+          <button type="button" className="act-scroll-cue" onClick={(event) => { event.stopPropagation(); scrollToAct(6) }}>
             启程
           </button>
         </section>
 
-        <section className={`seeing-act act-departure ${isActVisible(5) ? "is-visible" : ""}`} data-act="5">
+        <section className={`seeing-act act-departure ${isActVisible(6) ? "is-visible" : ""}`} data-act="6">
           <div className="zhao-seal-drop" aria-label="落印完成态">
             <YangmingZhaoSeal
               label="已照见"
@@ -463,6 +492,26 @@ export default function AssessmentResultPage() {
               致良知，不是消灭念头。
               <br />
               是念起时，知道是谁在下单。
+            </p>
+          </div>
+          <div className="report-path-layers" aria-label="照见修行成长三层闭环">
+            <p className="path-layers-title">照见 · 修行 · 成长</p>
+            <div>
+              <span>照见</span>
+              <strong>今天先看见：「{growthTopThought}」</strong>
+            </div>
+            <div>
+              <span>修行</span>
+              <strong>{thought.practice}</strong>
+            </div>
+            <div>
+              <span>成长</span>
+              <strong>复照这一念，看它是否比昨天更轻。</strong>
+            </div>
+            <p className="path-layers-prompt">
+              {growthPrompt}
+              <br />
+              这不是系统结构图，是你今天能带走的一条路。
             </p>
           </div>
           <div className="departure-actions">
@@ -500,8 +549,8 @@ export default function AssessmentResultPage() {
           overscroll-behavior-y: contain;
           scroll-snap-type: y proximity;
           scrollbar-width: none;
-          color: rgba(242, 235, 220, 0.92);
-          background: #050807;
+          color: var(--ym-text-primary);
+          background: var(--ym-bg-deep-lake);
           isolation: isolate;
         }
 
@@ -533,7 +582,7 @@ export default function AssessmentResultPage() {
           background:
             radial-gradient(ellipse at 50% 52%, rgba(216, 183, 111, 0.06), transparent 42%),
             radial-gradient(ellipse at 50% 78%, rgba(95, 132, 117, 0.12), transparent 54%);
-          animation: lake-breathe 7s ease-in-out infinite;
+          animation: ym-lake-breathe 7s ease-in-out infinite;
           opacity: 0.62;
         }
 
@@ -556,7 +605,7 @@ export default function AssessmentResultPage() {
           mask-image: linear-gradient(180deg, transparent, black 16%, black 80%, transparent);
           opacity: 0.62;
           transform-origin: center top;
-          animation: waterline-drift 12s ease-in-out infinite;
+          animation: ym-waterline-drift 12s ease-in-out infinite;
         }
 
         .seeing-act {
@@ -581,7 +630,7 @@ export default function AssessmentResultPage() {
           background: radial-gradient(ellipse at center, rgba(95, 132, 117, 0.09), transparent 68%);
           filter: blur(22px);
           opacity: 0;
-          transition: opacity 900ms ease-out, transform 900ms ease-out;
+          transition: opacity var(--ym-motion-fade-in) var(--ym-motion-ease-out), transform var(--ym-motion-fade-in) var(--ym-motion-ease-out);
           pointer-events: none;
         }
 
@@ -598,9 +647,9 @@ export default function AssessmentResultPage() {
           transform: translateY(22px);
           filter: blur(10px);
           transition:
-            opacity 860ms cubic-bezier(0.22, 1, 0.36, 1),
-            transform 860ms cubic-bezier(0.22, 1, 0.36, 1),
-            filter 860ms cubic-bezier(0.22, 1, 0.36, 1);
+            opacity var(--ym-motion-fade-in) var(--ym-motion-ease-out),
+            transform var(--ym-motion-fade-in) var(--ym-motion-ease-out),
+            filter var(--ym-motion-fade-in) var(--ym-motion-ease-out);
         }
 
         .seeing-act.is-visible .act-copy {
@@ -636,7 +685,7 @@ export default function AssessmentResultPage() {
           font-weight: 300;
           line-height: 1.26;
           letter-spacing: 0.07em;
-          color: rgba(242, 235, 220, 0.9);
+          color: rgba(244, 235, 221, 0.9);
           text-shadow:
             0 0 34px rgba(216, 183, 111, 0.08),
             0 28px 80px rgba(0, 0, 0, 0.72);
@@ -698,6 +747,7 @@ export default function AssessmentResultPage() {
         .still-breath,
         .thought-ripple,
         .thief-orbit,
+        .my-seeing-ripple,
         .mirror-field,
         .zhao-seal-drop {
           pointer-events: none;
@@ -716,7 +766,7 @@ export default function AssessmentResultPage() {
         }
 
         .act-still-water.is-visible .still-breath {
-          animation: ripple-open 1600ms ease-out 1200ms both;
+          animation: ym-lake-ripple 1600ms ease-out 1200ms both;
         }
 
         .thought-ripple {
@@ -738,7 +788,7 @@ export default function AssessmentResultPage() {
         }
 
         .act-one-thought.is-visible .thought-ripple i {
-          animation: ripple-open 1500ms ease-out both;
+          animation: ym-lake-ripple var(--ym-motion-ripple) ease-out both;
         }
 
         .act-one-thought.is-visible .thought-ripple i:nth-child(2) {
@@ -752,46 +802,63 @@ export default function AssessmentResultPage() {
         .thief-orbit {
           position: absolute;
           left: 50%;
-          top: 49%;
-          width: min(74vw, 42rem);
-          aspect-ratio: 1;
+          top: 55%;
+          --thief-spread: 4.2rem;
+          --thief-offset: 10.5rem;
+          --thief-sink-spread: 3rem;
+          --thief-sink-offset: 7.5rem;
+          width: min(82vw, 48rem);
+          height: min(42svh, 28rem);
           transform: translate(-50%, -50%);
           opacity: 0;
           transition: opacity 900ms ease-out;
+        }
+
+        .thief-orbit::before {
+          content: "";
+          position: absolute;
+          left: 50%;
+          top: 60%;
+          width: min(64vw, 36rem);
+          aspect-ratio: 1 / 0.34;
+          transform: translate(-50%, -50%);
+          border: 1px solid rgba(216, 183, 111, 0.1);
+          border-radius: 50%;
+          background: radial-gradient(ellipse at center, rgba(216, 183, 111, 0.05), transparent 66%);
+          filter: blur(1.2px);
+          opacity: 0;
         }
 
         .act-heart-thief.is-visible .thief-orbit {
           opacity: 1;
         }
 
+        .act-heart-thief.is-visible .thief-orbit::before {
+          animation: ym-lake-ripple 1600ms ease-out 760ms both;
+        }
+
         .thief-orbit span {
           position: absolute;
           left: 50%;
-          top: 50%;
-          transform:
-            translate(-50%, -50%)
-            rotate(calc(var(--i) * 60deg))
-            translateY(min(26vw, 14rem))
-            rotate(calc(var(--i) * -60deg));
+          top: 58%;
+          transform: translate(-50%, -50%) translate(calc(var(--i) * var(--thief-spread) - var(--thief-offset)), 0);
           font-family: var(--font-narrative);
           font-size: clamp(2.4rem, 6vw, 5.2rem);
-          color: rgba(220, 212, 195, 0.12);
-          filter: blur(1px);
-          transition:
-            color 900ms ease-out,
-            filter 900ms ease-out,
-            text-shadow 900ms ease-out,
-            transform 900ms ease-out;
+          color: rgba(220, 212, 195, 0.16);
+          filter: blur(1.6px);
+          opacity: 0;
         }
 
-        .thief-orbit span.is-active {
-          color: rgba(216, 183, 111, 0.58);
-          filter: blur(0.2px);
-          text-shadow: 0 0 32px rgba(216, 183, 111, 0.24);
+        .act-heart-thief.is-visible .thief-orbit span {
+          animation: thief-sink 1800ms cubic-bezier(0.22, 1, 0.36, 1) var(--thief-delay) both;
         }
 
-        .thief-orbit span.is-primary {
+        .act-heart-thief.is-visible .thief-orbit span.is-primary {
           color: rgba(179, 76, 56, 0.72);
+          filter: blur(0);
+          animation:
+            current-thief-rise 1900ms cubic-bezier(0.22, 1, 0.36, 1) 160ms both,
+            current-thief-glow 4200ms ease-in-out 1900ms infinite;
           text-shadow:
             0 0 34px rgba(179, 76, 56, 0.34),
             0 0 54px rgba(216, 183, 111, 0.14);
@@ -801,6 +868,64 @@ export default function AssessmentResultPage() {
           color: rgba(179, 76, 56, 0.82);
           font-weight: 300;
           text-shadow: 0 0 36px rgba(179, 76, 56, 0.34);
+        }
+
+        .act-my-seeing .act-copy {
+          max-width: min(66rem, calc(100vw - 2rem));
+        }
+
+        .my-seeing-ripple {
+          position: absolute;
+          left: 50%;
+          top: 57%;
+          z-index: 1;
+          width: min(72vw, 48rem);
+          aspect-ratio: 1 / 0.42;
+          transform: translate(-50%, -50%);
+          border: 1px solid rgba(216, 183, 111, 0.1);
+          border-radius: 50%;
+          opacity: 0;
+        }
+
+        .act-my-seeing.is-visible .my-seeing-ripple {
+          animation: ym-lake-ripple 1500ms ease-out 320ms both;
+        }
+
+        .my-seeing-copy h2 {
+          color: rgba(244, 235, 221, 0.78);
+          font-size: clamp(2.7rem, 5.8vw, 6.2rem);
+        }
+
+        .my-seeing-line {
+          position: relative;
+          width: min(54rem, 100%);
+          margin: clamp(1.4rem, 3svh, 2.4rem) auto 0;
+          border-top: 1px solid rgba(216, 183, 111, 0.18);
+          border-bottom: 1px solid rgba(216, 183, 111, 0.1);
+          padding: clamp(1rem, 2.6svh, 1.5rem) 0;
+          color: rgba(242, 235, 220, 0.72);
+          font-family: var(--font-story);
+          font-size: clamp(1.25rem, 2.4vw, 2rem);
+          font-weight: 300;
+          line-height: 1.8;
+          letter-spacing: 0.08em;
+          text-align: left;
+          text-wrap: pretty;
+        }
+
+        .my-seeing-line::before {
+          content: "";
+          position: absolute;
+          left: 50%;
+          top: -1px;
+          width: 0;
+          height: 1px;
+          transform: translateX(-50%);
+          background: rgba(216, 183, 111, 0.52);
+        }
+
+        .act-my-seeing.is-visible .my-seeing-line::before {
+          animation: seeing-line-open 900ms ease-out 420ms both;
         }
 
         .mirror-field {
@@ -930,7 +1055,77 @@ export default function AssessmentResultPage() {
         }
 
         .act-departure.is-visible .zhao-seal-drop {
-          animation: seal-drop 500ms cubic-bezier(0.18, 1.18, 0.34, 1) 260ms both;
+          animation: ym-seal-drop var(--ym-motion-seal-drop) var(--ym-motion-spring) 260ms both;
+        }
+
+        .report-path-layers {
+          position: relative;
+          z-index: 4;
+          display: grid;
+          width: min(52rem, calc(100vw - 2rem));
+          gap: 0;
+          margin-top: clamp(1.6rem, 3.8svh, 2.8rem);
+          border-top: 1px solid rgba(216, 183, 111, 0.12);
+          border-bottom: 1px solid rgba(216, 183, 111, 0.08);
+          padding: 1.1rem 0 0.9rem;
+          opacity: 0;
+          transform: translateY(18px);
+          transition:
+            opacity 700ms ease-out 360ms,
+            transform 700ms ease-out 360ms;
+        }
+
+        .act-departure.is-visible .report-path-layers {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        .path-layers-title {
+          margin: 0 0 0.8rem;
+          font-family: var(--font-function);
+          font-size: 0.72rem;
+          font-weight: 700;
+          letter-spacing: 0.24em;
+          color: rgba(216, 183, 111, 0.62);
+        }
+
+        .report-path-layers div {
+          display: grid;
+          grid-template-columns: minmax(5.2rem, 0.24fr) minmax(0, 1fr);
+          gap: 1rem;
+          align-items: baseline;
+          border-top: 1px solid rgba(216, 183, 111, 0.075);
+          padding: 0.72rem 0;
+          text-align: left;
+        }
+
+        .report-path-layers span {
+          font-family: var(--font-function);
+          font-size: 0.78rem;
+          font-weight: 700;
+          letter-spacing: 0.22em;
+          color: rgba(216, 183, 111, 0.64);
+        }
+
+        .report-path-layers strong {
+          min-width: 0;
+          color: rgba(242, 235, 220, 0.78);
+          font-family: var(--font-story);
+          font-size: clamp(1rem, 1.7vw, 1.24rem);
+          font-weight: 300;
+          line-height: 1.7;
+          letter-spacing: 0.06em;
+        }
+
+        .path-layers-prompt {
+          margin: 0.75rem 0 0;
+          white-space: pre-line;
+          color: rgba(220, 212, 195, 0.48);
+          font-family: var(--font-story);
+          font-size: clamp(0.98rem, 1.6vw, 1.2rem);
+          font-weight: 300;
+          line-height: 1.8;
+          letter-spacing: 0.08em;
         }
 
         .departure-actions {
@@ -1032,15 +1227,16 @@ export default function AssessmentResultPage() {
           }
 
           .thief-orbit {
+            --thief-spread: 2.4rem;
+            --thief-offset: 6rem;
+            --thief-sink-spread: 1.8rem;
+            --thief-sink-offset: 4.5rem;
             width: min(92vw, 26rem);
+            height: 18rem;
           }
 
           .thief-orbit span {
-            transform:
-              translate(-50%, -50%)
-              rotate(calc(var(--i) * 60deg))
-              translateY(min(34vw, 9.4rem))
-              rotate(calc(var(--i) * -60deg));
+            transform: translate(-50%, -50%) translate(calc(var(--i) * var(--thief-spread) - var(--thief-offset)), 0);
           }
 
           .seven-day-scroll {
@@ -1057,6 +1253,12 @@ export default function AssessmentResultPage() {
 
           .practice-line p {
             font-size: 1rem;
+          }
+
+          .report-path-layers div {
+            grid-template-columns: 1fr;
+            gap: 0.2rem;
+            text-align: center;
           }
 
           .departure-actions {
@@ -1091,48 +1293,6 @@ export default function AssessmentResultPage() {
           }
         }
 
-        @keyframes lake-breathe {
-          0%,
-          100% {
-            opacity: 0.46;
-            transform: scale(1);
-          }
-
-          50% {
-            opacity: 0.72;
-            transform: scale(1.018);
-          }
-        }
-
-        @keyframes waterline-drift {
-          0%,
-          100% {
-            transform: translateY(0) scaleY(1);
-          }
-
-          50% {
-            transform: translateY(-1.2svh) scaleY(1.03);
-          }
-        }
-
-        @keyframes ripple-open {
-          0% {
-            opacity: 0;
-            transform: scale(0.58);
-            filter: blur(0.2px);
-          }
-
-          26% {
-            opacity: 0.72;
-          }
-
-          100% {
-            opacity: 0;
-            transform: scale(1.58, 1.82);
-            filter: blur(3px);
-          }
-        }
-
         @keyframes thought-float {
           0%,
           100% {
@@ -1141,6 +1301,65 @@ export default function AssessmentResultPage() {
 
           50% {
             transform: translateY(-0.42rem);
+          }
+        }
+
+        @keyframes thief-sink {
+          0% {
+            opacity: 0.34;
+            transform: translate(-50%, -50%) translate(calc(var(--i) * var(--thief-spread) - var(--thief-offset)), -0.5rem);
+            filter: blur(1px);
+          }
+
+          100% {
+            opacity: 0;
+            transform: translate(-50%, -50%) translate(calc(var(--i) * var(--thief-sink-spread) - var(--thief-sink-offset)), 8rem);
+            filter: blur(10px);
+          }
+        }
+
+        @keyframes current-thief-rise {
+          0% {
+            opacity: 0;
+            transform: translate(-50%, -50%) translateY(8rem) scale(0.72);
+            filter: blur(14px);
+          }
+
+          58% {
+            opacity: 0.82;
+            transform: translate(-50%, -50%) translateY(-0.35rem) scale(1.04);
+            filter: blur(0.8px);
+          }
+
+          100% {
+            opacity: 1;
+            transform: translate(-50%, -50%) translateY(0) scale(1);
+            filter: blur(0);
+          }
+        }
+
+        @keyframes current-thief-glow {
+          0%,
+          100% {
+            text-shadow:
+              0 0 30px rgba(179, 76, 56, 0.28),
+              0 0 52px rgba(216, 183, 111, 0.12);
+          }
+
+          50% {
+            text-shadow:
+              0 0 44px rgba(179, 76, 56, 0.44),
+              0 0 74px rgba(216, 183, 111, 0.18);
+          }
+        }
+
+        @keyframes seeing-line-open {
+          from {
+            width: 0;
+          }
+
+          to {
+            width: 100%;
           }
         }
 
@@ -1170,25 +1389,6 @@ export default function AssessmentResultPage() {
           }
         }
 
-        @keyframes seal-drop {
-          from {
-            opacity: 0;
-            transform: translate(-50%, -58%) rotate(-18deg) scale(1.26);
-            filter: blur(8px);
-          }
-
-          72% {
-            opacity: 1;
-            transform: translate(-50%, -50%) rotate(-9deg) scale(0.82);
-            filter: blur(0);
-          }
-
-          to {
-            opacity: 0.92;
-            transform: translate(-50%, -50%) rotate(-9deg) scale(0.86);
-            filter: blur(0);
-          }
-        }
       `}</style>
     </AssessmentShell>
   )

@@ -11,9 +11,11 @@ import {
 import insightMirrors from "@/data/insight-engine/mirrors.json"
 import {
   confirmTodayOneThought,
+  createOneThoughtRecord,
   createTodayOneThoughtSnapshot,
   drawTodayOneThought,
   readOrCreateTodayOneThought,
+  saveOneThoughtRecord,
   todayOneThoughtSourceItems,
   type TodayOneThoughtSnapshot,
 } from "@/data/insight-engine/today-one-thought"
@@ -999,6 +1001,12 @@ export default function ZhaoxinRitualFlow({
         })
 
         saveHeartProof(heartProof)
+        saveOneThoughtRecord(createOneThoughtRecord(todayOneThought, {
+          recordId: `one_thought_${sourceId}`,
+          date: todayOneThought.dateKey,
+          completed: true,
+          sealedAt: completedAt,
+        }))
         setHeartProofSequenceNumber(nextSequenceNumber)
         setStage("growth")
         setRevealStep("idle")
@@ -1025,6 +1033,7 @@ export default function ZhaoxinRitualFlow({
     selectedScene,
     selectedThought,
     stage,
+    todayOneThought,
   ])
 
   const clearRevealTimers = useCallback(() => {
@@ -1448,6 +1457,9 @@ export default function ZhaoxinRitualFlow({
                   <strong>{growthPracticeLine}</strong>
                 </div>
               </div>
+              <a className="growth-lake-link" href="/one-thought-lake">
+                去心湖看看，多少人也有这一念
+              </a>
             </div>
           ) : null}
         </div>
@@ -1800,6 +1812,27 @@ export default function ZhaoxinRitualFlow({
           letter-spacing: 0.26em;
           text-indent: 0.26em;
           text-align: center;
+        }
+
+        .growth-lake-link {
+          justify-self: center;
+          border: 1px solid rgba(216, 183, 111, 0.16);
+          border-radius: 999px;
+          background: rgba(8, 8, 7, 0.28);
+          color: rgba(216, 183, 111, 0.68);
+          font-family: var(--font-sans, system-ui, sans-serif);
+          font-size: clamp(0.76rem, 1vw, 0.9rem);
+          font-weight: 700;
+          letter-spacing: 0.18em;
+          padding: 0.58rem 0.9rem;
+          text-decoration: none;
+          transition: border-color 520ms ease, color 520ms ease, background 520ms ease;
+        }
+
+        .growth-lake-link:hover {
+          border-color: rgba(216, 183, 111, 0.34);
+          background: rgba(216, 183, 111, 0.06);
+          color: rgba(244, 235, 221, 0.8);
         }
 
         @media (max-width: 560px) {

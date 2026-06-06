@@ -16,6 +16,8 @@ test("assessment result page renders six-act today seeing ritual instead of a re
     "YangmingZhaoSeal",
     "TODAY_ONE_THOUGHT_STORAGE_KEY",
     "todayOneThoughtSourceItems",
+    "loadOneThoughtRecords",
+    "buildOneThoughtGrowthProfile",
     "loadHeartProofs",
     "loadLatestHeartProof",
     "buildMirrorReport",
@@ -24,6 +26,7 @@ test("assessment result page renders six-act today seeing ritual instead of a re
     "act-still-water",
     "act-one-thought",
     "act-heart-thief",
+    "act-my-seeing",
     "act-nine-mirror",
     "act-seven-days",
     "act-departure",
@@ -37,6 +40,8 @@ test("assessment result page renders six-act today seeing ritual instead of a re
     "你只是经常被某一种念头带走。",
     "最常带走你的那一念是：",
     "这一念里，最重的是：",
+    "照见 · 我的照见",
+    "我今天看见：",
     "你最容易进入：",
     "它不是你。",
     "只是你最常进入的房间。",
@@ -54,9 +59,17 @@ test("assessment result page renders six-act today seeing ritual instead of a re
     "是念起时，知道是谁在下单。",
     "thought-ripple",
     "thief-orbit",
+    "thief-sink",
+    "current-thief-rise",
+    "current-thief-glow",
+    "my-seeing-line",
     "mirror-silhouette",
     "seven-day-scroll",
     "zhao-seal-drop",
+    "report-path-layers",
+    "照见 · 修行 · 成长",
+    "你今天先照见",
+    "这不是系统结构图，是你今天能带走的一条路。",
     "本报告用于交易心理觉察，不构成投资建议",
   ].forEach((token) => {
     assert.equal(source.includes(token), true, `missing token: ${token}`)
@@ -68,6 +81,12 @@ test("assessment result page renders six-act today seeing ritual instead of a re
 
   assert.equal(resultPage.includes("<strong>照</strong>"), false, "completion seal must not render font zhao")
   assert.equal(resultPage.includes("/cycle-mirror"), false, "report page must not send users to cycle mirror")
+  assert.equal(resultPage.includes("data-assessment-id"), false, "report page must not expose assessment ids in the visual flow")
+  assert.equal(resultPage.includes("data-report-id"), false, "report page must not expose report ids in the visual flow")
+  assert.equal(resultPage.includes("data-storage-key"), false, "report page must not expose storage keys in the visual flow")
+  assert.equal(resultPage.includes("assessment_id"), false, "report page must not show backend assessment field names")
+  assert.equal(resultPage.includes("mirror_report_id"), false, "report page must not show backend report field names")
+  assert.equal(resultPage.includes("Sprint"), false, "report page must not show sprint labels in the user flow")
   assert.equal(resultPage.includes("ReportCoreCard"), false, "today seeing report must not keep the right-side report card")
   assert.equal(resultPage.includes("RiskRadar"), false, "today seeing report must not render the old radar chart")
   assert.equal(resultPage.includes("主反应人格"), false, "today seeing report must not lead with personality labels")

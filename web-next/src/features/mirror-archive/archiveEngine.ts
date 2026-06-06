@@ -2,6 +2,7 @@ import { compareRiskRadarSnapshots, type PracticeChangeState, type PracticeRadar
 import { assessmentStorageKeys, getStorage } from "@/features/assessment/storage"
 import { type DailyGrowthState, getCheckinLabel, getThoughtLabel } from "@/features/assessment/sprint10/trainingTypes"
 import { loadHeartProofs } from "@/features/heart-proof/heartProofStorage"
+import { loadOneThoughtRecords } from "@/data/insight-engine/today-one-thought"
 import { ensureBehaviorLoopFromTradeReview, ensureBehaviorLoopsFromHeartProofs, loadBehaviorLoops } from "@/features/living-mirror-growth/behaviorLoopStorage"
 import type { BehaviorLoop } from "@/features/living-mirror-growth/behaviorLoopTypes"
 import { buildLivingMirrorGrowthProfileFromLocal, loadGrowthProfileArchiveItems, recomputeAndSaveGrowthProfile } from "@/features/living-mirror-growth/growthProfileStorage"
@@ -19,6 +20,7 @@ export function loadMirrorArchiveData(): MirrorArchiveData {
   const growth = getStorage<DailyGrowthState | null>("ym_living_mirror_growth_v1", null)
   const practice = getStorage<PracticeChangeState | null>(assessmentStorageKeys.practiceChange, null)
   const heartProofs = loadHeartProofs()
+  const oneThoughtRecords = loadOneThoughtRecords()
   const latestTradeReview = getStorage<TradeReview | null>(tradeReviewLastResultStorageKey, null)
   const retestComparison = compareRiskRadarSnapshots(practice?.baselineReport, practice?.retestReport)
   const growthBuildResult = recomputeAndSaveGrowthProfile()
@@ -45,6 +47,7 @@ export function loadMirrorArchiveData(): MirrorArchiveData {
     ...persistedArchiveItems.filter((item) => item.type === "behavior_loop"),
   ])
   const heartProofItems = heartProofs.map(toHeartProofArchiveItem)
+  const oneThoughtRecordItems = oneThoughtRecords.map(toOneThoughtRecordArchiveItem)
   const retests = dedupeArchiveItems([
     ...(retestComparison.length ? [toRetestArchiveItem(retestComparison, practice)] : []),
     ...persistedArchiveItems.filter((item) => item.type === "retest"),
@@ -56,6 +59,7 @@ export function loadMirrorArchiveData(): MirrorArchiveData {
     ...tradeReviews,
     ...behaviorLoopItems,
     ...heartProofItems,
+    ...oneThoughtRecordItems,
     ...retests,
   ].sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())
 
@@ -64,6 +68,7 @@ export function loadMirrorArchiveData(): MirrorArchiveData {
       reportCount: reports.length,
       completedDays: growth?.completedDays ?? 0,
       heartProofCount: heartProofItems.length,
+      oneThoughtRecordCount: oneThoughtRecordItems.length,
       tradeReviewCount: tradeReviews.length,
       growthProfileCount: growthProfiles.length,
       behaviorLoopCount: behaviorLoopItems.length,
@@ -78,9 +83,24 @@ export function loadMirrorArchiveData(): MirrorArchiveData {
       tradeReviews,
       behaviorLoops: behaviorLoopItems,
       heartProofs: heartProofItems,
+      oneThoughtRecords: oneThoughtRecordItems,
       retests,
     },
     allItems,
+  }
+}
+
+function toOneThoughtRecordArchiveItem(record: ReturnType<typeof loadOneThoughtRecords>[number]): ArchiveItem {
+  return {
+    archiveItemId: `archive_one_thought_${record.recordId}`,
+    anonymousId: "local-anonymous",
+    type: "one_thought_record",
+    sourceId: record.recordId,
+    detailHref: "/mirror-scroll",
+    title: record.completed ? "今日一念已落印" : "今日一念",
+    summary: `「${record.os}」已入档。心证：${record.evidence}`,
+    tags: [record.mirrorId, record.thief, record.sceneId].filter(Boolean).slice(0, 5),
+    createdAt: record.sealedAt || record.date,
   }
 }
 

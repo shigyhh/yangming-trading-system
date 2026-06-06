@@ -47,7 +47,7 @@ export function InkMountainBackground() {
   }, [])
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-ink">
+    <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-[var(--ym-bg-deep-lake)]">
       <ZenSceneCanvas />
       <motion.div
         key={response.id}
@@ -56,7 +56,7 @@ export function InkMountainBackground() {
         style={{ left: `${response.x * 100}%`, top: `${response.y * 100}%` }}
         initial={{ opacity: 0, scale: 0.76 }}
         animate={{ opacity: response.active ? [0, 0.14, 0] : 0, scale: [0.82, 1.08, 1.2] }}
-        transition={{ duration: 1.25, ease: "easeOut" }}
+        transition={{ duration: 1.25, ease: [0.22, 1, 0.36, 1] }}
       />
       <motion.div
         key={`mist-${response.id}`}
@@ -70,7 +70,7 @@ export function InkMountainBackground() {
           scaleY: [0.72, 0.88, 0.82],
           y: [8, -2, 0],
         }}
-        transition={{ duration: 1.6, ease: "easeOut" }}
+        transition={{ duration: 1.6, ease: [0.22, 1, 0.36, 1] }}
       />
       <motion.div
         className="absolute inset-[-12%] bg-[radial-gradient(circle_at_24%_16%,rgba(216,183,111,.035),transparent_24rem),radial-gradient(circle_at_82%_12%,rgba(95,132,117,.08),transparent_26rem),radial-gradient(circle_at_54%_86%,rgba(120,60,45,.08),transparent_28rem)]"
@@ -81,7 +81,7 @@ export function InkMountainBackground() {
           y: ["0%", "-.55%", "0%"],
         }}
         transition={{
-          opacity: { duration: 2.4, delay: 0.45, ease: "easeOut" },
+          opacity: { duration: 2.4, delay: 0.45, ease: [0.22, 1, 0.36, 1] },
           x: { duration: 18, repeat: Infinity, ease: "easeInOut" },
           y: { duration: 18, repeat: Infinity, ease: "easeInOut" },
         }}
@@ -113,27 +113,33 @@ export function InkMountainBackground() {
         </svg>
       </motion.div>
       <motion.div
-        className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,8,7,.12),rgba(8,8,7,.86)),repeating-linear-gradient(90deg,rgba(244,235,221,.008)_0_1px,transparent_1px_126px)]"
+        className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,8,7,.12),rgba(8,8,7,.86))]"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 1.2, ease: "easeOut" }}
+        transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
       />
       <motion.div
         className="absolute left-[-18%] top-[18%] h-px w-[136%] rotate-[-9deg] bg-[linear-gradient(90deg,transparent,rgba(216,183,111,.025),rgba(216,183,111,.12),rgba(95,132,117,.04),transparent)] blur-[1px]"
         initial={{ opacity: 0, x: "-12%" }}
         animate={{ opacity: [0, 0.36, 0.18, 0.36], x: ["-5%", "5%", "-5%"] }}
         transition={{
-          opacity: { duration: 2.6, delay: 0.9, ease: "easeOut" },
+          opacity: { duration: 2.6, delay: 0.9, ease: [0.22, 1, 0.36, 1] },
           x: { duration: 18, repeat: Infinity, ease: "easeInOut" },
         }}
       />
       <motion.div
         aria-hidden="true"
-        className="absolute inset-x-[-8vw] bottom-0 h-[58vh] opacity-30 mix-blend-screen"
+        className="absolute inset-x-[-14vw] bottom-0 h-[58vh] opacity-[.16]"
+        style={{
+          WebkitMaskImage:
+            "radial-gradient(ellipse 82% 64% at 50% 78%, #000 0%, rgba(0,0,0,.58) 44%, transparent 82%)",
+          maskImage:
+            "radial-gradient(ellipse 82% 64% at 50% 78%, #000 0%, rgba(0,0,0,.58) 44%, transparent 82%)",
+        }}
         initial={{ opacity: 0, y: "2vh" }}
-        animate={{ opacity: 0.26, x: ["-.65vw", ".65vw", "-.65vw"], y: ["0vh", "-.42vh", "0vh"] }}
+        animate={{ opacity: 0.16, x: ["-.65vw", ".65vw", "-.65vw"], y: ["0vh", "-.42vh", "0vh"] }}
         transition={{
-          opacity: { duration: 2.4, delay: 0.18, ease: "easeOut" },
+          opacity: { duration: 2.4, delay: 0.18, ease: [0.22, 1, 0.36, 1] },
           x: { duration: 30, repeat: Infinity, ease: "easeInOut" },
           y: { duration: 30, repeat: Infinity, ease: "easeInOut" },
         }}

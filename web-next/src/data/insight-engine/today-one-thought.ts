@@ -39,18 +39,30 @@ import type { InsightSceneFile } from "./schema"
 import {
   changeTodayOneThought as changeTodayOneThoughtCore,
   confirmTodayOneThought as confirmTodayOneThoughtCore,
+  createOneThoughtRecord as createOneThoughtRecordCore,
   createTodayOneThoughtSnapshot as createTodayOneThoughtSnapshotCore,
+  buildOneThoughtGrowthProfile as buildOneThoughtGrowthProfileCore,
   drawTodayOneThought as drawTodayOneThoughtCore,
+  loadOneThoughtRecords as loadOneThoughtRecordsCore,
+  matchUserThought as matchUserThoughtCore,
   readOrCreateTodayOneThought as readOrCreateTodayOneThoughtCore,
+  readStableTodayOneThought as readStableTodayOneThoughtCore,
+  saveOneThoughtRecord as saveOneThoughtRecordCore,
 } from "./today-one-thought-core"
 import type {
   BrowserStorage,
+  OneThought,
+  OneThoughtGrowthProfile,
+  OneThoughtGrowthPeriod,
+  OneThoughtMatchResult,
+  OneThoughtRecord,
   TodayOneThoughtSnapshot,
   TodayOneThoughtSourceItem,
   TodayOneThoughtStoredState,
 } from "./today-one-thought-core"
 
 export {
+  ONE_THOUGHT_RECORDS_STORAGE_KEY,
   TODAY_ONE_THOUGHT_CONFIRM_LIMIT,
   getTodayOneThoughtDateKey,
   TODAY_ONE_THOUGHT_CHANGE_LIMIT,
@@ -59,6 +71,11 @@ export {
 } from "./today-one-thought-core"
 export type {
   BrowserStorage,
+  OneThought,
+  OneThoughtGrowthProfile,
+  OneThoughtGrowthPeriod,
+  OneThoughtMatchResult,
+  OneThoughtRecord,
   TodayOneThoughtSnapshot,
   TodayOneThoughtSourceItem,
   TodayOneThoughtStoredState,
@@ -103,9 +120,10 @@ export const todayOneThoughtSceneLibrary = [
   scene36Insight,
 ] as InsightSceneFile[]
 
-export const todayOneThoughtSourceItems = todayOneThoughtSceneLibrary.flatMap((scene) =>
+export const oneThoughtPool = todayOneThoughtSceneLibrary.flatMap((scene) =>
   scene.items.map((item, index) => ({
     thoughtId: item.id,
+    id: item.id,
     sceneId: scene.sceneId,
     sceneName: scene.sceneName,
     mirrorId: scene.mirrorId,
@@ -114,13 +132,17 @@ export const todayOneThoughtSourceItems = todayOneThoughtSceneLibrary.flatMap((s
     tradeMoment: item.tradeMoment,
     os: item.os,
     reflection: item.reflection,
+    hiddenThought: item.hiddenThought,
     evidence: scene.evidences[index % scene.evidences.length] ?? scene.evidences[0] ?? "",
     practice: scene.practices[index % scene.practices.length] ?? scene.practices[0] ?? "",
     coreStatement: scene.coreStatement,
     evidenceLines: scene.evidences,
     practiceLines: scene.practices,
+    intensity: item.intensity,
   })),
 ) satisfies TodayOneThoughtSourceItem[]
+
+export const todayOneThoughtSourceItems = oneThoughtPool
 
 function getBrowserStorage(): BrowserStorage | null {
   if (typeof window === "undefined") return null
@@ -137,6 +159,13 @@ export function readOrCreateTodayOneThought(
   excludeThoughtIds: string[] = [],
 ): TodayOneThoughtSnapshot {
   return readOrCreateTodayOneThoughtCore({ sourceItems: todayOneThoughtSourceItems, storage, date, excludeThoughtIds })
+}
+
+export function readStableTodayOneThought(
+  storage: BrowserStorage | null = getBrowserStorage(),
+  date = new Date(),
+): TodayOneThoughtSnapshot {
+  return readStableTodayOneThoughtCore({ sourceItems: todayOneThoughtSourceItems, storage, date })
 }
 
 export function drawTodayOneThought(
@@ -166,4 +195,37 @@ export function changeTodayOneThought(
   date = new Date(),
 ): TodayOneThoughtSnapshot {
   return changeTodayOneThoughtCore({ sourceItems: todayOneThoughtSourceItems, currentState, storage, date })
+}
+
+export function createOneThoughtRecord(
+  thought: OneThought | TodayOneThoughtSnapshot | TodayOneThoughtSourceItem,
+  options: Parameters<typeof createOneThoughtRecordCore>[1] = {},
+): OneThoughtRecord {
+  return createOneThoughtRecordCore(thought, options)
+}
+
+export function loadOneThoughtRecords(storage: BrowserStorage | null = getBrowserStorage()): OneThoughtRecord[] {
+  return loadOneThoughtRecordsCore(storage)
+}
+
+export function saveOneThoughtRecord(
+  record: OneThoughtRecord,
+  storage: BrowserStorage | null = getBrowserStorage(),
+): OneThoughtRecord[] {
+  return saveOneThoughtRecordCore(record, storage)
+}
+
+export function matchUserThought(
+  inputText: string,
+  sourceItems: TodayOneThoughtSourceItem[] = oneThoughtPool,
+): OneThoughtMatchResult {
+  return matchUserThoughtCore(inputText, sourceItems)
+}
+
+export function buildOneThoughtGrowthProfile(input: {
+  userId: string
+  period: OneThoughtGrowthPeriod
+  records: OneThoughtRecord[]
+}): OneThoughtGrowthProfile {
+  return buildOneThoughtGrowthProfileCore(input)
 }

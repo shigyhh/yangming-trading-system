@@ -109,6 +109,21 @@
 :root {
   --background: #080807;
   --foreground: #f4ebdd;
+  --ym-bg-deep-lake: #050807;
+  --ym-bg-dark-ink: #080807;
+  --ym-bg-ink-surface: rgba(17, 16, 13, 0.72);
+  --ym-text-primary: #f4ebdd;
+  --ym-text-muted: rgba(220, 212, 195, 0.56);
+  --ym-accent-gold: #d8b76f;
+  --ym-accent-ink-green: #5f8475;
+  --ym-seal-cinnabar: #b34c38;
+  --ym-border-gold-low: rgba(217, 189, 122, 0.16);
+  --ym-border-ivory-low: rgba(244, 235, 221, 0.08);
+  --ym-motion-fade-in: 820ms;
+  --ym-motion-ripple: 1500ms;
+  --ym-motion-seal-drop: 500ms;
+  --ym-motion-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ym-motion-spring: cubic-bezier(0.18, 1.18, 0.34, 1);
   --font-yangming-title: "Yangming Display", "Noto Serif SC Local", "Noto Serif SC", "Noto Serif CJK SC", "Source Han Serif SC", "Songti SC", "STSong", serif;
   --font-yangming-hand: "Yangming Hand", "LXGW WenKai Local", "LXGW WenKai", "LXGW WenKai Screen", "Kaiti SC", "STKaiti", serif;
   --font-world: "LXGW WenKai Local", "LXGW WenKai", "LXGW WenKai Screen", "Kaiti SC", "STKaiti", serif;
@@ -734,6 +749,82 @@
   }
   100% {
     opacity: 0;
+  }
+}
+
+@keyframes ym-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+    filter: blur(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes ym-lake-breathe {
+  0%,
+  100% {
+    opacity: 0.48;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.72;
+    transform: scale(1.018);
+  }
+}
+
+@keyframes ym-lake-ripple {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.58);
+    filter: blur(0.2px);
+  }
+
+  28% {
+    opacity: 0.54;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.62, 1.84);
+    filter: blur(3px);
+  }
+}
+
+@keyframes ym-waterline-drift {
+  0%,
+  100% {
+    transform: translateY(0) scaleY(1);
+  }
+
+  50% {
+    transform: translateY(-1.1svh) scaleY(1.03);
+  }
+}
+
+@keyframes ym-seal-drop {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -58%) rotate(-18deg) scale(1.26);
+    filter: blur(8px);
+  }
+
+  72% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(-9deg) scale(0.82);
+    filter: blur(0);
+  }
+
+  to {
+    opacity: 0.92;
+    transform: translate(-50%, -50%) rotate(-9deg) scale(0.86);
+    filter: blur(0);
   }
 }
 
