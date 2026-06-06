@@ -25,11 +25,13 @@ test("one thought lake route and entrances exist without becoming a forum", asyn
   assert.match(page, /心湖只照见交易中的念头，不提供投资建议。/)
   assert.match(page, /我也有这一念/)
   assert.match(page, /写下我的一念/)
+  assert.match(page, /写下你的一念/)
   assert.match(page, /同念回响/)
   assert.match(page, /同一念的人，会收到这里的回响。/)
   assert.match(page, /matchUserThought/)
   assert.match(page, /saveOneThoughtRecord/)
   assert.doesNotMatch(page, /hiddenThought/)
+  assert.doesNotMatch(page, /<p className="lake-kicker">匿名共照<\/p>/)
   assert.doesNotMatch(page, /帖子/)
   assert.doesNotMatch(page, /点赞榜/)
   assert.doesNotMatch(page, /头像/)
@@ -86,6 +88,8 @@ test("one thought lake renders a Three.js thought cloud instead of the old spher
   assert.match(shaders, /smoothstep/)
   assert.match(noise, /createSeededRandom/)
   assert.doesNotMatch(thoughtField, /hiddenThought/)
+  assert.doesNotMatch(thoughtField, /thought-debug-toggle/)
+  assert.doesNotMatch(thoughtField, />\s*调\s*</)
   assert.doesNotMatch(page, /lake-thought-slip/, "heart lake should no longer use flat floating slips")
 })
 
@@ -107,6 +111,8 @@ test("anonymous thoughts stay separated from the official thought cloud", async 
     "--node-color",
     "匿名放入心湖",
     "存入我的心镜档案",
+    "countedEntries",
+    "getOneThoughtLakeStats(countedEntries)",
   ].forEach((token) => {
     assert.equal(page.includes(token), true, `missing anonymous thought token: ${token}`)
   })
@@ -114,6 +120,37 @@ test("anonymous thoughts stay separated from the official thought cloud", async 
   assert.doesNotMatch(page, /className=.*is-anonymous/)
   assert.doesNotMatch(page, /lake-sphere/)
   assert.doesNotMatch(page, /hiddenThought/)
+  assert.doesNotMatch(page, /getOneThoughtLakeStats\(seedEntries\)/)
+  assert.doesNotMatch(page, /getOneThoughtLakeStats\(lakeComments\)/)
+})
+
+test("one thought lake limits daily submitted thoughts without limiting comments", async () => {
+  const page = await readFile(pageUrl, "utf8")
+
+  ;[
+    "DAILY_LAKE_THOUGHT_LIMIT = 3",
+    "今日已放三念，今日宜止。",
+    "getTodayLocalThoughtCount",
+    "dailyThoughtLimitReached",
+    "todayLocalThoughtCount",
+    "今日已放 {todayLocalThoughtCount}/{DAILY_LAKE_THOUGHT_LIMIT} 念",
+    "handleToggleCompose",
+    "lake-compose-trigger",
+    "收起这一念",
+  ].forEach((token) => {
+    assert.equal(page.includes(token), true, `missing daily limit token: ${token}`)
+  })
+
+  assert.doesNotMatch(page, /lake-compose-head/)
+  assert.doesNotMatch(page, />\s*写一念\s*</)
+
+  const commentBlock = page.match(/function handleComment[\s\S]*?function handleToggleCompose/)?.[0] ?? ""
+  const matchBlock = page.match(/function handleMatch[\s\S]*?function handlePlaceIntoLake/)?.[0] ?? ""
+  const placeBlock = page.match(/function handlePlaceIntoLake[\s\S]*?function handleSaveArchive/)?.[0] ?? ""
+
+  assert.doesNotMatch(commentBlock, /dailyThoughtLimitReached|DAILY_LAKE_THOUGHT_LIMIT/)
+  assert.match(matchBlock, /dailyThoughtLimitReached/)
+  assert.match(placeBlock, /dailyThoughtLimitReached/)
 })
 
 test("one thought lake engine seeds the full one-thought pool and screens risky content", async () => {
