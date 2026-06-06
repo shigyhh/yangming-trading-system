@@ -9,7 +9,7 @@
   "items": [
     {
       "id": "scene_33_001",
-      "tradeMoment": "持仓没动静时",
+      "tradeMoment": "持仓横着不动时",
       "os": "换一个吧。",
       "hiddenThought": "这个太慢了。",
       "reflection": "你放弃的不是股票，你放弃的是等待。",
@@ -17,7 +17,7 @@
     },
     {
       "id": "scene_33_002",
-      "tradeMoment": "看到别的股票上涨时",
+      "tradeMoment": "看到别的票突然拉升时",
       "os": "那个涨了。",
       "hiddenThought": "我买错了。",
       "reflection": "你开始用别人的上涨否定自己的选择。",
@@ -25,7 +25,7 @@
     },
     {
       "id": "scene_33_003",
-      "tradeMoment": "持仓横盘时",
+      "tradeMoment": "持仓磨了一整天时",
       "os": "一点意思没有。",
       "hiddenThought": "钱被耽误了。",
       "reflection": "你开始把等待当成损失。",
@@ -33,7 +33,7 @@
     },
     {
       "id": "scene_33_004",
-      "tradeMoment": "卖出原股票时",
+      "tradeMoment": "卖出原股切过去时",
       "os": "先换过去。",
       "hiddenThought": "那边机会更大。",
       "reflection": "你总觉得机会在别处。",
@@ -41,15 +41,15 @@
     },
     {
       "id": "scene_33_005",
-      "tradeMoment": "换股以后原股上涨时",
-      "os": "卧槽。",
+      "tradeMoment": "刚换股原股就涨时",
+      "os": "我次奥。",
       "hiddenThought": "又卖飞了。",
       "reflection": "你离开的，不一定是错误的股票。",
       "intensity": 4
     },
     {
       "id": "scene_33_006",
-      "tradeMoment": "新买的又不涨时",
+      "tradeMoment": "新买的又开始横住时",
       "os": "怎么又不动。",
       "hiddenThought": "我运气真差。",
       "reflection": "频繁换股的人，永远觉得下一只更好。",
@@ -57,7 +57,7 @@
     },
     {
       "id": "scene_33_007",
-      "tradeMoment": "再次看到别的票拉升时",
+      "tradeMoment": "又看到别的票拉升时",
       "os": "要不再换。",
       "hiddenThought": "这次应该对了。",
       "reflection": "你开始把换股当成解决问题的方法。",
@@ -65,7 +65,7 @@
     },
     {
       "id": "scene_33_008",
-      "tradeMoment": "一天换了几只票时",
+      "tradeMoment": "一天换了好几只时",
       "os": "总得抓住一个。",
       "hiddenThought": "不可能全错。",
       "reflection": "你已经不是在交易，你在追逐。",
@@ -73,7 +73,7 @@
     },
     {
       "id": "scene_33_009",
-      "tradeMoment": "收盘回看时",
+      "tradeMoment": "收盘后回看换股记录时",
       "os": "白折腾一天。",
       "hiddenThought": "哪个都没拿住。",
       "reflection": "真正失去的，不是机会，是耐心。",
@@ -81,7 +81,7 @@
     },
     {
       "id": "scene_33_010",
-      "tradeMoment": "关软件之前",
+      "tradeMoment": "关软件前又想换思路时",
       "os": "明天换个思路。",
       "hiddenThought": "这次肯定行。",
       "reflection": "你总觉得答案在下一只股票里。",

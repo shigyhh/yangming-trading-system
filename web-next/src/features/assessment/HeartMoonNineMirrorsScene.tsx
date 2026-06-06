@@ -97,9 +97,9 @@ export function HeartMoonNineMirrorsScene({ onComplete, onLakeModeChange, onRipp
         <HeartLakeEngine
           lakeMode={lakeMode}
           triggerRippleKey={rippleKey}
-          opacity={lakeMode === "still" ? 0.74 : 0.92}
-          moonPathIntensity={lakeMode === "still" ? 0.55 : 0.86}
-          bloomScale={lakeMode === "liangzhi" ? 0.72 : 1}
+          opacity={lakeMode === "liangzhi" ? 0.62 : lakeMode === "still" ? 0.74 : 0.88}
+          moonPathIntensity={lakeMode === "liangzhi" ? 0.34 : lakeMode === "still" ? 0.55 : 0.78}
+          bloomScale={lakeMode === "liangzhi" ? 0.42 : 0.82}
           className="heart-moon-lake-engine"
         />
       ) : null}

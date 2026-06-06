@@ -9,7 +9,7 @@
   "items": [
     {
       "id": "scene_25_001",
-      "tradeMoment": "看到热点板块大涨时",
+      "tradeMoment": "热点板块集体大涨时",
       "os": "这波不能错过。",
       "hiddenThought": "终于轮到我了。",
       "reflection": "真正吸引你的，不是逻辑，是热闹。",
@@ -17,7 +17,7 @@
     },
     {
       "id": "scene_25_002",
-      "tradeMoment": "热点霸屏时",
+      "tradeMoment": "热点消息刷满屏时",
       "os": "这几天全在说它。",
       "hiddenThought": "应该不会错。",
       "reflection": "当所有人都在讨论的时候，你最容易失去判断。",
@@ -25,7 +25,7 @@
     },
     {
       "id": "scene_25_003",
-      "tradeMoment": "看着涨停潮时",
+      "tradeMoment": "看着涨停潮铺开时",
       "os": "赶紧上车。",
       "hiddenThought": "再晚没机会了。",
       "reflection": "你追的不是热点，你是在逃离错过。",
@@ -33,7 +33,7 @@
     },
     {
       "id": "scene_25_004",
-      "tradeMoment": "打开榜单时",
+      "tradeMoment": "打开榜单找最强时",
       "os": "就它了。",
       "hiddenThought": "肯定有人接力。",
       "reflection": "你开始把别人的动作，当成自己的理由。",
@@ -41,7 +41,7 @@
     },
     {
       "id": "scene_25_005",
-      "tradeMoment": "热点持续发酵时",
+      "tradeMoment": "热点越炒越热时",
       "os": "这次不一样。",
       "hiddenThought": "还能涨。",
       "reflection": "每一个热点，都让人相信自己遇到了例外。",
@@ -49,7 +49,7 @@
     },
     {
       "id": "scene_25_006",
-      "tradeMoment": "群里疯狂讨论时",
+      "tradeMoment": "群里全在讨论同一题材时",
       "os": "大家都在做。",
       "hiddenThought": "我不能落下。",
       "reflection": "刺激你的不是机会，是群体情绪。",
@@ -57,7 +57,7 @@
     },
     {
       "id": "scene_25_007",
-      "tradeMoment": "下单前最后几秒",
+      "tradeMoment": "下单前最后几秒时",
       "os": "先买再说。",
       "hiddenThought": "赚了再研究。",
       "reflection": "当你先买再说的时候，研究已经失去意义。",
@@ -65,7 +65,7 @@
     },
     {
       "id": "scene_25_008",
-      "tradeMoment": "买入以后",
+      "tradeMoment": "买入后看它继续强时",
       "os": "果然强。",
       "hiddenThought": "我跟对了。",
       "reflection": "热点最容易放大人的侥幸。",
@@ -73,7 +73,7 @@
     },
     {
       "id": "scene_25_009",
-      "tradeMoment": "热点继续上涨时",
+      "tradeMoment": "热点继续往上冲时",
       "os": "还得加。",
       "hiddenThought": "这波没结束。",
       "reflection": "赚钱以后，你开始越来越相信热点。",
@@ -81,7 +81,7 @@
     },
     {
       "id": "scene_25_010",
-      "tradeMoment": "收盘以后",
+      "tradeMoment": "收盘后还盯着热点时",
       "os": "明天继续冲。",
       "hiddenThought": "我已经上车了。",
       "reflection": "当你持仓以后，你开始希望热点永远存在。",

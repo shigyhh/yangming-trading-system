@@ -41,24 +41,35 @@ test("assessment result page renders and saves the mirror report", async () => {
   const source = await readFile(resultPageUrl, "utf8")
 
   ;[
-    "心镜报告",
-    "你的交易人格被市场照见",
-    "一句话照见",
-    "主人格",
-    "副人格",
-    "置信度",
-    "风险雷达",
-    "高危交易剧本",
-    "七日处方",
-    "训练营建议",
-    "保存心镜报告",
-    "进入活镜成长",
+    "今日照见报告",
+    "静水照心",
+    "一念显影",
+    "心贼显影",
+    "九镜显影",
+    "未来七日，只修这一念",
+    "启程",
+    "你不是一种人格。",
+    "你只是经常被某一种念头带走。",
+    "最常带走你的那一念是：",
+    "这一念里，最重的是：",
+    "你最容易进入：",
+    "它不是你。",
+    "只是你最常进入的房间。",
+    "致良知，不是消灭念头。",
+    "是念起时，知道是谁在下单。",
+    "存入心镜档案",
+    "/mirror-archive",
+    "展开心镜长卷",
+    "/mirror-scroll",
+    "进入今日一念",
+    "/assessment",
+    "TODAY_ONE_THOUGHT_STORAGE_KEY",
+    "todayOneThoughtSourceItems",
     "buildMirrorReport",
     "saveMirrorReport",
     "mirrorReportStorageKey",
     "reportId",
     "assessmentId",
-    "sevenDayPrescription",
   ].forEach((token) => {
     assert.equal(source.includes(token), true, `assessment result page missing ${token}`)
   })
@@ -66,4 +77,10 @@ test("assessment result page renders and saves the mirror report", async () => {
   forbiddenPhrases.forEach((phrase) => {
     assert.equal(source.includes(phrase), false, `mirror report contains forbidden phrase ${phrase}`)
   })
+
+  assert.equal(source.includes("/cycle-mirror"), false, "mirror report page must not expose cycle mirror as a front route")
+  assert.equal(source.includes("ReportCoreCard"), false, "mirror report page must not keep the dashboard report card")
+  assert.equal(source.includes("RiskRadar"), false, "mirror report page must not show the old radar chart")
+  assert.equal(source.includes("主反应人格"), false, "mirror report page must not frame the user as a personality type")
+  assert.equal(source.includes("七日处方"), false, "mirror report page must use cultivation language")
 })

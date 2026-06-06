@@ -17,7 +17,7 @@
     },
     {
       "id": "scene_36_002",
-      "tradeMoment": "本该止损时",
+      "tradeMoment": "到了止损位还不想动时",
       "os": "先不急。",
       "hiddenThought": "也许还能回来。",
       "reflection": "你开始把希望当成判断。",
@@ -25,7 +25,7 @@
     },
     {
       "id": "scene_36_003",
-      "tradeMoment": "看着亏损扩大时",
+      "tradeMoment": "亏损继续扩大时",
       "os": "不可能这么差。",
       "hiddenThought": "我应该没看错。",
       "reflection": "真正让你难受的，不是亏损，是错了。",
@@ -41,7 +41,7 @@
     },
     {
       "id": "scene_36_005",
-      "tradeMoment": "已经明显不对时",
+      "tradeMoment": "明显不对还想等等时",
       "os": "万一呢。",
       "hiddenThought": "给我一次机会。",
       "reflection": "很多执念，都藏在“万一”里。",
@@ -57,7 +57,7 @@
     },
     {
       "id": "scene_36_007",
-      "tradeMoment": "想卖又不卖时",
+      "tradeMoment": "想卖却又把手收回时",
       "os": "先放着。",
       "hiddenThought": "我不想承认。",
       "reflection": "你放不下的不是仓位，是自尊。",
@@ -65,7 +65,7 @@
     },
     {
       "id": "scene_36_008",
-      "tradeMoment": "回看买入逻辑时",
+      "tradeMoment": "回看买入逻辑找理由时",
       "os": "当时也没错。",
       "hiddenThought": "问题不在我。",
       "reflection": "你开始替自己辩护，而不是面对事实。",
@@ -73,7 +73,7 @@
     },
     {
       "id": "scene_36_009",
-      "tradeMoment": "准备认错时",
+      "tradeMoment": "准备认错又停住时",
       "os": "算了，再等等。",
       "hiddenThought": "太难受了。",
       "reflection": "认错最痛的，从来不是亏损，而是承认。",
@@ -81,7 +81,7 @@
     },
     {
       "id": "scene_36_010",
-      "tradeMoment": "收盘以后",
+      "tradeMoment": "收盘后把问题留到明天时",
       "os": "明天再说。",
       "hiddenThought": "希望明天改变。",
       "reflection": "你把今天的问题，交给了明天的幻想。",

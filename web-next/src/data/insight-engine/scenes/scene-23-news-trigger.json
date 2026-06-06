@@ -9,15 +9,15 @@
   "items": [
     {
       "id": "scene_23_001",
-      "tradeMoment": "刚看到突发消息时",
-      "os": "卧槽，真的假的。",
+      "tradeMoment": "突发消息弹出来时",
+      "os": "我次奥，真的假的。",
       "hiddenThought": "机会来了。",
       "reflection": "你还没验证消息，情绪已经开始交易。",
       "intensity": 4
     },
     {
       "id": "scene_23_002",
-      "tradeMoment": "群里突然刷屏时",
+      "tradeMoment": "群里突然开始刷屏时",
       "os": "都在说这个。",
       "hiddenThought": "我不能落后。",
       "reflection": "真正刺激你的，不是消息，是别人都知道。",
@@ -25,7 +25,7 @@
     },
     {
       "id": "scene_23_003",
-      "tradeMoment": "看到利好标题时",
+      "tradeMoment": "看到利好标题很猛时",
       "os": "这不得涨。",
       "hiddenThought": "先上再说。",
       "reflection": "你开始用想象代替判断。",
@@ -33,7 +33,7 @@
     },
     {
       "id": "scene_23_004",
-      "tradeMoment": "打开资讯软件时",
+      "tradeMoment": "打开资讯想确认时",
       "os": "我得赶紧看看。",
       "hiddenThought": "别人已经行动了。",
       "reflection": "你害怕的不是消息真假，是自己慢一步。",
@@ -41,7 +41,7 @@
     },
     {
       "id": "scene_23_005",
-      "tradeMoment": "看到别人转发时",
+      "tradeMoment": "看到别人疯狂转发时",
       "os": "这波稳了。",
       "hiddenThought": "大家都这么说。",
       "reflection": "当所有人都觉得稳的时候，你最容易失去独立判断。",
@@ -49,7 +49,7 @@
     },
     {
       "id": "scene_23_006",
-      "tradeMoment": "准备下单时",
+      "tradeMoment": "消息刚出就想下单时",
       "os": "先买点。",
       "hiddenThought": "万一是真的。",
       "reflection": "你买的不是确定性，你买的是侥幸。",
@@ -65,7 +65,7 @@
     },
     {
       "id": "scene_23_008",
-      "tradeMoment": "看到股价异动时",
+      "tradeMoment": "股价跟着消息异动时",
       "os": "果然有反应。",
       "hiddenThought": "我没看错。",
       "reflection": "你开始寻找支持自己的证据。",
@@ -73,7 +73,7 @@
     },
     {
       "id": "scene_23_009",
-      "tradeMoment": "买入以后",
+      "tradeMoment": "买入后盯着消息进展时",
       "os": "这次赶上了。",
       "hiddenThought": "终于轮到我。",
       "reflection": "真正让你兴奋的，不是机会，是参与感。",
@@ -81,7 +81,7 @@
     },
     {
       "id": "scene_23_010",
-      "tradeMoment": "收盘以后",
+      "tradeMoment": "收盘后担心消息落空时",
       "os": "希望消息别落空。",
       "hiddenThought": "我已经上车了。",
       "reflection": "当你持仓以后，你开始希望消息是真的。",

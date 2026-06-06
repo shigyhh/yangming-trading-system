@@ -9,15 +9,15 @@
   "items": [
     {
       "id": "scene_02_001",
-      "tradeMoment": "看着它连续上涨时",
-      "os": "卧槽，又涨了。",
+      "tradeMoment": "看着它连涨好几天时",
+      "os": "我次奥，又涨了。",
       "hiddenThought": "我又错过了。",
-      "reflection": "这一声卧槽，不是惊讶，是后悔。",
+      "reflection": "这一声我次奥，不是惊讶，是后悔。",
       "intensity": 4
     },
     {
       "id": "scene_02_002",
-      "tradeMoment": "打开软件看见涨幅时",
+      "tradeMoment": "打开软件看到大涨时",
       "os": "怎么又没买。",
       "hiddenThought": "我当时到底在等什么。",
       "reflection": "最难受的不是没买，是你知道自己本来想买。",
@@ -25,7 +25,7 @@
     },
     {
       "id": "scene_02_003",
-      "tradeMoment": "回看昨天的自选股时",
+      "tradeMoment": "回看昨天自选股时",
       "os": "早知道昨天就买了。",
       "hiddenThought": "我又把机会放走了。",
       "reflection": "你后悔的不是昨天，你后悔的是昨天那个没敢动的自己。",
@@ -33,7 +33,7 @@
     },
     {
       "id": "scene_02_004",
-      "tradeMoment": "看着自己关注很久的票上涨时",
+      "tradeMoment": "盯了很久的票突然涨时",
       "os": "我盯了这么久啊。",
       "hiddenThought": "为什么还是没做。",
       "reflection": "你付出了关注，却没有付出行动。",
@@ -41,7 +41,7 @@
     },
     {
       "id": "scene_02_005",
-      "tradeMoment": "看着它继续上涨时",
+      "tradeMoment": "眼看它一根根往上走时",
       "os": "又是我看着涨。",
       "hiddenThought": "为什么总是别人赚到。",
       "reflection": "最难受的不是上涨，是你又一次站在旁边看着它涨。",
@@ -49,7 +49,7 @@
     },
     {
       "id": "scene_02_006",
-      "tradeMoment": "涨起来以后回忆买点时",
+      "tradeMoment": "涨起来后回想买点时",
       "os": "刚才就该上。",
       "hiddenThought": "我又犹豫了。",
       "reflection": "你责怪的不是机会，你责怪的是那个刚才没按下去的人。",
@@ -57,7 +57,7 @@
     },
     {
       "id": "scene_02_007",
-      "tradeMoment": "看见别人晒盈利时",
+      "tradeMoment": "看到别人晒盈利截图时",
       "os": "别人都吃到了。",
       "hiddenThought": "怎么总不是我。",
       "reflection": "真正刺痛你的，从来不是行情，是比较。",
@@ -65,7 +65,7 @@
     },
     {
       "id": "scene_02_008",
-      "tradeMoment": "关掉软件又打开时",
+      "tradeMoment": "关掉软件又忍不住打开时",
       "os": "我真服了自己。",
       "hiddenThought": "我是不是不行。",
       "reflection": "这一刻，你开始攻击自己，而不是照见自己。",
@@ -73,7 +73,7 @@
     },
     {
       "id": "scene_02_009",
-      "tradeMoment": "看着它越涨越高时",
+      "tradeMoment": "看着价格越追越贵时",
       "os": "再追是不是晚了？",
       "hiddenThought": "我不想再错过一次。",
       "reflection": "踏空后最危险的，不是错过，是后悔完又想追进去。",

@@ -60,15 +60,15 @@ export default function MirrorArchivePage() {
       <div className="mirror-archive-page mx-auto w-full max-w-[1440px]">
         <section className="mirror-archive-hero">
           <div>
-            <StatusPill>心镜档案馆 · 活镜闭环</StatusPill>
+            <StatusPill>心镜档案馆 · 归档中心</StatusPill>
             <h1 className="mt-8 font-story text-[clamp(3rem,7.4vw,7rem)] font-light leading-[1.12] tracking-[.08em]">
-              《照见》活镜闭环
+              心镜档案馆
             </h1>
             <p className="mt-6 max-w-[42rem] font-story text-xl font-light leading-10 tracking-[.05em] text-[rgba(220,212,195,.62)]">
-              以交易照人心，以复盘照行为，以训练照变化，以活镜照成长。
+              报告、心证、修行、复盘、复测，全部归档。
             </p>
             <p className="mt-5 max-w-[46rem] font-function text-sm leading-7 text-[rgba(220,212,195,.48)]">
-              你的每一次照见，都会留在这里。绑定手机号后可长期保存心镜档案；未绑定时，先保存在本设备，不阻断继续训练。
+              日课路线和真实复盘路线的证据都会留在这里；系统底层会把它们送入循环识别，反向生成更针对性的训练。绑定手机号后可长期保存心镜档案；未绑定时，先保存在本设备，不阻断继续训练。
             </p>
           </div>
 
@@ -99,13 +99,13 @@ export default function MirrorArchivePage() {
           <ArchiveStat label="已训练天数" value={`${summary.completedDays}`} />
           <ArchiveStat label="心证数量" value={`${summary.heartProofCount}`} />
           <ArchiveStat label="真实复盘数量" value={`${summary.tradeReviewCount}`} />
-          <ArchiveStat label="循环之镜数量" value={`${summary.behaviorLoopCount}`} />
+          <ArchiveStat label="循环识别数" value={`${summary.behaviorLoopCount}`} />
         </section>
 
         <section className="mirror-archive-sections mt-6">
           <ArchiveSection title="我的心镜报告" items={sections.reports} emptyText="完成入照心后，心镜报告会留在这里。" />
           <ArchiveSection title="我的活镜成长谱" items={sections.growthProfiles} emptyText="心镜报告、今日修行、心证、真实复盘和复测变化会汇成成长谱。" />
-          <ArchiveSection title="我的循环之镜" items={sections.behaviorLoops} emptyText="完成真实交易复盘后，系统会把触发、一念、动作与结果沉淀成循环之镜。" />
+          <ArchiveSection title="循环识别记录" items={sections.behaviorLoops} emptyText="完成日课或真实交易复盘后，系统底层会识别触发、一念、动作与结果的重复模式。" />
           <ArchiveSection title="我的活镜成长" items={sections.growthRecords} emptyText="完成今日修行后，活镜成长记录会留在这里。" />
           <ArchiveSection title="我的真实复盘" items={sections.tradeReviews} emptyText="完成真实交易复盘后，复盘记录会留在这里。" />
           <ArchiveSection title="我的今日心证" items={sections.heartProofs} emptyText="每日落印或复盘完成后，心证会留在这里。" />
@@ -113,8 +113,8 @@ export default function MirrorArchivePage() {
         </section>
 
         <div className="mt-6 grid gap-3 md:grid-cols-3">
-          <PrimaryLink href="/assessment-result?preview=1" className="w-full">
-            查看心镜报告 →
+          <PrimaryLink href="/mirror-scroll" className="w-full">
+            展开心镜长卷 →
           </PrimaryLink>
           <SecondaryLink href="/living-mirror-growth" className="w-full">
             查看成长谱 →
@@ -234,10 +234,10 @@ function BehaviorLoopArchiveCard({ behaviorLoops }: { behaviorLoops: BehaviorLoo
 
   return (
     <ArchiveInsightCard
-      eyebrow="循环之镜"
-      title="重复循环可查、可读、可管理"
-      href="/cycle-mirror"
-      actionText="查看循环之镜"
+      eyebrow="底层循环识别"
+      title="重复动作会反向生成训练"
+      href="/trade-review"
+      actionText="补真实复盘"
     >
       <ArchiveMeta label="已识别循环数量" value={`${behaviorLoops.length} 条`} />
       <ArchiveMeta label="最高风险循环" value={topLoop ? `${topLoop.trigger} → ${topLoop.thought}` : "循环还未显影"} />

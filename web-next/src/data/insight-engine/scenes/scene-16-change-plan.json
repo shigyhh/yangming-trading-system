@@ -9,7 +9,7 @@
   "items": [
     {
       "id": "scene_16_001",
-      "tradeMoment": "开盘后走势和预期不同时",
+      "tradeMoment": "开盘走势偏离预案时",
       "os": "先看看再说。",
       "hiddenThought": "计划可能不对。",
       "reflection": "你开始怀疑的，不是行情，是自己的计划。",
@@ -17,7 +17,7 @@
     },
     {
       "id": "scene_16_002",
-      "tradeMoment": "本该买入却犹豫时",
+      "tradeMoment": "到了买点却停住手时",
       "os": "等一下。",
       "hiddenThought": "再确认一下。",
       "reflection": "很多计划，不是错在执行，而是死在犹豫。",
@@ -25,7 +25,7 @@
     },
     {
       "id": "scene_16_003",
-      "tradeMoment": "本该止损却没止时",
+      "tradeMoment": "到了止损位却没动时",
       "os": "再等等。",
       "hiddenThought": "也许会回来。",
       "reflection": "计划已经说该走，情绪却想留下。",
@@ -41,7 +41,7 @@
     },
     {
       "id": "scene_16_005",
-      "tradeMoment": "盘中波动很大时",
+      "tradeMoment": "盘中波动把心打乱时",
       "os": "先改一下。",
       "hiddenThought": "原计划不适合。",
       "reflection": "真正改变你的，不是市场，是情绪。",
@@ -49,7 +49,7 @@
     },
     {
       "id": "scene_16_006",
-      "tradeMoment": "看到别人做法不同时",
+      "tradeMoment": "看到别人换了做法时",
       "os": "要不换个思路。",
       "hiddenThought": "会不会他们对。",
       "reflection": "你开始把别人的动作当成自己的信号。",
@@ -57,7 +57,7 @@
     },
     {
       "id": "scene_16_007",
-      "tradeMoment": "原计划亏损时",
+      "tradeMoment": "原计划开始亏损时",
       "os": "这次特殊。",
       "hiddenThought": "应该破例。",
       "reflection": "几乎所有失控，都是从“这次特殊”开始的。",
@@ -65,7 +65,7 @@
     },
     {
       "id": "scene_16_008",
-      "tradeMoment": "临近下单时",
+      "tradeMoment": "临近下单又想改时",
       "os": "算了改一下。",
       "hiddenThought": "这样更稳。",
       "reflection": "你以为自己在优化，其实你在逃避不确定。",
@@ -73,7 +73,7 @@
     },
     {
       "id": "scene_16_009",
-      "tradeMoment": "交易结束后",
+      "tradeMoment": "收盘后回看原计划时",
       "os": "早知道按原计划。",
       "hiddenThought": "我又改了。",
       "reflection": "最痛的不是亏损，是背叛了自己。",
@@ -81,7 +81,7 @@
     },
     {
       "id": "scene_16_010",
-      "tradeMoment": "收盘复盘时",
+      "tradeMoment": "复盘时盯着改坏的那笔时",
       "os": "下次不改了。",
       "hiddenThought": "希望记住。",
       "reflection": "真正的问题不是计划不好，而是你总想临时改变计划。",

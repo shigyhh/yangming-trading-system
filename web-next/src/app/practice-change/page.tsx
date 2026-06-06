@@ -25,6 +25,10 @@ import {
 } from "@/features/assessment/practice-change"
 import type { AssessmentReport } from "@/features/assessment/report"
 import { assessmentStorageKeys, clearAssessmentProgress, getStorage, setStorage } from "@/features/assessment/storage"
+import { HeartProofCard } from "@/features/heart-proof/HeartProofCard"
+import { buildDailyGrowthHeartProof, formatHeartProofForCopy } from "@/features/heart-proof/heartProofEngine"
+import { loadLatestHeartProof, saveHeartProof } from "@/features/heart-proof/heartProofStorage"
+import type { HeartProof } from "@/features/heart-proof/heartProofTypes"
 import { cn } from "@/lib/utils"
 
 function getMetricDelta(metric: PracticeMetric) {
@@ -48,10 +52,68 @@ function getStrongestChange(metrics: PracticeMetric[]) {
   return [...metrics].sort((a, b) => getMetricDelta(b) - getMetricDelta(a))[0]
 }
 
+function getMetricBefore(practice: PracticeChangeState, key: PracticeMetric["key"]) {
+  return practice.metrics.find((metric) => metric.key === key)?.before
+}
+
+function getDailyGrowthBaselineScores(practice: PracticeChangeState) {
+  return {
+    emptyPositionAnxiety: getMetricBefore(practice, "emptyAnxiety"),
+    chaseImpulse: getMetricBefore(practice, "chaseImpulse"),
+    stopLossExecution: getMetricBefore(practice, "stopLossExecution"),
+    planChange: getMetricBefore(practice, "planChange"),
+    knowingDoing: getMetricBefore(practice, "zhixing"),
+  }
+}
+
+function getDailyGrowthThoughtType(report: AssessmentReport) {
+  switch (report.sourceMirror?.id) {
+    case "chasing":
+      return "chase"
+    case "following":
+      return "ask_others"
+    case "hesitation":
+    case "anxiety":
+      return "wait_pullback"
+    case "holdingLoss":
+    case "fantasy":
+    case "procrastination":
+      return "abandon_plan"
+    default:
+      return "fomo"
+  }
+}
+
+function getDailyGrowthThoughtLabel(report: AssessmentReport) {
+  return report.firstThoughtDisplay || report.firstThought || report.sourceMirror?.thought || report.primaryType.label
+}
+
+function buildPracticeGrowthRecord(nextPractice: PracticeChangeState) {
+  const record = nextPractice.records.find((item) => item.day === nextPractice.day) ?? nextPractice.records.at(-1)
+  const createdAt = record?.recordedAt ?? new Date().toISOString()
+  const dateKey = record?.dateKey ?? createdAt.slice(0, 10)
+
+  return {
+    growthRecordId: `practice_change_${dateKey}_day_${nextPractice.day}`,
+    createdAt,
+    record,
+  }
+}
+
+function buildHeartProofId(sourceId: string) {
+  return `heart_proof_${sourceId}`.replace(/[^a-zA-Z0-9_-]/g, "_")
+}
+
+function getDailyGrowthAnonymousId(report: AssessmentReport) {
+  return report.userId || getStorage<string>(assessmentStorageKeys.dataBindingUserId, "") || "local-anonymous"
+}
+
 export default function PracticeChangePage() {
   const router = useRouter()
   const [report, setReport] = useState<AssessmentReport | null>(null)
   const [practice, setPractice] = useState<PracticeChangeState | null>(null)
+  const [latestHeartProof, setLatestHeartProof] = useState<HeartProof | null>(null)
+  const [heartProofCopied, setHeartProofCopied] = useState(false)
   const [sealDropped, setSealDropped] = useState(false)
   const [holdingSeal, setHoldingSeal] = useState(false)
   const sealHoldTimerRef = useRef<number | null>(null)
@@ -68,18 +130,56 @@ export default function PracticeChangePage() {
       setReport(savedReport)
       setPractice(nextPractice)
       setStorage(assessmentStorageKeys.practiceChange, nextPractice)
+
+      const savedHeartProof = loadLatestHeartProof()
+      if (savedHeartProof?.sourceType === "daily_growth") setLatestHeartProof(savedHeartProof)
     }, 0)
 
     return () => window.clearTimeout(timer)
   }, [])
 
   const recordToday = () => {
-    if (!practice || !canRecordPracticeToday(practice)) return
+    if (!report || !practice || !canRecordPracticeToday(practice)) return
 
     const nextPractice = advancePracticeChange(practice, "completed")
+    const nextGrowth = buildPracticeGrowthRecord(nextPractice)
+    const heartProof = buildDailyGrowthHeartProof({
+      heartProofId: buildHeartProofId(nextGrowth.growthRecordId),
+      anonymousId: getDailyGrowthAnonymousId(report),
+      sourceType: "daily_growth",
+      sourceId: nextGrowth.growthRecordId,
+      reportId: report.reportId,
+      trainingDay: nextPractice.day,
+      completedDays: nextPractice.day,
+      checkinType: nextGrowth.record?.checkIn ?? "observe_only",
+      thoughtType: getDailyGrowthThoughtType(report),
+      thoughtLabel: getDailyGrowthThoughtLabel(report),
+      behaviorType: report.sourceMirror?.id ?? report.primaryType.key,
+      reflectionText: nextGrowth.record?.cultivationText || nextGrowth.record?.note || "已完成今日省察。",
+      completedAt: nextGrowth.createdAt,
+      baselineScores: getDailyGrowthBaselineScores(practice),
+      userId: report.userId,
+      createdAt: nextGrowth.createdAt,
+    })
+
+    saveHeartProof(heartProof)
     setPractice(nextPractice)
     setStorage(assessmentStorageKeys.practiceChange, nextPractice)
+    setLatestHeartProof(heartProof)
+    setHeartProofCopied(false)
     setSealDropped(true)
+  }
+
+  const copyHeartProof = async () => {
+    if (!latestHeartProof || !navigator.clipboard) return
+
+    try {
+      await navigator.clipboard.writeText(formatHeartProofForCopy(latestHeartProof))
+      setHeartProofCopied(true)
+      window.setTimeout(() => setHeartProofCopied(false), 1600)
+    } catch {
+      setHeartProofCopied(false)
+    }
   }
 
   const clearSealHold = () => {
@@ -230,6 +330,15 @@ export default function PracticeChangePage() {
             </div>
           ) : null}
         </GlassPanel>
+
+        {showSeal && latestHeartProof?.sourceType === "daily_growth" ? (
+          <HeartProofCard
+            heartProof={latestHeartProof}
+            copied={heartProofCopied}
+            onCopy={copyHeartProof}
+            className="mt-4"
+          />
+        ) : null}
 
         <GlassPanel className="mt-8">
           <p className="flex items-center gap-2 font-function text-xs font-semibold tracking-[.18em] text-[#b49d5d]">

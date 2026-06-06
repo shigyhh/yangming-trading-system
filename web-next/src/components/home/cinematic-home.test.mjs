@@ -57,7 +57,7 @@ test("home shell keeps the current Sprint8 entry path focused", async () => {
   assert.ok(entry.includes('href="/assessment-entry"'), "Sprint8 ritual entry must remain reachable after the worldview")
   assert.ok(entry.includes('router.push("/assessment-entry")'), "Sprint8 ritual entry must route to /assessment-entry")
 
-  ;["/living-mirror-growth", "/cycle-mirror", "/mirror-archive"].forEach((href) => {
+  ;["/living-mirror-growth", "/trade-review", "/mirror-archive"].forEach((href) => {
     assert.ok(topNav.includes(`href: "${href}"`), `home nav missing Sprint8+ route: ${href}`)
   })
 })

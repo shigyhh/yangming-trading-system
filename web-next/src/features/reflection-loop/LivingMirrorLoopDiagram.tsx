@@ -746,7 +746,7 @@ function LoopNodeCard({
 
         .living-loop-diagram .loop-ring-card {
           position: absolute;
-          width: clamp(148px, 13.2vw, 178px);
+          width: clamp(132px, 11.4vw, 164px);
         }
 
         .living-loop-diagram .loop-mobile-card {
@@ -765,8 +765,8 @@ function LoopNodeCard({
         }
 
         .living-loop-diagram .loop-card-position-2 {
-          left: 68%;
-          top: 5%;
+          left: 64%;
+          top: 3%;
           transform: translateX(-50%);
         }
 
@@ -775,8 +775,8 @@ function LoopNodeCard({
         }
 
         .living-loop-diagram .loop-card-position-3 {
-          left: 82%;
-          top: 18%;
+          left: 78%;
+          top: 12%;
           transform: translateX(-50%);
         }
 
@@ -786,7 +786,7 @@ function LoopNodeCard({
 
         .living-loop-diagram .loop-card-position-4 {
           left: 88%;
-          top: 38%;
+          top: 27%;
           transform: translateX(-50%);
         }
 
@@ -795,8 +795,8 @@ function LoopNodeCard({
         }
 
         .living-loop-diagram .loop-card-position-5 {
-          left: 82%;
-          top: 58%;
+          left: 90%;
+          top: 45%;
           transform: translateX(-50%);
         }
 
@@ -805,8 +805,8 @@ function LoopNodeCard({
         }
 
         .living-loop-diagram .loop-card-position-6 {
-          left: 68%;
-          top: 72%;
+          left: 82%;
+          top: 62%;
           transform: translateX(-50%);
         }
 
@@ -815,8 +815,8 @@ function LoopNodeCard({
         }
 
         .living-loop-diagram .loop-card-position-7 {
-          left: 50%;
-          top: 78%;
+          left: 66%;
+          top: 75%;
           transform: translateX(-50%);
         }
 
@@ -825,8 +825,8 @@ function LoopNodeCard({
         }
 
         .living-loop-diagram .loop-card-position-8 {
-          left: 32%;
-          top: 72%;
+          left: 50%;
+          top: 80%;
           transform: translateX(-50%);
         }
 
@@ -835,8 +835,8 @@ function LoopNodeCard({
         }
 
         .living-loop-diagram .loop-card-position-9 {
-          left: 18%;
-          top: 58%;
+          left: 34%;
+          top: 75%;
           transform: translateX(-50%);
         }
 
@@ -845,8 +845,8 @@ function LoopNodeCard({
         }
 
         .living-loop-diagram .loop-card-position-10 {
-          left: 12%;
-          top: 38%;
+          left: 18%;
+          top: 62%;
           transform: translateX(-50%);
         }
 
@@ -855,12 +855,42 @@ function LoopNodeCard({
         }
 
         .living-loop-diagram .loop-card-position-11 {
-          left: 18%;
-          top: 18%;
+          left: 10%;
+          top: 45%;
           transform: translateX(-50%);
         }
 
         .living-loop-diagram .loop-card-position-11:hover {
+          transform: translateX(-50%) translateY(-2px);
+        }
+
+        .living-loop-diagram .loop-card-position-12 {
+          left: 12%;
+          top: 27%;
+          transform: translateX(-50%);
+        }
+
+        .living-loop-diagram .loop-card-position-12:hover {
+          transform: translateX(-50%) translateY(-2px);
+        }
+
+        .living-loop-diagram .loop-card-position-13 {
+          left: 22%;
+          top: 12%;
+          transform: translateX(-50%);
+        }
+
+        .living-loop-diagram .loop-card-position-13:hover {
+          transform: translateX(-50%) translateY(-2px);
+        }
+
+        .living-loop-diagram .loop-card-position-14 {
+          left: 36%;
+          top: 3%;
+          transform: translateX(-50%);
+        }
+
+        .living-loop-diagram .loop-card-position-14:hover {
           transform: translateX(-50%) translateY(-2px);
         }
       `}</style>

@@ -139,7 +139,7 @@ function toReportArchiveItem(report: NonNullable<ReturnType<typeof loadMirrorRep
     anonymousId: report.anonymousId,
     type: "mirror_report",
     sourceId: report.reportId,
-    detailHref: "/assessment-result?preview=1",
+    detailHref: "/assessment-result",
     title: "心镜报告",
     summary: report.headline,
     tags: [report.primaryPersona, report.secondaryPersona, "七日处方"],
@@ -186,10 +186,10 @@ function toBehaviorLoopArchiveItem(loop: BehaviorLoop): ArchiveItem {
     anonymousId: loop.anonymousId,
     type: "behavior_loop",
     sourceId: loop.behaviorLoopId,
-    detailHref: "/cycle-mirror",
-    title: "循环之镜",
+    detailHref: "/mirror-archive",
+    title: "循环识别记录",
     summary: `已沉淀 ${loop.repeatCount || 1} 次：${loop.trigger} → ${loop.thought} → ${loop.action}。破环动作：${loop.loopBreakAction}。`,
-    tags: [String(loop.sourceMirror), loop.thought, ...loop.affectedDimensions, "循环证据"].filter(Boolean).slice(0, 5),
+    tags: [String(loop.sourceMirror), loop.thought, ...loop.affectedDimensions, "底层识别"].filter(Boolean).slice(0, 5),
     createdAt: loop.updatedAt,
   }
 }

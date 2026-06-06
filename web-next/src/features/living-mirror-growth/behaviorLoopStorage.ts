@@ -201,9 +201,9 @@ export function buildCycleMirrorCaseFromBehaviorLoop(loop: BehaviorLoop): CycleM
     sourceMirror: mirror,
     title: `${mirror.replace("之镜", "")}循环`,
     status: `循环已沉淀 ${loop.repeatCount || 1} 次：${loop.thought}`,
-    verdict: cleanText(loop.selfStory || "循环之镜已经从真实证据中生成。", 92),
+    verdict: cleanText(loop.selfStory || "底层循环识别已经从真实证据中生成。", 92),
     practice: cleanText(loop.loopBreakAction || "下一次同场景，先照见念头，再回到规则。", 88),
-    dataSourceLabel: "来自循环之镜持久化",
+    dataSourceLabel: "来自底层循环识别持久化",
     sourceId: loop.behaviorLoopId,
     nodes: [
       makeCycleNode("trigger", "触发", loop.trigger, `触发来自已沉淀证据：${loop.trigger}`),

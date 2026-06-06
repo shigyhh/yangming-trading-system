@@ -9,7 +9,7 @@
   "items": [
     {
       "id": "scene_09_001",
-      "tradeMoment": "看到账户继续亏损时",
+      "tradeMoment": "账户继续往下亏时",
       "os": "再补一点。",
       "hiddenThought": "成本就下来了。",
       "reflection": "你补的不是仓位，你补的是希望。",
@@ -17,7 +17,7 @@
     },
     {
       "id": "scene_09_002",
-      "tradeMoment": "跌得越来越多时",
+      "tradeMoment": "跌幅越看越深时",
       "os": "跌这么多了。",
       "hiddenThought": "应该到底了。",
       "reflection": "你开始把跌得多，当成上涨的理由。",
@@ -25,7 +25,7 @@
     },
     {
       "id": "scene_09_003",
-      "tradeMoment": "看着成本线时",
+      "tradeMoment": "盯着成本线算账时",
       "os": "拉一下就回本。",
       "hiddenThought": "我就解脱了。",
       "reflection": "你盯着的已经不是行情，是成本。",
@@ -33,7 +33,7 @@
     },
     {
       "id": "scene_09_004",
-      "tradeMoment": "再次下跌时",
+      "tradeMoment": "价格又往下踩一脚时",
       "os": "我再摊一下。",
       "hiddenThought": "总不能一直跌。",
       "reflection": "你不是在重新判断，你是在坚持原来的判断。",
@@ -41,7 +41,7 @@
     },
     {
       "id": "scene_09_005",
-      "tradeMoment": "准备加仓时",
+      "tradeMoment": "手又移到买入键时",
       "os": "便宜了。",
       "hiddenThought": "现在更划算。",
       "reflection": "你以为自己在捡便宜，其实你在找继续坚持的理由。",
@@ -49,7 +49,7 @@
     },
     {
       "id": "scene_09_006",
-      "tradeMoment": "已经亏损很多以后",
+      "tradeMoment": "亏得多还想再买时",
       "os": "再买一次。",
       "hiddenThought": "这次总会回来。",
       "reflection": "亏损越大，你越舍不得认错。",
@@ -57,7 +57,7 @@
     },
     {
       "id": "scene_09_007",
-      "tradeMoment": "看着仓位越来越重时",
+      "tradeMoment": "仓位越补越重时",
       "os": "成本马上下来了。",
       "hiddenThought": "我快回本了。",
       "reflection": "你越来越在意成本，越来越忘记风险。",
@@ -65,7 +65,7 @@
     },
     {
       "id": "scene_09_008",
-      "tradeMoment": "继续补仓时",
+      "tradeMoment": "又一次点下加仓时",
       "os": "这里应该到底了。",
       "hiddenThought": "我不能错。",
       "reflection": "你已经开始和市场较劲。",
@@ -73,7 +73,7 @@
     },
     {
       "id": "scene_09_009",
-      "tradeMoment": "回看账户时",
+      "tradeMoment": "回看账户想再补时",
       "os": "再补最后一次。",
       "hiddenThought": "我想救回来。",
       "reflection": "很多人失控，都是从最后一次开始的。",
@@ -81,7 +81,7 @@
     },
     {
       "id": "scene_09_010",
-      "tradeMoment": "关软件之前",
+      "tradeMoment": "关软件前还想着回本时",
       "os": "总会回来的。",
       "hiddenThought": "我还没输。",
       "reflection": "你把希望当成了判断。",

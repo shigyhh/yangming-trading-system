@@ -147,7 +147,7 @@ export function buildAssistantSuggestedOpening({
     return "你现在已经有今日修行记录，但还缺少真实交易复盘。下一步可以先复盘一笔最近的交易，只看当时是谁在下单。"
   }
   if (isPlanChangeLoop(topBehaviorLoop)) {
-    return "你的循环之镜里已经显影出“临盘改计划”。下一次不是先判断行情，而是先确认：这是条件变化，还是情绪变化。"
+    return "底层循环识别已经显影出“临盘改计划”。下一次不是先判断行情，而是先确认：这是条件变化，还是情绪变化。"
   }
   if (normalizedThought === "怕错过") {
     return "我看你最近高频出现的是“怕错过”。今天先不谈复杂系统，只练一个动作：计划外拉升前停十秒。"
@@ -333,7 +333,7 @@ function getNextCycleFocus(
 
   return {
     title: "下一轮照见重点",
-    reason: topBehaviorLoop ? "来自循环之镜的破环动作。" : "当前证据还不够，需要先补一条今日修行或真实复盘。",
+    reason: topBehaviorLoop ? "来自底层循环识别的破环动作。" : "当前证据还不够，需要先补一条今日修行或真实复盘。",
     nextActionText: topBehaviorLoop?.loopBreakAction || "先完成一条今日修行或真实复盘。",
     relatedDimensions: topBehaviorLoop?.affectedDimensions || ["今日修行", "真实复盘"],
   }

@@ -9,7 +9,7 @@
   "items": [
     {
       "id": "scene_08_001",
-      "tradeMoment": "已经亏损很多以后",
+      "tradeMoment": "亏损已经压得很重时",
       "os": "现在卖给谁？",
       "hiddenThought": "我不能认输。",
       "reflection": "你舍不得卖的不是股票，你舍不得的是认错。",
@@ -17,7 +17,7 @@
     },
     {
       "id": "scene_08_002",
-      "tradeMoment": "看到账户越来越绿时",
+      "tradeMoment": "账户越来越绿时",
       "os": "都亏这么多了。",
       "hiddenThought": "现在走太亏了。",
       "reflection": "亏损越大，你越舍不得承认。",
@@ -25,7 +25,7 @@
     },
     {
       "id": "scene_08_003",
-      "tradeMoment": "再次打开账户时",
+      "tradeMoment": "夜里又打开账户时",
       "os": "再等等。",
       "hiddenThought": "万一回来呢。",
       "reflection": "你等的不是上涨，你等的是希望。",
@@ -33,7 +33,7 @@
     },
     {
       "id": "scene_08_004",
-      "tradeMoment": "看着继续下跌时",
+      "tradeMoment": "看着它继续往下砸时",
       "os": "我不信。",
       "hiddenThought": "不可能一直跌。",
       "reflection": "你已经开始和现实较劲。",
@@ -41,7 +41,7 @@
     },
     {
       "id": "scene_08_005",
-      "tradeMoment": "连续阴线以后",
+      "tradeMoment": "连续阴线铺满屏幕时",
       "os": "总会弹一下。",
       "hiddenThought": "给我一次机会。",
       "reflection": "你一直在等一个体面离场的理由。",
@@ -49,7 +49,7 @@
     },
     {
       "id": "scene_08_006",
-      "tradeMoment": "想卖又没卖时",
+      "tradeMoment": "想卖却又停住手时",
       "os": "今天不卖。",
       "hiddenThought": "我还没准备好。",
       "reflection": "规则已经说该走，情绪还不肯走。",
@@ -57,7 +57,7 @@
     },
     {
       "id": "scene_08_007",
-      "tradeMoment": "跌破重要位置时",
+      "tradeMoment": "跌破关键位置时",
       "os": "再看两天。",
       "hiddenThought": "也许会变好。",
       "reflection": "你把今天的问题交给了明天。",
@@ -65,7 +65,7 @@
     },
     {
       "id": "scene_08_008",
-      "tradeMoment": "已经明显走坏时",
+      "tradeMoment": "走势已经彻底走坏时",
       "os": "拉红我就走。",
       "hiddenThought": "我只想少亏一点。",
       "reflection": "你等的不是拉红，你等的是不用认错。",
@@ -73,7 +73,7 @@
     },
     {
       "id": "scene_08_009",
-      "tradeMoment": "看着成本线时",
+      "tradeMoment": "盯着成本线不放时",
       "os": "总会回来。",
       "hiddenThought": "我还没输。",
       "reflection": "你把希望当成了判断。",
@@ -81,7 +81,7 @@
     },
     {
       "id": "scene_08_010",
-      "tradeMoment": "关软件之前",
+      "tradeMoment": "关软件前选择放着时",
       "os": "先放着。",
       "hiddenThought": "以后再说。",
       "reflection": "真正困住你的，不是股票，是执念。",

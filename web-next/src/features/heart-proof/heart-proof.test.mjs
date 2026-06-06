@@ -28,6 +28,7 @@ test("heart proof exposes the daily growth persistence contract", async () => {
     "ym_heart_proofs_v1",
     "ym_latest_heart_proof_v1",
     "saveHeartProof",
+    "getNextHeartProofSequenceNumber",
     "buildDailyGrowthHeartProof",
     "buildTradeReviewHeartProof",
     '"trade_review"',

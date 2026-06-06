@@ -9,15 +9,15 @@
   "items": [
     {
       "id": "scene_01_001",
-      "tradeMoment": "看着价格突然拉升时",
-      "os": "卧槽，真拉了。",
+      "tradeMoment": "盘中突然拉出长阳时",
+      "os": "我次奥，真拉了。",
       "hiddenThought": "我又慢了。",
-      "reflection": "这一声卧槽，不是惊讶，是后悔。",
+      "reflection": "这一声我次奥，不是惊讶，是后悔。",
       "intensity": 4
     },
     {
       "id": "scene_01_002",
-      "tradeMoment": "发现自己还没买进去时",
+      "tradeMoment": "发现自己还没上车时",
       "os": "我又没上车。",
       "hiddenThought": "怎么又是我。",
       "reflection": "你难受的不是没上车，是别人已经上车了。",
@@ -25,7 +25,7 @@
     },
     {
       "id": "scene_01_003",
-      "tradeMoment": "刚打开软件看到它起飞时",
+      "tradeMoment": "刚打开软件看到拉升时",
       "os": "怎么刚看就起飞了。",
       "hiddenThought": "别人又比我快。",
       "reflection": "你不是怕它涨，你是怕自己又一次错过。",
@@ -33,7 +33,7 @@
     },
     {
       "id": "scene_01_004",
-      "tradeMoment": "看着涨幅越来越接近涨停时",
+      "tradeMoment": "看着涨幅逼近涨停时",
       "os": "再不买要涨停了。",
       "hiddenThought": "我不想再错过。",
       "reflection": "真正让你着急的，不是涨停，是后悔又要来了。",
@@ -41,7 +41,7 @@
     },
     {
       "id": "scene_01_005",
-      "tradeMoment": "手放到买入键前",
+      "tradeMoment": "手已经放到买入键时",
       "os": "不追又要后悔。",
       "hiddenThought": "我受不了那种感觉。",
       "reflection": "你追的不是机会，你是在逃离后悔。",
@@ -49,7 +49,7 @@
     },
     {
       "id": "scene_01_006",
-      "tradeMoment": "犹豫几秒后准备下单时",
+      "tradeMoment": "犹豫几秒快要点下时",
       "os": "算了，先进。",
       "hiddenThought": "我不想再当旁观者。",
       "reflection": "规则还没说话，情绪已经下单了。",
@@ -57,7 +57,7 @@
     },
     {
       "id": "scene_01_007",
-      "tradeMoment": "看到它又比自己预期先涨时",
+      "tradeMoment": "看见它先于预期起涨时",
       "os": "怎么每次都差一步。",
       "hiddenThought": "我是不是不行。",
       "reflection": "你不是第一次差一步，所以这一次格外难受。",
@@ -65,7 +65,7 @@
     },
     {
       "id": "scene_01_008",
-      "tradeMoment": "想等回调却越看越急时",
+      "tradeMoment": "等回调却越等越高时",
       "os": "怕是不会回调了。",
       "hiddenThought": "机会不会等我。",
       "reflection": "你已经开始幻想，而不是判断。",
@@ -73,7 +73,7 @@
     },
     {
       "id": "scene_01_009",
-      "tradeMoment": "看到群里别人晒盈利时",
+      "tradeMoment": "群里开始晒盈利截图时",
       "os": "别人都吃肉了。",
       "hiddenThought": "为什么总不是我。",
       "reflection": "刺痛你的不是上涨，是比较。",
@@ -81,7 +81,7 @@
     },
     {
       "id": "scene_01_010",
-      "tradeMoment": "看着它越涨越远时",
+      "tradeMoment": "看着大阳线越拉越远时",
       "os": "我又慢了。",
       "hiddenThought": "我总是落后。",
       "reflection": "你怕的不是慢，你怕的是自己总是慢。",

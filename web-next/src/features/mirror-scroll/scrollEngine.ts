@@ -12,7 +12,7 @@ const nodeLabels: Record<MirrorScrollNodeType, string> = {
   growth: "活镜成长节点",
   growth_profile: "活镜成长谱节点",
   trade_review: "真实复盘节点",
-  behavior_loop: "循环之镜节点",
+  behavior_loop: "循环识别节点",
   heart_proof: "今日心证节点",
   retest: "复测变化节点",
   retest_change: "复测变化节点",
@@ -124,7 +124,7 @@ function toScrollNodes(item: ArchiveItem, heartProofById: Map<string, HeartProof
     return [
       buildNode(item, "behavior_loop", {
         id: `scroll_behavior_loop_${item.sourceId}`,
-        title: "循环之镜显影",
+        title: "循环识别显影",
         thoughtText: item.tags[1] || "重复一念",
         actionText: "照见触发、一念、动作、结果如何反复出现。",
         proofText: item.summary || `你正在重复的循环是：${item.tags[0] || "触发待照见"} → ${item.tags[1] || "一念待照见"} → 行为待复盘。`,

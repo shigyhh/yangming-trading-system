@@ -89,9 +89,9 @@ test("trade review page captures screenshot-based three-question review and crea
     "复盘心证已生成",
     "这笔复盘照见的是：",
     "真正的问题不是行情对错，而是当时哪一念先于规则行动。",
-    "循环之镜显影",
+    "循环识别显影",
     "你正在重复的循环是：",
-    "循环之镜已经从真实证据中生成。",
+    "底层循环识别已经从真实证据中生成。",
     "完成一次真实交易复盘后，这里会沉淀为个人循环。",
   ].forEach((token) => {
     assert.equal(source.includes(token), true, `missing token: ${token}`)

@@ -9,7 +9,7 @@
   "items": [
     {
       "id": "scene_06_001",
-      "tradeMoment": "利润开始回吐时",
+      "tradeMoment": "浮盈刚开始回吐时",
       "os": "先卖吧。",
       "hiddenThought": "我不想失去。",
       "reflection": "你卖掉的不是仓位，你卖掉的是不安。",
@@ -17,7 +17,7 @@
     },
     {
       "id": "scene_06_002",
-      "tradeMoment": "看着盈利缩水时",
+      "tradeMoment": "看着盈利数字缩水时",
       "os": "又吐回去了。",
       "hiddenThought": "到手的别飞了。",
       "reflection": "你怕的不是回调，你怕的是刚得到的东西又失去。",
@@ -25,7 +25,7 @@
     },
     {
       "id": "scene_06_003",
-      "tradeMoment": "账户盈利减少时",
+      "tradeMoment": "账户收益往下掉时",
       "os": "差不多了。",
       "hiddenThought": "我守不住。",
       "reflection": "你说差不多了，其实是情绪撑不住了。",
@@ -33,7 +33,7 @@
     },
     {
       "id": "scene_06_004",
-      "tradeMoment": "红盘开始缩小时",
+      "tradeMoment": "红盘逐渐变浅时",
       "os": "要不先走。",
       "hiddenThought": "我怕等下没了。",
       "reflection": "你不是在看规则，你是在看恐惧。",
@@ -41,7 +41,7 @@
     },
     {
       "id": "scene_06_005",
-      "tradeMoment": "利润回撤时",
+      "tradeMoment": "利润从高点撤下来时",
       "os": "赚一点也行。",
       "hiddenThought": "别最后白忙活。",
       "reflection": "你已经开始用卖出换安心。",
@@ -49,7 +49,7 @@
     },
     {
       "id": "scene_06_006",
-      "tradeMoment": "看着价格回落时",
+      "tradeMoment": "看着价格一点点回落时",
       "os": "够了够了。",
       "hiddenThought": "我拿不住。",
       "reflection": "你卖的不是仓位，是承受波动的能力。",
@@ -57,7 +57,7 @@
     },
     {
       "id": "scene_06_007",
-      "tradeMoment": "盈利还在时",
+      "tradeMoment": "盈利还在但心发慌时",
       "os": "先落袋。",
       "hiddenThought": "至少赚到了。",
       "reflection": "你想落袋的不是利润，是安全感。",
@@ -65,7 +65,7 @@
     },
     {
       "id": "scene_06_008",
-      "tradeMoment": "回看最高盈利时",
+      "tradeMoment": "回看刚才最高浮盈时",
       "os": "刚才就该卖。",
       "hiddenThought": "我又慢了。",
       "reflection": "你开始用最高点惩罚自己。",
@@ -73,7 +73,7 @@
     },
     {
       "id": "scene_06_009",
-      "tradeMoment": "准备点击卖出时",
+      "tradeMoment": "手停在卖出按钮上时",
       "os": "别回去了。",
       "hiddenThought": "我受不了再吐。",
       "reflection": "真正让你害怕的，不是价格，是失去。",
@@ -81,7 +81,7 @@
     },
     {
       "id": "scene_06_010",
-      "tradeMoment": "卖出以后",
+      "tradeMoment": "卖出后盯着账户时",
       "os": "总算卖了。",
       "hiddenThought": "终于安心了。",
       "reflection": "你得到的不是利润，你得到的是松一口气。",

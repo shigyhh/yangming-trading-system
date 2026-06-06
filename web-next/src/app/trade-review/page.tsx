@@ -337,7 +337,7 @@ export default function TradeReviewPage() {
               <SecondaryLink href="/living-mirror-center" className="w-full">
                 进入活镜中枢 →
               </SecondaryLink>
-              <SecondaryLink href="/observing-archive" className="w-full">
+              <SecondaryLink href="/mirror-archive" className="w-full">
                 回到心镜档案馆 →
               </SecondaryLink>
             </div>

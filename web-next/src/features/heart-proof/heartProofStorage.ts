@@ -16,6 +16,10 @@ export function loadLatestHeartProof() {
   return getStorage<HeartProof | null>(latestHeartProofStorageKey, null)
 }
 
+export function getNextHeartProofSequenceNumber() {
+  return loadHeartProofs().length + 1
+}
+
 export function saveHeartProof(heartProof: HeartProof) {
   const nextProofs = [
     ...loadHeartProofs().filter((proof) => (

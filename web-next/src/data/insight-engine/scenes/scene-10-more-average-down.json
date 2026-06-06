@@ -9,7 +9,7 @@
   "items": [
     {
       "id": "scene_10_001",
-      "tradeMoment": "再次下跌以后",
+      "tradeMoment": "补完仓又跌破低点时",
       "os": "再补一点。",
       "hiddenThought": "这样成本就下来了。",
       "reflection": "你补的不是仓位，你补的是希望。",
@@ -17,7 +17,7 @@
     },
     {
       "id": "scene_10_002",
-      "tradeMoment": "看着账户继续亏损时",
+      "tradeMoment": "账户亏损继续扩大时",
       "os": "跌这么多了。",
       "hiddenThought": "应该差不多到底了。",
       "reflection": "你开始把跌得多，当成上涨的理由。",
@@ -25,7 +25,7 @@
     },
     {
       "id": "scene_10_003",
-      "tradeMoment": "再次准备加仓时",
+      "tradeMoment": "又准备点加仓时",
       "os": "这里肯定有支撑。",
       "hiddenThought": "不可能一直跌。",
       "reflection": "你已经开始寻找坚持的理由，而不是寻找事实。",
@@ -33,7 +33,7 @@
     },
     {
       "id": "scene_10_004",
-      "tradeMoment": "看到价格继续下跌时",
+      "tradeMoment": "看着价格一层层下台阶时",
       "os": "再买一点。",
       "hiddenThought": "拉一下就回本。",
       "reflection": "你盯着的已经不是行情，是成本线。",
@@ -41,7 +41,7 @@
     },
     {
       "id": "scene_10_005",
-      "tradeMoment": "看着成本越来越低时",
+      "tradeMoment": "成本线被越摊越低时",
       "os": "这下差不多了。",
       "hiddenThought": "再跌也有限。",
       "reflection": "每一次补仓，你都在告诉自己同样的话。",
@@ -49,7 +49,7 @@
     },
     {
       "id": "scene_10_006",
-      "tradeMoment": "再次加仓以后",
+      "tradeMoment": "加仓后还是没止跌时",
       "os": "反正都这样了。",
       "hiddenThought": "只能补了。",
       "reflection": "当你开始说“反正”，规则已经离开了。",
@@ -57,7 +57,7 @@
     },
     {
       "id": "scene_10_007",
-      "tradeMoment": "看着仓位越来越重时",
+      "tradeMoment": "仓位已经压得很重时",
       "os": "我再摊一下。",
       "hiddenThought": "总会回来。",
       "reflection": "你不是在重新判断，你是在保护原来的判断。",
@@ -65,7 +65,7 @@
     },
     {
       "id": "scene_10_008",
-      "tradeMoment": "跌破预期位置时",
+      "tradeMoment": "跌破原本预期位置时",
       "os": "再补最后一次。",
       "hiddenThought": "这次真是最后一次。",
       "reflection": "很多人失控，都是从“最后一次”开始的。",
@@ -73,7 +73,7 @@
     },
     {
       "id": "scene_10_009",
-      "tradeMoment": "已经严重亏损以后",
+      "tradeMoment": "亏损已经明显失控时",
       "os": "这里应该到底了。",
       "hiddenThought": "我不能错。",
       "reflection": "你越来越想证明自己，而不是保护自己。",
@@ -81,7 +81,7 @@
     },
     {
       "id": "scene_10_010",
-      "tradeMoment": "关软件之前",
+      "tradeMoment": "关软件前还盼着回来时",
       "os": "总会回来的。",
       "hiddenThought": "我还没输。",
       "reflection": "你已经把希望当成了判断。",

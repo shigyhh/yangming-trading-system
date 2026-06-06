@@ -9,7 +9,7 @@
   "items": [
     {
       "id": "scene_15_001",
-      "tradeMoment": "看着行情上涨时",
+      "tradeMoment": "空仓看着行情上涨时",
       "os": "又涨了。",
       "hiddenThought": "我又空仓。",
       "reflection": "最难受的不是上涨，是你没参与。",
@@ -17,7 +17,7 @@
     },
     {
       "id": "scene_15_002",
-      "tradeMoment": "打开软件时",
+      "tradeMoment": "打开软件发现又没买时",
       "os": "今天又没买。",
       "hiddenThought": "我是不是错过了。",
       "reflection": "你开始怀疑的，不是行情，是自己。",
@@ -25,7 +25,7 @@
     },
     {
       "id": "scene_15_003",
-      "tradeMoment": "看着自选股上涨时",
+      "tradeMoment": "自选股一片红时",
       "os": "这票我看过。",
       "hiddenThought": "我本来可以上。",
       "reflection": "真正让你难受的，是你曾经看见过。",
@@ -33,7 +33,7 @@
     },
     {
       "id": "scene_15_004",
-      "tradeMoment": "看着别人赚钱时",
+      "tradeMoment": "看到别人晒盈利截图时",
       "os": "别人又吃到了。",
       "hiddenThought": "为什么总不是我。",
       "reflection": "刺痛你的不是行情，是比较。",
@@ -41,7 +41,7 @@
     },
     {
       "id": "scene_15_005",
-      "tradeMoment": "连续空仓几天以后",
+      "tradeMoment": "连续空仓几天后时",
       "os": "总得做点什么。",
       "hiddenThought": "我不能一直空着。",
       "reflection": "你开始为了交易而交易。",
@@ -49,7 +49,7 @@
     },
     {
       "id": "scene_15_006",
-      "tradeMoment": "看着市场热闹时",
+      "tradeMoment": "市场热闹得坐不住时",
       "os": "今天总得买一个吧。",
       "hiddenThought": "不然白看一天。",
       "reflection": "当你开始“总得买一个”，规则已经退场了。",
@@ -57,7 +57,7 @@
     },
     {
       "id": "scene_15_007",
-      "tradeMoment": "看到强势股时",
+      "tradeMoment": "强势股不断冒出来时",
       "os": "我是不是太谨慎了。",
       "hiddenThought": "我又慢了。",
       "reflection": "你把纪律误认为胆小。",
@@ -65,7 +65,7 @@
     },
     {
       "id": "scene_15_008",
-      "tradeMoment": "空仓期间刷群时",
+      "tradeMoment": "空仓刷群看到满屏持仓时",
       "os": "大家都有票。",
       "hiddenThought": "就我没有。",
       "reflection": "真正让你难受的，是自己被排除在外。",
@@ -73,7 +73,7 @@
     },
     {
       "id": "scene_15_009",
-      "tradeMoment": "临近收盘时",
+      "tradeMoment": "临近收盘还没仓位时",
       "os": "不买点不甘心。",
       "hiddenThought": "今天白过了。",
       "reflection": "你开始用仓位证明自己的存在感。",
@@ -81,7 +81,7 @@
     },
     {
       "id": "scene_15_010",
-      "tradeMoment": "关软件之前",
+      "tradeMoment": "关软件前暗暗发誓时",
       "os": "明天一定上。",
       "hiddenThought": "我不能再错过。",
       "reflection": "你害怕的不是空仓，你害怕的是再次错过。",

@@ -8,7 +8,7 @@ import { FlowButton } from "@/components/home/flow-button"
 
 const navLinks = [
   { label: "成长谱", href: "/living-mirror-growth" },
-  { label: "循环之镜", href: "/cycle-mirror" },
+  { label: "真实复盘", href: "/trade-review" },
   { label: "档案馆", href: "/mirror-archive" },
 ] as const
 

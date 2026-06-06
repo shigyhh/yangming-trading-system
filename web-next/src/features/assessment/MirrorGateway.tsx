@@ -279,7 +279,7 @@ const ritualCopyByPhase: Record<GatewayPhase, RitualCopy> = {
     kicker: "今日已照见",
     main: "今日已照见",
     sub: "怕错过\n↓\n追涨\n↓\n被套\n↓\n不甘\n↓\n再次追涨",
-    seal: "进入循环之镜",
+    seal: "生成心镜报告",
   },
 }
 
@@ -1005,6 +1005,7 @@ export function MirrorGateway({ onComplete }: MirrorGatewayProps) {
     <section
       className={cn("moon-heart-gateway", `is-${phase}`, showZhaoxinFlow && "is-zhaoxin-flow")}
       data-lake-state={showZhaoxinFlow ? (isLakeSettled ? "settled" : "arriving") : "prelude"}
+      data-lake-mode={lakeMode}
       aria-label="照入此心"
       data-flow-anchor={STILL_WATER_ENTRY_ANCHOR}
     >
@@ -1015,9 +1016,9 @@ export function MirrorGateway({ onComplete }: MirrorGatewayProps) {
           <HeartLakeEngine
             lakeMode={lakeMode}
             triggerRippleKey={rippleKey}
-            opacity={lakeMode === "still" ? 0.72 : isLakeSettled ? 0.82 : 0.7}
-            moonPathIntensity={lakeMode === "still" ? 0.58 : isLakeSettled ? 0.7 : 0.48}
-            bloomScale={lakeMode === "liangzhi" ? 0.64 : isLakeSettled ? 0.72 : 0.48}
+            opacity={lakeMode === "liangzhi" ? 0.64 : lakeMode === "still" ? 0.72 : isLakeSettled ? 0.82 : 0.7}
+            moonPathIntensity={lakeMode === "liangzhi" ? 0.34 : lakeMode === "still" ? 0.58 : isLakeSettled ? 0.7 : 0.48}
+            bloomScale={lakeMode === "liangzhi" ? 0.42 : isLakeSettled ? 0.72 : 0.48}
             className="mirror-gateway-heart-lake"
           />
           <ZhaoxinRitualFlow
@@ -1143,6 +1144,11 @@ export function MirrorGateway({ onComplete }: MirrorGatewayProps) {
           filter: brightness(0.72) blur(1.8px);
         }
 
+        .moon-heart-gateway.is-zhaoxin-flow[data-lake-mode="liangzhi"] :global(.still-water-intro) {
+          opacity: 0.12;
+          filter: brightness(0.42) blur(3px);
+        }
+
         .moon-heart-gateway :global(.mirror-gateway-heart-lake) {
           z-index: 2;
           mix-blend-mode: normal;
@@ -1158,6 +1164,10 @@ export function MirrorGateway({ onComplete }: MirrorGatewayProps) {
         .moon-heart-gateway[data-lake-state="settled"] :global(.mirror-gateway-heart-lake) {
           filter: saturate(0.92) brightness(0.96) blur(0);
           transform: scale(1);
+        }
+
+        .moon-heart-gateway[data-lake-mode="liangzhi"] :global(.mirror-gateway-heart-lake) {
+          filter: saturate(0.82) brightness(0.72) blur(0.4px);
         }
 
         .moon-heart-gateway.is-zhaoxin-flow :global(.zhaoxin-ritual-flow) {

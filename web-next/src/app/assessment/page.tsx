@@ -168,7 +168,7 @@ export default function AssessmentPage() {
             setStorage(assessmentStorageKeys.selectedMirrorId, mirrorId)
             setStorage(assessmentStorageKeys.report, mirrorReport)
             setStorage(assessmentStorageKeys.reportCreatedAt, mirrorReport.createdAt)
-            router.push(`/cycle-mirror?mirror=${encodeURIComponent(mirrorId)}`)
+            router.push("/assessment-result")
           }}
         />
       </AssessmentShell>

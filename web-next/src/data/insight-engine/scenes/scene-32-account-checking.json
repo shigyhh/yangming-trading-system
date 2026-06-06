@@ -9,7 +9,7 @@
   "items": [
     {
       "id": "scene_32_001",
-      "tradeMoment": "买入以后",
+      "tradeMoment": "刚买入就想看账户时",
       "os": "看一下。",
       "hiddenThought": "应该没事吧。",
       "reflection": "你看的不是账户，你看的是安全感。",
@@ -17,7 +17,7 @@
     },
     {
       "id": "scene_32_002",
-      "tradeMoment": "刚离开软件几分钟后",
+      "tradeMoment": "离开软件几分钟后时",
       "os": "再看看。",
       "hiddenThought": "万一变了呢。",
       "reflection": "真正让你放不下的，不是行情，是不确定。",
@@ -25,7 +25,7 @@
     },
     {
       "id": "scene_32_003",
-      "tradeMoment": "价格波动时",
+      "tradeMoment": "价格一跳动就打开时",
       "os": "怎么跌了。",
       "hiddenThought": "不会有事吧。",
       "reflection": "每一次波动，都在放大你的情绪。",
@@ -33,7 +33,7 @@
     },
     {
       "id": "scene_32_004",
-      "tradeMoment": "涨了一点时",
+      "tradeMoment": "刚涨一点就看收益时",
       "os": "赚了。",
       "hiddenThought": "还不错。",
       "reflection": "你的情绪开始跟着数字上下波动。",
@@ -41,7 +41,7 @@
     },
     {
       "id": "scene_32_005",
-      "tradeMoment": "跌了一点时",
+      "tradeMoment": "刚跌一点就看亏损时",
       "os": "怎么又绿了。",
       "hiddenThought": "不会亏吧。",
       "reflection": "账户变成了情绪遥控器。",
@@ -49,7 +49,7 @@
     },
     {
       "id": "scene_32_006",
-      "tradeMoment": "工作时忍不住打开软件",
+      "tradeMoment": "工作时偷偷点开软件时",
       "os": "看一眼。",
       "hiddenThought": "就一眼。",
       "reflection": "你已经开始被账户牵着走。",
@@ -57,7 +57,7 @@
     },
     {
       "id": "scene_32_007",
-      "tradeMoment": "晚上休息时",
+      "tradeMoment": "晚上休息还想再看时",
       "os": "再看一次。",
       "hiddenThought": "放不下。",
       "reflection": "真正困住你的，不是持仓，是执念。",
@@ -65,7 +65,7 @@
     },
     {
       "id": "scene_32_008",
-      "tradeMoment": "价格没变化时",
+      "tradeMoment": "价格不动也反复看时",
       "os": "怎么不动。",
       "hiddenThought": "到底行不行。",
       "reflection": "你开始要求市场立刻给答案。",
@@ -73,7 +73,7 @@
     },
     {
       "id": "scene_32_009",
-      "tradeMoment": "一天看了很多次以后",
+      "tradeMoment": "一天打开很多次后时",
       "os": "我怎么又打开了。",
       "hiddenThought": "我控制不住。",
       "reflection": "频繁看账户，本质上是在频繁确认自己。",
@@ -81,7 +81,7 @@
     },
     {
       "id": "scene_32_010",
-      "tradeMoment": "收盘以后",
+      "tradeMoment": "收盘后统计打开次数时",
       "os": "今天看太多了。",
       "hiddenThought": "我还是不放心。",
       "reflection": "当你无法离开账户，你已经失去了主动权。",

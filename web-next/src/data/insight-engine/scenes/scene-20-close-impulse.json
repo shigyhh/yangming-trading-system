@@ -9,7 +9,7 @@
   "items": [
     {
       "id": "scene_20_001",
-      "tradeMoment": "临近收盘时",
+      "tradeMoment": "临近收盘还空着手时",
       "os": "今天总得买点。",
       "hiddenThought": "不然白看一天。",
       "reflection": "你开始为了有仓位而交易。",
@@ -17,7 +17,7 @@
     },
     {
       "id": "scene_20_002",
-      "tradeMoment": "尾盘突然拉升时",
+      "tradeMoment": "尾盘突然拉一根时",
       "os": "再不上来不及了。",
       "hiddenThought": "明天可能高开。",
       "reflection": "你开始幻想明天，而不是判断今天。",
@@ -25,7 +25,7 @@
     },
     {
       "id": "scene_20_003",
-      "tradeMoment": "看着行情最后冲刺时",
+      "tradeMoment": "看着最后几分钟冲刺时",
       "os": "搞一笔再说。",
       "hiddenThought": "不能空着过夜。",
       "reflection": "你不是在抓机会，你是在逃离空仓。",
@@ -33,7 +33,7 @@
     },
     {
       "id": "scene_20_004",
-      "tradeMoment": "收盘前几分钟",
+      "tradeMoment": "收盘前几分钟心发痒时",
       "os": "不买有点亏。",
       "hiddenThought": "今天不能空手。",
       "reflection": "你开始把不交易当成损失。",
@@ -41,7 +41,7 @@
     },
     {
       "id": "scene_20_005",
-      "tradeMoment": "看着别人都在买时",
+      "tradeMoment": "看到别人尾盘进场时",
       "os": "人家都进了。",
       "hiddenThought": "就我没动。",
       "reflection": "真正让你着急的，不是行情，是比较。",
@@ -49,7 +49,7 @@
     },
     {
       "id": "scene_20_006",
-      "tradeMoment": "收盘倒计时时",
+      "tradeMoment": "收盘倒计时跳动时",
       "os": "先上车。",
       "hiddenThought": "明天再说。",
       "reflection": "很多冲动，都喜欢把问题留给明天。",
@@ -57,7 +57,7 @@
     },
     {
       "id": "scene_20_007",
-      "tradeMoment": "准备下单时",
+      "tradeMoment": "准备赶在收盘前下单时",
       "os": "错过今天又得等。",
       "hiddenThought": "我受不了等待。",
       "reflection": "你开始为了结束等待而交易。",
@@ -65,7 +65,7 @@
     },
     {
       "id": "scene_20_008",
-      "tradeMoment": "最后一分钟",
+      "tradeMoment": "最后一分钟点进去时",
       "os": "买了再说。",
       "hiddenThought": "总比没买强。",
       "reflection": "当你说“买了再说”，规则已经离场了。",
@@ -73,7 +73,7 @@
     },
     {
       "id": "scene_20_009",
-      "tradeMoment": "下单以后",
+      "tradeMoment": "下单后盯着收盘价时",
       "os": "明天应该有戏。",
       "hiddenThought": "希望别白买。",
       "reflection": "你开始用希望支撑决定。",
@@ -81,7 +81,7 @@
     },
     {
       "id": "scene_20_010",
-      "tradeMoment": "收盘以后",
+      "tradeMoment": "收盘后看着尾盘那笔时",
       "os": "又是尾盘买的。",
       "hiddenThought": "我还是没忍住。",
       "reflection": "真正让你后悔的，不是尾盘，是冲动。",

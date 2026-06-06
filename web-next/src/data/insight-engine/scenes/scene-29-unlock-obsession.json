@@ -9,7 +9,7 @@
   "items": [
     {
       "id": "scene_29_001",
-      "tradeMoment": "被套很久以后",
+      "tradeMoment": "被套很久后看见反弹时",
       "os": "解套我就走。",
       "hiddenThought": "我一天都不想拿了。",
       "reflection": "你等的不是机会，你等的是解脱。",
@@ -17,7 +17,7 @@
     },
     {
       "id": "scene_29_002",
-      "tradeMoment": "股价接近成本时",
+      "tradeMoment": "股价快碰到成本线时",
       "os": "快到了。",
       "hiddenThought": "终于熬到了。",
       "reflection": "你开始把解套当成目标，而不是交易。",
@@ -25,7 +25,7 @@
     },
     {
       "id": "scene_29_003",
-      "tradeMoment": "看着亏损缩小时",
+      "tradeMoment": "看着亏损一点点缩小时",
       "os": "再涨一点。",
       "hiddenThought": "马上自由了。",
       "reflection": "你已经不在看趋势，你只在看成本线。",
@@ -33,7 +33,7 @@
     },
     {
       "id": "scene_29_004",
-      "tradeMoment": "快回本时",
+      "tradeMoment": "快解套却还不想卖时",
       "os": "先别卖。",
       "hiddenThought": "说不定还能赚。",
       "reflection": "很多人死在快解套的时候。",
@@ -49,7 +49,7 @@
     },
     {
       "id": "scene_29_006",
-      "tradeMoment": "再次回落时",
+      "tradeMoment": "又从成本线掉下来时",
       "os": "怎么又下去了。",
       "hiddenThought": "就差一点。",
       "reflection": "最折磨人的，不是亏损，是差一点解套。",
@@ -57,7 +57,7 @@
     },
     {
       "id": "scene_29_007",
-      "tradeMoment": "看着价格反复震荡时",
+      "tradeMoment": "价格来回震荡折磨时",
       "os": "我等了这么久。",
       "hiddenThought": "不能白等。",
       "reflection": "你开始用过去的时间证明继续等待。",
@@ -65,7 +65,7 @@
     },
     {
       "id": "scene_29_008",
-      "tradeMoment": "已经失去逻辑时",
+      "tradeMoment": "逻辑没了只想解套时",
       "os": "我就想解套。",
       "hiddenThought": "其他都不重要。",
       "reflection": "当解套变成目标，规则就消失了。",
@@ -73,7 +73,7 @@
     },
     {
       "id": "scene_29_009",
-      "tradeMoment": "看着成本线时",
+      "tradeMoment": "盯着成本线等回来时",
       "os": "回来就行。",
       "hiddenThought": "别让我亏着走。",
       "reflection": "你真正放不下的，是不愿意接受亏损。",
@@ -81,7 +81,7 @@
     },
     {
       "id": "scene_29_010",
-      "tradeMoment": "关软件之前",
+      "tradeMoment": "关软件前还念着解套时",
       "os": "解套我一定卖。",
       "hiddenThought": "这次说真的。",
       "reflection": "你已经说过很多次：解套我就卖。",

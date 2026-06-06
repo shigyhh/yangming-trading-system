@@ -9,7 +9,7 @@
   "items": [
     {
       "id": "scene_17_001",
-      "tradeMoment": "刚止损以后",
+      "tradeMoment": "刚止损它就反弹时",
       "os": "卖完就涨。",
       "hiddenThought": "我是不是卖错了。",
       "reflection": "最难受的不是止损，是止损以后它涨了。",
@@ -17,7 +17,7 @@
     },
     {
       "id": "scene_17_002",
-      "tradeMoment": "看着价格拉回时",
+      "tradeMoment": "看着价格拉回成本附近时",
       "os": "我就知道。",
       "hiddenThought": "我本来没错。",
       "reflection": "你开始用结果否定规则。",
@@ -25,7 +25,7 @@
     },
     {
       "id": "scene_17_003",
-      "tradeMoment": "看着继续上涨时",
+      "tradeMoment": "看着它继续往上走时",
       "os": "白割了。",
       "hiddenThought": "我又当韭菜了。",
       "reflection": "你责怪的不是行情，你责怪的是自己。",
@@ -33,7 +33,7 @@
     },
     {
       "id": "scene_17_004",
-      "tradeMoment": "回看卖点时",
+      "tradeMoment": "回看刚才卖点时",
       "os": "再等等就好了。",
       "hiddenThought": "我太急了。",
       "reflection": "你开始幻想另一个结果。",
@@ -41,7 +41,7 @@
     },
     {
       "id": "scene_17_005",
-      "tradeMoment": "看着突破前高时",
+      "tradeMoment": "看着它突破前高时",
       "os": "怎么偏偏今天。",
       "hiddenThought": "为什么总是我。",
       "reflection": "你开始觉得市场在针对你。",
@@ -49,7 +49,7 @@
     },
     {
       "id": "scene_17_006",
-      "tradeMoment": "看着涨幅扩大时",
+      "tradeMoment": "涨幅一截截扩大时",
       "os": "我真服了。",
       "hiddenThought": "我总是卖飞。",
       "reflection": "这一刻，你开始攻击自己，而不是复盘自己。",
@@ -57,7 +57,7 @@
     },
     {
       "id": "scene_17_007",
-      "tradeMoment": "打开交割单时",
+      "tradeMoment": "打开交割单看卖点时",
       "os": "我割在最低点。",
       "hiddenThought": "我是不是不会做。",
       "reflection": "一次止损，你开始否定整个自己。",
@@ -65,7 +65,7 @@
     },
     {
       "id": "scene_17_008",
-      "tradeMoment": "再次想买回去时",
+      "tradeMoment": "又想追回去买回时",
       "os": "要不要追回来。",
       "hiddenThought": "我不甘心。",
       "reflection": "止损后最危险的，不是后悔，是追回去。",
@@ -73,7 +73,7 @@
     },
     {
       "id": "scene_17_009",
-      "tradeMoment": "看着别人还在持有时",
+      "tradeMoment": "看到别人还拿着时",
       "os": "他们怎么没卖。",
       "hiddenThought": "为什么总是我。",
       "reflection": "真正刺痛你的，不是上涨，是比较。",
@@ -81,7 +81,7 @@
     },
     {
       "id": "scene_17_010",
-      "tradeMoment": "收盘以后",
+      "tradeMoment": "收盘后盯着那笔止损时",
       "os": "下次不止损了。",
       "hiddenThought": "止损根本没用。",
       "reflection": "你开始怀疑的，不是这笔交易，是规则本身。",

@@ -9,7 +9,7 @@
   "items": [
     {
       "id": "scene_31_001",
-      "tradeMoment": "刚买进去以后",
+      "tradeMoment": "刚成交就开始后悔时",
       "os": "我买它干嘛。",
       "hiddenThought": "好像不对。",
       "reflection": "你不是买完才后悔，你是买之前就不确定。",
@@ -17,7 +17,7 @@
     },
     {
       "id": "scene_31_002",
-      "tradeMoment": "下单刚成交时",
+      "tradeMoment": "下单提示刚弹出时",
       "os": "怎么突然慌了。",
       "hiddenThought": "我是不是冲动了。",
       "reflection": "真正让你难受的，不是行情，是自己的不确定。",
@@ -25,7 +25,7 @@
     },
     {
       "id": "scene_31_003",
-      "tradeMoment": "看着价格波动时",
+      "tradeMoment": "买完看着价格波动时",
       "os": "不会买错了吧。",
       "hiddenThought": "我又乱来了。",
       "reflection": "你开始用恐惧审判刚刚的自己。",
@@ -33,7 +33,7 @@
     },
     {
       "id": "scene_31_004",
-      "tradeMoment": "买入后一分钟",
+      "tradeMoment": "买入一分钟就想撤时",
       "os": "要不先出来。",
       "hiddenThought": "亏一点算了。",
       "reflection": "买前怕错过，买后怕犯错。",
@@ -41,7 +41,7 @@
     },
     {
       "id": "scene_31_005",
-      "tradeMoment": "看着盘口变化时",
+      "tradeMoment": "盯着盘口觉得不对时",
       "os": "感觉不太对。",
       "hiddenThought": "我想撤退。",
       "reflection": "你不是在分析行情，你在寻找逃跑理由。",
@@ -49,7 +49,7 @@
     },
     {
       "id": "scene_31_006",
-      "tradeMoment": "价格小幅回落时",
+      "tradeMoment": "价格刚小幅回落时",
       "os": "完了。",
       "hiddenThought": "果然买错。",
       "reflection": "你把一分钟波动，当成最终答案。",
@@ -57,7 +57,7 @@
     },
     {
       "id": "scene_31_007",
-      "tradeMoment": "看着账户浮亏时",
+      "tradeMoment": "账户刚浮亏就慌时",
       "os": "我怎么又这样。",
       "hiddenThought": "我总买错。",
       "reflection": "一笔交易，你开始否定整个自己。",
@@ -65,7 +65,7 @@
     },
     {
       "id": "scene_31_008",
-      "tradeMoment": "看着价格又拉回去时",
+      "tradeMoment": "价格又拉回去时",
       "os": "还好没卖。",
       "hiddenThought": "吓死我了。",
       "reflection": "你的情绪比行情波动得更快。",
@@ -73,7 +73,7 @@
     },
     {
       "id": "scene_31_009",
-      "tradeMoment": "回看买点时",
+      "tradeMoment": "回看自己的买点时",
       "os": "当时到底怎么想的。",
       "hiddenThought": "我自己都说不清。",
       "reflection": "很多后悔，来自没有明确理由就下单。",
@@ -81,7 +81,7 @@
     },
     {
       "id": "scene_31_010",
-      "tradeMoment": "收盘以后",
+      "tradeMoment": "收盘后还在担心时",
       "os": "明天再看吧。",
       "hiddenThought": "希望没问题。",
       "reflection": "真正的问题不是买错，而是从来没有真正确信过。",

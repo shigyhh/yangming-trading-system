@@ -9,7 +9,7 @@
   "items": [
     {
       "id": "scene_35_001",
-      "tradeMoment": "刚开始盈利时",
+      "tradeMoment": "刚开始有浮盈时",
       "os": "要不先卖了。",
       "hiddenThought": "落袋为安。",
       "reflection": "你卖的不是仓位，你卖的是恐惧。",
@@ -25,7 +25,7 @@
     },
     {
       "id": "scene_35_003",
-      "tradeMoment": "看着利润波动时",
+      "tradeMoment": "利润上下波动时",
       "os": "不会吐回去吧。",
       "hiddenThought": "我拿不住。",
       "reflection": "真正让你紧张的，不是回调，是不确定。",
@@ -33,7 +33,7 @@
     },
     {
       "id": "scene_35_004",
-      "tradeMoment": "价格稍微回落时",
+      "tradeMoment": "价格稍微一回落时",
       "os": "要跑吗。",
       "hiddenThought": "别最后没了。",
       "reflection": "你开始把正常波动当危险信号。",
@@ -41,7 +41,7 @@
     },
     {
       "id": "scene_35_005",
-      "tradeMoment": "盈利还不错时",
+      "tradeMoment": "浮盈已经很可观时",
       "os": "赚这么多够了。",
       "hiddenThought": "我不敢贪。",
       "reflection": "你以为自己在理性，其实你在害怕。",
@@ -49,7 +49,7 @@
     },
     {
       "id": "scene_35_006",
-      "tradeMoment": "看着趋势继续时",
+      "tradeMoment": "趋势还在继续往上时",
       "os": "还能拿吗。",
       "hiddenThought": "我怕卖晚。",
       "reflection": "你已经提前开始后悔未来。",
@@ -57,7 +57,7 @@
     },
     {
       "id": "scene_35_007",
-      "tradeMoment": "账户不断创新高时",
+      "tradeMoment": "账户不断刷新高时",
       "os": "心里不踏实。",
       "hiddenThought": "赚太多反而慌。",
       "reflection": "很多人拿不住利润，因为不习惯拥有利润。",
@@ -65,7 +65,7 @@
     },
     {
       "id": "scene_35_008",
-      "tradeMoment": "看到一点回调时",
+      "tradeMoment": "看到一点回调就慌时",
       "os": "赶紧跑。",
       "hiddenThought": "保住再说。",
       "reflection": "恐惧最喜欢伪装成谨慎。",
@@ -73,7 +73,7 @@
     },
     {
       "id": "scene_35_009",
-      "tradeMoment": "卖出以后",
+      "tradeMoment": "卖出后终于松口气时",
       "os": "总算安心了。",
       "hiddenThought": "终于解脱。",
       "reflection": "你得到的不是利润，你得到的是安全感。",
@@ -81,7 +81,7 @@
     },
     {
       "id": "scene_35_010",
-      "tradeMoment": "收盘以后",
+      "tradeMoment": "收盘后庆幸自己卖了时",
       "os": "还好卖了。",
       "hiddenThought": "希望别继续涨。",
       "reflection": "当你卖出以后，开始希望市场证明你是对的。",

@@ -9,7 +9,7 @@
   "items": [
     {
       "id": "scene_34_001",
-      "tradeMoment": "看到一条利好消息时",
+      "tradeMoment": "刚刷到一条利好消息时",
       "os": "这消息挺猛。",
       "hiddenThought": "应该会涨。",
       "reflection": "你还没验证消息，心已经开始上涨了。",
@@ -17,7 +17,7 @@
     },
     {
       "id": "scene_34_002",
-      "tradeMoment": "群里开始转发消息时",
+      "tradeMoment": "群里开始转发同一消息时",
       "os": "大家都在传。",
       "hiddenThought": "应该不是假的。",
       "reflection": "你开始用转发次数代替判断。",
@@ -25,7 +25,7 @@
     },
     {
       "id": "scene_34_003",
-      "tradeMoment": "看到标题很刺激时",
+      "tradeMoment": "看到标题特别刺激时",
       "os": "这不得起飞。",
       "hiddenThought": "机会来了。",
       "reflection": "标题越刺激，越容易让情绪先下单。",
@@ -33,7 +33,7 @@
     },
     {
       "id": "scene_34_004",
-      "tradeMoment": "打开行情看到异动时",
+      "tradeMoment": "打开行情看是否异动时",
       "os": "果然有反应。",
       "hiddenThought": "消息是真的。",
       "reflection": "你开始寻找证明消息正确的证据。",
@@ -41,7 +41,7 @@
     },
     {
       "id": "scene_34_005",
-      "tradeMoment": "准备下单时",
+      "tradeMoment": "消息刚出就准备下单时",
       "os": "先买点看看。",
       "hiddenThought": "万一是真的呢。",
       "reflection": "你买的不是逻辑，你买的是万一。",
@@ -57,7 +57,7 @@
     },
     {
       "id": "scene_34_007",
-      "tradeMoment": "消息继续发酵时",
+      "tradeMoment": "消息还在继续发酵时",
       "os": "后面肯定还有。",
       "hiddenThought": "这才刚开始。",
       "reflection": "你开始用想象补全行情。",
@@ -65,7 +65,7 @@
     },
     {
       "id": "scene_34_008",
-      "tradeMoment": "买入以后",
+      "tradeMoment": "买入后等公告落地时",
       "os": "等公告落地。",
       "hiddenThought": "应该还有利好。",
       "reflection": "买入之后，你开始希望消息继续保护你。",
@@ -73,7 +73,7 @@
     },
     {
       "id": "scene_34_009",
-      "tradeMoment": "走势不如预期时",
+      "tradeMoment": "走势没有按消息走时",
       "os": "消息没兑现？",
       "hiddenThought": "我是不是被套了。",
       "reflection": "当消息撑不住价格，你才开始看风险。",
@@ -81,7 +81,7 @@
     },
     {
       "id": "scene_34_010",
-      "tradeMoment": "收盘以后",
+      "tradeMoment": "收盘后还等晚间消息时",
       "os": "看晚上怎么发酵。",
       "hiddenThought": "希望别出问题。",
       "reflection": "你已经把交易交给了未知消息。",

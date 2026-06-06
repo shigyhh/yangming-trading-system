@@ -9,7 +9,7 @@
   "items": [
     {
       "id": "scene_07_001",
-      "tradeMoment": "跌到止损位时",
+      "tradeMoment": "价格刚触到止损线时",
       "os": "再等等。",
       "hiddenThought": "还没到最坏的时候。",
       "reflection": "你等的不是反弹，你等的是不用认错。",
@@ -17,7 +17,7 @@
     },
     {
       "id": "scene_07_002",
-      "tradeMoment": "准备点击卖出时",
+      "tradeMoment": "手停在卖出键上时",
       "os": "现在卖就真亏了。",
       "hiddenThought": "我不想亏。",
       "reflection": "你怕的不是亏损，你怕的是亏损变成事实。",
@@ -25,7 +25,7 @@
     },
     {
       "id": "scene_07_003",
-      "tradeMoment": "看着继续下跌时",
+      "tradeMoment": "看着它继续破位时",
       "os": "还能回来。",
       "hiddenThought": "应该还有机会。",
       "reflection": "你已经开始把希望当判断。",
@@ -33,7 +33,7 @@
     },
     {
       "id": "scene_07_004",
-      "tradeMoment": "再次跌破支撑时",
+      "tradeMoment": "再次跌破支撑位时",
       "os": "先不卖。",
       "hiddenThought": "万一拉回去呢。",
       "reflection": "你不是看好，你是不舍得。",
@@ -41,7 +41,7 @@
     },
     {
       "id": "scene_07_005",
-      "tradeMoment": "打开账户时",
+      "tradeMoment": "打开账户看到亏损时",
       "os": "再给它一次机会。",
       "hiddenThought": "也许这次不一样。",
       "reflection": "你给它机会，其实是在给自己逃避认错的机会。",
@@ -49,7 +49,7 @@
     },
     {
       "id": "scene_07_006",
-      "tradeMoment": "看着账户越来越绿时",
+      "tradeMoment": "账户一片绿色扩大时",
       "os": "我不信这么倒霉。",
       "hiddenThought": "不可能这么差。",
       "reflection": "你开始和现实讨价还价。",
@@ -57,7 +57,7 @@
     },
     {
       "id": "scene_07_007",
-      "tradeMoment": "价格继续创新低时",
+      "tradeMoment": "价格继续创出新低时",
       "os": "反弹一下我就走。",
       "hiddenThought": "给我一次机会。",
       "reflection": "你一直在等一个体面离场的理由。",
@@ -65,7 +65,7 @@
     },
     {
       "id": "scene_07_008",
-      "tradeMoment": "已经明显走坏时",
+      "tradeMoment": "走势已经明显走坏时",
       "os": "再看一会儿。",
       "hiddenThought": "我还没准备好。",
       "reflection": "规则已经说该走，情绪还不肯走。",
@@ -73,7 +73,7 @@
     },
     {
       "id": "scene_07_009",
-      "tradeMoment": "亏损越来越大时",
+      "tradeMoment": "亏损数字越来越大时",
       "os": "先扛着。",
       "hiddenThought": "总会回来。",
       "reflection": "你扛的不是仓位，你扛的是不甘心。",
@@ -81,7 +81,7 @@
     },
     {
       "id": "scene_07_010",
-      "tradeMoment": "关软件之前",
+      "tradeMoment": "关软件前还没卖时",
       "os": "不急。",
       "hiddenThought": "明天再说。",
       "reflection": "你把今天的问题交给了明天。",
