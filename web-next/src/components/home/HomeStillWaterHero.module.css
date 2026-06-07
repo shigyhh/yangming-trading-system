@@ -31,14 +31,14 @@
 
 .diveArc {
   position: absolute;
-  width: min(48vw, 620px);
-  height: min(48vw, 620px);
-  left: 58%;
-  top: 22%;
-  border: 1px solid rgba(238, 230, 210, 0.045);
+  width: min(36vw, 460px);
+  height: min(36vw, 460px);
+  left: 53%;
+  top: 48%;
+  border: 1px solid rgba(238, 230, 210, 0.024);
   border-radius: 999px;
-  filter: blur(0.8px);
-  opacity: calc(0.12 + var(--dive) * 0.2);
+  filter: blur(3px);
+  opacity: calc(0.055 + var(--dive) * 0.12);
   transform: translate3d(0, calc(var(--dive) * -34px), 0) scale(calc(1 + var(--dive) * 0.08));
   mask-image: linear-gradient(130deg, transparent 0%, black 20%, black 58%, transparent 86%);
   transition:
@@ -51,13 +51,13 @@
   content: "";
   position: absolute;
   inset: 5%;
-  border: 1px solid rgba(238, 230, 210, 0.03);
+  border: 1px solid rgba(238, 230, 210, 0.018);
   border-radius: inherit;
 }
 
 .diveArc::after {
   inset: 11%;
-  opacity: 0.55;
+  opacity: 0.38;
 }
 
 .diveMote {
@@ -147,13 +147,15 @@
   z-index: 3;
   display: flex;
   min-height: 100svh;
-  width: min(100%, 1280px);
+  width: min(100%, 1360px);
   flex-direction: column;
   justify-content: center;
   padding: 7.5rem 1.5rem 5rem;
   margin: 0 auto;
   opacity: 1;
-  transform: translateY(calc(var(--dive) * -68px));
+  transform:
+    translate3d(0, clamp(-5rem, -6.2vh, -3.25rem), 0)
+    translateY(calc(var(--dive) * -68px));
   filter: blur(calc(var(--dive) * 8px));
   transition:
     opacity 900ms ease,
@@ -178,7 +180,7 @@
   align-items: center;
   justify-content: center;
   margin-left: clamp(0rem, 4vw, 2rem);
-  margin-bottom: clamp(1.8rem, 4vh, 3.2rem);
+  margin-bottom: clamp(1.15rem, 3vh, 2.2rem);
   border: 1px solid rgba(206, 228, 222, 0.42);
   border-radius: 999px;
   aspect-ratio: 1 / 1;
@@ -231,11 +233,11 @@
 .title {
   display: flex;
   flex-direction: column;
-  max-width: 820px;
+  max-width: 780px;
   margin: 0 0 0 clamp(0rem, 4vw, 2rem);
   color: rgba(238, 230, 210, 0.94);
   font-family: var(--font-yangming-title), "Songti SC", "STSong", "Noto Serif SC", serif;
-  font-size: clamp(4.8rem, 11vw, 9.6rem);
+  font-size: clamp(4.45rem, 10.2vw, 8.85rem);
   font-weight: 310;
   font-variation-settings: "wght" 310;
   line-height: 1.12;
@@ -312,7 +314,7 @@
   display: inline-flex;
   width: fit-content;
   flex-direction: column;
-  margin: clamp(3.2rem, 8vh, 5.8rem) 0 0 clamp(0rem, 4vw, 2rem);
+  margin: clamp(1.75rem, 3.4vh, 2.45rem) 0 0 clamp(0rem, 4vw, 2rem);
   color: rgba(216, 183, 111, 0.95);
   text-decoration: none;
   opacity: 0;
@@ -349,22 +351,11 @@
     transform 700ms ease;
 }
 
-.doorCaption {
-  display: block;
-  margin-top: 0.68em;
-  padding-left: 0.42em;
-  color: rgba(216, 183, 111, 0.34);
-  font-family: var(--font-interface), system-ui, sans-serif;
-  font-size: 0.66rem;
-  font-weight: 700;
-  letter-spacing: 0.4em;
-}
-
 .doorLine {
   display: block;
   width: clamp(11rem, 18vw, 15rem);
   height: 1px;
-  margin-top: 0.95rem;
+  margin-top: 1.05rem;
   transform-origin: left center;
   opacity: 0.58;
   background: linear-gradient(90deg, rgba(216, 183, 111, 0.68), rgba(216, 183, 111, 0.2), transparent);
@@ -603,6 +594,7 @@
   .content {
     justify-content: flex-start;
     padding: 8rem 1.25rem 5.5rem;
+    transform: translateY(calc(var(--dive) * -68px));
   }
 
   .zhaoMark,

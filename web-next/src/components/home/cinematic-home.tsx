@@ -2,7 +2,6 @@
 
 import { AmbientSound } from "@/components/home/ambient-sound"
 import { HeroSection } from "@/components/home/hero-section"
-import { HomeGatesSection } from "@/components/home/HomeGatesSection"
 import { HomeWaterStage } from "@/components/home/HomeWaterStage"
 import { TopNav } from "@/components/home/top-nav"
 
@@ -13,7 +12,6 @@ export function CinematicHome() {
       <HomeWaterStage />
       <TopNav />
       <HeroSection />
-      <HomeGatesSection />
       <footer
         id="compliance"
         className="font-function relative z-10 mx-auto w-full max-w-[1240px] px-4 pb-10 text-center text-sm leading-7 text-muted-cream md:px-8"

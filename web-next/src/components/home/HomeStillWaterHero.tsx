@@ -275,11 +275,10 @@ export default function HomeStillWaterHero() {
           <span className={styles.coupletDot} aria-hidden="true">｜</span>
           <span className={`${styles.coupletPhrase} ${styles.coupletMirror}`}>心镜照见自己</span>
         </p>
-        <p className={styles.subcopy}>这不是一个预测行情的网站，而是一套帮助交易者照见自己、重建纪律、训练执行的心学系统。</p>
+        <p className={styles.subcopy}>今天，你起了哪一念？</p>
 
         <a href="/reflect" className={styles.door} data-no-ripple="true" onClick={enterReflect}>
           <span className={styles.doorMain}>照见一念　→</span>
-          <span className={styles.doorCaption}>今日入卷</span>
           <span className={styles.doorLine} aria-hidden="true" />
         </a>
       </div>

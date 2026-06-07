@@ -21,8 +21,8 @@ test("zhixing scroll keeps the daily practice loop as the primary route", async 
   assert.ok(globals.includes("Zhixing scroll critical shell"), "hero must have critical CSS before hydration")
   assert.ok(globals.includes(".zhixing-hero"), "critical CSS must style the entry hero before client CSS loads")
   assert.ok(globals.includes("white-space: nowrap"), "desktop hero title should not break into a lonely final character")
-  assert.ok(topNav.includes('href: "/zhixing-scroll"'), "home top nav must expose zhixing scroll")
-  assert.ok(topNav.includes('href="/zhixing-scroll"'), "mobile bottom nav must expose zhixing scroll")
+  assert.ok(topNav.includes('href: "/reflect"'), "home top nav should route the daily practice loop through /reflect")
+  assert.equal(topNav.includes('href="/zhixing-scroll"'), false, "home top nav should not expose the old scroll directory as the primary mobile entrance")
 
   ;[
     "交易前，先展开一卷。",
