@@ -45,6 +45,8 @@ const goldPalette = [
   [0.58, 0.5, 0.28],
 ] as const
 
+const DEBUG_PANEL_ENABLED = false
+
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value))
 }
@@ -582,6 +584,12 @@ export function ThoughtField({ entries, onPreview, onSelect, selectedEntryId }: 
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null
+      const isEditing =
+        target?.tagName === "INPUT" || target?.tagName === "TEXTAREA" || target?.isContentEditable
+
+      if (isEditing) return
+
       if (event.code === "Space") {
         event.preventDefault()
         pausedRef.current = !pausedRef.current
@@ -631,7 +639,7 @@ export function ThoughtField({ entries, onPreview, onSelect, selectedEntryId }: 
           } as CSSProperties
         }
       />
-      {showDebug ? (
+      {DEBUG_PANEL_ENABLED && showDebug ? (
         <div className="thought-debug-panel">
           {(
             [

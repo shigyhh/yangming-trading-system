@@ -19,6 +19,8 @@ import {
   createOneThoughtLakeComment,
   createOneThoughtLakeEntryFromMatch,
   getOneThoughtLakeStats,
+  ONE_THOUGHT_LAKE_BLOCKED_INPUT_REASON,
+  ONE_THOUGHT_LAKE_UNRELATED_INPUT_REASON,
   readOneThoughtLakeComments,
   readOneThoughtLakeEntries,
   resonateWithOneThoughtLakeEntry,
@@ -90,7 +92,8 @@ export function OneThoughtLakePage() {
   const [inputText, setInputText] = useState("")
   const [draftEntry, setDraftEntry] = useState<OneThoughtLakeEntry | null>(null)
   const [composeOpen, setComposeOpen] = useState(false)
-  const [error, setError] = useState("")
+  const [composeError, setComposeError] = useState("")
+  const [commentError, setCommentError] = useState("")
   const [notice, setNotice] = useState("")
   const [resonatedIds, setResonatedIds] = useState<string[]>([])
   const [lakeComments, setLakeComments] = useState<OneThoughtLakeComment[]>(() =>
@@ -144,11 +147,47 @@ export function OneThoughtLakePage() {
         : [],
     [lakeComments, selectedEntry],
   )
+  const liveInputScreen = useMemo(
+    () => (inputText.trim() ? screenOneThoughtLakeInput(inputText) : null),
+    [inputText],
+  )
+  const inputRejected =
+    liveInputScreen?.reason === ONE_THOUGHT_LAKE_BLOCKED_INPUT_REASON ||
+    liveInputScreen?.reason === ONE_THOUGHT_LAKE_UNRELATED_INPUT_REASON
+
+  function handleInputTextChange(value: string) {
+    setInputText(value)
+
+    if (!value.trim()) {
+      setComposeError("")
+      setDraftEntry(null)
+      return
+    }
+
+    const screen = screenOneThoughtLakeInput(value)
+    if (
+      screen.reason === ONE_THOUGHT_LAKE_BLOCKED_INPUT_REASON ||
+      screen.reason === ONE_THOUGHT_LAKE_UNRELATED_INPUT_REASON
+    ) {
+      setComposeError(screen.reason)
+      setNotice("")
+      setDraftEntry(null)
+      return
+    }
+
+    if (
+      composeError === ONE_THOUGHT_LAKE_BLOCKED_INPUT_REASON ||
+      composeError === ONE_THOUGHT_LAKE_UNRELATED_INPUT_REASON
+    ) {
+      setComposeError("")
+    }
+  }
 
   function handleSelect(entry: OneThoughtLakeEntry) {
     setSelectedEntryId(entry.id)
     setNotice("")
-    setError("")
+    setComposeError("")
+    setCommentError("")
     setHoveredEntryId(null)
   }
 
@@ -168,7 +207,7 @@ export function OneThoughtLakePage() {
 
     const screen = screenOneThoughtLakeInput(commentText)
     if (!screen.allowed) {
-      setError(screen.reason ?? "这句回响暂时不能放入心湖。")
+      setCommentError(screen.reason ?? "这句回响暂时不能放入心湖。")
       return
     }
 
@@ -177,14 +216,21 @@ export function OneThoughtLakePage() {
     saveOneThoughtLakeComment(comment, storage)
     setLakeComments(readOneThoughtLakeComments(storage))
     setCommentText("")
-    setError("")
+    setCommentError("")
     setNotice("同念回响已入湖，同一念的人会收到这句回响。")
   }
 
   function handleToggleCompose() {
+    if (composeOpen || draftEntry) {
+      setComposeOpen(false)
+      setDraftEntry(null)
+      setComposeError("")
+      return
+    }
+
     if (!composeOpen && !draftEntry && dailyThoughtLimitReached) {
       setComposeOpen(true)
-      setError(DAILY_LAKE_THOUGHT_LIMIT_MESSAGE)
+      setComposeError(DAILY_LAKE_THOUGHT_LIMIT_MESSAGE)
       setNotice("")
       return
     }
@@ -197,14 +243,14 @@ export function OneThoughtLakePage() {
     setNotice("")
 
     if (dailyThoughtLimitReached) {
-      setError(DAILY_LAKE_THOUGHT_LIMIT_MESSAGE)
+      setComposeError(DAILY_LAKE_THOUGHT_LIMIT_MESSAGE)
       setDraftEntry(null)
       return
     }
 
     const screen = screenOneThoughtLakeInput(inputText)
     if (!screen.allowed) {
-      setError(screen.reason ?? "这句一念暂时不能放入心湖。")
+      setComposeError(screen.reason ?? "这句一念暂时不能放入心湖。")
       setDraftEntry(null)
       return
     }
@@ -212,19 +258,19 @@ export function OneThoughtLakePage() {
     const match = matchUserThought(screen.cleanedText)
     const entry = createOneThoughtLakeEntryFromMatch(screen.cleanedText, match, oneThoughtPool)
     if (!entry) {
-      setError("这句一念还没有照到合适场景。")
+      setComposeError("这句一念还没有照到合适场景。")
       setDraftEntry(null)
       return
     }
 
-    setError("")
+    setComposeError("")
     setDraftEntry(entry)
   }
 
   function handlePlaceIntoLake() {
     if (!draftEntry) return
     if (dailyThoughtLimitReached) {
-      setError(DAILY_LAKE_THOUGHT_LIMIT_MESSAGE)
+      setComposeError(DAILY_LAKE_THOUGHT_LIMIT_MESSAGE)
       return
     }
 
@@ -291,7 +337,7 @@ export function OneThoughtLakePage() {
 
       {anonymousEntries.length ? (
         <section className="lake-anonymous-band" aria-label="匿名一念浮光">
-          <p>匿名浮光</p>
+          <p>匿名漂浮一念</p>
           {anonymousEntries.map((entry, index) => (
             <button
               key={entry.id}
@@ -364,7 +410,7 @@ export function OneThoughtLakePage() {
               />
               <button type="submit">放入回响</button>
             </form>
-            {error ? <p className="lake-error">{error}</p> : null}
+            {commentError ? <p className="lake-error">{commentError}</p> : null}
           </section>
           <div className="lake-panel-actions">
             <button
@@ -395,13 +441,16 @@ export function OneThoughtLakePage() {
               </p>
               <textarea
                 value={inputText}
-                onChange={(event) => setInputText(event.target.value)}
+                onChange={(event) => handleInputTextChange(event.target.value)}
                 placeholder="写下今天交易中最真实的一念。"
                 maxLength={64}
+                aria-invalid={inputRejected}
               />
-              <button type="submit">照回这一念</button>
+              <button type="submit" disabled={inputRejected}>
+                照回这一念
+              </button>
             </form>
-            {error ? <p className="lake-error">{error}</p> : null}
+            {composeError ? <p className="lake-error">{composeError}</p> : null}
             {draftEntry ? (
               <div className="lake-match-result" aria-label="一念匹配结果">
                 <p>
@@ -889,6 +938,12 @@ export function OneThoughtLakePage() {
           opacity: 0.62;
         }
 
+        .lake-compose form button:disabled {
+          cursor: not-allowed;
+          filter: saturate(0.5);
+          opacity: 0.48;
+        }
+
         .lake-compose {
           left: 50%;
           bottom: clamp(2.55rem, 4vw, 3.25rem);
@@ -896,6 +951,14 @@ export function OneThoughtLakePage() {
           border-radius: 1.2rem;
           padding: 0.9rem;
           transform: translateX(-50%);
+        }
+
+        .lake-compose:not(.is-open) {
+          border-color: transparent;
+          background: transparent;
+          box-shadow: none;
+          backdrop-filter: none;
+          padding: 0;
         }
 
         .lake-compose-trigger {

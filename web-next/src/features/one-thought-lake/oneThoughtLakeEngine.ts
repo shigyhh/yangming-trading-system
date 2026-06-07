@@ -35,6 +35,12 @@ export type OneThoughtLakeScreenResult = {
   reason?: string
 }
 
+export const ONE_THOUGHT_LAKE_BLOCKED_INPUT_REASON =
+  "心湖只照见交易中的念头，不回应股票代码、收益数字、荐股、喊单、带单和联系方式。"
+
+export const ONE_THOUGHT_LAKE_UNRELATED_INPUT_REASON =
+  "心湖只回应交易中的念头。请写下临盘时真实冒出来的一句话。"
+
 export type OneThoughtLakeComment = {
   id: string
   date: string
@@ -107,12 +113,18 @@ const mirrorNameByEchoKey: Record<string, string> = {
 }
 
 const blockedPatterns = [
+  /^[\d\s+-]+$/,
   /\b[036]\d{5}\b/,
+  /(?:\+?86[-\s]?)?1[3-9]\d(?:[-\s]?\d){8}\b/,
+  /\b\d{10,}\b/,
   /(目标价|买什么|卖什么|荐股|喊单|带单|跟单|股票代码|推荐买入|推荐卖出|买入价|卖出价|止盈价|止损位)/i,
   /(稳赚|必赚|保赚|收益保证|翻倍|暴富|抄底|逃顶|开户|开户链接)/i,
   /(微信|vx|v信|QQ|qq|电话|手机号|联系方式|加我|私信|进群|群号)/i,
   /[+-]?\d+(?:\.\d+)?\s*(?:%|％|元|万|倍|个点|收益率)/,
 ]
+
+const tradingThoughtPattern =
+  /(买|卖|涨|跌|亏|赚|回本|解套|补仓|补|追|割肉|止损|止盈|仓位|持仓|空仓|满仓|重仓|轻仓|开盘|收盘|临盘|盘中|行情|账户|标题|消息|利好|利空|机会|踏空|卖飞|套|单|交易|下单|冲动|犹豫|焦虑|害怕|后悔|恐惧|贪|急|惧|疑|执|从|烦|慌|悔|怕|忍|等|拿|逃|扛|赌|梭|撤|管住|不甘心|不服|侥幸|上头)/
 
 function safeGet(storage: BrowserStorage | null | undefined, key: string) {
   try {
@@ -214,7 +226,15 @@ export function screenOneThoughtLakeInput(inputText: string): OneThoughtLakeScre
     return {
       allowed: false,
       cleanedText,
-      reason: "心湖只照见念头，不讨论股票代码、收益、买卖点和联系方式。",
+      reason: ONE_THOUGHT_LAKE_BLOCKED_INPUT_REASON,
+    }
+  }
+
+  if (!tradingThoughtPattern.test(cleanedText)) {
+    return {
+      allowed: false,
+      cleanedText,
+      reason: ONE_THOUGHT_LAKE_UNRELATED_INPUT_REASON,
     }
   }
 

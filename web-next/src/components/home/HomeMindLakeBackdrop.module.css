@@ -1,0 +1,340 @@
+.homeMindLake {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: #050706;
+}
+
+.layerHeartLake {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 28% 32%, rgba(184, 154, 88, 0.07), transparent 38%),
+    radial-gradient(circle at 72% 42%, rgba(11, 26, 26, 0.72), transparent 58%),
+    radial-gradient(ellipse at 50% 68%, rgba(180, 170, 140, 0.10), rgba(7, 17, 18, 0.36) 46%, transparent 72%),
+    linear-gradient(180deg, #050706 0%, #071112 42%, #0b1a1a 63%, #030504 100%);
+  animation: heartLakeBreath 18s ease-in-out infinite;
+}
+
+.layerHeartLake::before {
+  content: "";
+  position: absolute;
+  left: -12%;
+  right: -12%;
+  top: 56%;
+  height: 34%;
+  background: radial-gradient(ellipse at center, rgba(238, 230, 210, 0.055), rgba(184, 154, 88, 0.04) 28%, transparent 72%);
+  filter: blur(20px);
+  opacity: 0.86;
+}
+
+.layerDistantMarket {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  opacity: 0.9;
+  mix-blend-mode: screen;
+}
+
+.marketMist {
+  position: absolute;
+  left: 34%;
+  right: 6%;
+  top: 30%;
+  height: 36%;
+  background: repeating-linear-gradient(90deg, rgba(238, 230, 210, 0.055) 0 1px, transparent 1px 46px);
+  filter: blur(22px);
+  mask-image: radial-gradient(ellipse at 58% 48%, black 0%, transparent 72%);
+  opacity: 0.055;
+}
+
+.marketLights {
+  position: absolute;
+  left: 42%;
+  right: 10%;
+  top: 44%;
+  height: 24%;
+  background:
+    radial-gradient(circle at 10% 50%, rgba(184, 154, 88, 0.18), transparent 8%),
+    radial-gradient(circle at 34% 42%, rgba(238, 230, 210, 0.12), transparent 7%),
+    radial-gradient(circle at 58% 58%, rgba(184, 154, 88, 0.13), transparent 8%),
+    radial-gradient(circle at 76% 46%, rgba(238, 230, 210, 0.10), transparent 7%);
+  filter: blur(18px);
+  opacity: 0.045;
+  animation: distantMarketBreath 22s ease-in-out infinite;
+}
+
+.layerStillWater {
+  position: absolute;
+  left: -8%;
+  right: -8%;
+  top: 55%;
+  z-index: 3;
+  height: 32%;
+  background:
+    radial-gradient(ellipse at 40% 34%, rgba(238, 230, 210, 0.15), rgba(184, 154, 88, 0.086) 28%, transparent 68%),
+    radial-gradient(ellipse at 50% 46%, rgba(180, 170, 140, 0.118), rgba(7, 17, 18, 0.072) 48%, transparent 74%),
+    linear-gradient(180deg, transparent 0%, rgba(238, 230, 210, 0.06) 44%, transparent 100%);
+  filter: blur(30px);
+  opacity: 0.94;
+  animation: stillWaterBreath 16s ease-in-out infinite;
+}
+
+.layerStillWater::before,
+.layerStillWater::after {
+  content: "";
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(238, 230, 210, 0.13) 42%, rgba(184, 154, 88, 0.08) 52%, transparent 100%);
+  filter: blur(1.8px);
+  opacity: 0.13;
+}
+
+.layerStillWater::before {
+  top: 34%;
+  transform: scaleX(0.84);
+}
+
+.layerStillWater::after {
+  top: 52%;
+  opacity: 0.09;
+  transform: scaleX(0.64) translateX(8%);
+}
+
+.layerFloatingThoughts {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  overflow: hidden;
+}
+
+.floatingThought {
+  position: absolute;
+  display: inline-block;
+  color: rgba(238, 230, 210, 0.78);
+  font-size: clamp(13px, 1.1vw, 18px);
+  letter-spacing: 0.08em;
+  opacity: var(--thought-opacity, 0.12);
+  filter: blur(var(--thought-blur, 2px));
+  mix-blend-mode: screen;
+  text-shadow:
+    0 0 18px rgba(184, 154, 88, 0.08),
+    0 0 34px rgba(238, 230, 210, 0.04);
+  white-space: nowrap;
+  animation: thoughtDrift var(--drift-duration, 30s) ease-in-out infinite;
+}
+
+.thoughtA {
+  left: 59%;
+  top: 35%;
+  --thought-opacity: 0.15;
+  --thought-blur: 1.7px;
+  --drift-duration: 31s;
+  animation-delay: -6s;
+}
+
+.thoughtB {
+  left: 73%;
+  top: 58%;
+  --thought-opacity: 0.16;
+  --thought-blur: 1.5px;
+  --drift-duration: 27s;
+  animation-delay: -12s;
+}
+
+.thoughtC {
+  left: 61%;
+  top: 68%;
+  --thought-opacity: 0.13;
+  --thought-blur: 2.2px;
+  --drift-duration: 35s;
+  animation-delay: -20s;
+}
+
+.layerMirrorAura {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  mix-blend-mode: screen;
+}
+
+.layerMirrorAura::before {
+  content: "";
+  position: absolute;
+  left: 38%;
+  top: 66%;
+  width: min(30vw, 440px);
+  height: min(11vh, 96px);
+  border-radius: 999px;
+  background:
+    radial-gradient(
+      ellipse at center,
+      rgba(238, 230, 210, 0.072) 0%,
+      rgba(184, 154, 88, 0.04) 30%,
+      rgba(7, 17, 18, 0.026) 56%,
+      transparent 74%
+    );
+  filter: blur(36px);
+  opacity: 0.82;
+  transform: translate3d(-50%, -50%, 0) scaleX(1.28);
+}
+
+.mirrorAura {
+  position: absolute;
+  border-radius: 999px;
+  background: radial-gradient(circle at center, rgba(238, 230, 210, 0.055), rgba(184, 154, 88, 0.04) 22%, transparent 72%);
+  filter: blur(28px);
+  animation: mirrorAuraBreath 22s ease-in-out infinite;
+}
+
+.mirrorAuraLeft {
+  left: 5%;
+  top: 17%;
+  width: 520px;
+  height: 520px;
+  opacity: 0.24;
+}
+
+.mirrorAuraRight {
+  top: 24%;
+  right: 10%;
+  width: 420px;
+  height: 420px;
+  opacity: 0.18;
+  animation-delay: -7s;
+}
+
+.mirrorAuraBridge {
+  position: absolute;
+  left: 22%;
+  right: 18%;
+  top: 58%;
+  height: 18%;
+  background: radial-gradient(ellipse at center, rgba(184, 154, 88, 0.05), rgba(238, 230, 210, 0.02) 30%, transparent 72%);
+  filter: blur(24px);
+  opacity: 0.13;
+}
+
+.layerVignette {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  background:
+    linear-gradient(180deg, rgba(3, 5, 4, 0.78) 0%, rgba(3, 5, 4, 0.34) 13%, rgba(3, 5, 4, 0.04) 46%, rgba(3, 5, 4, 0.46) 88%, rgba(3, 5, 4, 0.86) 100%),
+    linear-gradient(90deg, rgba(3, 5, 4, 0.58) 0%, transparent 30%, transparent 68%, rgba(3, 5, 4, 0.60) 100%),
+    radial-gradient(ellipse at 50% 45%, transparent 0%, transparent 42%, rgba(3, 5, 4, 0.30) 82%, rgba(3, 5, 4, 0.56) 100%);
+}
+
+@keyframes heartLakeBreath {
+  0%,
+  100% {
+    filter: brightness(0.96) saturate(0.92);
+  }
+
+  50% {
+    filter: brightness(1.04) saturate(1.02);
+  }
+}
+
+@keyframes stillWaterBreath {
+  0%,
+  100% {
+    opacity: 0.78;
+    transform: translateY(0);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes distantMarketBreath {
+  0%,
+  100% {
+    opacity: 0.035;
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    opacity: 0.055;
+    transform: translate3d(-6px, 2px, 0);
+  }
+}
+
+@keyframes thoughtDrift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  33% {
+    transform: translate3d(6px, -5px, 0);
+  }
+
+  66% {
+    transform: translate3d(-4px, 5px, 0);
+  }
+}
+
+@keyframes mirrorAuraBreath {
+  0%,
+  100% {
+    filter: blur(28px);
+    transform: scale(1);
+  }
+
+  50% {
+    filter: blur(31px);
+    transform: scale(1.015);
+  }
+}
+
+@media (max-width: 768px) {
+  .layerStillWater {
+    top: 61%;
+    height: 28%;
+  }
+
+  .thoughtA {
+    display: none;
+  }
+
+  .thoughtB {
+    left: 54%;
+    top: 64%;
+    --thought-opacity: 0.08;
+    --thought-blur: 2.4px;
+  }
+
+  .thoughtC {
+    left: 16%;
+    top: 76%;
+    --thought-opacity: 0.065;
+    --thought-blur: 2.8px;
+  }
+
+  .mirrorAuraRight {
+    display: none;
+  }
+
+  .mirrorAuraLeft {
+    left: 50%;
+    top: 18%;
+    width: 360px;
+    height: 360px;
+    transform: translateX(-50%);
+  }
+
+  .layerMirrorAura::before {
+    left: 50%;
+    top: 68%;
+    width: 56vw;
+    height: 9vh;
+    opacity: 0.06;
+  }
+}

@@ -19,6 +19,7 @@
     "test:mirror-report": "node --test src/features/mirror-report/mirror-report.test.mjs",
     "test:mirror-archive": "node --test src/features/mirror-archive/mirror-archive.test.mjs",
     "test:mirror-scroll": "node --test src/features/mirror-scroll/mirror-scroll.test.mjs",
+    "test:zhixing-still-water": "node --test src/features/zhixing-still-water/zhixing-still-water.test.mjs",
     "test:reflection-loop": "node --test src/features/reflection-loop/reflection-loop.test.mjs",
     "test:living-mirror-growth": "node --test src/features/living-mirror-growth/living-mirror-growth.test.mjs",
     "test:practice-change": "node --test src/features/assessment/practice-change.test.mjs src/features/assessment/evidence-engine.test.mjs src/features/assessment/assistant-summary.test.mjs",

@@ -3,7 +3,7 @@ export type ZhixingMode = "emergency" | "daily" | "review"
 export type ZhixingRealm = "未发之中" | "已发之念" | "知行之印"
 
 export type ZhixingNodeId =
-  | "enter-heart"
+  | "daily-scroll"
   | "today-thought"
   | "heart-thief"
   | "nine-mirror"
@@ -13,6 +13,7 @@ export type ZhixingNodeId =
   | "daily-verdict"
   | "heart-archive"
   | "hundred-day-scroll"
+  | "course-live"
 
 export type ZhixingMirrorId =
   | "greed"
@@ -57,6 +58,8 @@ export type MirrorDefinition = {
   correctionPractice: string
   sealId: ZhixingSealId
   courseChapterId: string
+  courseTitle: string
+  courseCopy: string
   verdictTemplates: string[]
 }
 
@@ -70,11 +73,11 @@ export type SealDefinition = {
 
 export const zhixingScrollNodes: ZhixingScrollNode[] = [
   {
-    id: "enter-heart",
+    id: "daily-scroll",
     title: "入照心",
     realm: "未发之中",
     copy: "今日入卷，先照此心。市场未动，心已先动。一念不照，万法皆乱。",
-    buttonLabel: "开始今日照心",
+    buttonLabel: "开始照心",
     href: "/assessment-entry",
   },
   {
@@ -143,11 +146,19 @@ export const zhixingScrollNodes: ZhixingScrollNode[] = [
   },
   {
     id: "hundred-day-scroll",
-    title: "心镜长卷",
+    title: "连续长卷",
     realm: "知行之印",
     copy: "每一日一镜，每一念一痕。久看长卷，方知自己从何处来，往何处去。",
-    buttonLabel: "展开心镜长卷",
+    buttonLabel: "查看连续长卷",
     href: "/mirror-scroll",
+  },
+  {
+    id: "course-live",
+    title: "镜课训练",
+    realm: "知行之印",
+    copy: "课程不在首页硬卖。它只在你照见今日主镜之后，承接这一镜的训练。",
+    buttonLabel: "进入今日镜课",
+    href: "#mirror-course",
   },
 ]
 
@@ -248,7 +259,9 @@ export const mirrorDefinitions: MirrorDefinition[] = [
     correctionPractice: "先写下离场理由，再评价结果。",
     sealId: "light-position",
     courseChapterId: "course_mirror_greed_01",
-    verdictTemplates: ["贪念已起，心欲尽取。今日宜守轻仓印，不以多得为明。"],
+    courseTitle: "贪镜：从想多赚回到轻仓规则",
+    courseCopy: "如果你经常盈利后不愿离场，想把一段行情吃尽，可以学习《贪镜：从想多赚回到轻仓规则》。",
+    verdictTemplates: ["贪念已起，心欲尽取。今日宜守轻仓之印，不以多得为明。"],
   },
   {
     id: "fear",
@@ -259,7 +272,9 @@ export const mirrorDefinitions: MirrorDefinition[] = [
     correctionPractice: "先确认规则是否失效，再决定是否动作。",
     sealId: "observe",
     courseChapterId: "course_mirror_fear_01",
-    verdictTemplates: ["惧念已起，心先退缩。今日宜守静观印，不以害怕代替规则。"],
+    courseTitle: "惧镜：从害怕失去回到静观规则",
+    courseCopy: "如果你经常刚有利润就害怕失去，可以学习《惧镜：从害怕失去回到静观规则》。",
+    verdictTemplates: ["惧念生于得失。今日宜观波动，不因小利而乱出。"],
   },
   {
     id: "urgent",
@@ -270,7 +285,9 @@ export const mirrorDefinitions: MirrorDefinition[] = [
     correctionPractice: "临盘先停三息，只守等待印。",
     sealId: "wait",
     courseChapterId: "course_mirror_urgent_01",
-    verdictTemplates: ["急念已起，心欲逐影。今日宜守等待印，不以错过为亏。"],
+    courseTitle: "急镜：从冲动交易回到等待规则",
+    courseCopy: "如果你经常因为怕错过而提前进场，可以学习《急镜：从冲动交易回到等待规则》。",
+    verdictTemplates: ["急念已起，心欲逐影。今日宜守等待之印，不以错过为亏。"],
   },
   {
     id: "regret",
@@ -281,7 +298,9 @@ export const mirrorDefinitions: MirrorDefinition[] = [
     correctionPractice: "只写事实，不写责备。",
     sealId: "admit-wrong",
     courseChapterId: "course_mirror_regret_01",
-    verdictTemplates: ["悔念绕心，旧影未散。今日宜守认错印，不以自责遮住复盘。"],
+    courseTitle: "悔镜：从懊悔补偿回到认错复盘",
+    courseCopy: "如果你经常被错过和自责牵走，可以学习《悔镜：从懊悔补偿回到认错复盘》。",
+    verdictTemplates: ["悔念绕心，旧影未散。今日宜守认错之印，不以自责遮住复盘。"],
   },
   {
     id: "gamble",
@@ -292,7 +311,9 @@ export const mirrorDefinitions: MirrorDefinition[] = [
     correctionPractice: "今日只做系统内动作，动作少于念头。",
     sealId: "reduce-frequency",
     courseChapterId: "course_mirror_gamble_01",
-    verdictTemplates: ["赌念已动，心欲翻局。今日宜守减频印，不以一念求翻身。"],
+    courseTitle: "赌镜：从胜负心回到减频规则",
+    courseCopy: "如果你经常想一把扳回，可以学习《赌镜：从胜负心回到减频规则》。",
+    verdictTemplates: ["赌念已动，心欲翻局。今日宜守减频之印，不以一念求翻身。"],
   },
   {
     id: "hold",
@@ -303,7 +324,9 @@ export const mirrorDefinitions: MirrorDefinition[] = [
     correctionPractice: "先承认规则是否已破，再写下一步。",
     sealId: "no-hold",
     courseChapterId: "course_mirror_hold_01",
-    verdictTemplates: ["不甘为贼，幻想为绳。今日宜守不扛印，不以祈祷代替规则。"],
+    courseTitle: "扛镜：从幻想回本回到不扛规则",
+    courseCopy: "如果你经常跌破规则还舍不得认错，可以学习《扛镜：从幻想回本回到不扛规则》。",
+    verdictTemplates: ["不甘为贼，幻想为绳。今日所修，不在胜负，在能否及时认错。"],
   },
   {
     id: "chaos",
@@ -314,7 +337,9 @@ export const mirrorDefinitions: MirrorDefinition[] = [
     correctionPractice: "只记录一个规则来源，不临盘换逻辑。",
     sealId: "rest",
     courseChapterId: "course_mirror_chaos_01",
-    verdictTemplates: ["乱念纷起，心无所主。今日宜守休市印，不让理由替规则开门。"],
+    courseTitle: "乱镜：从逻辑漂移回到休市复盘",
+    courseCopy: "如果你经常临盘换周期、换逻辑、换理由，可以学习《乱镜：从逻辑漂移回到休市复盘》。",
+    verdictTemplates: ["乱念纷起，心无所主。今日宜守休市之印，不让理由替规则开门。"],
   },
   {
     id: "doubt",
@@ -325,7 +350,9 @@ export const mirrorDefinitions: MirrorDefinition[] = [
     correctionPractice: "先写规则，再写怀疑，不让怀疑改规则。",
     sealId: "keep-rule",
     courseChapterId: "course_mirror_doubt_01",
-    verdictTemplates: ["疑念未息，心多回头。今日宜守守规印，不以摇摆换清明。"],
+    courseTitle: "疑镜：从反复确认回到守规执行",
+    courseCopy: "如果你经常有规则却不敢相信规则，可以学习《疑镜：从反复确认回到守规执行》。",
+    verdictTemplates: ["疑念未息，心多回头。今日宜守守规之印，不以摇摆换清明。"],
   },
   {
     id: "slow",
@@ -336,9 +363,57 @@ export const mirrorDefinitions: MirrorDefinition[] = [
     correctionPractice: "行动前只问一件事：规则是否已经给出答案。",
     sealId: "wait",
     courseChapterId: "course_mirror_slow_01",
-    verdictTemplates: ["慢念成雾，心避其明。今日宜守等待印，等规则，不等逃避。"],
+    courseTitle: "慢镜：从拖延逃避回到规则回应",
+    courseCopy: "如果你经常该行动时迟疑、该认错时拖延，可以学习《慢镜：从拖延逃避回到规则回应》。",
+    verdictTemplates: ["慢念成雾，心避其明。今日宜守等待之印，等规则，不等逃避。"],
   },
 ]
+
+const dailyVerdictByMirrorSeal: Record<ZhixingMirrorId, Partial<Record<ZhixingSealId, string>> & { default: string }> = {
+  greed: {
+    default: "贪念已起，心欲尽取。今日宜守轻仓之印，不以多得为明。",
+    "light-position": "贪念已起，心欲尽取。今日宜守轻仓之印，不以多得为明。",
+  },
+  fear: {
+    default: "惧念生于得失。今日宜观波动，不因小利而乱出。",
+    observe: "惧念生于得失。今日宜观波动，不因小利而乱出。",
+  },
+  urgent: {
+    default: "急念已起，心欲逐影。今日宜守等待之印，不以错过为亏。",
+    "no-chase": "急念已起，心欲逐影。今日宜守等待之印，不以错过为亏。",
+    wait: "急念已起，心欲逐影。今日宜守等待之印，不以错过为亏。",
+  },
+  regret: {
+    default: "悔念绕心，旧影未散。今日宜守认错之印，不以自责遮住复盘。",
+    "admit-wrong": "悔念绕心，旧影未散。今日宜守认错之印，不以自责遮住复盘。",
+    review: "悔念绕心，旧影未散。今日宜守复盘之印，不以自责遮住事实。",
+  },
+  gamble: {
+    default: "赌念已动，心欲翻局。今日宜守减频之印，不以一念求翻身。",
+    "reduce-frequency": "赌念已动，心欲翻局。今日宜守减频之印，不以一念求翻身。",
+    "light-position": "赌念已动，心欲翻局。今日宜守轻仓之印，不以重仓求快。",
+  },
+  hold: {
+    default: "不甘为贼，幻想为绳。今日所修，不在胜负，在能否及时认错。",
+    "no-hold": "不甘为贼，幻想为绳。今日所修，不在胜负，在能否及时认错。",
+    "stop-loss": "不甘为贼，幻想为绳。今日所修，不在胜负，在能否及时认错。",
+  },
+  chaos: {
+    default: "乱念纷起，心无所主。今日宜守休市之印，不让理由替规则开门。",
+    rest: "乱念纷起，心无所主。今日宜守休市之印，不让理由替规则开门。",
+    "reduce-frequency": "乱念纷起，心无所主。今日宜守减频之印，不让动作追着情绪走。",
+  },
+  doubt: {
+    default: "疑念未息，心多回头。今日宜守守规之印，不以摇摆换清明。",
+    "keep-rule": "疑念未息，心多回头。今日宜守守规之印，不以摇摆换清明。",
+    observe: "疑念未息，心多回头。今日宜守静观之印，先看见摇摆，再回到规则。",
+  },
+  slow: {
+    default: "慢念成雾，心避其明。今日宜守等待之印，等规则，不等逃避。",
+    wait: "慢念成雾，心避其明。今日宜守等待之印，等规则，不等逃避。",
+    "admit-wrong": "慢念成雾，心避其明。今日宜守认错之印，不以拖延遮住答案。",
+  },
+}
 
 export function getMirrorDefinition(id: ZhixingMirrorId) {
   return mirrorDefinitions.find((mirror) => mirror.id === id) ?? mirrorDefinitions[2]
@@ -348,18 +423,28 @@ export function getSealDefinition(id: ZhixingSealId) {
   return sealDefinitions.find((seal) => seal.id === id) ?? sealDefinitions[3]
 }
 
+export function buildMirrorCourseRecommendation(mirrorId: ZhixingMirrorId) {
+  const mirror = getMirrorDefinition(mirrorId)
+  const seal = getSealDefinition(mirror.sealId)
+
+  return {
+    title: mirror.courseTitle,
+    copy: mirror.courseCopy,
+    buttonLabel: `学习${mirror.name}训练课`,
+    href: `/risk-education#${mirror.courseChapterId}`,
+    sealName: seal.name,
+  }
+}
+
 export function buildDailyVerdict(input: {
   primaryMirrorId?: ZhixingMirrorId
+  sealId?: ZhixingSealId
   dailyPractice?: string
   behaviorRisks?: string[]
 }) {
   const mirror = getMirrorDefinition(input.primaryMirrorId ?? "urgent")
-  const seal = getSealDefinition(mirror.sealId)
-  const template = mirror.verdictTemplates[0]
-  const practice = input.dailyPractice?.trim() || seal.practiceAction
-  const risk = input.behaviorRisks?.[0]
+  const seal = getSealDefinition(input.sealId ?? mirror.sealId)
+  const verdicts = dailyVerdictByMirrorSeal[mirror.id]
 
-  return risk
-    ? `${template} ${practice} 今日先照见：${risk}。`
-    : `${template} ${practice}`
+  return verdicts[seal.id] ?? verdicts.default ?? mirror.verdictTemplates[0]
 }

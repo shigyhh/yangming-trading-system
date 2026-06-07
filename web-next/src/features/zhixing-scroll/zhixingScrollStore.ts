@@ -99,6 +99,7 @@ export function createDefaultDailyScroll(date = new Date()): DailyScroll {
     },
     verdict: buildDailyVerdict({
       primaryMirrorId: mirror.id,
+      sealId: seal.id,
       dailyPractice,
       behaviorRisks,
     }),
@@ -120,6 +121,15 @@ function normalizeDailyScroll(value: DailyScroll, fallback: DailyScroll): DailyS
     .filter((nodeId): nodeId is ZhixingNodeId => zhixingScrollNodes.some((node) => node.id === nodeId))))
   const primaryMirror = getMirrorDefinition(value.primaryMirror || fallback.primaryMirror)
   const seal = getSealDefinition(value.seal?.id || primaryMirror.sealId)
+  const storedVerdict = value.verdict || fallback.verdict
+  const verdict = storedVerdict.includes("今日先照见：") || storedVerdict.includes("今日只守一件事：")
+    ? buildDailyVerdict({
+      primaryMirrorId: primaryMirror.id,
+      sealId: seal.id,
+      dailyPractice: value.dailyPractice || fallback.dailyPractice,
+      behaviorRisks: value.behaviorRisks || fallback.behaviorRisks,
+    })
+    : storedVerdict
 
   return {
     ...fallback,
@@ -131,7 +141,7 @@ function normalizeDailyScroll(value: DailyScroll, fallback: DailyScroll): DailyS
       sealedAt: value.seal?.sealedAt,
     },
     completedNodes,
-    verdict: value.verdict || fallback.verdict,
+    verdict,
     updatedAt: value.updatedAt || fallback.updatedAt,
   }
 }
@@ -171,6 +181,7 @@ export function completeZhixingNode(scroll: DailyScroll, nodeId: ZhixingNodeId, 
   const verdict = nodeId === "daily-verdict" || nodeId === "liangzhi-seal"
     ? buildDailyVerdict({
       primaryMirrorId: mirror.id,
+      sealId: seal.id,
       dailyPractice: scroll.dailyPractice || seal.practiceAction,
       behaviorRisks: scroll.behaviorRisks,
     })

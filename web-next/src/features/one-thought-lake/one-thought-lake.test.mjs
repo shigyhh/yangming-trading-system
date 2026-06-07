@@ -20,8 +20,13 @@ test("one thought lake route and entrances exist without becoming a forum", asyn
   const zhaoxin = await readFile(zhaoxinUrl, "utf8")
 
   assert.match(route, /OneThoughtLakePage/)
+  assert.match(route, /one-thought-lake-page/)
+  assert.match(route, /radial-gradient\(circle at 50% 38%/)
+  assert.match(route, /lake-header/)
   assert.match(page, /一念心湖/)
   assert.match(page, /匿名看见众人的一念，也匿名放下自己的一念。/)
+  assert.match(page, /匿名漂浮一念/)
+  assert.match(page, /今日共照/)
   assert.match(page, /心湖只照见交易中的念头，不提供投资建议。/)
   assert.match(page, /我也有这一念/)
   assert.match(page, /写下我的一念/)
@@ -77,6 +82,9 @@ test("one thought lake renders a Three.js thought cloud instead of the old spher
     "onPointerDown",
     "onPointerMove",
     "onPointerUp",
+    "DEBUG_PANEL_ENABLED && showDebug",
+    "target?.tagName === \"INPUT\"",
+    "target?.tagName === \"TEXTAREA\"",
   ].forEach((token) => {
     assert.equal(thoughtField.includes(token), true, `missing thought field token: ${token}`)
   })
@@ -135,6 +143,7 @@ test("one thought lake limits daily submitted thoughts without limiting comments
     "todayLocalThoughtCount",
     "今日已放 {todayLocalThoughtCount}/{DAILY_LAKE_THOUGHT_LIMIT} 念",
     "handleToggleCompose",
+    "setDraftEntry(null)",
     "lake-compose-trigger",
     "收起这一念",
   ].forEach((token) => {
@@ -165,7 +174,17 @@ test("one thought lake engine seeds the full one-thought pool and screens risky 
     "resonateWithOneThoughtLakeEntry",
     "screenOneThoughtLakeInput",
     "blockedPatterns",
+    "tradingThoughtPattern",
+    "ONE_THOUGHT_LAKE_BLOCKED_INPUT_REASON",
+    "ONE_THOUGHT_LAKE_UNRELATED_INPUT_REASON",
+    "/^[\\d\\s+-]+$/",
+    "股票代码",
+    "收益数字",
+    "\\b\\d{10,}\\b",
     "目标价",
+    "荐股",
+    "喊单",
+    "带单",
     "推荐买入",
     "联系方式",
     "sameThoughtCount",
@@ -179,6 +198,32 @@ test("one thought lake engine seeds the full one-thought pool and screens risky 
 
   assert.doesNotMatch(engine, /selected\.length >= 12/, "seed pool must not stop at twelve entries")
   assert.doesNotMatch(engine, /hiddenThought/)
+})
+
+test("one thought lake blocks phone numbers and contact-like digit strings", async () => {
+  const engine = await readFile(engineUrl, "utf8")
+
+  assert.match(engine, /1\[3-9\]/, "engine should block mainland mobile number patterns")
+  assert.match(engine, /\/\^\[\\d\\s\+-\]\+\$\//, "engine should block pure digit-like input")
+  assert.match(engine, /\\b\\d\{10,\}\\b/, "engine should block long contact-like digit strings")
+  assert.match(engine, /手机号\|联系方式/)
+})
+
+test("one thought lake rejects blocked input before generating a match", async () => {
+  const page = await readFile(pageUrl, "utf8")
+
+  ;[
+    "liveInputScreen",
+    "inputRejected",
+    "handleInputTextChange",
+    "ONE_THOUGHT_LAKE_BLOCKED_INPUT_REASON",
+    "ONE_THOUGHT_LAKE_UNRELATED_INPUT_REASON",
+    "aria-invalid={inputRejected}",
+    "disabled={inputRejected}",
+    "setDraftEntry(null)",
+  ].forEach((token) => {
+    assert.equal(page.includes(token), true, `missing live block token: ${token}`)
+  })
 })
 
 test("thought field README documents runtime controls and tuning parameters", async () => {

@@ -24,6 +24,17 @@ export interface MirrorScrollNode {
   affectedDimensions: string[]
   tags: string[]
   createdAt: string
+  tradeMoment?: string
+  os?: string
+  reflection?: string
+  thief?: string
+  mirrorId?: string
+  mirrorName?: string
+  sceneName?: string
+  evidence?: string
+  practice?: string
+  sealedAt?: string
+  completed?: boolean
   isLatest?: boolean
 }
 

@@ -34,11 +34,16 @@ export type TodayOneThoughtSourceItem = OneThought & {
 }
 
 export type OneThoughtRecord = {
+  id: string
   recordId: string
   date: string
+  dayIndex: number
   thoughtId: string
   sceneId: string
+  sceneName: string
   mirrorId: string
+  mirrorName: string
+  tradeMoment: string
   thief: string
   os: string
   reflection: string
@@ -182,12 +187,20 @@ function normalizeOneThoughtRecord(value: unknown): OneThoughtRecord | null {
   const item = value as Partial<OneThoughtRecord>
   if (!item.recordId || !item.date || !item.thoughtId || !item.sceneId || !item.mirrorId) return null
 
+  const recordId = String(item.recordId)
+  const dayIndex = Number(item.dayIndex)
+
   return {
-    recordId: String(item.recordId),
+    id: item.id ? String(item.id) : recordId,
+    recordId,
     date: String(item.date),
+    dayIndex: Number.isFinite(dayIndex) && dayIndex > 0 ? Math.trunc(dayIndex) : 0,
     thoughtId: String(item.thoughtId),
     sceneId: String(item.sceneId),
+    sceneName: item.sceneName ? String(item.sceneName) : String(item.sceneId),
     mirrorId: String(item.mirrorId),
+    mirrorName: item.mirrorName ? String(item.mirrorName) : String(item.mirrorId),
+    tradeMoment: item.tradeMoment ? String(item.tradeMoment) : "",
     thief: String(item.thief || ""),
     os: String(item.os || ""),
     reflection: String(item.reflection || ""),
@@ -488,8 +501,11 @@ export const changeTodayOneThought = drawTodayOneThought
 export function createOneThoughtRecord(
   thought: OneThought | TodayOneThoughtSnapshot | TodayOneThoughtSourceItem,
   options: {
+    id?: string
     recordId?: string
     date?: string
+    dayIndex?: number
+    mirrorName?: string
     completed?: boolean
     sealedAt?: string
   } = {},
@@ -497,13 +513,19 @@ export function createOneThoughtRecord(
   const date = options.date ?? thought.date ?? getTodayOneThoughtDateKey(new Date())
   const thoughtId = "thoughtId" in thought ? thought.thoughtId : thought.id
   const recordId = options.recordId ?? `one_thought_${cleanIdPart(date)}_${cleanIdPart(thoughtId)}`
+  const dayIndex = Number(options.dayIndex)
 
   return {
+    id: options.id ?? recordId,
     recordId,
     date,
+    dayIndex: Number.isFinite(dayIndex) && dayIndex > 0 ? Math.trunc(dayIndex) : 0,
     thoughtId,
     sceneId: thought.sceneId,
+    sceneName: thought.sceneName,
     mirrorId: thought.mirrorId,
+    mirrorName: options.mirrorName ?? thought.mirrorId,
+    tradeMoment: thought.tradeMoment,
     thief: thought.thief,
     os: thought.os,
     reflection: thought.reflection,
