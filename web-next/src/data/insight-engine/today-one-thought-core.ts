@@ -1,3 +1,8 @@
+import {
+  matchUserThought as matchUserThoughtByProfile,
+  type UserThoughtMatch,
+} from "../../lib/insight-engine/match-user-thought.ts"
+
 export type BrowserStorage = {
   getItem(key: string): string | null
   setItem(key: string, value: string): void
@@ -53,15 +58,7 @@ export type OneThoughtRecord = {
   sealedAt?: string
 }
 
-export type OneThoughtMatchResult = {
-  matchedSceneId: string
-  matchedThoughtId: string
-  confidence: number
-  matchedThief: string
-  matchedMirrorId: string
-  suggestedReflection: string
-  suggestedPractice: string
-}
+export type OneThoughtMatchResult = UserThoughtMatch
 
 export type OneThoughtGrowthPeriod = "7d" | "21d" | "30d" | "365d"
 
@@ -560,56 +557,9 @@ export function saveOneThoughtRecord(
   return nextRecords
 }
 
-const userThoughtMatchRules = [
-  {
-    sceneIds: ["scene_09", "scene_10"],
-    keywords: ["补仓", "成本", "摊平", "回来", "总会回来", "越跌越补"],
-  },
-  {
-    sceneIds: ["scene_28", "scene_29"],
-    keywords: ["回本", "解套", "本钱", "回到成本"],
-  },
-  {
-    sceneIds: ["scene_07", "scene_08"],
-    keywords: ["再等等", "不卖", "扛", "止损", "死撑"],
-  },
-  {
-    sceneIds: ["scene_01", "scene_19", "scene_27"],
-    keywords: ["追", "上车", "涨停", "拉升", "高位"],
-  },
-  {
-    sceneIds: ["scene_23", "scene_24", "scene_34"],
-    keywords: ["消息", "群里", "老师", "喊", "观点"],
-  },
-] as const
-
 export function matchUserThought(inputText: string, sourceItems: TodayOneThoughtSourceItem[]): OneThoughtMatchResult {
-  const text = inputText.trim()
-  const items = getSourceItems(sourceItems)
-  const rankedRules = userThoughtMatchRules
-    .map((rule) => ({
-      rule,
-      score: rule.keywords.reduce((total, keyword) => total + (text.includes(keyword) ? 1 : 0), 0),
-    }))
-    .sort((left, right) => right.score - left.score)
-  const topRule = rankedRules[0]
-  const matchedItem =
-    topRule && topRule.score > 0
-      ? items.find((item) => topRule.rule.sceneIds.some((sceneId) => sceneId === item.sceneId)) ?? items[0] ?? fallbackSourceItem
-      : items[hashText(text || "今日一念") % items.length] ?? fallbackSourceItem
-  const confidence = topRule && topRule.score > 0
-    ? Math.min(0.92, 0.52 + topRule.score * 0.12)
-    : 0.36
-
-  return {
-    matchedSceneId: matchedItem.sceneId,
-    matchedThoughtId: matchedItem.thoughtId,
-    confidence,
-    matchedThief: matchedItem.thief,
-    matchedMirrorId: matchedItem.mirrorId,
-    suggestedReflection: matchedItem.reflection,
-    suggestedPractice: matchedItem.practice,
-  }
+  void sourceItems
+  return matchUserThoughtByProfile(inputText)
 }
 
 export function buildOneThoughtGrowthProfile({

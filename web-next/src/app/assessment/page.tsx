@@ -147,7 +147,7 @@ export default function AssessmentPage() {
 
   if (!loaded || !question) {
     return (
-      <AssessmentShell>
+      <AssessmentShell background="home-water">
         <div className="grid min-h-[12rem] place-items-center gap-5">
           {showLoadingRecovery || !question ? (
             <SecondaryButton type="button" onClick={() => router.replace(hasSavedPhone() ? "/assessment" : "/assessment-login")}>
@@ -161,7 +161,7 @@ export default function AssessmentPage() {
 
   if (currentIndex === 0 && answers.length === 0) {
     return (
-      <AssessmentShell className="p-0 md:p-0" contentWidth="wide">
+      <AssessmentShell background="home-water" className="p-0 md:p-0" contentWidth="wide">
         <MirrorGateway
           onComplete={(mirrorId) => {
             const mirrorReport = generateMirrorReport(mirrorId)
@@ -285,6 +285,11 @@ export default function AssessmentPage() {
           margin-top: 22px;
           opacity: 0;
           animation: thought-in 220ms cubic-bezier(0.22, 1, 0.36, 1) 50ms forwards;
+        }
+
+        .thought-question h1 {
+          color: rgba(244, 235, 221, 0.96);
+          text-shadow: 0 0 44px rgba(0, 0, 0, 0.58);
         }
 
           .assessment-one-thought:not(.is-compact) .thought-scene {

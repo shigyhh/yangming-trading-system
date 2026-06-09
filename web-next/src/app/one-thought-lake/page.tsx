@@ -36,6 +36,8 @@ export default function Page() {
               font-size: clamp(4rem, 10vw, 8.8rem);
               font-weight: 300;
               letter-spacing: .08em;
+              color: rgba(244,235,221,.96);
+              text-shadow: 0 0 44px rgba(0,0,0,.58);
             }
             .one-thought-lake-page .lake-header p,
             .one-thought-lake-page .lake-count,

@@ -41,11 +41,11 @@ export function StillWaterIntroMirror({ phase }: { phase: string }) {
     const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value))
 
     const getPool = () => {
-      const radius = Math.min(width * 0.28, height * 0.28, 282)
+      const radius = Math.min(width * 0.36, height * 0.34, 360)
 
       return {
         x: width * 0.5,
-        y: height * 0.38,
+        y: height * 0.4,
         radius,
       }
     }
@@ -68,8 +68,8 @@ export function StillWaterIntroMirror({ phase }: { phase: string }) {
 
       const pool = {
         x: simWidth * 0.5,
-        y: simHeight * 0.38,
-        radius: Math.min(simWidth * 0.28, simHeight * 0.28, 282 / scale),
+        y: simHeight * 0.4,
+        radius: Math.min(simWidth * 0.36, simHeight * 0.34, 360 / scale),
       }
       const moonX = simWidth * 0.5
       const moonY = simHeight * 0.2
@@ -81,8 +81,8 @@ export function StillWaterIntroMirror({ phase }: { phase: string }) {
           const nx = (x - pool.x) / pool.radius
           const ny = (y - pool.y) / (pool.radius * 0.96)
           const distance = Math.sqrt(nx * nx + ny * ny)
-          const water = clamp(1 - distance / 1.46, 0, 1) ** 1.9
-          const depth = clamp(1 - distance / 0.92, 0, 1)
+          const water = clamp(1 - distance / 1.86, 0, 1) ** 2.15
+          const depth = clamp(1 - distance / 1.08, 0, 1)
           const sky = y / simHeight
 
           let red = 2 + 8 * (1 - sky)
@@ -294,17 +294,17 @@ export function StillWaterIntroMirror({ phase }: { phase: string }) {
       context.drawImage(simCanvas, 0, 0, simWidth, simHeight, 0, 0, width, height)
 
       const pool = getPool()
-      const outside = context.createRadialGradient(pool.x, pool.y, pool.radius * 0.54, pool.x, pool.y, pool.radius * 1.72)
+      const outside = context.createRadialGradient(pool.x, pool.y, pool.radius * 0.72, pool.x, pool.y, pool.radius * 2.12)
       outside.addColorStop(0, "rgba(0, 0, 0, 0)")
-      outside.addColorStop(0.72, "rgba(0, 0, 0, 0.22)")
-      outside.addColorStop(1, "rgba(0, 2, 4, 0.58)")
+      outside.addColorStop(0.78, "rgba(0, 0, 0, 0.12)")
+      outside.addColorStop(1, "rgba(0, 2, 4, 0.36)")
       context.fillStyle = outside
       context.fillRect(0, 0, width, height)
 
-      const dark = context.createRadialGradient(pool.x, pool.y, pool.radius * 0.1, pool.x, pool.y, pool.radius * 1.58)
-      dark.addColorStop(0, "rgba(0, 0, 0, 0.03)")
-      dark.addColorStop(0.72, "rgba(0, 0, 0, 0)")
-      dark.addColorStop(1, "rgba(0, 0, 0, 0.5)")
+      const dark = context.createRadialGradient(pool.x, pool.y, pool.radius * 0.16, pool.x, pool.y, pool.radius * 1.92)
+      dark.addColorStop(0, "rgba(0, 0, 0, 0.018)")
+      dark.addColorStop(0.76, "rgba(0, 0, 0, 0)")
+      dark.addColorStop(1, "rgba(0, 0, 0, 0.32)")
       context.fillStyle = dark
       context.fillRect(0, 0, width, height)
 

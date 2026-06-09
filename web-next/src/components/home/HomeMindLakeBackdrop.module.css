@@ -15,7 +15,7 @@
     radial-gradient(circle at 72% 42%, rgba(11, 26, 26, 0.72), transparent 58%),
     radial-gradient(ellipse at 50% 68%, rgba(180, 170, 140, 0.10), rgba(7, 17, 18, 0.36) 46%, transparent 72%),
     linear-gradient(180deg, #050706 0%, #071112 42%, #0b1a1a 63%, #030504 100%);
-  animation: heartLakeBreath 18s ease-in-out infinite;
+  animation: heartLakeBreath 22s ease-in-out infinite;
 }
 
 .layerHeartLake::before {
@@ -79,7 +79,7 @@
     linear-gradient(180deg, transparent 0%, rgba(238, 230, 210, 0.06) 44%, transparent 100%);
   filter: blur(30px);
   opacity: 0.94;
-  animation: stillWaterBreath 16s ease-in-out infinite;
+  animation: stillWaterBreath 18s ease-in-out infinite;
 }
 
 .layerStillWater::before,
@@ -103,6 +103,19 @@
   top: 52%;
   opacity: 0.09;
   transform: scaleX(0.64) translateX(8%);
+}
+
+.layerSubtleGlow {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 42% 62%, rgba(238, 230, 210, 0.055), transparent 18%),
+    radial-gradient(circle at 58% 70%, rgba(184, 154, 88, 0.045), transparent 20%);
+  filter: blur(34px);
+  opacity: 0.34;
+  animation: subtleGlowDrift 28s ease-in-out infinite;
 }
 
 .layerFloatingThoughts {
@@ -131,7 +144,7 @@
 .thoughtA {
   left: 59%;
   top: 35%;
-  --thought-opacity: 0.15;
+  --thought-opacity: 0.12;
   --thought-blur: 1.7px;
   --drift-duration: 31s;
   animation-delay: -6s;
@@ -140,7 +153,7 @@
 .thoughtB {
   left: 73%;
   top: 58%;
-  --thought-opacity: 0.16;
+  --thought-opacity: 0.11;
   --thought-blur: 1.5px;
   --drift-duration: 27s;
   animation-delay: -12s;
@@ -149,7 +162,7 @@
 .thoughtC {
   left: 61%;
   top: 68%;
-  --thought-opacity: 0.13;
+  --thought-opacity: 0.1;
   --thought-blur: 2.2px;
   --drift-duration: 35s;
   animation-delay: -20s;
@@ -187,8 +200,8 @@
   position: absolute;
   border-radius: 999px;
   background: radial-gradient(circle at center, rgba(238, 230, 210, 0.055), rgba(184, 154, 88, 0.04) 22%, transparent 72%);
-  filter: blur(28px);
-  animation: mirrorAuraBreath 22s ease-in-out infinite;
+  filter: blur(30px);
+  animation: mirrorAuraBreath 24s ease-in-out infinite;
 }
 
 .mirrorAuraLeft {
@@ -232,24 +245,26 @@
 @keyframes heartLakeBreath {
   0%,
   100% {
-    filter: brightness(0.96) saturate(0.92);
+    filter: brightness(0.94) saturate(0.92);
   }
 
   50% {
-    filter: brightness(1.04) saturate(1.02);
+    filter: brightness(1.035) saturate(1.02);
   }
 }
 
 @keyframes stillWaterBreath {
   0%,
   100% {
-    opacity: 0.78;
-    transform: translateY(0);
+    opacity: 0.72;
+    transform: translate3d(0, 0, 0) scaleX(1);
+    filter: blur(26px);
   }
 
   50% {
-    opacity: 1;
-    transform: translateY(-2px);
+    opacity: 0.92;
+    transform: translate3d(0, -2px, 0) scaleX(1.025);
+    filter: blur(30px);
   }
 }
 
@@ -284,13 +299,28 @@
 @keyframes mirrorAuraBreath {
   0%,
   100% {
-    filter: blur(28px);
+    opacity: 0.18;
+    filter: blur(30px);
     transform: scale(1);
   }
 
   50% {
-    filter: blur(31px);
-    transform: scale(1.015);
+    opacity: 0.25;
+    filter: blur(34px);
+    transform: scale(1.018);
+  }
+}
+
+@keyframes subtleGlowDrift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.34;
+  }
+
+  50% {
+    transform: translate3d(8px, -5px, 0);
+    opacity: 0.48;
   }
 }
 
@@ -336,5 +366,15 @@
     width: 56vw;
     height: 9vh;
     opacity: 0.06;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .layerHeartLake,
+  .layerStillWater,
+  .mirrorAura,
+  .layerSubtleGlow,
+  .floatingThought {
+    animation: none !important;
   }
 }

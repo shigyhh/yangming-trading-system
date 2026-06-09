@@ -7,7 +7,10 @@ import { YangmingA1Mark } from "@/components/brand/yangming-mark"
 
 import styles from "./HomeStillWaterHero.module.css"
 
-type DivePhase = "shore" | "descend" | "arrive" | "drop"
+type DivePhase = "shore" | "descend"
+
+const HOME_DIVE_DURATION_MS = 2400
+const HOME_ROUTE_DELAY_MS = 2200
 
 export default function HomeStillWaterHero() {
   const router = useRouter()
@@ -16,7 +19,6 @@ export default function HomeStillWaterHero() {
   const routeTimerRef = useRef<number | null>(null)
   const audioContextRef = useRef<AudioContext | null>(null)
   const [phase, setPhase] = useState<DivePhase>("shore")
-  const [typedThought, setTypedThought] = useState("")
 
   const ensureAudioContext = useCallback(() => {
     try {
@@ -81,38 +83,6 @@ export default function HomeStillWaterHero() {
       oscillator.connect(gain).connect(toneFilter).connect(audioContext.destination)
       oscillator.start(now)
       oscillator.stop(now + 2.8)
-    })
-  }, [ensureAudioContext])
-
-  const playArriveTone = useCallback(() => {
-    const audioContext = ensureAudioContext()
-    if (!audioContext) return
-
-    const now = audioContext.currentTime
-    const master = audioContext.createGain()
-    const lowpass = audioContext.createBiquadFilter()
-
-    master.gain.value = 0.045
-    lowpass.type = "lowpass"
-    lowpass.frequency.value = 2500
-    master.connect(lowpass).connect(audioContext.destination)
-
-    ;[
-      { duration: 2.8, frequency: 294, gain: 0.42 },
-      { duration: 1.6, frequency: 812, gain: 0.1 },
-    ].forEach((tone) => {
-      const oscillator = audioContext.createOscillator()
-      const gain = audioContext.createGain()
-
-      oscillator.type = "sine"
-      oscillator.frequency.value = tone.frequency
-      gain.gain.setValueAtTime(0.0001, now)
-      gain.gain.linearRampToValueAtTime(tone.gain, now + 0.02)
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + tone.duration)
-
-      oscillator.connect(gain).connect(master)
-      oscillator.start(now)
-      oscillator.stop(now + tone.duration + 0.08)
     })
   }, [ensureAudioContext])
 
@@ -197,40 +167,18 @@ export default function HomeStillWaterHero() {
     dispatchHomeWaterRipple({
       clientX: event.clientX,
       clientY: event.clientY,
-      life: 6200,
-      max: Math.max(window.innerWidth, window.innerHeight) * 0.82,
-      strength: 0.42,
+      life: 6800,
+      max: Math.max(window.innerWidth, window.innerHeight) * 0.9,
+      strength: 0.48,
     })
 
     setPhase("descend")
     playSubmergeSound()
-    tweenDive(1, 2900, () => {
-      setPhase("arrive")
-      playArriveTone()
-    })
-  }, [dispatchHomeWaterRipple, phase, playArriveTone, playSubmergeSound, router, tweenDive])
-
-  const submitThought = useCallback(() => {
-    if (phase !== "arrive") return
-
-    const cleanThought = typedThought.trim().slice(0, 28)
-    if (cleanThought) {
-      window.sessionStorage.setItem("yangming:home-dive-thought", cleanThought)
-    }
-
-    dispatchHomeWaterRipple({
-      life: 5600,
-      max: Math.max(window.innerWidth, window.innerHeight) * 0.62,
-      strength: 0.38,
-      x: 0.5,
-      y: 0.52,
-    })
-
-    setPhase("drop")
     routeTimerRef.current = window.setTimeout(() => {
       router.push("/reflect")
-    }, 1480)
-  }, [dispatchHomeWaterRipple, phase, router, typedThought])
+    }, HOME_ROUTE_DELAY_MS)
+    tweenDive(1, HOME_DIVE_DURATION_MS)
+  }, [dispatchHomeWaterRipple, phase, playSubmergeSound, router, tweenDive])
 
   return (
     <section
@@ -251,15 +199,6 @@ export default function HomeStillWaterHero() {
         <span className={`${styles.diveMote} ${styles.moteF}`} />
       </div>
 
-      <svg className={styles.inkDefs} aria-hidden="true">
-        <defs>
-          <filter id="home-still-water-ink" x="-15%" y="-15%" width="130%" height="130%" colorInterpolationFilters="sRGB">
-            <feTurbulence type="fractalNoise" baseFrequency="0.012 0.016" numOctaves="2" seed="7" result="noise" />
-            <feDisplacementMap in="SourceGraphic" in2="noise" scale="3.2" xChannelSelector="R" yChannelSelector="G" />
-          </filter>
-        </defs>
-      </svg>
-
       <div data-home-roll-plane className={styles.content}>
         <span className={styles.zhaoMark} aria-hidden="true">
           <YangmingA1Mark className={styles.zhaoGlyph} role="presentation" aria-hidden="true" />
@@ -275,39 +214,16 @@ export default function HomeStillWaterHero() {
           <span className={styles.coupletDot} aria-hidden="true">｜</span>
           <span className={`${styles.coupletPhrase} ${styles.coupletMirror}`}>心镜照见自己</span>
         </p>
-        <p className={styles.subcopy}>今天，你起了哪一念？</p>
+        <div className={styles.entryGroup}>
+          <p className={styles.subcopy}>今天，你起了哪一念？</p>
 
-        <a href="/reflect" className={styles.door} data-no-ripple="true" onClick={enterReflect}>
-          <span className={styles.doorMain}>照见一念　→</span>
-          <span className={styles.doorLine} aria-hidden="true" />
-        </a>
+          <a href="/reflect" className={styles.door} data-no-ripple="true" onClick={enterReflect}>
+            <span className={styles.doorMain}>照见一念　→</span>
+            <span className={styles.doorLine} aria-hidden="true" />
+          </a>
+        </div>
       </div>
 
-      <div className={styles.arrivePanel} aria-hidden={phase !== "arrive"}>
-        <p className={styles.arriveQuestion}>
-          市场未动，心已先动。
-          <br />
-          今天，你对自己说的那一句是——
-        </p>
-        <input
-          className={styles.thoughtInput}
-          value={typedThought}
-          maxLength={28}
-          placeholder="写下此刻心里那句话"
-          onChange={(event) => setTypedThought(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") submitThought()
-          }}
-        />
-        <button type="button" className={styles.dropDoor} onClick={submitThought}>
-          落入水中 ↓
-        </button>
-      </div>
-
-      <div className={styles.dropPanel} aria-hidden={phase !== "drop"}>
-        <p className={styles.dropThought}>「{typedThought.trim() || "再等等。"}」</p>
-        <p className={styles.dropCopy}>入卷 —— 今日一念，已落入水中</p>
-      </div>
     </section>
   )
 }

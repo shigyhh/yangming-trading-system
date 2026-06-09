@@ -66,7 +66,7 @@ const seedOsOrder = [
   "人家都敢上。",
 ]
 
-const seedCounts = [143, 119, 96, 88, 73, 65, 58, 51, 46, 39, 34, 27]
+const seedCounts = [42, 38, 35, 32, 29, 26, 23, 21, 19, 17, 15, 13]
 
 const mirrorEchoKeyByInsightMirrorId: Record<string, string> = {
   account_checking: "anxiety",

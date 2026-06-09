@@ -27,7 +27,13 @@ test("one thought lake route and entrances exist without becoming a forum", asyn
   assert.match(page, /匿名看见众人的一念，也匿名放下自己的一念。/)
   assert.match(page, /匿名漂浮一念/)
   assert.match(page, /今日共照/)
+  assert.match(page, /\.lake-header h1/)
+  assert.match(page, /color: rgba\(244, 235, 221, 0\.96\)/)
+  assert.match(page, /\.lake-focus-panel h2/)
   assert.match(page, /心湖只照见交易中的念头，不提供投资建议。/)
+  assert.match(page, /aria-label="回到首页"/)
+  assert.match(page, /回首页 →/)
+  assert.match(page, /lake-home-link i/)
   assert.match(page, /我也有这一念/)
   assert.match(page, /写下我的一念/)
   assert.match(page, /写下你的一念/)
@@ -118,8 +124,12 @@ test("anonymous thoughts stay separated from the official thought cloud", async 
     "--node-color",
     "匿名放入心湖",
     "存入我的心镜档案",
-    "countedEntries",
-    "getOneThoughtLakeStats(countedEntries)",
+    "getTodayLiveBase",
+    "36 + (getTodayLiveSeed() % 18)",
+    "Math.min(96",
+    "getDisplayTopEntry",
+    "const localEntries = entries.filter(isAnonymousLakeEntry)",
+    "getOneThoughtLakeStats(seedEntries)",
   ].forEach((token) => {
     assert.equal(page.includes(token), true, `missing anonymous thought token: ${token}`)
   })
@@ -127,7 +137,8 @@ test("anonymous thoughts stay separated from the official thought cloud", async 
   assert.doesNotMatch(page, /className=.*is-anonymous/)
   assert.doesNotMatch(page, /lake-sphere/)
   assert.doesNotMatch(page, /hiddenThought/)
-  assert.doesNotMatch(page, /getOneThoughtLakeStats\(seedEntries\)/)
+  assert.doesNotMatch(page, /const countedEntries/)
+  assert.doesNotMatch(page, /stats\.total \+ liveTotalOffset/)
   assert.doesNotMatch(page, /getOneThoughtLakeStats\(lakeComments\)/)
 })
 
@@ -143,6 +154,11 @@ test("one thought lake limits daily submitted thoughts without limiting comments
     "今日已放 {todayLocalThoughtCount}/{DAILY_LAKE_THOUGHT_LIMIT} 念",
     "handleToggleCompose",
     "setDraftEntry(null)",
+    "playThoughtSinkEffect",
+    "thoughtSinkActive",
+    "is-sinking",
+    "lakeThoughtSink",
+    "lakeThoughtSinkRipple",
     "lake-compose-trigger",
     "收起这一念",
   ].forEach((token) => {
@@ -187,6 +203,7 @@ test("one thought lake engine seeds the full one-thought pool and screens risky 
     "推荐买入",
     "联系方式",
     "sameThoughtCount",
+    "seedCounts = [42, 38, 35",
     "ONE_THOUGHT_LAKE_COMMENT_KEY",
     "readOneThoughtLakeComments",
     "createOneThoughtLakeComment",

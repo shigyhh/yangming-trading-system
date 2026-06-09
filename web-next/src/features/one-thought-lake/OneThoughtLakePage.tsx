@@ -5,6 +5,7 @@ import {
   type FormEvent,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react"
 
@@ -78,9 +79,45 @@ function getTodayLiveSeed() {
   return Array.from(today).reduce((total, char) => total + char.charCodeAt(0), 0)
 }
 
+function getTodayLiveBase() {
+  return 36 + (getTodayLiveSeed() % 18)
+}
+
 function getTodayLocalThoughtCount(entries: OneThoughtLakeEntry[]) {
   const todayKey = getTodayOneThoughtDateKey(new Date())
   return entries.filter((entry) => isAnonymousLakeEntry(entry) && entry.date === todayKey).length
+}
+
+function getDisplayTopEntry(entries: OneThoughtLakeEntry[], fallbackEntry: OneThoughtLakeEntry | null) {
+  const localEntries = entries.filter(isAnonymousLakeEntry)
+  if (!localEntries.length) return fallbackEntry
+
+  const grouped = new Map<string, { count: number; entry: OneThoughtLakeEntry; latest: string }>()
+
+  for (const entry of localEntries) {
+    const key = getEntryDisplayText(entry).trim()
+    if (!key) continue
+
+    const current = grouped.get(key)
+    const count = Math.max(1, Math.trunc(entry.sameThoughtCount || 1))
+
+    if (!current) {
+      grouped.set(key, { count, entry, latest: entry.createdAt })
+      continue
+    }
+
+    current.count += count
+    if (entry.createdAt > current.latest) {
+      current.entry = entry
+      current.latest = entry.createdAt
+    }
+  }
+
+  const topGroup = [...grouped.values()].sort(
+    (left, right) => right.count - left.count || right.latest.localeCompare(left.latest),
+  )[0]
+
+  return topGroup ? { ...topGroup.entry, sameThoughtCount: topGroup.count } : fallbackEntry
 }
 
 export function OneThoughtLakePage() {
@@ -101,11 +138,17 @@ export function OneThoughtLakePage() {
   )
   const [commentText, setCommentText] = useState("")
   const [liveTotalOffset, setLiveTotalOffset] = useState(0)
+  const [thoughtSinkActive, setThoughtSinkActive] = useState(false)
+  const thoughtSinkTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
     const storage = getBrowserStorage()
     setEntries(readOneThoughtLakeEntries(storage, oneThoughtPool))
     setLakeComments(readOneThoughtLakeComments(storage))
+
+    return () => {
+      if (thoughtSinkTimerRef.current) window.clearTimeout(thoughtSinkTimerRef.current)
+    }
   }, [])
 
   useEffect(() => {
@@ -130,10 +173,13 @@ export function OneThoughtLakePage() {
   )
   const seedEntries = useMemo(() => entries.filter((entry) => !isAnonymousLakeEntry(entry)), [entries])
   const anonymousEntries = useMemo(() => entries.filter(isAnonymousLakeEntry), [entries])
-  const countedEntries = useMemo(() => entries, [entries])
-  const stats = useMemo(() => getOneThoughtLakeStats(countedEntries), [countedEntries])
-  const liveTotal = stats.total + liveTotalOffset
+  const seedStats = useMemo(() => getOneThoughtLakeStats(seedEntries), [seedEntries])
   const todayLocalThoughtCount = useMemo(() => getTodayLocalThoughtCount(entries), [entries])
+  const displayTopEntry = useMemo(
+    () => getDisplayTopEntry(entries, seedStats.topEntry),
+    [entries, seedStats.topEntry],
+  )
+  const liveTotal = Math.min(96, getTodayLiveBase() + liveTotalOffset + todayLocalThoughtCount)
   const dailyThoughtLimitReached = todayLocalThoughtCount >= DAILY_LAKE_THOUGHT_LIMIT
   const selectedEntryText = selectedEntry ? getEntryDisplayText(selectedEntry) : ""
   const previewEntry = useMemo(
@@ -191,6 +237,18 @@ export function OneThoughtLakePage() {
     setHoveredEntryId(null)
   }
 
+  function playThoughtSinkEffect() {
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+
+    if (thoughtSinkTimerRef.current) window.clearTimeout(thoughtSinkTimerRef.current)
+    setThoughtSinkActive(false)
+
+    window.requestAnimationFrame(() => {
+      setThoughtSinkActive(true)
+      thoughtSinkTimerRef.current = window.setTimeout(() => setThoughtSinkActive(false), 920)
+    })
+  }
+
   function handleResonate(entry: OneThoughtLakeEntry) {
     if (resonatedIds.includes(entry.id)) return
 
@@ -222,6 +280,7 @@ export function OneThoughtLakePage() {
 
   function handleToggleCompose() {
     if (composeOpen || draftEntry) {
+      playThoughtSinkEffect()
       setComposeOpen(false)
       setDraftEntry(null)
       setComposeError("")
@@ -264,6 +323,7 @@ export function OneThoughtLakePage() {
     }
 
     setComposeError("")
+    playThoughtSinkEffect()
     setDraftEntry(entry)
   }
 
@@ -308,14 +368,15 @@ export function OneThoughtLakePage() {
       <div className="lake-ripple lake-ripple-two" aria-hidden="true" />
 
       <header className="lake-header">
-        <a href="/" className="lake-home-link">
-          照见
+        <a href="/" className="lake-home-link" aria-label="回到首页">
+          <span>回首页 →</span>
+          <i aria-hidden="true" />
         </a>
         <h1>一念心湖</h1>
         <p>匿名看见众人的一念，也匿名放下自己的一念。</p>
         <span className="lake-count" aria-live="polite">
           今日共照 <strong>{liveTotal || 0}</strong> 人
-          {stats.topEntry ? ` · 最多的一念：「${getEntryDisplayText(stats.topEntry)}」` : ""}
+          {displayTopEntry ? ` · 最多的一念：「${getEntryDisplayText(displayTopEntry)}」` : ""}
         </span>
       </header>
 
@@ -429,7 +490,10 @@ export function OneThoughtLakePage() {
         </aside>
       ) : null}
 
-      <section className={`lake-compose ${composeOpen || draftEntry ? "is-open" : ""}`} aria-label="写下你的一念">
+      <section
+        className={`lake-compose ${composeOpen || draftEntry ? "is-open" : ""} ${thoughtSinkActive ? "is-sinking" : ""}`}
+        aria-label="写下你的一念"
+      >
         <button type="button" className="lake-compose-trigger" onClick={handleToggleCompose}>
           {composeOpen || draftEntry ? "收起这一念" : dailyThoughtLimitReached ? "今日宜止" : "写下你的一念"}
         </button>
@@ -559,11 +623,50 @@ export function OneThoughtLakePage() {
           position: fixed;
           top: 1.1rem;
           left: 1.1rem;
-          color: rgba(216, 183, 111, 0.62);
+          display: inline-flex;
+          min-width: 5.9rem;
+          flex-direction: column;
+          gap: 0.48rem;
+          border: 1px solid rgba(216, 183, 111, 0.14);
+          border-radius: 999px;
+          background:
+            linear-gradient(180deg, rgba(244, 235, 221, 0.03), rgba(216, 183, 111, 0.02)),
+            rgba(4, 7, 6, 0.2);
+          box-shadow:
+            inset 0 1px 0 rgba(244, 235, 221, 0.04),
+            0 16px 44px rgba(0, 0, 0, 0.2);
+          color: rgba(216, 183, 111, 0.72);
           font-family: var(--font-sans, system-ui, sans-serif);
-          font-size: 0.76rem;
+          font-size: 0.72rem;
+          font-weight: 700;
           letter-spacing: 0.22em;
+          padding: 0.64rem 0.88rem 0.58rem;
           text-decoration: none;
+          backdrop-filter: blur(14px);
+          transition:
+            border-color 520ms ease,
+            color 520ms ease,
+            opacity 520ms ease,
+            transform 520ms ease;
+        }
+
+        .lake-home-link i {
+          display: block;
+          width: 4.1rem;
+          height: 1px;
+          background: linear-gradient(90deg, rgba(216, 183, 111, 0.62), rgba(216, 183, 111, 0.18), transparent);
+          opacity: 0.58;
+          transform-origin: left center;
+        }
+
+        .lake-home-link:hover {
+          border-color: rgba(216, 183, 111, 0.28);
+          color: rgba(244, 235, 221, 0.9);
+          transform: translateX(0.12rem);
+        }
+
+        .lake-home-link:hover i {
+          opacity: 0.82;
         }
 
         .lake-count,
@@ -578,15 +681,15 @@ export function OneThoughtLakePage() {
 
         .lake-header h1 {
           margin: 0;
-          color: rgba(244, 235, 221, 0.86);
+          color: rgba(244, 235, 221, 0.96);
           font-size: clamp(3.1rem, 8vw, 7.6rem);
           font-weight: 400;
           line-height: 1.08;
           letter-spacing: 0.14em;
           text-indent: 0.14em;
           text-shadow:
-            0 0 34px rgba(216, 183, 111, 0.08),
-            0 24px 76px rgba(0, 0, 0, 0.78);
+            0 0 44px rgba(0, 0, 0, 0.58),
+            0 0 26px rgba(216, 183, 111, 0.08);
         }
 
         .lake-header > p {
@@ -796,11 +899,12 @@ export function OneThoughtLakePage() {
 
         .lake-focus-panel h2 {
           margin: 0;
-          color: rgba(244, 235, 221, 0.88);
+          color: rgba(244, 235, 221, 0.96);
           font-size: clamp(2rem, 4.6vw, 4.1rem);
           font-weight: 400;
           line-height: 1.24;
           letter-spacing: 0.1em;
+          text-shadow: 0 0 42px rgba(0, 0, 0, 0.58);
         }
 
         .lake-focus-panel dl {
@@ -953,6 +1057,26 @@ export function OneThoughtLakePage() {
           transform: translateX(-50%);
         }
 
+        .lake-compose.is-sinking {
+          animation: lakeThoughtSink 920ms cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .lake-compose.is-sinking::after {
+          content: "";
+          pointer-events: none;
+          position: absolute;
+          left: 50%;
+          bottom: 0.54rem;
+          width: 82%;
+          height: 3.2rem;
+          border: 1px solid rgba(216, 183, 111, 0.16);
+          border-radius: 999px;
+          opacity: 0;
+          filter: blur(0.6px);
+          transform: translateX(-50%) scale(0.78);
+          animation: lakeThoughtSinkRipple 920ms ease-out;
+        }
+
         .lake-compose:not(.is-open) {
           border-color: transparent;
           background: transparent;
@@ -1024,7 +1148,7 @@ export function OneThoughtLakePage() {
         }
 
         .lake-match-result strong {
-          color: rgba(244, 235, 221, 0.8);
+          color: rgba(244, 235, 221, 0.92);
           font-weight: 400;
         }
 
@@ -1088,6 +1212,29 @@ export function OneThoughtLakePage() {
           }
         }
 
+        @keyframes lakeThoughtSink {
+          0%,
+          100% {
+            filter: blur(0);
+            transform: translateX(-50%) translateY(0) scale(1);
+          }
+          44% {
+            filter: blur(1.4px);
+            transform: translateX(-50%) translateY(6px) scale(0.985);
+          }
+        }
+
+        @keyframes lakeThoughtSinkRipple {
+          0% {
+            opacity: 0.22;
+            transform: translateX(-50%) scale(0.72);
+          }
+          100% {
+            opacity: 0;
+            transform: translateX(-50%) scale(1.08);
+          }
+        }
+
         @media (max-width: 720px) {
           .one-thought-lake-page {
             min-height: 100svh;
@@ -1148,6 +1295,10 @@ export function OneThoughtLakePage() {
             transform: none;
           }
 
+          .lake-compose.is-sinking {
+            animation-name: lakeThoughtSinkMobile;
+          }
+
           .lake-echo-form {
             grid-template-columns: 1fr;
           }
@@ -1159,9 +1310,23 @@ export function OneThoughtLakePage() {
           }
         }
 
+        @keyframes lakeThoughtSinkMobile {
+          0%,
+          100% {
+            filter: blur(0);
+            transform: translateY(0) scale(1);
+          }
+          44% {
+            filter: blur(1.4px);
+            transform: translateY(6px) scale(0.985);
+          }
+        }
+
         @media (prefers-reduced-motion: reduce) {
           .lake-anonymous-node,
-          .lake-ripple {
+          .lake-ripple,
+          .lake-compose.is-sinking,
+          .lake-compose.is-sinking::after {
             animation: none;
           }
         }

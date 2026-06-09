@@ -3,6 +3,7 @@
 import { AmbientSound } from "@/components/home/ambient-sound"
 import { HeroSection } from "@/components/home/hero-section"
 import { HomeWaterStage } from "@/components/home/HomeWaterStage"
+import { StorySections } from "@/components/home/story-sections"
 import { TopNav } from "@/components/home/top-nav"
 
 export function CinematicHome() {
@@ -12,9 +13,10 @@ export function CinematicHome() {
       <HomeWaterStage />
       <TopNav />
       <HeroSection />
+      <StorySections />
       <footer
         id="compliance"
-        className="font-function relative z-10 mx-auto w-full max-w-[1240px] px-4 pb-10 text-center text-sm leading-7 text-muted-cream md:px-8"
+        className="font-function pointer-events-none sticky bottom-[max(.75rem,env(safe-area-inset-bottom))] z-10 mx-auto mt-24 w-full max-w-[1240px] px-4 pb-1 text-center text-[11px] leading-5 text-[rgba(220,212,195,.32)] md:px-8 md:text-xs md:leading-6"
       >
         <p>本系统仅用于交易认知、行为训练与风险教育；</p>
         <p>不荐股、不喊单、不承诺收益。</p>

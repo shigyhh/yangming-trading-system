@@ -4,6 +4,7 @@ import assert from "node:assert/strict"
 
 const source = readFileSync(new URL("./MirrorGateway.tsx", import.meta.url), "utf8")
 const zhaoxinSource = readFileSync(new URL("./ZhaoxinRitualFlow.tsx", import.meta.url), "utf8")
+const heartMoonSceneSource = readFileSync(new URL("./HeartMoonNineMirrorsScene.tsx", import.meta.url), "utf8")
 const heartLakeSource = readFileSync(new URL("./HeartLakeEngine.tsx", import.meta.url), "utf8")
 const stillWaterSource = readFileSync(new URL("./StillWaterIntroMirror.tsx", import.meta.url), "utf8")
 const assessmentPage = readFileSync(new URL("../../app/assessment/page.tsx", import.meta.url), "utf8")
@@ -32,19 +33,73 @@ test("assessment keeps the locked mirror gateway and mounts the heart lake ritua
 
 test("mirror gateway keeps the fixed heart-lake prelude before nine-mirror flow", () => {
   const requiredCopy = [
-    "市场还在那里",
-    "行情还在那里",
-    "此刻，",
-    "你心里起了什么念？",
-    "一念未起时，",
-    "此心本自清明。",
+    "行情留在屏幕。",
+    "这一刻，",
+    "往心里走一步。",
+    "此刻,你心里最先冒出来的,是什么念头?",
   ]
 
   for (const text of requiredCopy) {
     assert.match(source, new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")))
+    assert.match(heartMoonSceneSource, new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")))
   }
 
+  const inputGhostCopy = [
+    "写下此刻的一念……",
+    "比如：我次奥，又被套了",
+    "比如：怎么又卖飞了",
+    "比如：再割，大腿都没了",
+    "比如：回本我就走",
+    "比如：又赚了，快翻倍了",
+    "比如：亏太多了，继续拿着吧",
+    "比如：什么时候才能回本啊",
+  ]
+
+  for (const text of inputGhostCopy) {
+    assert.match(source, new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")))
+  }
+
+  assert.doesNotMatch(source, /市场还在那里/)
+  assert.doesNotMatch(source, /行情还在那里/)
+  assert.doesNotMatch(source, /此刻，/)
+  assert.doesNotMatch(source, /你心里起了什么念？/)
+  assert.doesNotMatch(source, /你心里最先冒出来的念头是什么？/)
+  assert.doesNotMatch(source, /此时，/)
+  assert.doesNotMatch(source, /你心里最先冒出念头是什么？/)
+  assert.doesNotMatch(source, /一念未起时，/)
+  assert.doesNotMatch(source, /此心本自清明。/)
+  assert.doesNotMatch(heartMoonSceneSource, /市场正在那里/)
+  assert.doesNotMatch(heartMoonSceneSource, /行情正在那里/)
+  assert.doesNotMatch(heartMoonSceneSource, /此刻，/)
+  assert.doesNotMatch(heartMoonSceneSource, /你心里起了什么念？/)
+  assert.doesNotMatch(heartMoonSceneSource, /此时，/)
+  assert.doesNotMatch(heartMoonSceneSource, /你心里最先冒出念头是什么？/)
+  assert.match(source, /thought-sink-form/)
+  assert.match(source, /thought-shadow-stack/)
+  assert.match(source, /thought-sink-release/)
+  assert.match(source, /width:\s*min\(29rem, calc\(100vw - 3\.5rem\)\)/, "prelude thought input should feel lighter than the original wide doorway")
+  assert.match(source, /height:\s*clamp\(3\.5rem, 6\.3svh, 4\.25rem\)/, "prelude thought input should not dominate the question title")
+  assert.match(source, /width:\s*min\(78vw, 24rem\)/, "mobile prelude thought input should stay compact")
+  assert.match(source, /height:\s*3\.7rem/, "mobile prelude thought input should stay slim")
+  assert.doesNotMatch(source, /width:\s*min\(34rem, calc\(100vw - 2rem\)\)/)
+  assert.doesNotMatch(source, /height:\s*clamp\(4\.6rem, 8\.2svh, 5\.4rem\)/)
+  assert.doesNotMatch(source, /thought-sink-submit/)
+  assert.doesNotMatch(source, /照见今日一念/)
+  assert.match(source, /data-paused/)
+  assert.match(source, /isPreludePaused/)
+  assert.match(source, /onMouseEnter=\{\(\) => setIsPreludeHovering\(true\)\}/)
+  assert.match(source, /onFocusCapture=\{\(\) => setIsPreludeFocused\(true\)\}/)
+  assert.match(source, /sinkingThoughtText \?/)
+  assert.match(source, /QUESTION_REVEAL_DELAY_MS = 3400/)
+  assert.match(source, /PRELUDE_SINK_DELAY_MS = 13200/)
+  assert.match(source, /PRELUDE_ENTRY_DELAY_MS = 2300/)
+  assert.doesNotMatch(source, /window\.setTimeout\(\(\) => setPreludeStep\("clear"\), 5600\)/)
+  assert.doesNotMatch(source, /window\.setTimeout\(\(\) => enterThoughtLake\(\), 8400\)/)
+  assert.doesNotMatch(source, /saveOneThoughtRecord/)
   assert.match(source, /still-water-gateway-copy/)
+  assert.match(source, /rgba\(232, 228, 210, 0\.92\)/, "prelude big copy should preserve its original warm ivory hue while becoming brighter")
+  assert.match(assessmentPage, /thought-question h1/)
+  assert.match(assessmentPage, /rgba\(244, 235, 221, 0\.96\)/, "36-thought question title should be bright enough on the glass panel")
   assert.match(source, /STILL_WATER_ENTRY_ANCHOR/)
   assert.doesNotMatch(source, /若这一念截中你，就按下照见。/)
   assert.doesNotMatch(source, /<button[^>]*>\\s*照见此念\\s*<\/button>/)
@@ -59,7 +114,8 @@ test("assessment ritual viewport does not horizontally offset the full-screen la
     source.match(/\.moon-heart-gateway\.is-zhaoxin-flow :global\(\.zhaoxin-ritual-flow\) \{[\s\S]*?\n        \}/)?.[0] ??
     ""
 
-  assert.match(assessmentPage, /<AssessmentShell className="p-0 md:p-0" contentWidth="wide">/)
+  assert.match(assessmentPage, /<AssessmentShell background="home-water" className="p-0 md:p-0" contentWidth="wide">/)
+  assert.match(assessmentPage, /<AssessmentShell background="home-water">[\s\S]*重新进入照心/)
   assert.doesNotMatch(gatewayRule, /left:\s*50%/)
   assert.doesNotMatch(gatewayRule, /translateX\(-50%\)/)
   assert.doesNotMatch(zhaoxinRootRule, /left:\s*50%/)
@@ -74,20 +130,40 @@ test("one-thought lake owns the resonance confirm button", () => {
   assert.match(zhaoxinSource, /今日已照三念，宜止。/)
   assert.match(zhaoxinSource, /它藏在\$\{selectedInsight\.mirrorName\}里。/)
   assert.match(zhaoxinSource, /这不是定论，是今天开始练的一面镜。/)
-  assert.match(zhaoxinSource, /YangmingZhaoSeal/)
+  assert.doesNotMatch(zhaoxinSource, /YangmingZhaoSeal/)
   assert.match(zhaoxinSource, /liangzhi-title-action/)
-  assert.match(zhaoxinSource, /今日落印/)
+  assert.match(zhaoxinSource, /\.zhaoxin-copy\.is-liangzhi \{[\s\S]*?top:\s*42%;/)
   assert.match(zhaoxinSource, /我已照见，愿照此修行/)
-  assert.match(zhaoxinSource, /轻触落印，把今日心证收入心镜档案。/)
-  assert.match(zhaoxinSource, /aria-label="今日落印：我已照见，愿照此修行"/)
-  assert.match(zhaoxinSource, /liangzhi-step-kicker/)
-  assert.match(zhaoxinSource, /liangzhi-sealed-state/)
-  assert.match(zhaoxinSource, /label="已照见"/)
-  assert.match(zhaoxinSource, /showLabel/)
-  assert.match(zhaoxinSource, /致良知，不是消灭念头。/)
-  assert.match(zhaoxinSource, /是念起时，知道是谁在下单。/)
-  assert.match(zhaoxinSource, /liangzhi-title-stamp/)
-  assert.match(zhaoxinSource, /liangzhiStampPress/)
+  assert.match(zhaoxinSource, /长按落印，把今日心证收入心镜档案。/)
+  assert.match(zhaoxinSource, /aria-label="长按我已照见，愿照此修行"/)
+  assert.match(zhaoxinSource, /LIANGZHI_HOLD_DURATION = 1900/)
+  assert.match(zhaoxinSource, /STILL_SEAL_SETTLE_DELAY_MS = 4600/)
+  assert.match(zhaoxinSource, /--liangzhi-p/)
+  assert.match(zhaoxinSource, /liangzhi-sink-ripples/)
+  assert.doesNotMatch(
+    zhaoxinSource.match(/<button[\s\S]*?className=\{`liangzhi-title-action[\s\S]*?<\/button>/)?.[0] ?? "",
+    /<i aria-hidden="true" \/>/,
+  )
+  assert.doesNotMatch(zhaoxinSource, /今日落印/)
+  assert.doesNotMatch(zhaoxinSource, /按住，让它沉下去/)
+  assert.doesNotMatch(zhaoxinSource, /它又浮上来了/)
+  assert.doesNotMatch(zhaoxinSource, /长按，让这一念沉入水底/)
+  assert.doesNotMatch(zhaoxinSource, /liangzhi-step-kicker/)
+  assert.doesNotMatch(zhaoxinSource, /liangzhi-hold-prompt/)
+  assert.doesNotMatch(zhaoxinSource, /liangzhi-sealed-state/)
+  assert.doesNotMatch(zhaoxinSource, /liangzhi-seal-core/)
+  assert.match(zhaoxinSource, /if \(stage === "seal"\) return "still"/)
+  assert.match(zhaoxinSource, /onLakeModeChange\?\.\("still"\)/)
+  assert.match(zhaoxinSource, /liangzhi-still-close/)
+  assert.match(zhaoxinSource, /top: 38\.2svh/)
+  assert.match(zhaoxinSource, /一念未起时，/)
+  assert.match(zhaoxinSource, /此心本自清明。/)
+  assert.doesNotMatch(zhaoxinSource, /念起能知，/)
+  assert.doesNotMatch(zhaoxinSource, /便是修行。/)
+  assert.doesNotMatch(zhaoxinSource, /致良知，不是消灭念头/)
+  assert.doesNotMatch(zhaoxinSource, /是念起时，知道是谁在下单/)
+  assert.doesNotMatch(zhaoxinSource, /liangzhi-title-stamp/)
+  assert.doesNotMatch(zhaoxinSource, /liangzhiStampPress/)
   assert.match(zhaoxinSource, /getNextHeartProofSequenceNumber/)
   assert.match(zhaoxinSource, /buildDailyGrowthHeartProof/)
   assert.match(zhaoxinSource, /saveHeartProof/)
@@ -104,7 +180,8 @@ test("one-thought lake owns the resonance confirm button", () => {
   assert.match(zhaoxinSource, /今日修行/)
   assert.match(zhaoxinSource, /growthEvidenceLine/)
   assert.match(zhaoxinSource, /growthPracticeLine/)
-  assert.match(zhaoxinSource, /onClick=\{completeLiangzhiHold\}/)
+  assert.match(zhaoxinSource, /onPointerDown=\{startLiangzhiHold\}/)
+  assert.doesNotMatch(zhaoxinSource, /onClick=\{completeLiangzhiHold\}/)
   assert.match(zhaoxinSource, /onRipple\?\.\(\)/)
   assert.match(zhaoxinSource, /stage === "thief" && revealStep === "mirrorName"[\s\S]*\? selectedInsight\.mirrorName/)
   assert.match(zhaoxinSource, /content: "你照见了";/)
@@ -252,6 +329,7 @@ test("heart lake has natural moving glints and pressure-based pointer ripples", 
   assert.match(heartLakeSource, /UnrealBloomPass/)
   assert.match(heartLakeSource, /PerspectiveCamera/)
   assert.match(heartLakeSource, /PlaneGeometry/)
+  assert.match(heartLakeSource, /PlaneGeometry\(220,\s*280,\s*180,\s*260\)/)
   assert.match(heartLakeSource, /ShaderMaterial/)
   assert.match(heartLakeSource, /u_rippleStrength/)
   assert.match(heartLakeSource, /u_entryProgress/)
@@ -262,6 +340,8 @@ test("heart lake has natural moving glints and pressure-based pointer ripples", 
   assert.match(heartLakeSource, /event\.pressure/)
   assert.match(heartLakeSource, /triggerPointerRipple\(event\.clientX, event\.clientY, "move"/)
   assert.match(heartLakeSource, /triggerPointerRipple\(event\.clientX, event\.clientY, "press"/)
+  assert.match(heartLakeSource, /softBreak/)
+  assert.doesNotMatch(heartLakeSource, /hardCut/)
   assert.doesNotMatch(heartLakeSource, /compileShader/)
   assert.doesNotMatch(heartLakeSource, /gl\.drawArrays/)
 })
@@ -269,6 +349,10 @@ test("heart lake has natural moving glints and pressure-based pointer ripples", 
 test("still water intro keeps touch ripples without periodic center ripples", () => {
   assert.match(stillWaterSource, /stirAtPointer/)
   assert.match(stillWaterSource, /pointermove/)
+  assert.match(stillWaterSource, /width \* 0\.36/)
+  assert.match(stillWaterSource, /height \* 0\.34/)
+  assert.doesNotMatch(stillWaterSource, /width \* 0\.28/)
+  assert.doesNotMatch(stillWaterSource, /height \* 0\.28/)
   assert.doesNotMatch(stillWaterSource, /lastAutoDrop/)
   assert.doesNotMatch(stillWaterSource, /autoInterval/)
   assert.doesNotMatch(stillWaterSource, /for \(let ring = 0; ring < 8/)

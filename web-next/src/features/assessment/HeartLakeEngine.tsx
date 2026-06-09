@@ -391,11 +391,15 @@ const waterFragmentShader = `
     float brokenNoise =
       noise(vec2(row * 0.19 + seed, p.x * mix(1.9, 5.6, farLayer) + u_time * 0.36));
     float broken = smoothstep(0.36, 0.88, brokenNoise);
-    float hardCut = 1.0 - smoothstep(0.91, 1.0, hash(vec2(row, floor((p.x + offset) * 0.74) + seed)));
+    float softBreak = mix(
+      0.72,
+      1.0,
+      smoothstep(0.18, 0.92, noise(vec2(row * 0.37 + seed, p.x * 0.52 + u_time * 0.05)))
+    );
     float twinkle = 0.58 + 0.42 * sin(u_time * (0.65 + chance * 1.25) + row * 1.73 + seed);
     float keep = smoothstep(threshold, 1.0, chance);
 
-    return xShape * yShape * broken * hardCut * keep * twinkle;
+    return xShape * yShape * broken * softBreak * keep * twinkle;
   }
 
   void main() {
@@ -678,7 +682,7 @@ export default function HeartLakeEngine({
       },
     }
 
-    const waterGeometry = new THREE.PlaneGeometry(92, 164, 180, 260)
+    const waterGeometry = new THREE.PlaneGeometry(220, 280, 180, 260)
     const waterMaterial = new THREE.ShaderMaterial({
       uniforms,
       vertexShader: waterVertexShader,

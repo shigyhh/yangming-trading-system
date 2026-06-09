@@ -206,6 +206,48 @@
     @apply font-sans;
     scroll-behavior: smooth;
   }
+
+  html[data-home-story-scrollbar="quiet"],
+  html[data-home-story-scrollbar="quiet"] body {
+    scrollbar-color: rgba(184, 154, 88, 0.18) transparent;
+    scrollbar-width: thin;
+  }
+
+  html[data-home-story-scrollbar="quiet"]::-webkit-scrollbar,
+  html[data-home-story-scrollbar="quiet"] body::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  html[data-home-story-scrollbar="quiet"]::-webkit-scrollbar-track,
+  html[data-home-story-scrollbar="quiet"] body::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  html[data-home-story-scrollbar="quiet"]::-webkit-scrollbar-thumb,
+  html[data-home-story-scrollbar="quiet"] body::-webkit-scrollbar-thumb {
+    background: rgba(184, 154, 88, 0.18);
+    border-radius: 999px;
+  }
+
+  html[data-home-story-scrollbar="quiet"]::-webkit-scrollbar-corner,
+  html[data-home-story-scrollbar="quiet"] body::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  @media (hover: none), (pointer: coarse), (max-width: 767px) {
+    html[data-home-story-scrollbar="quiet"],
+    html[data-home-story-scrollbar="quiet"] body {
+      scrollbar-width: none;
+    }
+
+    html[data-home-story-scrollbar="quiet"]::-webkit-scrollbar,
+    html[data-home-story-scrollbar="quiet"] body::-webkit-scrollbar {
+      display: none;
+      width: 0;
+      height: 0;
+    }
+  }
 }
 
 @layer base {
@@ -213,10 +255,9 @@
     min-width: 320px;
     overflow-x: hidden;
     background:
-      radial-gradient(circle at 16% 16%, rgba(216, 183, 111, 0.2), transparent 26rem),
-      radial-gradient(circle at 84% 10%, rgba(95, 132, 117, 0.18), transparent 24rem),
-      radial-gradient(circle at 58% 84%, rgba(120, 60, 45, 0.16), transparent 26rem),
-      #080807;
+      radial-gradient(circle at 82% 12%, rgba(95, 132, 117, 0.12), transparent 24rem),
+      radial-gradient(circle at 58% 84%, rgba(95, 132, 117, 0.055), transparent 26rem),
+      #050807;
   }
 
   ::selection {

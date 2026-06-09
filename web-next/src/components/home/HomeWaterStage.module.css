@@ -1,6 +1,6 @@
 .root {
   --still-water-tint: 200, 224, 224;
-  --still-water-tint-alpha: 0.058;
+  --still-water-tint-alpha: 0.035;
   --water-dive: 0;
   position: fixed;
   inset: 0;
@@ -10,16 +10,9 @@
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
-  background:
-    radial-gradient(76% 62% at 31% 38%, rgba(184, 154, 88, 0.034), transparent 62%),
-    radial-gradient(82% 70% at 64% 54%, rgba(48, 84, 82, 0.16), transparent 66%),
-    radial-gradient(120% 100% at 44% 48%, #0e1819 0%, #0a1011 46%, #060a0b 78%, #04080a 100%);
+  background: radial-gradient(120% 100% at 42% 52%, #0e1819 0%, #0a1011 46%, #060a0b 76%, #04080a 100%);
   contain: strict;
   transform: translateZ(0);
-}
-
-.root::before {
-  content: none;
 }
 
 .canvas {
@@ -29,25 +22,9 @@
   display: block;
   width: 100%;
   height: 100%;
-  opacity: 1;
-}
-
-.surfaceLayer {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  mix-blend-mode: screen;
-  background:
-    linear-gradient(
-      180deg,
-      rgba(186, 210, 210, 0.08),
-      rgba(150, 178, 184, 0.032) 50%,
-      transparent 82%
-    ),
-    radial-gradient(ellipse at 42% 64%, rgba(238, 230, 210, 0.026), transparent 56%);
-  opacity: calc(0.48 - var(--water-dive) * 0.34);
-  transform: translateY(calc(var(--water-dive) * -40%));
+  cursor: pointer;
+  opacity: calc(0.9 - var(--water-dive) * 0.14);
+  transform: translateY(calc(var(--water-dive) * -2.5%));
   transition:
     opacity 900ms ease,
     transform 1300ms cubic-bezier(0.22, 1, 0.36, 1);
@@ -56,73 +33,25 @@
 .tintLayer {
   position: absolute;
   inset: 0;
-  z-index: 2;
+  z-index: 1;
+  pointer-events: none;
   mix-blend-mode: screen;
-  background:
-    linear-gradient(
-      180deg,
-      rgba(var(--still-water-tint), calc(var(--still-water-tint-alpha) * 0.92)) 0%,
-      rgba(var(--still-water-tint), calc(var(--still-water-tint-alpha) * 0.34)) 48%,
-      transparent 82%
-    );
+  background: linear-gradient(
+    180deg,
+    rgba(var(--still-water-tint), var(--still-water-tint-alpha)) 0%,
+    rgba(var(--still-water-tint), calc(var(--still-water-tint-alpha) * 0.35)) 48%,
+    transparent 82%
+  );
   opacity: calc(1 - var(--water-dive) * 0.55);
-  transform: translateY(calc(var(--water-dive) * -28%));
-  transition:
-    opacity 900ms ease,
-    transform 1300ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity 900ms ease;
 }
 
-.stillWaterPlane {
+.vignetteLayer {
   position: absolute;
-  left: -10%;
-  right: -10%;
-  top: 50%;
+  inset: 0;
   z-index: 2;
-  height: 46%;
-  background:
-    radial-gradient(ellipse at 38% 45%, rgba(238, 230, 210, 0.09), rgba(184, 154, 88, 0.038) 24%, transparent 58%),
-    radial-gradient(ellipse at 50% 50%, rgba(180, 170, 140, 0.1), rgba(7, 17, 18, 0.12) 46%, transparent 78%),
-    linear-gradient(180deg, transparent 0%, rgba(238, 230, 210, 0.032) 44%, transparent 100%);
-  filter: blur(28px);
-  opacity: calc(0.74 - var(--water-dive) * 0.12);
-  transform: translateY(calc(var(--water-dive) * -8%));
-  animation: stillWaterBreath 16s ease-in-out infinite;
-  transition:
-    opacity 1200ms ease,
-    transform 1600ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.stillWaterPlane::before,
-.stillWaterPlane::after {
-  content: "";
-  position: absolute;
-  height: 1px;
-  background:
-    linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(238, 230, 210, 0.085) 38%,
-      rgba(184, 154, 88, 0.06) 50%,
-      rgba(238, 230, 210, 0.052) 62%,
-      transparent 100%
-    );
-  filter: blur(1.4px);
-  opacity: 0.54;
-}
-
-.stillWaterPlane::before {
-  left: 10%;
-  right: 12%;
-  top: 43%;
-  transform: scaleX(0.86);
-}
-
-.stillWaterPlane::after {
-  left: 20%;
-  right: 23%;
-  top: 57%;
-  opacity: 0.28;
-  transform: translateX(6%) scaleX(0.72);
+  pointer-events: none;
+  background: radial-gradient(130% 120% at 42% 50%, transparent 52%, rgba(0, 0, 0, 0.55) 100%);
 }
 
 .deepLayer {
@@ -131,43 +60,16 @@
   z-index: 3;
   pointer-events: none;
   background:
-    radial-gradient(120% 100% at 50% 60%, rgba(4, 10, 16, 0.22), rgba(2, 6, 10, 0.74) 100%);
+    radial-gradient(120% 100% at 50% 60%, rgba(4, 10, 16, 0.22), rgba(2, 6, 10, 0.74) 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.3));
   opacity: calc(var(--water-dive) * 0.78);
   transition: opacity 260ms linear;
 }
 
-.vignetteLayer {
-  position: absolute;
-  inset: 0;
-  z-index: 4;
-  background:
-    radial-gradient(135% 120% at 44% 50%, transparent 48%, rgba(0, 0, 0, 0.44) 100%),
-    linear-gradient(180deg, rgba(3, 5, 4, 0.2) 0%, transparent 28%, rgba(3, 5, 4, 0.34) 100%);
-}
-
-@keyframes stillWaterBreath {
-  0%,
-  100% {
-    opacity: 0.58;
-    filter: blur(28px) brightness(0.94);
-  }
-
-  50% {
-    opacity: 0.78;
-    filter: blur(31px) brightness(1.02);
-  }
-}
-
-@media (max-width: 768px) {
-  .stillWaterPlane {
-    top: 56%;
-    height: 40%;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .stillWaterPlane {
-    animation-duration: 0.01ms !important;
+  .canvas,
+  .tintLayer,
+  .deepLayer {
     transition-duration: 0.01ms !important;
   }
 }

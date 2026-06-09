@@ -15,6 +15,7 @@ export default function HomeMindLakeBackdrop() {
         <div className={styles.marketLights} />
       </div>
       <div className={styles.layerStillWater} />
+      <div className={styles.layerSubtleGlow} />
       <div className={styles.layerFloatingThoughts}>
         {floatingThoughts.map((item) => (
           <span key={item.text} className={`${styles.floatingThought} ${item.className}`}>

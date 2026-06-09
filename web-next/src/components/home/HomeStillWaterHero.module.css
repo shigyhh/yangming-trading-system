@@ -26,7 +26,7 @@
     radial-gradient(120% 105% at 50% 64%, rgba(4, 10, 16, 0.16), rgba(2, 6, 10, 0.56) 100%),
     linear-gradient(180deg, transparent 0%, rgba(1, 5, 7, 0.34) 100%);
   opacity: calc(var(--dive) * 0.58);
-  transition: opacity 1200ms ease;
+  transition: opacity 2200ms ease;
 }
 
 .diveArc {
@@ -42,8 +42,8 @@
   transform: translate3d(0, calc(var(--dive) * -34px), 0) scale(calc(1 + var(--dive) * 0.08));
   mask-image: linear-gradient(130deg, transparent 0%, black 20%, black 58%, transparent 86%);
   transition:
-    opacity 1400ms ease,
-    transform 1800ms cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 2200ms ease,
+    transform 2600ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .diveArc::before,
@@ -128,18 +128,11 @@
   animation-delay: -12s;
 }
 
-.root[data-phase="descend"] .diveMote,
-.root[data-phase="arrive"] .diveMote {
+.root[data-phase="descend"] .diveMote {
   animation-name: bubbleRise;
-  animation-duration: var(--bubble-duration, 3.4s);
+  animation-duration: var(--bubble-duration, 4.4s);
   animation-iteration-count: infinite;
   opacity: calc(var(--mote-opacity, 0.12) + 0.22);
-}
-
-.inkDefs {
-  position: absolute;
-  width: 0;
-  height: 0;
 }
 
 .content {
@@ -152,22 +145,39 @@
   justify-content: center;
   padding: 7.5rem 1.5rem 5rem;
   margin: 0 auto;
-  opacity: 1;
+  opacity: calc(1 - var(--dive) * 1.08);
   transform:
     translate3d(0, clamp(-5rem, -6.2vh, -3.25rem), 0)
     translateY(calc(var(--dive) * -68px));
   filter: blur(calc(var(--dive) * 8px));
-  transition:
-    opacity 900ms ease,
-    filter 1000ms ease,
-    transform 1200ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: none;
 }
 
-.root[data-phase="descend"] .content,
-.root[data-phase="arrive"] .content,
-.root[data-phase="drop"] .content {
-  opacity: 0;
+.root[data-phase="descend"] .content {
   pointer-events: none;
+}
+
+:global(html[data-home-route-transition="active"]) .content {
+  opacity: 0.16;
+  pointer-events: none;
+  filter: blur(5px);
+  transform:
+    translate3d(0, clamp(-5rem, -6.2vh, -3.25rem), 0)
+    translateY(-46px)
+    scale(0.992);
+  transition:
+    opacity 1800ms ease,
+    filter 2100ms ease,
+    transform 2400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:global(html[data-home-route-transition="active"]) .diveLayer::before {
+  opacity: 0.38;
+}
+
+:global(html[data-home-route-transition="active"]) .diveArc {
+  opacity: 0.18;
+  transform: translate3d(-18vw, 18vh, 0) scale(1.65);
 }
 
 .zhaoMark {
@@ -179,7 +189,7 @@
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  margin-left: clamp(0rem, 4vw, 2rem);
+  margin-left: 0;
   margin-bottom: clamp(1.15rem, 3vh, 2.2rem);
   border: 1px solid rgba(206, 228, 222, 0.42);
   border-radius: 999px;
@@ -234,16 +244,15 @@
   display: flex;
   flex-direction: column;
   max-width: 780px;
-  margin: 0 0 0 clamp(0rem, 4vw, 2rem);
-  color: rgba(238, 230, 210, 0.94);
+  margin: 0;
+  color: #eef3ee;
   font-family: var(--font-yangming-title), "Songti SC", "STSong", "Noto Serif SC", serif;
   font-size: clamp(4.45rem, 10.2vw, 8.85rem);
   font-weight: 310;
   font-variation-settings: "wght" 310;
   line-height: 1.12;
   letter-spacing: 0.1em;
-  text-shadow: 0 24px 72px rgba(0, 0, 0, 0.58);
-  filter: url("#home-still-water-ink");
+  text-shadow: 0 0 60px rgba(0, 0, 0, 0.6);
   animation: titleRise 2.2s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
@@ -257,7 +266,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.14em 0.44em;
-  margin: clamp(1.5rem, 4vh, 2.5rem) 0 0 clamp(0rem, 4vw, 2rem);
+  margin: clamp(1.5rem, 4vh, 2.5rem) 0 0;
   color: rgba(216, 183, 111, 0.76);
   font-family: var(--font-story), "Songti SC", serif;
   font-size: clamp(1rem, 1.6vw, 1.34rem);
@@ -277,8 +286,8 @@
 }
 
 .coupletMarket {
-  color: rgba(199, 207, 196, 0.56);
-  text-shadow: 0 0 22px rgba(100, 132, 120, 0.08);
+  color: rgba(255, 255, 255, 0.96);
+  text-shadow: 0 0 34px rgba(0, 0, 0, 0.42);
   animation-delay: 0.78s;
 }
 
@@ -289,16 +298,25 @@
 }
 
 .coupletMirror {
-  color: rgba(216, 183, 111, 0.84);
+  color: rgba(242, 209, 132, 0.98);
   text-shadow:
-    0 0 20px rgba(184, 154, 88, 0.12),
-    0 0 34px rgba(238, 230, 210, 0.04);
+    0 0 30px rgba(0, 0, 0, 0.46),
+    0 0 22px rgba(216, 183, 111, 0.16);
   animation-delay: 1.28s;
+}
+
+.entryGroup {
+  display: flex;
+  width: fit-content;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(0.5rem, 1vh, 0.75rem);
+  margin: clamp(0.75rem, 1.6vh, 1.15rem) 0 0;
 }
 
 .subcopy {
   max-width: min(62rem, 86vw);
-  margin: clamp(1.5rem, 3.4vh, 2.35rem) 0 0 clamp(0rem, 4vw, 2rem);
+  margin: 0;
   color: rgba(220, 215, 200, 0.64);
   font-family: var(--font-interface), var(--font-story), serif;
   font-size: clamp(1rem, 1.45vw, 1.24rem);
@@ -314,8 +332,8 @@
   display: inline-flex;
   width: fit-content;
   flex-direction: column;
-  margin: clamp(1.75rem, 3.4vh, 2.45rem) 0 0 clamp(0rem, 4vw, 2rem);
-  color: rgba(216, 183, 111, 0.95);
+  margin: 0;
+  color: rgba(242, 209, 132, 0.98);
   text-decoration: none;
   opacity: 0;
   animation: fadeUp 1.5s ease 1.34s both;
@@ -345,6 +363,9 @@
   font-size: clamp(1.42rem, 2.3vw, 1.9rem);
   font-weight: 360;
   letter-spacing: 0.22em;
+  text-shadow:
+    0 0 34px rgba(0, 0, 0, 0.5),
+    0 0 24px rgba(216, 183, 111, 0.14);
   transition:
     color 700ms ease,
     letter-spacing 700ms ease,
@@ -358,7 +379,7 @@
   margin-top: 1.05rem;
   transform-origin: left center;
   opacity: 0.58;
-  background: linear-gradient(90deg, rgba(216, 183, 111, 0.68), rgba(216, 183, 111, 0.2), transparent);
+  background: linear-gradient(90deg, rgba(242, 209, 132, 0.66), rgba(242, 209, 132, 0.2), transparent);
   animation: doorLineBreath 5s ease-in-out infinite;
 }
 
@@ -368,7 +389,7 @@
 }
 
 .door:hover .doorMain {
-  color: rgba(255, 248, 225, 0.94);
+  color: rgba(255, 236, 181, 0.98);
   letter-spacing: 0.3em;
   transform: translateX(0.16rem);
 }
@@ -377,113 +398,40 @@
   animation-duration: 2.8s;
 }
 
-.arrivePanel,
-.dropPanel {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  z-index: 4;
-  width: min(88vw, 720px);
-  transform: translate(-50%, -44%) translateY(24px);
-  text-align: center;
+.door[data-story-door="third"] {
+  color: rgba(238, 203, 128, 0.98);
+}
+
+.door[data-story-door="third"]::before {
+  left: -1rem;
+  bottom: -1.05rem;
+  width: clamp(180px, 20vw, 260px);
+  height: 4.8rem;
   opacity: 0;
-  pointer-events: none;
-  filter: blur(8px);
-  transition:
-    opacity 900ms ease,
-    filter 900ms ease,
-    transform 1000ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.root[data-phase="arrive"] .arrivePanel,
-.root[data-phase="drop"] .dropPanel {
-  opacity: 1;
-  pointer-events: auto;
-  filter: blur(0);
-  transform: translate(-50%, -50%) translateY(0);
+.door[data-story-door="third"] .doorMain {
+  font-size: clamp(34px, 3.6vw, 52px);
+  letter-spacing: 0.2em;
+  color: rgba(238, 203, 128, 0.98);
+  text-shadow:
+    0 0 32px rgba(0, 0, 0, 0.54),
+    0 0 20px rgba(216, 183, 111, 0.1);
 }
 
-.arriveQuestion {
-  margin: 0 auto clamp(2.2rem, 6vh, 4rem);
-  color: rgba(238, 230, 210, 0.76);
-  font-family: var(--font-yangming-title), "Songti SC", serif;
-  font-size: clamp(2rem, 4.2vw, 4.2rem);
-  font-weight: 300;
-  line-height: 1.7;
-  letter-spacing: 0.13em;
-  filter: url("#home-still-water-ink");
-  text-shadow: 0 28px 82px rgba(0, 0, 0, 0.66);
+.door[data-story-door="third"] .doorLine {
+  width: clamp(180px, 19vw, 260px);
+  opacity: 0.58;
+  background: linear-gradient(90deg, rgba(238, 203, 128, 0.62), rgba(238, 203, 128, 0.2), transparent);
 }
 
-.thoughtInput {
-  display: block;
-  width: min(100%, 680px);
-  margin: 0 auto;
-  border: 0;
-  border-bottom: 1px solid rgba(238, 230, 210, 0.26);
-  border-radius: 0;
-  background: transparent;
-  color: rgba(238, 230, 210, 0.86);
-  font-family: var(--font-yangming-title), "Songti SC", serif;
-  font-size: clamp(1.8rem, 4.4vw, 3.6rem);
-  font-weight: 300;
-  letter-spacing: 0.1em;
-  line-height: 1.5;
-  outline: none;
-  text-align: center;
-  text-shadow: 0 0 28px rgba(238, 230, 210, 0.12);
-  caret-color: rgba(216, 183, 111, 0.68);
+.door[data-story-door="third"]:hover::before {
+  opacity: 0.2;
+  transform: scale(1.1);
 }
 
-.thoughtInput::placeholder {
-  color: rgba(238, 230, 210, 0.22);
-}
-
-.thoughtInput:focus {
-  border-bottom-color: rgba(216, 183, 111, 0.42);
-}
-
-.dropDoor {
-  display: inline-flex;
-  margin-top: clamp(2rem, 5vh, 3.8rem);
-  border: 0;
-  background: transparent;
-  color: rgba(216, 183, 111, 0.62);
-  cursor: pointer;
-  font-family: var(--font-story), "Songti SC", serif;
-  font-size: clamp(0.95rem, 1.5vw, 1.18rem);
-  font-weight: 400;
-  letter-spacing: 0.28em;
-  transition:
-    color 700ms ease,
-    letter-spacing 700ms ease,
-    transform 700ms ease;
-}
-
-.dropDoor:hover {
-  color: rgba(238, 230, 210, 0.82);
-  letter-spacing: 0.36em;
-  transform: translateY(2px);
-}
-
-.dropThought {
-  margin: 0;
-  color: rgba(238, 230, 210, 0.82);
-  font-family: var(--font-yangming-title), "Songti SC", serif;
-  font-size: clamp(2.4rem, 7vw, 6rem);
-  font-weight: 300;
-  line-height: 1.35;
-  letter-spacing: 0.12em;
-  filter: url("#home-still-water-ink");
-  animation: thoughtSink 1480ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
-.dropCopy {
-  margin: clamp(1.4rem, 4vh, 2.6rem) 0 0;
-  color: rgba(216, 183, 111, 0.42);
-  font-family: var(--font-story), "Songti SC", serif;
-  font-size: clamp(0.88rem, 1.3vw, 1.05rem);
-  letter-spacing: 0.24em;
+.door[data-story-door="third"]:hover .doorMain {
+  color: rgba(248, 218, 150, 0.99);
 }
 
 @keyframes moteDrift {
@@ -517,26 +465,6 @@
   }
 }
 
-@keyframes thoughtSink {
-  0% {
-    opacity: 0;
-    filter: url("#home-still-water-ink") blur(8px);
-    transform: translateY(-18px) scale(1.02);
-  }
-
-  32% {
-    opacity: 1;
-    filter: url("#home-still-water-ink") blur(0);
-    transform: translateY(0) scale(1);
-  }
-
-  100% {
-    opacity: 0;
-    filter: url("#home-still-water-ink") blur(12px);
-    transform: translateY(78px) scale(0.96);
-  }
-}
-
 @keyframes doorLineBreath {
   0%,
   100% {
@@ -545,8 +473,8 @@
   }
 
   50% {
-    opacity: 0.9;
-    transform: scaleX(1.08);
+    opacity: 0.58;
+    transform: scaleX(1.04);
   }
 }
 
@@ -554,13 +482,13 @@
   from {
     opacity: 0;
     transform: translateY(1.1rem);
-    filter: url("#home-still-water-ink") blur(6px);
+    filter: blur(6px);
   }
 
   to {
     opacity: 1;
     transform: none;
-    filter: url("#home-still-water-ink") blur(0);
+    filter: blur(0);
   }
 }
 
@@ -590,6 +518,13 @@
   }
 }
 
+@media (min-width: 769px) {
+  .content {
+    padding-right: 2rem;
+    padding-left: 2rem;
+  }
+}
+
 @media (max-width: 768px) {
   .content {
     justify-content: flex-start;
@@ -600,8 +535,7 @@
   .zhaoMark,
   .title,
   .couplet,
-  .subcopy,
-  .door {
+  .entryGroup {
     margin-left: 0;
   }
 
@@ -624,21 +558,7 @@
   }
 
   .door {
-    margin-top: 3.5rem;
-  }
-
-  .arrivePanel,
-  .dropPanel {
-    width: min(92vw, 560px);
-  }
-
-  .arriveQuestion {
-    font-size: clamp(1.65rem, 8vw, 2.8rem);
-    line-height: 1.75;
-  }
-
-  .thoughtInput {
-    font-size: clamp(1.55rem, 8vw, 2.5rem);
+    margin-top: 0;
   }
 
   .diveArc {
@@ -658,10 +578,7 @@
   .coupletPhrase,
   .coupletDot,
   .subcopy,
-  .door,
-  .arrivePanel,
-  .dropPanel,
-  .dropThought {
+  .door {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }

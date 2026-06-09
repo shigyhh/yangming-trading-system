@@ -1,8 +1,7 @@
 "use client"
 
-import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { type CSSProperties, type PointerEvent as ReactPointerEvent, useCallback, useEffect, useMemo, useRef, useState } from "react"
 
-import { YangmingZhaoSeal } from "@/components/brand/yangming-zhao-seal"
 import {
   getSceneDrivenMirror,
   oneThoughtScenes,
@@ -422,12 +421,12 @@ const stageText: Record<Stage, StageCopy> = {
     sub: "下一次计划外拉升，只练停十秒。",
   },
   liangzhi: {
-    title: "今日落印",
+    title: "",
     sub: "把这一念落成今日心证，收入心镜档案。",
   },
   seal: {
     title: "已照见",
-    sub: "致良知，不是消灭念头。\n是念起时，知道是谁在下单。",
+    sub: "",
   },
   growth: {
     title: "今日照见总结",
@@ -790,7 +789,7 @@ function modeForStage(stage: Stage): LakeMode {
   if (stage === "cycle") return "chase"
   if (stage === "practice") return "thought"
   if (stage === "liangzhi") return "liangzhi"
-  if (stage === "seal") return "liangzhi"
+  if (stage === "seal") return "still"
   if (stage === "growth") return "still"
   return "still"
 }
@@ -807,6 +806,8 @@ const revealStepSchedule: Partial<Record<RevealStep, { next: RevealStep | "liang
 }
 
 const allowTodayOneThoughtPreviewLimitBypass = process.env.NODE_ENV !== "production"
+const LIANGZHI_HOLD_DURATION = 1900
+const STILL_SEAL_SETTLE_DELAY_MS = 4600
 
 export default function ZhaoxinRitualFlow({
   onEnterCycle,
@@ -829,12 +830,18 @@ export default function ZhaoxinRitualFlow({
   const [revealStep, setRevealStep] = useState<RevealStep>("idle")
   const [isRevealPaused, setIsRevealPaused] = useState(false)
   const [isHoldingLiangzhi, setIsHoldingLiangzhi] = useState(false)
+  const [isLiangzhiReturning, setIsLiangzhiReturning] = useState(false)
   const [heartProofSequenceNumber, setHeartProofSequenceNumber] = useState(1)
+  const rootRef = useRef<HTMLElement | null>(null)
   const absorbTimerRef = useRef<number | null>(null)
   const sceneTimerRefs = useRef<number[]>([])
   const mirrorStageTimerRefs = useRef<number[]>([])
   const revealTimerRefs = useRef<number[]>([])
   const liangzhiHoldTimerRef = useRef<number | null>(null)
+  const liangzhiHoldFrameRef = useRef<number | null>(null)
+  const liangzhiReturnTimerRef = useRef<number | null>(null)
+  const liangzhiHoldStartRef = useRef(0)
+  const isLiangzhiHoldActiveRef = useRef(false)
   const floatingThoughtIdsRef = useRef<string[]>([])
   const previewMirror = mirrorForKey(previewMirrorId)
   const selectedMirror = mirrorForKey(selectedMirrorId)
@@ -1011,7 +1018,7 @@ export default function ZhaoxinRitualFlow({
         setStage("growth")
         setRevealStep("idle")
         onLakeModeChange?.(modeForStage("growth"))
-      }, 2600)
+      }, STILL_SEAL_SETTLE_DELAY_MS)
     }
 
     if (stage === "growth") {
@@ -1149,6 +1156,12 @@ export default function ZhaoxinRitualFlow({
       if (liangzhiHoldTimerRef.current) {
         window.clearTimeout(liangzhiHoldTimerRef.current)
       }
+      if (liangzhiHoldFrameRef.current !== null) {
+        window.cancelAnimationFrame(liangzhiHoldFrameRef.current)
+      }
+      if (liangzhiReturnTimerRef.current) {
+        window.clearTimeout(liangzhiReturnTimerRef.current)
+      }
       for (const timer of sceneTimerRefs.current) {
         window.clearTimeout(timer)
       }
@@ -1266,12 +1279,38 @@ export default function ZhaoxinRitualFlow({
     setIsRevealPaused(false)
   }
 
+  const setLiangzhiHoldProgress = (progress: number) => {
+    rootRef.current?.style.setProperty("--liangzhi-p", Math.max(0, Math.min(progress, 1)).toFixed(3))
+  }
+
+  const clearLiangzhiHoldFrame = () => {
+    if (liangzhiHoldFrameRef.current !== null) {
+      window.cancelAnimationFrame(liangzhiHoldFrameRef.current)
+      liangzhiHoldFrameRef.current = null
+    }
+  }
+
   const clearLiangzhiHold = () => {
     if (liangzhiHoldTimerRef.current) {
       window.clearTimeout(liangzhiHoldTimerRef.current)
       liangzhiHoldTimerRef.current = null
     }
+    clearLiangzhiHoldFrame()
+    const wasActive = isLiangzhiHoldActiveRef.current
+    isLiangzhiHoldActiveRef.current = false
     setIsHoldingLiangzhi(false)
+
+    if (wasActive && stage === "liangzhi") {
+      setLiangzhiHoldProgress(0)
+      setIsLiangzhiReturning(true)
+      if (liangzhiReturnTimerRef.current) {
+        window.clearTimeout(liangzhiReturnTimerRef.current)
+      }
+      liangzhiReturnTimerRef.current = window.setTimeout(() => {
+        setIsLiangzhiReturning(false)
+        liangzhiReturnTimerRef.current = null
+      }, 1500)
+    }
   }
 
   const completeLiangzhiHold = () => {
@@ -1279,23 +1318,53 @@ export default function ZhaoxinRitualFlow({
     if (liangzhiHoldTimerRef.current) {
       window.clearTimeout(liangzhiHoldTimerRef.current)
     }
+    clearLiangzhiHoldFrame()
     liangzhiHoldTimerRef.current = null
+    isLiangzhiHoldActiveRef.current = false
     setIsHoldingLiangzhi(false)
+    setIsLiangzhiReturning(false)
+    setLiangzhiHoldProgress(1)
     setStage("seal")
     onRipple?.()
-    onLakeModeChange?.("liangzhi")
+    onLakeModeChange?.("still")
   }
 
-  const startLiangzhiHold = () => {
+  const updateLiangzhiHoldProgress = (timestamp: number) => {
+    if (!isLiangzhiHoldActiveRef.current) return
+
+    const rawProgress = Math.min((timestamp - liangzhiHoldStartRef.current) / LIANGZHI_HOLD_DURATION, 1)
+    const easedProgress = rawProgress * rawProgress * (3 - 2 * rawProgress)
+    setLiangzhiHoldProgress(easedProgress)
+
+    if (rawProgress >= 1) {
+      completeLiangzhiHold()
+      return
+    }
+
+    liangzhiHoldFrameRef.current = window.requestAnimationFrame(updateLiangzhiHoldProgress)
+  }
+
+  const startLiangzhiHold = (event: ReactPointerEvent<HTMLButtonElement>) => {
     if (stage !== "liangzhi") return
+    event.preventDefault()
+    event.currentTarget.setPointerCapture?.(event.pointerId)
+    if (liangzhiReturnTimerRef.current) {
+      window.clearTimeout(liangzhiReturnTimerRef.current)
+      liangzhiReturnTimerRef.current = null
+    }
+    setIsLiangzhiReturning(false)
     setIsHoldingLiangzhi(true)
+    isLiangzhiHoldActiveRef.current = true
+    liangzhiHoldStartRef.current = performance.now()
+    setLiangzhiHoldProgress(0)
     onLakeModeChange?.("liangzhi")
 
     if (liangzhiHoldTimerRef.current) {
       window.clearTimeout(liangzhiHoldTimerRef.current)
+      liangzhiHoldTimerRef.current = null
     }
-
-    liangzhiHoldTimerRef.current = window.setTimeout(completeLiangzhiHold, 960)
+    clearLiangzhiHoldFrame()
+    liangzhiHoldFrameRef.current = window.requestAnimationFrame(updateLiangzhiHoldProgress)
   }
 
   const displayTitle =
@@ -1352,7 +1421,7 @@ export default function ZhaoxinRitualFlow({
               : stage === "practice"
                 ? selectedInsight.practice
 		                : stage === "liangzhi"
-		                  ? "轻触落印，把今日心证收入心镜档案。"
+		                  ? "长按落印，把今日心证收入心镜档案。"
 	                : stage === "seal"
 	                  ? ""
                   : stage === "growth"
@@ -1361,7 +1430,10 @@ export default function ZhaoxinRitualFlow({
 
   return (
     <section
+      ref={rootRef}
       className={`zhaoxin-ritual-flow ${isHoldingLiangzhi ? "is-holding-liangzhi" : ""} ${
+        isLiangzhiReturning ? "is-liangzhi-returning" : ""
+      } ${
         isMirrorAbsorbing ? "is-focusing" : ""
       } ${initialScene ? "is-direct-thought" : ""}`}
       aria-label="照心九镜仪式"
@@ -1398,7 +1470,11 @@ export default function ZhaoxinRitualFlow({
             </h1>
           ) : stage === "liangzhi" ? (
             <div className="liangzhi-title-wrap">
-              <p className="liangzhi-step-kicker">{displayTitle}</p>
+              <div className="liangzhi-sink-ripples" aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </div>
               <button
                 type="button"
                 className={`liangzhi-title-action ${isHoldingLiangzhi ? "is-holding" : ""}`}
@@ -1406,29 +1482,14 @@ export default function ZhaoxinRitualFlow({
                 onPointerUp={clearLiangzhiHold}
                 onPointerLeave={clearLiangzhiHold}
                 onPointerCancel={clearLiangzhiHold}
-                onClick={completeLiangzhiHold}
-                aria-label="今日落印：我已照见，愿照此修行"
+                aria-label="长按我已照见，愿照此修行"
               >
                 <span>我已照见，愿照此修行</span>
-                <i aria-hidden="true" />
               </button>
             </div>
           ) : stage === "seal" ? (
-            <div className="liangzhi-sealed-state" aria-label="今日落印已完成">
-              <YangmingZhaoSeal
-                className="liangzhi-title-stamp"
-                label="已照见"
-                motion="none"
-                showLabel
-                size="lg"
-                title="已照见照字完成印"
-                tone="cinnabar"
-              />
-              <p className="liangzhi-seal-core">
-                致良知，不是消灭念头。
-                <br />
-                是念起时，知道是谁在下单。
-              </p>
+            <div className="liangzhi-still-close" aria-label="水面复静">
+              <p>一念未起时，此心本自清明。</p>
             </div>
           ) : displayTitle ? (
             <h1>{displayTitle}</h1>
@@ -1547,6 +1608,7 @@ export default function ZhaoxinRitualFlow({
 
       <style jsx>{`
         .zhaoxin-ritual-flow {
+          --liangzhi-p: 0;
           position: relative;
           z-index: 6;
           width: 100%;
@@ -1576,26 +1638,26 @@ export default function ZhaoxinRitualFlow({
         .liangzhi-hold-glow {
           position: absolute;
           left: 50%;
-          top: 58%;
+          top: 64%;
           z-index: 18;
           width: min(44vw, 22rem);
           height: min(18vw, 8.5rem);
-          transform: translate(-50%, -50%) scale(0.82);
+          transform: translate(-50%, -50%) scale(calc(0.84 + var(--liangzhi-p) * 0.22));
           border-radius: 999px;
           background:
             radial-gradient(ellipse at center, rgba(236, 226, 176, 0.28), rgba(192, 206, 188, 0.08) 36%, transparent 72%),
             radial-gradient(ellipse at 50% 60%, rgba(132, 190, 196, 0.12), transparent 66%);
-          filter: blur(18px);
-          opacity: 0;
+          filter: blur(calc(18px + var(--liangzhi-p) * 12px));
+          opacity: calc(var(--liangzhi-p) * 0.62);
           pointer-events: none;
           transition:
             opacity 520ms ease,
-            transform 960ms cubic-bezier(0.16, 1, 0.3, 1);
+            filter 720ms ease,
+            transform 720ms cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .zhaoxin-ritual-flow.is-holding-liangzhi .liangzhi-hold-glow {
-          opacity: 0.92;
-          transform: translate(-50%, -50%) scale(1.04);
+          opacity: calc(0.12 + var(--liangzhi-p) * 0.64);
         }
 
         .zhaoxin-copy {
@@ -1621,8 +1683,10 @@ export default function ZhaoxinRitualFlow({
           font-weight: 400;
           line-height: 1.45;
           letter-spacing: 0.12em;
-          color: rgba(232, 228, 210, 0.84);
-          text-shadow: 0 0 24px rgba(226, 222, 203, 0.12);
+          color: rgba(232, 228, 210, 0.94);
+          text-shadow:
+            0 0 44px rgba(0, 0, 0, 0.58),
+            0 0 22px rgba(226, 222, 203, 0.1);
           overflow-wrap: anywhere;
           text-wrap: balance;
         }
@@ -1688,7 +1752,7 @@ export default function ZhaoxinRitualFlow({
         .zhaoxin-copy.is-reveal-practiceInsight h1 {
           max-width: min(42rem, calc(100vw - 2rem));
           margin: 0 auto;
-          color: rgba(244, 235, 221, 0.88);
+          color: rgba(244, 235, 221, 0.96);
           font-size: clamp(1.48rem, 3.2vw, 2.5rem);
           line-height: 1.78;
           letter-spacing: 0.1em;
@@ -1703,7 +1767,7 @@ export default function ZhaoxinRitualFlow({
         }
 
         .zhaoxin-copy.is-thief h1 {
-          color: rgba(232, 228, 210, 0.78);
+          color: rgba(232, 228, 210, 0.9);
         }
 
         .zhaoxin-copy.is-thief.is-reveal-mirrorName {
@@ -1712,7 +1776,7 @@ export default function ZhaoxinRitualFlow({
         }
 
         .zhaoxin-copy.is-thief.is-reveal-mirrorName h1 {
-          color: rgba(244, 235, 221, 0.86);
+          color: rgba(244, 235, 221, 0.96);
           font-size: clamp(2.45rem, 6vw, 4.65rem);
           line-height: 1.22;
           letter-spacing: 0.15em;
@@ -1737,13 +1801,18 @@ export default function ZhaoxinRitualFlow({
           letter-spacing: 0.11em;
         }
 
+        .zhaoxin-copy.is-liangzhi {
+          top: 42%;
+          width: min(44rem, calc(100vw - 2rem));
+        }
+
         .zhaoxin-copy.is-growth {
           top: clamp(7.2rem, 21svh, 12.4rem);
           width: min(52rem, calc(100vw - 2rem));
         }
 
         .zhaoxin-copy.is-growth h1 {
-          color: rgba(232, 228, 210, 0.84);
+          color: rgba(232, 228, 210, 0.94);
           font-size: clamp(2.2rem, 4.6vw, 4.6rem);
           line-height: 1.22;
           letter-spacing: 0.13em;
@@ -1857,20 +1926,7 @@ export default function ZhaoxinRitualFlow({
           display: grid;
           justify-items: center;
           gap: clamp(0.9rem, 2.2svh, 1.25rem);
-        }
-
-        .zhaoxin-copy.is-liangzhi .liangzhi-step-kicker {
-          margin: 0;
-          color: rgba(216, 183, 111, 0.62);
-          font-family: var(--font-serif, "Songti SC", serif);
-          font-size: clamp(0.86rem, 1.45vw, 1.04rem);
-          font-weight: 400;
-          line-height: 1.6;
-          letter-spacing: 0.34em;
-          text-indent: 0.34em;
-          text-shadow:
-            0 0 18px rgba(216, 183, 111, 0.1),
-            0 16px 44px rgba(0, 0, 0, 0.72);
+          isolation: isolate;
         }
 
         .liangzhi-title-action {
@@ -1900,6 +1956,16 @@ export default function ZhaoxinRitualFlow({
             inset 0 1px 0 rgba(255, 255, 255, 0.08),
             inset 0 -1px 0 rgba(216, 183, 111, 0.1);
           backdrop-filter: blur(16px);
+          transform: translateY(calc(var(--liangzhi-p) * 5.4rem)) scale(calc(1 - var(--liangzhi-p) * 0.025));
+          filter:
+            blur(calc(var(--liangzhi-p) * 9px))
+            brightness(calc(1 - var(--liangzhi-p) * 0.32))
+            saturate(calc(1 - var(--liangzhi-p) * 0.18));
+          transition:
+            border-color 520ms ease,
+            box-shadow 520ms ease,
+            filter 720ms ease,
+            transform 720ms cubic-bezier(0.16, 1, 0.3, 1);
           -webkit-tap-highlight-color: transparent;
         }
 
@@ -1920,112 +1986,117 @@ export default function ZhaoxinRitualFlow({
 
         .liangzhi-title-action:hover::before,
         .liangzhi-title-action.is-holding::before {
-          opacity: 0.72;
-          transform: scale(1);
+          opacity: calc(0.24 + var(--liangzhi-p) * 0.38);
+          transform: scale(calc(0.98 + var(--liangzhi-p) * 0.08));
         }
 
         .liangzhi-title-action:active {
-          transform: translateY(1px) scale(0.996);
+          transform: translateY(calc(var(--liangzhi-p) * 5.4rem + 1px)) scale(calc(0.996 - var(--liangzhi-p) * 0.025));
         }
 
         .liangzhi-title-action span {
           position: relative;
           z-index: 1;
+          transform: translateY(calc(var(--liangzhi-p) * 0.55rem));
+          opacity: calc(1 - var(--liangzhi-p) * 0.2);
+          transition:
+            opacity 720ms ease,
+            transform 720ms cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .liangzhi-title-action i {
+        .zhaoxin-ritual-flow.is-holding-liangzhi .liangzhi-title-action,
+        .zhaoxin-ritual-flow.is-holding-liangzhi .liangzhi-title-action span {
+          transition-duration: 80ms;
+        }
+
+        .liangzhi-sink-ripples {
           position: absolute;
           left: 50%;
-          bottom: 0.86rem;
-          z-index: 1;
-          width: min(22rem, 68vw);
-          height: 1px;
-          transform: translateX(-50%) scaleX(0.16);
-          transform-origin: center;
-          background: linear-gradient(90deg, transparent, rgba(216, 183, 111, 0.72), transparent);
-          opacity: 0.32;
-          box-shadow: 0 0 16px rgba(216, 183, 111, 0.16);
-          transition:
-            opacity 220ms ease,
-            transform 220ms ease;
+          top: calc(50% + var(--liangzhi-p) * 4.2rem);
+          z-index: -1;
+          width: min(46rem, 92vw);
+          height: min(16rem, 32vw);
+          transform: translate(-50%, -50%);
+          opacity: calc(var(--liangzhi-p) * 0.74);
+          filter: blur(0.2px);
+          pointer-events: none;
         }
 
-        .liangzhi-title-action.is-holding i {
-          opacity: 0.78;
-          transform: translateX(-50%) scaleX(1);
-          transition: transform 960ms linear;
+        .liangzhi-sink-ripples span {
+          position: absolute;
+          inset: 12% 18%;
+          border: 1px solid rgba(196, 216, 212, 0.18);
+          border-radius: 999px;
+          opacity: 0;
+          transform: scale(0.32);
         }
 
-        .liangzhi-sealed-state {
+        .zhaoxin-ritual-flow.is-holding-liangzhi .liangzhi-sink-ripples span {
+          animation: liangzhiHoldRing 2200ms ease-out infinite;
+        }
+
+        .zhaoxin-ritual-flow.is-holding-liangzhi .liangzhi-sink-ripples span:nth-child(2) {
+          animation-delay: 680ms;
+        }
+
+        .zhaoxin-ritual-flow.is-holding-liangzhi .liangzhi-sink-ripples span:nth-child(3) {
+          animation-delay: 1360ms;
+        }
+
+        .zhaoxin-copy.is-seal {
+          top: 38.2svh;
+          width: min(54rem, calc(100vw - 2rem));
+          transform: translate(-50%, -50%);
+          pointer-events: none;
+        }
+
+        .zhaoxin-copy.is-seal .zhaoxin-copy-inner {
+          animation: stillSealCloseIn 1800ms cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .liangzhi-still-close {
           position: relative;
           display: grid;
+          min-height: 8rem;
           place-items: center;
-          gap: clamp(1.1rem, 2.4svh, 1.55rem);
           isolation: isolate;
         }
 
-        .liangzhi-sealed-state::before {
+        .liangzhi-still-close::before {
           content: "";
           position: absolute;
           left: 50%;
-          top: 37%;
+          top: 50%;
           z-index: 0;
-          width: min(18rem, 62vw);
-          height: min(10rem, 28vw);
+          width: min(44rem, 82vw);
+          height: min(18rem, 34svh);
           border-radius: 50%;
           background:
-            radial-gradient(ellipse at center, rgba(120, 60, 45, 0.22), transparent 62%),
-            radial-gradient(ellipse at center, rgba(216, 183, 111, 0.12), transparent 70%);
-          filter: blur(14px);
+            radial-gradient(ellipse at center, rgba(238, 230, 210, 0.09), rgba(184, 154, 88, 0.035) 35%, transparent 72%),
+            radial-gradient(ellipse at center, rgba(95, 132, 117, 0.08), transparent 68%);
+          filter: blur(38px);
           opacity: 0;
-          transform: translate(-50%, -50%) scale(0.58);
-          animation: liangzhiStampShadow 1480ms cubic-bezier(0.16, 0.86, 0.22, 1) both;
+          transform: translate(-50%, -50%) scale(0.88);
+          animation: stillSealLakeSettle 4200ms cubic-bezier(0.16, 1, 0.3, 1) both;
           pointer-events: none;
         }
 
-        .liangzhi-sealed-state::after {
-          content: "";
-          position: absolute;
-          left: 50%;
-          top: 37%;
-          z-index: 0;
-          width: min(18rem, 62vw);
-          height: min(10rem, 28vw);
-          border: 1px solid rgba(182, 91, 68, 0.28);
-          border-radius: 50%;
-          opacity: 0;
-          transform: translate(-50%, -50%) scale(0.36);
-          animation: liangzhiStampRipple 1480ms 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
-          pointer-events: none;
-        }
-
-        .liangzhi-sealed-state :global(.liangzhi-title-stamp) {
+        .liangzhi-still-close p {
           position: relative;
-          z-index: 2;
-          width: clamp(5rem, 13vw, 9rem);
-          height: clamp(5rem, 13vw, 9rem);
-          opacity: 0;
-          color: rgba(182, 91, 68, 0.84);
-          mix-blend-mode: screen;
-          transform: translateY(-1.05rem) scale(1.18) rotate(-7deg);
-          animation: liangzhiStampPress 1480ms cubic-bezier(0.16, 0.86, 0.22, 1) both;
-          pointer-events: none;
-        }
-
-        .zhaoxin-copy .liangzhi-seal-core {
-          position: relative;
-          z-index: 2;
+          z-index: 1;
           margin: 0;
-          color: rgba(220, 212, 195, 0.5);
+          max-width: min(48rem, calc(100vw - 2rem));
+          color: rgba(244, 235, 221, 0.88);
           font-family: var(--font-serif, "Songti SC", serif);
-          font-size: clamp(0.92rem, 1.6vw, 1.08rem);
+          font-size: 2.35rem;
           font-weight: 400;
-          line-height: 2.05;
-          letter-spacing: 0.12em;
+          line-height: 1.36;
+          letter-spacing: 0.1em;
           text-align: center;
+          white-space: nowrap;
           text-shadow:
-            0 0 18px rgba(216, 183, 111, 0.08),
-            0 16px 44px rgba(0, 0, 0, 0.78);
+            0 0 48px rgba(0, 0, 0, 0.64),
+            0 0 22px rgba(238, 230, 210, 0.08);
         }
 
         .zhaoxin-copy.is-scene {
@@ -2083,11 +2154,11 @@ export default function ZhaoxinRitualFlow({
         }
 
         .zhaoxin-copy.is-thought h1 {
-          color: rgba(244, 235, 221, 0.88);
+          color: rgba(244, 235, 221, 0.96);
           font-size: clamp(1.8rem, 4.2vw, 3.35rem);
           letter-spacing: 0.11em;
           text-shadow:
-            0 0 28px rgba(216, 183, 111, 0.16),
+            0 0 34px rgba(216, 183, 111, 0.14),
             0 20px 64px rgba(0, 0, 0, 0.82);
         }
 
@@ -2897,54 +2968,46 @@ export default function ZhaoxinRitualFlow({
           transform: translateY(-1px);
         }
 
-        @keyframes liangzhiStampPress {
+        @keyframes stillSealCloseIn {
           0% {
             opacity: 0;
-            transform: translateY(-1.25rem) scale(1.22) rotate(-7deg);
-            filter: blur(2px);
-          }
-          34% {
-            opacity: 0.92;
-            transform: translateY(0.36rem) scale(0.86) rotate(-7deg);
-            filter: blur(0);
-          }
-          54% {
-            opacity: 0.86;
-            transform: translateY(-0.08rem) scale(1.03) rotate(-7deg);
+            transform: translateY(1.2rem);
+            filter: blur(18px);
           }
           100% {
-            opacity: 0.64;
-            transform: translateY(0) scale(0.98) rotate(-7deg);
+            opacity: 1;
+            transform: translateY(0);
             filter: blur(0);
           }
         }
 
-        @keyframes liangzhiStampShadow {
+        @keyframes stillSealLakeSettle {
           0% {
             opacity: 0;
-            transform: translate(-50%, -50%) scale(0.5);
+            transform: translate(-50%, -50%) scale(1.08);
+            filter: blur(52px);
           }
           34% {
-            opacity: 0.86;
+            opacity: 0.52;
+          }
+          100% {
+            opacity: 0.24;
             transform: translate(-50%, -50%) scale(0.92);
-          }
-          100% {
-            opacity: 0.22;
-            transform: translate(-50%, -50%) scale(1.18);
+            filter: blur(40px);
           }
         }
 
-        @keyframes liangzhiStampRipple {
+        @keyframes liangzhiHoldRing {
           0% {
-            opacity: 0;
-            transform: translate(-50%, -50%) scale(0.28);
+            opacity: calc(var(--liangzhi-p) * 0.54);
+            transform: scale(0.28);
           }
-          36% {
-            opacity: 0.66;
+          72% {
+            opacity: calc(var(--liangzhi-p) * 0.16);
           }
           100% {
             opacity: 0;
-            transform: translate(-50%, -50%) scale(1.72);
+            transform: scale(2.18);
           }
         }
 
@@ -4219,13 +4282,13 @@ export default function ZhaoxinRitualFlow({
             text-indent: 0.1em;
           }
 
-          .liangzhi-title-action i {
-            width: min(12rem, 66vw);
+          .zhaoxin-copy.is-liangzhi {
+            top: 40%;
           }
 
-          .liangzhi-sealed-state :global(.liangzhi-title-stamp) {
-            width: clamp(4.3rem, 22vw, 6rem);
-            height: clamp(4.3rem, 22vw, 6rem);
+          .liangzhi-still-close p {
+            font-size: 1.24rem;
+            letter-spacing: 0.06em;
           }
 
           .scene-float-field::before {

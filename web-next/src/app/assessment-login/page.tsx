@@ -68,7 +68,7 @@ export default function AssessmentLoginPage() {
   }
 
   return (
-    <AssessmentShell contentWidth="wide">
+    <AssessmentShell background="home-water" contentWidth="wide">
       <div className="login-page mx-auto grid w-full max-w-[1120px] gap-6">
         <section className="login-copy">
           <div className="login-eyebrow">
@@ -129,7 +129,7 @@ export default function AssessmentLoginPage() {
             type="button"
             onClick={saveAndContinue}
             disabled={!phoneValid || !codeValid || submitting}
-            className="w-full"
+            className="login-primary-button justify-self-center w-full max-w-[20rem] !min-h-[3.5rem] !rounded-full !bg-[linear-gradient(180deg,#dcc67c_0%,#b99d56_52%,#92743a_100%)] !px-8 !text-[0.94rem] !text-[#0b0a07] !shadow-[0_16px_34px_rgba(0,0,0,.34),0_0_18px_rgba(216,183,111,.08),inset_0_1px_0_rgba(255,255,255,.28)] enabled:hover:!brightness-110 enabled:hover:!shadow-[0_18px_40px_rgba(0,0,0,.36),0_0_24px_rgba(216,183,111,.14),inset_0_1px_0_rgba(255,255,255,.34)] disabled:!cursor-not-allowed disabled:!opacity-[.76] disabled:!brightness-[.98] disabled:!saturate-[.95] disabled:!text-[rgba(10,10,8,.78)]"
           >
             {submitting ? "归档中..." : "进入照心 →"}
           </PrimaryButton>
@@ -177,10 +177,9 @@ export default function AssessmentLoginPage() {
             width: min(42vw, 390px);
             aspect-ratio: 1;
             border-radius: 50%;
-            background:
-              repeating-radial-gradient(circle, rgba(216, 183, 111, 0.048) 0 1px, transparent 1px 18px),
-              radial-gradient(circle, rgba(95, 132, 117, 0.06), transparent 58%);
-            opacity: 0.48;
+            background: radial-gradient(circle, rgba(238, 230, 210, 0.032), transparent 62%);
+            filter: blur(18px);
+            opacity: 0.2;
             z-index: -1;
           }
 
