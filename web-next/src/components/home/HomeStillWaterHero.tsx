@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react"
 import { useRouter } from "next/navigation"
 
+import HeroRightZhaoSeal from "@/components/home/HeroRightZhaoSeal"
 import { YangmingA1Mark } from "@/components/brand/yangming-mark"
 
 import styles from "./HomeStillWaterHero.module.css"
@@ -201,27 +202,33 @@ export default function HomeStillWaterHero() {
       </div>
 
       <div data-home-roll-plane className={styles.content}>
-        <span className={styles.zhaoMark} aria-hidden="true">
-          <YangmingA1Mark className={styles.zhaoGlyph} role="presentation" aria-hidden="true" />
-        </span>
+        <div className={styles.copy}>
+          <span className={styles.zhaoMark} aria-hidden="true">
+            <YangmingA1Mark className={styles.zhaoGlyph} role="presentation" aria-hidden="true" />
+          </span>
 
-        <h1 className={styles.title} data-hero-title aria-label="心不静，交易必乱。">
-          <span>心不静，</span>
-          <span>交易必乱。</span>
-        </h1>
+          <h1 className={styles.title} data-hero-title aria-label="心不静，交易必乱。">
+            <span>心不静，</span>
+            <span>交易必乱。</span>
+          </h1>
 
-        <p className={styles.couplet} aria-label="市场照见价格 · 心镜照见自己">
-          <span className={`${styles.coupletPhrase} ${styles.coupletMarket}`}>市场照见价格</span>
-          <span className={styles.coupletDot} aria-hidden="true">｜</span>
-          <span className={`${styles.coupletPhrase} ${styles.coupletMirror}`}>心镜照见自己</span>
-        </p>
-        <div className={styles.entryGroup}>
-          <p className={styles.subcopy}>今天，你起了哪一念？</p>
+          <p className={styles.couplet} aria-label="市场照见价格 · 心镜照见自己">
+            <span className={`${styles.coupletPhrase} ${styles.coupletMarket}`}>市场照见价格</span>
+            <span className={styles.coupletDot} aria-hidden="true">｜</span>
+            <span className={`${styles.coupletPhrase} ${styles.coupletMirror}`}>心镜照见自己</span>
+          </p>
+          <div className={styles.entryGroup}>
+            <p className={styles.subcopy}>今天，你起了哪一念？</p>
 
-          <a href={REFLECT_ENTRY_HREF} className={styles.door} data-no-ripple="true" onClick={enterReflect}>
-            <span className={styles.doorMain}>照见一念　→</span>
-            <span className={styles.doorLine} aria-hidden="true" />
-          </a>
+            <a href={REFLECT_ENTRY_HREF} className={styles.door} data-no-ripple="true" onClick={enterReflect}>
+              <span className={styles.doorMain}>照见一念　→</span>
+              <span className={styles.doorLine} aria-hidden="true" />
+            </a>
+          </div>
+        </div>
+
+        <div className={styles.rightSealStage}>
+          <HeroRightZhaoSeal className={styles.rightSealWatermark} />
         </div>
       </div>
 

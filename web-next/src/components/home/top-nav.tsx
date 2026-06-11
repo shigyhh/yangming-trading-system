@@ -189,19 +189,19 @@ export function TopNav() {
     <motion.header
       className="home-top-nav-shell font-function fixed inset-x-0 top-0 z-40 border-b border-[rgba(217,189,122,.01)] bg-[#080807]/3 backdrop-blur-2xl"
       initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: scrollFade * 0.74, y: -(1 - scrollFade) * 22 }}
+      animate={{ opacity: scrollFade * 0.82, y: -(1 - scrollFade) * 22 }}
       whileHover={scrollFade > 0.08 ? { opacity: Math.min(0.9, scrollFade * 0.9) } : undefined}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       style={{ pointerEvents: scrollFade > 0.08 ? "auto" : "none" }}
     >
       <nav className="mx-auto flex min-h-16 w-full max-w-[1360px] items-center justify-between gap-6 px-5 md:min-h-[72px] md:px-8">
-        <a href="#hero" className="group flex items-center gap-3 opacity-[.62] no-underline transition duration-700 hover:opacity-[.9]">
+        <a href="#hero" className="group flex items-center gap-3 opacity-100 no-underline transition duration-700 hover:opacity-[.96]">
           <span className="home-nav-zhao" aria-hidden="true">
             <YangmingA1Mark className="home-nav-zhao-glyph" role="presentation" aria-hidden="true" />
           </span>
           <span className="flex flex-col">
-            <strong className="type-level-5 text-[rgba(216,183,111,.7)]">阳明心学交易系统</strong>
-            <em className="type-level-4 mt-1 text-[0.62rem] not-italic text-muted-cream opacity-58">见行情 · 见心 · 见人格</em>
+            <strong className="type-level-5 text-[rgba(216,183,111,.82)]">阳明心学交易系统</strong>
+            <em className="type-level-4 mt-1 text-[0.62rem] not-italic text-muted-cream opacity-[.82]">见行情 · 见心 · 见人格</em>
           </span>
         </a>
         <div className="hidden items-center gap-3 md:flex">
@@ -213,8 +213,8 @@ export function TopNav() {
                 onClick={(event) => enterRouteThroughWater(event, item.href)}
                 className={`relative rounded-full px-2.5 py-2 font-function text-[0.64rem] font-semibold tracking-[.18em] no-underline transition duration-500 hover:bg-[rgba(217,189,122,.04)] hover:text-[rgba(244,235,221,.86)] ${
                   isActive(item.href)
-                    ? "text-[rgba(216,183,111,.84)] after:absolute after:left-1/2 after:top-full after:size-1 after:-translate-x-1/2 after:rounded-full after:bg-[rgba(216,183,111,.62)]"
-                    : "text-[rgba(220,212,195,.7)]"
+                    ? "text-[rgba(216,183,111,.86)] after:absolute after:left-1/2 after:top-full after:size-1 after:-translate-x-1/2 after:rounded-full after:bg-[rgba(216,183,111,.62)]"
+                    : "text-[rgba(220,212,195,.82)]"
                 }`}
               >
                 {item.label}
@@ -228,8 +228,8 @@ export function TopNav() {
                 onClick={(event) => enterRouteThroughWater(event, item.href)}
                 className={`relative rounded-full px-2.5 py-2 font-function text-[0.64rem] font-semibold tracking-[.18em] no-underline transition duration-500 hover:bg-[rgba(217,189,122,.035)] hover:text-[rgba(244,235,221,.82)] ${
                   isActive(item.href)
-                    ? "text-[rgba(216,183,111,.78)] after:absolute after:left-1/2 after:top-full after:size-1 after:-translate-x-1/2 after:rounded-full after:bg-[rgba(216,183,111,.54)]"
-                    : "text-[rgba(220,212,195,.62)]"
+                    ? "text-[rgba(216,183,111,.86)] after:absolute after:left-1/2 after:top-full after:size-1 after:-translate-x-1/2 after:rounded-full after:bg-[rgba(216,183,111,.54)]"
+                    : "text-[rgba(220,212,195,.82)]"
                 }`}
               >
                 {item.label}

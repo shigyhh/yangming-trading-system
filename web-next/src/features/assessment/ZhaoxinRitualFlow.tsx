@@ -98,6 +98,17 @@ type StageCopy = {
 
 type ArchiveSyncPhase = "choice" | "form" | "synced" | "local"
 
+type PostSealContinueDraft = {
+  entry: "post_seal_continue"
+  source: "one_thought_ritual"
+  ritualVersion: typeof ONE_THOUGHT_RITUAL_VERSION
+  reflectionVersion: typeof PRIVATE_REFLECTION_VERSION
+  previousEventId: string
+  stage: "zhaojian_this_thought"
+  sceneId: string
+  itemId: string
+}
+
 type TradingScene =
   | "surge"
   | "plunge"
@@ -457,8 +468,8 @@ const stageText: Record<Stage, StageCopy> = {
     sub: "",
   },
   growth: {
-    title: "这一念，已入今日所照。",
-    sub: "",
+    title: "此念已落印",
+    sub: "这一念，已入今日所照。",
   },
 }
 
@@ -881,6 +892,8 @@ export default function ZhaoxinRitualFlow({
   const [isSendingArchiveCode, setIsSendingArchiveCode] = useState(false)
   const [isBindingArchivePhone, setIsBindingArchivePhone] = useState(false)
   const [sealedOneThoughtRecordId, setSealedOneThoughtRecordId] = useState("")
+  const [sealedOneThoughtEventId, setSealedOneThoughtEventId] = useState("")
+  const [postSealContinueDraft, setPostSealContinueDraft] = useState<PostSealContinueDraft | null>(null)
   const [heartProofSequenceNumber, setHeartProofSequenceNumber] = useState(1)
   const rootRef = useRef<HTMLElement | null>(null)
   const absorbTimerRef = useRef<number | null>(null)
@@ -954,6 +967,7 @@ export default function ZhaoxinRitualFlow({
   const reflectionLineCount = selectedInsight.reflection.length
   const isTodayOneThoughtLimitReached = todayOneThought.remainingConfirmations <= 0
   const shouldBlockTodayOneThoughtConfirmation = isTodayOneThoughtLimitReached && !allowTodayOneThoughtPreviewLimitBypass
+  const canStartPostSealContinue = todayOneThought.remainingConfirmations > 0
   const growthEvidenceLine = compactRitualLine(selectedInsight.evidence)
   const growthPracticeLine = compactRitualLine(selectedInsight.practice)
   const archiveLoginPhoneValid = isMainlandPhone(archiveLoginPhone)
@@ -993,7 +1007,7 @@ export default function ZhaoxinRitualFlow({
   }, [rememberFloatingThought, todayOneThought.thoughtId])
 
   useEffect(() => {
-    if (stage !== "thought" || isMirrorAbsorbing || shouldBlockTodayOneThoughtConfirmation) return undefined
+    if (stage !== "thought" || isMirrorAbsorbing || shouldBlockTodayOneThoughtConfirmation || postSealContinueDraft) return undefined
 
     let isFloatingThoughtCancelled = false
     let floatTimer: number | null = null
@@ -1027,6 +1041,7 @@ export default function ZhaoxinRitualFlow({
     getFloatingThoughtExclusions,
     isMirrorAbsorbing,
     onRipple,
+    postSealContinueDraft,
     rememberFloatingThought,
     stage,
     shouldBlockTodayOneThoughtConfirmation,
@@ -1069,6 +1084,7 @@ export default function ZhaoxinRitualFlow({
         })
 
         const oneThoughtRecordId = `one_thought_${sourceId}`
+        const oneThoughtEventId = `one_thought_event_${sourceId}`
         const finalReflectionEntry = getReflection(selectedThought.sceneId, selectedThought.id)
         if (!finalReflectionEntry) return
 
@@ -1081,7 +1097,7 @@ export default function ZhaoxinRitualFlow({
           syncStatus: hasSavedPhone() ? "synced" : "local_only",
         }))
         createOneThoughtEvent({
-          id: `one_thought_event_${sourceId}`,
+          id: oneThoughtEventId,
           userId: DEFAULT_MIND_ARCHIVE_USER_ID,
           sceneId: selectedThought.sceneId,
           itemId: selectedThought.id,
@@ -1126,6 +1142,7 @@ export default function ZhaoxinRitualFlow({
         markReflectEntered()
         setHeartProofSequenceNumber(nextSequenceNumber)
         setSealedOneThoughtRecordId(oneThoughtRecordId)
+        setSealedOneThoughtEventId(oneThoughtEventId)
         setStage("growth")
         setRevealStep("idle")
         onLakeModeChange?.(modeForStage("growth"))
@@ -1368,6 +1385,7 @@ export default function ZhaoxinRitualFlow({
     setMirrorsCanInteract(false)
     setIsRevealPaused(false)
     setSelectedReaction(null)
+    setPostSealContinueDraft(null)
     setArchiveSyncPhase("choice")
     setArchiveLoginMessage("")
     setRevealStep("idle")
@@ -1375,6 +1393,66 @@ export default function ZhaoxinRitualFlow({
     onLakeModeChange?.(mirror.lakeMode)
     setStage("thief")
     setRevealStep("reflectionOne")
+  }
+
+  const buildPostSealContinueDraft = (nextThought: TodayOneThoughtSnapshot): PostSealContinueDraft => ({
+    entry: "post_seal_continue",
+    source: "one_thought_ritual",
+    ritualVersion: ONE_THOUGHT_RITUAL_VERSION,
+    reflectionVersion: PRIVATE_REFLECTION_VERSION,
+    previousEventId: sealedOneThoughtEventId,
+    stage: "zhaojian_this_thought",
+    sceneId: nextThought.sceneId,
+    itemId: nextThought.itemId,
+  })
+
+  const applyPostSealContinueThought = (nextThought: TodayOneThoughtSnapshot) => {
+    const nextEntry = thoughtEntryForId(nextThought.thoughtId)
+    const nextMirror = mirrorForKey(nextThought.mirrorId)
+
+    setTodayOneThought(nextThought)
+    setSelectedScene(normalizeTradingScene(nextEntry.scene))
+    setSelectedIntensity(normalizeTradingIntensity(nextEntry.intensity))
+    setSelectedMirrorId(nextMirror.key)
+    setPreviewMirrorId(nextMirror.key)
+    setMirrorsCanInteract(false)
+    setIsRevealPaused(false)
+    setSelectedReaction(null)
+    setArchiveSyncPhase("choice")
+    setArchiveLoginMessage("")
+    setRevealStep("idle")
+    onRipple?.()
+    onLakeModeChange?.("thought")
+    setStage("thought")
+  }
+
+  const startPostSealContinue = () => {
+    if (!canStartPostSealContinue) return
+
+    const nextThought = drawTodayOneThought(todayOneThought.storedState, {
+      excludeThoughtIds: [todayOneThought.thoughtId],
+    })
+
+    if (nextThought.thoughtId === todayOneThought.thoughtId) {
+      window.location.href = "/assessment-entry"
+      return
+    }
+
+    setPostSealContinueDraft(buildPostSealContinueDraft(nextThought))
+    applyPostSealContinueThought(nextThought)
+  }
+
+  const changePostSealContinueThought = () => {
+    if (!postSealContinueDraft || shouldBlockTodayOneThoughtConfirmation) return
+
+    const nextThought = drawTodayOneThought(todayOneThought.storedState, {
+      excludeThoughtIds: [todayOneThought.thoughtId],
+    })
+
+    if (nextThought.thoughtId === todayOneThought.thoughtId) return
+
+    setPostSealContinueDraft(buildPostSealContinueDraft(nextThought))
+    applyPostSealContinueThought(nextThought)
   }
 
   const pauseReveal = () => {
@@ -1616,7 +1694,7 @@ export default function ZhaoxinRitualFlow({
 	                : stage === "seal"
 	                  ? ""
                   : stage === "growth"
-                    ? ""
+                    ? stageText.growth.sub
                     : stageText[stage].sub
 
   return (
@@ -1712,7 +1790,7 @@ export default function ZhaoxinRitualFlow({
           {displaySub ? <p>{displaySub}</p> : null}
           {stage === "growth" ? (
             <div className="growth-proof" aria-label="今日所照落印记录">
-              <p className="growth-proof-sequence">照见第{heartProofSequenceNumber}念</p>
+              <p className="growth-proof-sequence">落印报告 · 照见第{heartProofSequenceNumber}念</p>
               <div className="growth-proof-ledger">
                 <div className="growth-proof-row">
                   <span>本次一念</span>
@@ -1742,8 +1820,11 @@ export default function ZhaoxinRitualFlow({
               <div className="growth-archive-coda" aria-label="落印后归档选择">
                 {archiveSyncPhase === "choice" ? (
                   <>
-                    <p className="growth-coda-title">此念已落印</p>
-                    <p className="growth-coda-copy">本机今日所照已保存。</p>
+                    <p className="growth-coda-copy">
+                      本机今日所照已保存。
+                      <br />
+                      不登录，也不影响本次落印。
+                    </p>
                     <p className="growth-coda-ask">要把这一念同步到档案馆吗？</p>
                     <div className="growth-coda-actions">
                       <button type="button" className="growth-coda-button" onClick={beginArchiveSync}>
@@ -1818,13 +1899,28 @@ export default function ZhaoxinRitualFlow({
                   <>
                     <p className="growth-coda-title">已同步到档案馆。</p>
                     <p className="growth-coda-copy">换设备后，也能找回这一念。</p>
+                    {!canStartPostSealContinue ? (
+                      <p className="growth-coda-limit">
+                        今日三念已满。
+                        <br />
+                        先回今日所照，看这几念怎么动。
+                      </p>
+                    ) : null}
                     <div className="growth-coda-actions">
-                      <a className="growth-coda-link" href="/mind-archive">
-                        查看档案馆
-                      </a>
-                      <a className="growth-coda-link is-quiet" href="/assessment-entry">
-                        继续照见一念
-                      </a>
+                      {canStartPostSealContinue ? (
+                        <>
+                          <a className="growth-coda-link" href="/mind-archive">
+                            查看档案馆
+                          </a>
+                          <button type="button" className="growth-coda-button is-quiet" onClick={startPostSealContinue}>
+                            再照一念
+                          </button>
+                        </>
+                      ) : (
+                        <a className="growth-coda-link" href="/today-sealed">
+                          查看今日所照
+                        </a>
+                      )}
                     </div>
                   </>
                 ) : null}
@@ -1833,13 +1929,22 @@ export default function ZhaoxinRitualFlow({
                   <>
                     <p className="growth-coda-title">已留在本机。</p>
                     <p className="growth-coda-copy">这一念仍会出现在今日所照。</p>
+                    {!canStartPostSealContinue ? (
+                      <p className="growth-coda-limit">
+                        今日三念已满。
+                        <br />
+                        先回今日所照，看这几念怎么动。
+                      </p>
+                    ) : null}
                     <div className="growth-coda-actions">
                       <a className="growth-coda-link" href="/today-sealed">
                         查看今日所照
                       </a>
-                      <a className="growth-coda-link is-quiet" href="/assessment-entry">
-                        继续照见一念
-                      </a>
+                      {canStartPostSealContinue ? (
+                        <button type="button" className="growth-coda-button is-quiet" onClick={startPostSealContinue}>
+                          再照一念
+                        </button>
+                      ) : null}
                     </div>
                   </>
                 ) : null}
@@ -1918,6 +2023,15 @@ export default function ZhaoxinRitualFlow({
               ? "照见此念"
               : "今日已照三念，宜止。"}
           </button>
+          {postSealContinueDraft && !shouldBlockTodayOneThoughtConfirmation ? (
+            <button
+              type="button"
+              className="ritual-thought-change is-thought-change"
+              onClick={changePostSealContinueThought}
+            >
+              换一念
+            </button>
+          ) : null}
           {!shouldBlockTodayOneThoughtConfirmation ? (
             <p className="ritual-thought-hint">若这一念正是你，请轻触照见。</p>
           ) : (
@@ -2130,32 +2244,49 @@ export default function ZhaoxinRitualFlow({
         }
 
         .zhaoxin-copy.is-growth {
-          top: clamp(5.4rem, 16svh, 9.4rem);
-          width: min(58rem, calc(100vw - 2rem));
+          top: clamp(3.2rem, 8.5svh, 5.6rem);
+          width: min(64rem, calc(100vw - 2rem));
+          max-height: calc(100svh - clamp(4.4rem, 9svh, 6.8rem));
+          overflow-y: auto;
+          padding: 0 0 1.5rem;
+          scrollbar-width: none;
+        }
+
+        .zhaoxin-copy.is-growth::-webkit-scrollbar {
+          display: none;
         }
 
         .zhaoxin-copy.is-growth h1 {
           color: rgba(238, 232, 214, 0.96);
-          font-size: clamp(3rem, 6.8vw, 7.1rem);
-          line-height: 1.08;
-          letter-spacing: 0.11em;
+          font-size: clamp(4.5rem, 5.4vw, 5.5rem);
+          line-height: 1.12;
+          letter-spacing: 0.08em;
           text-shadow:
             0 0 40px rgba(216, 183, 111, 0.08),
             0 28px 90px rgba(0, 0, 0, 0.86);
         }
 
+        .zhaoxin-copy.is-growth > .zhaoxin-copy-inner > p {
+          margin-top: 0.5rem;
+          color: rgba(232, 228, 210, 0.68);
+          font-family: var(--font-serif, "Songti SC", serif);
+          font-size: clamp(1.25rem, 1.7vw, 1.5rem);
+          line-height: 1.65;
+          letter-spacing: 0.08em;
+        }
+
         .growth-proof {
           position: relative;
           display: grid;
-          gap: clamp(0.62rem, 1.35svh, 0.9rem);
-          width: min(48rem, 100%);
-          margin: clamp(2.1rem, 4svh, 3rem) auto 0;
-          color: rgba(220, 212, 195, 0.58);
+          gap: clamp(0.78rem, 1.5svh, 1.05rem);
+          width: min(58rem, 100%);
+          margin: clamp(1.35rem, 2.8svh, 2rem) auto 0;
+          color: rgba(220, 212, 195, 0.74);
           font-family: var(--font-serif, "Songti SC", serif);
-          font-size: clamp(0.8rem, 1.08vw, 0.94rem);
+          font-size: clamp(0.96rem, 1.18vw, 1.08rem);
           font-weight: 400;
-          line-height: 1.72;
-          letter-spacing: 0.08em;
+          line-height: 1.76;
+          letter-spacing: 0.045em;
           text-align: left;
           text-shadow:
             0 0 18px rgba(216, 183, 111, 0.06),
@@ -2182,19 +2313,19 @@ export default function ZhaoxinRitualFlow({
 
         .growth-proof-ledger {
           display: grid;
-          width: min(43rem, 100%);
+          width: min(52rem, 100%);
           margin: 0 auto;
-          border-top: 1px solid rgba(216, 183, 111, 0.16);
-          border-bottom: 1px solid rgba(216, 183, 111, 0.14);
+          border-top: 1px solid rgba(216, 183, 111, 0.2);
+          border-bottom: 1px solid rgba(216, 183, 111, 0.16);
         }
 
         .growth-proof-row {
           display: grid;
-          grid-template-columns: minmax(6.2rem, 8.2rem) minmax(0, 1fr);
-          gap: clamp(1.1rem, 2.5vw, 2.2rem);
+          grid-template-columns: minmax(6.8rem, 9.2rem) minmax(0, 1fr);
+          gap: clamp(1.25rem, 2.8vw, 2.45rem);
           align-items: baseline;
-          padding: clamp(0.48rem, 1svh, 0.72rem) 0;
-          border-bottom: 1px solid rgba(216, 183, 111, 0.085);
+          padding: clamp(0.62rem, 1.1svh, 0.86rem) 0;
+          border-bottom: 1px solid rgba(216, 183, 111, 0.105);
         }
 
         .growth-proof-row:last-child {
@@ -2202,70 +2333,78 @@ export default function ZhaoxinRitualFlow({
         }
 
         .growth-proof-row span {
-          color: rgba(216, 183, 111, 0.66);
+          color: rgba(216, 183, 111, 0.58);
+          font-family: var(--font-sans, system-ui, sans-serif);
+          font-size: clamp(0.78rem, 0.95vw, 0.88rem);
           font-weight: 400;
-          letter-spacing: 0.22em;
+          letter-spacing: 0.18em;
           white-space: nowrap;
         }
 
         .growth-proof-row strong {
-          color: rgba(226, 222, 204, 0.66);
+          color: rgba(238, 232, 214, 0.86);
           font-weight: 400;
-          letter-spacing: 0.075em;
+          letter-spacing: 0.045em;
           overflow-wrap: anywhere;
           text-wrap: pretty;
         }
 
         .growth-proof-sequence {
           margin: 0;
-          color: rgba(216, 183, 111, 0.52);
+          color: rgba(216, 183, 111, 0.68);
           font-family: var(--font-sans, system-ui, sans-serif);
-          font-size: clamp(0.72rem, 1vw, 0.88rem);
+          font-size: clamp(0.82rem, 1.05vw, 0.96rem);
           font-weight: 600;
-          letter-spacing: 0.28em;
-          text-indent: 0.28em;
+          letter-spacing: 0.2em;
+          text-indent: 0.2em;
           text-align: center;
         }
 
         .growth-archive-coda {
           display: grid;
           justify-items: center;
-          gap: 0.72rem;
-          width: min(34rem, 100%);
-          margin: clamp(1.1rem, 2.4svh, 1.65rem) auto 0;
-          border-top: 1px solid rgba(216, 183, 111, 0.13);
-          padding-top: clamp(0.95rem, 2svh, 1.35rem);
-          color: rgba(220, 212, 195, 0.62);
+          gap: 0.82rem;
+          width: min(40rem, 100%);
+          margin: clamp(1.15rem, 2.4svh, 1.7rem) auto 0;
+          border-top: 1px solid rgba(216, 183, 111, 0.17);
+          padding-top: clamp(1rem, 2svh, 1.4rem);
+          color: rgba(220, 212, 195, 0.74);
           text-align: center;
           animation: growthCodaIn 720ms ease 900ms both;
         }
 
         .growth-coda-title,
         .growth-coda-ask,
-        .growth-coda-copy {
+        .growth-coda-copy,
+        .growth-coda-limit {
           margin: 0;
         }
 
         .growth-coda-title {
           color: rgba(244, 235, 221, 0.86);
           font-family: var(--font-serif, "Songti SC", serif);
-          font-size: clamp(1.05rem, 1.7vw, 1.32rem);
+          font-size: clamp(1.08rem, 1.7vw, 1.34rem);
           font-weight: 400;
           line-height: 1.55;
           letter-spacing: 0.12em;
         }
 
         .growth-coda-copy,
-        .growth-coda-ask {
-          color: rgba(220, 212, 195, 0.58);
+        .growth-coda-ask,
+        .growth-coda-limit {
+          color: rgba(220, 212, 195, 0.72);
           font-family: var(--font-sans, system-ui, sans-serif);
-          font-size: clamp(0.78rem, 1vw, 0.9rem);
-          line-height: 1.85;
+          font-size: clamp(0.88rem, 1.02vw, 0.98rem);
+          line-height: 1.78;
           letter-spacing: 0.06em;
         }
 
         .growth-coda-ask {
-          color: rgba(216, 183, 111, 0.68);
+          color: rgba(216, 183, 111, 0.78);
+        }
+
+        .growth-coda-limit {
+          color: rgba(220, 212, 195, 0.62);
         }
 
         .growth-coda-actions {
@@ -2290,11 +2429,12 @@ export default function ZhaoxinRitualFlow({
           color: rgba(216, 183, 111, 0.78);
           cursor: pointer;
           font-family: var(--font-sans, system-ui, sans-serif);
-          font-size: clamp(0.76rem, 1vw, 0.9rem);
+          font-size: clamp(0.86rem, 1vw, 0.94rem);
           font-weight: 700;
-          letter-spacing: 0.12em;
+          letter-spacing: 0.1em;
           line-height: 1.35;
-          padding: 0.72rem 1rem;
+          min-height: 2.5rem;
+          padding: 0.74rem 1.18rem;
           text-decoration: none;
           transition:
             opacity 260ms ease,
@@ -2308,6 +2448,15 @@ export default function ZhaoxinRitualFlow({
         .growth-coda-link.is-quiet {
           background: transparent;
           color: rgba(220, 212, 195, 0.66);
+        }
+
+        .growth-coda-button:not(.is-quiet),
+        .growth-coda-link:not(.is-quiet) {
+          border-color: rgba(216, 183, 111, 0.34);
+          background:
+            linear-gradient(180deg, rgba(216, 183, 111, 0.22), rgba(120, 96, 50, 0.12)),
+            rgba(8, 8, 7, 0.36);
+          color: rgba(244, 235, 221, 0.88);
         }
 
         .growth-coda-button:hover,
@@ -2412,38 +2561,59 @@ export default function ZhaoxinRitualFlow({
 
         @media (max-width: 560px) {
           .zhaoxin-copy.is-growth {
-            top: clamp(4.8rem, 12svh, 6.8rem);
+            top: clamp(2.1rem, 5.8svh, 3.2rem);
+            max-height: calc(100svh - 3rem);
+            width: min(24rem, calc(100vw - 1.6rem));
+            padding-bottom: 1rem;
           }
 
           .zhaoxin-copy.is-growth h1 {
-            font-size: clamp(2.35rem, 12vw, 4rem);
-            letter-spacing: 0.08em;
+            font-size: clamp(2.5rem, 11.5vw, 3rem);
+            line-height: 1.16;
+            letter-spacing: 0.06em;
+          }
+
+          .zhaoxin-copy.is-growth > .zhaoxin-copy-inner > p {
+            margin-top: 0.38rem;
+            font-size: clamp(1rem, 4.4vw, 1.12rem);
+            line-height: 1.65;
+            letter-spacing: 0.06em;
           }
 
           .growth-proof {
-            width: min(22rem, 100%);
-            margin-top: clamp(1.45rem, 3svh, 2rem);
+            width: min(23rem, 100%);
+            margin-top: clamp(1rem, 2.4svh, 1.35rem);
+            font-size: clamp(0.94rem, 3.8vw, 1.02rem);
+            line-height: 1.72;
+          }
+
+          .growth-proof-ledger {
+            width: 100%;
           }
 
           .growth-proof-row {
             grid-template-columns: 1fr;
-            gap: 0.1rem;
-            padding: 0.5rem 0;
+            gap: 0.18rem;
+            padding: 0.62rem 0;
           }
 
           .growth-archive-coda {
-            width: min(22rem, 100%);
+            width: min(23rem, 100%);
+            gap: 0.72rem;
+            margin-top: 1rem;
           }
 
           .growth-coda-actions {
             align-items: stretch;
             flex-direction: column;
             width: 100%;
+            gap: 0.62rem;
           }
 
           .growth-coda-button,
           .growth-coda-link {
             width: 100%;
+            min-height: 2.65rem;
           }
 
           .archive-login-code-row {
@@ -2451,8 +2621,8 @@ export default function ZhaoxinRitualFlow({
           }
 
           .growth-proof-row span {
-            font-size: 0.74rem;
-            letter-spacing: 0.18em;
+            font-size: 0.78rem;
+            letter-spacing: 0.15em;
           }
         }
 
@@ -3522,6 +3692,35 @@ export default function ZhaoxinRitualFlow({
             linear-gradient(180deg, rgba(34, 35, 31, 0.62), rgba(5, 6, 4, 0.82)),
             radial-gradient(ellipse at 50% 0%, rgba(220, 212, 195, 0.055), transparent 72%);
           transform: none;
+        }
+
+        .thought-actions .ritual-thought-change {
+          display: inline-grid;
+          min-height: 2.35rem;
+          place-items: center;
+          border: 1px solid rgba(216, 183, 111, 0.18);
+          border-radius: 999px;
+          background: rgba(8, 8, 7, 0.24);
+          color: rgba(220, 212, 195, 0.62);
+          cursor: pointer;
+          font-family: var(--font-serif, "Songti SC", serif);
+          font-size: clamp(0.78rem, 1.2vw, 0.9rem);
+          font-weight: 400;
+          letter-spacing: 0.14em;
+          line-height: 1.35;
+          padding: 0.5rem 1.1rem;
+          pointer-events: auto;
+          transition:
+            border-color 260ms ease,
+            color 260ms ease,
+            transform 260ms ease;
+          animation: thoughtActionStackRise 1500ms cubic-bezier(0.16, 1, 0.3, 1) 1850ms both;
+        }
+
+        .thought-actions .ritual-thought-change:hover {
+          border-color: rgba(216, 183, 111, 0.32);
+          color: rgba(244, 235, 221, 0.78);
+          transform: translateY(-1px);
         }
 
         .thought-actions .ritual-thought-hint {
