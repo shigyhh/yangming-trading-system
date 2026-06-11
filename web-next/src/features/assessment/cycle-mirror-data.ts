@@ -23,7 +23,7 @@ const mirrorCaseIdByName: Record<string, string> = {
   追涨之镜: "chasing",
   扛单之镜: "holdingLoss",
   幻想之镜: "fantasy",
-  赌性之镜: "gambling",
+  执念之镜: "gambling",
   从众之镜: "following",
   犹疑之镜: "hesitation",
   拖延之镜: "procrastination",
@@ -35,7 +35,7 @@ const mirrorActionMap: Record<string, string> = {
   追涨之镜: "追涨",
   扛单之镜: "扛单",
   幻想之镜: "补故事",
-  赌性之镜: "加重动作",
+  执念之镜: "加重动作",
   从众之镜: "跟随外声",
   犹疑之镜: "反复等待",
   拖延之镜: "推迟复盘",
@@ -47,7 +47,7 @@ const legacyPersonaMirrorMap: Record<string, MirrorName> = {
   冲动型: "追涨之镜",
   扛单型: "扛单之镜",
   完美型: "犹疑之镜",
-  赌徒型: "赌性之镜",
+  赌徒型: "执念之镜",
   从众型: "从众之镜",
   偏执型: "幻想之镜",
   拖延型: "拖延之镜",
@@ -215,7 +215,7 @@ function inferRetrigger(mirror: MirrorName, thought: string) {
     }
   }
 
-  if (mirror === "赌性之镜") {
+  if (mirror === "执念之镜") {
     return {
       short: "更想翻回。",
       detail: "如果把上一笔情绪带到下一笔，循环会变成用行动修复不甘。",
@@ -239,7 +239,7 @@ function buildPracticeLine(mirror: MirrorName) {
   if (mirror === "追涨之镜") return "今日只练一件事：计划外拉升前，先停十秒，再写入场条件。"
   if (mirror === "从众之镜") return "今日只练一件事：听到外部声音后，先写自己的判断。"
   if (mirror === "扛单之镜") return "今日只练一件事：边界触发后，不解释，只记录并执行原计划。"
-  if (mirror === "赌性之镜") return "今日只练一件事：上一笔情绪未落定前，不急着开始下一笔。"
+  if (mirror === "执念之镜") return "今日只练一件事：上一笔情绪未落定前，不急着开始下一笔。"
   if (mirror === "焦虑之镜") return "今日只练一件事：怕回吐出现时，先回看原计划。"
   return "今日只练一件事：念头出现时，先照见，再复盘。"
 }
@@ -248,7 +248,7 @@ function inferMirrorFromText(text: string): MirrorName {
   if (/怕错过|错过|上车|拉升|追|冲动|来不及/.test(text)) return "追涨之镜"
   if (/群|大家|别人|外部|消息|问/.test(text)) return "从众之镜"
   if (/不认错|不甘|扛|止损|边界/.test(text)) return "扛单之镜"
-  if (/翻本|赌|回本|报复/.test(text)) return "赌性之镜"
+  if (/翻本|赌|回本|报复/.test(text)) return "执念之镜"
   if (/怕回吐|焦虑|空仓|恐慌|紧张/.test(text)) return "焦虑之镜"
   if (/等待|犹豫|回撤|不确定/.test(text)) return "犹疑之镜"
   if (/拖延|明天|以后|复盘/.test(text)) return "拖延之镜"

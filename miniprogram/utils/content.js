@@ -13,7 +13,7 @@ const MIRROR_BINDINGS = {
   "冲动型": { mirrorName: "追涨之镜", heartMirrorName: "追涨之镜", aliases: [], thieves: ["贪", "急"], virtue: "" },
   "扛单型": { mirrorName: "扛单之镜", heartMirrorName: "扛单之镜", aliases: [], thieves: ["痴", "慢"], virtue: "" },
   "完美型": { mirrorName: "错过之镜", heartMirrorName: "犹疑之镜", aliases: ["等完美点位之镜", "犹疑之镜"], thieves: ["疑", "惧"], virtue: "" },
-  "赌徒型": { mirrorName: "翻本之镜", heartMirrorName: "赌性之镜", aliases: ["赌性之镜"], thieves: ["贪", "急", "痴"], virtue: "" },
+  "赌徒型": { mirrorName: "翻本之镜", heartMirrorName: "执念之镜", aliases: ["执念之镜"], thieves: ["贪", "急", "痴"], virtue: "" },
   "从众型": { mirrorName: "跟风之镜", heartMirrorName: "从众之镜", aliases: ["从众之镜"], thieves: ["疑", "惧"], virtue: "" },
   "偏执型": { mirrorName: "证明之镜", heartMirrorName: "幻想之镜", aliases: ["幻想之镜"], thieves: ["痴"], virtue: "" },
   "拖延型": { mirrorName: "不复盘之镜", heartMirrorName: "拖延之镜", aliases: ["拖延之镜"], thieves: ["慢"], virtue: "" },

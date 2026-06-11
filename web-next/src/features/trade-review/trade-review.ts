@@ -160,7 +160,7 @@ export function buildTradeReviewNextActionText(thoughtType?: TradeReviewThoughtT
 
 export function inferTradeReviewMirror(text: string): MirrorName {
   if (/怕错过|错过|上车|拉升|追|冲动|来不及/.test(text)) return "追涨之镜"
-  if (/翻本|赢回来|报复|赌|梭/.test(text)) return "赌性之镜"
+  if (/翻本|赢回来|报复|赌|梭/.test(text)) return "执念之镜"
   if (/不认错|不甘|扛|止损|边界/.test(text)) return "扛单之镜"
   if (/怕回吐|焦虑|恐慌|空仓|紧张|害怕/.test(text)) return "焦虑之镜"
   if (/大家都在说|大家|别人|群|消息|外部|问/.test(text)) return "从众之镜"
@@ -204,7 +204,7 @@ function buildReviewText(mirror: MirrorName, thieves: HeartThief[], strongestTho
 
 function buildNextPracticeText(mirror: MirrorName) {
   if (mirror === "追涨之镜") return "下一次计划外拉升前，先停十秒，再写下入场条件。"
-  if (mirror === "赌性之镜") return "下一次想翻本时，先写下这是不是情绪在替你行动。"
+  if (mirror === "执念之镜") return "下一次想翻本时，先写下这是不是情绪在替你行动。"
   if (mirror === "扛单之镜") return "下一次边界被触碰时，先记录不甘，再回看原计划。"
   if (mirror === "焦虑之镜") return "下一次怕回吐时，先写下真正害怕失去的是什么。"
   if (mirror === "从众之镜") return "下一次看外部信息前，先写下自己的判断。"

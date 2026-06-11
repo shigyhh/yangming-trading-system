@@ -55,7 +55,7 @@ export const behaviorMirrorSignals: BehaviorMirrorSignal[] = [
   },
   {
     id: "gambling",
-    name: "赌性之镜",
+    name: "执念之镜",
     behavior: "亏后想一把翻身，把交易变成押注。",
     thought: "这一把做对，就能全回来。",
     thief: ["贪", "急", "痴"],

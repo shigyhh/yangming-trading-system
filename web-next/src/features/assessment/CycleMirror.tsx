@@ -74,7 +74,7 @@ const cycleCases: CycleMirrorCase[] = [
   },
   {
     id: "gambling",
-    sourceMirror: "赌性之镜",
+    sourceMirror: "执念之镜",
     title: "亏后翻本循环",
     status: "刚亏一笔，心想讨回。",
     verdict: "你不是在交易，是在用下一笔逃避上一笔。",

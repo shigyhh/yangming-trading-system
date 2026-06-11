@@ -4,6 +4,7 @@ import Link from "next/link"
 import { Suspense, useEffect, useMemo, useState, type ChangeEvent } from "react"
 import { useSearchParams } from "next/navigation"
 
+import { ReturnHomeLink } from "@/components/navigation/ReturnHomeLink"
 import { AssessmentShell, PrimaryButton } from "@/features/assessment/components"
 import { getPendingReviewEvents } from "@/lib/mind-archive/archiveStatsService"
 import {
@@ -450,6 +451,7 @@ function ReviewPageContent() {
 
   return (
     <AssessmentShell background="home-water" contentWidth="wide">
+      <ReturnHomeLink />
       <main className="review-page">
         <header className="review-hero">
           <p>真实复盘</p>

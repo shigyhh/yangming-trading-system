@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useCallback, useEffect, useState } from "react"
 
+import { ReturnHomeLink } from "@/components/navigation/ReturnHomeLink"
 import { AssessmentShell } from "@/features/assessment/components"
 import { getTodayArchiveStats } from "@/lib/mind-archive/archiveStatsService"
 import { updateOneThoughtEventFinalAction } from "@/lib/mind-archive/oneThoughtEventRepository"
@@ -90,6 +91,7 @@ export default function TodaySealedPage() {
 
   return (
     <AssessmentShell background="home-water" contentWidth="wide">
+      <ReturnHomeLink />
       <main className="today-sealed-page">
         <header className="today-hero">
           <p>今日所照</p>

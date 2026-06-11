@@ -108,7 +108,7 @@ const mirrorNameByEchoKey: Record<string, string> = {
   conscience: "良知之镜",
   delay: "拖延之镜",
   fantasy: "幻想之镜",
-  gamble: "赌性之镜",
+  gamble: "执念之镜",
   herd: "从众之镜",
   hesitate: "犹疑之镜",
   hold: "扛单之镜",

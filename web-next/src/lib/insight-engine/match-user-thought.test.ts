@@ -21,7 +21,7 @@ test("matches sell-too-early regret without falling into gambling", () => {
 
   expectScene(result, ["卖飞懊恼"])
   assert.equal(result.matchedMirrorName, "悔念之镜")
-  expectNotMirror(result, "赌性之镜")
+  expectNotMirror(result, "执念之镜")
 })
 
 test("matches holding-longer regret to sell-too-early or profit regret", () => {
@@ -40,7 +40,7 @@ test("matches revenge trading only for comeback language", () => {
   const result = matchUserThought("亏了这么多，下一笔必须打回来")
 
   expectScene(result, ["连续亏损后翻本"])
-  assert.equal(result.matchedMirrorName, "赌性之镜")
+  assert.equal(result.matchedMirrorName, "执念之镜")
 })
 
 test("matches all-in impulse", () => {

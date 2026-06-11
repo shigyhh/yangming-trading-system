@@ -304,7 +304,7 @@ function getLoopPattern(candidate: LoopCandidate) {
 
   if (candidate.patternKey === "revenge") {
     return {
-      sourceMirror: "赌性之镜",
+      sourceMirror: "执念之镜",
       trigger: "上一笔亏损或止损后",
       thoughtLabel: "想翻本",
       action: "急着用下一笔证明自己",
@@ -487,7 +487,7 @@ function getBreakAction(thoughtType: string) {
 function inferMirrorFromThought(thoughtType: string) {
   if (thoughtType === "fomo" || thoughtType === "chase") return "追涨之镜"
   if (thoughtType === "ask_others") return "从众之镜"
-  if (thoughtType === "revenge") return "赌性之镜"
+  if (thoughtType === "revenge") return "执念之镜"
   if (thoughtType === "fear" || thoughtType === "wait_pullback") return "焦虑之镜"
   if (thoughtType === "ego") return "幻想之镜"
   if (thoughtType === "abandon_plan") return "良知之镜"

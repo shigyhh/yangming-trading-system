@@ -2,7 +2,7 @@ import type { CSSProperties, ReactNode } from "react"
 
 import type { StillWaterRecord } from "./stillWaterScrollEngine"
 
-const mirrorNames = ["追涨之镜", "扛单之镜", "幻想之镜", "赌性之镜", "从众之镜", "犹疑之镜", "拖延之镜", "焦虑之镜", "良知之镜"]
+const mirrorNames = ["追涨之镜", "扛单之镜", "幻想之镜", "执念之镜", "从众之镜", "犹疑之镜", "拖延之镜", "焦虑之镜", "良知之镜"]
 
 function formatSealTime(value?: string) {
   if (!value) return "尚未落印"

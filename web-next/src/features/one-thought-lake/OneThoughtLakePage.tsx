@@ -8,8 +8,8 @@ import {
   useRef,
   useState,
 } from "react"
-import Link from "next/link"
 
+import { ReturnHomeLink } from "@/components/navigation/ReturnHomeLink"
 import {
   getTodayOneThoughtDateKey,
   matchUserThought,
@@ -339,16 +339,13 @@ export function OneThoughtLakePage() {
 
   return (
     <main className="one-thought-lake-page">
+      <ReturnHomeLink />
       <div className="lake-ink" aria-hidden="true" />
       <div className="lake-horizon" aria-hidden="true" />
       <div className="lake-ripple lake-ripple-one" aria-hidden="true" />
       <div className="lake-ripple lake-ripple-two" aria-hidden="true" />
 
       <header className="lake-header">
-        <Link href="/?home=1" className="lake-home-link" aria-label="回到首页">
-          <span>回首页 →</span>
-          <i aria-hidden="true" />
-        </Link>
         <h1>众念心湖</h1>
         <p>匿名看见众人的一念，也匿名放下自己的一念。</p>
         <span className="lake-count" aria-live="polite">
@@ -598,56 +595,6 @@ export function OneThoughtLakePage() {
           margin: 0 auto;
           padding-top: clamp(5.2rem, 9svh, 7.1rem);
           text-align: center;
-        }
-
-        .lake-home-link {
-          position: fixed;
-          top: 1.1rem;
-          left: 1.1rem;
-          display: inline-flex;
-          min-width: 5.9rem;
-          flex-direction: column;
-          gap: 0.48rem;
-          border: 1px solid rgba(216, 183, 111, 0.14);
-          border-radius: 999px;
-          background:
-            linear-gradient(180deg, rgba(244, 235, 221, 0.03), rgba(216, 183, 111, 0.02)),
-            rgba(4, 7, 6, 0.2);
-          box-shadow:
-            inset 0 1px 0 rgba(244, 235, 221, 0.04),
-            0 16px 44px rgba(0, 0, 0, 0.2);
-          color: rgba(216, 183, 111, 0.72);
-          font-family: var(--font-sans, system-ui, sans-serif);
-          font-size: 0.72rem;
-          font-weight: 700;
-          letter-spacing: 0.22em;
-          padding: 0.64rem 0.88rem 0.58rem;
-          text-decoration: none;
-          backdrop-filter: blur(14px);
-          transition:
-            border-color 520ms ease,
-            color 520ms ease,
-            opacity 520ms ease,
-            transform 520ms ease;
-        }
-
-        .lake-home-link i {
-          display: block;
-          width: 4.1rem;
-          height: 1px;
-          background: linear-gradient(90deg, rgba(216, 183, 111, 0.62), rgba(216, 183, 111, 0.18), transparent);
-          opacity: 0.58;
-          transform-origin: left center;
-        }
-
-        .lake-home-link:hover {
-          border-color: rgba(216, 183, 111, 0.28);
-          color: rgba(244, 235, 221, 0.9);
-          transform: translateX(0.12rem);
-        }
-
-        .lake-home-link:hover i {
-          opacity: 0.82;
         }
 
         .lake-count,

@@ -13,12 +13,12 @@ let dataBindingLoading = null;
 const forbiddenPhrases = ["推荐买入", "推荐卖出", "必赚", "稳赚", "收益保证", "喊单", "抄底", "逃顶"];
 const assistantStatuses = new Set(["待承接", "已承接", "待复盘", "已完成"]);
 const livingMirrorSchemaVersion = "living_mirror_v1";
-const mirrorNames = ["追涨之镜", "扛单之镜", "幻想之镜", "赌性之镜", "从众之镜", "犹疑之镜", "拖延之镜", "焦虑之镜", "良知之镜"];
+const mirrorNames = ["追涨之镜", "扛单之镜", "幻想之镜", "执念之镜", "从众之镜", "犹疑之镜", "拖延之镜", "焦虑之镜", "良知之镜"];
 const mirrorKeyByName = {
   追涨之镜: "chasing",
   扛单之镜: "holding_loss",
   幻想之镜: "fantasy",
-  赌性之镜: "gambling",
+  执念之镜: "gambling",
   从众之镜: "following",
   犹疑之镜: "hesitation",
   拖延之镜: "procrastination",
@@ -29,7 +29,7 @@ const legacyTypeMirrorMap = {
   冲动型: "追涨之镜",
   扛单型: "扛单之镜",
   完美型: "犹疑之镜",
-  赌徒型: "赌性之镜",
+  赌徒型: "执念之镜",
   从众型: "从众之镜",
   偏执型: "幻想之镜",
   拖延型: "拖延之镜",
@@ -1482,7 +1482,7 @@ function buildProfileTrainingFocus(mainMirror) {
     "追涨之镜": "边界前停十秒，先写第一念。",
     "扛单之镜": "边界触碰时，只回看原先写下的规则。",
     "幻想之镜": "先写反向事实，再进入复盘。",
-    "赌性之镜": "动作变大前，先记录那一口不甘。",
+    "执念之镜": "动作变大前，先记录那一口不甘。",
     "从众之镜": "外部声音变热时，先回到自己的计划。",
     "犹疑之镜": "允许一次小步验证，不追求完美确认。",
     "拖延之镜": "只做三分钟复盘，先把事实落下。",
@@ -1551,7 +1551,7 @@ function buildTrainingPrescriptionPrompt(mirror) {
     "追涨之镜": "今天哪一个瞬间最怕错过？停下后看见了什么？",
     "扛单之镜": "今天边界被触碰时，心里最不愿承认的是什么？",
     "幻想之镜": "今天有没有把希望当成事实？请写下一条反向事实。",
-    "赌性之镜": "今天哪一口不甘最想放大动作？先把它写下来。",
+    "执念之镜": "今天哪一口不甘最想放大动作？先把它写下来。",
     "从众之镜": "今天哪一句外部声音最牵动你？回到自己的计划了吗？",
     "犹疑之镜": "今天有没有为了完美确认而迟迟不动？最小一步是什么？",
     "拖延之镜": "今天哪一次复盘被拖走了？先写三分钟事实。",
@@ -1720,7 +1720,7 @@ function inferMirrorName(values = [], fallback = "追涨之镜") {
   if (/追|错过|上车|冲动|拉升|急拉|临盘追/.test(text)) return "追涨之镜";
   if (/扛|不认错|边界后移|不甘|止损|拖住/.test(text)) return "扛单之镜";
   if (/幻想|证明|完美|执念|一定会回来/.test(text)) return "幻想之镜";
-  if (/赌|翻本|报复|梭|赢回来/.test(text)) return "赌性之镜";
+  if (/赌|翻本|报复|梭|赢回来/.test(text)) return "执念之镜";
   if (/从众|别人|大家|群|消息|外部/.test(text)) return "从众之镜";
   if (/犹疑|犹豫|等待|回撤|不确定|观望/.test(text)) return "犹疑之镜";
   if (/拖延|麻木|明天|以后再说|迟迟/.test(text)) return "拖延之镜";
@@ -1754,7 +1754,7 @@ function buildBehaviorTags({ detectedMirror, strongestThought }) {
   const tags = [detectedMirror.replace("之镜", "")];
   if (strongestThought) tags.push("真实念头");
   if (detectedMirror === "追涨之镜") tags.push("怕错过");
-  if (detectedMirror === "赌性之镜") tags.push("想翻本");
+  if (detectedMirror === "执念之镜") tags.push("想翻本");
   if (detectedMirror === "扛单之镜") tags.push("不认错");
   if (detectedMirror === "从众之镜") tags.push("外部声音");
   return Array.from(new Set(tags)).slice(0, 6);

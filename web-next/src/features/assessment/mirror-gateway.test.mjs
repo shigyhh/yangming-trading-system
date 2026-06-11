@@ -465,7 +465,7 @@ test("mirror gateway is not a nine-option questionnaire", () => {
     "追涨之镜",
     "扛单之镜",
     "幻想之镜",
-    "赌性之镜",
+    "执念之镜",
     "从众之镜",
     "犹疑之镜",
     "拖延之镜",

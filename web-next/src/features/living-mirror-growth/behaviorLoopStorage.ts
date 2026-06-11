@@ -14,7 +14,7 @@ const mirrorCaseIdByName: Record<string, string> = {
   追涨之镜: "chasing",
   扛单之镜: "holdingLoss",
   幻想之镜: "fantasy",
-  赌性之镜: "gambling",
+  执念之镜: "gambling",
   从众之镜: "following",
   犹疑之镜: "hesitation",
   拖延之镜: "procrastination",
@@ -336,7 +336,7 @@ function inferMirrorFromText(text: string) {
   if (/怕错过|错过|上车|拉升|追|临盘改计划/.test(text)) return "追涨之镜"
   if (/群|大家|别人|外部|消息|独立判断|问/.test(text)) return "从众之镜"
   if (/不认错|不甘|扛|止损|边界/.test(text)) return "扛单之镜"
-  if (/翻本|赌|回本|报复/.test(text)) return "赌性之镜"
+  if (/翻本|赌|回本|报复/.test(text)) return "执念之镜"
   if (/怕回吐|焦虑|空仓|恐慌|紧张/.test(text)) return "焦虑之镜"
   if (/等待|犹豫|回撤|不确定/.test(text)) return "犹疑之镜"
   if (/拖延|明天|以后|复盘/.test(text)) return "拖延之镜"

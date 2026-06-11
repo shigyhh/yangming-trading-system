@@ -60,7 +60,7 @@ const seeingMirrorById: Record<string, SeeingMirror> = {
   chase: { behaviorMirrorId: "chasing", name: "追涨之镜", room: "追涨之镜" },
   hold: { behaviorMirrorId: "holdingLoss", name: "扛单之镜", room: "扛单之镜" },
   fantasy: { behaviorMirrorId: "fantasy", name: "幻想之镜", room: "幻想之镜" },
-  gamble: { behaviorMirrorId: "gambling", name: "赌性之镜", room: "赌性之镜" },
+  gamble: { behaviorMirrorId: "gambling", name: "执念之镜", room: "执念之镜" },
   herd: { behaviorMirrorId: "following", name: "从众之镜", room: "从众之镜" },
   hesitate: { behaviorMirrorId: "hesitation", name: "犹疑之镜", room: "犹疑之镜" },
   delay: { behaviorMirrorId: "procrastination", name: "拖延之镜", room: "拖延之镜" },
@@ -69,7 +69,7 @@ const seeingMirrorById: Record<string, SeeingMirror> = {
   fallback: { behaviorMirrorId: "chasing", name: "追涨之镜", room: "追涨之镜" },
 }
 
-const mirrorRooms = ["追涨之镜", "扛单之镜", "幻想之镜", "赌性之镜", "从众之镜", "犹疑之镜", "拖延之镜", "焦虑之镜", "良知之镜"]
+const mirrorRooms = ["追涨之镜", "扛单之镜", "幻想之镜", "执念之镜", "从众之镜", "犹疑之镜", "拖延之镜", "焦虑之镜", "良知之镜"]
 
 const thiefGlyphOrder: ThiefGlyph["glyph"][] = ["贪", "急", "惧", "疑", "执", "从"]
 

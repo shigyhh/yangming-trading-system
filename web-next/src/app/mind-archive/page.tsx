@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
 import DangAnGuanArchive from "@/components/archive/DangAnGuanArchive"
+import { ReturnHomeLink } from "@/components/navigation/ReturnHomeLink"
 import { AssessmentShell } from "@/features/assessment/components"
 import { getHeartThiefProfile, type HeartThiefProfile } from "@/lib/mind-archive/heartThiefProfileService"
 import {
@@ -70,6 +71,7 @@ export default function MindArchivePage() {
 
   return (
     <AssessmentShell background="home-water" contentWidth="wide">
+      <ReturnHomeLink />
       <DangAnGuanArchive
         summary={{
           todaySealedCount: stats?.todayTotal ?? 0,

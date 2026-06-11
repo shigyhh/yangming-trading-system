@@ -15,6 +15,7 @@ import {
   oneThoughtScenes,
 } from "@yangming/content/one-thought"
 
+import { ReturnHomeLink } from "@/components/navigation/ReturnHomeLink"
 import insightMirrors from "@/data/insight-engine/mirrors.json"
 import {
   confirmTodayOneThought,
@@ -506,7 +507,7 @@ const mirrorInsights: Record<string, MirrorInsight> = {
   },
   gamble: {
     id: "gamble",
-    mirrorName: "赌性之镜",
+    mirrorName: "执念之镜",
     thought: "下一把就能赢回来。",
     reflection: ["你想赢回来的不是亏损。", "你想赢回的是，", "被市场打碎的自尊。"],
     thief: "贪 · 急 · 痴",
@@ -590,7 +591,7 @@ const mirrorEchoes: MirrorEcho[] = [
   },
   {
     key: "gamble",
-    label: "赌性之镜",
+    label: "执念之镜",
     motionType: "gamble",
     thought: "下一把就能赢回来。",
     whisper: "亏后想翻本",
@@ -1708,6 +1709,7 @@ export default function ZhaoxinRitualFlow({
       aria-label="照见一念仪轨"
     >
       <div className="zhaoxin-vignette" aria-hidden="true" />
+      {stage === "growth" ? <ReturnHomeLink /> : null}
       {stage === "liangzhi" ? <div className="liangzhi-hold-glow" aria-hidden="true" /> : null}
 
       <div

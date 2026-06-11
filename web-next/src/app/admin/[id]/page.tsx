@@ -12,7 +12,7 @@ const mirrorScoreLabels: Record<string, string> = {
   chasing: "追涨之镜",
   holding_loss: "扛单之镜",
   fantasy: "幻想之镜",
-  gambling: "赌性之镜",
+  gambling: "执念之镜",
   following: "从众之镜",
   hesitation: "犹疑之镜",
   procrastination: "拖延之镜",

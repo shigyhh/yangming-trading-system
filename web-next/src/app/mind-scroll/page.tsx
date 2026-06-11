@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useEffect, useState } from "react"
 
+import { ReturnHomeLink } from "@/components/navigation/ReturnHomeLink"
 import { AssessmentShell } from "@/features/assessment/components"
 import { getMindScrollItems, type MindScrollItem } from "@/lib/mind-archive/mindScrollService"
 import { DEFAULT_MIND_ARCHIVE_USER_ID } from "@/lib/mind-archive/types"
@@ -64,6 +65,7 @@ export default function MindScrollPage() {
 
   return (
     <AssessmentShell background="home-water" contentWidth="wide">
+      <ReturnHomeLink />
       <main className="mind-scroll-page">
         <header className="scroll-hero">
           <p>心镜长卷</p>

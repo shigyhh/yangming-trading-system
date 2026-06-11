@@ -12,7 +12,7 @@ const shadersUrl = new URL("./visual/shaders.ts", import.meta.url)
 const routeUrl = new URL("../../app/lake/page.tsx", import.meta.url)
 const aliasRouteUrl = new URL("../../app/one-thought-lake/page.tsx", import.meta.url)
 const topNavUrl = new URL("../../components/home/top-nav.tsx", import.meta.url)
-const zhaoxinUrl = new URL("../assessment/ZhaoxinRitualFlow.tsx", import.meta.url)
+const returnHomeUrl = new URL("../../components/navigation/ReturnHomeLink.tsx", import.meta.url)
 
 test("one thought lake route and entrances exist without becoming a forum", async () => {
   const page = await readFile(pageUrl, "utf8")
@@ -20,7 +20,7 @@ test("one thought lake route and entrances exist without becoming a forum", asyn
   const route = await readFile(routeUrl, "utf8")
   const aliasRoute = await readFile(aliasRouteUrl, "utf8")
   const topNav = await readFile(topNavUrl, "utf8")
-  const zhaoxin = await readFile(zhaoxinUrl, "utf8")
+  const returnHome = await readFile(returnHomeUrl, "utf8")
 
   assert.match(route, /OneThoughtLakePage/)
   assert.match(aliasRoute, /redirect\("\/lake"\)/)
@@ -36,10 +36,10 @@ test("one thought lake route and entrances exist without becoming a forum", asyn
   assert.match(page, /\.lake-focus-panel h2/)
   assert.match(page, /众念心湖只照见交易中的念头，不提供投资建议。/)
   assert.doesNotMatch(page, /众念心湖是匿名共照空间，不写入私人心镜档案。/)
-  assert.match(page, /href="\/\?home=1"/)
-  assert.match(page, /aria-label="回到首页"/)
-  assert.match(page, /回首页 →/)
-  assert.match(page, /lake-home-link i/)
+  assert.match(page, /ReturnHomeLink/)
+  assert.match(returnHome, /aria-label="回到首页"/)
+  assert.match(returnHome, /← 回首页/)
+  assert.doesNotMatch(page, /回首页 →/)
   assert.match(page, /我也有这一念/)
   assert.match(page, /写下我的一念/)
   assert.match(page, /写下你的一念/)
@@ -73,8 +73,6 @@ test("one thought lake route and entrances exist without becoming a forum", asyn
   assert.match(topNav, /众念心湖/)
   assert.match(topNav, /href: "\/lake"/)
   assert.doesNotMatch(topNav, /one-thought-bottom-nav/)
-  assert.match(zhaoxin, /去众念心湖看看，多少人也有这一念/)
-  assert.match(zhaoxin, /href="\/lake"/)
 })
 
 test("one thought lake renders a Three.js thought cloud instead of the old sphere", async () => {

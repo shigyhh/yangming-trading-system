@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useEffect, useState } from "react"
 
+import { ReturnHomeLink } from "@/components/navigation/ReturnHomeLink"
 import { AssessmentShell } from "@/features/assessment/components"
 import {
   getZhixingScrollItems,
@@ -56,6 +57,7 @@ export default function ZhixingScrollPage() {
 
   return (
     <AssessmentShell background="home-water" contentWidth="wide">
+      <ReturnHomeLink />
       <main className="zhixing-scroll-page">
         <header className="scroll-hero">
           <p>知行长卷</p>

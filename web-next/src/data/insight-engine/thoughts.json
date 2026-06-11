@@ -1202,7 +1202,7 @@
   {
     "id": "gamble_thought_01",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "surge",
     "sourceScene": "急涨时",
     "intensity": 1,
@@ -1212,7 +1212,7 @@
   {
     "id": "gamble_thought_02",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "plunge",
     "sourceScene": "急跌时",
     "intensity": 2,
@@ -1222,7 +1222,7 @@
   {
     "id": "gamble_thought_03",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "beforeStop",
     "sourceScene": "止损时",
     "intensity": 3,
@@ -1232,7 +1232,7 @@
   {
     "id": "gamble_thought_04",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "floatingGain",
     "sourceScene": "浮盈时",
     "intensity": 4,
@@ -1242,7 +1242,7 @@
   {
     "id": "gamble_thought_05",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "missed",
     "sourceScene": "踏空时",
     "intensity": 5,
@@ -1252,7 +1252,7 @@
   {
     "id": "gamble_thought_06",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "lossStreak",
     "sourceScene": "亏损后",
     "intensity": 1,
@@ -1262,7 +1262,7 @@
   {
     "id": "gamble_thought_07",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "review",
     "sourceScene": "复盘时",
     "intensity": 2,
@@ -1272,7 +1272,7 @@
   {
     "id": "gamble_thought_08",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "surge",
     "sourceScene": "开盘时",
     "intensity": 3,
@@ -1282,7 +1282,7 @@
   {
     "id": "gamble_thought_09",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "review",
     "sourceScene": "临盘改计划",
     "intensity": 4,
@@ -1292,7 +1292,7 @@
   {
     "id": "gamble_thought_10",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "lossStreak",
     "sourceScene": "连续亏损时",
     "intensity": 5,
@@ -1302,7 +1302,7 @@
   {
     "id": "gamble_thought_11",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "winStreak",
     "sourceScene": "连续盈利后",
     "intensity": 1,
@@ -1312,7 +1312,7 @@
   {
     "id": "gamble_thought_12",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "missed",
     "sourceScene": "空仓时",
     "intensity": 2,
@@ -1322,7 +1322,7 @@
   {
     "id": "gamble_thought_13",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "surge",
     "sourceScene": "急涨时",
     "intensity": 3,
@@ -1332,7 +1332,7 @@
   {
     "id": "gamble_thought_14",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "plunge",
     "sourceScene": "急跌时",
     "intensity": 4,
@@ -1342,7 +1342,7 @@
   {
     "id": "gamble_thought_15",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "beforeStop",
     "sourceScene": "止损时",
     "intensity": 5,
@@ -1352,7 +1352,7 @@
   {
     "id": "gamble_thought_16",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "floatingGain",
     "sourceScene": "浮盈时",
     "intensity": 1,
@@ -1362,7 +1362,7 @@
   {
     "id": "gamble_thought_17",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "missed",
     "sourceScene": "踏空时",
     "intensity": 2,
@@ -1372,7 +1372,7 @@
   {
     "id": "gamble_thought_18",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "lossStreak",
     "sourceScene": "亏损后",
     "intensity": 3,
@@ -1382,7 +1382,7 @@
   {
     "id": "gamble_thought_19",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "review",
     "sourceScene": "复盘时",
     "intensity": 4,
@@ -1392,7 +1392,7 @@
   {
     "id": "gamble_thought_20",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "surge",
     "sourceScene": "开盘时",
     "intensity": 5,
@@ -1402,7 +1402,7 @@
   {
     "id": "gamble_thought_21",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "review",
     "sourceScene": "临盘改计划",
     "intensity": 1,
@@ -1412,7 +1412,7 @@
   {
     "id": "gamble_thought_22",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "lossStreak",
     "sourceScene": "连续亏损时",
     "intensity": 2,
@@ -1422,7 +1422,7 @@
   {
     "id": "gamble_thought_23",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "winStreak",
     "sourceScene": "连续盈利后",
     "intensity": 3,
@@ -1432,7 +1432,7 @@
   {
     "id": "gamble_thought_24",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "missed",
     "sourceScene": "空仓时",
     "intensity": 4,
@@ -1442,7 +1442,7 @@
   {
     "id": "gamble_thought_25",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "surge",
     "sourceScene": "急涨时",
     "intensity": 5,
@@ -1452,7 +1452,7 @@
   {
     "id": "gamble_thought_26",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "plunge",
     "sourceScene": "急跌时",
     "intensity": 1,
@@ -1462,7 +1462,7 @@
   {
     "id": "gamble_thought_27",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "beforeStop",
     "sourceScene": "止损时",
     "intensity": 2,
@@ -1472,7 +1472,7 @@
   {
     "id": "gamble_thought_28",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "floatingGain",
     "sourceScene": "浮盈时",
     "intensity": 3,
@@ -1482,7 +1482,7 @@
   {
     "id": "gamble_thought_29",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "missed",
     "sourceScene": "踏空时",
     "intensity": 4,
@@ -1492,7 +1492,7 @@
   {
     "id": "gamble_thought_30",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "lossStreak",
     "sourceScene": "亏损后",
     "intensity": 5,
@@ -1502,7 +1502,7 @@
   {
     "id": "gamble_thought_31",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "review",
     "sourceScene": "复盘时",
     "intensity": 1,
@@ -1512,7 +1512,7 @@
   {
     "id": "gamble_thought_32",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "surge",
     "sourceScene": "开盘时",
     "intensity": 2,
@@ -1522,7 +1522,7 @@
   {
     "id": "gamble_thought_33",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "review",
     "sourceScene": "临盘改计划",
     "intensity": 3,
@@ -1532,7 +1532,7 @@
   {
     "id": "gamble_thought_34",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "lossStreak",
     "sourceScene": "连续亏损时",
     "intensity": 4,
@@ -1542,7 +1542,7 @@
   {
     "id": "gamble_thought_35",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "winStreak",
     "sourceScene": "连续盈利后",
     "intensity": 5,
@@ -1552,7 +1552,7 @@
   {
     "id": "gamble_thought_36",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "missed",
     "sourceScene": "空仓时",
     "intensity": 1,
@@ -1562,7 +1562,7 @@
   {
     "id": "gamble_thought_37",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "surge",
     "sourceScene": "急涨时",
     "intensity": 2,
@@ -1572,7 +1572,7 @@
   {
     "id": "gamble_thought_38",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "plunge",
     "sourceScene": "急跌时",
     "intensity": 3,
@@ -1582,7 +1582,7 @@
   {
     "id": "gamble_thought_39",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "beforeStop",
     "sourceScene": "止损时",
     "intensity": 4,
@@ -1592,7 +1592,7 @@
   {
     "id": "gamble_thought_40",
     "mirrorId": "gamble",
-    "mirrorName": "赌性之镜",
+    "mirrorName": "执念之镜",
     "scene": "floatingGain",
     "sourceScene": "浮盈时",
     "intensity": 5,

@@ -93,7 +93,7 @@ const KEYWORD_MIRROR_RULES = [
     trainingAction: "写一条反向事实，让事实照见继续解释的惯性。"
   },
   {
-    mirrorName: "赌性之镜",
+    mirrorName: "执念之镜",
     type: "赌徒型",
     keywords: ["翻本", "梭哈", "加大仓位"],
     thieves: ["贪", "急", "痴"],

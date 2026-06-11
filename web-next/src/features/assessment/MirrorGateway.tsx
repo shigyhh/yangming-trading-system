@@ -152,7 +152,7 @@ const mirrorSpecs: MirrorSpec[] = [
   },
   {
     id: "gambling",
-    name: "赌性之镜",
+    name: "执念之镜",
     angle: Math.PI * 1.18,
     radiusX: 0.55,
     radiusY: 0.18,
@@ -246,7 +246,7 @@ const ritualCopyByPhase: Record<GatewayPhase, RitualCopy> = {
   mirrorsResponding: {
     kicker: "九镜响应",
     main: "追涨之镜正在发亮。",
-    sub: "赌性之镜、从众之镜随之微动；良知之镜仍在远处。",
+    sub: "执念之镜、从众之镜随之微动；良知之镜仍在远处。",
   },
   mainMirrorAbsorbing: {
     kicker: "照见此念",
