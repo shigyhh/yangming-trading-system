@@ -5,9 +5,7 @@ import { Suspense, useEffect, useMemo, useState } from "react"
 import { useSearchParams } from "next/navigation"
 
 import { AssessmentShell, PrimaryButton } from "@/features/assessment/components"
-import {
-  listRecentOneThoughtEvents,
-} from "@/lib/mind-archive/oneThoughtEventRepository"
+import { getPendingReviewEvents } from "@/lib/mind-archive/archiveStatsService"
 import {
   DEFAULT_MIND_ARCHIVE_USER_ID,
   type OneThoughtEvent,
@@ -32,8 +30,9 @@ const directionLabels: Array<{ value: TradeDirection; label: string }> = [
 
 function ReviewPageContent() {
   const searchParams = useSearchParams()
+  const linkedEventId = searchParams.get("linkedOneThoughtEventId") || ""
   const [events, setEvents] = useState<OneThoughtEvent[]>([])
-  const [selectedEventId, setSelectedEventId] = useState(searchParams.get("linkedOneThoughtEventId") || "")
+  const [selectedEventId, setSelectedEventId] = useState(linkedEventId)
   const [symbol, setSymbol] = useState("")
   const [direction, setDirection] = useState<TradeDirection>("buy")
   const [entryPrice, setEntryPrice] = useState("")
@@ -49,11 +48,17 @@ function ReviewPageContent() {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      setEvents(listRecentOneThoughtEvents(DEFAULT_MIND_ARCHIVE_USER_ID, 12))
+      const pendingEvents = getPendingReviewEvents(DEFAULT_MIND_ARCHIVE_USER_ID)
+      setEvents(pendingEvents)
+      setSelectedEventId((current) => {
+        if (current && pendingEvents.some((event) => event.id === current)) return current
+        if (linkedEventId && pendingEvents.some((event) => event.id === linkedEventId)) return linkedEventId
+        return pendingEvents[0]?.id || ""
+      })
     }, 0)
 
     return () => window.clearTimeout(timer)
-  }, [])
+  }, [linkedEventId])
 
   const selectedEvent = useMemo(
     () => events.find((event) => event.id === selectedEventId) ?? null,
@@ -82,19 +87,23 @@ function ReviewPageContent() {
       setNotice("请写下本次盈亏。")
       return
     }
+    if (!selectedEvent) {
+      setNotice("请先从待复盘的一念里选择一条。")
+      return
+    }
 
     const input: CreateTradeReviewInput = {
       userId: DEFAULT_MIND_ARCHIVE_USER_ID,
-      linkedOneThoughtEventId: selectedEvent?.id,
-      sceneId: selectedEvent?.sceneId,
-      itemId: selectedEvent?.itemId,
-      key: selectedEvent?.key,
-      os: selectedEvent?.os,
-      reflectionFinal: selectedEvent?.reflectionFinal,
-      painLevel: selectedEvent?.painLevel,
-      painPoint: selectedEvent?.painPoint,
-      heartThief: selectedEvent?.heartThief,
-      reflectionVersion: selectedEvent?.reflectionVersion,
+      linkedOneThoughtEventId: selectedEvent.id,
+      sceneId: selectedEvent.sceneId,
+      itemId: selectedEvent.itemId,
+      key: selectedEvent.key,
+      os: selectedEvent.os,
+      reflectionFinal: selectedEvent.reflectionFinal,
+      painLevel: selectedEvent.painLevel,
+      painPoint: selectedEvent.painPoint,
+      heartThief: selectedEvent.heartThief,
+      reflectionVersion: selectedEvent.reflectionVersion,
       symbol: symbol.trim(),
       direction,
       entryPrice: optionalNumber(entryPrice),
@@ -110,7 +119,9 @@ function ReviewPageContent() {
     const review = createTradeReview(input)
     setCreatedJudgement(review.heartJudgement)
     setNotice("真实复盘已写回一念档案。")
-    setEvents(listRecentOneThoughtEvents(DEFAULT_MIND_ARCHIVE_USER_ID, 12))
+    const pendingEvents = getPendingReviewEvents(DEFAULT_MIND_ARCHIVE_USER_ID)
+    setEvents(pendingEvents)
+    setSelectedEventId(pendingEvents[0]?.id || "")
   }
 
   return (
@@ -129,7 +140,6 @@ function ReviewPageContent() {
           <p>关联最近一念</p>
           {events.length ? (
             <select value={selectedEventId} onChange={(event) => setSelectedEventId(event.target.value)}>
-              <option value="">不关联，单独复盘</option>
               {events.map((event) => (
                 <option key={event.id} value={event.id}>
                   {event.os} · {event.tradeMoment}
@@ -137,7 +147,7 @@ function ReviewPageContent() {
               ))}
             </select>
           ) : (
-            <span className="muted">还没有私人今日照见记录。可以先完成一次今日照见。</span>
+            <span className="muted">暂无待复盘的一念。先在今日所照里把最后动作标为“还是交易了”。</span>
           )}
           {selectedEvent ? (
             <div className="linked-thought">

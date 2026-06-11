@@ -2,7 +2,6 @@
 
 import {
   type CSSProperties,
-  type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
   useCallback,
   useEffect,
@@ -96,6 +95,8 @@ type StageCopy = {
   title: string
   sub?: string
 }
+
+type ArchiveSyncPhase = "choice" | "form" | "synced" | "local"
 
 type TradingScene =
   | "surge"
@@ -449,14 +450,14 @@ const stageText: Record<Stage, StageCopy> = {
   },
   liangzhi: {
     title: "",
-    sub: "把这一念落成今日心证，收入心镜档案。",
+    sub: "落印后，这一念会进入今日所照。\n日后可在档案馆回看。",
   },
   seal: {
     title: "已照见",
     sub: "",
   },
   growth: {
-    title: "今日照见已落印",
+    title: "这一念，已入今日所照。",
     sub: "",
   },
 }
@@ -843,6 +844,13 @@ const oneThoughtReactionOptions: Array<{ value: OneThoughtReaction; label: strin
   { value: "still_moving", label: "心还在动" },
 ]
 
+const oneThoughtReactionHints: Record<OneThoughtReaction, string> = {
+  seen: "照到了，先把这一念记下。",
+  not_hit: "没照到也记下，后面继续校准。",
+  stopped: "愿意先停，就是今日功夫。",
+  still_moving: "不必骗自己，心还在动也照实落下。",
+}
+
 export default function ZhaoxinRitualFlow({
   onLakeModeChange,
   onRipple,
@@ -865,14 +873,13 @@ export default function ZhaoxinRitualFlow({
   const [isHoldingLiangzhi, setIsHoldingLiangzhi] = useState(false)
   const [isLiangzhiReturning, setIsLiangzhiReturning] = useState(false)
   const [selectedReaction, setSelectedReaction] = useState<OneThoughtReaction | null>(null)
-  const [showArchiveLoginPrompt, setShowArchiveLoginPrompt] = useState(false)
+  const [archiveSyncPhase, setArchiveSyncPhase] = useState<ArchiveSyncPhase>("choice")
   const [archiveLoginPhone, setArchiveLoginPhone] = useState("")
   const [archiveLoginCode, setArchiveLoginCode] = useState("")
   const [archiveLoginCountdown, setArchiveLoginCountdown] = useState(0)
   const [archiveLoginMessage, setArchiveLoginMessage] = useState("")
   const [isSendingArchiveCode, setIsSendingArchiveCode] = useState(false)
   const [isBindingArchivePhone, setIsBindingArchivePhone] = useState(false)
-  const [pendingArchiveHref, setPendingArchiveHref] = useState("")
   const [sealedOneThoughtRecordId, setSealedOneThoughtRecordId] = useState("")
   const [heartProofSequenceNumber, setHeartProofSequenceNumber] = useState(1)
   const rootRef = useRef<HTMLElement | null>(null)
@@ -1361,6 +1368,8 @@ export default function ZhaoxinRitualFlow({
     setMirrorsCanInteract(false)
     setIsRevealPaused(false)
     setSelectedReaction(null)
+    setArchiveSyncPhase("choice")
+    setArchiveLoginMessage("")
     setRevealStep("idle")
     onRipple?.()
     onLakeModeChange?.(mirror.lakeMode)
@@ -1442,27 +1451,15 @@ export default function ZhaoxinRitualFlow({
     })
   }
 
-  const navigateToArchiveTarget = (href: string) => {
-    if (!href || typeof window === "undefined") return
-    window.location.href = href
-  }
-
-  const requestArchiveLogin = (targetHref: string) => {
-    setPendingArchiveHref(targetHref)
+  const beginArchiveSync = () => {
     setArchiveLoginMessage("")
-    setShowArchiveLoginPrompt(true)
-  }
-
-  const handleArchiveNavigation = (event: ReactMouseEvent<HTMLAnchorElement>, targetHref: string) => {
-    if (stage !== "growth") return
-
     if (hasSavedPhone()) {
       markCurrentInsightSyncStatus("synced")
+      setArchiveSyncPhase("synced")
       return
     }
 
-    event.preventDefault()
-    requestArchiveLogin(targetHref)
+    setArchiveSyncPhase("form")
   }
 
   const sendArchiveLoginCode = async () => {
@@ -1504,12 +1501,10 @@ export default function ZhaoxinRitualFlow({
       setStorage(assessmentStorageKeys.phoneTail, archiveLoginPhone.slice(-4))
       setStorage(assessmentStorageKeys.userCreatedAt, new Date().toISOString())
       markCurrentInsightSyncStatus("synced")
-      setArchiveLoginMessage("绑定成功，正在归档。")
-      setShowArchiveLoginPrompt(false)
-      navigateToArchiveTarget(pendingArchiveHref)
-      setPendingArchiveHref("")
+      setArchiveLoginMessage("")
+      setArchiveSyncPhase("synced")
     } catch (error) {
-      setArchiveLoginMessage(error instanceof Error ? error.message : "请稍后再试。")
+      setArchiveLoginMessage(`${error instanceof Error ? error.message : "请稍后再试。"} 本机记录仍保留。`)
     } finally {
       setIsBindingArchivePhone(false)
     }
@@ -1517,10 +1512,8 @@ export default function ZhaoxinRitualFlow({
 
   const keepArchiveLocalOnly = () => {
     markCurrentInsightSyncStatus("local_only")
-    setArchiveLoginMessage("本次已保存在本机。")
-    setShowArchiveLoginPrompt(false)
-    navigateToArchiveTarget(pendingArchiveHref)
-    setPendingArchiveHref("")
+    setArchiveLoginMessage("")
+    setArchiveSyncPhase("local")
   }
 
   const updateLiangzhiHoldProgress = (timestamp: number) => {
@@ -1617,7 +1610,9 @@ export default function ZhaoxinRitualFlow({
               : stage === "practice"
                 ? selectedInsight.practice
 		                : stage === "liangzhi"
-		                  ? "长按落印，把今日心证收入心镜档案。"
+		                  ? selectedReaction
+                        ? "落印后，这一念会进入今日所照。\n日后可在档案馆回看。"
+                        : "选择此刻最真实的反应，再落印入今日所照。"
 	                : stage === "seal"
 	                  ? ""
                   : stage === "growth"
@@ -1671,6 +1666,10 @@ export default function ZhaoxinRitualFlow({
                 <span />
                 <span />
               </div>
+              <div className="liangzhi-choice-guide">
+                <h2>此念照到你了吗？</h2>
+                <p>不用判断对错，只记录此刻心的反应。</p>
+              </div>
               <div className="one-thought-reactions" aria-label="落印前反馈">
                 {oneThoughtReactionOptions.map((option) => (
                   <button
@@ -1684,6 +1683,9 @@ export default function ZhaoxinRitualFlow({
                   </button>
                 ))}
               </div>
+              {selectedReaction ? (
+                <p className="one-thought-reaction-hint">{oneThoughtReactionHints[selectedReaction]}</p>
+              ) : null}
               <button
                 type="button"
                 className={`liangzhi-title-action ${isHoldingLiangzhi ? "is-holding" : ""}`}
@@ -1695,7 +1697,7 @@ export default function ZhaoxinRitualFlow({
                 aria-disabled={!selectedReaction}
                 aria-label="长按落印入档"
               >
-                <span>{selectedReaction ? "落印入档" : "先照见此念"}</span>
+                <span>{selectedReaction ? "长按落印入档" : "先选一个回响"}</span>
               </button>
             </div>
           ) : stage === "seal" ? (
@@ -1709,7 +1711,7 @@ export default function ZhaoxinRitualFlow({
           )}
           {displaySub ? <p>{displaySub}</p> : null}
           {stage === "growth" ? (
-            <div className="growth-proof" aria-label="今日照见已落印心证卷">
+            <div className="growth-proof" aria-label="今日所照落印记录">
               <p className="growth-proof-sequence">照见第{heartProofSequenceNumber}念</p>
               <div className="growth-proof-ledger">
                 <div className="growth-proof-row">
@@ -1737,17 +1739,111 @@ export default function ZhaoxinRitualFlow({
                   <strong>{growthPracticeLine}</strong>
                 </div>
               </div>
-              <div className="growth-archive-actions" aria-label="心证归档入口">
-                <a className="growth-archive-door" href="/mirror-scroll" onClick={(event) => handleArchiveNavigation(event, "/mirror-scroll")}>
-                  沉入长卷
-                </a>
-                <a className="growth-archive-link" href="/mirror-archive" onClick={(event) => handleArchiveNavigation(event, "/mirror-archive")}>
-                  查看档案
-                </a>
+              <div className="growth-archive-coda" aria-label="落印后归档选择">
+                {archiveSyncPhase === "choice" ? (
+                  <>
+                    <p className="growth-coda-title">此念已落印</p>
+                    <p className="growth-coda-copy">本机今日所照已保存。</p>
+                    <p className="growth-coda-ask">要把这一念同步到档案馆吗？</p>
+                    <div className="growth-coda-actions">
+                      <button type="button" className="growth-coda-button" onClick={beginArchiveSync}>
+                        同步到档案馆
+                      </button>
+                      <button type="button" className="growth-coda-button is-quiet" onClick={keepArchiveLocalOnly}>
+                        只留在本机
+                      </button>
+                    </div>
+                  </>
+                ) : null}
+
+                {archiveSyncPhase === "form" ? (
+                  <div className="growth-sync-form">
+                    <p className="growth-coda-title">同步到档案馆</p>
+                    <p className="growth-coda-copy">
+                      留下手机号，换设备也能找回你的档案馆。
+                      <br />
+                      号码只用于找回与同步，不会公开。
+                      <br />
+                      不登录，也不影响本次落印。
+                    </p>
+
+                    <div className="archive-login-form">
+                      <label>
+                        <span>手机号</span>
+                        <input
+                          value={archiveLoginPhone}
+                          onChange={(event) => setArchiveLoginPhone(event.target.value.replace(/\D/g, "").slice(0, 11))}
+                          inputMode="tel"
+                          autoComplete="tel"
+                          placeholder="填写手机号"
+                        />
+                      </label>
+
+                      <div className="archive-login-code-row">
+                        <label>
+                          <span>验证码</span>
+                          <input
+                            value={archiveLoginCode}
+                            onChange={(event) => setArchiveLoginCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                            inputMode="numeric"
+                            autoComplete="one-time-code"
+                            placeholder="4-6 位"
+                          />
+                        </label>
+                        <button type="button" onClick={sendArchiveLoginCode} disabled={!archiveLoginPhoneValid || isSendingArchiveCode || archiveLoginCountdown > 0}>
+                          {isSendingArchiveCode ? "发送中..." : archiveLoginCountdown > 0 ? `重新获取 ${archiveLoginCountdown}s` : "获取验证码"}
+                        </button>
+                      </div>
+                    </div>
+
+                    {archiveLoginMessage ? <p className="archive-login-message">{archiveLoginMessage}</p> : null}
+
+                    <div className="growth-coda-actions">
+                      <button
+                        type="button"
+                        className="growth-coda-button"
+                        onClick={bindArchivePhoneAndArchive}
+                        disabled={!archiveLoginPhoneValid || !archiveLoginCodeValid || isBindingArchivePhone}
+                      >
+                        {isBindingArchivePhone ? "同步中..." : "同步到档案馆"}
+                      </button>
+                      <button type="button" className="growth-coda-button is-quiet" onClick={keepArchiveLocalOnly}>
+                        只留在本机
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+
+                {archiveSyncPhase === "synced" ? (
+                  <>
+                    <p className="growth-coda-title">已同步到档案馆。</p>
+                    <p className="growth-coda-copy">换设备后，也能找回这一念。</p>
+                    <div className="growth-coda-actions">
+                      <a className="growth-coda-link" href="/mind-archive">
+                        查看档案馆
+                      </a>
+                      <a className="growth-coda-link is-quiet" href="/assessment-entry">
+                        继续照见一念
+                      </a>
+                    </div>
+                  </>
+                ) : null}
+
+                {archiveSyncPhase === "local" ? (
+                  <>
+                    <p className="growth-coda-title">已留在本机。</p>
+                    <p className="growth-coda-copy">这一念仍会出现在今日所照。</p>
+                    <div className="growth-coda-actions">
+                      <a className="growth-coda-link" href="/today-sealed">
+                        查看今日所照
+                      </a>
+                      <a className="growth-coda-link is-quiet" href="/assessment-entry">
+                        继续照见一念
+                      </a>
+                    </div>
+                  </>
+                ) : null}
               </div>
-              <a className="growth-lake-link" href="/lake">
-                去众念心湖看看，多少人也有这一念
-              </a>
             </div>
           ) : null}
         </div>
@@ -1826,69 +1922,10 @@ export default function ZhaoxinRitualFlow({
             <p className="ritual-thought-hint">若这一念正是你，请轻触照见。</p>
           ) : (
             <div className="ritual-limit-actions" aria-label="今日照见次数已满后的承接去处">
-              <a href="/mirror-archive">看心镜档案</a>
+              <a href="/mind-archive">看档案馆</a>
               <a href="/living-mirror-growth">进入成长谱</a>
             </div>
           )}
-        </div>
-      ) : null}
-
-      {showArchiveLoginPrompt ? (
-        <div className="archive-login-layer" role="dialog" aria-modal="true" aria-label="心证归档手机号绑定">
-          <div className="archive-login-panel">
-            <p className="archive-login-eyebrow">归档前</p>
-            <h2>
-              把这枚心证，
-              <br />
-              存入你的档案。
-            </h2>
-            <p className="archive-login-copy">绑定手机号后，可跨设备查看心镜档案、长卷与复测。手机号不会公开展示。</p>
-
-            <div className="archive-login-form">
-              <label>
-                <span>手机号</span>
-                <input
-                  value={archiveLoginPhone}
-                  onChange={(event) => setArchiveLoginPhone(event.target.value.replace(/\D/g, "").slice(0, 11))}
-                  inputMode="tel"
-                  autoComplete="tel"
-                  placeholder="填写手机号"
-                />
-              </label>
-
-              <div className="archive-login-code-row">
-                <label>
-                  <span>验证码</span>
-                  <input
-                    value={archiveLoginCode}
-                    onChange={(event) => setArchiveLoginCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    placeholder="4-6 位"
-                  />
-                </label>
-                <button type="button" onClick={sendArchiveLoginCode} disabled={!archiveLoginPhoneValid || isSendingArchiveCode || archiveLoginCountdown > 0}>
-                  {isSendingArchiveCode ? "发送中..." : archiveLoginCountdown > 0 ? `重新获取 ${archiveLoginCountdown}s` : "获取验证码"}
-                </button>
-              </div>
-            </div>
-
-            {archiveLoginMessage ? <p className="archive-login-message">{archiveLoginMessage}</p> : null}
-
-            <div className="archive-login-actions">
-              <button
-                type="button"
-                className="archive-login-primary"
-                onClick={bindArchivePhoneAndArchive}
-                disabled={!archiveLoginPhoneValid || !archiveLoginCodeValid || isBindingArchivePhone}
-              >
-                {isBindingArchivePhone ? "归档中..." : "绑定并归档"}
-              </button>
-              <button type="button" className="archive-login-secondary" onClick={keepArchiveLocalOnly}>
-                本次仅本机保存
-              </button>
-            </div>
-          </div>
         </div>
       ) : null}
 
@@ -2190,72 +2227,187 @@ export default function ZhaoxinRitualFlow({
           text-align: center;
         }
 
-        .growth-lake-link {
-          justify-self: center;
-          border: 1px solid rgba(216, 183, 111, 0.16);
-          border-radius: 999px;
-          background: rgba(8, 8, 7, 0.28);
+        .growth-archive-coda {
+          display: grid;
+          justify-items: center;
+          gap: 0.72rem;
+          width: min(34rem, 100%);
+          margin: clamp(1.1rem, 2.4svh, 1.65rem) auto 0;
+          border-top: 1px solid rgba(216, 183, 111, 0.13);
+          padding-top: clamp(0.95rem, 2svh, 1.35rem);
+          color: rgba(220, 212, 195, 0.62);
+          text-align: center;
+          animation: growthCodaIn 720ms ease 900ms both;
+        }
+
+        .growth-coda-title,
+        .growth-coda-ask,
+        .growth-coda-copy {
+          margin: 0;
+        }
+
+        .growth-coda-title {
+          color: rgba(244, 235, 221, 0.86);
+          font-family: var(--font-serif, "Songti SC", serif);
+          font-size: clamp(1.05rem, 1.7vw, 1.32rem);
+          font-weight: 400;
+          line-height: 1.55;
+          letter-spacing: 0.12em;
+        }
+
+        .growth-coda-copy,
+        .growth-coda-ask {
+          color: rgba(220, 212, 195, 0.58);
+          font-family: var(--font-sans, system-ui, sans-serif);
+          font-size: clamp(0.78rem, 1vw, 0.9rem);
+          line-height: 1.85;
+          letter-spacing: 0.06em;
+        }
+
+        .growth-coda-ask {
           color: rgba(216, 183, 111, 0.68);
+        }
+
+        .growth-coda-actions {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          align-items: center;
+          gap: 0.72rem;
+          width: min(100%, 32rem);
+          margin-top: 0.1rem;
+          font-family: var(--font-sans, system-ui, sans-serif);
+        }
+
+        .growth-coda-button,
+        .growth-coda-link,
+        .archive-login-code-row button {
+          border: 1px solid rgba(216, 183, 111, 0.2);
+          border-radius: 999px;
+          background:
+            radial-gradient(ellipse at 50% 0%, rgba(216, 183, 111, 0.09), transparent 64%),
+            rgba(8, 8, 7, 0.32);
+          color: rgba(216, 183, 111, 0.78);
+          cursor: pointer;
           font-family: var(--font-sans, system-ui, sans-serif);
           font-size: clamp(0.76rem, 1vw, 0.9rem);
           font-weight: 700;
-          letter-spacing: 0.18em;
-          padding: 0.58rem 0.9rem;
-          text-decoration: none;
-          transition: border-color 520ms ease, color 520ms ease, background 520ms ease;
-        }
-
-        .growth-archive-actions {
-          display: inline-flex;
-          justify-self: center;
-          align-items: center;
-          gap: clamp(0.8rem, 2vw, 1.2rem);
-          margin-top: clamp(0.15rem, 0.7svh, 0.45rem);
-          font-family: var(--font-sans, system-ui, sans-serif);
-        }
-
-        .growth-archive-door,
-        .growth-archive-link {
-          color: rgba(216, 183, 111, 0.78);
-          font-size: clamp(0.78rem, 1.05vw, 0.92rem);
-          font-weight: 700;
-          letter-spacing: 0.16em;
+          letter-spacing: 0.12em;
+          line-height: 1.35;
+          padding: 0.72rem 1rem;
           text-decoration: none;
           transition:
-            color 420ms ease,
-            border-color 420ms ease,
-            background 420ms ease,
-            transform 420ms ease;
+            opacity 260ms ease,
+            border-color 260ms ease,
+            color 260ms ease,
+            background 260ms ease,
+            transform 260ms ease;
         }
 
-        .growth-archive-door {
-          border: 1px solid rgba(216, 183, 111, 0.18);
-          border-radius: 999px;
-          background:
-            radial-gradient(ellipse at 50% 0%, rgba(216, 183, 111, 0.1), transparent 62%),
-            rgba(8, 8, 7, 0.34);
-          padding: 0.62rem 1.08rem;
-          box-shadow:
-            0 14px 42px rgba(0, 0, 0, 0.28),
-            inset 0 1px 0 rgba(244, 235, 221, 0.045);
+        .growth-coda-button.is-quiet,
+        .growth-coda-link.is-quiet {
+          background: transparent;
+          color: rgba(220, 212, 195, 0.66);
         }
 
-        .growth-archive-link {
-          border-bottom: 1px solid rgba(216, 183, 111, 0.32);
-          padding: 0.36rem 0.08rem;
-        }
-
-        .growth-archive-door:hover,
-        .growth-archive-link:hover {
+        .growth-coda-button:hover,
+        .growth-coda-link:hover,
+        .archive-login-code-row button:hover {
           color: rgba(244, 235, 221, 0.84);
           border-color: rgba(216, 183, 111, 0.42);
           transform: translateY(-1px);
         }
 
-        .growth-lake-link:hover {
-          border-color: rgba(216, 183, 111, 0.34);
-          background: rgba(216, 183, 111, 0.06);
-          color: rgba(244, 235, 221, 0.8);
+        .growth-coda-button:disabled,
+        .archive-login-code-row button:disabled {
+          cursor: not-allowed;
+          opacity: 0.42;
+          transform: none;
+        }
+
+        .growth-sync-form {
+          display: grid;
+          justify-items: center;
+          gap: 0.82rem;
+          width: min(30rem, 100%);
+        }
+
+        .archive-login-form {
+          display: grid;
+          gap: 0.8rem;
+          width: min(30rem, 100%);
+          text-align: left;
+        }
+
+        .archive-login-form label {
+          display: grid;
+          gap: 0.42rem;
+          min-width: 0;
+        }
+
+        .archive-login-form span {
+          color: rgba(220, 212, 195, 0.62);
+          font-family: var(--font-sans, system-ui, sans-serif);
+          font-size: 0.78rem;
+          letter-spacing: 0.08em;
+        }
+
+        .archive-login-form input {
+          width: 100%;
+          min-width: 0;
+          min-height: 2.8rem;
+          border: 1px solid rgba(216, 183, 111, 0.22);
+          border-radius: 0.55rem;
+          background: rgba(255, 255, 255, 0.035);
+          color: rgba(244, 235, 221, 0.94);
+          font-family: var(--font-sans, system-ui, sans-serif);
+          font-size: 0.94rem;
+          letter-spacing: 0.08em;
+          outline: none;
+          padding: 0.66rem 0.82rem;
+          transition:
+            border-color 260ms ease,
+            background 260ms ease,
+            box-shadow 260ms ease;
+        }
+
+        .archive-login-form input::placeholder {
+          color: rgba(220, 212, 195, 0.34);
+        }
+
+        .archive-login-form input:focus {
+          border-color: rgba(216, 183, 111, 0.5);
+          background: rgba(255, 255, 255, 0.055);
+          box-shadow: 0 0 0 1px rgba(216, 183, 111, 0.12);
+        }
+
+        .archive-login-code-row {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) 7.8rem;
+          gap: 0.66rem;
+          align-items: end;
+          min-width: 0;
+        }
+
+        .archive-login-code-row button {
+          min-height: 2.8rem;
+          border-radius: 0.55rem;
+          font-size: 0.74rem;
+          white-space: nowrap;
+        }
+
+        .archive-login-message {
+          width: min(30rem, 100%);
+          margin: 0;
+          border: 1px solid rgba(216, 183, 111, 0.11);
+          border-radius: 0.55rem;
+          background: rgba(255, 255, 255, 0.026);
+          color: rgba(220, 212, 195, 0.62);
+          font-family: var(--font-sans, system-ui, sans-serif);
+          font-size: 0.8rem;
+          line-height: 1.7;
+          padding: 0.55rem 0.72rem;
+          text-align: left;
         }
 
         @media (max-width: 560px) {
@@ -2279,9 +2431,23 @@ export default function ZhaoxinRitualFlow({
             padding: 0.5rem 0;
           }
 
-          .growth-archive-actions {
-            flex-wrap: wrap;
-            justify-content: center;
+          .growth-archive-coda {
+            width: min(22rem, 100%);
+          }
+
+          .growth-coda-actions {
+            align-items: stretch;
+            flex-direction: column;
+            width: 100%;
+          }
+
+          .growth-coda-button,
+          .growth-coda-link {
+            width: 100%;
+          }
+
+          .archive-login-code-row {
+            grid-template-columns: 1fr;
           }
 
           .growth-proof-row span {
@@ -2296,6 +2462,37 @@ export default function ZhaoxinRitualFlow({
           justify-items: center;
           gap: clamp(0.9rem, 2.2svh, 1.25rem);
           isolation: isolate;
+        }
+
+        .liangzhi-choice-guide {
+          display: grid;
+          justify-items: center;
+          gap: 0.44rem;
+          width: min(34rem, 90vw);
+          text-align: center;
+        }
+
+        .liangzhi-choice-guide h2 {
+          margin: 0;
+          color: rgba(232, 228, 210, 0.86);
+          font-family: var(--font-serif, "Songti SC", serif);
+          font-size: clamp(1.18rem, 2.6vw, 1.72rem);
+          font-weight: 400;
+          line-height: 1.45;
+          letter-spacing: 0.14em;
+          text-indent: 0.14em;
+        }
+
+        .liangzhi-choice-guide p,
+        .one-thought-reaction-hint {
+          max-width: 30rem;
+          margin: 0;
+          color: rgba(220, 212, 195, 0.48);
+          font-family: var(--font-serif, "Songti SC", serif);
+          font-size: clamp(0.78rem, 1.35vw, 0.94rem);
+          line-height: 1.9;
+          letter-spacing: 0.1em;
+          text-indent: 0.1em;
         }
 
         .one-thought-reactions {
@@ -2590,220 +2787,6 @@ export default function ZhaoxinRitualFlow({
           letter-spacing: 0.18em;
           text-indent: 0.18em;
           color: rgba(232, 204, 132, 0.66);
-        }
-
-        .archive-login-layer {
-          position: absolute;
-          inset: 0;
-          z-index: 88;
-          display: grid;
-          place-items: center;
-          padding: clamp(1rem, 4vw, 2rem);
-          background:
-            radial-gradient(ellipse at center, rgba(216, 183, 111, 0.04), transparent 42%),
-            radial-gradient(ellipse at 50% 58%, rgba(95, 132, 117, 0.065), transparent 68%),
-            rgba(5, 6, 4, 0.28);
-          backdrop-filter: blur(8px);
-          pointer-events: auto;
-          animation: archiveLoginIn 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
-        }
-
-        .archive-login-panel {
-          position: relative;
-          width: min(30rem, calc(100vw - 2rem));
-          border: 1px solid rgba(216, 183, 111, 0.13);
-          border-radius: 1.1rem;
-          background:
-            radial-gradient(ellipse at 50% 0%, rgba(216, 183, 111, 0.06), transparent 58%),
-            linear-gradient(180deg, rgba(15, 16, 13, 0.74), rgba(5, 7, 5, 0.68));
-          box-shadow:
-            0 28px 88px rgba(0, 0, 0, 0.58),
-            inset 0 1px 0 rgba(244, 235, 221, 0.06);
-          padding: clamp(1.35rem, 4vw, 2rem);
-          color: rgba(232, 228, 210, 0.82);
-          font-family: var(--font-serif, "Songti SC", serif);
-          text-align: left;
-        }
-
-        .archive-login-panel::before {
-          content: "";
-          position: absolute;
-          left: 50%;
-          top: 50%;
-          z-index: -1;
-          width: 86%;
-          height: 38%;
-          transform: translate(-50%, -50%);
-          border-radius: 999px;
-          background: radial-gradient(ellipse at center, rgba(196, 216, 212, 0.12), transparent 70%);
-          filter: blur(24px);
-          opacity: 0.62;
-          pointer-events: none;
-        }
-
-        .archive-login-eyebrow {
-          margin: 0 0 0.78rem;
-          color: rgba(216, 183, 111, 0.62);
-          font-size: 0.78rem;
-          line-height: 1.4;
-          letter-spacing: 0.28em;
-          text-indent: 0.28em;
-        }
-
-        .archive-login-panel h2 {
-          margin: 0;
-          color: rgba(244, 235, 221, 0.92);
-          font-size: clamp(1.55rem, 3vw, 2.18rem);
-          font-weight: 400;
-          line-height: 1.4;
-          letter-spacing: 0.09em;
-          text-wrap: balance;
-        }
-
-        .archive-login-copy {
-          margin: 0.9rem 0 1.35rem;
-          color: rgba(220, 212, 195, 0.64);
-          font-size: clamp(0.9rem, 1.6vw, 1rem);
-          line-height: 1.9;
-          letter-spacing: 0.06em;
-        }
-
-        .archive-login-form {
-          display: grid;
-          gap: 0.85rem;
-        }
-
-        .archive-login-form label {
-          display: grid;
-          gap: 0.42rem;
-        }
-
-        .archive-login-form span {
-          color: rgba(220, 212, 195, 0.62);
-          font-family: var(--font-sans, system-ui, sans-serif);
-          font-size: 0.82rem;
-          letter-spacing: 0.08em;
-        }
-
-        .archive-login-form input {
-          width: 100%;
-          min-height: 3rem;
-          border: 1px solid rgba(216, 183, 111, 0.22);
-          border-radius: 0.55rem;
-          background: rgba(255, 255, 255, 0.035);
-          color: rgba(244, 235, 221, 0.94);
-          font-family: var(--font-sans, system-ui, sans-serif);
-          font-size: 0.96rem;
-          letter-spacing: 0.08em;
-          outline: none;
-          padding: 0.72rem 0.9rem;
-          transition:
-            border-color 260ms ease,
-            background 260ms ease,
-            box-shadow 260ms ease;
-        }
-
-        .archive-login-form input::placeholder {
-          color: rgba(220, 212, 195, 0.34);
-        }
-
-        .archive-login-form input:focus {
-          border-color: rgba(216, 183, 111, 0.5);
-          background: rgba(255, 255, 255, 0.055);
-          box-shadow: 0 0 0 1px rgba(216, 183, 111, 0.12);
-        }
-
-        .archive-login-code-row {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) 8.2rem;
-          gap: 0.7rem;
-          align-items: end;
-        }
-
-        .archive-login-code-row button,
-        .archive-login-primary,
-        .archive-login-secondary {
-          border: 0;
-          font-family: var(--font-sans, system-ui, sans-serif);
-          cursor: pointer;
-          transition:
-            opacity 260ms ease,
-            border-color 260ms ease,
-            color 260ms ease,
-            background 260ms ease,
-            transform 260ms ease;
-        }
-
-        .archive-login-code-row button {
-          min-height: 3rem;
-          border: 1px solid rgba(216, 183, 111, 0.2);
-          border-radius: 0.55rem;
-          background: rgba(216, 183, 111, 0.055);
-          color: rgba(220, 212, 195, 0.72);
-          font-size: 0.78rem;
-          letter-spacing: 0.05em;
-          white-space: nowrap;
-        }
-
-        .archive-login-code-row button:disabled,
-        .archive-login-primary:disabled {
-          cursor: not-allowed;
-          opacity: 0.42;
-        }
-
-        .archive-login-message {
-          margin: 0.9rem 0 0;
-          border: 1px solid rgba(216, 183, 111, 0.11);
-          border-radius: 0.55rem;
-          background: rgba(255, 255, 255, 0.026);
-          color: rgba(220, 212, 195, 0.62);
-          font-family: var(--font-sans, system-ui, sans-serif);
-          font-size: 0.82rem;
-          line-height: 1.7;
-          padding: 0.55rem 0.72rem;
-        }
-
-        .archive-login-actions {
-          display: flex;
-          flex-wrap: wrap;
-          justify-content: center;
-          gap: 0.75rem;
-          margin-top: 1.25rem;
-        }
-
-        .archive-login-primary {
-          min-width: 9.5rem;
-          min-height: 3.05rem;
-          border-radius: 999px;
-          background: linear-gradient(180deg, #dcc67c 0%, #b99d56 54%, #92743a 100%);
-          color: #0b0a07;
-          font-size: 0.92rem;
-          font-weight: 700;
-          letter-spacing: 0.1em;
-          padding: 0.72rem 1.4rem;
-          box-shadow:
-            0 16px 34px rgba(0, 0, 0, 0.34),
-            inset 0 1px 0 rgba(255, 255, 255, 0.24);
-        }
-
-        .archive-login-primary:not(:disabled):hover {
-          transform: translateY(-1px);
-          filter: brightness(1.05);
-        }
-
-        .archive-login-secondary {
-          min-height: 3.05rem;
-          border-bottom: 1px solid rgba(216, 183, 111, 0.26);
-          background: transparent;
-          color: rgba(216, 183, 111, 0.68);
-          font-size: 0.9rem;
-          letter-spacing: 0.1em;
-          padding: 0.72rem 0.22rem;
-        }
-
-        .archive-login-secondary:hover {
-          color: rgba(244, 235, 221, 0.82);
-          border-color: rgba(216, 183, 111, 0.46);
         }
 
         .scene-float-field {
@@ -3761,14 +3744,22 @@ export default function ZhaoxinRitualFlow({
           }
         }
 
-        @keyframes archiveLoginIn {
+        @keyframes growthCodaIn {
           from {
             opacity: 0;
+            transform: translateY(0.7rem);
             filter: blur(8px);
           }
           to {
             opacity: 1;
+            transform: translateY(0);
             filter: blur(0);
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .growth-archive-coda {
+            animation: none;
           }
         }
 

@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react"
 import { AssessmentShell } from "@/features/assessment/components"
 import { getTodayArchiveStats } from "@/lib/mind-archive/archiveStatsService"
 import { updateOneThoughtEventFinalAction } from "@/lib/mind-archive/oneThoughtEventRepository"
+import { getRuleGuardReminders, type RuleGuardReminder } from "@/lib/rule-guard/ruleGuardService"
 import {
   DEFAULT_MIND_ARCHIVE_USER_ID,
   type ActualAction,
@@ -59,6 +60,7 @@ export default function TodaySealedPage() {
     stillMoving: 0,
     pendingReview: 0,
   })
+  const [reminders, setReminders] = useState<RuleGuardReminder[]>([])
 
   const refreshToday = useCallback(() => {
     const stats = getTodayArchiveStats(DEFAULT_MIND_ARCHIVE_USER_ID)
@@ -70,6 +72,7 @@ export default function TodaySealedPage() {
       stillMoving: stats.stillMoving,
       pendingReview: stats.pendingReview,
     })
+    setReminders(getRuleGuardReminders(DEFAULT_MIND_ARCHIVE_USER_ID))
   }, [])
 
   useEffect(() => {
@@ -125,6 +128,25 @@ export default function TodaySealedPage() {
             <strong>{summary.pendingReview}</strong>
             <p>交易后还欠一次回头看</p>
           </article>
+        </section>
+
+        <section className="guard-section" aria-label="规则守护高频提醒">
+          <div>
+            <p>规则守护</p>
+            <h2>不做强制拦截，只做提醒</h2>
+            <span>提醒来自已落印的一念和已有真实复盘。</span>
+          </div>
+          <div>
+            <p>高频提醒</p>
+            {reminders.length ? reminders.slice(0, 3).map((reminder) => (
+              <article key={reminder.id}>
+                <strong>{reminder.title}</strong>
+                <span>{reminder.message}</span>
+              </article>
+            )) : (
+              <span>暂无高频提醒。</span>
+            )}
+          </div>
         </section>
 
         <section className="today-list" aria-label="今日最近一念">
@@ -255,12 +277,56 @@ export default function TodaySealedPage() {
           margin-bottom: 30px;
         }
 
+        .guard-section {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 18px;
+          margin-bottom: 30px;
+        }
+
         .today-summary article,
         .today-list,
         .today-records article,
-        .today-empty {
+        .today-empty,
+        .guard-section > div {
           border-top: 1px solid rgba(216, 183, 111, 0.18);
           background: rgba(8, 8, 7, 0.16);
+        }
+
+        .guard-section > div {
+          padding: 20px;
+        }
+
+        .guard-section p {
+          margin: 0 0 12px;
+          color: rgba(216, 183, 111, 0.64);
+          font-size: 13px;
+          letter-spacing: 0.2em;
+        }
+
+        .guard-section h2 {
+          margin: 0 0 10px;
+          font-family: var(--font-serif);
+          font-size: clamp(28px, 4vw, 48px);
+          font-weight: 400;
+        }
+
+        .guard-section span {
+          color: rgba(244, 235, 221, 0.52);
+          line-height: 1.8;
+          white-space: pre-line;
+        }
+
+        .guard-section article {
+          display: grid;
+          gap: 6px;
+          border-top: 1px solid rgba(216, 183, 111, 0.1);
+          padding: 12px 0;
+        }
+
+        .guard-section strong {
+          color: rgba(216, 183, 111, 0.86);
+          font-weight: 400;
         }
 
         .today-summary article {
@@ -393,7 +459,8 @@ export default function TodaySealedPage() {
         }
 
         @media (max-width: 900px) {
-          .today-summary {
+          .today-summary,
+          .guard-section {
             grid-template-columns: repeat(2, minmax(0, 1fr));
           }
 
@@ -408,6 +475,10 @@ export default function TodaySealedPage() {
           }
 
           .today-summary {
+            grid-template-columns: 1fr;
+          }
+
+          .guard-section {
             grid-template-columns: 1fr;
           }
 

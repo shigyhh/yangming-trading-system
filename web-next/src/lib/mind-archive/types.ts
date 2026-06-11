@@ -123,16 +123,16 @@ export type HeartJudgement =
 export interface TradeReview {
   id: string
   userId: string
-  linkedOneThoughtEventId?: string
-  sceneId?: string
-  itemId?: string
-  key?: string
-  os?: string
-  reflectionFinal?: string
+  linkedOneThoughtEventId: string
+  sceneId: string
+  itemId: string
+  key: string
+  os: string
+  reflectionFinal: string
   painLevel?: 1 | 2 | 3 | 4 | 5
   painPoint?: string
   heartThief?: string
-  reflectionVersion?: PrivateReflectionVersion
+  reflectionVersion: PrivateReflectionVersion
   symbol: string
   direction: TradeDirection
   entryPrice?: number

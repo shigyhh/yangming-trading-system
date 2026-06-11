@@ -43,7 +43,7 @@ function listArchiveEvents(
   return storage === undefined ? listSealedOneThoughtEvents(userId) : listSealedOneThoughtEvents(userId, storage)
 }
 
-function normalizeHeartThieves(value: string | undefined) {
+export function normalizeHeartThieves(value: string | undefined) {
   if (!value) return []
 
   return value

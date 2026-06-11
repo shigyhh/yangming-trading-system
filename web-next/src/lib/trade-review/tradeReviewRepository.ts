@@ -107,7 +107,19 @@ function normalizeTradeReview(value: unknown): TradeReview | null {
   if (!value || typeof value !== "object") return null
 
   const item = value as Partial<TradeReview>
-  if (!item.id || !item.symbol || !item.direction) return null
+  if (
+    !item.id ||
+    !item.linkedOneThoughtEventId ||
+    !item.sceneId ||
+    !item.itemId ||
+    !item.key ||
+    !item.os ||
+    !item.reflectionFinal ||
+    !item.symbol ||
+    !item.direction
+  ) {
+    return null
+  }
 
   const pnl = Number(item.pnl)
   if (!Number.isFinite(pnl)) return null
@@ -119,12 +131,12 @@ function normalizeTradeReview(value: unknown): TradeReview | null {
   return {
     id: String(item.id),
     userId: String(item.userId || DEFAULT_MIND_ARCHIVE_USER_ID),
-    linkedOneThoughtEventId: item.linkedOneThoughtEventId ? String(item.linkedOneThoughtEventId) : undefined,
-    sceneId: item.sceneId ? String(item.sceneId) : undefined,
-    itemId: item.itemId ? String(item.itemId) : undefined,
-    key: item.key ? String(item.key) : undefined,
-    os: item.os ? String(item.os) : undefined,
-    reflectionFinal: item.reflectionFinal ? String(item.reflectionFinal) : undefined,
+    linkedOneThoughtEventId: String(item.linkedOneThoughtEventId),
+    sceneId: String(item.sceneId),
+    itemId: String(item.itemId),
+    key: String(item.key),
+    os: String(item.os),
+    reflectionFinal: String(item.reflectionFinal),
     painLevel: normalizePainLevel(item.painLevel),
     painPoint: item.painPoint ? String(item.painPoint) : undefined,
     heartThief: item.heartThief ? String(item.heartThief) : undefined,
@@ -173,6 +185,14 @@ export function listRecentTradeReviews(
   return listTradeReviews(userId, storage).slice(0, Math.max(0, Math.trunc(limit)))
 }
 
+export function listTradeReviewsByOneThoughtEvent(
+  userId: string,
+  eventId: string,
+  storage: BrowserStorageLike | null = getBrowserStorage(),
+) {
+  return listTradeReviews(userId, storage).filter((review) => review.linkedOneThoughtEventId === eventId)
+}
+
 export function getTradeReview(id: string, storage: BrowserStorageLike | null = getBrowserStorage()) {
   return parseJson<unknown[]>(safeGet(storage, TRADE_REVIEW_STORAGE_KEY), [])
     .map(normalizeTradeReview)
@@ -202,9 +222,7 @@ export function createTradeReview(
   )
 
   writeTradeReviews(nextReviews, storage)
-  if (review.linkedOneThoughtEventId) {
-    linkTradeReviewToOneThoughtEvent(review.linkedOneThoughtEventId, review.id, storage)
-  }
+  linkTradeReviewToOneThoughtEvent(review.linkedOneThoughtEventId, review.id, storage)
 
   return review
 }

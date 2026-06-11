@@ -105,6 +105,7 @@ function normalizeEvent(value: unknown): OneThoughtEvent | null {
   const createdAt = String(item.createdAt || item.reflectionShownAt || new Date().toISOString())
   const source = normalizeSource((item as { source?: unknown }).source)
   const ritualStatus = normalizeRitualStatus((item as { ritualStatus?: unknown }).ritualStatus)
+  const ritualVersionValue = String((item as { ritualVersion?: unknown }).ritualVersion || "")
   const reviewStatus = normalizeReviewStatus((item as { reviewStatus?: unknown }).reviewStatus, item)
   const sealStage =
     item.sealStage && typeof item.sealStage === "object"
@@ -128,11 +129,11 @@ function normalizeEvent(value: unknown): OneThoughtEvent | null {
     practiceText: item.practiceText ? String(item.practiceText) : undefined,
     reflectionVersion: PRIVATE_REFLECTION_VERSION,
     ritualName:
-      item.ritualName === ONE_THOUGHT_RITUAL_NAME || item.ritualVersion === "zhaojian_yinian_zhaoxin_ritual_v1"
+      item.ritualName === ONE_THOUGHT_RITUAL_NAME || ritualVersionValue === "zhaojian_yinian_zhaoxin_ritual_v1"
         ? ONE_THOUGHT_RITUAL_NAME
         : undefined,
     ritualVersion:
-      item.ritualVersion === ONE_THOUGHT_RITUAL_VERSION || item.ritualVersion === "zhaojian_yinian_zhaoxin_ritual_v1"
+      ritualVersionValue === ONE_THOUGHT_RITUAL_VERSION || ritualVersionValue === "zhaojian_yinian_zhaoxin_ritual_v1"
         ? ONE_THOUGHT_RITUAL_VERSION
         : undefined,
     ritualStatus,
@@ -203,8 +204,10 @@ export function updateOneThoughtEventFinalAction(
   actualAction: ActualAction,
   storage: BrowserStorageLike | null = getBrowserStorage(),
 ) {
+  const now = new Date().toISOString()
   return updateOneThoughtEvent(id, {
     actualAction,
+    actualActionAt: now,
     reviewStatus: reviewStatusForActualAction(actualAction),
   }, storage)
 }

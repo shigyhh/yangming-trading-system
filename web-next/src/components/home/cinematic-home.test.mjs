@@ -309,13 +309,20 @@ test("home first viewport is a still-water seeing entrance", async () => {
     assert.equal(stillHero.includes(forbiddenMarketToken), false, `hero should not include readable market info: ${forbiddenMarketToken}`)
   })
 
-  ;["/today-sealed", "/lake", "/review", "/me/archive"].forEach((href) => {
+  ;["/today-sealed", "/mind-archive", "/lake"].forEach((href) => {
     assert.ok(topNav.includes(`href: "${href}"`), `home nav missing route: ${href}`)
   })
+  assert.ok(topNav.includes("privateNavLinks"), "home top nav should keep private route group separate")
+  assert.ok(topNav.includes("publicNavLinks"), "home top nav should keep public route group separate")
+  assert.ok(topNav.includes("home-nav-divider"), "home top nav should visually separate public lake from private routes")
   assert.equal(topNav.includes("one-thought-bottom-nav"), false, "home top nav should not include the app bottom nav")
   assert.equal(topNav.includes("<FlowButton"), false, "home nav should not keep a duplicate top-right one-thought entrance")
   assert.equal(topNav.includes("照见一念"), false, "home nav should leave 照见一念 to the main hero doorway")
   assert.ok(topNav.includes("今日所照"), "home top nav should expose today's sealed-record status page")
+  assert.ok(topNav.includes("档案馆"), "home top nav should expose the private archive museum")
+  assert.ok(topNav.includes("众念心湖"), "home top nav should expose the public lake")
+  assert.equal(topNav.includes('{ label: "真实复盘"'), false, "home top nav should keep review inside the archive museum")
+  assert.equal(topNav.includes('{ label: "一念档案"'), false, "home top nav should not duplicate the archive museum label")
   assert.equal(topNav.includes('{ label: "今日照见", href: "/reflect" }'), false, "home top nav should not duplicate the private start flow")
   assert.ok(layout.includes("<AppBottomNav />"), "app layout should mount bottom navigation outside the home-only top nav")
   ;["今日照见", "心镜长卷", "众念心湖", "我的", 'href: "/reflect"', 'href: "/scroll"', 'href: "/lake"', 'href: "/me"'].forEach((copy) => {

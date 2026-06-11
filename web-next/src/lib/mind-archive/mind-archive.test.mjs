@@ -4,10 +4,13 @@ import test from "node:test"
 
 const typesUrl = new URL("./types.ts", import.meta.url)
 const eventRepoUrl = new URL("./oneThoughtEventRepository.ts", import.meta.url)
+const archiveStatsUrl = new URL("./archiveStatsService.ts", import.meta.url)
 const ritualFlowUrl = new URL("../../features/assessment/ZhaoxinRitualFlow.tsx", import.meta.url)
 const ritualFacadeUrl = new URL("../../features/assessment/OneThoughtRitualFlow.tsx", import.meta.url)
 const gatewayUrl = new URL("../../features/assessment/MirrorGateway.tsx", import.meta.url)
 const entryPageUrl = new URL("../../app/assessment-entry/page.tsx", import.meta.url)
+const todaySealedPageUrl = new URL("../../app/today-sealed/page.tsx", import.meta.url)
+const mindArchivePageUrl = new URL("../../app/mind-archive/page.tsx", import.meta.url)
 const lakePageUrl = new URL("../../features/one-thought-lake/OneThoughtLakePage.tsx", import.meta.url)
 
 test("OneThoughtEvent contract names the P0 ritual boundary", async () => {
@@ -111,4 +114,117 @@ test("众念心湖 remains isolated from sealed OneThoughtRitual events", async 
   assert.doesNotMatch(lakePage, /createOneThoughtEvent/)
   assert.doesNotMatch(lakePage, /ritualStatus:\s*"sealed"/)
   assert.doesNotMatch(lakePage, /ONE_THOUGHT_RITUAL_VERSION/)
+})
+
+test("P1 stats use only sealed oneThoughtEvents and expose archive selectors", async () => {
+  const archiveStats = await readFile(archiveStatsUrl, "utf8")
+
+  ;[
+    "listSealedOneThoughtEvents",
+    "getTodayArchiveStats",
+    "getMindArchiveStats",
+    "getRecentSealedThoughtEvents",
+    "getTopHeartThieves",
+    "getTopScenes",
+    "getStopRate",
+    "getRecurringThoughts",
+    "getPendingReviewEvents",
+    'event.userReaction === "stopped"',
+    'event.actualAction === "traded" && event.reviewStatus === "pending"',
+  ].forEach((token) => {
+    assert.equal(archiveStats.includes(token), true, `missing P1 archive stats token: ${token}`)
+  })
+
+  assert.doesNotMatch(archiveStats, /anonymousThoughtLakeEntry/)
+  assert.doesNotMatch(archiveStats, /reflection_v2/)
+})
+
+test("P1 final action records actualAction and reviewStatus without creating reviews", async () => {
+  const eventRepo = await readFile(eventRepoUrl, "utf8")
+
+  ;[
+    "updateOneThoughtEventFinalAction",
+    "reviewStatusForActualAction",
+    'if (actualAction === "traded") return "pending"',
+    'return "none"',
+    "actualActionAt: now",
+    "reviewStatus: reviewStatusForActualAction(actualAction)",
+  ].forEach((token) => {
+    assert.equal(eventRepo.includes(token), true, `missing final action token: ${token}`)
+  })
+})
+
+test("今日所照 page reads sealed stats and records the P1 final action", async () => {
+  const todaySealedPage = await readFile(todaySealedPageUrl, "utf8")
+
+  ;[
+    "getTodayArchiveStats",
+    "updateOneThoughtEventFinalAction",
+    "今日所照",
+    "今天你照见了几念",
+    "照见了",
+    "没照到",
+    "愿止一念",
+    "心还在动",
+    "待复盘",
+    "最近一念",
+    "reflectionFinal",
+    "heartEvidence || event.painPoint",
+    "practiceText",
+    "最后你怎么做？",
+    'recordFinalAction(event.id, "paused")',
+    'recordFinalAction(event.id, "watched")',
+    'recordFinalAction(event.id, "traded")',
+    'recordFinalAction(event.id, "unknown")',
+    "/assessment-entry",
+  ].forEach((token) => {
+    assert.equal(todaySealedPage.includes(token), true, `missing today sealed page token: ${token}`)
+  })
+
+  assert.doesNotMatch(todaySealedPage, /reflection_v2/)
+  assert.doesNotMatch(todaySealedPage, /anonymousThoughtLakeEntry/)
+})
+
+test("档案馆 page collects the private archive IA without lake or old reflection sources", async () => {
+  const mindArchivePage = await readFile(mindArchivePageUrl, "utf8")
+
+  ;[
+    "getMindArchiveStats",
+    "getRecentSealedThoughtEvents",
+    "listRecentTradeReviews",
+    "getHeartThiefProfile",
+    "getRuleGuardReminders",
+    "档案馆",
+    "一念档案",
+    "这里收藏你已照见、已落印、已复盘的一念。",
+    "不记行情，只记你被哪一念牵走，又有没有照着做。",
+    "当前卷：一念档案",
+    "今日所照摘要",
+    "近日最强心贼",
+    "待显影",
+    "最近一念",
+    "一念档案摘要",
+    "查看一念档案",
+    "心镜长卷",
+    "看心怎么动。",
+    "知行长卷",
+    "看照见后有没有做到。",
+    "真实复盘入口",
+    "复发念",
+    "这不是第一次来，也不会是最后一次。",
+    "规则守护",
+    "reminders.slice(0, 3)",
+    "recentSealedEvents",
+    "pendingReviewEvents",
+    "stats.recurringThoughts",
+    "reflectionFinal",
+    "心贼标签待补齐",
+    "这一念之后你交易了，后面还欠一次回头看。",
+  ].forEach((token) => {
+    assert.equal(mindArchivePage.includes(token), true, `missing mind archive page token: ${token}`)
+  })
+
+  assert.doesNotMatch(mindArchivePage, /心镜档案/)
+  assert.doesNotMatch(mindArchivePage, /reflection_v2/)
+  assert.doesNotMatch(mindArchivePage, /anonymousThoughtLakeEntry/)
 })

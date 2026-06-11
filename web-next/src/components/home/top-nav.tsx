@@ -14,11 +14,13 @@ import {
 } from "@/features/assessment/storage"
 import { STORAGE_KEYS } from "@/lib/user-flow/visitor-state"
 
-const navLinks = [
+const privateNavLinks = [
   { label: "今日所照", href: "/today-sealed" },
+  { label: "档案馆", href: "/mind-archive" },
+] as const
+
+const publicNavLinks = [
   { label: "众念心湖", href: "/lake" },
-  { label: "真实复盘", href: "/review" },
-  { label: "心镜档案", href: "/me/archive" },
 ] as const
 
 const HOME_DIVE_DURATION_MS = 2400
@@ -90,7 +92,9 @@ export function TopNav() {
     if (href === "/today-sealed") return pathname === "/today-sealed"
     if (href === "/lake") return pathname === "/lake" || pathname === "/one-thought-lake"
     if (href === "/review") return pathname === "/review" || pathname === "/trade-review"
-    if (href === "/me/archive") return pathname === "/me/archive" || pathname === "/mirror-archive"
+    if (href === "/mind-archive") {
+      return pathname === "/mind-archive" || pathname === "/me/archive" || pathname === "/mirror-archive"
+    }
     return pathname === href
   }
 
@@ -185,32 +189,47 @@ export function TopNav() {
     <motion.header
       className="home-top-nav-shell font-function fixed inset-x-0 top-0 z-40 border-b border-[rgba(217,189,122,.01)] bg-[#080807]/3 backdrop-blur-2xl"
       initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: scrollFade * 0.52, y: -(1 - scrollFade) * 22 }}
-      whileHover={scrollFade > 0.08 ? { opacity: Math.min(0.76, scrollFade * 0.76) } : undefined}
+      animate={{ opacity: scrollFade * 0.74, y: -(1 - scrollFade) * 22 }}
+      whileHover={scrollFade > 0.08 ? { opacity: Math.min(0.9, scrollFade * 0.9) } : undefined}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       style={{ pointerEvents: scrollFade > 0.08 ? "auto" : "none" }}
     >
       <nav className="mx-auto flex min-h-16 w-full max-w-[1360px] items-center justify-between gap-6 px-5 md:min-h-[72px] md:px-8">
-        <a href="#hero" className="group flex items-center gap-3 opacity-[.46] no-underline transition duration-700 hover:opacity-[.82]">
+        <a href="#hero" className="group flex items-center gap-3 opacity-[.62] no-underline transition duration-700 hover:opacity-[.9]">
           <span className="home-nav-zhao" aria-hidden="true">
             <YangmingA1Mark className="home-nav-zhao-glyph" role="presentation" aria-hidden="true" />
           </span>
           <span className="flex flex-col">
-            <strong className="type-level-5 text-[rgba(216,183,111,.58)]">阳明心学交易系统</strong>
-            <em className="type-level-4 mt-1 text-[0.62rem] not-italic text-muted-cream opacity-42">见行情 · 见心 · 见人格</em>
+            <strong className="type-level-5 text-[rgba(216,183,111,.7)]">阳明心学交易系统</strong>
+            <em className="type-level-4 mt-1 text-[0.62rem] not-italic text-muted-cream opacity-58">见行情 · 见心 · 见人格</em>
           </span>
         </a>
         <div className="hidden items-center gap-3 md:flex">
-          <div className="hidden items-center gap-3 lg:flex">
-            {navLinks.map((item) => (
+          <div className="hidden items-center gap-4 lg:flex" aria-label="首页辅助导航">
+            {privateNavLinks.map((item) => (
               <a
                 key={item.href}
                 href={item.href}
                 onClick={(event) => enterRouteThroughWater(event, item.href)}
-                className={`relative rounded-full px-2.5 py-2 font-function text-[0.64rem] font-semibold tracking-[.18em] no-underline transition duration-500 hover:bg-[rgba(217,189,122,.022)] hover:text-[rgba(244,235,221,.68)] ${
+                className={`relative rounded-full px-2.5 py-2 font-function text-[0.64rem] font-semibold tracking-[.18em] no-underline transition duration-500 hover:bg-[rgba(217,189,122,.04)] hover:text-[rgba(244,235,221,.86)] ${
                   isActive(item.href)
-                    ? "text-[rgba(216,183,111,.64)] after:absolute after:left-1/2 after:top-full after:size-1 after:-translate-x-1/2 after:rounded-full after:bg-[rgba(216,183,111,.5)]"
-                    : "text-[rgba(220,212,195,.44)]"
+                    ? "text-[rgba(216,183,111,.84)] after:absolute after:left-1/2 after:top-full after:size-1 after:-translate-x-1/2 after:rounded-full after:bg-[rgba(216,183,111,.62)]"
+                    : "text-[rgba(220,212,195,.7)]"
+                }`}
+              >
+                {item.label}
+              </a>
+            ))}
+            <span className="home-nav-divider" aria-hidden="true" />
+            {publicNavLinks.map((item) => (
+              <a
+                key={item.href}
+                href={item.href}
+                onClick={(event) => enterRouteThroughWater(event, item.href)}
+                className={`relative rounded-full px-2.5 py-2 font-function text-[0.64rem] font-semibold tracking-[.18em] no-underline transition duration-500 hover:bg-[rgba(217,189,122,.035)] hover:text-[rgba(244,235,221,.82)] ${
+                  isActive(item.href)
+                    ? "text-[rgba(216,183,111,.78)] after:absolute after:left-1/2 after:top-full after:size-1 after:-translate-x-1/2 after:rounded-full after:bg-[rgba(216,183,111,.54)]"
+                    : "text-[rgba(220,212,195,.62)]"
                 }`}
               >
                 {item.label}
@@ -263,6 +282,20 @@ export function TopNav() {
       <style jsx>{`
         .home-account-area {
           position: relative;
+        }
+
+        .home-nav-divider {
+          display: inline-block;
+          width: 1px;
+          height: 0.9rem;
+          margin-inline: 0.45rem 0.2rem;
+          background: linear-gradient(
+            to bottom,
+            transparent,
+            rgba(216, 183, 111, 0.24),
+            transparent
+          );
+          opacity: 0.68;
         }
 
         .home-account-chip {
