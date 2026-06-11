@@ -1,0 +1,11 @@
+{
+  "market": "ashare",
+  "timeframe": "101",
+  "source": "historical_market_cache",
+  "last_trade_date": "20260601",
+  "updated_at": "2026-06-11T11:45:26.526Z",
+  "symbols_count": 13,
+  "candles_count": 47989,
+  "status": "stale",
+  "errors": []
+}

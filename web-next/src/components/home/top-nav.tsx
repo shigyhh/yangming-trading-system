@@ -16,6 +16,7 @@ import { STORAGE_KEYS } from "@/lib/user-flow/visitor-state"
 
 const privateNavLinks = [
   { label: "今日所照", href: "/today-sealed" },
+  { label: "真实复盘", href: "/review" },
   { label: "档案馆", href: "/mind-archive" },
 ] as const
 

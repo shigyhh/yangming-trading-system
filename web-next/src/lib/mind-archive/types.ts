@@ -120,6 +120,144 @@ export type HeartJudgement =
   | "zheng_kui"
   | "shuang_shu"
 
+export type ChartEvidenceType =
+  | "before_entry"
+  | "after_entry"
+  | "exit"
+  | "trade_record"
+
+export type MarketTrend =
+  | "uptrend"
+  | "downtrend"
+  | "range"
+  | "sharp_rise"
+  | "sharp_drop"
+  | "reversal_attempt"
+  | "unclear"
+
+export type PriceLocation =
+  | "high"
+  | "middle"
+  | "low"
+  | "support_area"
+  | "resistance_area"
+  | "range_top"
+  | "range_bottom"
+  | "ma_area"
+  | "unclear"
+
+export type MarketPattern =
+  | "breakout"
+  | "pullback"
+  | "false_breakout"
+  | "range_bound"
+  | "second_push"
+  | "second_dip"
+  | "spike_and_fade"
+  | "rebound"
+  | "unclear"
+
+export type VolumeState =
+  | "expanding"
+  | "shrinking"
+  | "normal"
+  | "unknown"
+
+export type Timeframe =
+  | "1m"
+  | "5m"
+  | "15m"
+  | "30m"
+  | "1h"
+  | "4h"
+  | "1d"
+  | "101"
+
+export type KlinePattern = MarketPattern
+
+export type MarketContextDataSource = "manual" | "kline_db" | "screenshot" | "insufficient_data"
+
+export interface KlineCandle {
+  symbol: string
+  timeframe: Timeframe | string
+  openTime: string
+  closeTime?: string
+  open: number
+  high: number
+  low: number
+  close: number
+  volume?: number
+  amount?: number
+  pctChg?: number
+}
+
+export interface KlineContextQuery {
+  symbol: string
+  timeframe: Timeframe | string
+  entryTime: string
+  entryPrice?: number
+}
+
+export interface KlineContextResult {
+  symbol: string
+  timeframe: Timeframe | string
+  entryTime: string
+  candlesUsed: number
+  marketTrend: MarketTrend
+  priceLocation: PriceLocation
+  pattern: KlinePattern
+  volumeState: VolumeState
+  confidence: "low" | "medium" | "high"
+  dataSource: "kline_db" | "manual" | "insufficient_data"
+  evidence: {
+    recentHigh?: number
+    recentLow?: number
+    lastClose?: number
+    ma20?: number
+    ma60?: number
+    slopePct?: number
+    volumeRatio?: number
+  }
+  notes?: string[]
+}
+
+export type ChartEvidence = {
+  id: string
+  type: ChartEvidenceType
+  url: string
+  fileName?: string
+  createdAt: string
+}
+
+export type TradeReviewMarketContext = {
+  symbol?: string
+  timeframe?: string
+  entryTime?: string
+  entryPrice?: number
+  marketTrend?: MarketTrend
+  priceLocation?: PriceLocation
+  pattern?: MarketPattern
+  volumeState?: VolumeState
+  confidence?: "low" | "medium" | "high"
+  dataSource: MarketContextDataSource
+  evidence?: KlineContextResult["evidence"]
+  editedByUser?: boolean
+}
+
+export type TradeReviewBehaviorEvidence = {
+  changedPlanIntraday?: boolean
+  addedPosition?: boolean
+  movedStopLoss?: boolean
+  emotionDrivenEntry?: boolean
+}
+
+export type TradeReviewSummary = {
+  marketText?: string
+  behaviorText?: string
+  heartText?: string
+  practiceText?: string
+}
+
 export interface TradeReview {
   id: string
   userId: string
@@ -134,6 +272,7 @@ export interface TradeReview {
   heartThief?: string
   reflectionVersion: PrivateReflectionVersion
   symbol: string
+  timeframe?: string
   direction: TradeDirection
   entryPrice?: number
   exitPrice?: number
@@ -142,7 +281,11 @@ export interface TradeReview {
   followedPlan: boolean
   brokeRule: boolean
   screenshotUrl?: string
+  chartEvidence?: ChartEvidence[]
+  marketContext?: TradeReviewMarketContext
+  behaviorEvidence?: TradeReviewBehaviorEvidence
   reviewText?: string
+  reviewSummary?: TradeReviewSummary
   heartJudgement: HeartJudgement
   createdAt: string
   updatedAt: string
