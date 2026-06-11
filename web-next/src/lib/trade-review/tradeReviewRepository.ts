@@ -4,8 +4,14 @@ import {
   PRIVATE_REFLECTION_VERSION,
   TRADE_REVIEW_STORAGE_KEY,
   type BrowserStorageLike,
+  type ChartEvidence,
+  type ChartEvidenceType,
   type HeartJudgement,
+  type MarketPattern,
+  type MarketTrend,
+  type PriceLocation,
   type TradeReview,
+  type VolumeState,
 } from "@/lib/mind-archive/types"
 
 export type CreateTradeReviewInput = Omit<TradeReview, "id" | "heartJudgement" | "createdAt" | "updatedAt"> & {
@@ -82,6 +88,157 @@ function normalizePainLevel(value: unknown): TradeReview["painLevel"] {
   return undefined
 }
 
+function normalizeChartEvidenceType(value: unknown): ChartEvidenceType {
+  if (
+    value === "before_entry" ||
+    value === "after_entry" ||
+    value === "exit" ||
+    value === "trade_record"
+  ) {
+    return value
+  }
+  return "before_entry"
+}
+
+function normalizeChartEvidence(value: unknown): ChartEvidence | null {
+  if (!value || typeof value !== "object") return null
+  const item = value as Partial<ChartEvidence>
+  if (!item.id || !item.url) return null
+
+  return {
+    id: String(item.id),
+    type: normalizeChartEvidenceType(item.type),
+    url: String(item.url),
+    fileName: item.fileName ? String(item.fileName) : undefined,
+    createdAt: String(item.createdAt || new Date().toISOString()),
+  }
+}
+
+function normalizeMarketTrend(value: unknown): MarketTrend {
+  if (
+    value === "uptrend" ||
+    value === "downtrend" ||
+    value === "range" ||
+    value === "sharp_rise" ||
+    value === "sharp_drop" ||
+    value === "reversal_attempt" ||
+    value === "unclear"
+  ) {
+    return value
+  }
+  return "unclear"
+}
+
+function normalizePriceLocation(value: unknown): PriceLocation {
+  if (
+    value === "high" ||
+    value === "middle" ||
+    value === "low" ||
+    value === "support_area" ||
+    value === "resistance_area" ||
+    value === "range_top" ||
+    value === "range_bottom" ||
+    value === "ma_area" ||
+    value === "unclear"
+  ) {
+    return value
+  }
+  return "unclear"
+}
+
+function normalizePattern(value: unknown): MarketPattern {
+  if (
+    value === "breakout" ||
+    value === "pullback" ||
+    value === "false_breakout" ||
+    value === "range_bound" ||
+    value === "second_push" ||
+    value === "second_dip" ||
+    value === "spike_and_fade" ||
+    value === "rebound" ||
+    value === "unclear"
+  ) {
+    return value
+  }
+  return "unclear"
+}
+
+function normalizeVolumeState(value: unknown): VolumeState {
+  if (value === "expanding" || value === "shrinking" || value === "normal" || value === "unknown") {
+    return value
+  }
+  return "unknown"
+}
+
+function normalizeConfidence(value: unknown): "low" | "medium" | "high" | undefined {
+  if (value === "low" || value === "medium" || value === "high") return value
+  return undefined
+}
+
+function normalizeMarketContextDataSource(value: unknown): NonNullable<TradeReview["marketContext"]>["dataSource"] {
+  if (value === "kline_db" || value === "screenshot" || value === "insufficient_data") return value
+  return "manual"
+}
+
+function normalizeMarketContextEvidence(value: unknown): NonNullable<TradeReview["marketContext"]>["evidence"] {
+  if (!value || typeof value !== "object") return undefined
+  const item = value as Record<string, unknown>
+
+  return {
+    recentHigh: normalizeOptionalNumber(item.recentHigh),
+    recentLow: normalizeOptionalNumber(item.recentLow),
+    lastClose: normalizeOptionalNumber(item.lastClose),
+    ma20: normalizeOptionalNumber(item.ma20),
+    ma60: normalizeOptionalNumber(item.ma60),
+    slopePct: normalizeOptionalNumber(item.slopePct),
+    volumeRatio: normalizeOptionalNumber(item.volumeRatio),
+  }
+}
+
+function normalizeMarketContext(value: unknown): TradeReview["marketContext"] {
+  if (!value || typeof value !== "object") return undefined
+  const item = value as Partial<NonNullable<TradeReview["marketContext"]>>
+
+  return {
+    symbol: item.symbol ? String(item.symbol).trim() : undefined,
+    timeframe: item.timeframe ? String(item.timeframe).trim() : undefined,
+    entryTime: item.entryTime ? String(item.entryTime).trim() : undefined,
+    entryPrice: normalizeOptionalNumber(item.entryPrice),
+    marketTrend: normalizeMarketTrend(item.marketTrend),
+    priceLocation: normalizePriceLocation(item.priceLocation),
+    pattern: normalizePattern(item.pattern),
+    volumeState: normalizeVolumeState(item.volumeState),
+    confidence: normalizeConfidence(item.confidence),
+    dataSource: normalizeMarketContextDataSource(item.dataSource),
+    evidence: normalizeMarketContextEvidence(item.evidence),
+    editedByUser: Boolean(item.editedByUser),
+  }
+}
+
+function normalizeBehaviorEvidence(value: unknown): TradeReview["behaviorEvidence"] {
+  if (!value || typeof value !== "object") return undefined
+  const item = value as Partial<NonNullable<TradeReview["behaviorEvidence"]>>
+
+  return {
+    changedPlanIntraday: Boolean(item.changedPlanIntraday),
+    addedPosition: Boolean(item.addedPosition),
+    movedStopLoss: Boolean(item.movedStopLoss),
+    emotionDrivenEntry: Boolean(item.emotionDrivenEntry),
+  }
+}
+
+function normalizeReviewSummary(value: unknown): TradeReview["reviewSummary"] {
+  if (!value || typeof value !== "object") return undefined
+  const item = value as Partial<NonNullable<TradeReview["reviewSummary"]>>
+
+  return {
+    marketText: item.marketText ? String(item.marketText) : undefined,
+    behaviorText: item.behaviorText ? String(item.behaviorText) : undefined,
+    heartText: item.heartText ? String(item.heartText) : undefined,
+    practiceText: item.practiceText ? String(item.practiceText) : undefined,
+  }
+}
+
 export function calculateHeartJudgement(
   pnl: number,
   followedPlan: boolean,
@@ -142,6 +299,7 @@ function normalizeTradeReview(value: unknown): TradeReview | null {
     heartThief: item.heartThief ? String(item.heartThief) : undefined,
     reflectionVersion: PRIVATE_REFLECTION_VERSION,
     symbol: String(item.symbol).trim(),
+    timeframe: item.timeframe ? String(item.timeframe).trim() : undefined,
     direction: item.direction,
     entryPrice: normalizeOptionalNumber(item.entryPrice),
     exitPrice: normalizeOptionalNumber(item.exitPrice),
@@ -150,7 +308,13 @@ function normalizeTradeReview(value: unknown): TradeReview | null {
     followedPlan,
     brokeRule,
     screenshotUrl: item.screenshotUrl ? String(item.screenshotUrl) : undefined,
+    chartEvidence: Array.isArray(item.chartEvidence)
+      ? item.chartEvidence.map(normalizeChartEvidence).filter((evidence): evidence is ChartEvidence => Boolean(evidence))
+      : undefined,
+    marketContext: normalizeMarketContext(item.marketContext),
+    behaviorEvidence: normalizeBehaviorEvidence(item.behaviorEvidence),
     reviewText: item.reviewText ? String(item.reviewText) : undefined,
+    reviewSummary: normalizeReviewSummary(item.reviewSummary),
     heartJudgement: item.heartJudgement || calculateHeartJudgement(pnl, followedPlan, brokeRule),
     createdAt,
     updatedAt: String(item.updatedAt || createdAt),
