@@ -177,7 +177,7 @@ export default function LivingMirrorGrowthPage() {
             继续今日修行
           </SecondaryLink>
           <SecondaryLink href="/mirror-archive" className="w-full">
-            回到心镜档案馆
+            回到心镜档案
           </SecondaryLink>
           <SecondaryLink href="/mirror-scroll" className="w-full">
             查看心镜长卷

@@ -4,6 +4,7 @@ import type {
   TodayOneThoughtSourceItem,
 } from "../../data/insight-engine/today-one-thought-core"
 import { getTodayOneThoughtDateKey } from "../../data/insight-engine/today-one-thought-core"
+import { getReflection } from "../../lib/reflections/reflectionService"
 
 export const ONE_THOUGHT_LAKE_STORAGE_KEY = "zhaojian:one-thought-lake:v1"
 export const ONE_THOUGHT_LAKE_RESONANCE_KEY = "zhaojian:one-thought-lake-resonance:v1"
@@ -22,9 +23,11 @@ export type OneThoughtLakeEntry = {
   regionScope: "CN"
   createdAt: string
   thoughtId: string
+  itemId: string
   os: string
   tradeMoment: string
   reflection: string
+  reflectionFinal: string
   evidence: string
   practice: string
 }
@@ -34,6 +37,12 @@ export type OneThoughtLakeScreenResult = {
   cleanedText: string
   reason?: string
 }
+
+export const ONE_THOUGHT_LAKE_BLOCKED_INPUT_REASON =
+  "众念心湖只照见交易中的念头，不回应股票代码、收益数字、荐股、喊单、带单和联系方式。"
+
+export const ONE_THOUGHT_LAKE_UNRELATED_INPUT_REASON =
+  "众念心湖只回应交易中的念头。请写下临盘时真实冒出来的一句话。"
 
 export type OneThoughtLakeComment = {
   id: string
@@ -60,7 +69,7 @@ const seedOsOrder = [
   "人家都敢上。",
 ]
 
-const seedCounts = [143, 119, 96, 88, 73, 65, 58, 51, 46, 39, 34, 27]
+const seedCounts = [42, 38, 35, 32, 29, 26, 23, 21, 19, 17, 15, 13]
 
 const mirrorEchoKeyByInsightMirrorId: Record<string, string> = {
   account_checking: "anxiety",
@@ -107,12 +116,18 @@ const mirrorNameByEchoKey: Record<string, string> = {
 }
 
 const blockedPatterns = [
+  /^[\d\s+-]+$/,
   /\b[036]\d{5}\b/,
+  /(?:\+?86[-\s]?)?1[3-9]\d(?:[-\s]?\d){8}\b/,
+  /\b\d{10,}\b/,
   /(目标价|买什么|卖什么|荐股|喊单|带单|跟单|股票代码|推荐买入|推荐卖出|买入价|卖出价|止盈价|止损位)/i,
   /(稳赚|必赚|保赚|收益保证|翻倍|暴富|抄底|逃顶|开户|开户链接)/i,
   /(微信|vx|v信|QQ|qq|电话|手机号|联系方式|加我|私信|进群|群号)/i,
   /[+-]?\d+(?:\.\d+)?\s*(?:%|％|元|万|倍|个点|收益率)/,
 ]
+
+const tradingThoughtPattern =
+  /(买|卖|涨|跌|亏|赚|回本|解套|补仓|补|追|割肉|止损|止盈|仓位|持仓|空仓|满仓|重仓|轻仓|开盘|收盘|临盘|盘中|行情|账户|标题|消息|利好|利空|机会|踏空|卖飞|套|单|交易|下单|冲动|犹豫|焦虑|害怕|后悔|恐惧|贪|急|惧|疑|执|从|烦|慌|悔|怕|忍|等|拿|逃|扛|赌|梭|撤|管住|不甘心|不服|侥幸|上头)/
 
 function safeGet(storage: BrowserStorage | null | undefined, key: string) {
   try {
@@ -159,6 +174,10 @@ function normalizeLakeEntry(value: unknown): OneThoughtLakeEntry | null {
   if (!item.id || !item.date || !item.thoughtId || !item.matchedSceneId) return null
 
   const mirrorId = String(item.mirrorId || "")
+  const itemId = String(item.itemId || item.thoughtId)
+  const reflectionFinal =
+    getReflection(String(item.matchedSceneId), itemId)?.reflectionFinal ||
+    String(item.reflectionFinal || item.reflection || "")
 
   return {
     id: String(item.id),
@@ -173,9 +192,11 @@ function normalizeLakeEntry(value: unknown): OneThoughtLakeEntry | null {
     regionScope: "CN",
     createdAt: String(item.createdAt || `${item.date}T00:00:00.000Z`),
     thoughtId: String(item.thoughtId),
+    itemId,
     os: cleanText(String(item.os || item.anonymousText || "这一念浮上来了。")),
     tradeMoment: String(item.tradeMoment || ""),
-    reflection: String(item.reflection || ""),
+    reflection: reflectionFinal,
+    reflectionFinal,
     evidence: String(item.evidence || ""),
     practice: String(item.practice || ""),
   }
@@ -214,7 +235,15 @@ export function screenOneThoughtLakeInput(inputText: string): OneThoughtLakeScre
     return {
       allowed: false,
       cleanedText,
-      reason: "心湖只照见念头，不讨论股票代码、收益、买卖点和联系方式。",
+      reason: ONE_THOUGHT_LAKE_BLOCKED_INPUT_REASON,
+    }
+  }
+
+  if (!tradingThoughtPattern.test(cleanedText)) {
+    return {
+      allowed: false,
+      cleanedText,
+      reason: ONE_THOUGHT_LAKE_UNRELATED_INPUT_REASON,
     }
   }
 
@@ -234,6 +263,8 @@ export function createOneThoughtLakeEntry(
   const createdAt = options.createdAt ?? new Date().toISOString()
   const date = options.date ?? getTodayOneThoughtDateKey(new Date(createdAt))
   const anonymousText = cleanText(options.anonymousText || thought.os)
+  const reflectionFinal =
+    getReflection(thought.sceneId, thought.itemId)?.reflectionFinal || thought.reflectionFinal || thought.reflection
 
   return {
     id: options.id ?? `lake_${cleanIdPart(date)}_${cleanIdPart(thought.thoughtId)}_${cleanIdPart(createdAt)}`,
@@ -248,9 +279,11 @@ export function createOneThoughtLakeEntry(
     regionScope: "CN",
     createdAt,
     thoughtId: thought.thoughtId,
+    itemId: thought.itemId,
     os: thought.os,
     tradeMoment: thought.tradeMoment,
-    reflection: thought.reflection,
+    reflection: reflectionFinal,
+    reflectionFinal,
     evidence: thought.evidence,
     practice: thought.practice,
   }

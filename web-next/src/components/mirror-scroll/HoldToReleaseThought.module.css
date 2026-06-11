@@ -1,0 +1,214 @@
+.root {
+  --progress: 0;
+  position: relative;
+  isolation: isolate;
+  min-height: 240px;
+  width: min(720px, 92vw);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: rgba(244, 235, 221, 0.92);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none;
+  outline: none;
+}
+
+.root::before {
+  content: "";
+  position: absolute;
+  inset: 14%;
+  z-index: -2;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse at center, rgba(244, 235, 221, 0.08), rgba(95, 132, 117, 0.08) 44%, rgba(2, 5, 4, 0) 72%),
+    radial-gradient(ellipse at center, transparent 52%, rgba(216, 183, 111, 0.06) 54%, transparent 62%);
+  opacity: calc(0.38 + var(--progress) * 0.18);
+  filter: blur(calc(1px + var(--progress) * 5px));
+  transform: scale(calc(1 - var(--progress) * 0.08));
+  transition: opacity 220ms ease, filter 220ms ease, transform 220ms ease;
+}
+
+.root[data-state="completed"] {
+  cursor: default;
+}
+
+.waterPressureRing {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: -1;
+  width: min(620px, 84vw);
+  aspect-ratio: 2.35;
+  border: 1px solid rgba(210, 180, 120, calc(0.22 - var(--progress) * 0.12));
+  border-radius: 50%;
+  opacity: calc(0.18 - var(--progress) * 0.14);
+  box-shadow:
+    inset 0 0 42px rgba(216, 183, 111, calc(0.08 + var(--progress) * 0.05)),
+    0 0 38px rgba(216, 183, 111, calc(0.08 + var(--progress) * 0.04));
+  transform: translate(-50%, -50%) scale(calc(1.4 - var(--progress) * 0.68));
+  transition: opacity 160ms linear, transform 160ms linear, border-color 160ms linear;
+}
+
+.waterPressureRing::before,
+.waterPressureRing::after {
+  content: "";
+  position: absolute;
+  inset: 14%;
+  border-radius: 50%;
+  border: 1px solid rgba(244, 235, 221, calc(0.1 - var(--progress) * 0.06));
+  transform: scale(calc(1.2 - var(--progress) * 0.45));
+}
+
+.waterPressureRing::after {
+  inset: 27%;
+  border-color: rgba(216, 183, 111, calc(0.14 - var(--progress) * 0.08));
+}
+
+.inkDissolveLayer {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 7rem;
+}
+
+.thoughtText,
+.thoughtGhost {
+  grid-area: 1 / 1;
+  font-family: var(--font-story), "Songti SC", "STSong", serif;
+  font-size: clamp(32px, 7vw, 72px);
+  line-height: 1.25;
+  letter-spacing: 0.04em;
+  white-space: normal;
+}
+
+.thoughtText {
+  color: rgba(244, 235, 221, 0.92);
+  opacity: calc(1 - var(--progress) * 0.75);
+  filter: blur(calc(var(--progress) * 3px));
+  text-shadow:
+    0 0 24px rgba(216, 183, 111, 0.12),
+    0 16px 54px rgba(0, 0, 0, 0.42);
+  transform:
+    translateY(calc(var(--progress) * 28px))
+    scale(calc(1 - var(--progress) * 0.04));
+}
+
+.thoughtGhost {
+  position: relative;
+  color: rgba(244, 235, 221, 0.8);
+  opacity: calc(var(--progress) * 0.24);
+  filter: blur(calc(6px + var(--progress) * 10px));
+  text-shadow:
+    0 0 32px rgba(244, 235, 221, 0.1),
+    0 0 62px rgba(216, 183, 111, 0.08);
+  transform:
+    translateY(calc(var(--progress) * 58px))
+    scale(calc(1 + var(--progress) * 0.08));
+}
+
+.releaseHint {
+  position: absolute;
+  left: 50%;
+  bottom: 0.4rem;
+  transform: translateX(-50%);
+  width: min(32rem, 86vw);
+  font-family: var(--font-function), system-ui, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.8;
+  letter-spacing: 0.18em;
+  color: rgba(216, 183, 111, calc(0.66 - var(--progress) * 0.22));
+  opacity: 1;
+  transition: opacity 260ms ease;
+}
+
+.completedSeal {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: clamp(6.5rem, 22vw, 9.5rem);
+  aspect-ratio: 1;
+  border: 1px solid rgba(179, 76, 56, 0.66);
+  color: rgba(179, 76, 56, 0.96);
+  background: rgba(120, 60, 45, 0.08);
+  font-family: var(--font-story), "Songti SC", serif;
+  font-size: clamp(1.55rem, 6vw, 3rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  opacity: 0;
+  pointer-events: none;
+  text-align: center;
+  transform: translate(-50%, -58%) rotate(-8deg) scale(1.16);
+  box-shadow:
+    inset 0 0 34px rgba(179, 76, 56, 0.12),
+    0 0 44px rgba(120, 60, 45, 0.18);
+}
+
+.root[data-state="completed"] .thoughtText,
+.root[data-state="completed"] .thoughtGhost {
+  opacity: 0;
+  filter: blur(14px);
+  transform: translateY(72px) scale(0.86);
+  transition: opacity 540ms ease, filter 540ms ease, transform 640ms ease;
+}
+
+.root[data-state="completed"] .waterPressureRing {
+  opacity: 0.04;
+  transform: translate(-50%, -50%) scale(0.72);
+  transition: opacity 1200ms ease, transform 1200ms ease;
+}
+
+.root[data-state="completed"] .releaseHint {
+  opacity: 0;
+}
+
+.root[data-state="completed"] .completedSeal {
+  animation: sealDrop 500ms cubic-bezier(0.18, 1.18, 0.34, 1) 420ms both;
+}
+
+.root[data-state="released"] .thoughtText,
+.root[data-state="released"] .thoughtGhost,
+.root[data-state="released"] .waterPressureRing {
+  transition: opacity 260ms ease, filter 260ms ease, transform 320ms ease;
+}
+
+@keyframes sealDrop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -78%) rotate(-8deg) scale(1.22);
+    filter: blur(6px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(-8deg) scale(1);
+    filter: blur(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root,
+  .root::before,
+  .root *,
+  .root *::before,
+  .root *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .thoughtText {
+    transform: none;
+    filter: none;
+  }
+
+  .thoughtGhost,
+  .waterPressureRing {
+    display: none;
+  }
+}

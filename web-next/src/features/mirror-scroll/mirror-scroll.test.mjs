@@ -44,34 +44,60 @@ test("mirror scroll builds narrative nodes from archive items and heart proofs",
     "buildOneThoughtRecordNode",
     "behaviorLoopCount",
     "oneThoughtRecordCount",
+    "oneThoughtPool",
+    "mirrors.json",
+    "tradeMoment",
+    "reflection",
+    "mirrorName",
+    "sceneName",
+    "sealedAt",
     "isLatest",
   ].forEach((token) => {
     assert.equal(source.includes(token), true, `mirror scroll engine missing ${token}`)
   })
 })
 
-test("mirror scroll page exposes Sprint 11.5 long scroll narrative", async () => {
+test("mirror scroll page exposes still-water long scroll narrative", async () => {
   const source = await readFile(pageUrl, "utf8")
 
   ;[
+    "明镜止水 · 照见长卷",
     "心镜长卷",
-    "把每天的一念，连成一卷。",
-    "档案馆保存结构，长卷展开叙事",
-    "scroll-paper",
-    "scroll-node-card",
-    "node-orb",
-    "latest-seal",
-    "当日一念",
-    "当日动作",
-    "当日心证",
-    "影响维度",
-    "node.summary",
-    "line-clamp-3",
-    "长卷未起笔",
-    "回到心镜档案馆",
-    "真实交易复盘",
+    "不是记录你做过什么。",
+    "而是记录你一次次看见了谁在下单。",
+    "无善无恶心之体",
+    "有善有恶意之动",
+    "知善知恶是良知",
+    "为善去恶是格物",
+    "你已经照见",
+    "其中，最常出现的是",
+    "你不是没有变化",
+    "长按这一念，让它沉入水底。",
+    "知而不行，只是未知。",
+    "今日这一念，已被你亲手放下。",
+    "轻触水面，照回完整一念",
+    "原来，我一直照的，是自己的心。",
+    "明日再照。",
+    "heart-river",
+    "river-scroller",
+    "river-station",
+    "thought-stone",
+    "water-impact",
+    "thief-shadow",
+    "echo-rings",
+    "zhu-seal",
+    "backlight-reflection",
+    "长卷尚未展开",
+    "只看心贼",
+    "只看镜",
+    "回到今日",
+    "心镜档案",
   ].forEach((token) => {
     assert.equal(source.includes(token), true, `mirror scroll page missing ${token}`)
+  })
+
+  ;["scroll-paper", "scroll-node-card", "node-orb", "latest-seal", "hiddenThought"].forEach((token) => {
+    assert.equal(source.includes(token), false, `mirror scroll page should not include old/list token ${token}`)
   })
 
   forbiddenPhrases.forEach((phrase) => {

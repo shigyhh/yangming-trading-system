@@ -5,19 +5,22 @@ import {
   type FormEvent,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react"
+import Link from "next/link"
 
 import {
-  createOneThoughtRecord,
+  getTodayOneThoughtDateKey,
   matchUserThought,
   oneThoughtPool,
-  saveOneThoughtRecord,
 } from "@/data/insight-engine/today-one-thought"
 import {
   createOneThoughtLakeComment,
   createOneThoughtLakeEntryFromMatch,
   getOneThoughtLakeStats,
+  ONE_THOUGHT_LAKE_BLOCKED_INPUT_REASON,
+  ONE_THOUGHT_LAKE_UNRELATED_INPUT_REASON,
   readOneThoughtLakeComments,
   readOneThoughtLakeEntries,
   resonateWithOneThoughtLakeEntry,
@@ -39,17 +42,12 @@ const anonymousColors = [
   "rgba(188, 104, 132, 0.9)",
 ]
 
+const DAILY_LAKE_THOUGHT_LIMIT = 3
+const DAILY_LAKE_THOUGHT_LIMIT_MESSAGE = "今日已放三念，今日宜止。"
+
 function getBrowserStorage() {
   if (typeof window === "undefined") return null
   return window.localStorage
-}
-
-function findThought(entry: OneThoughtLakeEntry) {
-  return (
-    oneThoughtPool.find((thought) => thought.thoughtId === entry.thoughtId) ??
-    oneThoughtPool.find((thought) => thought.sceneId === entry.matchedSceneId) ??
-    oneThoughtPool[0]
-  )
 }
 
 function isAnonymousLakeEntry(entry: OneThoughtLakeEntry) {
@@ -72,6 +70,47 @@ function getTodayLiveSeed() {
   return Array.from(today).reduce((total, char) => total + char.charCodeAt(0), 0)
 }
 
+function getTodayLiveBase() {
+  return 36 + (getTodayLiveSeed() % 18)
+}
+
+function getTodayLocalThoughtCount(entries: OneThoughtLakeEntry[]) {
+  const todayKey = getTodayOneThoughtDateKey(new Date())
+  return entries.filter((entry) => isAnonymousLakeEntry(entry) && entry.date === todayKey).length
+}
+
+function getDisplayTopEntry(entries: OneThoughtLakeEntry[], fallbackEntry: OneThoughtLakeEntry | null) {
+  const localEntries = entries.filter(isAnonymousLakeEntry)
+  if (!localEntries.length) return fallbackEntry
+
+  const grouped = new Map<string, { count: number; entry: OneThoughtLakeEntry; latest: string }>()
+
+  for (const entry of localEntries) {
+    const key = getEntryDisplayText(entry).trim()
+    if (!key) continue
+
+    const current = grouped.get(key)
+    const count = Math.max(1, Math.trunc(entry.sameThoughtCount || 1))
+
+    if (!current) {
+      grouped.set(key, { count, entry, latest: entry.createdAt })
+      continue
+    }
+
+    current.count += count
+    if (entry.createdAt > current.latest) {
+      current.entry = entry
+      current.latest = entry.createdAt
+    }
+  }
+
+  const topGroup = [...grouped.values()].sort(
+    (left, right) => right.count - left.count || right.latest.localeCompare(left.latest),
+  )[0]
+
+  return topGroup ? { ...topGroup.entry, sameThoughtCount: topGroup.count } : fallbackEntry
+}
+
 export function OneThoughtLakePage() {
   const [entries, setEntries] = useState<OneThoughtLakeEntry[]>(() =>
     readOneThoughtLakeEntries(null, oneThoughtPool),
@@ -81,32 +120,41 @@ export function OneThoughtLakePage() {
   const [inputText, setInputText] = useState("")
   const [draftEntry, setDraftEntry] = useState<OneThoughtLakeEntry | null>(null)
   const [composeOpen, setComposeOpen] = useState(false)
-  const [error, setError] = useState("")
+  const [composeError, setComposeError] = useState("")
+  const [commentError, setCommentError] = useState("")
   const [notice, setNotice] = useState("")
   const [resonatedIds, setResonatedIds] = useState<string[]>([])
   const [lakeComments, setLakeComments] = useState<OneThoughtLakeComment[]>(() =>
     readOneThoughtLakeComments(null),
   )
   const [commentText, setCommentText] = useState("")
-  const [liveTotalOffset, setLiveTotalOffset] = useState(0)
+  const [liveTotalOffset, setLiveTotalOffset] = useState(() => getTodayLiveSeed() % 5)
+  const [thoughtSinkActive, setThoughtSinkActive] = useState(false)
+  const thoughtSinkTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
-    const storage = getBrowserStorage()
-    setEntries(readOneThoughtLakeEntries(storage, oneThoughtPool))
-    setLakeComments(readOneThoughtLakeComments(storage))
+    const timer = window.setTimeout(() => {
+      const storage = getBrowserStorage()
+      setEntries(readOneThoughtLakeEntries(storage, oneThoughtPool))
+      setLakeComments(readOneThoughtLakeComments(storage))
+    }, 0)
+
+    return () => {
+      window.clearTimeout(timer)
+      if (thoughtSinkTimerRef.current) window.clearTimeout(thoughtSinkTimerRef.current)
+    }
   }, [])
 
   useEffect(() => {
     const seed = getTodayLiveSeed()
     let tick = 0
-    setLiveTotalOffset(seed % 29)
 
     const interval = window.setInterval(
       () => {
         tick += 1
-        setLiveTotalOffset((current) => current + (tick % 5 === 0 ? 2 : 1))
+        setLiveTotalOffset((current) => current + (tick % 6 === 0 ? 2 : 1))
       },
-      4600 + (seed % 6) * 520,
+      18000 + (seed % 6) * 2400,
     )
 
     return () => window.clearInterval(interval)
@@ -118,8 +166,14 @@ export function OneThoughtLakePage() {
   )
   const seedEntries = useMemo(() => entries.filter((entry) => !isAnonymousLakeEntry(entry)), [entries])
   const anonymousEntries = useMemo(() => entries.filter(isAnonymousLakeEntry), [entries])
-  const stats = useMemo(() => getOneThoughtLakeStats(seedEntries), [seedEntries])
-  const liveTotal = stats.total + liveTotalOffset
+  const seedStats = useMemo(() => getOneThoughtLakeStats(seedEntries), [seedEntries])
+  const todayLocalThoughtCount = useMemo(() => getTodayLocalThoughtCount(entries), [entries])
+  const displayTopEntry = useMemo(
+    () => getDisplayTopEntry(entries, seedStats.topEntry),
+    [entries, seedStats.topEntry],
+  )
+  const liveTotal = Math.min(96, getTodayLiveBase() + liveTotalOffset + todayLocalThoughtCount)
+  const dailyThoughtLimitReached = todayLocalThoughtCount >= DAILY_LAKE_THOUGHT_LIMIT
   const selectedEntryText = selectedEntry ? getEntryDisplayText(selectedEntry) : ""
   const previewEntry = useMemo(
     () => entries.find((entry) => entry.id === hoveredEntryId) ?? null,
@@ -132,12 +186,60 @@ export function OneThoughtLakePage() {
         : [],
     [lakeComments, selectedEntry],
   )
+  const liveInputScreen = useMemo(
+    () => (inputText.trim() ? screenOneThoughtLakeInput(inputText) : null),
+    [inputText],
+  )
+  const inputRejected =
+    liveInputScreen?.reason === ONE_THOUGHT_LAKE_BLOCKED_INPUT_REASON ||
+    liveInputScreen?.reason === ONE_THOUGHT_LAKE_UNRELATED_INPUT_REASON
+
+  function handleInputTextChange(value: string) {
+    setInputText(value)
+
+    if (!value.trim()) {
+      setComposeError("")
+      setDraftEntry(null)
+      return
+    }
+
+    const screen = screenOneThoughtLakeInput(value)
+    if (
+      screen.reason === ONE_THOUGHT_LAKE_BLOCKED_INPUT_REASON ||
+      screen.reason === ONE_THOUGHT_LAKE_UNRELATED_INPUT_REASON
+    ) {
+      setComposeError(screen.reason)
+      setNotice("")
+      setDraftEntry(null)
+      return
+    }
+
+    if (
+      composeError === ONE_THOUGHT_LAKE_BLOCKED_INPUT_REASON ||
+      composeError === ONE_THOUGHT_LAKE_UNRELATED_INPUT_REASON
+    ) {
+      setComposeError("")
+    }
+  }
 
   function handleSelect(entry: OneThoughtLakeEntry) {
     setSelectedEntryId(entry.id)
     setNotice("")
-    setError("")
+    setComposeError("")
+    setCommentError("")
     setHoveredEntryId(null)
+  }
+
+  function playThoughtSinkEffect() {
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+
+    if (thoughtSinkTimerRef.current) window.clearTimeout(thoughtSinkTimerRef.current)
+    setThoughtSinkActive(false)
+
+    window.requestAnimationFrame(() => {
+      setThoughtSinkActive(true)
+      thoughtSinkTimerRef.current = window.setTimeout(() => setThoughtSinkActive(false), 920)
+    })
   }
 
   function handleResonate(entry: OneThoughtLakeEntry) {
@@ -156,7 +258,7 @@ export function OneThoughtLakePage() {
 
     const screen = screenOneThoughtLakeInput(commentText)
     if (!screen.allowed) {
-      setError(screen.reason ?? "这句回响暂时不能放入心湖。")
+      setCommentError(screen.reason ?? "这句回响暂时不能放入众念心湖。")
       return
     }
 
@@ -165,17 +267,42 @@ export function OneThoughtLakePage() {
     saveOneThoughtLakeComment(comment, storage)
     setLakeComments(readOneThoughtLakeComments(storage))
     setCommentText("")
-    setError("")
+    setCommentError("")
     setNotice("同念回响已入湖，同一念的人会收到这句回响。")
+  }
+
+  function handleToggleCompose() {
+    if (composeOpen || draftEntry) {
+      playThoughtSinkEffect()
+      setComposeOpen(false)
+      setDraftEntry(null)
+      setComposeError("")
+      return
+    }
+
+    if (!composeOpen && !draftEntry && dailyThoughtLimitReached) {
+      setComposeOpen(true)
+      setComposeError(DAILY_LAKE_THOUGHT_LIMIT_MESSAGE)
+      setNotice("")
+      return
+    }
+
+    setComposeOpen((current) => !current)
   }
 
   function handleMatch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setNotice("")
 
+    if (dailyThoughtLimitReached) {
+      setComposeError(DAILY_LAKE_THOUGHT_LIMIT_MESSAGE)
+      setDraftEntry(null)
+      return
+    }
+
     const screen = screenOneThoughtLakeInput(inputText)
     if (!screen.allowed) {
-      setError(screen.reason ?? "这句一念暂时不能放入心湖。")
+      setComposeError(screen.reason ?? "这句一念暂时不能放入众念心湖。")
       setDraftEntry(null)
       return
     }
@@ -183,42 +310,31 @@ export function OneThoughtLakePage() {
     const match = matchUserThought(screen.cleanedText)
     const entry = createOneThoughtLakeEntryFromMatch(screen.cleanedText, match, oneThoughtPool)
     if (!entry) {
-      setError("这句一念还没有照到合适场景。")
+      setComposeError("这句一念还没有照到合适场景。")
       setDraftEntry(null)
       return
     }
 
-    setError("")
+    setComposeError("")
+    playThoughtSinkEffect()
     setDraftEntry(entry)
   }
 
   function handlePlaceIntoLake() {
     if (!draftEntry) return
+    if (dailyThoughtLimitReached) {
+      setComposeError(DAILY_LAKE_THOUGHT_LIMIT_MESSAGE)
+      return
+    }
 
     const storage = getBrowserStorage()
     saveOneThoughtLakeEntry(draftEntry, storage)
     const nextEntries = readOneThoughtLakeEntries(storage, oneThoughtPool)
     setEntries(nextEntries)
     setSelectedEntryId(draftEntry.id)
-    setNotice("这一念已匿名放入心湖。")
+    setNotice("这一念已匿名放入众念心湖。")
     setInputText("")
     setDraftEntry(null)
-  }
-
-  function handleSaveArchive() {
-    if (!draftEntry) return
-
-    const thought = findThought(draftEntry)
-    const storage = getBrowserStorage()
-    saveOneThoughtRecord(
-      createOneThoughtRecord(thought, {
-        recordId: `lake_archive_${draftEntry.id}`,
-        date: draftEntry.date,
-        completed: false,
-      }),
-      storage,
-    )
-    setNotice("这一念已存入你的心镜档案。")
   }
 
   return (
@@ -229,15 +345,15 @@ export function OneThoughtLakePage() {
       <div className="lake-ripple lake-ripple-two" aria-hidden="true" />
 
       <header className="lake-header">
-        <a href="/" className="lake-home-link">
-          照见
-        </a>
-        <p className="lake-kicker">匿名共照</p>
-        <h1>一念心湖</h1>
+        <Link href="/?home=1" className="lake-home-link" aria-label="回到首页">
+          <span>回首页 →</span>
+          <i aria-hidden="true" />
+        </Link>
+        <h1>众念心湖</h1>
         <p>匿名看见众人的一念，也匿名放下自己的一念。</p>
         <span className="lake-count" aria-live="polite">
           今日共照 <strong>{liveTotal || 0}</strong> 人
-          {stats.topEntry ? ` · 最多的一念：「${getEntryDisplayText(stats.topEntry)}」` : ""}
+          {displayTopEntry ? ` · 最多的一念：「${getEntryDisplayText(displayTopEntry)}」` : ""}
         </span>
       </header>
 
@@ -259,7 +375,7 @@ export function OneThoughtLakePage() {
 
       {anonymousEntries.length ? (
         <section className="lake-anonymous-band" aria-label="匿名一念浮光">
-          <p>匿名浮光</p>
+          <p>匿名漂浮一念</p>
           {anonymousEntries.map((entry, index) => (
             <button
               key={entry.id}
@@ -282,19 +398,19 @@ export function OneThoughtLakePage() {
       ) : null}
 
       {selectedEntry ? (
-        <aside className="lake-focus-panel" aria-label="一念展开">
+        <aside className="lake-focus-panel" aria-label="众念展开">
           <button type="button" className="lake-close" onClick={() => setSelectedEntryId(null)}>
-            回到心湖
+            回到众念心湖
           </button>
           <p className="lake-panel-label">{selectedEntry.tradeMoment}</p>
           <h2>「{selectedEntryText}」</h2>
           <dl>
             <div>
-              <dt>落在</dt>
+              <dt>湖中归类</dt>
               <dd>{selectedEntry.matchedSceneName}</dd>
             </div>
             <div>
-              <dt>心贼</dt>
+              <dt>这念的力</dt>
               <dd>{selectedEntry.thief}</dd>
             </div>
             <div>
@@ -302,7 +418,7 @@ export function OneThoughtLakePage() {
               <dd>{selectedEntry.sameThoughtCount} 人</dd>
             </div>
           </dl>
-          <p className="lake-reflection">{selectedEntry.reflection}</p>
+          <p className="lake-reflection">若想把这一念照成自己的心证，请进入今日照见。</p>
           <section className="lake-echoes" aria-label="同念回响">
             <div className="lake-echoes-head">
               <p>同念回响</p>
@@ -318,7 +434,7 @@ export function OneThoughtLakePage() {
                 ))
               ) : (
                 <p>
-                  <span>心湖</span>
+                  <span>众念</span>
                   同一念的人，会收到这里的回响。
                 </p>
               )}
@@ -332,12 +448,19 @@ export function OneThoughtLakePage() {
               />
               <button type="submit">放入回响</button>
             </form>
-            {error ? <p className="lake-error">{error}</p> : null}
+            {commentError ? <p className="lake-error">{commentError}</p> : null}
           </section>
           <div className="lake-panel-actions">
+            <form className="lake-reflect-form" action="/reflect" method="get">
+              <input type="hidden" name="source" value="lake" />
+              <input type="hidden" name="text" value={selectedEntryText} />
+              <button type="submit" className="lake-primary-action">
+                照见此念
+              </button>
+            </form>
             <button
               type="button"
-              className="lake-primary-action"
+              className="lake-secondary-action"
               onClick={() => handleResonate(selectedEntry)}
               disabled={resonatedIds.includes(selectedEntry.id)}
             >
@@ -351,42 +474,45 @@ export function OneThoughtLakePage() {
         </aside>
       ) : null}
 
-      <section className={`lake-compose ${composeOpen || draftEntry ? "is-open" : ""}`} aria-label="写下我的一念">
-        <div className="lake-compose-head">
-          <p>写下我的一念</p>
-          <button type="button" onClick={() => setComposeOpen((current) => !current)}>
-            {composeOpen || draftEntry ? "收起" : "写一念"}
-          </button>
-        </div>
+      <section
+        className={`lake-compose ${composeOpen || draftEntry ? "is-open" : ""} ${thoughtSinkActive ? "is-sinking" : ""}`}
+        aria-label="写下你的一念"
+      >
+        <button type="button" className="lake-compose-trigger" onClick={handleToggleCompose}>
+          {composeOpen || draftEntry ? "收起这一念" : dailyThoughtLimitReached ? "今日宜止" : "写下你的一念"}
+        </button>
         {composeOpen || draftEntry ? (
           <>
             <form onSubmit={handleMatch}>
+              <p className="lake-compose-quota">
+                今日已放 {todayLocalThoughtCount}/{DAILY_LAKE_THOUGHT_LIMIT} 念
+              </p>
               <textarea
                 value={inputText}
-                onChange={(event) => setInputText(event.target.value)}
+                onChange={(event) => handleInputTextChange(event.target.value)}
                 placeholder="写下今天交易中最真实的一念。"
                 maxLength={64}
+                aria-invalid={inputRejected}
               />
-              <button type="submit">照回这一念</button>
+              <button type="submit" disabled={inputRejected}>
+                投念入湖
+              </button>
             </form>
-            {error ? <p className="lake-error">{error}</p> : null}
+            {composeError ? <p className="lake-error">{composeError}</p> : null}
             {draftEntry ? (
               <div className="lake-match-result" aria-label="一念匹配结果">
                 <p>
-                  这一念落在：<strong>{draftEntry.matchedSceneName}</strong>
+                  湖中归类：<strong>{draftEntry.matchedSceneName}</strong>
                 </p>
                 <p>
-                  心贼：<strong>{draftEntry.thief}</strong>
+                  这念的力：<strong>{draftEntry.thief}</strong>
                 </p>
                 <p>
-                  镜中显影：<strong>{draftEntry.mirrorName}</strong>
+                  镜影：<strong>{draftEntry.mirrorName}</strong>
                 </p>
                 <div>
                   <button type="button" onClick={handlePlaceIntoLake}>
-                    匿名放入心湖
-                  </button>
-                  <button type="button" onClick={handleSaveArchive}>
-                    存入我的心镜档案
+                    匿名放入众念心湖
                   </button>
                 </div>
               </div>
@@ -395,7 +521,7 @@ export function OneThoughtLakePage() {
         ) : null}
       </section>
 
-      <p className="lake-compliance">心湖只照见交易中的念头，不提供投资建议。</p>
+      <p className="lake-compliance">众念心湖只照见交易中的念头，不提供投资建议。</p>
 
       <style jsx>{`
         .one-thought-lake-page {
@@ -478,14 +604,52 @@ export function OneThoughtLakePage() {
           position: fixed;
           top: 1.1rem;
           left: 1.1rem;
-          color: rgba(216, 183, 111, 0.62);
+          display: inline-flex;
+          min-width: 5.9rem;
+          flex-direction: column;
+          gap: 0.48rem;
+          border: 1px solid rgba(216, 183, 111, 0.14);
+          border-radius: 999px;
+          background:
+            linear-gradient(180deg, rgba(244, 235, 221, 0.03), rgba(216, 183, 111, 0.02)),
+            rgba(4, 7, 6, 0.2);
+          box-shadow:
+            inset 0 1px 0 rgba(244, 235, 221, 0.04),
+            0 16px 44px rgba(0, 0, 0, 0.2);
+          color: rgba(216, 183, 111, 0.72);
           font-family: var(--font-sans, system-ui, sans-serif);
-          font-size: 0.76rem;
+          font-size: 0.72rem;
+          font-weight: 700;
           letter-spacing: 0.22em;
+          padding: 0.64rem 0.88rem 0.58rem;
           text-decoration: none;
+          backdrop-filter: blur(14px);
+          transition:
+            border-color 520ms ease,
+            color 520ms ease,
+            opacity 520ms ease,
+            transform 520ms ease;
         }
 
-        .lake-kicker,
+        .lake-home-link i {
+          display: block;
+          width: 4.1rem;
+          height: 1px;
+          background: linear-gradient(90deg, rgba(216, 183, 111, 0.62), rgba(216, 183, 111, 0.18), transparent);
+          opacity: 0.58;
+          transform-origin: left center;
+        }
+
+        .lake-home-link:hover {
+          border-color: rgba(216, 183, 111, 0.28);
+          color: rgba(244, 235, 221, 0.9);
+          transform: translateX(0.12rem);
+        }
+
+        .lake-home-link:hover i {
+          opacity: 0.82;
+        }
+
         .lake-count,
         .lake-compliance {
           margin: 0;
@@ -496,26 +660,20 @@ export function OneThoughtLakePage() {
           letter-spacing: 0.2em;
         }
 
-        .lake-kicker {
-          font-size: clamp(0.82rem, 1vw, 0.95rem);
-          letter-spacing: 0.28em;
-          text-indent: 0.28em;
-        }
-
         .lake-header h1 {
           margin: 0;
-          color: rgba(244, 235, 221, 0.86);
+          color: rgba(244, 235, 221, 0.96);
           font-size: clamp(3.1rem, 8vw, 7.6rem);
           font-weight: 400;
           line-height: 1.08;
           letter-spacing: 0.14em;
           text-indent: 0.14em;
           text-shadow:
-            0 0 34px rgba(216, 183, 111, 0.08),
-            0 24px 76px rgba(0, 0, 0, 0.78);
+            0 0 44px rgba(0, 0, 0, 0.58),
+            0 0 26px rgba(216, 183, 111, 0.08);
         }
 
-        .lake-header > p:not(.lake-kicker) {
+        .lake-header > p {
           max-width: 34rem;
           margin: 0;
           color: rgba(220, 212, 195, 0.54);
@@ -687,7 +845,7 @@ export function OneThoughtLakePage() {
         }
 
         .lake-close,
-        .lake-compose-head button,
+        .lake-compose-trigger,
         .lake-secondary-action,
         .lake-primary-action,
         .lake-compose form button,
@@ -703,6 +861,8 @@ export function OneThoughtLakePage() {
           font-weight: 700;
           letter-spacing: 0.18em;
           padding: 0.72rem 1rem;
+          text-align: center;
+          text-decoration: none;
           transition: border-color 500ms ease, color 500ms ease, background 500ms ease, opacity 500ms ease;
         }
 
@@ -722,11 +882,12 @@ export function OneThoughtLakePage() {
 
         .lake-focus-panel h2 {
           margin: 0;
-          color: rgba(244, 235, 221, 0.88);
+          color: rgba(244, 235, 221, 0.96);
           font-size: clamp(2rem, 4.6vw, 4.1rem);
           font-weight: 400;
           line-height: 1.24;
           letter-spacing: 0.1em;
+          text-shadow: 0 0 42px rgba(0, 0, 0, 0.58);
         }
 
         .lake-focus-panel dl {
@@ -851,6 +1012,10 @@ export function OneThoughtLakePage() {
           gap: 0.72rem;
         }
 
+        .lake-reflect-form {
+          display: contents;
+        }
+
         .lake-primary-action,
         .lake-compose form button,
         .lake-match-result button:first-child {
@@ -864,6 +1029,12 @@ export function OneThoughtLakePage() {
           opacity: 0.62;
         }
 
+        .lake-compose form button:disabled {
+          cursor: not-allowed;
+          filter: saturate(0.5);
+          opacity: 0.48;
+        }
+
         .lake-compose {
           left: 50%;
           bottom: clamp(2.55rem, 4vw, 3.25rem);
@@ -873,26 +1044,58 @@ export function OneThoughtLakePage() {
           transform: translateX(-50%);
         }
 
-        .lake-compose-head {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 1rem;
+        .lake-compose.is-sinking {
+          animation: lakeThoughtSink 920ms cubic-bezier(0.22, 1, 0.36, 1);
         }
 
-        .lake-compose-head p {
-          margin: 0;
-          color: rgba(216, 183, 111, 0.7);
-          font-family: var(--font-sans, system-ui, sans-serif);
-          font-size: 0.78rem;
-          font-weight: 700;
-          letter-spacing: 0.18em;
+        .lake-compose.is-sinking::after {
+          content: "";
+          pointer-events: none;
+          position: absolute;
+          left: 50%;
+          bottom: 0.54rem;
+          width: 82%;
+          height: 3.2rem;
+          border: 1px solid rgba(216, 183, 111, 0.16);
+          border-radius: 999px;
+          opacity: 0;
+          filter: blur(0.6px);
+          transform: translateX(-50%) scale(0.78);
+          animation: lakeThoughtSinkRipple 920ms ease-out;
+        }
+
+        .lake-compose:not(.is-open) {
+          border-color: transparent;
+          background: transparent;
+          box-shadow: none;
+          backdrop-filter: none;
+          padding: 0;
+        }
+
+        .lake-compose-trigger {
+          display: grid;
+          width: 100%;
+          min-height: 3.4rem;
+          place-items: center;
+          background:
+            linear-gradient(180deg, rgba(244, 235, 221, 0.035), rgba(244, 235, 221, 0.012)),
+            rgba(4, 6, 5, 0.26);
+          color: rgba(216, 183, 111, 0.74);
         }
 
         .lake-compose form {
           display: grid;
           gap: 0.75rem;
           margin-top: 0.9rem;
+        }
+
+        .lake-compose-quota {
+          margin: 0;
+          color: rgba(216, 183, 111, 0.46);
+          font-family: var(--font-sans, system-ui, sans-serif);
+          font-size: 0.68rem;
+          font-weight: 700;
+          letter-spacing: 0.18em;
         }
 
         .lake-compose textarea {
@@ -932,7 +1135,7 @@ export function OneThoughtLakePage() {
         }
 
         .lake-match-result strong {
-          color: rgba(244, 235, 221, 0.8);
+          color: rgba(244, 235, 221, 0.92);
           font-weight: 400;
         }
 
@@ -996,6 +1199,29 @@ export function OneThoughtLakePage() {
           }
         }
 
+        @keyframes lakeThoughtSink {
+          0%,
+          100% {
+            filter: blur(0);
+            transform: translateX(-50%) translateY(0) scale(1);
+          }
+          44% {
+            filter: blur(1.4px);
+            transform: translateX(-50%) translateY(6px) scale(0.985);
+          }
+        }
+
+        @keyframes lakeThoughtSinkRipple {
+          0% {
+            opacity: 0.22;
+            transform: translateX(-50%) scale(0.72);
+          }
+          100% {
+            opacity: 0;
+            transform: translateX(-50%) scale(1.08);
+          }
+        }
+
         @media (max-width: 720px) {
           .one-thought-lake-page {
             min-height: 100svh;
@@ -1056,6 +1282,10 @@ export function OneThoughtLakePage() {
             transform: none;
           }
 
+          .lake-compose.is-sinking {
+            animation-name: lakeThoughtSinkMobile;
+          }
+
           .lake-echo-form {
             grid-template-columns: 1fr;
           }
@@ -1067,9 +1297,23 @@ export function OneThoughtLakePage() {
           }
         }
 
+        @keyframes lakeThoughtSinkMobile {
+          0%,
+          100% {
+            filter: blur(0);
+            transform: translateY(0) scale(1);
+          }
+          44% {
+            filter: blur(1.4px);
+            transform: translateY(6px) scale(0.985);
+          }
+        }
+
         @media (prefers-reduced-motion: reduce) {
           .lake-anonymous-node,
-          .lake-ripple {
+          .lake-ripple,
+          .lake-compose.is-sinking,
+          .lake-compose.is-sinking::after {
             animation: none;
           }
         }

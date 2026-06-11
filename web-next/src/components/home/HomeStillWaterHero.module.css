@@ -1,0 +1,642 @@
+.root {
+  --dive: 0;
+  position: relative;
+  z-index: 10;
+  min-height: 100svh;
+  overflow: hidden;
+  isolation: isolate;
+  background: transparent;
+  color: rgba(238, 230, 210, 0.9);
+}
+
+.diveLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.diveLayer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(105% 95% at 46% 66%, rgba(140, 170, 174, 0.08), transparent 48%),
+    radial-gradient(120% 105% at 50% 64%, rgba(4, 10, 16, 0.16), rgba(2, 6, 10, 0.56) 100%),
+    linear-gradient(180deg, transparent 0%, rgba(1, 5, 7, 0.34) 100%);
+  opacity: calc(var(--dive) * 0.58);
+  transition: opacity 2200ms ease;
+}
+
+.diveArc {
+  position: absolute;
+  width: min(36vw, 460px);
+  height: min(36vw, 460px);
+  left: 53%;
+  top: 48%;
+  border: 1px solid rgba(238, 230, 210, 0.024);
+  border-radius: 999px;
+  filter: blur(3px);
+  opacity: calc(0.055 + var(--dive) * 0.12);
+  transform: translate3d(0, calc(var(--dive) * -34px), 0) scale(calc(1 + var(--dive) * 0.08));
+  mask-image: linear-gradient(130deg, transparent 0%, black 20%, black 58%, transparent 86%);
+  transition:
+    opacity 2200ms ease,
+    transform 2600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.diveArc::before,
+.diveArc::after {
+  content: "";
+  position: absolute;
+  inset: 5%;
+  border: 1px solid rgba(238, 230, 210, 0.018);
+  border-radius: inherit;
+}
+
+.diveArc::after {
+  inset: 11%;
+  opacity: 0.38;
+}
+
+.diveMote {
+  position: absolute;
+  width: var(--mote-size, 6px);
+  height: var(--mote-size, 6px);
+  border-radius: 999px;
+  background: rgba(238, 230, 210, 0.2);
+  box-shadow: 0 0 22px rgba(238, 230, 210, 0.11);
+  filter: blur(var(--mote-blur, 3px));
+  opacity: calc(var(--mote-opacity, 0.12) + var(--dive) * 0.16);
+  animation: moteDrift var(--mote-duration, 24s) ease-in-out infinite;
+}
+
+.moteA {
+  --mote-size: 7px;
+  --mote-opacity: 0.1;
+  --mote-duration: 26s;
+  left: 61%;
+  top: 32%;
+}
+
+.moteB {
+  --mote-size: 5px;
+  --mote-opacity: 0.08;
+  --mote-duration: 31s;
+  left: 69%;
+  top: 46%;
+  animation-delay: -9s;
+}
+
+.moteC {
+  --mote-size: 9px;
+  --mote-opacity: 0.075;
+  --mote-blur: 4px;
+  --mote-duration: 28s;
+  left: 77%;
+  top: 36%;
+  animation-delay: -16s;
+}
+
+.moteD {
+  --mote-size: 4px;
+  --mote-opacity: 0.1;
+  --mote-duration: 22s;
+  left: 58%;
+  top: 52%;
+  animation-delay: -5s;
+}
+
+.moteE {
+  --mote-size: 6px;
+  --mote-opacity: 0.065;
+  --mote-blur: 5px;
+  --mote-duration: 34s;
+  left: 50%;
+  top: 39%;
+  animation-delay: -20s;
+}
+
+.moteF {
+  --mote-size: 8px;
+  --mote-opacity: 0.08;
+  --mote-blur: 4px;
+  --mote-duration: 30s;
+  left: 72%;
+  top: 58%;
+  animation-delay: -12s;
+}
+
+.root[data-phase="descend"] .diveMote {
+  animation-name: bubbleRise;
+  animation-duration: var(--bubble-duration, 4.4s);
+  animation-iteration-count: infinite;
+  opacity: calc(var(--mote-opacity, 0.12) + 0.22);
+}
+
+.content {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  min-height: 100svh;
+  width: min(100%, 1360px);
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
+  align-items: center;
+  gap: clamp(2rem, 7vw, 7rem);
+  padding: 7.5rem 1.5rem 5rem;
+  margin: 0 auto;
+  opacity: calc(1 - var(--dive) * 1.08);
+  transform:
+    translate3d(0, clamp(-5rem, -6.2vh, -3.25rem), 0)
+    translateY(calc(var(--dive) * -68px));
+  filter: blur(calc(var(--dive) * 8px));
+  transition: none;
+}
+
+.copy {
+  position: relative;
+  z-index: 2;
+  min-width: 0;
+}
+
+.rightSealStage {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  padding-top: clamp(1rem, 4vh, 3rem);
+  pointer-events: none;
+}
+
+.rightSealStage::before {
+  content: "";
+  position: absolute;
+  inset: 10% -10% 4%;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 50% 44%, rgba(216, 183, 111, 0.055), transparent 44%),
+    radial-gradient(circle at 50% 54%, rgba(120, 165, 158, 0.11), transparent 62%);
+  filter: blur(18px);
+  opacity: 0.78;
+  pointer-events: none;
+}
+
+.rightSealWatermark {
+  position: relative;
+  z-index: 1;
+}
+
+.root[data-phase="descend"] .content {
+  pointer-events: none;
+}
+
+:global(html[data-home-route-transition="active"]) .content {
+  opacity: 0.16;
+  pointer-events: none;
+  filter: blur(5px);
+  transform:
+    translate3d(0, clamp(-5rem, -6.2vh, -3.25rem), 0)
+    translateY(-46px)
+    scale(0.992);
+  transition:
+    opacity 1800ms ease,
+    filter 2100ms ease,
+    transform 2400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:global(html[data-home-route-transition="active"]) .diveLayer::before {
+  opacity: 0.38;
+}
+
+:global(html[data-home-route-transition="active"]) .diveArc {
+  opacity: 0.18;
+  transform: translate3d(-18vw, 18vh, 0) scale(1.65);
+}
+
+.zhaoMark {
+  position: relative;
+  display: inline-flex;
+  width: 3.85rem;
+  height: 3.85rem;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0;
+  margin-bottom: clamp(1.15rem, 3vh, 2.2rem);
+  border: 1px solid rgba(206, 228, 222, 0.42);
+  border-radius: 999px;
+  aspect-ratio: 1 / 1;
+  color: rgba(232, 240, 238, 0.86);
+  line-height: 1;
+  background:
+    radial-gradient(circle at 50% 46%, rgba(238, 230, 210, 0.045), transparent 62%),
+    radial-gradient(circle at 50% 50%, rgba(7, 17, 18, 0.36), transparent 78%);
+  box-shadow:
+    0 0 30px rgba(206, 228, 222, 0.13),
+    inset 0 0 24px rgba(206, 228, 222, 0.04);
+  opacity: 0.92;
+  transform: translate3d(0, 0, 0);
+  text-shadow:
+    0 0 14px rgba(238, 230, 210, 0.1),
+    0 0 28px rgba(206, 228, 222, 0.08);
+}
+
+.zhaoGlyph {
+  width: 68%;
+  height: 68%;
+  color: currentColor;
+  opacity: 0.82;
+  filter:
+    drop-shadow(0 0 12px rgba(238, 230, 210, 0.09))
+    drop-shadow(0 0 24px rgba(206, 228, 222, 0.06));
+}
+
+.zhaoMark::before,
+.zhaoMark::after {
+  content: "";
+  position: absolute;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.zhaoMark::before {
+  inset: 9%;
+  border: 1px solid rgba(206, 228, 222, 0.13);
+  opacity: 0.66;
+}
+
+.zhaoMark::after {
+  inset: -2px;
+  border: 1px solid rgba(206, 228, 222, 0.1);
+  opacity: 0.58;
+  mask-image: linear-gradient(120deg, black 0%, black 46%, transparent 62%, black 82%);
+}
+
+.title {
+  display: flex;
+  flex-direction: column;
+  max-width: 780px;
+  margin: 0;
+  color: #eef3ee;
+  font-family: var(--font-yangming-title), "Songti SC", "STSong", "Noto Serif SC", serif;
+  font-size: clamp(4.45rem, 10.2vw, 8.85rem);
+  font-weight: 310;
+  font-variation-settings: "wght" 310;
+  line-height: 1.12;
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 60px rgba(0, 0, 0, 0.6);
+  animation: titleRise 2.2s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.title span {
+  display: block;
+  white-space: nowrap;
+}
+
+.couplet {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.14em 0.44em;
+  margin: clamp(1.5rem, 4vh, 2.5rem) 0 0;
+  color: rgba(216, 183, 111, 0.76);
+  font-family: var(--font-story), "Songti SC", serif;
+  font-size: clamp(1rem, 1.6vw, 1.34rem);
+  font-weight: 300;
+  line-height: 1.9;
+  letter-spacing: 0.22em;
+  opacity: 1;
+}
+
+.coupletPhrase,
+.coupletDot {
+  display: inline-block;
+  opacity: 0;
+  filter: blur(4px);
+  transform: translateY(0.42rem);
+  animation: coupletPhraseIn 1.35s cubic-bezier(0.22, 0.9, 0.2, 1) both;
+}
+
+.coupletMarket {
+  color: rgba(255, 255, 255, 0.96);
+  text-shadow: 0 0 34px rgba(0, 0, 0, 0.42);
+  animation-delay: 0.78s;
+}
+
+.coupletDot {
+  color: rgba(184, 154, 88, 0.42);
+  filter: blur(2px);
+  animation-delay: 1.08s;
+}
+
+.coupletMirror {
+  color: rgba(242, 209, 132, 0.98);
+  text-shadow:
+    0 0 30px rgba(0, 0, 0, 0.46),
+    0 0 22px rgba(216, 183, 111, 0.16);
+  animation-delay: 1.28s;
+}
+
+.entryGroup {
+  display: flex;
+  width: fit-content;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(0.5rem, 1vh, 0.75rem);
+  margin: clamp(0.75rem, 1.6vh, 1.15rem) 0 0;
+}
+
+.subcopy {
+  max-width: min(62rem, 86vw);
+  margin: 0;
+  color: rgba(220, 215, 200, 0.64);
+  font-family: var(--font-interface), var(--font-story), serif;
+  font-size: clamp(1rem, 1.45vw, 1.24rem);
+  font-weight: 620;
+  line-height: 1.9;
+  letter-spacing: 0.045em;
+  opacity: 0;
+  animation: fadeUp 1.5s ease 1s both;
+}
+
+.door {
+  position: relative;
+  display: inline-flex;
+  width: fit-content;
+  flex-direction: column;
+  margin: 0;
+  color: rgba(242, 209, 132, 0.98);
+  text-decoration: none;
+  opacity: 0;
+  animation: fadeUp 1.5s ease 1.34s both;
+}
+
+.door::before {
+  content: "";
+  position: absolute;
+  left: -1.4rem;
+  bottom: -1.25rem;
+  width: clamp(13rem, 20vw, 17rem);
+  height: 4.2rem;
+  border: 1px solid rgba(216, 183, 111, 0.12);
+  border-radius: 999px;
+  opacity: 0;
+  filter: blur(8px);
+  transform: scale(0.88);
+  transition:
+    opacity 900ms ease,
+    transform 1400ms ease;
+}
+
+.doorMain {
+  display: block;
+  padding-left: 0.22em;
+  font-family: var(--font-yangming-title), "Songti SC", serif;
+  font-size: clamp(1.42rem, 2.3vw, 1.9rem);
+  font-weight: 360;
+  letter-spacing: 0.22em;
+  text-shadow:
+    0 0 34px rgba(0, 0, 0, 0.5),
+    0 0 24px rgba(216, 183, 111, 0.14);
+  transition:
+    color 700ms ease,
+    letter-spacing 700ms ease,
+    transform 700ms ease;
+}
+
+.doorLine {
+  display: block;
+  width: clamp(11rem, 18vw, 15rem);
+  height: 1px;
+  margin-top: 1.05rem;
+  transform-origin: left center;
+  opacity: 0.58;
+  background: linear-gradient(90deg, rgba(242, 209, 132, 0.66), rgba(242, 209, 132, 0.2), transparent);
+  animation: doorLineBreath 5s ease-in-out infinite;
+}
+
+.door:hover::before {
+  opacity: 0.26;
+  transform: scale(1.08);
+}
+
+.door:hover .doorMain {
+  color: rgba(255, 236, 181, 0.98);
+  letter-spacing: 0.3em;
+  transform: translateX(0.16rem);
+}
+
+.door:hover .doorLine {
+  animation-duration: 2.8s;
+}
+
+.door[data-story-door="third"] {
+  color: rgba(238, 203, 128, 0.98);
+}
+
+.door[data-story-door="third"]::before {
+  left: -1rem;
+  bottom: -1.05rem;
+  width: clamp(180px, 20vw, 260px);
+  height: 4.8rem;
+  opacity: 0;
+}
+
+.door[data-story-door="third"] .doorMain {
+  font-size: clamp(34px, 3.6vw, 52px);
+  letter-spacing: 0.2em;
+  color: rgba(238, 203, 128, 0.98);
+  text-shadow:
+    0 0 32px rgba(0, 0, 0, 0.54),
+    0 0 20px rgba(216, 183, 111, 0.1);
+}
+
+.door[data-story-door="third"] .doorLine {
+  width: clamp(180px, 19vw, 260px);
+  opacity: 0.58;
+  background: linear-gradient(90deg, rgba(238, 203, 128, 0.62), rgba(238, 203, 128, 0.2), transparent);
+}
+
+.door[data-story-door="third"]:hover::before {
+  opacity: 0.2;
+  transform: scale(1.1);
+}
+
+.door[data-story-door="third"]:hover .doorMain {
+  color: rgba(248, 218, 150, 0.99);
+}
+
+@keyframes moteDrift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  40% {
+    transform: translate3d(6px, -8px, 0) scale(1.04);
+  }
+
+  72% {
+    transform: translate3d(-5px, 5px, 0) scale(0.98);
+  }
+}
+
+@keyframes bubbleRise {
+  0% {
+    transform: translate3d(0, 52px, 0) scale(0.8);
+    opacity: 0;
+  }
+
+  22% {
+    opacity: 0.34;
+  }
+
+  100% {
+    transform: translate3d(8px, -92px, 0) scale(1.16);
+    opacity: 0;
+  }
+}
+
+@keyframes doorLineBreath {
+  0%,
+  100% {
+    opacity: 0.42;
+    transform: scaleX(0.88);
+  }
+
+  50% {
+    opacity: 0.58;
+    transform: scaleX(1.04);
+  }
+}
+
+@keyframes titleRise {
+  from {
+    opacity: 0;
+    transform: translateY(1.1rem);
+    filter: blur(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes coupletPhraseIn {
+  from {
+    opacity: 0;
+    filter: blur(4px);
+    transform: translateY(0.42rem);
+  }
+
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: none;
+  }
+}
+
+@media (min-width: 769px) {
+  .content {
+    padding-right: 2rem;
+    padding-left: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .content {
+    display: flex;
+    position: relative;
+    justify-content: flex-start;
+    padding: 8rem 1.25rem 5.5rem;
+    transform: translateY(calc(var(--dive) * -68px));
+  }
+
+  .copy {
+    z-index: 2;
+  }
+
+  .rightSealStage {
+    position: absolute;
+    right: clamp(0.75rem, 4vw, 1.4rem);
+    top: clamp(5.75rem, 13svh, 8rem);
+    z-index: 1;
+    padding: 0;
+    opacity: 0.86;
+  }
+
+  .rightSealStage::before {
+    inset: -24% -36%;
+    opacity: 0.32;
+    filter: blur(14px);
+  }
+
+  .zhaoMark,
+  .title,
+  .couplet,
+  .entryGroup {
+    margin-left: 0;
+  }
+
+  .title {
+    font-size: clamp(3.5rem, 17vw, 5.1rem);
+    letter-spacing: 0.045em;
+  }
+
+  .couplet {
+    max-width: 18rem;
+    font-size: 0.94rem;
+    line-height: 1.9;
+    gap: 0.08em 0.34em;
+  }
+
+  .subcopy {
+    max-width: 21rem;
+    font-size: 0.86rem;
+    font-weight: 560;
+  }
+
+  .door {
+    margin-top: 0;
+  }
+
+  .diveArc {
+    width: 78vw;
+    height: 78vw;
+    left: 42%;
+    top: 28%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .diveLayer,
+  .diveMote,
+  .doorLine,
+  .title,
+  .couplet,
+  .coupletPhrase,
+  .coupletDot,
+  .subcopy,
+  .door {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

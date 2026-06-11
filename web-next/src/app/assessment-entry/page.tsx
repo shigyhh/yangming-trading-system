@@ -9,42 +9,25 @@ import {
   PrimaryButton,
 } from "@/features/assessment/components"
 import {
-  assessmentStorageKeys,
   clearAssessmentDraft,
   consumeSkipEntryOpeningRitualOnce,
-  getSavedNickname,
-  getSavedPhoneTail,
-  hasSavedPhone,
   markAssessmentGatewayOnce,
-  setStorage,
 } from "@/features/assessment/storage"
 
 export default function AssessmentEntryPage() {
   const router = useRouter()
-  const [phoneTail, setPhoneTail] = useState("")
-  const [nickname, setNickname] = useState("")
-  const [nicknameDraft, setNicknameDraft] = useState("")
-  const [isEditingName, setIsEditingName] = useState(false)
   const [showOpeningRitual, setShowOpeningRitual] = useState(() => !consumeSkipEntryOpeningRitualOnce())
   const isRoutingRef = useRef(false)
 
   useEffect(() => {
     router.prefetch("/assessment")
-    router.prefetch("/assessment-login")
 
     const openingTimer = window.setTimeout(() => {
       setShowOpeningRitual(false)
-    }, 2450)
+    }, 5400)
 
-    const timer = window.setTimeout(() => {
-      const savedNickname = getSavedNickname()
-      setPhoneTail(getSavedPhoneTail())
-      setNickname(savedNickname)
-      setNicknameDraft(savedNickname)
-    }, 0)
     return () => {
       window.clearTimeout(openingTimer)
-      window.clearTimeout(timer)
     }
   }, [router])
 
@@ -52,84 +35,55 @@ export default function AssessmentEntryPage() {
     if (isRoutingRef.current) return
     isRoutingRef.current = true
 
-    const savedPhone = hasSavedPhone()
-    const target = savedPhone ? "/assessment" : "/assessment-login"
+    clearAssessmentDraft()
+    markAssessmentGatewayOnce()
 
-    if (savedPhone) {
-      clearAssessmentDraft()
-      markAssessmentGatewayOnce()
-    }
-
-    router.push(target)
-  }
-
-  const saveNickname = () => {
-    const cleanName = nicknameDraft.trim().slice(0, 12)
-    setNickname(cleanName)
-    setNicknameDraft(cleanName)
-    setStorage(assessmentStorageKeys.userNickname, cleanName)
-    setIsEditingName(false)
+    router.push("/assessment")
   }
 
   return (
-    <AssessmentShell contentWidth="wide">
+    <AssessmentShell background="home-water" contentWidth="wide">
       {showOpeningRitual ? (
         <div className="ritual-opening-transition" aria-hidden="true">
-          <div className="ritual-opening-breath" aria-hidden="true" />
-          <div className="ritual-opening-water ritual-opening-water-still" aria-hidden="true" />
+          <div className="ritual-opening-thoughts" aria-hidden="true">
+            <span className="ritual-floating-mote ritual-floating-mote-1" />
+            <span className="ritual-floating-mote ritual-floating-mote-2" />
+            <span className="ritual-floating-mote ritual-floating-mote-3" />
+            <span className="ritual-floating-mote ritual-floating-mote-4" />
+            <span className="ritual-floating-mote ritual-floating-mote-5" />
+            <span className="ritual-floating-mote ritual-floating-mote-6" />
+            <span className="ritual-floating-mote ritual-floating-mote-7" />
+            <span className="ritual-floating-mote ritual-floating-mote-8" />
+            <span className="ritual-floating-mote ritual-floating-mote-9" />
+            <span className="ritual-floating-mote ritual-floating-mote-10" />
+
+            <span className="ritual-floating-thought ritual-floating-thought-1">再等等。</span>
+            <span className="ritual-floating-thought ritual-floating-thought-2">不能错过。</span>
+            <span className="ritual-floating-thought ritual-floating-thought-3">先看清这一念。</span>
+            <span className="ritual-floating-thought ritual-floating-thought-4">别急。</span>
+            <span className="ritual-floating-thought ritual-floating-thought-5">会回来的。</span>
+            <span className="ritual-floating-thought ritual-floating-thought-6">先停一息。</span>
+          </div>
 
           <div className="ritual-still-seal" aria-hidden="true">
-            <YangmingA1Mark className="ritual-seal-mark" />
+            <YangmingA1Mark className="ritual-seal-mark" width={112} height={104} />
           </div>
 
           <p className="ritual-opening-copy">此心一照，妄念自明。</p>
         </div>
       ) : (
         <div className="ritual-entry-first-step">
-          <div className="ritual-entry-breath" aria-hidden="true" />
-
           <div className="ritual-late-seal" aria-hidden="true">
-            <YangmingA1Mark className="ritual-seal-mark" />
+            <YangmingA1Mark className="ritual-seal-mark" width={66} height={61} />
           </div>
 
           <h1 className="ritual-line ritual-line-main ritual-line-1">
             回想最近一次，
             <br />
-            你没有守住自己的交易瞬间。
+            交易计划还在，心先动了。
           </h1>
 
-          <p className="ritual-line ritual-line-soft ritual-line-2">别急着回答。</p>
-
-          <div className="ritual-entry-action ritual-line ritual-line-3">
-            {phoneTail || nickname ? (
-              <div className="mb-4 grid justify-items-center gap-2">
-                {isEditingName ? (
-                  <div className="flex w-full max-w-[260px] items-center gap-2">
-                    <input
-                      value={nicknameDraft}
-                      onChange={(event) => setNicknameDraft(event.target.value.slice(0, 12))}
-                      placeholder="换个昵称"
-                      className="min-h-9 flex-1 rounded-full border border-[rgba(172,146,83,.16)] bg-black/20 px-3 text-center font-function text-sm tracking-[.04em] text-[rgba(242,235,220,.82)] outline-none placeholder:text-[rgba(220,212,195,.28)] focus:border-[rgba(180,157,93,.42)]"
-                    />
-                    <button
-                      type="button"
-                      onClick={saveNickname}
-                      className="rounded-full border border-[rgba(172,146,83,.16)] px-3 py-2 font-function text-xs tracking-[.08em] text-[rgba(220,212,195,.58)] transition hover:text-[rgba(242,235,220,.86)]"
-                    >
-                      保存
-                    </button>
-                  </div>
-                ) : null}
-                <button
-                  type="button"
-                  onClick={() => setIsEditingName((current) => !current)}
-                  className="rounded-full border border-[rgba(172,146,83,.16)] bg-[rgba(169,144,82,.055)] px-4 py-1 font-function text-xs tracking-[.1em] text-[rgba(180,157,93,.68)] transition hover:border-[rgba(180,157,93,.3)] hover:text-[rgba(216,183,111,.86)]"
-                >
-                  {nickname || `尾号 ${phoneTail}`}
-                </button>
-              </div>
-            ) : null}
-
+          <div className="ritual-entry-action ritual-line ritual-line-2">
             <PrimaryButton type="button" onClick={startAssessment} className="w-full">
               照见此心
             </PrimaryButton>
@@ -152,118 +106,234 @@ export default function AssessmentEntryPage() {
           overflow: hidden;
           padding: clamp(22px, 4svh, 38px) 0;
           text-align: center;
-          animation: ritual-opening-fade-out 640ms ease 2050ms forwards;
+          animation: ritual-opening-fade-out 900ms ease 4600ms forwards;
         }
 
-        .ritual-opening-breath {
+        .ritual-opening-thoughts {
           position: absolute;
-          inset: -8% -20% 0;
-          z-index: -1;
-          background:
-            radial-gradient(circle at 50% 35%, rgba(216, 183, 111, 0.16), transparent 28%),
-            radial-gradient(ellipse at 50% 66%, rgba(109, 91, 52, 0.16), transparent 42%),
-            linear-gradient(180deg, transparent, rgba(7, 7, 6, 0.18) 56%, transparent);
-          filter: blur(2px);
-          opacity: 0.72;
+          inset: 0;
+          z-index: 1;
           pointer-events: none;
         }
 
-        .ritual-opening-water {
+        .ritual-floating-thought {
           position: absolute;
-          left: 50%;
-          z-index: 0;
-          bottom: 14%;
-          width: min(86vw, 760px);
-          height: clamp(120px, 24svh, 230px);
-          border-radius: 50%;
-          background:
-            linear-gradient(180deg, rgba(242, 235, 220, 0.035), transparent 34%),
-            radial-gradient(ellipse at 50% 12%, rgba(216, 183, 111, 0.2), rgba(95, 132, 117, 0.075) 34%, transparent 70%);
-          filter: blur(18px);
+          display: block;
+          max-width: min(38vw, 15em);
+          font-family: var(--font-narrative);
+          font-size: clamp(0.9rem, 2.1vw, 1.34rem);
+          font-weight: 320;
+          font-variation-settings: "wght" 320;
+          letter-spacing: 0.12em;
+          line-height: 1.6;
+          color: rgba(220, 212, 195, 0.52);
+          text-align: center;
+          white-space: nowrap;
           opacity: 0;
-          transform: translate(-50%, 34px) scaleX(0.72);
-          animation: ritual-water-rise 1450ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
-          pointer-events: none;
+          filter: blur(12px);
+          transform: translate3d(0, 18px, 0) scale(0.98);
+          animation: ritual-floating-thought-rise 2700ms cubic-bezier(0.2, 0.78, 0.2, 1) forwards;
         }
 
-        .ritual-opening-water-still {
-          top: calc(50% + clamp(20px, 4.6svh, 42px));
-          bottom: auto;
-          width: min(88vw, 820px);
-          height: clamp(150px, 26svh, 260px);
-          opacity: 0;
-          transform: translate(-50%, 18px) scaleX(0.7);
-          animation:
-            ritual-still-water-in 1320ms cubic-bezier(0.22, 1, 0.36, 1) 120ms forwards,
-            ritual-still-water-breathe 6.8s ease-in-out 1480ms infinite;
-        }
-
-        .ritual-opening-water::before {
-          content: "";
+        .ritual-floating-mote {
           position: absolute;
-          left: 9%;
-          right: 9%;
-          top: 14%;
-          height: 1px;
+          display: block;
+          width: calc(var(--mote-r, 1) * 10px);
+          height: calc(var(--mote-r, 1) * 10px);
           border-radius: 999px;
-          background: linear-gradient(90deg, transparent, rgba(216, 183, 111, 0.28), rgba(244, 235, 221, 0.14), transparent);
-          opacity: 0.74;
+          background: radial-gradient(circle, rgba(200, 222, 222, 0.42), rgba(200, 222, 222, 0.14) 44%, transparent 74%);
+          filter: blur(2px);
+          opacity: 0;
+          transform: translate3d(0, 24px, 0) scale(0.82);
+          animation: ritual-floating-mote-rise var(--mote-life, 5600ms) ease-out var(--mote-delay, 0ms) forwards;
+        }
+
+        .ritual-floating-mote-1 {
+          left: 32%;
+          top: 36%;
+          --mote-r: 0.7;
+          --mote-life: 4700ms;
+          --mote-delay: 260ms;
+          --mote-dx: -6px;
+          --mote-dy: -58px;
+        }
+
+        .ritual-floating-mote-2 {
+          left: 38%;
+          top: 55%;
+          --mote-r: 1.8;
+          --mote-life: 6200ms;
+          --mote-delay: 420ms;
+          --mote-dx: 9px;
+          --mote-dy: -74px;
+        }
+
+        .ritual-floating-mote-3 {
+          right: 34%;
+          top: 42%;
+          --mote-r: 2.2;
+          --mote-life: 6800ms;
+          --mote-delay: 520ms;
+          --mote-dx: -4px;
+          --mote-dy: -68px;
+        }
+
+        .ritual-floating-mote-4 {
+          right: 27%;
+          bottom: 34%;
+          --mote-r: 0.9;
+          --mote-life: 5200ms;
+          --mote-delay: 780ms;
+          --mote-dx: 7px;
+          --mote-dy: -48px;
+        }
+
+        .ritual-floating-mote-5 {
+          left: 24%;
+          bottom: 31%;
+          --mote-r: 1.2;
+          --mote-life: 5600ms;
+          --mote-delay: 920ms;
+          --mote-dx: -10px;
+          --mote-dy: -56px;
+        }
+
+        .ritual-floating-mote-6 {
+          right: 42%;
+          bottom: 25%;
+          --mote-r: 0.6;
+          --mote-life: 4300ms;
+          --mote-delay: 1080ms;
+          --mote-dx: 4px;
+          --mote-dy: -44px;
+        }
+
+        .ritual-floating-mote-7 {
+          left: 46%;
+          top: 29%;
+          --mote-r: 1.5;
+          --mote-life: 6400ms;
+          --mote-delay: 1180ms;
+          --mote-dx: 11px;
+          --mote-dy: -70px;
+        }
+
+        .ritual-floating-mote-8 {
+          right: 24%;
+          top: 57%;
+          --mote-r: 1.0;
+          --mote-life: 4900ms;
+          --mote-delay: 1320ms;
+          --mote-dx: -8px;
+          --mote-dy: -46px;
+        }
+
+        .ritual-floating-mote-9 {
+          left: 29%;
+          top: 49%;
+          --mote-r: 2.0;
+          --mote-life: 6900ms;
+          --mote-delay: 1480ms;
+          --mote-dx: 6px;
+          --mote-dy: -62px;
+        }
+
+        .ritual-floating-mote-10 {
+          right: 31%;
+          top: 33%;
+          --mote-r: 0.8;
+          --mote-life: 4500ms;
+          --mote-delay: 1640ms;
+          --mote-dx: -5px;
+          --mote-dy: -50px;
+        }
+
+        .ritual-floating-thought-1 {
+          left: clamp(20px, 22vw, 260px);
+          top: 42%;
+          --thought-dx: -7px;
+          animation-delay: 460ms;
+        }
+
+        .ritual-floating-thought-2 {
+          right: clamp(18px, 21vw, 250px);
+          top: 45%;
+          --thought-dx: 8px;
+          animation-delay: 680ms;
+        }
+
+        .ritual-floating-thought-3 {
+          left: clamp(24px, 26vw, 310px);
+          bottom: 27%;
+          --thought-dx: 6px;
+          color: rgba(220, 212, 195, 0.42);
+          font-size: clamp(1.06rem, 2.5vw, 1.68rem);
+          animation-delay: 940ms;
+        }
+
+        .ritual-floating-thought-4 {
+          right: clamp(24px, 31vw, 360px);
+          bottom: 35%;
+          --thought-dx: -5px;
+          color: rgba(220, 212, 195, 0.36);
+          animation-delay: 1180ms;
+        }
+
+        .ritual-floating-thought-5 {
+          left: clamp(20px, 17vw, 210px);
+          top: 56%;
+          --thought-dx: 5px;
+          color: rgba(220, 212, 195, 0.32);
+          font-size: clamp(0.78rem, 1.8vw, 1.08rem);
+          animation-delay: 1420ms;
+        }
+
+        .ritual-floating-thought-6 {
+          right: clamp(22px, 18vw, 220px);
+          bottom: 24%;
+          --thought-dx: -6px;
+          color: rgba(220, 212, 195, 0.38);
+          font-size: clamp(1rem, 2.3vw, 1.46rem);
+          animation-delay: 1600ms;
         }
 
         .ritual-still-seal {
           position: relative;
-          z-index: 1;
+          z-index: 2;
           display: grid;
-          width: clamp(164px, 42vw, 218px);
-          height: clamp(164px, 42vw, 218px);
-          place-items: center;
-          border: 1px solid rgba(172, 146, 83, 0.24);
-          border-radius: 999px;
-          background: radial-gradient(circle, rgba(216, 183, 111, 0.1), rgba(255, 255, 255, 0.012) 58%, transparent 75%);
-          box-shadow: 0 0 58px rgba(180, 157, 93, 0.075);
-          opacity: 0;
-          transform: translateY(10px) scale(0.96);
-        }
-
-        .ritual-still-seal {
           width: clamp(176px, 43vw, 238px);
           height: clamp(176px, 43vw, 238px);
-          border-color: rgba(172, 146, 83, 0.28);
+          place-items: center;
+          border: 1px solid rgba(172, 146, 83, 0.28);
+          border-radius: 999px;
+          overflow: hidden;
           background:
             radial-gradient(circle, rgba(216, 183, 111, 0.18), rgba(216, 183, 111, 0.055) 42%, rgba(255, 255, 255, 0.012) 61%, transparent 76%),
             radial-gradient(circle at 50% 56%, rgba(95, 132, 117, 0.07), transparent 62%);
           box-shadow:
             0 0 74px rgba(180, 157, 93, 0.1),
             inset 0 0 38px rgba(216, 183, 111, 0.045);
+          opacity: 0;
+          filter: blur(14px);
+          transform: translateY(24px) scale(0.93);
           animation:
-            ritual-seal-appear 980ms cubic-bezier(0.22, 1, 0.36, 1) 80ms forwards,
-            ritual-still-seal-breathe 5.6s ease-in-out 1180ms infinite;
+            ritual-seal-appear 1800ms cubic-bezier(0.16, 1, 0.3, 1) 60ms forwards,
+            ritual-still-seal-breathe 5.6s ease-in-out 2160ms infinite;
         }
 
         .ritual-still-seal::before {
           content: "";
           position: absolute;
-          inset: 26px;
-          border: 1px dashed rgba(220, 212, 195, 0.12);
-          border-radius: inherit;
-        }
-
-        .ritual-still-seal::before {
           inset: 28px;
-          border-color: rgba(220, 212, 195, 0.145);
+          border: 1px dashed rgba(220, 212, 195, 0.145);
+          border-radius: inherit;
         }
 
         .ritual-still-seal::after {
           content: "";
           position: absolute;
-          inset: 46px;
-          border-radius: inherit;
-          background: rgba(216, 183, 111, 0.12);
-          filter: blur(25px);
-        }
-
-        .ritual-still-seal::after {
           inset: 42px;
+          border-radius: inherit;
           background: rgba(216, 183, 111, 0.16);
           filter: blur(28px);
         }
@@ -272,6 +342,8 @@ export default function AssessmentEntryPage() {
           position: relative;
           z-index: 2;
           width: clamp(4.9rem, 17vw, 7.1rem);
+          max-width: 54%;
+          max-height: 54%;
           height: auto;
           color: rgba(242, 235, 220, 0.82);
           transform: translateX(0.02em);
@@ -288,6 +360,7 @@ export default function AssessmentEntryPage() {
           place-items: center;
           border: 1px solid rgba(172, 146, 83, 0.16);
           border-radius: 999px;
+          overflow: hidden;
           background: radial-gradient(circle, rgba(216, 183, 111, 0.08), rgba(255, 255, 255, 0.01) 58%, transparent 74%);
           box-shadow: 0 0 38px rgba(180, 157, 93, 0.052);
           opacity: 0;
@@ -319,6 +392,8 @@ export default function AssessmentEntryPage() {
           position: relative;
           z-index: 2;
           width: clamp(3rem, 8vw, 4.2rem);
+          max-width: 48%;
+          max-height: 48%;
           height: auto;
           color: rgba(242, 235, 220, 0.7);
           transform: translateX(0.02em);
@@ -326,19 +401,20 @@ export default function AssessmentEntryPage() {
 
         .ritual-opening-copy {
           position: relative;
-          z-index: 1;
+          z-index: 2;
           margin: clamp(38px, 7svh, 66px) 0 0;
           font-family: var(--font-narrative);
           font-size: clamp(1.2rem, 4.8vw, 2.18rem);
           font-weight: 300;
           letter-spacing: 0.13em;
           line-height: 1.45;
-          color: rgba(220, 212, 195, 0.68);
+          color: rgba(238, 243, 238, 0.78);
+          text-shadow: 0 0 36px rgba(0, 0, 0, 0.48);
           white-space: nowrap;
           opacity: 0;
           filter: blur(7px);
           transform: translateY(14px);
-          animation: ritual-opening-copy-in 980ms cubic-bezier(0.22, 1, 0.36, 1) 720ms forwards;
+          animation: ritual-opening-copy-in 1280ms cubic-bezier(0.22, 1, 0.36, 1) 1760ms forwards;
         }
 
         .ritual-entry-first-step {
@@ -355,20 +431,6 @@ export default function AssessmentEntryPage() {
           text-align: center;
         }
 
-        .ritual-entry-breath {
-          position: absolute;
-          inset: -3% -18% 0;
-          z-index: -1;
-          background:
-            radial-gradient(circle at 50% 38%, rgba(216, 183, 111, 0.13), transparent 27%),
-            radial-gradient(ellipse at 50% 70%, rgba(109, 91, 52, 0.14), transparent 43%),
-            linear-gradient(180deg, transparent, rgba(7, 7, 6, 0.14) 54%, transparent);
-          filter: blur(2px);
-          opacity: 0.68;
-          animation: ritual-entry-breathe 8s ease-in-out infinite;
-          pointer-events: none;
-        }
-
         .ritual-line {
           margin: 0;
           opacity: 0;
@@ -377,31 +439,21 @@ export default function AssessmentEntryPage() {
           animation: ritual-line-in 1000ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
 
-        .ritual-line-soft {
-          margin-top: clamp(62px, 7.2svh, 88px);
-          font-family: var(--font-narrative);
-          font-size: clamp(1.2rem, 4.6vw, 1.62rem);
-          font-weight: 360;
-          font-variation-settings: "wght" 360;
-          letter-spacing: 0.065em;
-          line-height: 1.7;
-          color: rgba(220, 212, 195, 0.66);
-        }
-
         .ritual-line-main {
           margin-top: clamp(58px, 6svh, 86px);
+          max-width: min(100%, 24em);
           font-family: var(--font-yangming-title), var(--font-narrative), serif;
-          font-size: clamp(1.55rem, 3.18vw, 2.92rem);
+          font-size: clamp(1.55rem, 3vw, 2.76rem);
           font-weight: 420;
           font-variation-settings: "wght" 420;
           letter-spacing: 0.025em;
-          line-height: 1.36;
-          color: rgba(242, 235, 220, 0.9);
-          text-shadow: 0 0 20px rgba(216, 183, 111, 0.055);
+          line-height: 1.44;
+          color: #eef3ee;
+          text-shadow: 0 0 56px rgba(0, 0, 0, 0.58);
         }
 
         .ritual-entry-action {
-          margin-top: clamp(42px, 5.8svh, 68px);
+          margin-top: clamp(72px, 8svh, 98px);
           width: 100%;
           max-width: 380px;
           padding-bottom: max(0px, env(safe-area-inset-bottom));
@@ -415,14 +467,14 @@ export default function AssessmentEntryPage() {
           }
 
           .ritual-line-main {
-            max-width: 16em;
+            max-width: min(100%, 24em);
           }
         }
 
         .ritual-entry-note {
           margin: 14px 0 0;
           font-family: var(--font-interface);
-          font-size: 0.76rem;
+          font-size: clamp(0.86rem, 1vw, 0.94rem);
           font-weight: 300;
           letter-spacing: 0.08em;
           line-height: 1.8;
@@ -434,56 +486,7 @@ export default function AssessmentEntryPage() {
         }
 
         .ritual-line-2 {
-          animation-delay: 1700ms;
-        }
-
-        .ritual-line-3 {
-          animation-delay: 3500ms;
-        }
-
-        @keyframes ritual-water-rise {
-          0% {
-            opacity: 0;
-            transform: translate(-50%, 42px) scaleX(0.62);
-          }
-
-          46% {
-            opacity: 0.72;
-          }
-
-          100% {
-            opacity: 0.5;
-            transform: translate(-50%, -6px) scaleX(1);
-          }
-        }
-
-        @keyframes ritual-still-water-in {
-          0% {
-            opacity: 0;
-            transform: translate(-50%, 32px) scaleX(0.62);
-          }
-
-          55% {
-            opacity: 0.48;
-          }
-
-          100% {
-            opacity: 0.36;
-            transform: translate(-50%, 0) scaleX(1);
-          }
-        }
-
-        @keyframes ritual-still-water-breathe {
-          0%,
-          100% {
-            opacity: 0.34;
-            transform: translate(-50%, 0) scaleX(0.98);
-          }
-
-          50% {
-            opacity: 0.44;
-            transform: translate(-50%, -8px) scaleX(1.04);
-          }
+          animation-delay: 2100ms;
         }
 
         @keyframes ritual-opening-copy-in {
@@ -503,12 +506,18 @@ export default function AssessmentEntryPage() {
         @keyframes ritual-seal-appear {
           0% {
             opacity: 0;
-            filter: blur(8px);
-            transform: translateY(14px) scale(0.97);
+            filter: blur(16px);
+            transform: translateY(28px) scale(0.92);
+          }
+
+          38% {
+            opacity: 0.44;
+            filter: blur(10px);
+            transform: translateY(13px) scale(0.96);
           }
 
           100% {
-            opacity: 1;
+            opacity: 0.92;
             filter: blur(0);
             transform: translateY(0) scale(1);
           }
@@ -566,19 +575,6 @@ export default function AssessmentEntryPage() {
           }
         }
 
-        @keyframes ritual-entry-breathe {
-          0%,
-          100% {
-            opacity: 0.56;
-            transform: scale(0.98);
-          }
-
-          50% {
-            opacity: 0.9;
-            transform: scale(1.04);
-          }
-        }
-
         @keyframes ritual-line-in {
           0% {
             opacity: 0;
@@ -598,6 +594,118 @@ export default function AssessmentEntryPage() {
             opacity: 0;
             filter: blur(10px);
             transform: translateY(-8px);
+          }
+        }
+
+        @keyframes ritual-floating-thought-rise {
+          0% {
+            opacity: 0;
+            filter: blur(13px);
+            transform: translate3d(0, 18px, 0) scale(0.98);
+          }
+
+          34% {
+            opacity: 0.28;
+            filter: blur(3px);
+          }
+
+          70% {
+            opacity: 0.18;
+            filter: blur(4px);
+          }
+
+          100% {
+            opacity: 0;
+            filter: blur(14px);
+            transform: translate3d(var(--thought-dx, 0), -18px, 0) scale(1.02);
+          }
+        }
+
+        @keyframes ritual-floating-mote-rise {
+          0% {
+            opacity: 0;
+            transform: translate3d(0, 24px, 0) scale(0.82);
+          }
+
+          22% {
+            opacity: 0.2;
+          }
+
+          54% {
+            opacity: 0.3;
+          }
+
+          100% {
+            opacity: 0;
+            transform: translate3d(var(--mote-dx, 0), var(--mote-dy, -58px), 0) scale(1.16);
+          }
+        }
+
+        @media (max-width: 640px) {
+          .ritual-floating-thought {
+            max-width: 44vw;
+            font-size: clamp(0.78rem, 3.4vw, 1.02rem);
+            letter-spacing: 0.1em;
+          }
+
+          .ritual-floating-thought-1 {
+            left: 5vw;
+            top: 39%;
+          }
+
+          .ritual-floating-thought-2 {
+            right: 5vw;
+            top: 45%;
+          }
+
+          .ritual-floating-thought-3 {
+            left: 10vw;
+            bottom: 25%;
+          }
+
+          .ritual-floating-thought-4 {
+            right: 14vw;
+            bottom: 34%;
+          }
+
+          .ritual-floating-thought-5 {
+            left: 8vw;
+            top: 58%;
+          }
+
+          .ritual-floating-thought-6 {
+            right: 9vw;
+            bottom: 23%;
+          }
+
+          .ritual-floating-mote {
+            width: calc(var(--mote-r, 1) * 8px);
+            height: calc(var(--mote-r, 1) * 8px);
+          }
+
+          .ritual-floating-thought-3 {
+            font-size: clamp(0.96rem, 4.3vw, 1.22rem);
+          }
+
+          .ritual-floating-thought-5 {
+            font-size: clamp(0.72rem, 3.1vw, 0.92rem);
+          }
+
+          .ritual-floating-thought-6 {
+            font-size: clamp(0.88rem, 3.8vw, 1.08rem);
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .ritual-opening-transition,
+          .ritual-still-seal,
+          .ritual-floating-mote,
+          .ritual-floating-thought,
+          .ritual-opening-copy,
+          .ritual-late-seal,
+          .ritual-line {
+            animation-duration: 1ms !important;
+            animation-delay: 0ms !important;
           }
         }
 

@@ -1,13 +1,13 @@
 "use client"
 
-import type { PointerEvent as ReactPointerEvent } from "react"
+import type { FormEvent, PointerEvent as ReactPointerEvent } from "react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { cn } from "@/lib/utils"
 
 import HeartLakeEngine, { type LakeMode } from "./HeartLakeEngine"
+import OneThoughtRitualFlow from "./OneThoughtRitualFlow"
 import { StillWaterIntroMirror } from "./StillWaterIntroMirror"
-import ZhaoxinRitualFlow from "./ZhaoxinRitualFlow"
 
 type MirrorGatewayProps = {
   onComplete: (mirrorId: string) => void
@@ -82,6 +82,9 @@ type PreludeStep = "market" | "question" | "clear"
 
 const MAIN_MIRROR_ID: MirrorId = "chasing"
 const STILL_WATER_ENTRY_ANCHOR = "still-water-intro-mirror"
+const QUESTION_REVEAL_DELAY_MS = 3400
+const PRELUDE_SINK_DELAY_MS = 13200
+const PRELUDE_ENTRY_DELAY_MS = 2300
 
 const getNow = () => (typeof performance !== "undefined" ? performance.now() : Date.now())
 
@@ -884,11 +887,20 @@ export function MirrorGateway({ onComplete }: MirrorGatewayProps) {
   const [lakeMode, setLakeMode] = useState<LakeMode>("still")
   const [rippleKey, setRippleKey] = useState(0)
   const [preludeStep, setPreludeStep] = useState<PreludeStep>("market")
+  const [preludeThoughtInput, setPreludeThoughtInput] = useState("")
+  const [sinkingThoughtText, setSinkingThoughtText] = useState("")
+  const [isPreludeHovering, setIsPreludeHovering] = useState(false)
+  const [isPreludeFocused, setIsPreludeFocused] = useState(false)
   const holdFrameRef = useRef<number | null>(null)
+  const preludeThoughtInputRef = useRef("")
+  const preludeSinkStartedRef = useRef(false)
+  const preludeEnterTimerRef = useRef<number | null>(null)
   const currentCopy = ritualCopyByPhase[phase]
   const canHoldWater = false
   const canEnterCycle = false
-  const stillWaterPhase = preludeStep === "market" ? "openingSelf" : "question"
+  const hasPreludeThought = preludeThoughtInput.trim().length > 0
+  const isPreludePaused = preludeStep === "question" && (isPreludeHovering || isPreludeFocused)
+  const stillWaterPhase = preludeStep === "market" ? "openingSelf" : preludeStep === "clear" ? "firstRipple" : "question"
 
   const copyClassName = useMemo(
     () =>
@@ -921,6 +933,35 @@ export function MirrorGateway({ onComplete }: MirrorGatewayProps) {
     setShowZhaoxinFlow(true)
   }, [])
 
+  const beginPreludeThoughtSink = useCallback(() => {
+    if (showZhaoxinFlow || preludeSinkStartedRef.current) return
+
+    preludeSinkStartedRef.current = true
+    setSinkingThoughtText(preludeThoughtInputRef.current.trim())
+    setPreludeStep("clear")
+    setPulse((current) => current + 1)
+    setRippleKey((current) => current + 1)
+
+    if (preludeEnterTimerRef.current !== null) {
+      window.clearTimeout(preludeEnterTimerRef.current)
+    }
+
+    preludeEnterTimerRef.current = window.setTimeout(() => {
+      enterThoughtLake()
+      preludeEnterTimerRef.current = null
+    }, PRELUDE_ENTRY_DELAY_MS)
+  }, [enterThoughtLake, showZhaoxinFlow])
+
+  const handlePreludeThoughtChange = (value: string) => {
+    setPreludeThoughtInput(value)
+    preludeThoughtInputRef.current = value
+  }
+
+  const handlePreludeThoughtSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    beginPreludeThoughtSink()
+  }
+
   useEffect(() => {
     if (!showZhaoxinFlow) return undefined
 
@@ -932,18 +973,28 @@ export function MirrorGateway({ onComplete }: MirrorGatewayProps) {
   useEffect(() => {
     if (showZhaoxinFlow) return undefined
 
-    const timers = [
-      window.setTimeout(() => setPreludeStep("question"), 2600),
-      window.setTimeout(() => setPreludeStep("clear"), 5600),
-      window.setTimeout(() => enterThoughtLake(), 8400),
-    ]
+    if (preludeStep === "market") {
+      const timer = window.setTimeout(() => setPreludeStep("question"), QUESTION_REVEAL_DELAY_MS)
 
+      return () => window.clearTimeout(timer)
+    }
+
+    if (preludeStep === "question" && !isPreludePaused) {
+      const timer = window.setTimeout(() => beginPreludeThoughtSink(), PRELUDE_SINK_DELAY_MS)
+
+      return () => window.clearTimeout(timer)
+    }
+
+    return undefined
+  }, [beginPreludeThoughtSink, isPreludePaused, preludeStep, showZhaoxinFlow])
+
+  useEffect(() => {
     return () => {
-      for (const timer of timers) {
-        window.clearTimeout(timer)
+      if (preludeEnterTimerRef.current !== null) {
+        window.clearTimeout(preludeEnterTimerRef.current)
       }
     }
-  }, [enterThoughtLake, showZhaoxinFlow])
+  }, [])
 
   useEffect(() => {
     if (!canHoldWater || !isHoldingWater) return undefined
@@ -1021,10 +1072,9 @@ export function MirrorGateway({ onComplete }: MirrorGatewayProps) {
             bloomScale={lakeMode === "liangzhi" ? 0.42 : isLakeSettled ? 0.72 : 0.48}
             className="mirror-gateway-heart-lake"
           />
-          <ZhaoxinRitualFlow
+          <OneThoughtRitualFlow
             initialScene="surge"
             initialIntensity={3}
-            onEnterCycle={() => onComplete(MAIN_MIRROR_ID)}
             onLakeModeChange={updateLakeMode}
             onRipple={triggerZhaoxinRipple}
           />
@@ -1035,24 +1085,66 @@ export function MirrorGateway({ onComplete }: MirrorGatewayProps) {
         <div key={preludeStep} className={`still-water-gateway-copy is-${preludeStep}`} aria-live="polite">
           {preludeStep === "market" ? (
             <h1>
-              市场还在那里
+              行情留在屏幕。
               <br />
-              行情还在那里
+              <br />
+              这一刻，
+              <br />
+              <br />
+              往心里走一步。
             </h1>
           ) : null}
           {preludeStep === "question" ? (
-            <h1>
-              此刻，
-              <br />
-              你心里起了什么念？
-            </h1>
+            <div className="thought-sink-panel">
+              <h1>此刻,你心里最先冒出来的,是什么念头?</h1>
+              <form
+                className="thought-sink-form"
+                data-has-value={hasPreludeThought ? "true" : "false"}
+                data-paused={isPreludePaused ? "true" : "false"}
+                onSubmit={handlePreludeThoughtSubmit}
+                onMouseEnter={() => setIsPreludeHovering(true)}
+                onMouseLeave={() => setIsPreludeHovering(false)}
+                onFocusCapture={() => setIsPreludeFocused(true)}
+                onBlurCapture={(event) => {
+                  const nextTarget = event.relatedTarget instanceof Node ? event.relatedTarget : null
+                  if (!nextTarget || !event.currentTarget.contains(nextTarget)) {
+                    setIsPreludeFocused(false)
+                  }
+                }}
+              >
+                <label className="thought-sink-label" htmlFor="prelude-thought-input">
+                  写下此刻的一念……
+                </label>
+                <div className="thought-sink-input-shell">
+                  <input
+                    id="prelude-thought-input"
+                    className="thought-sink-input"
+                    value={preludeThoughtInput}
+                    onChange={(event) => handlePreludeThoughtChange(event.target.value)}
+                    placeholder="写下此刻的一念……"
+                    autoComplete="off"
+                    maxLength={36}
+                  />
+                  <div className="thought-shadow-stack" aria-hidden="true">
+                    <span className="thought-shadow-option">比如：我次奥，又被套了</span>
+                    <span className="thought-shadow-option">比如：怎么又卖飞了</span>
+                    <span className="thought-shadow-option">比如：再割，大腿都没了</span>
+                    <span className="thought-shadow-option">比如：回本我就走</span>
+                    <span className="thought-shadow-option">比如：又赚了，快翻倍了</span>
+                    <span className="thought-shadow-option">比如：亏太多了，继续拿着吧</span>
+                    <span className="thought-shadow-option">比如：什么时候才能回本啊</span>
+                  </div>
+                </div>
+              </form>
+            </div>
           ) : null}
           {preludeStep === "clear" ? (
-            <h1>
-              一念未起时，
-              <br />
-              此心本自清明。
-            </h1>
+            <div
+              className={cn("thought-sink-release", sinkingThoughtText ? "has-thought" : "is-empty")}
+              aria-hidden={!sinkingThoughtText}
+            >
+              {sinkingThoughtText ? <span>{sinkingThoughtText}</span> : null}
+            </div>
           ) : null}
         </div>
       ) : null}
@@ -1192,25 +1284,217 @@ export function MirrorGateway({ onComplete }: MirrorGatewayProps) {
 
         .still-water-gateway-copy h1 {
           margin: 0;
-          color: rgba(232, 228, 210, 0.74);
+          color: rgba(232, 228, 210, 0.92);
           font-family: var(--font-narrative);
           font-size: clamp(1.18rem, 2.7vw, 2.35rem);
           font-weight: 360;
           font-variation-settings: "wght" 360;
           line-height: 1.72;
           letter-spacing: 0.085em;
-          text-shadow:
-            0 0 28px rgba(216, 183, 111, 0.08),
-            0 18px 54px rgba(0, 0, 0, 0.78);
+          text-shadow: 0 0 52px rgba(0, 0, 0, 0.6);
           animation: still-copy-rise 1180ms cubic-bezier(0.16, 1, 0.3, 1) both;
         }
 
         .still-water-gateway-copy.is-question {
-          top: clamp(67%, 74svh, 79%);
+          top: clamp(64%, 71svh, 76%);
+          width: min(44rem, calc(100vw - 2rem));
+          pointer-events: auto;
         }
 
-        .still-water-gateway-copy.is-clear h1 {
-          color: rgba(244, 235, 221, 0.78);
+        .still-water-gateway-copy.is-clear {
+          top: clamp(64%, 70svh, 76%);
+        }
+
+        .thought-sink-panel {
+          display: grid;
+          gap: clamp(0.8rem, 1.8svh, 1.08rem);
+          pointer-events: auto;
+        }
+
+        .thought-sink-panel h1 {
+          font-size: clamp(1.04rem, 2.08vw, 1.86rem);
+          line-height: 1.5;
+        }
+
+        .thought-sink-form {
+          display: grid;
+          gap: clamp(0.64rem, 1.45svh, 0.9rem);
+          width: min(29rem, calc(100vw - 3.5rem));
+          margin: 0 auto;
+          pointer-events: auto;
+        }
+
+        .thought-sink-label {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          overflow: hidden;
+          clip: rect(0 0 0 0);
+          white-space: nowrap;
+        }
+
+        .thought-sink-input-shell {
+          position: relative;
+          height: clamp(3.5rem, 6.3svh, 4.25rem);
+          overflow: hidden;
+          border: 1px solid rgba(216, 183, 111, 0.3);
+          border-radius: 999px;
+          background:
+            radial-gradient(ellipse at 50% 0%, rgba(244, 235, 221, 0.055), transparent 56%),
+            radial-gradient(ellipse at 50% 100%, rgba(216, 183, 111, 0.08), transparent 66%),
+            linear-gradient(180deg, rgba(31, 27, 17, 0.52), rgba(4, 7, 6, 0.82) 48%, rgba(2, 4, 4, 0.9));
+          box-shadow:
+            0 14px 42px rgba(0, 0, 0, 0.42),
+            0 0 0 1px rgba(216, 183, 111, 0.045),
+            inset 0 1px 0 rgba(255, 255, 255, 0.075);
+        }
+
+        .thought-sink-input-shell::before {
+          content: "";
+          position: absolute;
+          pointer-events: none;
+        }
+
+        .thought-sink-input-shell::before {
+          inset: 1px;
+          border-radius: inherit;
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.052), transparent 35%, rgba(216, 183, 111, 0.042));
+          opacity: 0.5;
+        }
+
+        .thought-sink-input {
+          position: relative;
+          z-index: 2;
+          width: 100%;
+          height: 100%;
+          padding: 0.5rem 1.55rem 1rem;
+          border: 0;
+          outline: 0;
+          background: transparent;
+          color: rgba(244, 235, 221, 0.94);
+          font-family: var(--font-narrative);
+          font-size: clamp(0.92rem, 1.65vw, 1.12rem);
+          font-weight: 360;
+          line-height: 1.32;
+          letter-spacing: 0.07em;
+          text-align: center;
+          text-shadow: 0 0 24px rgba(0, 0, 0, 0.42);
+        }
+
+        .thought-sink-input::placeholder {
+          color: rgba(242, 220, 168, 0.58);
+        }
+
+        .thought-sink-input-shell:focus-within {
+          border-color: rgba(242, 220, 168, 0.48);
+          box-shadow:
+            0 16px 48px rgba(0, 0, 0, 0.46),
+            0 0 26px rgba(216, 183, 111, 0.09),
+            0 0 0 1px rgba(216, 183, 111, 0.08),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .thought-shadow-stack {
+          position: absolute;
+          right: 1.55rem;
+          bottom: 0.42rem;
+          left: 1.55rem;
+          z-index: 1;
+          height: 0.95rem;
+          perspective: 800px;
+          color: rgba(232, 228, 210, 0.22);
+          font-family: var(--font-function);
+          font-size: clamp(0.62rem, 1.12vw, 0.72rem);
+          letter-spacing: 0.08em;
+          pointer-events: none;
+          transition: opacity 520ms ease;
+        }
+
+        .thought-sink-form[data-has-value="true"] .thought-shadow-stack {
+          opacity: 0;
+        }
+
+        .thought-sink-form[data-paused="true"] .thought-sink-input-shell {
+          border-color: rgba(242, 220, 168, 0.42);
+          box-shadow:
+            0 16px 48px rgba(0, 0, 0, 0.44),
+            0 0 24px rgba(216, 183, 111, 0.075),
+            inset 0 1px 0 rgba(255, 255, 255, 0.09);
+        }
+
+        .thought-shadow-option {
+          position: absolute;
+          inset: 0;
+          display: grid;
+          place-items: center;
+          opacity: 0;
+          filter: blur(5px);
+          transform: translateY(-0.75rem) rotateX(-50deg);
+          transform-origin: center;
+          animation: thought-shadow-turn 22.4s ease-in-out infinite;
+        }
+
+        .thought-shadow-option:nth-child(2) {
+          animation-delay: 3.2s;
+        }
+
+        .thought-shadow-option:nth-child(3) {
+          animation-delay: 6.4s;
+        }
+
+        .thought-shadow-option:nth-child(4) {
+          animation-delay: 9.6s;
+        }
+
+        .thought-shadow-option:nth-child(5) {
+          animation-delay: 12.8s;
+        }
+
+        .thought-shadow-option:nth-child(6) {
+          animation-delay: 16s;
+        }
+
+        .thought-shadow-option:nth-child(7) {
+          animation-delay: 19.2s;
+        }
+
+        .thought-sink-release {
+          position: relative;
+          display: grid;
+          min-height: clamp(7rem, 17svh, 10rem);
+          place-items: center;
+        }
+
+        .thought-sink-release::before,
+        .thought-sink-release::after {
+          content: "";
+          position: absolute;
+          width: min(18rem, 58vw);
+          aspect-ratio: 1 / 0.34;
+          border: 1px solid rgba(232, 228, 210, 0.13);
+          border-radius: 50%;
+          opacity: 0;
+          filter: blur(3px);
+          animation: thought-sink-ripple 2300ms cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        .thought-sink-release::after {
+          width: min(12rem, 42vw);
+          animation-delay: 220ms;
+        }
+
+        .thought-sink-release.is-empty::before {
+          border-color: rgba(232, 228, 210, 0.16);
+        }
+
+        .thought-sink-release span {
+          color: rgba(244, 235, 221, 0.88);
+          font-family: var(--font-narrative);
+          font-size: clamp(1.18rem, 2.8vw, 2.1rem);
+          font-weight: 360;
+          letter-spacing: 0.09em;
+          text-shadow: 0 0 42px rgba(0, 0, 0, 0.56);
+          animation: thought-sink-text 2300ms cubic-bezier(0.22, 1, 0.36, 1) both;
         }
 
         .ritual-copy {
@@ -1243,10 +1527,8 @@ export function MirrorGateway({ onComplete }: MirrorGatewayProps) {
           font-weight: 300;
           line-height: 1.34;
           letter-spacing: 0.06em;
-          color: rgba(244, 235, 221, 0.9);
-          text-shadow:
-            0 0 34px rgba(216, 183, 111, 0.1),
-            0 20px 60px rgba(0, 0, 0, 0.7);
+          color: rgba(244, 235, 221, 0.96);
+          text-shadow: 0 0 58px rgba(0, 0, 0, 0.62);
         }
 
         .ritual-copy p {
@@ -1460,6 +1742,64 @@ export function MirrorGateway({ onComplete }: MirrorGatewayProps) {
           }
         }
 
+        @keyframes thought-shadow-turn {
+          0%,
+          100% {
+            opacity: 0;
+            filter: blur(5px);
+            transform: translateY(-0.75rem) rotateX(-50deg);
+          }
+
+          5%,
+          12% {
+            opacity: 1;
+            filter: blur(0.5px);
+            transform: translateY(0) rotateX(0deg);
+          }
+
+          18% {
+            opacity: 0;
+            filter: blur(6px);
+            transform: translateY(0.75rem) rotateX(50deg);
+          }
+        }
+
+        @keyframes thought-sink-text {
+          0% {
+            opacity: 1;
+            filter: blur(0);
+            transform: translateY(0) scale(1);
+          }
+
+          58% {
+            opacity: 0.42;
+          }
+
+          100% {
+            opacity: 0;
+            filter: blur(15px);
+            transform: translateY(4.8rem) scale(0.86);
+          }
+        }
+
+        @keyframes thought-sink-ripple {
+          0% {
+            opacity: 0;
+            filter: blur(3px);
+            transform: scale(0.28);
+          }
+
+          22% {
+            opacity: 0.42;
+          }
+
+          100% {
+            opacity: 0;
+            filter: blur(9px);
+            transform: scale(1.32);
+          }
+        }
+
         @keyframes thought-from-water {
           from {
             opacity: 0;
@@ -1529,12 +1869,51 @@ export function MirrorGateway({ onComplete }: MirrorGatewayProps) {
             padding: 0 1.5rem;
             font-size: 0.86rem;
           }
+
+          .still-water-gateway-copy {
+            top: clamp(62%, 70svh, 76%);
+            width: min(90vw, 34rem);
+          }
+
+          .still-water-gateway-copy.is-question {
+            top: clamp(62%, 70svh, 76%);
+          }
+
+          .thought-sink-panel h1 {
+            font-size: clamp(1rem, 4.6vw, 1.32rem);
+            letter-spacing: 0.055em;
+          }
+
+          .thought-sink-form {
+            width: min(78vw, 24rem);
+          }
+
+          .thought-sink-input-shell {
+            height: 3.7rem;
+          }
+
+          .thought-sink-input {
+            padding-inline: 1.25rem;
+            padding-bottom: 0.86rem;
+            font-size: 0.92rem;
+          }
+
+          .thought-shadow-stack {
+            right: 1.05rem;
+            bottom: 0.36rem;
+            left: 1.05rem;
+            font-size: 0.62rem;
+          }
         }
 
         @media (prefers-reduced-motion: reduce) {
           .ritual-copy,
           .ritual-copy.is-thought h1,
-          .thief-detail {
+          .thief-detail,
+          .thought-shadow-option,
+          .thought-sink-release::before,
+          .thought-sink-release::after,
+          .thought-sink-release span {
             animation: none !important;
             filter: none !important;
           }

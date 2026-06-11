@@ -45,6 +45,8 @@ const goldPalette = [
   [0.58, 0.5, 0.28],
 ] as const
 
+const DEBUG_PANEL_ENABLED = false
+
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value))
 }
@@ -582,6 +584,12 @@ export function ThoughtField({ entries, onPreview, onSelect, selectedEntryId }: 
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null
+      const isEditing =
+        target?.tagName === "INPUT" || target?.tagName === "TEXTAREA" || target?.isContentEditable
+
+      if (isEditing) return
+
       if (event.code === "Space") {
         event.preventDefault()
         pausedRef.current = !pausedRef.current
@@ -631,10 +639,7 @@ export function ThoughtField({ entries, onPreview, onSelect, selectedEntryId }: 
           } as CSSProperties
         }
       />
-      <button type="button" className="thought-debug-toggle" onClick={() => setShowDebug((current) => !current)}>
-        调
-      </button>
-      {showDebug ? (
+      {DEBUG_PANEL_ENABLED && showDebug ? (
         <div className="thought-debug-panel">
           {(
             [
@@ -727,29 +732,6 @@ export function ThoughtField({ entries, onPreview, onSelect, selectedEntryId }: 
             radial-gradient(circle at 76% 64%, rgba(216, 183, 111, 0.18) 0 1px, transparent 1px);
           background-size: 47px 43px, 61px 59px;
           mask-image: radial-gradient(ellipse at center, black 22%, transparent 72%);
-        }
-
-        .thought-debug-toggle {
-          position: absolute;
-          right: 0.4rem;
-          top: 0.4rem;
-          z-index: 5;
-          width: 2rem;
-          height: 2rem;
-          border: 1px solid rgba(216, 183, 111, 0.16);
-          border-radius: 999px;
-          background: rgba(6, 8, 7, 0.34);
-          color: rgba(216, 183, 111, 0.56);
-          cursor: pointer;
-          font-family: var(--font-sans, system-ui, sans-serif);
-          font-size: 0.74rem;
-          opacity: 0;
-          transition: opacity 420ms ease;
-        }
-
-        .thought-field:hover .thought-debug-toggle,
-        .thought-debug-toggle:focus-visible {
-          opacity: 0.44;
         }
 
         .thought-debug-panel {

@@ -298,10 +298,10 @@ export default function AssessmentResultPage() {
             今日照见报告尚未生成。
           </h1>
           <p className="mt-6 font-function text-sm leading-7 text-[rgba(220,212,195,.58)]">
-            先完成一次今日一念、照回与落印，报告会从同一念头自然显影。
+            先完成一次今日照见、照回与落印，报告会从同一念头自然显影。
           </p>
           <PrimaryLink href="/assessment" className="mt-8 w-full">
-            进入今日一念
+            进入今日照见
           </PrimaryLink>
         </div>
       </AssessmentShell>
@@ -359,7 +359,7 @@ export default function AssessmentResultPage() {
             <p className="act-kicker">第二幕 · 一念显影</p>
             <p className="thought-lead">最常带走你的那一念是：</p>
             <h2 className="core-thought">「{thought.os}」</h2>
-            <p className="act-note">{thought.reflection}</p>
+            <p className="act-note">{thought.reflectionFinal || thought.reflection}</p>
           </div>
           <button type="button" className="act-scroll-cue" onClick={(event) => { event.stopPropagation(); scrollToAct(2) }}>
             看见心贼
@@ -515,11 +515,11 @@ export default function AssessmentResultPage() {
             </p>
           </div>
           <div className="departure-actions">
-            <PrimaryLink href="/assessment">进入今日一念</PrimaryLink>
+            <PrimaryLink href="/assessment">进入今日照见</PrimaryLink>
             <SecondaryButton type="button" onClick={saveCurrentMirrorReport}>
               存入心镜档案
             </SecondaryButton>
-            <SecondaryLink href="/mirror-archive">进入心镜档案馆</SecondaryLink>
+            <SecondaryLink href="/mirror-archive">进入心镜档案</SecondaryLink>
             <SecondaryLink href="/mirror-scroll">展开心镜长卷</SecondaryLink>
           </div>
           <p className="archive-status" aria-live="polite">

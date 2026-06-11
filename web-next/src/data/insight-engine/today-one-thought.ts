@@ -36,6 +36,7 @@ import scene35Insight from "@/data/insight-engine/scenes/scene-35-fear-holding.j
 import scene36Insight from "@/data/insight-engine/scenes/scene-36-fear-of-being-wrong.json"
 
 import type { InsightSceneFile } from "./schema"
+import { getReflection } from "@/lib/reflections/reflectionService"
 import {
   changeTodayOneThought as changeTodayOneThoughtCore,
   confirmTodayOneThought as confirmTodayOneThoughtCore,
@@ -62,6 +63,8 @@ import type {
 } from "./today-one-thought-core"
 
 export {
+  LEGACY_ONE_THOUGHT_RECORDS_STORAGE_KEY,
+  ONE_THOUGHT_INSIGHT_RECORDS_STORAGE_KEY,
   ONE_THOUGHT_RECORDS_STORAGE_KEY,
   TODAY_ONE_THOUGHT_CONFIRM_LIMIT,
   getTodayOneThoughtDateKey,
@@ -74,6 +77,7 @@ export type {
   OneThought,
   OneThoughtGrowthProfile,
   OneThoughtGrowthPeriod,
+  OneThoughtInsightRecord,
   OneThoughtMatchResult,
   OneThoughtRecord,
   TodayOneThoughtSnapshot,
@@ -121,25 +125,31 @@ export const todayOneThoughtSceneLibrary = [
 ] as InsightSceneFile[]
 
 export const oneThoughtPool = todayOneThoughtSceneLibrary.flatMap((scene) =>
-  scene.items.map((item, index) => ({
-    thoughtId: item.id,
-    id: item.id,
-    sceneId: scene.sceneId,
-    sceneName: scene.sceneName,
-    mirrorId: scene.mirrorId,
-    thief: scene.thief,
-    itemId: item.id,
-    tradeMoment: item.tradeMoment,
-    os: item.os,
-    reflection: item.reflection,
-    hiddenThought: item.hiddenThought,
-    evidence: scene.evidences[index % scene.evidences.length] ?? scene.evidences[0] ?? "",
-    practice: scene.practices[index % scene.practices.length] ?? scene.practices[0] ?? "",
-    coreStatement: scene.coreStatement,
-    evidenceLines: scene.evidences,
-    practiceLines: scene.practices,
-    intensity: item.intensity,
-  })),
+  scene.items.map((item, index) => {
+    const reflectionFinal = getReflection(scene.sceneId, item.id)?.reflectionFinal ?? ""
+
+    return {
+      thoughtId: item.id,
+      id: item.id,
+      sceneId: scene.sceneId,
+      sceneName: scene.sceneName,
+      mirrorId: scene.mirrorId,
+      thief: scene.thief,
+      itemId: item.id,
+      tradeMoment: item.tradeMoment,
+      os: item.os,
+      reflection: reflectionFinal,
+      reflection_v2: item.reflection_v2,
+      reflectionFinal,
+      hiddenThought: item.hiddenThought,
+      evidence: scene.evidences[index % scene.evidences.length] ?? scene.evidences[0] ?? "",
+      practice: scene.practices[index % scene.practices.length] ?? scene.practices[0] ?? "",
+      coreStatement: scene.coreStatement,
+      evidenceLines: scene.evidences,
+      practiceLines: scene.practices,
+      intensity: item.intensity,
+    }
+  }),
 ) satisfies TodayOneThoughtSourceItem[]
 
 export const todayOneThoughtSourceItems = oneThoughtPool

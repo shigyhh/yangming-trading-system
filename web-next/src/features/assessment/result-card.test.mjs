@@ -48,7 +48,7 @@ test("assessment result page renders six-act today seeing ritual instead of a re
     "今日开始。",
     "不与市场争。",
     "先与自己见。",
-    "进入今日一念",
+    "进入今日照见",
     "/assessment",
     "存入心镜档案",
     "/mirror-archive",

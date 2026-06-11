@@ -167,8 +167,13 @@ test("one thought records save the sealed thought without exposing hidden though
   const loadedRecords = loadOneThoughtRecords(storage)
 
   assert.equal(record.thoughtId, thought.thoughtId)
+  assert.equal(record.id, record.recordId)
+  assert.equal(record.dayIndex, 0)
   assert.equal(record.sceneId, thought.sceneId)
+  assert.equal(record.sceneName, thought.sceneName)
   assert.equal(record.mirrorId, thought.mirrorId)
+  assert.equal(record.mirrorName, thought.mirrorId)
+  assert.equal(record.tradeMoment, thought.tradeMoment)
   assert.equal(record.thief, thought.thief)
   assert.equal(record.os, thought.os)
   assert.equal(record.reflection, thought.reflection)

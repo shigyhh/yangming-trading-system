@@ -145,16 +145,16 @@ export default function TradeReviewPage() {
                 size="sm"
                 tier="method"
               />
-              <span>复盘页 / 回看行为</span>
+              <span>真实复盘 / 谁在下单</span>
             </div>
-            <StatusPill>真实交易复盘 MVP</StatusPill>
+            <StatusPill>真实复盘</StatusPill>
             <h1 className="trade-review-title mt-8 font-story font-light leading-[1.08] tracking-[.08em]">
               以复盘照行为，
               <br />
               以活镜照成长。
             </h1>
             <p className="mt-6 max-w-[44rem] font-story text-[1.12rem] font-light leading-9 tracking-[.045em] text-[rgba(220,212,195,.62)]">
-              上传一张截图，写下三句真实自述。系统先不判断行情，只把你的念头映射到九面行为心镜。
+              不复盘行情对错，只复盘谁在下单。上传一张截图，写下三句真实自述，系统只把行为和念头映射到九面行为心镜。
             </p>
           </div>
 
@@ -338,7 +338,7 @@ export default function TradeReviewPage() {
                 进入活镜中枢 →
               </SecondaryLink>
               <SecondaryLink href="/mirror-archive" className="w-full">
-                回到心镜档案馆 →
+                回到心镜档案 →
               </SecondaryLink>
             </div>
           </GlassPanel>

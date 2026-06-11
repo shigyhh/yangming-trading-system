@@ -355,7 +355,7 @@ test("living mirror growth detail page reads GrowthProfile and renders Sprint 6 
     "完成今日修行后，这里会出现你的第一条高频一念。",
     "missing_trade_review",
     "继续今日修行",
-    "回到心镜档案馆",
+    "回到心镜档案",
     "查看心镜长卷",
     "min-w-[240px]",
     "grid-template-columns: repeat(auto-fit, minmax(240px, 1fr))",

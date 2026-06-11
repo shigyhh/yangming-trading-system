@@ -8,6 +8,8 @@ export type InsightContentItem = {
   os: string
   hiddenThought: string
   reflection: string
+  reflection_v2?: string
+  reflectionFinal?: string
   intensity: InsightIntensity
 }
 

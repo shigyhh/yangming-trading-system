@@ -3,27 +3,40 @@
 import Link from "next/link"
 import type { ButtonHTMLAttributes, ReactNode } from "react"
 
+import { HomeWaterStage } from "@/components/home/HomeWaterStage"
 import { cn } from "@/lib/utils"
 
 export function AssessmentShell({
+  background = "default",
   children,
   className,
   contentWidth = "default",
 }: {
+  background?: "default" | "home-water"
   children: ReactNode
   className?: string
   contentWidth?: "default" | "wide"
 }) {
+  const usesHomeWater = background === "home-water"
+
   return (
     <main
       className={cn(
-        "assessment-shell relative min-h-svh overflow-hidden bg-[#050504] px-5 py-8 text-[rgba(242,235,220,.92)] md:px-8 md:py-10",
+        "assessment-shell relative min-h-svh overflow-hidden px-5 py-8 text-[rgba(242,235,220,.92)] md:px-8 md:py-10",
+        usesHomeWater ? "bg-[#050807]" : "bg-[#050504]",
         className,
       )}
+      data-background={background}
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_12%,rgba(180,157,93,.14),transparent_32%),radial-gradient(circle_at_50%_86%,rgba(150,124,63,.12),transparent_34%),linear-gradient(180deg,#060606_0%,#050504_100%)]" />
-      <div className="assessment-glow assessment-glow-top" />
-      <div className="assessment-glow assessment-glow-bottom" />
+      {usesHomeWater ? (
+        <HomeWaterStage />
+      ) : (
+        <>
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_12%,rgba(180,157,93,.14),transparent_32%),radial-gradient(circle_at_50%_86%,rgba(150,124,63,.12),transparent_34%),linear-gradient(180deg,#060606_0%,#050504_100%)]" />
+          <div className="assessment-glow assessment-glow-top" />
+          <div className="assessment-glow assessment-glow-bottom" />
+        </>
+      )}
       <div
         className={cn(
           "relative z-10 mx-auto flex min-h-[calc(100svh-4rem)] w-full flex-col justify-center md:min-h-[calc(100svh-5rem)]",

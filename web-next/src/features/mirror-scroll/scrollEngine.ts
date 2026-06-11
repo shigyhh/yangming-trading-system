@@ -1,6 +1,11 @@
 import { loadHeartProofs } from "@/features/heart-proof/heartProofStorage"
 import type { HeartProof } from "@/features/heart-proof/heartProofTypes"
-import { loadOneThoughtRecords, type OneThoughtRecord } from "@/data/insight-engine/today-one-thought"
+import {
+  loadOneThoughtRecords,
+  oneThoughtPool,
+  type OneThoughtRecord,
+} from "@/data/insight-engine/today-one-thought"
+import mirrors from "@/data/insight-engine/mirrors.json"
 import { loadGrowthProfileScrollEvents } from "@/features/living-mirror-growth/growthProfileStorage"
 import { loadMirrorArchiveData } from "@/features/mirror-archive/archiveEngine"
 import type { ArchiveItem } from "@/features/mirror-archive/archiveTypes"
@@ -20,10 +25,13 @@ const nodeLabels: Record<MirrorScrollNodeType, string> = {
   retest_change: "复测变化节点",
 }
 
+const mirrorNameById = new Map(mirrors.map((mirror) => [mirror.mirrorId, mirror.mirrorName]))
+const thoughtById = new Map(oneThoughtPool.map((thought) => [thought.id, thought]))
+
 export function loadMirrorScrollData(): MirrorScrollData {
   const archive = loadMirrorArchiveData()
   const heartProofs = loadHeartProofs()
-  const oneThoughtRecords = loadOneThoughtRecords()
+  const oneThoughtRecords = loadOneThoughtRecords().filter((record) => record.completed)
   const heartProofById = new Map(heartProofs.map((proof) => [proof.heartProofId, proof]))
   const oneThoughtRecordById = new Map(oneThoughtRecords.map((record) => [record.recordId, record]))
   const nodes = dedupeScrollNodes([
@@ -188,6 +196,10 @@ function buildHeartProofNode(item: ArchiveItem, proof?: HeartProof): MirrorScrol
 }
 
 function buildOneThoughtRecordNode(item: ArchiveItem, record?: OneThoughtRecord): MirrorScrollNode {
+  const thought = record ? thoughtById.get(record.thoughtId) : undefined
+  const mirrorId = record?.mirrorId || thought?.mirrorId
+  const reflectionFinal = record?.reflectionFinal || record?.reflection || thought?.reflectionFinal || thought?.reflection
+
   return buildNode(item, "one_thought_record", {
     id: `scroll_one_thought_${item.sourceId}`,
     title: "每日一念已落印",
@@ -196,10 +208,22 @@ function buildOneThoughtRecordNode(item: ArchiveItem, record?: OneThoughtRecord)
     proofText: record?.evidence || item.summary,
     affectedDimensions: [
       record?.thief,
-      record?.mirrorId,
+      mirrorId,
       record?.sceneId,
       "今日一念",
     ].filter((value): value is string => Boolean(value)),
+    tradeMoment: thought?.tradeMoment,
+    os: record?.os || thought?.os,
+    reflection: reflectionFinal,
+    reflectionFinal,
+    thief: record?.thief || thought?.thief,
+    mirrorId,
+    mirrorName: mirrorId ? mirrorNameById.get(mirrorId) || mirrorId : undefined,
+    sceneName: thought?.sceneName,
+    evidence: record?.evidence || thought?.evidence,
+    practice: record?.practice || thought?.practice,
+    sealedAt: record?.sealedAt,
+    completed: record?.completed,
   })
 }
 
@@ -213,6 +237,18 @@ function buildNode(
     actionText: string
     proofText: string
     affectedDimensions: string[]
+    tradeMoment?: string
+    os?: string
+    reflection?: string
+    reflectionFinal?: string
+    thief?: string
+    mirrorId?: string
+    mirrorName?: string
+    sceneName?: string
+    evidence?: string
+    practice?: string
+    sealedAt?: string
+    completed?: boolean
   },
 ): MirrorScrollNode {
   return {
@@ -229,6 +265,18 @@ function buildNode(
     affectedDimensions: Array.from(new Set(override.affectedDimensions)).filter(Boolean).slice(0, 6),
     tags: item.tags,
     createdAt: item.createdAt,
+    tradeMoment: override.tradeMoment,
+    os: override.os,
+    reflection: override.reflection,
+    reflectionFinal: override.reflectionFinal,
+    thief: override.thief,
+    mirrorId: override.mirrorId,
+    mirrorName: override.mirrorName,
+    sceneName: override.sceneName,
+    evidence: override.evidence,
+    practice: override.practice,
+    sealedAt: override.sealedAt,
+    completed: override.completed,
   }
 }
 

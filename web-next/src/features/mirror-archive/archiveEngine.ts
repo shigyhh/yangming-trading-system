@@ -20,7 +20,7 @@ export function loadMirrorArchiveData(): MirrorArchiveData {
   const growth = getStorage<DailyGrowthState | null>("ym_living_mirror_growth_v1", null)
   const practice = getStorage<PracticeChangeState | null>(assessmentStorageKeys.practiceChange, null)
   const heartProofs = loadHeartProofs()
-  const oneThoughtRecords = loadOneThoughtRecords()
+  const oneThoughtRecords = loadOneThoughtRecords().filter((record) => record.completed)
   const latestTradeReview = getStorage<TradeReview | null>(tradeReviewLastResultStorageKey, null)
   const retestComparison = compareRiskRadarSnapshots(practice?.baselineReport, practice?.retestReport)
   const growthBuildResult = recomputeAndSaveGrowthProfile()
@@ -46,7 +46,7 @@ export function loadMirrorArchiveData(): MirrorArchiveData {
     ...behaviorLoops.map(toBehaviorLoopArchiveItem),
     ...persistedArchiveItems.filter((item) => item.type === "behavior_loop"),
   ])
-  const heartProofItems = heartProofs.map(toHeartProofArchiveItem)
+  const heartProofItems: ArchiveItem[] = []
   const oneThoughtRecordItems = oneThoughtRecords.map(toOneThoughtRecordArchiveItem)
   const retests = dedupeArchiveItems([
     ...(retestComparison.length ? [toRetestArchiveItem(retestComparison, practice)] : []),

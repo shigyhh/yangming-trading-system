@@ -9,7 +9,7 @@ import { MirrorRevelation } from "@/features/assessment/MirrorRevelation"
 import { assessmentQuestions } from "@/features/assessment/questions"
 import { generateMirrorReport } from "@/features/assessment/report"
 import type { AssessmentAnswer } from "@/features/assessment/report"
-import { assessmentStorageKeys, getStorage, hasSavedPhone, setStorage } from "@/features/assessment/storage"
+import { assessmentStorageKeys, getStorage, setStorage } from "@/features/assessment/storage"
 import { cn } from "@/lib/utils"
 
 function shuffleQuestionIds() {
@@ -49,17 +49,6 @@ export default function AssessmentPage() {
   const [showLoadingRecovery, setShowLoadingRecovery] = useState(false)
 
   useEffect(() => {
-    if (!hasSavedPhone()) {
-      router.replace("/assessment-login")
-      const fallbackTimer = window.setTimeout(() => {
-        if (window.location.pathname === "/assessment") {
-          window.location.assign("/assessment-login")
-        }
-      }, 420)
-
-      return () => window.clearTimeout(fallbackTimer)
-    }
-
     const recoveryTimer = window.setTimeout(() => {
       setShowLoadingRecovery(true)
     }, 1400)
@@ -84,7 +73,7 @@ export default function AssessmentPage() {
       window.clearTimeout(timer)
       window.clearTimeout(recoveryTimer)
     }
-  }, [loaded, router])
+  }, [loaded])
 
   const orderedQuestions = useMemo(
     () =>
@@ -147,10 +136,10 @@ export default function AssessmentPage() {
 
   if (!loaded || !question) {
     return (
-      <AssessmentShell>
+      <AssessmentShell background="home-water">
         <div className="grid min-h-[12rem] place-items-center gap-5">
           {showLoadingRecovery || !question ? (
-            <SecondaryButton type="button" onClick={() => router.replace(hasSavedPhone() ? "/assessment" : "/assessment-login")}>
+            <SecondaryButton type="button" onClick={() => router.replace("/assessment")}>
               重新进入照心
             </SecondaryButton>
           ) : null}
@@ -161,7 +150,7 @@ export default function AssessmentPage() {
 
   if (currentIndex === 0 && answers.length === 0) {
     return (
-      <AssessmentShell className="p-0 md:p-0" contentWidth="wide">
+      <AssessmentShell background="home-water" className="p-0 md:p-0" contentWidth="wide">
         <MirrorGateway
           onComplete={(mirrorId) => {
             const mirrorReport = generateMirrorReport(mirrorId)
@@ -287,9 +276,14 @@ export default function AssessmentPage() {
           animation: thought-in 220ms cubic-bezier(0.22, 1, 0.36, 1) 50ms forwards;
         }
 
-          .assessment-one-thought:not(.is-compact) .thought-scene {
-            animation-duration: 560ms;
-            animation-delay: 80ms;
+        .thought-question h1 {
+          color: rgba(244, 235, 221, 0.96);
+          text-shadow: 0 0 44px rgba(0, 0, 0, 0.58);
+        }
+
+        .assessment-one-thought:not(.is-compact) .thought-scene {
+          animation-duration: 560ms;
+          animation-delay: 80ms;
         }
 
         .assessment-one-thought:not(.is-compact) .thought-question {
@@ -298,9 +292,9 @@ export default function AssessmentPage() {
           animation-delay: 460ms;
         }
 
-          .thought-action-bar {
-            isolation: isolate;
-          }
+        .thought-action-bar {
+          isolation: isolate;
+        }
 
         @media (min-width: 960px) {
           .assessment-one-thought {

@@ -60,9 +60,9 @@ export default function MirrorArchivePage() {
       <div className="mirror-archive-page mx-auto w-full max-w-[1440px]">
         <section className="mirror-archive-hero">
           <div>
-            <StatusPill>心镜档案馆 · 归档中心</StatusPill>
+            <StatusPill>心镜档案 · 归档中心</StatusPill>
             <h1 className="mt-8 font-story text-[clamp(3rem,7.4vw,7rem)] font-light leading-[1.12] tracking-[.08em]">
-              心镜档案馆
+              心镜档案
             </h1>
             <p className="mt-6 max-w-[42rem] font-story text-xl font-light leading-10 tracking-[.05em] text-[rgba(220,212,195,.62)]">
               报告、心证、修行、复盘、复测，全部归档。

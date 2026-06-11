@@ -149,7 +149,7 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
                       {record.action}
                     </p>
                     <p className="mt-2 font-function text-xs leading-6 text-[rgba(244,235,221,.48)]">
-                      省察：{record.reflection}
+                      省察：{record.reflectionFinal ?? record.reflection}
                     </p>
                   </article>
                 ))

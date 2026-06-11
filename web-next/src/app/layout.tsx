@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AppBottomNav } from "@/components/app-bottom-nav";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -23,7 +24,10 @@ export default function RootLayout({
       className="dark h-full antialiased"
       data-scroll-behavior="smooth"
     >
-      <body className="font-function min-h-full flex flex-col">{children}</body>
+      <body className="font-function min-h-full flex flex-col">
+        {children}
+        <AppBottomNav />
+      </body>
     </html>
   );
 }
