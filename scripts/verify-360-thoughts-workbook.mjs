@@ -1,8 +1,10 @@
+import path from "node:path"
+
 import { FileBlob, SpreadsheetFile } from "@oai/artifact-tool"
 
 const workbookPath =
   process.env.WORKBOOK_PATH ||
-  "/Users/jianlinhe/Desktop/yangming-trading-system/outputs/360-thoughts/阳明心学交易系统-36场景360念统一调整表.xlsx"
+  path.resolve("outputs/360-thoughts/阳明心学交易系统-36场景360念统一调整表.xlsx")
 
 const input = await FileBlob.load(workbookPath)
 const workbook = await SpreadsheetFile.importXlsx(input)

@@ -11,7 +11,6 @@ import {
 import {
   clearAssessmentDraft,
   consumeSkipEntryOpeningRitualOnce,
-  hasSavedPhone,
   markAssessmentGatewayOnce,
 } from "@/features/assessment/storage"
 
@@ -22,7 +21,6 @@ export default function AssessmentEntryPage() {
 
   useEffect(() => {
     router.prefetch("/assessment")
-    router.prefetch("/assessment-login")
 
     const openingTimer = window.setTimeout(() => {
       setShowOpeningRitual(false)
@@ -37,15 +35,10 @@ export default function AssessmentEntryPage() {
     if (isRoutingRef.current) return
     isRoutingRef.current = true
 
-    const savedPhone = hasSavedPhone()
-    const target = savedPhone ? "/assessment" : "/assessment-login"
+    clearAssessmentDraft()
+    markAssessmentGatewayOnce()
 
-    if (savedPhone) {
-      clearAssessmentDraft()
-      markAssessmentGatewayOnce()
-    }
-
-    router.push(target)
+    router.push("/assessment")
   }
 
   return (
@@ -85,16 +78,12 @@ export default function AssessmentEntryPage() {
           </div>
 
           <h1 className="ritual-line ritual-line-main ritual-line-1">
-            回想最近一次
+            回想最近一次，
             <br />
-            你定好了计划,却没守住。
+            交易计划还在，心先动了。
           </h1>
 
-          <p className="ritual-line ritual-line-soft ritual-line-2">
-            慢慢想
-          </p>
-
-          <div className="ritual-entry-action ritual-line ritual-line-3">
+          <div className="ritual-entry-action ritual-line ritual-line-2">
             <PrimaryButton type="button" onClick={startAssessment} className="w-full">
               照见此心
             </PrimaryButton>
@@ -450,33 +439,21 @@ export default function AssessmentEntryPage() {
           animation: ritual-line-in 1000ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
 
-        .ritual-line-soft {
-          margin-top: clamp(48px, 5.6svh, 68px);
-          font-family: var(--font-narrative);
-          font-size: clamp(1.2rem, 4.6vw, 1.62rem);
-          font-weight: 360;
-          font-variation-settings: "wght" 360;
-          letter-spacing: 0.065em;
-          line-height: 1.52;
-          color: rgba(238, 243, 238, 0.72);
-          text-shadow: 0 0 32px rgba(0, 0, 0, 0.42);
-        }
-
         .ritual-line-main {
           margin-top: clamp(58px, 6svh, 86px);
-          max-width: min(100%, 22em);
+          max-width: min(100%, 24em);
           font-family: var(--font-yangming-title), var(--font-narrative), serif;
-          font-size: clamp(1.55rem, 3.05vw, 2.8rem);
+          font-size: clamp(1.55rem, 3vw, 2.76rem);
           font-weight: 420;
           font-variation-settings: "wght" 420;
           letter-spacing: 0.025em;
-          line-height: 1.36;
+          line-height: 1.44;
           color: #eef3ee;
           text-shadow: 0 0 56px rgba(0, 0, 0, 0.58);
         }
 
         .ritual-entry-action {
-          margin-top: clamp(34px, 4.8svh, 56px);
+          margin-top: clamp(72px, 8svh, 98px);
           width: 100%;
           max-width: 380px;
           padding-bottom: max(0px, env(safe-area-inset-bottom));
@@ -490,7 +467,7 @@ export default function AssessmentEntryPage() {
           }
 
           .ritual-line-main {
-            max-width: min(100%, 22em);
+            max-width: min(100%, 24em);
           }
         }
 
@@ -509,11 +486,7 @@ export default function AssessmentEntryPage() {
         }
 
         .ritual-line-2 {
-          animation-delay: 1700ms;
-        }
-
-        .ritual-line-3 {
-          animation-delay: 3500ms;
+          animation-delay: 2100ms;
         }
 
         @keyframes ritual-opening-copy-in {

@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation"
 
 import heroStyles from "./HomeStillWaterHero.module.css"
 
-const methodSeals = ["一念", "照回", "心贼", "九镜", "心证", "修行", "落印"]
 const HOME_DIVE_DURATION_MS = 2400
 const HOME_ROUTE_DELAY_MS = 2200
+const REFLECT_ENTRY_HREF = "/assessment-entry"
 
 export function StorySections() {
   const router = useRouter()
@@ -44,7 +44,7 @@ export function StorySections() {
       event.preventDefault()
 
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        router.push("/reflect")
+        router.push(REFLECT_ENTRY_HREF)
         return
       }
 
@@ -66,7 +66,7 @@ export function StorySections() {
       tweenHomeDive(1, HOME_DIVE_DURATION_MS)
 
       routeTimerRef.current = window.setTimeout(() => {
-        router.push("/reflect")
+        router.push(REFLECT_ENTRY_HREF)
       }, HOME_ROUTE_DELAY_MS)
     },
     [router, tweenHomeDive],
@@ -117,8 +117,6 @@ export function StorySections() {
         const sampleReflectionLabel = gsap.utils.toArray<HTMLElement>("[data-sample-reflection-label]")
         const sampleReflectionFirst = gsap.utils.toArray<HTMLElement>("[data-sample-reflection='first']")
         const sampleReflectionPain = gsap.utils.toArray<HTMLElement>("[data-sample-reflection='pain']")
-        const sampleClosing = gsap.utils.toArray<HTMLElement>("[data-sample-close]")
-        const methodChain = gsap.utils.toArray<HTMLElement>("[data-method-chain]")
         const finalCall = gsap.utils.toArray<HTMLElement>("[data-breath-final]")
         const firstSecondLine = secondLines[0] ? [secondLines[0]] : []
         const secondDepthLines = secondLines.slice(1)
@@ -152,7 +150,7 @@ export function StorySections() {
           transformOrigin: "50% 58%",
           willChange: "transform, opacity, filter",
         })
-        gsap.set([...thirdOpeningLines, ...sampleThought, ...sampleReflectionLabel, ...sampleReflectionFirst, ...sampleReflectionPain, ...sampleClosing, ...methodChain, ...finalCall], {
+        gsap.set([...thirdOpeningLines, ...sampleThought, ...sampleReflectionLabel, ...sampleReflectionFirst, ...sampleReflectionPain, ...finalCall], {
           opacity: 0,
           y: 18,
           scale: 0.985,
@@ -233,12 +231,10 @@ export function StorySections() {
           .to(sampleReflectionLabel, { opacity: 0.5, y: 0, scale: 1, filter: "blur(0px)", duration: 0.6, ease: "power3.out" }, 11.76)
           .to(sampleReflectionFirst, { opacity: 0.9, y: 0, scale: 1, filter: "blur(0px)", duration: 0.72, ease: "power3.out" }, 11.9)
           .to(sampleReflectionPain, { opacity: 1, y: 0, scale: 1.01, filter: "blur(0px)", duration: 0.95, ease: "power3.out" }, 12.72)
-          .to(reflectionPhase, previousPhase, 15.05)
+          .to(reflectionPhase, quietPhase, 15.05)
           .set(closurePhase, { pointerEvents: "auto" }, 15.2)
           .to(closurePhase, activePhase, 15.2)
-          .to(sampleClosing, { opacity: 0.52, y: 0, scale: 1, filter: "blur(0px)", stagger: 0.14, duration: 0.72, ease: "power2.out" }, 15.38)
           .to(finalCall, { opacity: 1, y: 0, scale: 1.01, filter: "blur(0px)", stagger: 0.2, duration: 0.92, ease: "power3.out" }, 16.12)
-          .to(methodChain, { opacity: 0.18, y: 0, scale: 1, filter: "blur(0px)", duration: 0.72, ease: "power2.out" }, 16.44)
           .to(closurePhase, { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", duration: 1.3, ease: "none" }, 17.25)
           .to([lawPhase, thoughtPhase], quietPhase, 15.2)
       }, rootRef)
@@ -318,12 +314,12 @@ export function StorySections() {
               <p data-third-opening className="m-0">照见不是预测。</p>
               <p data-third-opening className="m-0 hidden md:block">
                 是把
-                <span className="text-[rgba(242,209,132,.88)]">下单前那一句话</span>，
+                <span className="text-[rgba(242,209,132,.88)]">下单前那一念</span>，
                 <br />
                 照出来。
               </p>
               <p data-third-opening className="m-0 md:hidden">
-                是把下单前那一句话
+                是把下单前那一念
                 <br />
                 照出来。
               </p>
@@ -355,7 +351,7 @@ export function StorySections() {
             </div>
           </div>
 
-          <div data-third-phase="closure" className="absolute inset-0 flex flex-col items-center justify-center px-2 pb-8 md:pb-10">
+          <div data-third-phase="closure" className="absolute inset-0 flex flex-col items-center justify-center px-2 pt-[12svh] pb-0 md:pt-[14svh] md:pb-0">
             <div data-breath-final className="flex flex-col items-center gap-3 md:gap-4">
               <p className="font-worldview m-0 text-[clamp(36px,4vw,58px)] font-normal leading-[1.18] tracking-[.1em] text-[rgba(244,235,221,.96)]">
                 今天，
@@ -363,7 +359,7 @@ export function StorySections() {
                 你起了哪一念？
               </p>
               <a
-                href="/reflect"
+                href={REFLECT_ENTRY_HREF}
                 className={heroStyles.door}
                 data-story-door="third"
                 onClick={enterReflectThroughWater}
@@ -373,15 +369,6 @@ export function StorySections() {
                 <span className={heroStyles.doorLine} aria-hidden="true" />
               </a>
             </div>
-
-            <div data-sample-close className="font-story mt-12 flex flex-col items-center justify-center gap-1 text-[13px] font-light leading-6 tracking-[.12em] text-[rgba(220,212,195,.38)] md:mt-14 md:text-[15px]">
-              <span>心贼：<strong className="font-worldview font-normal text-[rgba(242,209,132,.58)]">执</strong></span>
-              <span>今日修行：不拿结果否定过程。</span>
-            </div>
-
-            <p data-method-chain className="font-story absolute inset-x-0 bottom-[3.4rem] m-0 text-[10px] font-light leading-5 tracking-[.24em] text-[rgba(220,212,195,.14)] md:bottom-[3.7rem] md:text-xs">
-              {methodSeals.join(" · ")}
-            </p>
           </div>
         </div>
       </div>

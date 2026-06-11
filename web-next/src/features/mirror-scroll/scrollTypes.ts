@@ -27,6 +27,7 @@ export interface MirrorScrollNode {
   tradeMoment?: string
   os?: string
   reflection?: string
+  reflectionFinal?: string
   thief?: string
   mirrorId?: string
   mirrorName?: string

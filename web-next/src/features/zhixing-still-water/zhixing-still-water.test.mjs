@@ -29,7 +29,8 @@ test("still-water zhixing scroll exposes a separate ritual route", async () => {
 
   assert.ok(route.includes("HeartMirrorScroll"), "route must mount the heart mirror scroll")
   assert.ok(heartMirror.includes("HeartMirrorScroll"), "feature entry should expose the named heart mirror scroll")
-  assert.ok(topNav.includes('href: "/reflect"'), "desktop nav should keep 照见 as the primary daily entry")
+  assert.ok(topNav.includes('href: "/today-sealed"'), "desktop nav should expose 今日所照 as a status entry")
+  assert.equal(topNav.includes('{ label: "今日照见", href: "/reflect" }'), false, "desktop nav should not duplicate the private start flow")
   assert.equal(topNav.includes('href="/zhixing-still-water"'), false, "home mobile nav should not expose the still-water directory as a first-screen entrance")
 
   const ritualSource = [page, parts, stage, sharedStage, audio, holdComponent, holdStyles].join("\n")
@@ -100,7 +101,7 @@ test("still-water zhixing scroll exposes a separate ritual route", async () => {
     "查看心镜档案",
     "重新入照心",
     "查看复测变化",
-    "查看心镜档案馆",
+    "查看心镜档案",
     "回到今日",
     "只看心贼",
     "只看镜",

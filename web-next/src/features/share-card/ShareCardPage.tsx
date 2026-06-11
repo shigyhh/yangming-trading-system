@@ -212,7 +212,7 @@ export function ShareCardPage() {
           </div>
           <div className="mt-3 grid gap-3 sm:max-w-[520px] sm:grid-cols-2">
             <SecondaryLink href="/mirror-archive" className="w-full">
-              回到心镜档案馆 →
+              回到心镜档案 →
             </SecondaryLink>
             <SecondaryLink href="/mirror-scroll" className="w-full">
               查看心镜长卷 →

@@ -91,7 +91,7 @@ test("mirror scroll page exposes still-water long scroll narrative", async () =>
     "只看心贼",
     "只看镜",
     "回到今日",
-    "心镜档案馆",
+    "心镜档案",
   ].forEach((token) => {
     assert.equal(source.includes(token), true, `mirror scroll page missing ${token}`)
   })

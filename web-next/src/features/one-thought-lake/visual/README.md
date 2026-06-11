@@ -1,4 +1,4 @@
-# 一念心湖视觉层
+# 众念心湖视觉层
 
 当前项目是 Next.js + TypeScript + Three.js，所以这里没有另起 Vite 项目，而是把“念头万万千 / 心猿意马 / 万念归心”的 WebGL 作品接入到 `/one-thought-lake` 页面里。
 

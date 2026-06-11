@@ -148,7 +148,7 @@ export default function LivingMirrorCenterPage() {
             查看成长谱
           </SecondaryLink>
           <SecondaryLink href="/mirror-archive" className="w-full">
-            回到档案馆
+            回到心镜档案
           </SecondaryLink>
         </div>
 

@@ -21,6 +21,7 @@ interface RiverDay {
   tradeMoment: string
   os: string
   reflection: string
+  reflectionFinal: string
   thief: string
   mirrorId: string
   mirrorName: string
@@ -289,7 +290,7 @@ export default function MirrorScrollPage() {
             </span>
           </div>
           <div className="river-links">
-            <SecondaryLink href="/mirror-archive">心镜档案馆 →</SecondaryLink>
+            <SecondaryLink href="/mirror-archive">心镜档案 →</SecondaryLink>
             <SecondaryLink href="/assessment">今日照见 →</SecondaryLink>
             <SecondaryLink href="/practice-change?preview=1">今日修行 →</SecondaryLink>
           </div>
@@ -1392,7 +1393,7 @@ function RiverStation({
             </p>
           </div>
         ) : null}
-        <p className="river-reflection">{day.reflection}</p>
+        <p className="river-reflection">{day.reflectionFinal}</p>
         <div className="river-underwater" aria-label="心贼与九镜">
           <span>
             心贼
@@ -1418,7 +1419,7 @@ function RiverStation({
           <div className="river-strike" aria-label="完整照见">
             <p><span>交易现场</span>{day.tradeMoment}</p>
             <p><span>一念</span>「{day.os}」</p>
-            <p><span>照回</span>{day.reflection}</p>
+            <p><span>照回</span>{day.reflectionFinal}</p>
             <p><span>心贼</span>{day.thief}</p>
             <p><span>九镜</span>{day.mirrorName}</p>
             <p><span>心证</span>{day.evidence}</p>
@@ -1485,7 +1486,8 @@ function buildRiverDays(groups: MirrorScrollDayGroup[]): RiverDay[] {
       primaryNode,
       tradeMoment: primaryNode.tradeMoment || primaryNode.title || "这一日的交易现场",
       os: primaryNode.os || primaryNode.thoughtText || "这一念仍待照见",
-      reflection: primaryNode.reflection || primaryNode.proofText || primaryNode.summary || "这一日，你开始看见自己。",
+      reflection: primaryNode.reflectionFinal || primaryNode.reflection || primaryNode.proofText || primaryNode.summary || "这一日，你开始看见自己。",
+      reflectionFinal: primaryNode.reflectionFinal || primaryNode.reflection || primaryNode.proofText || primaryNode.summary || "这一日，你开始看见自己。",
       thief: primaryNode.thief || getAffectedThief(primaryNode),
       mirrorId: primaryNode.mirrorId || getAffectedMirror(primaryNode),
       mirrorName: primaryNode.mirrorName || getAffectedMirror(primaryNode) || DEFAULT_MIRROR,

@@ -35,6 +35,7 @@ import scene34 from "../../data/insight-engine/scenes/scene-34-news-trading.json
 import scene35 from "../../data/insight-engine/scenes/scene-35-fear-holding.json" with { type: "json" }
 import scene36 from "../../data/insight-engine/scenes/scene-36-fear-of-being-wrong.json" with { type: "json" }
 import { sceneProfiles, type SceneProfile } from "../../data/insight-engine/scene-profiles.ts"
+import { getReflectionFinalText } from "../reflections/reflectionService.ts"
 
 type InsightSceneItem = {
   id: string
@@ -42,6 +43,8 @@ type InsightSceneItem = {
   os: string
   hiddenThought: string
   reflection: string
+  reflection_v2?: string
+  reflectionFinal?: string
   intensity: number
 }
 
@@ -75,6 +78,7 @@ export type UserThoughtMatch = {
     matchedTerms: string[]
   }>
   suggestedReflection: string
+  suggestedReflectionFinal: string
   suggestedEvidence: string
   suggestedPractice: string
 }
@@ -276,7 +280,12 @@ function confidenceValue(label: UserThoughtMatch["confidenceLabel"], topScore: n
 function pickClosestItem(input: string, scene: InsightScene) {
   return [...scene.items]
     .map((item) => {
-      const itemTerms = [item.tradeMoment, item.os, item.hiddenThought, item.reflection]
+      const itemTerms = [
+        item.tradeMoment,
+        item.os,
+        item.hiddenThought,
+        getReflectionFinalText({ ...item, sceneId: scene.sceneId }),
+      ]
       const score = itemTerms.reduce((total, term) => total + (includesTerm(input, term) ? 1 : 0), 0)
       return { item, score }
     })
@@ -308,6 +317,7 @@ export function matchUserThought(inputText: string): UserThoughtMatch {
   const label = confidenceLabel(top.score, secondScore)
   const scene = scenesById.get(top.profile.sceneId) ?? insightScenes[0]
   const item = pickClosestItem(normalizedInput, scene)
+  const suggestedReflectionFinal = getReflectionFinalText({ ...item, sceneId: scene.sceneId })
   const candidates = scored.slice(0, 3).map(({ profile, score, matchedTerms }) => ({
     sceneId: profile.sceneId,
     sceneName: profile.sceneName,
@@ -332,7 +342,8 @@ export function matchUserThought(inputText: string): UserThoughtMatch {
         ? `命中：${top.matchedTerms.filter((term) => !term.startsWith("-") && !term.startsWith("避开:") && !term.startsWith("互斥:")).join("、") || "场景画像"}`
         : "未命中高置信画像，使用本地今日一念兜底。",
     candidates,
-    suggestedReflection: item?.reflection ?? "",
+    suggestedReflection: suggestedReflectionFinal,
+    suggestedReflectionFinal,
     suggestedEvidence: scene.evidences[0] ?? "",
     suggestedPractice: scene.practices[0] ?? "",
   }
@@ -390,6 +401,10 @@ export function applyAIThoughtMatch(localMatch: UserThoughtMatch, aiMatch: AITho
   const scene = scenesById.get(aiMatch.matchedSceneId) ?? scenesById.get(localMatch.matchedSceneId) ?? insightScenes[0]
   const item = pickClosestItem(normalizeInput(localMatch.inputText), scene)
   const candidate = localMatch.candidates.find((entry) => entry.sceneId === aiMatch.matchedSceneId)
+  const profile = profilesById.get(aiMatch.matchedSceneId)
+  void profile
+  const suggestedReflectionFinal =
+    getReflectionFinalText({ ...item, sceneId: scene.sceneId }) || localMatch.suggestedReflectionFinal
 
   return {
     ...localMatch,
@@ -402,7 +417,8 @@ export function applyAIThoughtMatch(localMatch: UserThoughtMatch, aiMatch: AITho
     confidence: aiMatch.confidence,
     confidenceLabel: aiMatch.confidence >= 0.72 ? "high" : aiMatch.confidence >= 0.48 ? "medium" : "low",
     reason: aiMatch.reason,
-    suggestedReflection: item?.reflection ?? localMatch.suggestedReflection,
+    suggestedReflection: suggestedReflectionFinal,
+    suggestedReflectionFinal,
     suggestedEvidence: scene.evidences[0] ?? localMatch.suggestedEvidence,
     suggestedPractice: scene.practices[0] ?? localMatch.suggestedPractice,
     candidates: candidate

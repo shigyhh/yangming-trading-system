@@ -201,9 +201,19 @@
   }
   body {
     @apply bg-background text-foreground;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    overflow-x: clip;
+    overscroll-behavior-x: none;
   }
   html {
     @apply font-sans;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    overflow-x: clip;
+    overscroll-behavior-x: none;
     scroll-behavior: smooth;
   }
 
@@ -254,6 +264,7 @@
   body {
     min-width: 320px;
     overflow-x: hidden;
+    overflow-x: clip;
     background:
       radial-gradient(circle at 82% 12%, rgba(95, 132, 117, 0.12), transparent 24rem),
       radial-gradient(circle at 58% 84%, rgba(95, 132, 117, 0.055), transparent 26rem),

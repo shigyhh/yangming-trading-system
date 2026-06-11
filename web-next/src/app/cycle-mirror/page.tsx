@@ -100,7 +100,7 @@ export default function CycleMirrorPage() {
             继续真实复盘
           </SecondaryLink>
           <SecondaryLink href="/mirror-archive" className="w-full">
-            查看心镜档案馆
+            查看心镜档案
           </SecondaryLink>
         </div>
 

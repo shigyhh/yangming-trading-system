@@ -94,7 +94,7 @@ export const livingMirrorLoopNodes: LoopNode[] = [
   {
     id: "mirror_archive",
     index: 11,
-    title: "心镜档案馆",
+    title: "心镜档案",
     subtitle: "报告、心证、修行、复盘、复测，全部归档",
     principle: "以活镜照成长",
     outputObject: "mirror_archive_id",

@@ -31,7 +31,7 @@ const thoughtById = new Map(oneThoughtPool.map((thought) => [thought.id, thought
 export function loadMirrorScrollData(): MirrorScrollData {
   const archive = loadMirrorArchiveData()
   const heartProofs = loadHeartProofs()
-  const oneThoughtRecords = loadOneThoughtRecords()
+  const oneThoughtRecords = loadOneThoughtRecords().filter((record) => record.completed)
   const heartProofById = new Map(heartProofs.map((proof) => [proof.heartProofId, proof]))
   const oneThoughtRecordById = new Map(oneThoughtRecords.map((record) => [record.recordId, record]))
   const nodes = dedupeScrollNodes([
@@ -198,6 +198,7 @@ function buildHeartProofNode(item: ArchiveItem, proof?: HeartProof): MirrorScrol
 function buildOneThoughtRecordNode(item: ArchiveItem, record?: OneThoughtRecord): MirrorScrollNode {
   const thought = record ? thoughtById.get(record.thoughtId) : undefined
   const mirrorId = record?.mirrorId || thought?.mirrorId
+  const reflectionFinal = record?.reflectionFinal || record?.reflection || thought?.reflectionFinal || thought?.reflection
 
   return buildNode(item, "one_thought_record", {
     id: `scroll_one_thought_${item.sourceId}`,
@@ -213,7 +214,8 @@ function buildOneThoughtRecordNode(item: ArchiveItem, record?: OneThoughtRecord)
     ].filter((value): value is string => Boolean(value)),
     tradeMoment: thought?.tradeMoment,
     os: record?.os || thought?.os,
-    reflection: record?.reflection || thought?.reflection,
+    reflection: reflectionFinal,
+    reflectionFinal,
     thief: record?.thief || thought?.thief,
     mirrorId,
     mirrorName: mirrorId ? mirrorNameById.get(mirrorId) || mirrorId : undefined,
@@ -238,6 +240,7 @@ function buildNode(
     tradeMoment?: string
     os?: string
     reflection?: string
+    reflectionFinal?: string
     thief?: string
     mirrorId?: string
     mirrorName?: string
@@ -265,6 +268,7 @@ function buildNode(
     tradeMoment: override.tradeMoment,
     os: override.os,
     reflection: override.reflection,
+    reflectionFinal: override.reflectionFinal,
     thief: override.thief,
     mirrorId: override.mirrorId,
     mirrorName: override.mirrorName,

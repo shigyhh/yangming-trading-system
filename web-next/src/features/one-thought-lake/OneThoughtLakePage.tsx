@@ -8,13 +8,12 @@ import {
   useRef,
   useState,
 } from "react"
+import Link from "next/link"
 
 import {
-  createOneThoughtRecord,
   getTodayOneThoughtDateKey,
   matchUserThought,
   oneThoughtPool,
-  saveOneThoughtRecord,
 } from "@/data/insight-engine/today-one-thought"
 import {
   createOneThoughtLakeComment,
@@ -49,14 +48,6 @@ const DAILY_LAKE_THOUGHT_LIMIT_MESSAGE = "今日已放三念，今日宜止。"
 function getBrowserStorage() {
   if (typeof window === "undefined") return null
   return window.localStorage
-}
-
-function findThought(entry: OneThoughtLakeEntry) {
-  return (
-    oneThoughtPool.find((thought) => thought.thoughtId === entry.thoughtId) ??
-    oneThoughtPool.find((thought) => thought.sceneId === entry.matchedSceneId) ??
-    oneThoughtPool[0]
-  )
 }
 
 function isAnonymousLakeEntry(entry: OneThoughtLakeEntry) {
@@ -137,16 +128,19 @@ export function OneThoughtLakePage() {
     readOneThoughtLakeComments(null),
   )
   const [commentText, setCommentText] = useState("")
-  const [liveTotalOffset, setLiveTotalOffset] = useState(0)
+  const [liveTotalOffset, setLiveTotalOffset] = useState(() => getTodayLiveSeed() % 5)
   const [thoughtSinkActive, setThoughtSinkActive] = useState(false)
   const thoughtSinkTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
-    const storage = getBrowserStorage()
-    setEntries(readOneThoughtLakeEntries(storage, oneThoughtPool))
-    setLakeComments(readOneThoughtLakeComments(storage))
+    const timer = window.setTimeout(() => {
+      const storage = getBrowserStorage()
+      setEntries(readOneThoughtLakeEntries(storage, oneThoughtPool))
+      setLakeComments(readOneThoughtLakeComments(storage))
+    }, 0)
 
     return () => {
+      window.clearTimeout(timer)
       if (thoughtSinkTimerRef.current) window.clearTimeout(thoughtSinkTimerRef.current)
     }
   }, [])
@@ -154,7 +148,6 @@ export function OneThoughtLakePage() {
   useEffect(() => {
     const seed = getTodayLiveSeed()
     let tick = 0
-    setLiveTotalOffset(seed % 5)
 
     const interval = window.setInterval(
       () => {
@@ -265,7 +258,7 @@ export function OneThoughtLakePage() {
 
     const screen = screenOneThoughtLakeInput(commentText)
     if (!screen.allowed) {
-      setCommentError(screen.reason ?? "这句回响暂时不能放入心湖。")
+      setCommentError(screen.reason ?? "这句回响暂时不能放入众念心湖。")
       return
     }
 
@@ -309,7 +302,7 @@ export function OneThoughtLakePage() {
 
     const screen = screenOneThoughtLakeInput(inputText)
     if (!screen.allowed) {
-      setComposeError(screen.reason ?? "这句一念暂时不能放入心湖。")
+      setComposeError(screen.reason ?? "这句一念暂时不能放入众念心湖。")
       setDraftEntry(null)
       return
     }
@@ -339,25 +332,9 @@ export function OneThoughtLakePage() {
     const nextEntries = readOneThoughtLakeEntries(storage, oneThoughtPool)
     setEntries(nextEntries)
     setSelectedEntryId(draftEntry.id)
-    setNotice("这一念已匿名放入心湖。")
+    setNotice("这一念已匿名放入众念心湖。")
     setInputText("")
     setDraftEntry(null)
-  }
-
-  function handleSaveArchive() {
-    if (!draftEntry) return
-
-    const thought = findThought(draftEntry)
-    const storage = getBrowserStorage()
-    saveOneThoughtRecord(
-      createOneThoughtRecord(thought, {
-        recordId: `lake_archive_${draftEntry.id}`,
-        date: draftEntry.date,
-        completed: false,
-      }),
-      storage,
-    )
-    setNotice("这一念已存入你的心镜档案。")
   }
 
   return (
@@ -368,11 +345,11 @@ export function OneThoughtLakePage() {
       <div className="lake-ripple lake-ripple-two" aria-hidden="true" />
 
       <header className="lake-header">
-        <a href="/" className="lake-home-link" aria-label="回到首页">
+        <Link href="/?home=1" className="lake-home-link" aria-label="回到首页">
           <span>回首页 →</span>
           <i aria-hidden="true" />
-        </a>
-        <h1>一念心湖</h1>
+        </Link>
+        <h1>众念心湖</h1>
         <p>匿名看见众人的一念，也匿名放下自己的一念。</p>
         <span className="lake-count" aria-live="polite">
           今日共照 <strong>{liveTotal || 0}</strong> 人
@@ -421,19 +398,19 @@ export function OneThoughtLakePage() {
       ) : null}
 
       {selectedEntry ? (
-        <aside className="lake-focus-panel" aria-label="一念展开">
+        <aside className="lake-focus-panel" aria-label="众念展开">
           <button type="button" className="lake-close" onClick={() => setSelectedEntryId(null)}>
-            回到心湖
+            回到众念心湖
           </button>
           <p className="lake-panel-label">{selectedEntry.tradeMoment}</p>
           <h2>「{selectedEntryText}」</h2>
           <dl>
             <div>
-              <dt>落在</dt>
+              <dt>湖中归类</dt>
               <dd>{selectedEntry.matchedSceneName}</dd>
             </div>
             <div>
-              <dt>心贼</dt>
+              <dt>这念的力</dt>
               <dd>{selectedEntry.thief}</dd>
             </div>
             <div>
@@ -441,7 +418,7 @@ export function OneThoughtLakePage() {
               <dd>{selectedEntry.sameThoughtCount} 人</dd>
             </div>
           </dl>
-          <p className="lake-reflection">{selectedEntry.reflection}</p>
+          <p className="lake-reflection">若想把这一念照成自己的心证，请进入今日照见。</p>
           <section className="lake-echoes" aria-label="同念回响">
             <div className="lake-echoes-head">
               <p>同念回响</p>
@@ -457,7 +434,7 @@ export function OneThoughtLakePage() {
                 ))
               ) : (
                 <p>
-                  <span>心湖</span>
+                  <span>众念</span>
                   同一念的人，会收到这里的回响。
                 </p>
               )}
@@ -474,9 +451,16 @@ export function OneThoughtLakePage() {
             {commentError ? <p className="lake-error">{commentError}</p> : null}
           </section>
           <div className="lake-panel-actions">
+            <form className="lake-reflect-form" action="/reflect" method="get">
+              <input type="hidden" name="source" value="lake" />
+              <input type="hidden" name="text" value={selectedEntryText} />
+              <button type="submit" className="lake-primary-action">
+                照见此念
+              </button>
+            </form>
             <button
               type="button"
-              className="lake-primary-action"
+              className="lake-secondary-action"
               onClick={() => handleResonate(selectedEntry)}
               disabled={resonatedIds.includes(selectedEntry.id)}
             >
@@ -511,27 +495,24 @@ export function OneThoughtLakePage() {
                 aria-invalid={inputRejected}
               />
               <button type="submit" disabled={inputRejected}>
-                照回这一念
+                投念入湖
               </button>
             </form>
             {composeError ? <p className="lake-error">{composeError}</p> : null}
             {draftEntry ? (
               <div className="lake-match-result" aria-label="一念匹配结果">
                 <p>
-                  这一念落在：<strong>{draftEntry.matchedSceneName}</strong>
+                  湖中归类：<strong>{draftEntry.matchedSceneName}</strong>
                 </p>
                 <p>
-                  心贼：<strong>{draftEntry.thief}</strong>
+                  这念的力：<strong>{draftEntry.thief}</strong>
                 </p>
                 <p>
-                  镜中显影：<strong>{draftEntry.mirrorName}</strong>
+                  镜影：<strong>{draftEntry.mirrorName}</strong>
                 </p>
                 <div>
                   <button type="button" onClick={handlePlaceIntoLake}>
-                    匿名放入心湖
-                  </button>
-                  <button type="button" onClick={handleSaveArchive}>
-                    存入我的心镜档案
+                    匿名放入众念心湖
                   </button>
                 </div>
               </div>
@@ -540,7 +521,7 @@ export function OneThoughtLakePage() {
         ) : null}
       </section>
 
-      <p className="lake-compliance">心湖只照见交易中的念头，不提供投资建议。</p>
+      <p className="lake-compliance">众念心湖只照见交易中的念头，不提供投资建议。</p>
 
       <style jsx>{`
         .one-thought-lake-page {
@@ -880,6 +861,8 @@ export function OneThoughtLakePage() {
           font-weight: 700;
           letter-spacing: 0.18em;
           padding: 0.72rem 1rem;
+          text-align: center;
+          text-decoration: none;
           transition: border-color 500ms ease, color 500ms ease, background 500ms ease, opacity 500ms ease;
         }
 
@@ -1027,6 +1010,10 @@ export function OneThoughtLakePage() {
           display: flex;
           flex-wrap: wrap;
           gap: 0.72rem;
+        }
+
+        .lake-reflect-form {
+          display: contents;
         }
 
         .lake-primary-action,

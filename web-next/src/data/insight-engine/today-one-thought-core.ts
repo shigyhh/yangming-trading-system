@@ -2,17 +2,21 @@ import {
   matchUserThought as matchUserThoughtByProfile,
   type UserThoughtMatch,
 } from "../../lib/insight-engine/match-user-thought.ts"
+import { getReflectionFinalText } from "../../lib/reflections/reflectionService.ts"
 
 export type BrowserStorage = {
   getItem(key: string): string | null
   setItem(key: string, value: string): void
+  removeItem?(key: string): void
 }
 
 export const TODAY_ONE_THOUGHT_STORAGE_KEY = "zhaojian:today-one-thought:v1"
 export const TODAY_ONE_THOUGHT_USER_SEED_KEY = "zhaojian:today-one-thought:user-seed:v1"
 export const TODAY_ONE_THOUGHT_CONFIRM_LIMIT = 3
 export const TODAY_ONE_THOUGHT_CHANGE_LIMIT = TODAY_ONE_THOUGHT_CONFIRM_LIMIT
-export const ONE_THOUGHT_RECORDS_STORAGE_KEY = "zhaojian:one-thought-records:v1"
+export const ONE_THOUGHT_INSIGHT_RECORDS_STORAGE_KEY = "zhaojian:one_thought_insight_records"
+export const ONE_THOUGHT_RECORDS_STORAGE_KEY = ONE_THOUGHT_INSIGHT_RECORDS_STORAGE_KEY
+export const LEGACY_ONE_THOUGHT_RECORDS_STORAGE_KEY = "zhaojian:one-thought-records:v1"
 
 export type OneThought = {
   id: string
@@ -22,6 +26,8 @@ export type OneThought = {
   tradeMoment: string
   os: string
   reflection: string
+  reflection_v2?: string
+  reflectionFinal?: string
   hiddenThought?: string
   thief: string
   evidence: string
@@ -38,11 +44,13 @@ export type TodayOneThoughtSourceItem = OneThought & {
   practiceLines?: string[]
 }
 
-export type OneThoughtRecord = {
+export type OneThoughtInsightRecord = {
   id: string
   recordId: string
   date: string
   dayIndex: number
+  inputText: string
+  source: "user_input" | "today_one_thought" | "daily_engine" | "lake" | "lake_archive" | "legacy"
   thoughtId: string
   sceneId: string
   sceneName: string
@@ -52,11 +60,17 @@ export type OneThoughtRecord = {
   thief: string
   os: string
   reflection: string
+  reflection_v2?: string
+  reflectionFinal?: string
   evidence: string
   practice: string
   completed: boolean
   sealedAt?: string
+  summary?: string
+  syncStatus?: "local_only" | "synced"
 }
+
+export type OneThoughtRecord = OneThoughtInsightRecord
 
 export type OneThoughtMatchResult = UserThoughtMatch
 
@@ -127,6 +141,7 @@ const fallbackSourceItem: TodayOneThoughtSourceItem = {
   tradeMoment: "照见此刻",
   os: "先照见这一念。",
   reflection: "你照见的是当下的反应。",
+  reflectionFinal: "你照见的是当下的反应。",
   evidence: "我看见自己正在起念。",
   practice: "停十秒。",
   coreStatement: "念头起处，便是练处。",
@@ -158,6 +173,19 @@ function safeSet(storage: BrowserStorage | null | undefined, key: string, value:
   } catch {
     // localStorage can be unavailable in private or embedded browser contexts.
   }
+}
+
+function normalizeRecordSource(value: unknown): OneThoughtInsightRecord["source"] {
+  if (
+    value === "user_input" ||
+    value === "today_one_thought" ||
+    value === "daily_engine" ||
+    value === "lake" ||
+    value === "lake_archive"
+  ) {
+    return value
+  }
+  return "legacy"
 }
 
 function cleanIdPart(value: string | number | undefined) {
@@ -192,6 +220,8 @@ function normalizeOneThoughtRecord(value: unknown): OneThoughtRecord | null {
     recordId,
     date: String(item.date),
     dayIndex: Number.isFinite(dayIndex) && dayIndex > 0 ? Math.trunc(dayIndex) : 0,
+    inputText: item.inputText ? String(item.inputText) : String(item.os || ""),
+    source: normalizeRecordSource(item.source),
     thoughtId: String(item.thoughtId),
     sceneId: String(item.sceneId),
     sceneName: item.sceneName ? String(item.sceneName) : String(item.sceneId),
@@ -201,10 +231,14 @@ function normalizeOneThoughtRecord(value: unknown): OneThoughtRecord | null {
     thief: String(item.thief || ""),
     os: String(item.os || ""),
     reflection: String(item.reflection || ""),
+    reflection_v2: item.reflection_v2 ? String(item.reflection_v2) : undefined,
+    reflectionFinal: item.reflectionFinal ? String(item.reflectionFinal) : undefined,
     evidence: String(item.evidence || ""),
     practice: String(item.practice || ""),
     completed: Boolean(item.completed),
     sealedAt: item.sealedAt ? String(item.sealedAt) : undefined,
+    summary: item.summary ? String(item.summary) : undefined,
+    syncStatus: item.syncStatus === "synced" || item.syncStatus === "local_only" ? item.syncStatus : undefined,
   }
 }
 
@@ -503,20 +537,40 @@ export function createOneThoughtRecord(
     date?: string
     dayIndex?: number
     mirrorName?: string
+    inputText?: string
+    source?: OneThoughtInsightRecord["source"]
+    reflection?: string
+    reflection_v2?: string
+    reflectionFinal?: string
+    evidence?: string
+    practice?: string
     completed?: boolean
     sealedAt?: string
+    summary?: string
+    syncStatus?: OneThoughtInsightRecord["syncStatus"]
   } = {},
 ): OneThoughtRecord {
   const date = options.date ?? thought.date ?? getTodayOneThoughtDateKey(new Date())
   const thoughtId = "thoughtId" in thought ? thought.thoughtId : thought.id
   const recordId = options.recordId ?? `one_thought_${cleanIdPart(date)}_${cleanIdPart(thoughtId)}`
   const dayIndex = Number(options.dayIndex)
+  const reflectionFinal = [
+    options.reflectionFinal,
+    getReflectionFinalText(thought),
+    "reflectionFinal" in thought ? thought.reflectionFinal : "",
+    options.reflection,
+    thought.reflection,
+  ].find((value) => typeof value === "string" && value.trim().length > 0) ?? ""
+  const reflectionV2 = options.reflection_v2 ?? ("reflection_v2" in thought ? thought.reflection_v2 : undefined)
+  const reflection = options.reflection ?? reflectionFinal
 
   return {
     id: options.id ?? recordId,
     recordId,
     date,
     dayIndex: Number.isFinite(dayIndex) && dayIndex > 0 ? Math.trunc(dayIndex) : 0,
+    inputText: options.inputText ?? thought.os,
+    source: options.source ?? ("dateKey" in thought ? "today_one_thought" : "legacy"),
     thoughtId,
     sceneId: thought.sceneId,
     sceneName: thought.sceneName,
@@ -525,22 +579,31 @@ export function createOneThoughtRecord(
     tradeMoment: thought.tradeMoment,
     thief: thought.thief,
     os: thought.os,
-    reflection: thought.reflection,
-    evidence: thought.evidence,
-    practice: thought.practice,
+    reflection,
+    reflection_v2: reflectionV2 || undefined,
+    reflectionFinal,
+    evidence: options.evidence ?? thought.evidence,
+    practice: options.practice ?? thought.practice,
     completed: options.completed ?? true,
     sealedAt: options.sealedAt,
+    summary: options.summary,
+    syncStatus: options.syncStatus,
   }
 }
 
 export function loadOneThoughtRecords(storage: BrowserStorage | null | undefined = null): OneThoughtRecord[] {
-  const parsedRecords = parseJson<unknown[]>(safeGet(storage, ONE_THOUGHT_RECORDS_STORAGE_KEY), [])
+  const parsedRecords = [
+    ...parseJson<unknown[]>(safeGet(storage, ONE_THOUGHT_RECORDS_STORAGE_KEY), []),
+    ...parseJson<unknown[]>(safeGet(storage, LEGACY_ONE_THOUGHT_RECORDS_STORAGE_KEY), []),
+  ]
 
   if (!Array.isArray(parsedRecords)) return []
 
-  return parsedRecords
+  const records = parsedRecords
     .map(normalizeOneThoughtRecord)
     .filter((record): record is OneThoughtRecord => Boolean(record))
+
+  return Array.from(new Map(records.map((record) => [record.recordId, record])).values())
     .sort((left, right) => getRecordTime(right) - getRecordTime(left))
 }
 

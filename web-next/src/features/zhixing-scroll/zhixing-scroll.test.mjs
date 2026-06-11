@@ -21,7 +21,8 @@ test("zhixing scroll keeps the daily practice loop as the primary route", async 
   assert.ok(globals.includes("Zhixing scroll critical shell"), "hero must have critical CSS before hydration")
   assert.ok(globals.includes(".zhixing-hero"), "critical CSS must style the entry hero before client CSS loads")
   assert.ok(globals.includes("white-space: nowrap"), "desktop hero title should not break into a lonely final character")
-  assert.ok(topNav.includes('href: "/reflect"'), "home top nav should route the daily practice loop through /reflect")
+  assert.ok(topNav.includes('href: "/today-sealed"'), "home top nav should route today's sealed status through /today-sealed")
+  assert.equal(topNav.includes('{ label: "今日照见", href: "/reflect" }'), false, "home top nav should not duplicate the private start flow")
   assert.equal(topNav.includes('href="/zhixing-scroll"'), false, "home top nav should not expose the old scroll directory as the primary mobile entrance")
 
   ;[
@@ -29,7 +30,7 @@ test("zhixing scroll keeps the daily practice loop as the primary route", async 
     "市场未动，心已先动。",
     "一念不照，万法皆乱。",
     "开始今日一卷",
-    "90 秒看懂知行心卷",
+    "90 秒看懂心镜长卷",
     "临盘心乱，先急救",
     "EntryGateHero",
     "InkMistStage",

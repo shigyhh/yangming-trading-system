@@ -5,19 +5,20 @@ import { usePathname, useRouter } from "next/navigation"
 import { useCallback, useEffect, useRef, useState, type FormEvent, type MouseEvent } from "react"
 
 import { YangmingA1Mark } from "@/components/brand/yangming-mark"
-import { FlowButton } from "@/components/home/flow-button"
 import {
   assessmentStorageKeys,
   getSavedNickname,
   getSavedPhoneTail,
+  removeStorage,
   setStorage,
 } from "@/features/assessment/storage"
+import { STORAGE_KEYS } from "@/lib/user-flow/visitor-state"
 
 const navLinks = [
-  { label: "知行心卷", href: "/reflect" },
-  { label: "一念心湖", href: "/lake" },
-  { label: "照见实盘", href: "/review" },
-  { label: "档案馆", href: "/me/archive" },
+  { label: "今日所照", href: "/today-sealed" },
+  { label: "众念心湖", href: "/lake" },
+  { label: "真实复盘", href: "/review" },
+  { label: "心镜档案", href: "/me/archive" },
 ] as const
 
 const HOME_DIVE_DURATION_MS = 2400
@@ -75,14 +76,18 @@ export function TopNav() {
   }, [])
 
   useEffect(() => {
-    const savedName = getSavedNickname()
-    setAccountTail(getSavedPhoneTail())
-    setAccountName(savedName)
-    setAccountDraft(savedName)
+    const timer = window.setTimeout(() => {
+      const savedName = getSavedNickname()
+      setAccountTail(getSavedPhoneTail())
+      setAccountName(savedName)
+      setAccountDraft(savedName)
+    }, 0)
+
+    return () => window.clearTimeout(timer)
   }, [])
 
   function isActive(href: string) {
-    if (href === "/reflect") return pathname === "/reflect" || pathname === "/assessment-entry"
+    if (href === "/today-sealed") return pathname === "/today-sealed"
     if (href === "/lake") return pathname === "/lake" || pathname === "/one-thought-lake"
     if (href === "/review") return pathname === "/review" || pathname === "/trade-review"
     if (href === "/me/archive") return pathname === "/me/archive" || pathname === "/mirror-archive"
@@ -156,6 +161,26 @@ export function TopNav() {
     setStorage(assessmentStorageKeys.userNickname, cleanName)
   }
 
+  const signOutAccount = () => {
+    removeStorage(assessmentStorageKeys.userPhone)
+    removeStorage(assessmentStorageKeys.phoneTail)
+    removeStorage(assessmentStorageKeys.userNickname)
+    removeStorage(assessmentStorageKeys.userCreatedAt)
+    removeStorage(assessmentStorageKeys.skipEntryOpeningRitualOnce)
+    removeStorage(assessmentStorageKeys.assessmentGatewayOnce)
+
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(STORAGE_KEYS.homeIntroSeen)
+      window.localStorage.removeItem(STORAGE_KEYS.firstReflectEntered)
+      window.localStorage.removeItem(STORAGE_KEYS.draftInsightRecord)
+    }
+
+    setAccountTail("")
+    setAccountName("")
+    setAccountDraft("")
+    setIsAccountOpen(false)
+  }
+
   return (
     <motion.header
       className="home-top-nav-shell font-function fixed inset-x-0 top-0 z-40 border-b border-[rgba(217,189,122,.01)] bg-[#080807]/3 backdrop-blur-2xl"
@@ -226,18 +251,13 @@ export function TopNav() {
                     </div>
                   </form>
                   <p className="home-account-note">一个手机号归档测评、训练与复看记录。</p>
+                  <button type="button" className="home-account-logout" onClick={signOutAccount}>
+                    退出照心账户
+                  </button>
                 </div>
               ) : null}
             </div>
           ) : null}
-          <FlowButton
-            href="/reflect"
-            variant="ghost"
-            className="min-h-10 px-5 opacity-[.4] hover:opacity-[.72]"
-            onClick={(event) => enterRouteThroughWater(event, "/reflect")}
-          >
-            照见一念
-          </FlowButton>
         </div>
       </nav>
       <style jsx>{`
@@ -356,6 +376,28 @@ export function TopNav() {
           font-size: 0.66rem;
           line-height: 1.65;
           letter-spacing: 0.06em;
+        }
+
+        .home-account-logout {
+          width: 100%;
+          margin-top: 0.72rem;
+          border: 0;
+          border-top: 1px solid rgba(172, 146, 83, 0.1);
+          background: transparent;
+          padding: 0.7rem 0 0;
+          color: rgba(220, 212, 195, 0.38);
+          font-size: 0.68rem;
+          letter-spacing: 0.1em;
+          text-align: left;
+          cursor: pointer;
+          transition:
+            color 360ms ease,
+            border-color 360ms ease;
+        }
+
+        .home-account-logout:hover {
+          border-color: rgba(172, 146, 83, 0.18);
+          color: rgba(216, 183, 111, 0.7);
         }
 
         :global(.home-nav-zhao) {

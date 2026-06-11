@@ -90,6 +90,7 @@ export type AdminTrainingRecord = {
   status: "已完成" | "进行中" | "未开始" | "未完成"
   action: string
   reflection: string
+  reflectionFinal?: string
 }
 
 export type AdminKLineRecord = {

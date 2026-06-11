@@ -8,21 +8,21 @@ import { YangmingGlyph } from "@/components/brand/yangming-mark"
 
 const waterSealEntries = [
   {
-    href: "/reflect",
+    href: "/today-sealed",
     glyph: "trade" as const,
-    label: "照见一念",
-    description: "从今日一念入照心。",
+    label: "今日所照",
+    description: "查看今日已照见的一念。",
   },
   {
     href: "/review",
     glyph: "review" as const,
-    label: "照见实盘",
+    label: "真实复盘",
     description: "只复盘谁在下单。",
   },
   {
     href: "/lake",
     glyph: "growth" as const,
-    label: "一念心湖",
+    label: "众念心湖",
     description: "看见众人也如此。",
   },
 ]
@@ -52,7 +52,7 @@ export function InsightCard() {
           <p className="type-level-5 mb-5 w-fit rounded-full border border-[rgba(216,183,111,.055)] bg-[rgba(216,183,111,.012)] px-3 py-1 text-[rgba(216,183,111,.42)]">
             临盘观心
           </p>
-          <p className="type-level-4 text-[rgba(216,183,111,.48)]">今日照见台</p>
+          <p className="type-level-4 text-[rgba(216,183,111,.48)]">今日所照台</p>
           <h2 className="brand-card-title mt-2 md:mt-3">不急翻回</h2>
           <div className="mt-6 font-story text-[1.12rem] font-light leading-[1.95] text-[rgba(244,235,221,.66)] md:mt-8 md:text-[1.36rem]">
             <p>上一笔情绪</p>
@@ -60,7 +60,7 @@ export function InsightCard() {
           </div>
         </div>
 
-        <nav className="relative z-10 mt-10 grid gap-5 md:mt-12 md:gap-6" aria-label="今日照见入口">
+        <nav className="relative z-10 mt-10 grid gap-5 md:mt-12 md:gap-6" aria-label="今日所照入口">
           {waterSealEntries.map((item, index) => (
             <Link
               key={item.label}

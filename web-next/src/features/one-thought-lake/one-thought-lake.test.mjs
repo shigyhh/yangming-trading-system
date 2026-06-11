@@ -9,28 +9,34 @@ const configUrl = new URL("./visual/config.ts", import.meta.url)
 const noiseUrl = new URL("./visual/noise.ts", import.meta.url)
 const readmeUrl = new URL("./visual/README.md", import.meta.url)
 const shadersUrl = new URL("./visual/shaders.ts", import.meta.url)
-const routeUrl = new URL("../../app/one-thought-lake/page.tsx", import.meta.url)
+const routeUrl = new URL("../../app/lake/page.tsx", import.meta.url)
+const aliasRouteUrl = new URL("../../app/one-thought-lake/page.tsx", import.meta.url)
 const topNavUrl = new URL("../../components/home/top-nav.tsx", import.meta.url)
 const zhaoxinUrl = new URL("../assessment/ZhaoxinRitualFlow.tsx", import.meta.url)
 
 test("one thought lake route and entrances exist without becoming a forum", async () => {
   const page = await readFile(pageUrl, "utf8")
+  const engine = await readFile(engineUrl, "utf8")
   const route = await readFile(routeUrl, "utf8")
+  const aliasRoute = await readFile(aliasRouteUrl, "utf8")
   const topNav = await readFile(topNavUrl, "utf8")
   const zhaoxin = await readFile(zhaoxinUrl, "utf8")
 
   assert.match(route, /OneThoughtLakePage/)
+  assert.match(aliasRoute, /redirect\("\/lake"\)/)
   assert.match(route, /one-thought-lake-page/)
   assert.match(route, /radial-gradient\(circle at 50% 38%/)
   assert.match(route, /lake-header/)
-  assert.match(page, /一念心湖/)
+  assert.match(page, /众念心湖/)
   assert.match(page, /匿名看见众人的一念，也匿名放下自己的一念。/)
   assert.match(page, /匿名漂浮一念/)
   assert.match(page, /今日共照/)
   assert.match(page, /\.lake-header h1/)
   assert.match(page, /color: rgba\(244, 235, 221, 0\.96\)/)
   assert.match(page, /\.lake-focus-panel h2/)
-  assert.match(page, /心湖只照见交易中的念头，不提供投资建议。/)
+  assert.match(page, /众念心湖只照见交易中的念头，不提供投资建议。/)
+  assert.doesNotMatch(page, /众念心湖是匿名共照空间，不写入私人心镜档案。/)
+  assert.match(page, /href="\/\?home=1"/)
   assert.match(page, /aria-label="回到首页"/)
   assert.match(page, /回首页 →/)
   assert.match(page, /lake-home-link i/)
@@ -40,17 +46,35 @@ test("one thought lake route and entrances exist without becoming a forum", asyn
   assert.match(page, /同念回响/)
   assert.match(page, /同一念的人，会收到这里的回响。/)
   assert.match(page, /matchUserThought/)
-  assert.match(page, /saveOneThoughtRecord/)
+  assert.match(page, /action="\/reflect" method="get"/)
+  assert.match(page, /name="source" value="lake"/)
+  assert.match(page, /name="text" value=\{selectedEntryText\}/)
+  assert.match(page, /照见此念/)
+  assert.match(page, /投念入湖/)
+  assert.match(page, /湖中归类/)
+  assert.match(page, /这念的力/)
+  assert.match(page, /镜影/)
+  assert.match(page, /若想把这一念照成自己的心证，请进入今日照见。/)
+  assert.doesNotMatch(page, /照回这一念/)
+  assert.doesNotMatch(page, /这一念落在：/)
+  assert.doesNotMatch(page, /镜中显影：/)
+  assert.doesNotMatch(page, /saveOneThoughtRecord/)
+  assert.doesNotMatch(page, /createOneThoughtEvent/)
+  assert.doesNotMatch(page, /oneThoughtEventRepository/)
+  assert.doesNotMatch(page, /ONE_THOUGHT_EVENT_STORAGE_KEY/)
+  assert.doesNotMatch(engine, /createOneThoughtEvent/)
+  assert.doesNotMatch(engine, /oneThoughtEventRepository/)
+  assert.doesNotMatch(engine, /ONE_THOUGHT_EVENT_STORAGE_KEY/)
   assert.doesNotMatch(page, /hiddenThought/)
   assert.doesNotMatch(page, /<p className="lake-kicker">匿名共照<\/p>/)
   assert.doesNotMatch(page, /帖子/)
   assert.doesNotMatch(page, /点赞榜/)
   assert.doesNotMatch(page, /头像/)
-  assert.match(topNav, /一念心湖/)
+  assert.match(topNav, /众念心湖/)
   assert.match(topNav, /href: "\/lake"/)
   assert.doesNotMatch(topNav, /one-thought-bottom-nav/)
-  assert.match(zhaoxin, /去心湖看看，多少人也有这一念/)
-  assert.match(zhaoxin, /href="\/one-thought-lake"/)
+  assert.match(zhaoxin, /去众念心湖看看，多少人也有这一念/)
+  assert.match(zhaoxin, /href="\/lake"/)
 })
 
 test("one thought lake renders a Three.js thought cloud instead of the old sphere", async () => {
@@ -122,8 +146,8 @@ test("anonymous thoughts stay separated from the official thought cloud", async 
     "lake-anonymous-node",
     "lake-hover-preview",
     "--node-color",
-    "匿名放入心湖",
-    "存入我的心镜档案",
+    "匿名放入众念心湖",
+    "照见此念",
     "getTodayLiveBase",
     "36 + (getTodayLiveSeed() % 18)",
     "Math.min(96",
@@ -170,7 +194,7 @@ test("one thought lake limits daily submitted thoughts without limiting comments
 
   const commentBlock = page.match(/function handleComment[\s\S]*?function handleToggleCompose/)?.[0] ?? ""
   const matchBlock = page.match(/function handleMatch[\s\S]*?function handlePlaceIntoLake/)?.[0] ?? ""
-  const placeBlock = page.match(/function handlePlaceIntoLake[\s\S]*?function handleSaveArchive/)?.[0] ?? ""
+  const placeBlock = page.match(/function handlePlaceIntoLake[\s\S]*?return \(/)?.[0] ?? ""
 
   assert.doesNotMatch(commentBlock, /dailyThoughtLimitReached|DAILY_LAKE_THOUGHT_LIMIT/)
   assert.match(matchBlock, /dailyThoughtLimitReached/)
@@ -184,6 +208,9 @@ test("one thought lake engine seeds the full one-thought pool and screens risky 
     "buildMockOneThoughtLakeEntries",
     "for (const thought of sourceItems)",
     "createOneThoughtLakeEntry",
+    "getReflection(thought.sceneId, thought.itemId)?.reflectionFinal",
+    "itemId: thought.itemId",
+    "reflectionFinal",
     "readOneThoughtLakeEntries",
     "saveOneThoughtLakeEntry",
     "resonateWithOneThoughtLakeEntry",

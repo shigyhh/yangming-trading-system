@@ -14,10 +14,10 @@ type Gate = {
 
 const gates: Gate[] = [
   {
-    href: "/zhixing-scroll",
-    mark: "卷",
-    name: "知行心卷",
-    line: "入今日一卷，照见、了断、再照。",
+    href: "/today-sealed",
+    mark: "照",
+    name: "今日所照",
+    line: "查看今日已落印的一念，再从此处继续照见。",
     side: "left",
   },
   {
@@ -28,23 +28,23 @@ const gates: Gate[] = [
     side: "right",
   },
   {
-    href: "/one-thought-lake",
+    href: "/lake",
     mark: "湖",
-    name: "一念心湖",
+    name: "众念心湖",
     line: "看见众人，也如你一般，被一念所牵。",
     side: "left",
   },
   {
     href: "/review",
     mark: "盘",
-    name: "照见实盘",
+    name: "真实复盘",
     line: "不复盘行情对错，只复盘谁在下单。",
     side: "right",
   },
   {
-    href: "/mirror-archive",
+    href: "/me/archive",
     mark: "藏",
-    name: "档案馆",
+    name: "心镜档案",
     line: "日日所照，积成一径。这卷，是你。",
     side: "left",
   },
@@ -52,7 +52,6 @@ const gates: Gate[] = [
 
 export function HomeGatesSection() {
   const rootRef = useRef<HTMLElement | null>(null)
-  const sectionRefs = useRef<Array<HTMLElement | null>>([])
   const activeGateRef = useRef(-1)
 
   useEffect(() => {
@@ -60,12 +59,15 @@ export function HomeGatesSection() {
 
     function updateGates() {
       frame = 0
+      const sections = Array.from(
+        rootRef.current?.querySelectorAll<HTMLElement>("[data-gate-section]") ?? [],
+      )
 
       const viewportHeight = window.innerHeight || 1
       let closestIndex = -1
       let closestDistance = Number.POSITIVE_INFINITY
 
-      sectionRefs.current.forEach((section, index) => {
+      sections.forEach((section, index) => {
         if (!section) return
 
         const rect = section.getBoundingClientRect()
@@ -95,9 +97,9 @@ export function HomeGatesSection() {
 
       if (closestIndex !== activeGateRef.current && closestIndex >= 0 && closestDistance < 0.4) {
         activeGateRef.current = closestIndex
-        sectionRefs.current.forEach((section) => section?.removeAttribute("data-here"))
+        sections.forEach((section) => section.removeAttribute("data-here"))
 
-        const current = sectionRefs.current[closestIndex]
+        const current = sections[closestIndex]
         current?.setAttribute("data-here", "true")
 
         if (!current) return
@@ -134,10 +136,6 @@ export function HomeGatesSection() {
     }
   }, [])
 
-  const setSectionRef = (index: number) => (node: HTMLElement | null) => {
-    sectionRefs.current[index] = node
-  }
-
   return (
     <section
       ref={rootRef}
@@ -155,20 +153,20 @@ export function HomeGatesSection() {
       </svg>
 
       <div className={styles.content}>
-        <section className={`${styles.section} ${styles.lead}`} ref={setSectionRef(0)}>
+        <section className={`${styles.section} ${styles.lead}`} data-gate-section>
           <div className={styles.inner} data-gate-inner>
             <p className={styles.leadTitle}>顺这片水，往下走——</p>
             <p className={styles.leadLine}>五处，照见自己的五个去处。</p>
           </div>
         </section>
 
-        {gates.map((gate, index) => (
+        {gates.map((gate) => (
           <section
             key={gate.name}
             className={`${styles.section} ${styles.gate}`}
+            data-gate-section
             data-gate="true"
             data-side={gate.side}
-            ref={setSectionRef(index + 1)}
           >
             <a href={gate.href} className={styles.inner} data-gate-inner>
               <span className={styles.seal}>{gate.mark}</span>
@@ -180,10 +178,10 @@ export function HomeGatesSection() {
           </section>
         ))}
 
-        <section className={`${styles.section} ${styles.coda}`} ref={setSectionRef(gates.length + 1)}>
+        <section className={`${styles.section} ${styles.coda}`} data-gate-section>
           <div className={styles.inner} data-gate-inner>
             <p className={styles.codaLine}>见行情　·　见心　·　见人格</p>
-            <a className={styles.codaDoor} href="/reflect">
+            <a className={styles.codaDoor} href="/assessment-entry">
               <span>照见一念　→</span>
               <i aria-hidden="true" />
             </a>

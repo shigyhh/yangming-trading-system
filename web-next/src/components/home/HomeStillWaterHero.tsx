@@ -11,6 +11,7 @@ type DivePhase = "shore" | "descend"
 
 const HOME_DIVE_DURATION_MS = 2400
 const HOME_ROUTE_DELAY_MS = 2200
+const REFLECT_ENTRY_HREF = "/assessment-entry"
 
 export default function HomeStillWaterHero() {
   const router = useRouter()
@@ -160,7 +161,7 @@ export default function HomeStillWaterHero() {
     if (phase !== "shore") return
 
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      router.push("/reflect")
+      router.push(REFLECT_ENTRY_HREF)
       return
     }
 
@@ -175,7 +176,7 @@ export default function HomeStillWaterHero() {
     setPhase("descend")
     playSubmergeSound()
     routeTimerRef.current = window.setTimeout(() => {
-      router.push("/reflect")
+      router.push(REFLECT_ENTRY_HREF)
     }, HOME_ROUTE_DELAY_MS)
     tweenDive(1, HOME_DIVE_DURATION_MS)
   }, [dispatchHomeWaterRipple, phase, playSubmergeSound, router, tweenDive])
@@ -217,7 +218,7 @@ export default function HomeStillWaterHero() {
         <div className={styles.entryGroup}>
           <p className={styles.subcopy}>今天，你起了哪一念？</p>
 
-          <a href="/reflect" className={styles.door} data-no-ripple="true" onClick={enterReflect}>
+          <a href={REFLECT_ENTRY_HREF} className={styles.door} data-no-ripple="true" onClick={enterReflect}>
             <span className={styles.doorMain}>照见一念　→</span>
             <span className={styles.doorLine} aria-hidden="true" />
           </a>

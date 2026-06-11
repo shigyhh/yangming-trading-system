@@ -46,7 +46,7 @@ test("living mirror loop exposes ordered nodes and status function", async () =>
     "生成当天心镜报告",
     "真实交易复盘",
     "拍照持仓，结合历史 K 线回看交易场景与临场反应",
-    "心镜档案馆",
+    "心镜档案",
     "报告、心证、修行、复盘、复测，全部归档",
     "心镜长卷",
     "把每日证据连成成长叙事",

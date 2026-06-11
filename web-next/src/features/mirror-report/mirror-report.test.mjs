@@ -63,7 +63,7 @@ test("assessment result page renders and saves the mirror report", async () => {
     "/mirror-archive",
     "展开心镜长卷",
     "/mirror-scroll",
-    "进入今日一念",
+    "进入今日照见",
     "/assessment",
     "TODAY_ONE_THOUGHT_STORAGE_KEY",
     "todayOneThoughtSourceItems",

@@ -3,9 +3,9 @@
 import { usePathname } from "next/navigation"
 
 const appNavItems = [
-  { label: "照见", href: "/reflect" },
-  { label: "长卷", href: "/scroll" },
-  { label: "心湖", href: "/lake" },
+  { label: "今日照见", href: "/reflect" },
+  { label: "心镜长卷", href: "/scroll" },
+  { label: "众念心湖", href: "/lake" },
   { label: "我的", href: "/me" },
 ] as const
 
@@ -50,7 +50,7 @@ export function AppBottomNav() {
             key={item.href}
             href={item.href}
             aria-current={active ? "page" : undefined}
-            className={`flex min-h-10 items-center justify-center rounded-full text-[0.72rem] font-semibold tracking-[.18em] no-underline transition duration-500 ${
+            className={`flex min-h-10 items-center justify-center rounded-full text-[0.66rem] font-semibold tracking-[.06em] no-underline transition duration-500 ${
               active
                 ? "bg-[rgba(216,183,111,.12)] text-[rgba(216,183,111,.88)]"
                 : "text-[rgba(220,212,195,.48)] hover:bg-[rgba(217,189,122,.07)] hover:text-[rgba(244,235,221,.8)]"

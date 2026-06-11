@@ -111,14 +111,14 @@ test("home first viewport is a still-water seeing entrance", async () => {
   assert.ok(stillHero.includes("HOME_ROUTE_DELAY_MS = 2200"), "main one-thought entrance should delay routing until the descent has read visually")
   assert.ok(storySections.includes("enterReflectThroughWater"), "final one-thought entrance should use the same water route transition")
   assert.ok(storySections.includes("home-water-dive"), "final one-thought entrance should deepen the shared water before routing")
-  assert.ok(storySections.includes('router.push("/reflect")'), "final one-thought entrance should still enter through the reflect alias")
+  assert.ok(storySections.includes('REFLECT_ENTRY_HREF = "/assessment-entry"'), "final one-thought entrance should enter through the assessment-entry seal")
   assert.ok(storySections.includes('document.documentElement.setAttribute("data-home-route-transition", "active")'), "final one-thought entrance should mark the shared route transition")
   assert.ok(storySections.includes('document.documentElement.setAttribute("data-home-story-scrollbar", "quiet")'), "home story should quiet the native page scrollbar only while mounted")
   assert.ok(storySections.includes('document.documentElement.removeAttribute("data-home-story-scrollbar")'), "home story should restore the page scrollbar when unmounted")
   assert.ok(storySections.includes("HOME_ROUTE_DELAY_MS = 2200"), "final one-thought entrance should wait for the water descent")
   assert.ok(storySections.includes("relative z-20 min-h-[230svh]"), "three-breath story should sit above the compliance footer while pinned")
   assert.ok(storySections.includes('data-third-phase="closure"'), "third breath should keep the final doorway in its own closing phase")
-  assert.ok(storySections.includes("pb-8 md:pb-10"), "third breath final doorway should sit in the middle of the viewport instead of near the footer")
+  assert.ok(storySections.includes("pt-[12svh]"), "third breath final doorway should sit slightly below center with cleaner upper space")
   assert.equal(stillHero.includes("home-water-ripple-impact"), false, "hero text should stay still while water reacts around it")
   assert.ok(stillHero.includes('className={styles.zhaoMark}'), "hero should use a dedicated artistic 照 seal")
   assert.ok(stillHero.includes("YangmingA1Mark"), "hero seal should use the project brand art glyph")
@@ -132,7 +132,7 @@ test("home first viewport is a still-water seeing entrance", async () => {
   assert.ok(stillHero.includes("市场照见价格 · 心镜照见自己"), "hero should keep the soul line")
   assert.ok(stillHero.includes("今天，你起了哪一念？"), "hero should ask today's one-thought question")
   assert.ok(stillHero.includes("styles.entryGroup"), "one-thought question and doorway should stay bound as one visual group")
-  assert.ok(stillHero.includes('href="/reflect"'), "main threshold should enter /reflect")
+  assert.ok(stillHero.includes('REFLECT_ENTRY_HREF = "/assessment-entry"'), "main threshold should enter the assessment-entry seal")
   assert.equal(stillHero.includes('href="/review"'), false, "first viewport should not include a secondary review entrance")
   assert.ok(stillHero.includes("照见一念"), "main threshold should say 照见一念")
   assert.equal(stillHero.includes("今日入卷"), false, "main threshold should not keep an extra caption")
@@ -150,30 +150,21 @@ test("home first viewport is a still-water seeing entrance", async () => {
     "是下单前那一念，",
     "先替你做了主。",
     "照见不是预测。",
-    "下单前那一句话",
+    "下单前那一念",
     "照出来。",
     "比如：",
     "「再等等。」",
     "你等的不是机会。",
     "你等的是，",
     "一个不用认错的台阶。",
-    "执",
-    "今日修行：",
-    "不拿结果否定过程。",
     "照见一念",
-    "一念",
     "照回",
-    "心贼",
-    "九镜",
-    "心证",
-    "修行",
-    "落印",
     "今天，",
     "你起了哪一念？",
   ].forEach((copy) => {
     assert.ok(storySections.includes(copy), `three-breath story missing copy: ${copy}`)
   })
-  assert.ok(storySections.includes('href="/reflect"'), "third breath should return naturally to /reflect")
+  assert.ok(storySections.includes('href={REFLECT_ENTRY_HREF}'), "third breath should return naturally to the assessment-entry seal")
   assert.ok(storySections.includes("onMouseEnter={previewReflectRipple}"), "third-breath entrance should create a light water ripple on hover")
   assert.ok(storySections.includes("strength: 0.12"), "third-breath hover ripple should stay restrained")
   assert.ok(storySections.includes("data-breath-line"), "second breath should reveal lines one at a time")
@@ -187,8 +178,8 @@ test("home first viewport is a still-water seeing entrance", async () => {
   assert.ok(storySections.includes("data-third-opening"), "third breath should introduce seeing as non-prediction")
   assert.ok(storySections.includes("data-sample-thought"), "third breath should show one concrete thought sample")
   assert.ok(storySections.includes("data-sample-reflection=\"pain\""), "third breath should make the reflection pain point explicit")
-  assert.ok(storySections.includes("data-sample-close"), "third breath should close with thief and practice")
-  assert.ok(storySections.includes("data-method-chain"), "method chain should remain only as auxiliary small copy")
+  assert.equal(storySections.includes("data-sample-close"), false, "final third-breath screen should not keep the thief/practice aftertone")
+  assert.equal(storySections.includes("data-method-chain"), false, "final third-breath screen should not keep the method-chain ghost")
   assert.ok(storySections.includes("const activePhase"), "third breath should use one clear active phase instead of a static poster")
   assert.ok(storySections.includes("const previousPhase"), "third breath should push the previous phase back into mist")
   assert.ok(storySections.includes("const quietPhase"), "third breath should keep next phases hidden")
@@ -210,7 +201,7 @@ test("home first viewport is a still-water seeing entrance", async () => {
   assert.ok(storySections.includes("rgba(216,183,111,.035)"), "sample thought water mark should stay below card-like visibility")
   assert.ok(storySections.includes("text-[rgba(216,183,111,.42)]"), "sample marker should stay light")
   assert.ok(storySections.includes("opacity: 0.18"), "previous phases should stay faint when receding")
-  assert.ok(storySections.includes("rgba(220,212,195,.14)"), "auxiliary method chain should stay as a bottom imprint")
+  assert.ok(storySections.includes(".to(reflectionPhase, quietPhase, 15.05)"), "the reflection strike should fully dissolve before the final doorway")
   assert.ok(storySections.includes('filter: "blur(10px)"'), "leaving panels should soften into mist without making the story unreadable")
   assert.ok(storySections.includes("text-[rgba(238,243,238,.94)]"), "second-breath main copy should be bright enough to read at a glance")
   assert.ok(storySections.includes("relative flex min-h-[24rem]"), "second-breath key copy should be a readable four-line block, not overlapping hidden text")
@@ -219,7 +210,7 @@ test("home first viewport is a still-water seeing entrance", async () => {
   assert.ok(storySections.includes("7.25"), "second breath should hold its final line before fading out")
   assert.ok(storySections.includes("8.45"), "third breath should begin only after the second breath has completed")
   assert.ok(storySections.includes("finalCall"), "third-breath final entrance should be revealed as the last phase")
-  assert.ok(storySections.includes("mt-12"), "third-breath thief and practice should sit below the final doorway as a quiet aftertone")
+  assert.equal(storySections.includes("mt-12"), false, "third-breath final doorway should not have a lower aftertone block")
   assert.ok(storySections.includes('data-story-door="third"'), "third-breath final entrance should use a larger story-only doorway")
   assert.ok(stillHeroCss.includes('.door[data-story-door="third"] .doorMain'), "third-breath doorway sizing should not change the first-screen doorway")
   assert.ok(stillHeroCss.includes("font-size: clamp(34px, 3.6vw, 52px)"), "third-breath doorway should be large enough to read as an entrance")
@@ -289,6 +280,13 @@ test("home first viewport is a still-water seeing entrance", async () => {
   assert.ok(topNav.includes("home-account-chip"), "top nav should expose the quiet first-screen account chip")
   assert.ok(topNav.includes("home-account-panel"), "top nav should let the account chip open basic information")
   assert.ok(topNav.includes("setStorage(assessmentStorageKeys.userNickname"), "top nav account panel should let the user update a nickname")
+  assert.ok(topNav.includes("退出照心账户"), "top nav account panel should let developers and users return to the new-user flow")
+  assert.ok(topNav.includes("removeStorage(assessmentStorageKeys.userPhone)"), "signing out should clear the saved phone")
+  assert.ok(topNav.includes("removeStorage(assessmentStorageKeys.phoneTail)"), "signing out should clear the phone tail shown in the nav")
+  assert.ok(topNav.includes("window.localStorage.removeItem(STORAGE_KEYS.homeIntroSeen)"), "signing out should clear the home intro visitor flag")
+  assert.ok(topNav.includes("window.localStorage.removeItem(STORAGE_KEYS.firstReflectEntered)"), "signing out should clear the reflect visitor flag")
+  assert.equal(topNav.includes("clearVisitorStateForDevOnly"), false, "signing out should not wipe archived one-thought records")
+  assert.equal(topNav.includes("STORAGE_KEYS.insightRecords"), false, "signing out should not delete sealed archive records")
   assert.ok(topNav.includes("window.scrollY"), "top nav should fade according to real page scroll")
   assert.ok(topNav.includes("viewportHeight * 0.5"), "top nav should fully hide after about half a viewport")
   assert.ok(topNav.includes("scrollFade > 0.08"), "top nav should disable pointer events once it has faded away")
@@ -311,20 +309,24 @@ test("home first viewport is a still-water seeing entrance", async () => {
     assert.equal(stillHero.includes(forbiddenMarketToken), false, `hero should not include readable market info: ${forbiddenMarketToken}`)
   })
 
-  ;["/lake", "/review", "/me/archive"].forEach((href) => {
+  ;["/today-sealed", "/lake", "/review", "/me/archive"].forEach((href) => {
     assert.ok(topNav.includes(`href: "${href}"`), `home nav missing route: ${href}`)
   })
   assert.equal(topNav.includes("one-thought-bottom-nav"), false, "home top nav should not include the app bottom nav")
-  assert.ok(topNav.includes('href="/reflect"'), "home nav start button should use /reflect")
+  assert.equal(topNav.includes("<FlowButton"), false, "home nav should not keep a duplicate top-right one-thought entrance")
+  assert.equal(topNav.includes("照见一念"), false, "home nav should leave 照见一念 to the main hero doorway")
+  assert.ok(topNav.includes("今日所照"), "home top nav should expose today's sealed-record status page")
+  assert.equal(topNav.includes('{ label: "今日照见", href: "/reflect" }'), false, "home top nav should not duplicate the private start flow")
   assert.ok(layout.includes("<AppBottomNav />"), "app layout should mount bottom navigation outside the home-only top nav")
-  ;["照见", "长卷", "心湖", "我的", 'href: "/reflect"', 'href: "/scroll"', 'href: "/lake"', 'href: "/me"'].forEach((copy) => {
+  ;["今日照见", "心镜长卷", "众念心湖", "我的", 'href: "/reflect"', 'href: "/scroll"', 'href: "/lake"', 'href: "/me"'].forEach((copy) => {
     assert.ok(appBottomNav.includes(copy), `app bottom nav missing: ${copy}`)
   })
   assert.ok(appBottomNav.includes("shouldShowBottomNav"), "bottom nav should be route-scoped instead of shown on the home page")
-  assert.match(reflectAlias, /redirect\("\/assessment-entry"\)/)
-  assert.match(reviewAlias, /redirect\("\/trade-review"\)/)
-  assert.match(lakeAlias, /redirect\("\/one-thought-lake"\)/)
+  assert.match(reflectAlias, /getTodayInsightRecord/)
+  assert.match(reviewAlias, /ReviewPageContent/)
+  assert.match(reviewAlias, /createTradeReview/)
+  assert.match(lakeAlias, /<OneThoughtLakePage \/>/)
   assert.match(scrollAlias, /redirect\("\/mirror-scroll"\)/)
   assert.match(meAlias, /redirect\("\/me\/archive"\)/)
-  assert.match(meArchiveAlias, /redirect\("\/mirror-archive"\)/)
+  assert.match(meArchiveAlias, /redirect\("\/mind-archive"\)/)
 })

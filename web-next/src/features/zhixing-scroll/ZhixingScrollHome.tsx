@@ -144,7 +144,7 @@ function EntryGateHero({
   onStart: () => void
 }) {
   return (
-    <section className="zhixing-hero" aria-label="知行心卷首屏">
+    <section className="zhixing-hero" aria-label="心镜长卷首屏">
       <motion.div
         className="zhixing-hero__content"
         initial={{ opacity: 0, y: 22 }}
@@ -154,12 +154,12 @@ function EntryGateHero({
         <div className="zhixing-heartfire" aria-hidden="true" />
         <h1>交易前，先展开一卷。</h1>
         <p>市场未动，心已先动。<br />一念不照，万法皆乱。</p>
-        <div className="zhixing-hero__actions" aria-label="知行心卷入口">
+        <div className="zhixing-hero__actions" aria-label="心镜长卷入口">
           <button className="zhixing-start" type="button" onClick={onStart} disabled={entryStage === "entering"}>
             开始今日一卷
           </button>
           <button className="zhixing-quiet-action" type="button" onClick={onStart} disabled={entryStage === "entering"}>
-            90 秒看懂知行心卷
+            90 秒看懂心镜长卷
           </button>
           <button className="zhixing-quiet-action zhixing-quiet-action--urgent" type="button" onClick={onStart} disabled={entryStage === "entering"}>
             临盘心乱，先急救
@@ -195,7 +195,7 @@ function ScrollNarrativeContainer({
   stageRef: RefObject<HTMLElement | null>
 }) {
   return (
-    <section ref={stageRef} className="zhixing-stage" aria-label="今日知行心卷">
+    <section ref={stageRef} className="zhixing-stage" aria-label="今日心镜长卷">
       {children}
     </section>
   )
@@ -399,7 +399,7 @@ function PerspectiveScrollNarrative({
       </div>
       <DepthScrollStage>
         <div className="depth-stage-kicker">
-          <p>今日知行心卷 · {scroll.date}</p>
+          <p>今日心镜长卷 · {scroll.date}</p>
           <span>{progressLabel}。沿心路入卷，只照今日一念。</span>
         </div>
         <div className="depth-node-layer">

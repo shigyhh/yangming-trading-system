@@ -1,6 +1,15 @@
 "use client"
 
-import { type CSSProperties, type PointerEvent as ReactPointerEvent, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import {
+  type CSSProperties,
+  type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 
 import {
   getSceneDrivenMirror,
@@ -11,13 +20,14 @@ import insightMirrors from "@/data/insight-engine/mirrors.json"
 import {
   confirmTodayOneThought,
   createOneThoughtRecord,
-  createTodayOneThoughtSnapshot,
   drawTodayOneThought,
+  loadOneThoughtRecords,
   readOrCreateTodayOneThought,
   saveOneThoughtRecord,
   todayOneThoughtSourceItems,
   type TodayOneThoughtSnapshot,
 } from "@/data/insight-engine/today-one-thought"
+import { markHomeIntroSeen, markReflectEntered } from "@/lib/user-flow/visitor-state"
 import scene01Insight from "@/data/insight-engine/scenes/scene-01-chase-surge.json"
 import scene02Insight from "@/data/insight-engine/scenes/scene-02-missed.json"
 import scene03Insight from "@/data/insight-engine/scenes/scene-03-small-position.json"
@@ -54,9 +64,19 @@ import scene33Insight from "@/data/insight-engine/scenes/scene-33-stock-hopping.
 import scene34Insight from "@/data/insight-engine/scenes/scene-34-news-trading.json"
 import scene35Insight from "@/data/insight-engine/scenes/scene-35-fear-holding.json"
 import scene36Insight from "@/data/insight-engine/scenes/scene-36-fear-of-being-wrong.json"
-import { assessmentStorageKeys, getStorage } from "@/features/assessment/storage"
+import { isMainlandPhone, sendSmsCode, verifySmsCode } from "@/features/assessment/mock-sms"
+import { assessmentStorageKeys, getStorage, hasSavedPhone, setStorage } from "@/features/assessment/storage"
 import { buildDailyGrowthHeartProof } from "@/features/heart-proof/heartProofEngine"
 import { getNextHeartProofSequenceNumber, saveHeartProof } from "@/features/heart-proof/heartProofStorage"
+import { createReflectionKey, getReflection } from "@/lib/reflections/reflectionService"
+import { createOneThoughtEvent } from "@/lib/mind-archive/oneThoughtEventRepository"
+import {
+  DEFAULT_MIND_ARCHIVE_USER_ID,
+  ONE_THOUGHT_RITUAL_NAME,
+  ONE_THOUGHT_RITUAL_VERSION,
+  PRIVATE_REFLECTION_VERSION,
+  type OneThoughtReaction,
+} from "@/lib/mind-archive/types"
 
 import type { LakeMode } from "./HeartLakeEngine"
 
@@ -93,6 +113,7 @@ type TradingIntensity = 1 | 2 | 3 | 4 | 5
 
 type InsightThoughtEntry = {
   id: string
+  sceneId: string
   mirrorId: string
   mirrorName: string
   scene: string
@@ -102,6 +123,7 @@ type InsightThoughtEntry = {
   text: string
   tradeMoment: string
   reflection: string
+  reflectionFinal: string
   thief: string
   thiefExplain: string[]
   evidence: string
@@ -138,7 +160,6 @@ type InsightMirrorEntry = {
 }
 
 type ZhaoxinRitualFlowProps = {
-  onEnterCycle?: () => void
   onLakeModeChange?: (mode: LakeMode) => void
   onRipple?: () => void
   initialScene?: TradingScene
@@ -319,23 +340,29 @@ function mirrorNameForId(mirrorId: string) {
 }
 
 const insightThoughtLibrary: InsightThoughtEntry[] = insightSceneLibrary.flatMap((scene) =>
-  scene.items.map((item, index) => ({
-    id: item.id,
-    mirrorId: scene.mirrorId,
-    mirrorName: mirrorNameForId(scene.mirrorId),
-    scene: sceneKeyForInsightScene(scene.sceneId),
-    sceneName: scene.sceneName,
-    sourceScene: item.tradeMoment,
-    intensity: item.intensity,
-    text: item.os,
-    tradeMoment: item.tradeMoment,
-    reflection: item.reflection,
-    thief: scene.thief,
-    thiefExplain: scene.thiefExplain,
-    evidence: scene.evidences[index % scene.evidences.length] ?? scene.evidences[0] ?? "",
-    practice: scene.practices[index % scene.practices.length] ?? scene.practices[0] ?? "",
-    coreStatement: scene.coreStatement,
-  })),
+  scene.items.map((item, index) => {
+    const reflectionFinal = getReflection(scene.sceneId, item.id)?.reflectionFinal ?? item.reflection
+
+    return {
+      id: item.id,
+      sceneId: scene.sceneId,
+      mirrorId: scene.mirrorId,
+      mirrorName: mirrorNameForId(scene.mirrorId),
+      scene: sceneKeyForInsightScene(scene.sceneId),
+      sceneName: scene.sceneName,
+      sourceScene: item.tradeMoment,
+      intensity: item.intensity,
+      text: item.os,
+      tradeMoment: item.tradeMoment,
+      reflection: reflectionFinal,
+      reflectionFinal,
+      thief: scene.thief,
+      thiefExplain: scene.thiefExplain,
+      evidence: scene.evidences[index % scene.evidences.length] ?? scene.evidences[0] ?? "",
+      practice: scene.practices[index % scene.practices.length] ?? scene.practices[0] ?? "",
+      coreStatement: scene.coreStatement,
+    }
+  }),
 )
 
 const fallbackThoughtEntry = insightThoughtLibrary[0] as InsightThoughtEntry
@@ -429,8 +456,8 @@ const stageText: Record<Stage, StageCopy> = {
     sub: "",
   },
   growth: {
-    title: "今日照见总结",
-    sub: "这一念，已生成今日心证，正在显出当天心镜报告。",
+    title: "今日照见已落印",
+    sub: "",
   },
 }
 
@@ -809,8 +836,14 @@ const allowTodayOneThoughtPreviewLimitBypass = process.env.NODE_ENV !== "product
 const LIANGZHI_HOLD_DURATION = 1900
 const STILL_SEAL_SETTLE_DELAY_MS = 4600
 
+const oneThoughtReactionOptions: Array<{ value: OneThoughtReaction; label: string }> = [
+  { value: "seen", label: "照见了" },
+  { value: "not_hit", label: "没照到" },
+  { value: "stopped", label: "愿止一念" },
+  { value: "still_moving", label: "心还在动" },
+]
+
 export default function ZhaoxinRitualFlow({
-  onEnterCycle,
   onLakeModeChange,
   onRipple,
   initialScene,
@@ -820,7 +853,7 @@ export default function ZhaoxinRitualFlow({
   const [selectedScene, setSelectedScene] = useState<TradingScene>(initialScene ?? "surge")
   const [selectedIntensity, setSelectedIntensity] = useState<TradingIntensity>(initialIntensity ?? 3)
   const [todayOneThought, setTodayOneThought] = useState<TodayOneThoughtSnapshot>(() =>
-    createTodayOneThoughtSnapshot(),
+    readOrCreateTodayOneThought(),
   )
   const [isSceneAbsorbing, setIsSceneAbsorbing] = useState(false)
   const [isMirrorAbsorbing, setIsMirrorAbsorbing] = useState(false)
@@ -831,6 +864,16 @@ export default function ZhaoxinRitualFlow({
   const [isRevealPaused, setIsRevealPaused] = useState(false)
   const [isHoldingLiangzhi, setIsHoldingLiangzhi] = useState(false)
   const [isLiangzhiReturning, setIsLiangzhiReturning] = useState(false)
+  const [selectedReaction, setSelectedReaction] = useState<OneThoughtReaction | null>(null)
+  const [showArchiveLoginPrompt, setShowArchiveLoginPrompt] = useState(false)
+  const [archiveLoginPhone, setArchiveLoginPhone] = useState("")
+  const [archiveLoginCode, setArchiveLoginCode] = useState("")
+  const [archiveLoginCountdown, setArchiveLoginCountdown] = useState(0)
+  const [archiveLoginMessage, setArchiveLoginMessage] = useState("")
+  const [isSendingArchiveCode, setIsSendingArchiveCode] = useState(false)
+  const [isBindingArchivePhone, setIsBindingArchivePhone] = useState(false)
+  const [pendingArchiveHref, setPendingArchiveHref] = useState("")
+  const [sealedOneThoughtRecordId, setSealedOneThoughtRecordId] = useState("")
   const [heartProofSequenceNumber, setHeartProofSequenceNumber] = useState(1)
   const rootRef = useRef<HTMLElement | null>(null)
   const absorbTimerRef = useRef<number | null>(null)
@@ -851,6 +894,7 @@ export default function ZhaoxinRitualFlow({
   const selectedThought = useMemo(
     () => ({
       id: currentThoughtEntry.id,
+      sceneId: currentThoughtEntry.sceneId,
       mirrorId: todayOneThought.mirrorId,
       mirrorName: currentThoughtEntry.mirrorName,
       sceneKey: normalizeTradingScene(currentThoughtEntry.scene),
@@ -859,7 +903,8 @@ export default function ZhaoxinRitualFlow({
       intensity: normalizeTradingIntensity(currentThoughtEntry.intensity),
       text: todayOneThought.os,
       tradeMoment: todayOneThought.tradeMoment,
-      reflection: todayOneThought.reflection,
+      reflection: todayOneThought.reflectionFinal || todayOneThought.reflection,
+      reflectionFinal: todayOneThought.reflectionFinal || todayOneThought.reflection,
       thief: todayOneThought.thief,
       thiefExplain: currentThoughtEntry.thiefExplain,
       evidence: todayOneThought.evidence,
@@ -876,8 +921,8 @@ export default function ZhaoxinRitualFlow({
       sceneLabel: selectedThought.tradeMoment,
       intensity: selectedIntensity,
       reflection: {
-        text: selectedThought.reflection,
-        lines: splitInsightText(selectedThought.reflection),
+        text: selectedThought.reflectionFinal,
+        lines: splitInsightText(selectedThought.reflectionFinal),
       },
       evidence: {
         text: selectedThought.evidence,
@@ -904,6 +949,8 @@ export default function ZhaoxinRitualFlow({
   const shouldBlockTodayOneThoughtConfirmation = isTodayOneThoughtLimitReached && !allowTodayOneThoughtPreviewLimitBypass
   const growthEvidenceLine = compactRitualLine(selectedInsight.evidence)
   const growthPracticeLine = compactRitualLine(selectedInsight.practice)
+  const archiveLoginPhoneValid = isMainlandPhone(archiveLoginPhone)
+  const archiveLoginCodeValid = /^\d{4,6}$/.test(archiveLoginCode)
   const rememberFloatingThought = useCallback((thoughtId: string) => {
     const nextThoughtIds = [
       ...floatingThoughtIdsRef.current.filter((item) => item !== thoughtId),
@@ -925,11 +972,18 @@ export default function ZhaoxinRitualFlow({
   }, [initialScene, onLakeModeChange])
 
   useEffect(() => {
-    const nextThought = readOrCreateTodayOneThought()
+    if (archiveLoginCountdown <= 0) return
 
-    rememberFloatingThought(nextThought.thoughtId)
-    setTodayOneThought(nextThought)
-  }, [rememberFloatingThought])
+    const timer = window.setTimeout(() => {
+      setArchiveLoginCountdown((current) => current - 1)
+    }, 1000)
+
+    return () => window.clearTimeout(timer)
+  }, [archiveLoginCountdown])
+
+  useEffect(() => {
+    rememberFloatingThought(todayOneThought.thoughtId)
+  }, [rememberFloatingThought, todayOneThought.thoughtId])
 
   useEffect(() => {
     if (stage !== "thought" || isMirrorAbsorbing || shouldBlockTodayOneThoughtConfirmation) return undefined
@@ -974,7 +1028,7 @@ export default function ZhaoxinRitualFlow({
   useEffect(() => {
     let timer: number | null = null
 
-    if (stage === "seal") {
+    if (stage === "seal" && selectedReaction) {
       timer = window.setTimeout(() => {
         const nextSequenceNumber = getNextHeartProofSequenceNumber()
         const savedReport = getStorage<{
@@ -1007,38 +1061,82 @@ export default function ZhaoxinRitualFlow({
           createdAt: completedAt,
         })
 
+        const oneThoughtRecordId = `one_thought_${sourceId}`
+        const finalReflectionEntry = getReflection(selectedThought.sceneId, selectedThought.id)
+        if (!finalReflectionEntry) return
+
         saveHeartProof(heartProof)
         saveOneThoughtRecord(createOneThoughtRecord(todayOneThought, {
-          recordId: `one_thought_${sourceId}`,
+          recordId: oneThoughtRecordId,
           date: todayOneThought.dateKey,
           completed: true,
           sealedAt: completedAt,
+          syncStatus: hasSavedPhone() ? "synced" : "local_only",
         }))
+        createOneThoughtEvent({
+          id: `one_thought_event_${sourceId}`,
+          userId: DEFAULT_MIND_ARCHIVE_USER_ID,
+          sceneId: selectedThought.sceneId,
+          itemId: selectedThought.id,
+          key: createReflectionKey(selectedThought.sceneId, selectedThought.id),
+          tradeMoment: selectedThought.tradeMoment,
+          os: selectedThought.text,
+          reflectionFinal: finalReflectionEntry.reflectionFinal,
+          finalSource: finalReflectionEntry.finalSource || PRIVATE_REFLECTION_VERSION,
+          painLevel: normalizeTradingIntensity(selectedThought.intensity),
+          painPoint: finalReflectionEntry.painPoint || selectedInsight.evidence,
+          heartThief: selectedInsight.thief,
+          heartEvidence: selectedInsight.evidence,
+          practiceText: selectedInsight.practice,
+          reflectionVersion: PRIVATE_REFLECTION_VERSION,
+          ritualName: ONE_THOUGHT_RITUAL_NAME,
+          ritualVersion: ONE_THOUGHT_RITUAL_VERSION,
+          ritualStatus: "sealed",
+          sealStage: {
+            startedAt: completedAt,
+            zhaoziStartedAt: completedAt,
+            zhaojianThisHeartAt: completedAt,
+            zhaojianThisThoughtAt: completedAt,
+            reflectionShownAt: completedAt,
+            reflectionSeenAt: completedAt,
+            heartThiefShownAt: completedAt,
+            heartEvidenceShownAt: completedAt,
+            practiceShownAt: completedAt,
+            sealedAt: completedAt,
+          },
+          reflectionShownAt: completedAt,
+          reflectionSeen: true,
+          reflectionSeenAt: completedAt,
+          userReaction: selectedReaction,
+          userReactionAt: completedAt,
+          actualAction: "unknown",
+          reviewStatus: "none",
+          source: "one_thought_ritual",
+          createdAt: completedAt,
+          updatedAt: completedAt,
+        })
+        markHomeIntroSeen()
+        markReflectEntered()
         setHeartProofSequenceNumber(nextSequenceNumber)
+        setSealedOneThoughtRecordId(oneThoughtRecordId)
         setStage("growth")
         setRevealStep("idle")
         onLakeModeChange?.(modeForStage("growth"))
       }, STILL_SEAL_SETTLE_DELAY_MS)
     }
 
-    if (stage === "growth") {
-      timer = window.setTimeout(() => {
-        onEnterCycle?.()
-      }, 6400)
-    }
-
     return () => {
       if (timer) window.clearTimeout(timer)
     }
   }, [
-    onEnterCycle,
     onLakeModeChange,
-    selectedContent.evidence,
-    selectedContent.practice,
+    selectedInsight.evidence,
+    selectedInsight.practice,
     selectedInsight.thief,
     selectedMirrorId,
     selectedScene,
     selectedThought,
+    selectedReaction,
     stage,
     todayOneThought,
   ])
@@ -1262,6 +1360,7 @@ export default function ZhaoxinRitualFlow({
     setPreviewMirrorId(mirror.key)
     setMirrorsCanInteract(false)
     setIsRevealPaused(false)
+    setSelectedReaction(null)
     setRevealStep("idle")
     onRipple?.()
     onLakeModeChange?.(mirror.lakeMode)
@@ -1315,6 +1414,7 @@ export default function ZhaoxinRitualFlow({
 
   const completeLiangzhiHold = () => {
     if (stage !== "liangzhi") return
+    if (!selectedReaction) return
     if (liangzhiHoldTimerRef.current) {
       window.clearTimeout(liangzhiHoldTimerRef.current)
     }
@@ -1327,6 +1427,100 @@ export default function ZhaoxinRitualFlow({
     setStage("seal")
     onRipple?.()
     onLakeModeChange?.("still")
+  }
+
+  const markCurrentInsightSyncStatus = (syncStatus: "local_only" | "synced") => {
+    const targetRecordId = sealedOneThoughtRecordId
+    if (!targetRecordId) return
+
+    const currentRecord = loadOneThoughtRecords().find((record) => record.recordId === targetRecordId)
+    if (!currentRecord) return
+
+    saveOneThoughtRecord({
+      ...currentRecord,
+      syncStatus,
+    })
+  }
+
+  const navigateToArchiveTarget = (href: string) => {
+    if (!href || typeof window === "undefined") return
+    window.location.href = href
+  }
+
+  const requestArchiveLogin = (targetHref: string) => {
+    setPendingArchiveHref(targetHref)
+    setArchiveLoginMessage("")
+    setShowArchiveLoginPrompt(true)
+  }
+
+  const handleArchiveNavigation = (event: ReactMouseEvent<HTMLAnchorElement>, targetHref: string) => {
+    if (stage !== "growth") return
+
+    if (hasSavedPhone()) {
+      markCurrentInsightSyncStatus("synced")
+      return
+    }
+
+    event.preventDefault()
+    requestArchiveLogin(targetHref)
+  }
+
+  const sendArchiveLoginCode = async () => {
+    setArchiveLoginMessage("")
+    if (!archiveLoginPhoneValid) {
+      setArchiveLoginMessage("手机号格式不正确。")
+      return
+    }
+
+    setIsSendingArchiveCode(true)
+
+    try {
+      await sendSmsCode(archiveLoginPhone)
+      setArchiveLoginCountdown(60)
+      setArchiveLoginMessage("验证码已送达。")
+    } catch (error) {
+      setArchiveLoginMessage(error instanceof Error ? error.message : "请稍后再试。")
+    } finally {
+      setIsSendingArchiveCode(false)
+    }
+  }
+
+  const bindArchivePhoneAndArchive = async () => {
+    setArchiveLoginMessage("")
+    if (!archiveLoginPhoneValid) {
+      setArchiveLoginMessage("手机号格式不正确。")
+      return
+    }
+    if (!archiveLoginCodeValid) {
+      setArchiveLoginMessage("验证码不正确。")
+      return
+    }
+
+    setIsBindingArchivePhone(true)
+
+    try {
+      await verifySmsCode(archiveLoginPhone, archiveLoginCode)
+      setStorage(assessmentStorageKeys.userPhone, archiveLoginPhone)
+      setStorage(assessmentStorageKeys.phoneTail, archiveLoginPhone.slice(-4))
+      setStorage(assessmentStorageKeys.userCreatedAt, new Date().toISOString())
+      markCurrentInsightSyncStatus("synced")
+      setArchiveLoginMessage("绑定成功，正在归档。")
+      setShowArchiveLoginPrompt(false)
+      navigateToArchiveTarget(pendingArchiveHref)
+      setPendingArchiveHref("")
+    } catch (error) {
+      setArchiveLoginMessage(error instanceof Error ? error.message : "请稍后再试。")
+    } finally {
+      setIsBindingArchivePhone(false)
+    }
+  }
+
+  const keepArchiveLocalOnly = () => {
+    markCurrentInsightSyncStatus("local_only")
+    setArchiveLoginMessage("本次已保存在本机。")
+    setShowArchiveLoginPrompt(false)
+    navigateToArchiveTarget(pendingArchiveHref)
+    setPendingArchiveHref("")
   }
 
   const updateLiangzhiHoldProgress = (timestamp: number) => {
@@ -1346,7 +1540,9 @@ export default function ZhaoxinRitualFlow({
 
   const startLiangzhiHold = (event: ReactPointerEvent<HTMLButtonElement>) => {
     if (stage !== "liangzhi") return
+    if (!selectedReaction) return
     event.preventDefault()
+
     event.currentTarget.setPointerCapture?.(event.pointerId)
     if (liangzhiReturnTimerRef.current) {
       window.clearTimeout(liangzhiReturnTimerRef.current)
@@ -1436,7 +1632,7 @@ export default function ZhaoxinRitualFlow({
       } ${
         isMirrorAbsorbing ? "is-focusing" : ""
       } ${initialScene ? "is-direct-thought" : ""}`}
-      aria-label="照心九镜仪式"
+      aria-label="照见一念仪轨"
     >
       <div className="zhaoxin-vignette" aria-hidden="true" />
       {stage === "liangzhi" ? <div className="liangzhi-hold-glow" aria-hidden="true" /> : null}
@@ -1475,6 +1671,19 @@ export default function ZhaoxinRitualFlow({
                 <span />
                 <span />
               </div>
+              <div className="one-thought-reactions" aria-label="落印前反馈">
+                {oneThoughtReactionOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    className={selectedReaction === option.value ? "is-selected" : ""}
+                    onClick={() => setSelectedReaction(option.value)}
+                    aria-pressed={selectedReaction === option.value}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
               <button
                 type="button"
                 className={`liangzhi-title-action ${isHoldingLiangzhi ? "is-holding" : ""}`}
@@ -1482,9 +1691,11 @@ export default function ZhaoxinRitualFlow({
                 onPointerUp={clearLiangzhiHold}
                 onPointerLeave={clearLiangzhiHold}
                 onPointerCancel={clearLiangzhiHold}
-                aria-label="长按我已照见，愿照此修行"
+                disabled={!selectedReaction}
+                aria-disabled={!selectedReaction}
+                aria-label="长按落印入档"
               >
-                <span>我已照见，愿照此修行</span>
+                <span>{selectedReaction ? "落印入档" : "先照见此念"}</span>
               </button>
             </div>
           ) : stage === "seal" ? (
@@ -1498,16 +1709,24 @@ export default function ZhaoxinRitualFlow({
           )}
           {displaySub ? <p>{displaySub}</p> : null}
           {stage === "growth" ? (
-            <div className="growth-proof" aria-label="今日照见总结生成摘要">
+            <div className="growth-proof" aria-label="今日照见已落印心证卷">
               <p className="growth-proof-sequence">照见第{heartProofSequenceNumber}念</p>
               <div className="growth-proof-ledger">
                 <div className="growth-proof-row">
-                  <span>本次照见</span>
-                  <strong>{selectedInsight.mirrorName}</strong>
+                  <span>本次一念</span>
+                  <strong>「{selectedThought.text}」</strong>
                 </div>
                 <div className="growth-proof-row">
                   <span>起念场景</span>
                   <strong>{selectedThought.tradeMoment}</strong>
+                </div>
+                <div className="growth-proof-row">
+                  <span>照回</span>
+                  <strong>{compactRitualLine(selectedInsight.reflection.join(" "))}</strong>
+                </div>
+                <div className="growth-proof-row">
+                  <span>镜中显影</span>
+                  <strong>{selectedInsight.mirrorName}</strong>
                 </div>
                 <div className="growth-proof-row">
                   <span>今日心证</span>
@@ -1518,8 +1737,16 @@ export default function ZhaoxinRitualFlow({
                   <strong>{growthPracticeLine}</strong>
                 </div>
               </div>
-              <a className="growth-lake-link" href="/one-thought-lake">
-                去心湖看看，多少人也有这一念
+              <div className="growth-archive-actions" aria-label="心证归档入口">
+                <a className="growth-archive-door" href="/mirror-scroll" onClick={(event) => handleArchiveNavigation(event, "/mirror-scroll")}>
+                  沉入长卷
+                </a>
+                <a className="growth-archive-link" href="/mirror-archive" onClick={(event) => handleArchiveNavigation(event, "/mirror-archive")}>
+                  查看档案
+                </a>
+              </div>
+              <a className="growth-lake-link" href="/lake">
+                去众念心湖看看，多少人也有这一念
               </a>
             </div>
           ) : null}
@@ -1603,6 +1830,65 @@ export default function ZhaoxinRitualFlow({
               <a href="/living-mirror-growth">进入成长谱</a>
             </div>
           )}
+        </div>
+      ) : null}
+
+      {showArchiveLoginPrompt ? (
+        <div className="archive-login-layer" role="dialog" aria-modal="true" aria-label="心证归档手机号绑定">
+          <div className="archive-login-panel">
+            <p className="archive-login-eyebrow">归档前</p>
+            <h2>
+              把这枚心证，
+              <br />
+              存入你的档案。
+            </h2>
+            <p className="archive-login-copy">绑定手机号后，可跨设备查看心镜档案、长卷与复测。手机号不会公开展示。</p>
+
+            <div className="archive-login-form">
+              <label>
+                <span>手机号</span>
+                <input
+                  value={archiveLoginPhone}
+                  onChange={(event) => setArchiveLoginPhone(event.target.value.replace(/\D/g, "").slice(0, 11))}
+                  inputMode="tel"
+                  autoComplete="tel"
+                  placeholder="填写手机号"
+                />
+              </label>
+
+              <div className="archive-login-code-row">
+                <label>
+                  <span>验证码</span>
+                  <input
+                    value={archiveLoginCode}
+                    onChange={(event) => setArchiveLoginCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    placeholder="4-6 位"
+                  />
+                </label>
+                <button type="button" onClick={sendArchiveLoginCode} disabled={!archiveLoginPhoneValid || isSendingArchiveCode || archiveLoginCountdown > 0}>
+                  {isSendingArchiveCode ? "发送中..." : archiveLoginCountdown > 0 ? `重新获取 ${archiveLoginCountdown}s` : "获取验证码"}
+                </button>
+              </div>
+            </div>
+
+            {archiveLoginMessage ? <p className="archive-login-message">{archiveLoginMessage}</p> : null}
+
+            <div className="archive-login-actions">
+              <button
+                type="button"
+                className="archive-login-primary"
+                onClick={bindArchivePhoneAndArchive}
+                disabled={!archiveLoginPhoneValid || !archiveLoginCodeValid || isBindingArchivePhone}
+              >
+                {isBindingArchivePhone ? "归档中..." : "绑定并归档"}
+              </button>
+              <button type="button" className="archive-login-secondary" onClick={keepArchiveLocalOnly}>
+                本次仅本机保存
+              </button>
+            </div>
+          </div>
         </div>
       ) : null}
 
@@ -1807,30 +2093,31 @@ export default function ZhaoxinRitualFlow({
         }
 
         .zhaoxin-copy.is-growth {
-          top: clamp(7.2rem, 21svh, 12.4rem);
-          width: min(52rem, calc(100vw - 2rem));
+          top: clamp(5.4rem, 16svh, 9.4rem);
+          width: min(58rem, calc(100vw - 2rem));
         }
 
         .zhaoxin-copy.is-growth h1 {
-          color: rgba(232, 228, 210, 0.94);
-          font-size: clamp(2.2rem, 4.6vw, 4.6rem);
-          line-height: 1.22;
-          letter-spacing: 0.13em;
+          color: rgba(238, 232, 214, 0.96);
+          font-size: clamp(3rem, 6.8vw, 7.1rem);
+          line-height: 1.08;
+          letter-spacing: 0.11em;
           text-shadow:
-            0 0 34px rgba(216, 183, 111, 0.1),
-            0 24px 72px rgba(0, 0, 0, 0.78);
+            0 0 40px rgba(216, 183, 111, 0.08),
+            0 28px 90px rgba(0, 0, 0, 0.86);
         }
 
         .growth-proof {
+          position: relative;
           display: grid;
-          gap: clamp(0.7rem, 1.5svh, 1rem);
-          width: min(44rem, 100%);
-          margin: clamp(1.35rem, 3.2svh, 2.15rem) auto 0;
-          color: rgba(220, 212, 195, 0.54);
+          gap: clamp(0.62rem, 1.35svh, 0.9rem);
+          width: min(48rem, 100%);
+          margin: clamp(2.1rem, 4svh, 3rem) auto 0;
+          color: rgba(220, 212, 195, 0.58);
           font-family: var(--font-serif, "Songti SC", serif);
-          font-size: clamp(0.78rem, 1.22vw, 1rem);
+          font-size: clamp(0.8rem, 1.08vw, 0.94rem);
           font-weight: 400;
-          line-height: 1.8;
+          line-height: 1.72;
           letter-spacing: 0.08em;
           text-align: left;
           text-shadow:
@@ -1838,21 +2125,39 @@ export default function ZhaoxinRitualFlow({
             0 16px 44px rgba(0, 0, 0, 0.78);
         }
 
+        .growth-proof::before {
+          content: "";
+          position: absolute;
+          left: 50%;
+          top: 43%;
+          z-index: -1;
+          width: min(68rem, 118vw);
+          height: clamp(16rem, 34svh, 27rem);
+          transform: translate(-50%, -50%);
+          border-radius: 50%;
+          background:
+            radial-gradient(ellipse at center, rgba(30, 58, 58, 0.18), rgba(10, 28, 30, 0.08) 48%, transparent 74%),
+            radial-gradient(ellipse at center, rgba(216, 183, 111, 0.05), transparent 64%);
+          filter: blur(18px);
+          opacity: 0.72;
+          pointer-events: none;
+        }
+
         .growth-proof-ledger {
           display: grid;
-          width: min(40rem, 100%);
+          width: min(43rem, 100%);
           margin: 0 auto;
-          border-top: 1px solid rgba(216, 183, 111, 0.12);
-          border-bottom: 1px solid rgba(216, 183, 111, 0.12);
+          border-top: 1px solid rgba(216, 183, 111, 0.16);
+          border-bottom: 1px solid rgba(216, 183, 111, 0.14);
         }
 
         .growth-proof-row {
           display: grid;
-          grid-template-columns: minmax(5.6rem, 7.2rem) minmax(0, 1fr);
-          gap: clamp(0.9rem, 2vw, 1.5rem);
+          grid-template-columns: minmax(6.2rem, 8.2rem) minmax(0, 1fr);
+          gap: clamp(1.1rem, 2.5vw, 2.2rem);
           align-items: baseline;
-          padding: 0.54rem 0;
-          border-bottom: 1px solid rgba(216, 183, 111, 0.07);
+          padding: clamp(0.48rem, 1svh, 0.72rem) 0;
+          border-bottom: 1px solid rgba(216, 183, 111, 0.085);
         }
 
         .growth-proof-row:last-child {
@@ -1860,26 +2165,28 @@ export default function ZhaoxinRitualFlow({
         }
 
         .growth-proof-row span {
-          color: rgba(216, 183, 111, 0.62);
+          color: rgba(216, 183, 111, 0.66);
           font-weight: 400;
-          letter-spacing: 0.2em;
+          letter-spacing: 0.22em;
           white-space: nowrap;
         }
 
         .growth-proof-row strong {
-          color: rgba(220, 212, 195, 0.58);
+          color: rgba(226, 222, 204, 0.66);
           font-weight: 400;
-          letter-spacing: 0.08em;
+          letter-spacing: 0.075em;
           overflow-wrap: anywhere;
           text-wrap: pretty;
         }
 
         .growth-proof-sequence {
           margin: 0;
-          color: rgba(216, 183, 111, 0.68);
-          font-size: clamp(0.82rem, 1.35vw, 1.05rem);
-          letter-spacing: 0.26em;
-          text-indent: 0.26em;
+          color: rgba(216, 183, 111, 0.52);
+          font-family: var(--font-sans, system-ui, sans-serif);
+          font-size: clamp(0.72rem, 1vw, 0.88rem);
+          font-weight: 600;
+          letter-spacing: 0.28em;
+          text-indent: 0.28em;
           text-align: center;
         }
 
@@ -1898,6 +2205,53 @@ export default function ZhaoxinRitualFlow({
           transition: border-color 520ms ease, color 520ms ease, background 520ms ease;
         }
 
+        .growth-archive-actions {
+          display: inline-flex;
+          justify-self: center;
+          align-items: center;
+          gap: clamp(0.8rem, 2vw, 1.2rem);
+          margin-top: clamp(0.15rem, 0.7svh, 0.45rem);
+          font-family: var(--font-sans, system-ui, sans-serif);
+        }
+
+        .growth-archive-door,
+        .growth-archive-link {
+          color: rgba(216, 183, 111, 0.78);
+          font-size: clamp(0.78rem, 1.05vw, 0.92rem);
+          font-weight: 700;
+          letter-spacing: 0.16em;
+          text-decoration: none;
+          transition:
+            color 420ms ease,
+            border-color 420ms ease,
+            background 420ms ease,
+            transform 420ms ease;
+        }
+
+        .growth-archive-door {
+          border: 1px solid rgba(216, 183, 111, 0.18);
+          border-radius: 999px;
+          background:
+            radial-gradient(ellipse at 50% 0%, rgba(216, 183, 111, 0.1), transparent 62%),
+            rgba(8, 8, 7, 0.34);
+          padding: 0.62rem 1.08rem;
+          box-shadow:
+            0 14px 42px rgba(0, 0, 0, 0.28),
+            inset 0 1px 0 rgba(244, 235, 221, 0.045);
+        }
+
+        .growth-archive-link {
+          border-bottom: 1px solid rgba(216, 183, 111, 0.32);
+          padding: 0.36rem 0.08rem;
+        }
+
+        .growth-archive-door:hover,
+        .growth-archive-link:hover {
+          color: rgba(244, 235, 221, 0.84);
+          border-color: rgba(216, 183, 111, 0.42);
+          transform: translateY(-1px);
+        }
+
         .growth-lake-link:hover {
           border-color: rgba(216, 183, 111, 0.34);
           background: rgba(216, 183, 111, 0.06);
@@ -1906,13 +2260,28 @@ export default function ZhaoxinRitualFlow({
 
         @media (max-width: 560px) {
           .zhaoxin-copy.is-growth {
-            top: clamp(5.8rem, 15svh, 8rem);
+            top: clamp(4.8rem, 12svh, 6.8rem);
+          }
+
+          .zhaoxin-copy.is-growth h1 {
+            font-size: clamp(2.35rem, 12vw, 4rem);
+            letter-spacing: 0.08em;
+          }
+
+          .growth-proof {
+            width: min(22rem, 100%);
+            margin-top: clamp(1.45rem, 3svh, 2rem);
           }
 
           .growth-proof-row {
             grid-template-columns: 1fr;
             gap: 0.1rem;
-            padding: 0.64rem 0;
+            padding: 0.5rem 0;
+          }
+
+          .growth-archive-actions {
+            flex-wrap: wrap;
+            justify-content: center;
           }
 
           .growth-proof-row span {
@@ -1927,6 +2296,40 @@ export default function ZhaoxinRitualFlow({
           justify-items: center;
           gap: clamp(0.9rem, 2.2svh, 1.25rem);
           isolation: isolate;
+        }
+
+        .one-thought-reactions {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 0.62rem;
+          width: min(34rem, 90vw);
+          pointer-events: auto;
+        }
+
+        .one-thought-reactions button {
+          border: 1px solid rgba(216, 183, 111, 0.18);
+          border-radius: 999px;
+          background: rgba(8, 8, 5, 0.28);
+          padding: 0.56rem 0.92rem;
+          color: rgba(226, 218, 199, 0.62);
+          font-family: var(--font-serif, "Songti SC", serif);
+          font-size: clamp(0.78rem, 1.24vw, 0.94rem);
+          letter-spacing: 0.14em;
+          cursor: pointer;
+          transition:
+            border-color 240ms ease,
+            background 240ms ease,
+            color 240ms ease,
+            transform 240ms ease;
+        }
+
+        .one-thought-reactions button:hover,
+        .one-thought-reactions button.is-selected {
+          border-color: rgba(216, 183, 111, 0.38);
+          background: rgba(55, 44, 20, 0.34);
+          color: rgba(238, 228, 184, 0.92);
+          transform: translateY(-1px);
         }
 
         .liangzhi-title-action {
@@ -1967,6 +2370,13 @@ export default function ZhaoxinRitualFlow({
             filter 720ms ease,
             transform 720ms cubic-bezier(0.16, 1, 0.3, 1);
           -webkit-tap-highlight-color: transparent;
+        }
+
+        .liangzhi-title-action:disabled {
+          cursor: default;
+          opacity: 0.58;
+          transform: none;
+          filter: saturate(0.82) brightness(0.82);
         }
 
         .liangzhi-title-action::before {
@@ -2180,6 +2590,220 @@ export default function ZhaoxinRitualFlow({
           letter-spacing: 0.18em;
           text-indent: 0.18em;
           color: rgba(232, 204, 132, 0.66);
+        }
+
+        .archive-login-layer {
+          position: absolute;
+          inset: 0;
+          z-index: 88;
+          display: grid;
+          place-items: center;
+          padding: clamp(1rem, 4vw, 2rem);
+          background:
+            radial-gradient(ellipse at center, rgba(216, 183, 111, 0.04), transparent 42%),
+            radial-gradient(ellipse at 50% 58%, rgba(95, 132, 117, 0.065), transparent 68%),
+            rgba(5, 6, 4, 0.28);
+          backdrop-filter: blur(8px);
+          pointer-events: auto;
+          animation: archiveLoginIn 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .archive-login-panel {
+          position: relative;
+          width: min(30rem, calc(100vw - 2rem));
+          border: 1px solid rgba(216, 183, 111, 0.13);
+          border-radius: 1.1rem;
+          background:
+            radial-gradient(ellipse at 50% 0%, rgba(216, 183, 111, 0.06), transparent 58%),
+            linear-gradient(180deg, rgba(15, 16, 13, 0.74), rgba(5, 7, 5, 0.68));
+          box-shadow:
+            0 28px 88px rgba(0, 0, 0, 0.58),
+            inset 0 1px 0 rgba(244, 235, 221, 0.06);
+          padding: clamp(1.35rem, 4vw, 2rem);
+          color: rgba(232, 228, 210, 0.82);
+          font-family: var(--font-serif, "Songti SC", serif);
+          text-align: left;
+        }
+
+        .archive-login-panel::before {
+          content: "";
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          z-index: -1;
+          width: 86%;
+          height: 38%;
+          transform: translate(-50%, -50%);
+          border-radius: 999px;
+          background: radial-gradient(ellipse at center, rgba(196, 216, 212, 0.12), transparent 70%);
+          filter: blur(24px);
+          opacity: 0.62;
+          pointer-events: none;
+        }
+
+        .archive-login-eyebrow {
+          margin: 0 0 0.78rem;
+          color: rgba(216, 183, 111, 0.62);
+          font-size: 0.78rem;
+          line-height: 1.4;
+          letter-spacing: 0.28em;
+          text-indent: 0.28em;
+        }
+
+        .archive-login-panel h2 {
+          margin: 0;
+          color: rgba(244, 235, 221, 0.92);
+          font-size: clamp(1.55rem, 3vw, 2.18rem);
+          font-weight: 400;
+          line-height: 1.4;
+          letter-spacing: 0.09em;
+          text-wrap: balance;
+        }
+
+        .archive-login-copy {
+          margin: 0.9rem 0 1.35rem;
+          color: rgba(220, 212, 195, 0.64);
+          font-size: clamp(0.9rem, 1.6vw, 1rem);
+          line-height: 1.9;
+          letter-spacing: 0.06em;
+        }
+
+        .archive-login-form {
+          display: grid;
+          gap: 0.85rem;
+        }
+
+        .archive-login-form label {
+          display: grid;
+          gap: 0.42rem;
+        }
+
+        .archive-login-form span {
+          color: rgba(220, 212, 195, 0.62);
+          font-family: var(--font-sans, system-ui, sans-serif);
+          font-size: 0.82rem;
+          letter-spacing: 0.08em;
+        }
+
+        .archive-login-form input {
+          width: 100%;
+          min-height: 3rem;
+          border: 1px solid rgba(216, 183, 111, 0.22);
+          border-radius: 0.55rem;
+          background: rgba(255, 255, 255, 0.035);
+          color: rgba(244, 235, 221, 0.94);
+          font-family: var(--font-sans, system-ui, sans-serif);
+          font-size: 0.96rem;
+          letter-spacing: 0.08em;
+          outline: none;
+          padding: 0.72rem 0.9rem;
+          transition:
+            border-color 260ms ease,
+            background 260ms ease,
+            box-shadow 260ms ease;
+        }
+
+        .archive-login-form input::placeholder {
+          color: rgba(220, 212, 195, 0.34);
+        }
+
+        .archive-login-form input:focus {
+          border-color: rgba(216, 183, 111, 0.5);
+          background: rgba(255, 255, 255, 0.055);
+          box-shadow: 0 0 0 1px rgba(216, 183, 111, 0.12);
+        }
+
+        .archive-login-code-row {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) 8.2rem;
+          gap: 0.7rem;
+          align-items: end;
+        }
+
+        .archive-login-code-row button,
+        .archive-login-primary,
+        .archive-login-secondary {
+          border: 0;
+          font-family: var(--font-sans, system-ui, sans-serif);
+          cursor: pointer;
+          transition:
+            opacity 260ms ease,
+            border-color 260ms ease,
+            color 260ms ease,
+            background 260ms ease,
+            transform 260ms ease;
+        }
+
+        .archive-login-code-row button {
+          min-height: 3rem;
+          border: 1px solid rgba(216, 183, 111, 0.2);
+          border-radius: 0.55rem;
+          background: rgba(216, 183, 111, 0.055);
+          color: rgba(220, 212, 195, 0.72);
+          font-size: 0.78rem;
+          letter-spacing: 0.05em;
+          white-space: nowrap;
+        }
+
+        .archive-login-code-row button:disabled,
+        .archive-login-primary:disabled {
+          cursor: not-allowed;
+          opacity: 0.42;
+        }
+
+        .archive-login-message {
+          margin: 0.9rem 0 0;
+          border: 1px solid rgba(216, 183, 111, 0.11);
+          border-radius: 0.55rem;
+          background: rgba(255, 255, 255, 0.026);
+          color: rgba(220, 212, 195, 0.62);
+          font-family: var(--font-sans, system-ui, sans-serif);
+          font-size: 0.82rem;
+          line-height: 1.7;
+          padding: 0.55rem 0.72rem;
+        }
+
+        .archive-login-actions {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 0.75rem;
+          margin-top: 1.25rem;
+        }
+
+        .archive-login-primary {
+          min-width: 9.5rem;
+          min-height: 3.05rem;
+          border-radius: 999px;
+          background: linear-gradient(180deg, #dcc67c 0%, #b99d56 54%, #92743a 100%);
+          color: #0b0a07;
+          font-size: 0.92rem;
+          font-weight: 700;
+          letter-spacing: 0.1em;
+          padding: 0.72rem 1.4rem;
+          box-shadow:
+            0 16px 34px rgba(0, 0, 0, 0.34),
+            inset 0 1px 0 rgba(255, 255, 255, 0.24);
+        }
+
+        .archive-login-primary:not(:disabled):hover {
+          transform: translateY(-1px);
+          filter: brightness(1.05);
+        }
+
+        .archive-login-secondary {
+          min-height: 3.05rem;
+          border-bottom: 1px solid rgba(216, 183, 111, 0.26);
+          background: transparent;
+          color: rgba(216, 183, 111, 0.68);
+          font-size: 0.9rem;
+          letter-spacing: 0.1em;
+          padding: 0.72rem 0.22rem;
+        }
+
+        .archive-login-secondary:hover {
+          color: rgba(244, 235, 221, 0.82);
+          border-color: rgba(216, 183, 111, 0.46);
         }
 
         .scene-float-field {
@@ -3133,6 +3757,17 @@ export default function ZhaoxinRitualFlow({
           to {
             opacity: 1;
             transform: translateY(0);
+            filter: blur(0);
+          }
+        }
+
+        @keyframes archiveLoginIn {
+          from {
+            opacity: 0;
+            filter: blur(8px);
+          }
+          to {
+            opacity: 1;
             filter: blur(0);
           }
         }

@@ -4,6 +4,7 @@ import type {
   TodayOneThoughtSourceItem,
 } from "../../data/insight-engine/today-one-thought-core"
 import { getTodayOneThoughtDateKey } from "../../data/insight-engine/today-one-thought-core"
+import { getReflection } from "../../lib/reflections/reflectionService"
 
 export const ONE_THOUGHT_LAKE_STORAGE_KEY = "zhaojian:one-thought-lake:v1"
 export const ONE_THOUGHT_LAKE_RESONANCE_KEY = "zhaojian:one-thought-lake-resonance:v1"
@@ -22,9 +23,11 @@ export type OneThoughtLakeEntry = {
   regionScope: "CN"
   createdAt: string
   thoughtId: string
+  itemId: string
   os: string
   tradeMoment: string
   reflection: string
+  reflectionFinal: string
   evidence: string
   practice: string
 }
@@ -36,10 +39,10 @@ export type OneThoughtLakeScreenResult = {
 }
 
 export const ONE_THOUGHT_LAKE_BLOCKED_INPUT_REASON =
-  "心湖只照见交易中的念头，不回应股票代码、收益数字、荐股、喊单、带单和联系方式。"
+  "众念心湖只照见交易中的念头，不回应股票代码、收益数字、荐股、喊单、带单和联系方式。"
 
 export const ONE_THOUGHT_LAKE_UNRELATED_INPUT_REASON =
-  "心湖只回应交易中的念头。请写下临盘时真实冒出来的一句话。"
+  "众念心湖只回应交易中的念头。请写下临盘时真实冒出来的一句话。"
 
 export type OneThoughtLakeComment = {
   id: string
@@ -171,6 +174,10 @@ function normalizeLakeEntry(value: unknown): OneThoughtLakeEntry | null {
   if (!item.id || !item.date || !item.thoughtId || !item.matchedSceneId) return null
 
   const mirrorId = String(item.mirrorId || "")
+  const itemId = String(item.itemId || item.thoughtId)
+  const reflectionFinal =
+    getReflection(String(item.matchedSceneId), itemId)?.reflectionFinal ||
+    String(item.reflectionFinal || item.reflection || "")
 
   return {
     id: String(item.id),
@@ -185,9 +192,11 @@ function normalizeLakeEntry(value: unknown): OneThoughtLakeEntry | null {
     regionScope: "CN",
     createdAt: String(item.createdAt || `${item.date}T00:00:00.000Z`),
     thoughtId: String(item.thoughtId),
+    itemId,
     os: cleanText(String(item.os || item.anonymousText || "这一念浮上来了。")),
     tradeMoment: String(item.tradeMoment || ""),
-    reflection: String(item.reflection || ""),
+    reflection: reflectionFinal,
+    reflectionFinal,
     evidence: String(item.evidence || ""),
     practice: String(item.practice || ""),
   }
@@ -254,6 +263,8 @@ export function createOneThoughtLakeEntry(
   const createdAt = options.createdAt ?? new Date().toISOString()
   const date = options.date ?? getTodayOneThoughtDateKey(new Date(createdAt))
   const anonymousText = cleanText(options.anonymousText || thought.os)
+  const reflectionFinal =
+    getReflection(thought.sceneId, thought.itemId)?.reflectionFinal || thought.reflectionFinal || thought.reflection
 
   return {
     id: options.id ?? `lake_${cleanIdPart(date)}_${cleanIdPart(thought.thoughtId)}_${cleanIdPart(createdAt)}`,
@@ -268,9 +279,11 @@ export function createOneThoughtLakeEntry(
     regionScope: "CN",
     createdAt,
     thoughtId: thought.thoughtId,
+    itemId: thought.itemId,
     os: thought.os,
     tradeMoment: thought.tradeMoment,
-    reflection: thought.reflection,
+    reflection: reflectionFinal,
+    reflectionFinal,
     evidence: thought.evidence,
     practice: thought.practice,
   }

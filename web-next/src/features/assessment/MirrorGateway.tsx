@@ -6,8 +6,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 
 import HeartLakeEngine, { type LakeMode } from "./HeartLakeEngine"
+import OneThoughtRitualFlow from "./OneThoughtRitualFlow"
 import { StillWaterIntroMirror } from "./StillWaterIntroMirror"
-import ZhaoxinRitualFlow from "./ZhaoxinRitualFlow"
 
 type MirrorGatewayProps = {
   onComplete: (mirrorId: string) => void
@@ -1072,10 +1072,9 @@ export function MirrorGateway({ onComplete }: MirrorGatewayProps) {
             bloomScale={lakeMode === "liangzhi" ? 0.42 : isLakeSettled ? 0.72 : 0.48}
             className="mirror-gateway-heart-lake"
           />
-          <ZhaoxinRitualFlow
+          <OneThoughtRitualFlow
             initialScene="surge"
             initialIntensity={3}
-            onEnterCycle={() => onComplete(MAIN_MIRROR_ID)}
             onLakeModeChange={updateLakeMode}
             onRipple={triggerZhaoxinRipple}
           />

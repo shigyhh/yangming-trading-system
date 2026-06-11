@@ -120,7 +120,10 @@ export function MirrorRiverScroll() {
   }, [])
 
   const mirrorOptions = useMemo(() => getStillWaterMirrorOptions(data?.records ?? []), [data?.records])
-  const reflectionBeats = useMemo(() => splitReflectionBeats(data?.today.reflection ?? ""), [data?.today.reflection])
+  const reflectionBeats = useMemo(
+    () => splitReflectionBeats(data?.today.reflectionFinal ?? data?.today.reflection ?? ""),
+    [data?.today.reflection, data?.today.reflectionFinal],
+  )
   const filteredRecords = useMemo(
     () => filterStillWaterRecords(data?.records ?? [], { thief: thiefFilter, mirror: mirrorFilter }),
     [data?.records, mirrorFilter, thiefFilter],
@@ -260,7 +263,8 @@ export function MirrorRiverScroll() {
       dayIndex: (data?.records.length ?? 0) + 1,
       tradeMoment: todayThought.tradeMoment,
       os: todayThought.os,
-      reflection: todayThought.reflection,
+      reflection: todayThought.reflectionFinal || todayThought.reflection,
+      reflectionFinal: todayThought.reflectionFinal || todayThought.reflection,
       thief: todayThought.thief,
       mirrorId: todayThought.mirrorId,
       mirrorName: data?.today.mirrorName,
@@ -444,7 +448,7 @@ export function MirrorRiverScroll() {
               <div className="still-water-links">
                 <PrimaryLink href="/assessment">重新入照心</PrimaryLink>
                 <SecondaryLink href="/practice-change?preview=1">查看复测变化</SecondaryLink>
-                <SecondaryLink href="/mirror-archive">查看心镜档案馆</SecondaryLink>
+                <SecondaryLink href="/mirror-archive">查看心镜档案</SecondaryLink>
               </div>
             </section>
 

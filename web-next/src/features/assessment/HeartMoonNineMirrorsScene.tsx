@@ -3,18 +3,17 @@
 import { useEffect, useMemo, useState } from "react"
 
 import HeartLakeEngine, { type LakeMode } from "./HeartLakeEngine"
+import OneThoughtRitualFlow from "./OneThoughtRitualFlow"
 import { StillWaterIntroMirror } from "./StillWaterIntroMirror"
-import ZhaoxinRitualFlow from "./ZhaoxinRitualFlow"
 
 type HeartMoonNineMirrorsSceneProps = {
-  onComplete: (mirrorId: string) => void
   onLakeModeChange?: (mode: LakeMode) => void
   onRipple?: () => void
 }
 
 type PreludeStep = "market" | "question" | "ripple" | "heartMoon"
 
-export function HeartMoonNineMirrorsScene({ onComplete, onLakeModeChange, onRipple }: HeartMoonNineMirrorsSceneProps) {
+export function HeartMoonNineMirrorsScene({ onLakeModeChange, onRipple }: HeartMoonNineMirrorsSceneProps) {
   const [lakeMode, setLakeMode] = useState<LakeMode>("still")
   const [rippleKey, setRippleKey] = useState(0)
   const [showLakeEngine, setShowLakeEngine] = useState(false)
@@ -65,7 +64,7 @@ export function HeartMoonNineMirrorsScene({ onComplete, onLakeModeChange, onRipp
   }
 
   return (
-    <section className="heart-moon-nine-mirrors-scene" aria-label="明月照心九镜仪式">
+    <section className="heart-moon-nine-mirrors-scene" aria-label="照见一念仪轨">
       <StillWaterIntroMirror phase={stillWaterPhase} />
       {!showRitualFlow ? (
         <div className={`heart-prelude-copy is-${preludeStep}`} aria-live="polite">
@@ -106,10 +105,9 @@ export function HeartMoonNineMirrorsScene({ onComplete, onLakeModeChange, onRipp
         />
       ) : null}
       {showRitualFlow ? (
-        <ZhaoxinRitualFlow
+        <OneThoughtRitualFlow
           initialScene="surge"
           initialIntensity={3}
-          onEnterCycle={() => onComplete("chasing")}
           onLakeModeChange={updateLakeMode}
           onRipple={triggerRipple}
         />

@@ -1,0 +1,3602 @@
+[
+  {
+    "itemId": "scene_01_001",
+    "sceneId": "scene_01",
+    "sceneName": "急涨追高",
+    "os": "我次奥，真拉了。",
+    "reflection_v2": "这声'我次奥'，不是冲它喊的。\n是冲那个又一次站在外面的你。",
+    "source": "标杆版",
+    "painPoint": "怕错过、怕落后、怕别人先赚钱",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_01_002",
+    "sceneId": "scene_01",
+    "sceneName": "急涨追高",
+    "os": "我又没上车。",
+    "reflection_v2": "你难受的不是没上车。\n是别人已经在车上，而你还站在原地。",
+    "source": "V2戳心版",
+    "painPoint": "怕错过、怕落后、怕别人先赚钱",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_01_003",
+    "sceneId": "scene_01",
+    "sceneName": "急涨追高",
+    "os": "怎么刚看就起飞了。",
+    "reflection_v2": "你怕的不是它起飞。\n你怕的是，自己又成了那个看着别人起飞的人。",
+    "source": "V2戳心版",
+    "painPoint": "怕错过、怕落后、怕别人先赚钱",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_01_004",
+    "sceneId": "scene_01",
+    "sceneName": "急涨追高",
+    "os": "再不买要涨停了。",
+    "reflection_v2": "让你急的不是涨停。\n是后悔已经追到你手边了。",
+    "source": "V2戳心版",
+    "painPoint": "怕错过、怕落后、怕别人先赚钱",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_01_005",
+    "sceneId": "scene_01",
+    "sceneName": "急涨追高",
+    "os": "不追又要后悔。",
+    "reflection_v2": "你不是冲着机会去的。\n是想躲开'又后悔'那种感觉。",
+    "source": "标杆版",
+    "painPoint": "怕错过、怕落后、怕别人先赚钱",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_01_006",
+    "sceneId": "scene_01",
+    "sceneName": "急涨追高",
+    "os": "算了，先进。",
+    "reflection_v2": "你说先进。\n其实是规则还没开口，情绪已经替你下单了。",
+    "source": "V2戳心版",
+    "painPoint": "怕错过、怕落后、怕别人先赚钱",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_01_007",
+    "sceneId": "scene_01",
+    "sceneName": "急涨追高",
+    "os": "怎么每次都差一步。",
+    "reflection_v2": "这一步差的不是买点。\n是你一直想证明自己不再慢。",
+    "source": "V2戳心版",
+    "painPoint": "怕错过、怕落后、怕别人先赚钱",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_01_008",
+    "sceneId": "scene_01",
+    "sceneName": "急涨追高",
+    "os": "怕是不会回调了。",
+    "reflection_v2": "你怕的不是没有回调。\n是怕市场再也不等你。",
+    "source": "V2戳心版",
+    "painPoint": "怕错过、怕落后、怕别人先赚钱",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_01_009",
+    "sceneId": "scene_01",
+    "sceneName": "急涨追高",
+    "os": "别人都吃肉了。",
+    "reflection_v2": "刺痛你的不是别人吃肉。\n是你又把自己放进了比较里。",
+    "source": "V2戳心版",
+    "painPoint": "怕错过、怕落后、怕别人先赚钱",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_01_010",
+    "sceneId": "scene_01",
+    "sceneName": "急涨追高",
+    "os": "我又慢了。",
+    "reflection_v2": "你怕的不是这一次慢。\n是'你总是慢'。",
+    "source": "标杆版",
+    "painPoint": "怕错过、怕落后、怕别人先赚钱",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_02_001",
+    "sceneId": "scene_02",
+    "sceneName": "踏空焦虑",
+    "os": "我次奥，又涨了。",
+    "reflection_v2": "这一声不是惊讶。\n是你又一次看见自己站在行情外面。",
+    "source": "V2戳心版",
+    "painPoint": "局外人感、后悔、比较",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_02_002",
+    "sceneId": "scene_02",
+    "sceneName": "踏空焦虑",
+    "os": "怎么又没买。",
+    "reflection_v2": "最疼的不是没买。\n是你明明看见过，却没有动。",
+    "source": "V2戳心版",
+    "painPoint": "局外人感、后悔、比较",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_02_003",
+    "sceneId": "scene_02",
+    "sceneName": "踏空焦虑",
+    "os": "早知道昨天就买了。",
+    "reflection_v2": "你后悔的不是昨天。\n是昨天那个不敢点下去的自己。",
+    "source": "V2戳心版",
+    "painPoint": "局外人感、后悔、比较",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_02_004",
+    "sceneId": "scene_02",
+    "sceneName": "踏空焦虑",
+    "os": "我盯了这么久啊。",
+    "reflection_v2": "你盯了很久。\n可真正让你痛的，是你只盯着，没承担。",
+    "source": "V2戳心版",
+    "painPoint": "局外人感、后悔、比较",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_02_005",
+    "sceneId": "scene_02",
+    "sceneName": "踏空焦虑",
+    "os": "又是我看着涨。",
+    "reflection_v2": "你不是在看它涨。\n你是在看自己又一次成了旁观者。",
+    "source": "V2戳心版",
+    "painPoint": "局外人感、后悔、比较",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_02_006",
+    "sceneId": "scene_02",
+    "sceneName": "踏空焦虑",
+    "os": "刚才就该上。",
+    "reflection_v2": "你怪的不是刚才。\n你怪的是那个买点面前停住的自己。",
+    "source": "V2戳心版",
+    "painPoint": "局外人感、后悔、比较",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_02_007",
+    "sceneId": "scene_02",
+    "sceneName": "踏空焦虑",
+    "os": "别人都吃到了。",
+    "reflection_v2": "让你疼的不是行情。\n是'又一次，是别人，不是我'。",
+    "source": "标杆版",
+    "painPoint": "局外人感、后悔、比较",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_02_008",
+    "sceneId": "scene_02",
+    "sceneName": "踏空焦虑",
+    "os": "我真服了自己。",
+    "reflection_v2": "你服的不是行情。\n你服的是自己又开始攻击自己。",
+    "source": "V2戳心版",
+    "painPoint": "局外人感、后悔、比较",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_02_009",
+    "sceneId": "scene_02",
+    "sceneName": "踏空焦虑",
+    "os": "再追是不是晚了？",
+    "reflection_v2": "最危险的不是踏空。\n是踏空之后，你想用追高把后悔抹掉。",
+    "source": "V2戳心版",
+    "painPoint": "局外人感、后悔、比较",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_02_010",
+    "sceneId": "scene_02",
+    "sceneName": "踏空焦虑",
+    "os": "不会还要继续涨吧？",
+    "reflection_v2": "你怕的不是它继续涨。\n是自己再一次，被甩在后面。",
+    "source": "标杆版",
+    "painPoint": "局外人感、后悔、比较",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_03_001",
+    "sceneId": "scene_03",
+    "sceneName": "买少后悔",
+    "os": "买少了。",
+    "reflection_v2": "你难受的不是买少。\n是贪心已经开始嫌弃自己赚得不够多。",
+    "source": "V2戳心版",
+    "painPoint": "少赚等于亏、贪心审判谨慎",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_03_002",
+    "sceneId": "scene_03",
+    "sceneName": "买少后悔",
+    "os": "早知道多买点。",
+    "reflection_v2": "你后悔的不是仓位。\n是那个关键时刻没敢重一点的自己。",
+    "source": "V2戳心版",
+    "painPoint": "少赚等于亏、贪心审判谨慎",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_03_003",
+    "sceneId": "scene_03",
+    "sceneName": "买少后悔",
+    "os": "这点仓有什么用。",
+    "reflection_v2": "刺痛你的不是这点仓。\n是别人一笔，就照出了你的不甘。",
+    "source": "V2戳心版",
+    "painPoint": "少赚等于亏、贪心审判谨慎",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_03_004",
+    "sceneId": "scene_03",
+    "sceneName": "买少后悔",
+    "os": "应该重仓的。",
+    "reflection_v2": "你想重仓的不是机会。\n是想用结果证明自己当时不该保守。",
+    "source": "V2戳心版",
+    "painPoint": "少赚等于亏、贪心审判谨慎",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_03_005",
+    "sceneId": "scene_03",
+    "sceneName": "买少后悔",
+    "os": "我当时到底怕什么。",
+    "reflection_v2": "你问当时怕什么。\n其实是现在的贪，在审判当时的谨慎。",
+    "source": "V2戳心版",
+    "painPoint": "少赚等于亏、贪心审判谨慎",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_03_006",
+    "sceneId": "scene_03",
+    "sceneName": "买少后悔",
+    "os": "仓位太轻了。",
+    "reflection_v2": "你不是没赚。\n你只是一直盯着那个没赚到的自己。",
+    "source": "V2戳心版",
+    "painPoint": "少赚等于亏、贪心审判谨慎",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_03_007",
+    "sceneId": "scene_03",
+    "sceneName": "买少后悔",
+    "os": "这波没吃到位。",
+    "reflection_v2": "你放不下的不是利润。\n是那个幻想里更完美的自己。",
+    "source": "V2戳心版",
+    "painPoint": "少赚等于亏、贪心审判谨慎",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_03_008",
+    "sceneId": "scene_03",
+    "sceneName": "买少后悔",
+    "os": "怎么就买这么点。",
+    "reflection_v2": "你说在复盘仓位，其实在反复地，责怪自己。",
+    "source": "标杆版",
+    "painPoint": "少赚等于亏、贪心审判谨慎",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_03_009",
+    "sceneId": "scene_03",
+    "sceneName": "买少后悔",
+    "os": "别人一把顶我十把。",
+    "reflection_v2": "别人一把顶你十把。\n你疼的不是钱，是比较把你打回原形。",
+    "source": "V2戳心版",
+    "painPoint": "少赚等于亏、贪心审判谨慎",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_03_010",
+    "sceneId": "scene_03",
+    "sceneName": "买少后悔",
+    "os": "白看对了。",
+    "reflection_v2": "你白看的不是行情。\n是看对了却不敢相信自己的那一下。",
+    "source": "V2戳心版",
+    "painPoint": "少赚等于亏、贪心审判谨慎",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_04_001",
+    "sceneId": "scene_04",
+    "sceneName": "卖飞懊恼",
+    "os": "我次奥，还涨。",
+    "reflection_v2": "这一声不是惊讶。\n是你又一次看见自己拿不住。",
+    "source": "V2戳心版",
+    "painPoint": "卖早后悔、幻想最高点、拿不住",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_04_002",
+    "sceneId": "scene_04",
+    "sceneName": "卖飞懊恼",
+    "os": "怎么刚卖就飞。",
+    "reflection_v2": "最难受的不是卖出。\n是你刚放手，它就开始证明你卖早了。",
+    "source": "V2戳心版",
+    "painPoint": "卖早后悔、幻想最高点、拿不住",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_04_003",
+    "sceneId": "scene_04",
+    "sceneName": "卖飞懊恼",
+    "os": "我再拿一下就好了。",
+    "reflection_v2": "你后悔的不是卖，是没卖在那个位置。\n可那个位置，事后才有。",
+    "source": "标杆版",
+    "painPoint": "卖早后悔、幻想最高点、拿不住",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_04_004",
+    "sceneId": "scene_04",
+    "sceneName": "卖飞懊恼",
+    "os": "后面全没吃到。",
+    "reflection_v2": "你不是没赚到。\n你是在用没吃到的那段，抹掉已经赚到的部分。",
+    "source": "V2戳心版",
+    "painPoint": "卖早后悔、幻想最高点、拿不住",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_04_005",
+    "sceneId": "scene_04",
+    "sceneName": "卖飞懊恼",
+    "os": "别人怎么拿住的。",
+    "reflection_v2": "别人拿住的不是股票。\n是你最受不了的那个“我为什么不行”。",
+    "source": "V2戳心版",
+    "painPoint": "卖早后悔、幻想最高点、拿不住",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_04_006",
+    "sceneId": "scene_04",
+    "sceneName": "卖飞懊恼",
+    "os": "我刚才卖什么。",
+    "reflection_v2": "你问自己卖什么。\n其实是在追问：我怎么又输给了害怕。",
+    "source": "V2戳心版",
+    "painPoint": "卖早后悔、幻想最高点、拿不住",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_04_007",
+    "sceneId": "scene_04",
+    "sceneName": "卖飞懊恼",
+    "os": "又卖飞了。",
+    "reflection_v2": "你怕的不是这一次卖飞。\n是'我怎么总这样'。",
+    "source": "标杆版",
+    "painPoint": "卖早后悔、幻想最高点、拿不住",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_04_008",
+    "sceneId": "scene_04",
+    "sceneName": "卖飞懊恼",
+    "os": "我就知道。",
+    "reflection_v2": "你说我就知道。\n其实是后悔在伪装成先见之明。",
+    "source": "V2戳心版",
+    "painPoint": "卖早后悔、幻想最高点、拿不住",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_04_009",
+    "sceneId": "scene_04",
+    "sceneName": "卖飞懊恼",
+    "os": "又少赚了。",
+    "reflection_v2": "你少赚的不是钱。\n是那个你以为本该属于你的完美结果。",
+    "source": "V2戳心版",
+    "painPoint": "卖早后悔、幻想最高点、拿不住",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_04_010",
+    "sceneId": "scene_04",
+    "sceneName": "卖飞懊恼",
+    "os": "真难受。",
+    "reflection_v2": "难受的不是卖飞。\n是你又用最高点，羞辱了自己的执行。",
+    "source": "V2戳心版",
+    "painPoint": "卖早后悔、幻想最高点、拿不住",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_05_001",
+    "sceneId": "scene_05",
+    "sceneName": "卖晚懊恼",
+    "os": "刚才就该卖。",
+    "reflection_v2": "你后悔的不是没卖。\n是那一刻你明明想走，却又贪了一下。",
+    "source": "V2戳心版",
+    "painPoint": "贪恋高点、执行迟疑、结果反噬",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_05_002",
+    "sceneId": "scene_05",
+    "sceneName": "卖晚懊恼",
+    "os": "怎么没走。",
+    "reflection_v2": "让你疼的不是利润变少。\n是你看见自己又一次没按想好的做。",
+    "source": "V2戳心版",
+    "painPoint": "贪恋高点、执行迟疑、结果反噬",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_05_003",
+    "sceneId": "scene_05",
+    "sceneName": "卖晚懊恼",
+    "os": "又坐电梯了。",
+    "reflection_v2": "你坐的不是电梯。\n是贪心把你从清醒带回了幻想。",
+    "source": "V2戳心版",
+    "painPoint": "贪恋高点、执行迟疑、结果反噬",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_05_004",
+    "sceneId": "scene_05",
+    "sceneName": "卖晚懊恼",
+    "os": "白拿这么久。",
+    "reflection_v2": "你觉得白拿了这么久。\n其实是时间也开始替你向自己讨债。",
+    "source": "V2戳心版",
+    "painPoint": "贪恋高点、执行迟疑、结果反噬",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_05_005",
+    "sceneId": "scene_05",
+    "sceneName": "卖晚懊恼",
+    "os": "我刚才在等什么。",
+    "reflection_v2": "你等的不是信号。\n你等的是一个比高点还高的完美结果。",
+    "source": "V2戳心版",
+    "painPoint": "贪恋高点、执行迟疑、结果反噬",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_05_006",
+    "sceneId": "scene_05",
+    "sceneName": "卖晚懊恼",
+    "os": "真难受。",
+    "reflection_v2": "你不是在止盈。\n是在为'回吐'这件事，提前认输。",
+    "source": "标杆版",
+    "painPoint": "贪恋高点、执行迟疑、结果反噬",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_05_007",
+    "sceneId": "scene_05",
+    "sceneName": "卖晚懊恼",
+    "os": "早知道就卖了。",
+    "reflection_v2": "你说早知道。\n其实是在用现在的答案，审判当时的贪念。",
+    "source": "V2戳心版",
+    "painPoint": "贪恋高点、执行迟疑、结果反噬",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_05_008",
+    "sceneId": "scene_05",
+    "sceneName": "卖晚懊恼",
+    "os": "又没卖在高点。",
+    "reflection_v2": "你说在复盘卖点，其实在为'贪'，又一次定罪。",
+    "source": "标杆版",
+    "painPoint": "贪恋高点、执行迟疑、结果反噬",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_05_009",
+    "sceneId": "scene_05",
+    "sceneName": "卖晚懊恼",
+    "os": "这波白做了。",
+    "reflection_v2": "这波没白做。\n只是后悔把赚到的部分全盖住了。",
+    "source": "V2戳心版",
+    "painPoint": "贪恋高点、执行迟疑、结果反噬",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_05_010",
+    "sceneId": "scene_05",
+    "sceneName": "卖晚懊恼",
+    "os": "下次一定卖。",
+    "reflection_v2": "你说下次一定卖。\n可真正没放下的，是那个不肯满足的自己。",
+    "source": "V2戳心版",
+    "painPoint": "贪恋高点、执行迟疑、结果反噬",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_06_001",
+    "sceneId": "scene_06",
+    "sceneName": "浮盈回吐恐惧",
+    "os": "先卖吧。",
+    "reflection_v2": "你卖的不是仓位。\n是'怕到手的飞了'那份慌。",
+    "source": "标杆版",
+    "painPoint": "怕失去利润、用卖出换安全感",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_06_002",
+    "sceneId": "scene_06",
+    "sceneName": "浮盈回吐恐惧",
+    "os": "又吐回去了。",
+    "reflection_v2": "你怕的不是回吐。\n是刚到手的东西，又从你眼前消失。",
+    "source": "V2戳心版",
+    "painPoint": "怕失去利润、用卖出换安全感",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_06_003",
+    "sceneId": "scene_06",
+    "sceneName": "浮盈回吐恐惧",
+    "os": "差不多了。",
+    "reflection_v2": "'差不多了'是你给自己的台阶。\n你不是看够了，是怕了。",
+    "source": "标杆版",
+    "painPoint": "怕失去利润、用卖出换安全感",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_06_004",
+    "sceneId": "scene_06",
+    "sceneName": "浮盈回吐恐惧",
+    "os": "要不先走。",
+    "reflection_v2": "你不是在看走势。\n你是在看恐惧什么时候把你推出去。",
+    "source": "V2戳心版",
+    "painPoint": "怕失去利润、用卖出换安全感",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_06_005",
+    "sceneId": "scene_06",
+    "sceneName": "浮盈回吐恐惧",
+    "os": "赚一点也行。",
+    "reflection_v2": "你把'怕回吐'，当成了'见好就收'。",
+    "source": "标杆版",
+    "painPoint": "怕失去利润、用卖出换安全感",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_06_006",
+    "sceneId": "scene_06",
+    "sceneName": "浮盈回吐恐惧",
+    "os": "够了够了。",
+    "reflection_v2": "你卖的不是仓位。\n是自己承受不了波动的那一段心力。",
+    "source": "V2戳心版",
+    "painPoint": "怕失去利润、用卖出换安全感",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_06_007",
+    "sceneId": "scene_06",
+    "sceneName": "浮盈回吐恐惧",
+    "os": "先落袋。",
+    "reflection_v2": "你想落袋的不是利润。\n是安全感。",
+    "source": "V2戳心版",
+    "painPoint": "怕失去利润、用卖出换安全感",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_06_008",
+    "sceneId": "scene_06",
+    "sceneName": "浮盈回吐恐惧",
+    "os": "刚才就该卖。",
+    "reflection_v2": "你用刚才的最高点。\n一次次惩罚现在的自己。",
+    "source": "V2戳心版",
+    "painPoint": "怕失去利润、用卖出换安全感",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_06_009",
+    "sceneId": "scene_06",
+    "sceneName": "浮盈回吐恐惧",
+    "os": "别回去了。",
+    "reflection_v2": "你怕的不是价格回去。\n是拥有过的东西再次失去。",
+    "source": "V2戳心版",
+    "painPoint": "怕失去利润、用卖出换安全感",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_06_010",
+    "sceneId": "scene_06",
+    "sceneName": "浮盈回吐恐惧",
+    "os": "总算卖了。",
+    "reflection_v2": "你松的那口气说明了：你要的先不是利润。\n是不再害怕。",
+    "source": "V2戳心版",
+    "painPoint": "怕失去利润、用卖出换安全感",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_07_001",
+    "sceneId": "scene_07",
+    "sceneName": "不愿止损",
+    "os": "再等等。",
+    "reflection_v2": "你等的不是反弹。\n是'我还没真的错'。",
+    "source": "标杆版",
+    "painPoint": "不愿认错、希望替代判断",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_07_002",
+    "sceneId": "scene_07",
+    "sceneName": "不愿止损",
+    "os": "现在卖就真亏了。",
+    "reflection_v2": "你怕的不是亏损。\n是亏损一卖，就再也不能假装没错。",
+    "source": "V2戳心版",
+    "painPoint": "不愿认错、希望替代判断",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_07_003",
+    "sceneId": "scene_07",
+    "sceneName": "不愿止损",
+    "os": "还能回来。",
+    "reflection_v2": "'还能回来'是你想要的。\n不是它给的。",
+    "source": "标杆版",
+    "painPoint": "不愿认错、希望替代判断",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_07_004",
+    "sceneId": "scene_07",
+    "sceneName": "不愿止损",
+    "os": "先不卖。",
+    "reflection_v2": "你不是看好。\n你是不舍得承认这一次错了。",
+    "source": "V2戳心版",
+    "painPoint": "不愿认错、希望替代判断",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_07_005",
+    "sceneId": "scene_07",
+    "sceneName": "不愿止损",
+    "os": "再给它一次机会。",
+    "reflection_v2": "你给它机会。\n其实是在给自己逃避认错的机会。",
+    "source": "V2戳心版",
+    "painPoint": "不愿认错、希望替代判断",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_07_006",
+    "sceneId": "scene_07",
+    "sceneName": "不愿止损",
+    "os": "我不信这么倒霉。",
+    "reflection_v2": "你不是倒霉。\n你是在和已经发生的事实讨价还价。",
+    "source": "V2戳心版",
+    "painPoint": "不愿认错、希望替代判断",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_07_007",
+    "sceneId": "scene_07",
+    "sceneName": "不愿止损",
+    "os": "反弹一下我就走。",
+    "reflection_v2": "你等的不是反弹。\n是一个'我不算输'的台阶。",
+    "source": "标杆版",
+    "painPoint": "不愿认错、希望替代判断",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_07_008",
+    "sceneId": "scene_07",
+    "sceneName": "不愿止损",
+    "os": "再看一会儿。",
+    "reflection_v2": "规则已经说该走。\n留下的是那口不甘心。",
+    "source": "V2戳心版",
+    "painPoint": "不愿认错、希望替代判断",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_07_009",
+    "sceneId": "scene_07",
+    "sceneName": "不愿止损",
+    "os": "先扛着。",
+    "reflection_v2": "你扛的不是仓位。\n你扛的是那句：我怎么可能错。",
+    "source": "V2戳心版",
+    "painPoint": "不愿认错、希望替代判断",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_07_010",
+    "sceneId": "scene_07",
+    "sceneName": "不愿止损",
+    "os": "不急。",
+    "reflection_v2": "'明天再说'。\n你不是不急，是把今天该认的，推给了明天。",
+    "source": "标杆版",
+    "painPoint": "不愿认错、希望替代判断",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_08_001",
+    "sceneId": "scene_08",
+    "sceneName": "扛单死撑",
+    "os": "现在卖给谁？",
+    "reflection_v2": "你舍不得的不是这只票。\n是'我错了'三个字。",
+    "source": "标杆版",
+    "painPoint": "不服输、面子、把希望当系统",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_08_002",
+    "sceneId": "scene_08",
+    "sceneName": "扛单死撑",
+    "os": "都亏这么多了。",
+    "reflection_v2": "不是亏多了不能走。\n是亏越深，你越不敢承认，一直在错。",
+    "source": "标杆版",
+    "painPoint": "不服输、面子、把希望当系统",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_08_003",
+    "sceneId": "scene_08",
+    "sceneName": "扛单死撑",
+    "os": "再等等。",
+    "reflection_v2": "你等的不是上涨。\n你等的是希望替你收拾残局。",
+    "source": "V2戳心版",
+    "painPoint": "不服输、面子、把希望当系统",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_08_004",
+    "sceneId": "scene_08",
+    "sceneName": "扛单死撑",
+    "os": "我不信。",
+    "reflection_v2": "你不信的不是行情。\n你不信的是自己这一次真的看错了。",
+    "source": "V2戳心版",
+    "painPoint": "不服输、面子、把希望当系统",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_08_005",
+    "sceneId": "scene_08",
+    "sceneName": "扛单死撑",
+    "os": "总会弹一下。",
+    "reflection_v2": "你等的不是弹一下。\n是等一个不用狼狈离场的台阶。",
+    "source": "V2戳心版",
+    "painPoint": "不服输、面子、把希望当系统",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_08_006",
+    "sceneId": "scene_08",
+    "sceneName": "扛单死撑",
+    "os": "今天不卖。",
+    "reflection_v2": "不是今天不卖。\n是今天的你还不愿意低头。",
+    "source": "V2戳心版",
+    "painPoint": "不服输、面子、把希望当系统",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_08_007",
+    "sceneId": "scene_08",
+    "sceneName": "扛单死撑",
+    "os": "再看两天。",
+    "reflection_v2": "你说再看两天。\n其实是把认错往后拖两天。",
+    "source": "V2戳心版",
+    "painPoint": "不服输、面子、把希望当系统",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_08_008",
+    "sceneId": "scene_08",
+    "sceneName": "扛单死撑",
+    "os": "拉红我就走。",
+    "reflection_v2": "'拉红就走'。\n上次拉红时，你也没走。你等的不是红，是不认错。",
+    "source": "标杆版",
+    "painPoint": "不服输、面子、把希望当系统",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_08_009",
+    "sceneId": "scene_08",
+    "sceneName": "扛单死撑",
+    "os": "总会回来。",
+    "reflection_v2": "你盯着成本线。\n其实是盯着那句：我不该输。",
+    "source": "V2戳心版",
+    "painPoint": "不服输、面子、把希望当系统",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_08_010",
+    "sceneId": "scene_08",
+    "sceneName": "扛单死撑",
+    "os": "先放着。",
+    "reflection_v2": "你放着的不是股票。\n是那个不肯认输的自己。",
+    "source": "V2戳心版",
+    "painPoint": "不服输、面子、把希望当系统",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_09_001",
+    "sceneId": "scene_09",
+    "sceneName": "补仓摊平",
+    "os": "再补一点。",
+    "reflection_v2": "你盯着的是成本线，不是公司。补下去的。\n是不肯认错的希望。",
+    "source": "标杆版",
+    "painPoint": "摊平不是策略、是不愿认错",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_09_002",
+    "sceneId": "scene_09",
+    "sceneName": "补仓摊平",
+    "os": "跌这么多了。",
+    "reflection_v2": "'跌这么多'不是抄底的理由。\n是你想摊低成本的借口。",
+    "source": "标杆版",
+    "painPoint": "摊平不是策略、是不愿认错",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_09_003",
+    "sceneId": "scene_09",
+    "sceneName": "补仓摊平",
+    "os": "拉一下就回本。",
+    "reflection_v2": "你盯着的不是行情。\n是那条让你觉得还有救的成本线。",
+    "source": "V2戳心版",
+    "painPoint": "摊平不是策略、是不愿认错",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_09_004",
+    "sceneId": "scene_09",
+    "sceneName": "补仓摊平",
+    "os": "我再摊一下。",
+    "reflection_v2": "你不是重新判断。\n你是在保护原来的判断。",
+    "source": "V2戳心版",
+    "painPoint": "摊平不是策略、是不愿认错",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_09_005",
+    "sceneId": "scene_09",
+    "sceneName": "补仓摊平",
+    "os": "便宜了。",
+    "reflection_v2": "便宜的是价格，没变的是你看错的方向。",
+    "source": "标杆版",
+    "painPoint": "摊平不是策略、是不愿认错",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_09_006",
+    "sceneId": "scene_09",
+    "sceneName": "补仓摊平",
+    "os": "再买一次。",
+    "reflection_v2": "你不是在抄底。\n是在给一个已经错的决定，再下一注。",
+    "source": "标杆版",
+    "painPoint": "摊平不是策略、是不愿认错",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_09_007",
+    "sceneId": "scene_09",
+    "sceneName": "补仓摊平",
+    "os": "成本马上下来了。",
+    "reflection_v2": "成本是降了，风险翻倍了。\n你买的，是'我没错'的错觉。",
+    "source": "标杆版",
+    "painPoint": "摊平不是策略、是不愿认错",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_09_008",
+    "sceneId": "scene_09",
+    "sceneName": "补仓摊平",
+    "os": "这里应该到底了。",
+    "reflection_v2": "你不是在和价格较劲。\n你是在和自己的错误较劲。",
+    "source": "V2戳心版",
+    "painPoint": "摊平不是策略、是不愿认错",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_09_009",
+    "sceneId": "scene_09",
+    "sceneName": "补仓摊平",
+    "os": "再补最后一次。",
+    "reflection_v2": "最后一次最危险。\n因为它听起来像清醒，其实是失控。",
+    "source": "V2戳心版",
+    "painPoint": "摊平不是策略、是不愿认错",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_09_010",
+    "sceneId": "scene_09",
+    "sceneName": "补仓摊平",
+    "os": "总会回来的。",
+    "reflection_v2": "'还没输'。\n你把'不卖'，当成了'没输'。",
+    "source": "标杆版",
+    "painPoint": "摊平不是策略、是不愿认错",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_10_001",
+    "sceneId": "scene_10",
+    "sceneName": "越跌越补",
+    "os": "再补一点。",
+    "reflection_v2": "你补的不是仓位。\n是不肯认错的希望。",
+    "source": "标杆版",
+    "painPoint": "越补越想证明自己没错",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_10_002",
+    "sceneId": "scene_10",
+    "sceneName": "越跌越补",
+    "os": "跌这么多了。",
+    "reflection_v2": "你在给一个已经错的决定，一次次加注。",
+    "source": "标杆版",
+    "painPoint": "越补越想证明自己没错",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_10_003",
+    "sceneId": "scene_10",
+    "sceneName": "越跌越补",
+    "os": "这里肯定有支撑。",
+    "reflection_v2": "你找的不是支撑。\n是继续相信自己的证据。",
+    "source": "V2戳心版",
+    "painPoint": "越补越想证明自己没错",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_10_004",
+    "sceneId": "scene_10",
+    "sceneName": "越跌越补",
+    "os": "再买一点。",
+    "reflection_v2": "你盯的不是行情。\n是成本线能不能替你挽回面子。",
+    "source": "V2戳心版",
+    "painPoint": "越补越想证明自己没错",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_10_005",
+    "sceneId": "scene_10",
+    "sceneName": "越跌越补",
+    "os": "这下差不多了。",
+    "reflection_v2": "每一次差不多。\n都在把上一次错误往更深处推。",
+    "source": "V2戳心版",
+    "painPoint": "越补越想证明自己没错",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_10_006",
+    "sceneId": "scene_10",
+    "sceneName": "越跌越补",
+    "os": "反正都这样了。",
+    "reflection_v2": "当你说反正都这样了。\n规则已经不在场了。",
+    "source": "V2戳心版",
+    "painPoint": "越补越想证明自己没错",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_10_007",
+    "sceneId": "scene_10",
+    "sceneName": "越跌越补",
+    "os": "我再摊一下。",
+    "reflection_v2": "你不是在重新判断。\n你是在保护那个最初不愿错的自己。",
+    "source": "V2戳心版",
+    "painPoint": "越补越想证明自己没错",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_10_008",
+    "sceneId": "scene_10",
+    "sceneName": "越跌越补",
+    "os": "再补最后一次。",
+    "reflection_v2": "最后一次。\n很多失控都是从这四个字开始的。",
+    "source": "V2戳心版",
+    "painPoint": "越补越想证明自己没错",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_10_009",
+    "sceneId": "scene_10",
+    "sceneName": "越跌越补",
+    "os": "这里应该到底了。",
+    "reflection_v2": "你不是在抄底。\n是在用越来越多的钱，捍卫'我没错'。",
+    "source": "标杆版",
+    "painPoint": "越补越想证明自己没错",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_10_010",
+    "sceneId": "scene_10",
+    "sceneName": "越跌越补",
+    "os": "总会回来的。",
+    "reflection_v2": "你等它回来。\n其实是在等自己不用认错。",
+    "source": "V2戳心版",
+    "painPoint": "越补越想证明自己没错",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_11_001",
+    "sceneId": "scene_11",
+    "sceneName": "连续亏损后翻本",
+    "os": "再来一笔。",
+    "reflection_v2": "你要翻回来的，不只是钱。\n是'我不该输'那口气。",
+    "source": "标杆版",
+    "painPoint": "羞耻、不甘、想把亏损打回来",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_11_002",
+    "sceneId": "scene_11",
+    "sceneName": "连续亏损后翻本",
+    "os": "这一笔回来我就停。",
+    "reflection_v2": "这一笔回来我就停。\n你已经用这句话，把自己骗过很多次。",
+    "source": "V2戳心版",
+    "painPoint": "羞耻、不甘、想把亏损打回来",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_11_003",
+    "sceneId": "scene_11",
+    "sceneName": "连续亏损后翻本",
+    "os": "今天不能这样结束。",
+    "reflection_v2": "你受不了的不是亏损。\n是今天竟然要以失败收场。",
+    "source": "V2戳心版",
+    "painPoint": "羞耻、不甘、想把亏损打回来",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_11_004",
+    "sceneId": "scene_11",
+    "sceneName": "连续亏损后翻本",
+    "os": "总得给我一次吧。",
+    "reflection_v2": "你不是向市场要机会。\n你是在向市场讨一个公平。",
+    "source": "V2戳心版",
+    "painPoint": "羞耻、不甘、想把亏损打回来",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_11_005",
+    "sceneId": "scene_11",
+    "sceneName": "连续亏损后翻本",
+    "os": "再试一次。",
+    "reflection_v2": "你真正相信的，已经不是系统。\n是运气。",
+    "source": "照回升级版",
+    "painPoint": "羞耻、不甘、想把亏损打回来",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_11_006",
+    "sceneId": "scene_11",
+    "sceneName": "连续亏损后翻本",
+    "os": "就差一点。",
+    "reflection_v2": "就差一点。\n是亏损最会用来诱你继续的句子。",
+    "source": "V2戳心版",
+    "painPoint": "羞耻、不甘、想把亏损打回来",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_11_007",
+    "sceneId": "scene_11",
+    "sceneName": "连续亏损后翻本",
+    "os": "我得弄回来。",
+    "reflection_v2": "你想弄回来的不只是钱。\n还有被亏损打掉的面子。",
+    "source": "V2戳心版",
+    "painPoint": "羞耻、不甘、想把亏损打回来",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_11_008",
+    "sceneId": "scene_11",
+    "sceneName": "连续亏损后翻本",
+    "os": "怎么可能一直亏。",
+    "reflection_v2": "市场不会因为你委屈。\n就给你一笔补偿。",
+    "source": "V2戳心版",
+    "painPoint": "羞耻、不甘、想把亏损打回来",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_11_009",
+    "sceneId": "scene_11",
+    "sceneName": "连续亏损后翻本",
+    "os": "最后一把。",
+    "reflection_v2": "真正的最后一把。\n是你停手的那把，不是再开的这把。",
+    "source": "标杆版",
+    "painPoint": "羞耻、不甘、想把亏损打回来",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_11_010",
+    "sceneId": "scene_11",
+    "sceneName": "连续亏损后翻本",
+    "os": "我还没输。",
+    "reflection_v2": "你不是还没输。\n你是还不肯承认今天该停。",
+    "source": "V2戳心版",
+    "painPoint": "羞耻、不甘、想把亏损打回来",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_12_001",
+    "sceneId": "scene_12",
+    "sceneName": "连续盈利后膨胀",
+    "os": "今天状态真好。",
+    "reflection_v2": "你开始相信的不是系统。\n是赚钱以后那个发热的自己。",
+    "source": "V2戳心版",
+    "painPoint": "赚钱后的自大、轻视风险",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_12_002",
+    "sceneId": "scene_12",
+    "sceneName": "连续盈利后膨胀",
+    "os": "再来一笔。",
+    "reflection_v2": "连续盈利后最危险的不是亏损。\n是你觉得自己还能再赢。",
+    "source": "V2戳心版",
+    "painPoint": "赚钱后的自大、轻视风险",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_12_003",
+    "sceneId": "scene_12",
+    "sceneName": "连续盈利后膨胀",
+    "os": "手感来了。",
+    "reflection_v2": "你把几次对，当成了'我懂了'。\n市场最爱在这时，给你上一课。",
+    "source": "标杆版",
+    "painPoint": "赚钱后的自大、轻视风险",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_12_004",
+    "sceneId": "scene_12",
+    "sceneName": "连续盈利后膨胀",
+    "os": "这次多上点。",
+    "reflection_v2": "让你想加大的不是机会。\n是你开始相信，自己不会错。",
+    "source": "标杆版",
+    "painPoint": "赚钱后的自大、轻视风险",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_12_005",
+    "sceneId": "scene_12",
+    "sceneName": "连续盈利后膨胀",
+    "os": "这票我看透了。",
+    "reflection_v2": "当你觉得看透了。\n市场最容易让你看见自己有多轻。",
+    "source": "V2戳心版",
+    "painPoint": "赚钱后的自大、轻视风险",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_12_006",
+    "sceneId": "scene_12",
+    "sceneName": "连续盈利后膨胀",
+    "os": "今天就是我的盘。",
+    "reflection_v2": "不是盘属于你。\n是你的心开始以为自己高过市场。",
+    "source": "V2戳心版",
+    "painPoint": "赚钱后的自大、轻视风险",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_12_007",
+    "sceneId": "scene_12",
+    "sceneName": "连续盈利后膨胀",
+    "os": "这也太简单了。",
+    "reflection_v2": "你觉得简单的那一刻。\n风险已经被你看低了。",
+    "source": "V2戳心版",
+    "painPoint": "赚钱后的自大、轻视风险",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_12_008",
+    "sceneId": "scene_12",
+    "sceneName": "连续盈利后膨胀",
+    "os": "不上重仓可惜了。",
+    "reflection_v2": "你不是在抓机会。\n是在用盈利，给冲动壮胆。",
+    "source": "标杆版",
+    "painPoint": "赚钱后的自大、轻视风险",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_12_009",
+    "sceneId": "scene_12",
+    "sceneName": "连续盈利后膨胀",
+    "os": "他们不敢上。",
+    "reflection_v2": "你开始比的不是规则，是胆子。\n赌的，是别人不敢赌的。",
+    "source": "标杆版",
+    "painPoint": "赚钱后的自大、轻视风险",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_12_010",
+    "sceneId": "scene_12",
+    "sceneName": "连续盈利后膨胀",
+    "os": "今天真准。",
+    "reflection_v2": "赚钱以后最容易忘的。\n正是让你赚钱的那份敬畏。",
+    "source": "V2戳心版",
+    "painPoint": "赚钱后的自大、轻视风险",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_13_001",
+    "sceneId": "scene_13",
+    "sceneName": "重仓冲动",
+    "os": "这次得上重仓。",
+    "reflection_v2": "你放大的不是仓位。\n是'这次一定要赚够'的欲望。",
+    "source": "标杆版",
+    "painPoint": "想一笔证明自己、怕赚少",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_13_002",
+    "sceneId": "scene_13",
+    "sceneName": "重仓冲动",
+    "os": "不上重仓可惜了。",
+    "reflection_v2": "你怕的已经不是亏。\n是怕赚少了。",
+    "source": "V2戳心版",
+    "painPoint": "想一笔证明自己、怕赚少",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_13_003",
+    "sceneId": "scene_13",
+    "sceneName": "重仓冲动",
+    "os": "这票稳。",
+    "reflection_v2": "你说它稳。\n往往是你开始忽略风险的时候。",
+    "source": "V2戳心版",
+    "painPoint": "想一笔证明自己、怕赚少",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_13_004",
+    "sceneId": "scene_13",
+    "sceneName": "重仓冲动",
+    "os": "干脆多上点。",
+    "reflection_v2": "你拉大的不是仓位。\n是情绪替你说话的声音。",
+    "source": "V2戳心版",
+    "painPoint": "想一笔证明自己、怕赚少",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_13_005",
+    "sceneId": "scene_13",
+    "sceneName": "重仓冲动",
+    "os": "这次机会太好了。",
+    "reflection_v2": "让你加码的不是机会有多好。\n是你不想，再当那个赚得少的人。",
+    "source": "标杆版",
+    "painPoint": "想一笔证明自己、怕赚少",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_13_006",
+    "sceneId": "scene_13",
+    "sceneName": "重仓冲动",
+    "os": "拼一把。",
+    "reflection_v2": "拼一把出口的那一刻。\n系统已经让位给了冲动。",
+    "source": "V2戳心版",
+    "painPoint": "想一笔证明自己、怕赚少",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_13_007",
+    "sceneId": "scene_13",
+    "sceneName": "重仓冲动",
+    "os": "这种机会一年没几次。",
+    "reflection_v2": "每个重仓冲动。\n都相信自己遇到的是例外。",
+    "source": "V2戳心版",
+    "painPoint": "想一笔证明自己、怕赚少",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_13_008",
+    "sceneId": "scene_13",
+    "sceneName": "重仓冲动",
+    "os": "人家都敢上。",
+    "reflection_v2": "你比的不是规则。\n是别人敢上，你也不想显得胆小。",
+    "source": "V2戳心版",
+    "painPoint": "想一笔证明自己、怕赚少",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_13_009",
+    "sceneId": "scene_13",
+    "sceneName": "重仓冲动",
+    "os": "搞大一点。",
+    "reflection_v2": "'没意思'。\n你要的不是收益，是刺激。",
+    "source": "标杆版",
+    "painPoint": "想一笔证明自己、怕赚少",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_13_010",
+    "sceneId": "scene_13",
+    "sceneName": "重仓冲动",
+    "os": "这一把要干票大的。",
+    "reflection_v2": "你想干票大的，不是因为机会。\n是因为不甘心。",
+    "source": "标杆版",
+    "painPoint": "想一笔证明自己、怕赚少",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_14_001",
+    "sceneId": "scene_14",
+    "sceneName": "梭哈冲动",
+    "os": "干一把。",
+    "reflection_v2": "你觉得'这次不一样'。\n梭哈的人，每次都这么觉得。",
+    "source": "标杆版",
+    "painPoint": "一把改命、欲望接管系统",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_14_002",
+    "sceneId": "scene_14",
+    "sceneName": "梭哈冲动",
+    "os": "全上。",
+    "reflection_v2": "你全上的不是仓位。\n是'我能一把翻身'的幻想。",
+    "source": "标杆版",
+    "painPoint": "一把改命、欲望接管系统",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_14_003",
+    "sceneId": "scene_14",
+    "sceneName": "梭哈冲动",
+    "os": "留着也没用。",
+    "reflection_v2": "你把风控看成阻碍。\n说明欲望已经开始掌权。",
+    "source": "V2戳心版",
+    "painPoint": "一把改命、欲望接管系统",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_14_004",
+    "sceneId": "scene_14",
+    "sceneName": "梭哈冲动",
+    "os": "搞票大的。",
+    "reflection_v2": "你不只是想赚钱。\n你开始想要刺激。",
+    "source": "V2戳心版",
+    "painPoint": "一把改命、欲望接管系统",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_14_005",
+    "sceneId": "scene_14",
+    "sceneName": "梭哈冲动",
+    "os": "这次必须狠狠干。",
+    "reflection_v2": "你放大的不是仓位。\n是心里那头不肯满足的欲望。",
+    "source": "V2戳心版",
+    "painPoint": "一把改命、欲望接管系统",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_14_006",
+    "sceneId": "scene_14",
+    "sceneName": "梭哈冲动",
+    "os": "错过太可惜。",
+    "reflection_v2": "让你不留余地的不是机会。\n是害怕错过。",
+    "source": "V2戳心版",
+    "painPoint": "一把改命、欲望接管系统",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_14_007",
+    "sceneId": "scene_14",
+    "sceneName": "梭哈冲动",
+    "os": "拼了。",
+    "reflection_v2": "这一刻你已经不在交易，你在赌。",
+    "source": "标杆版",
+    "painPoint": "一把改命、欲望接管系统",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_14_008",
+    "sceneId": "scene_14",
+    "sceneName": "梭哈冲动",
+    "os": "果然没错。",
+    "reflection_v2": "行情暂时顺着你，不等于你看懂了。\n赌赢一把，最坏。",
+    "source": "标杆版",
+    "painPoint": "一把改命、欲望接管系统",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_14_009",
+    "sceneId": "scene_14",
+    "sceneName": "梭哈冲动",
+    "os": "再干大点。",
+    "reflection_v2": "'赚够'。\n贪婪最大的特点，就是永远不够。",
+    "source": "标杆版",
+    "painPoint": "一把改命、欲望接管系统",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_14_010",
+    "sceneId": "scene_14",
+    "sceneName": "梭哈冲动",
+    "os": "这一把翻身。",
+    "reflection_v2": "你押上的不是仓位，是人生。\n而市场，不负责改命。",
+    "source": "标杆版",
+    "painPoint": "一把改命、欲望接管系统",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_15_001",
+    "sceneId": "scene_15",
+    "sceneName": "空仓焦虑",
+    "os": "又涨了。",
+    "reflection_v2": "你难受的不是上涨。\n是市场热闹时，你不在里面。",
+    "source": "V2戳心版",
+    "painPoint": "不在场感、比较、存在感焦虑",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_15_002",
+    "sceneId": "scene_15",
+    "sceneName": "空仓焦虑",
+    "os": "今天又没买。",
+    "reflection_v2": "你怀疑的不是今天没买。\n是自己是不是又错过了一次。",
+    "source": "V2戳心版",
+    "painPoint": "不在场感、比较、存在感焦虑",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_15_003",
+    "sceneId": "scene_15",
+    "sceneName": "空仓焦虑",
+    "os": "这票我看过。",
+    "reflection_v2": "真正刺痛你的。\n是你曾经看见过，却没有参与。",
+    "source": "V2戳心版",
+    "painPoint": "不在场感、比较、存在感焦虑",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_15_004",
+    "sceneId": "scene_15",
+    "sceneName": "空仓焦虑",
+    "os": "别人又吃到了。",
+    "reflection_v2": "别人赚到的不是利润。\n是你最受不了的比较。",
+    "source": "V2戳心版",
+    "painPoint": "不在场感、比较、存在感焦虑",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_15_005",
+    "sceneId": "scene_15",
+    "sceneName": "空仓焦虑",
+    "os": "总得做点什么。",
+    "reflection_v2": "总得做点什么。\n是空仓焦虑最像交易的一句话。",
+    "source": "V2戳心版",
+    "painPoint": "不在场感、比较、存在感焦虑",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_15_006",
+    "sceneId": "scene_15",
+    "sceneName": "空仓焦虑",
+    "os": "今天总得买一个吧。",
+    "reflection_v2": "当你说总得买一个。\n交易已经变成了证明存在感。",
+    "source": "V2戳心版",
+    "painPoint": "不在场感、比较、存在感焦虑",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_15_007",
+    "sceneId": "scene_15",
+    "sceneName": "空仓焦虑",
+    "os": "我是不是太谨慎了。",
+    "reflection_v2": "你把纪律误会成胆小。\n其实是热闹在逼你交出规则。",
+    "source": "V2戳心版",
+    "painPoint": "不在场感、比较、存在感焦虑",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_15_008",
+    "sceneId": "scene_15",
+    "sceneName": "空仓焦虑",
+    "os": "大家都有票。",
+    "reflection_v2": "你想要的不是这只票。\n是'和大家一样'那份安心。",
+    "source": "标杆版",
+    "painPoint": "不在场感、比较、存在感焦虑",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_15_009",
+    "sceneId": "scene_15",
+    "sceneName": "空仓焦虑",
+    "os": "不买点不甘心。",
+    "reflection_v2": "这一刻让你下单的，不是机会。\n是不甘心。",
+    "source": "标杆版",
+    "painPoint": "不在场感、比较、存在感焦虑",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_15_010",
+    "sceneId": "scene_15",
+    "sceneName": "空仓焦虑",
+    "os": "明天一定上。",
+    "reflection_v2": "你害怕的不是空仓。\n是明天还要继续看别人动。",
+    "source": "V2戳心版",
+    "painPoint": "不在场感、比较、存在感焦虑",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_16_001",
+    "sceneId": "scene_16",
+    "sceneName": "临盘改计划",
+    "os": "先看看再说。",
+    "reflection_v2": "你开始怀疑的不是计划。\n是行情一晃，你的心先动了。",
+    "source": "V2戳心版",
+    "painPoint": "情绪改计划、背叛自己写下的规则",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_16_002",
+    "sceneId": "scene_16",
+    "sceneName": "临盘改计划",
+    "os": "等一下。",
+    "reflection_v2": "很多计划不是输给市场。\n是死在你手停住的那一秒。",
+    "source": "V2戳心版",
+    "painPoint": "情绪改计划、背叛自己写下的规则",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_16_003",
+    "sceneId": "scene_16",
+    "sceneName": "临盘改计划",
+    "os": "再等等。",
+    "reflection_v2": "计划已经说该走。\n留下的是情绪想再等等。",
+    "source": "V2戳心版",
+    "painPoint": "情绪改计划、背叛自己写下的规则",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_16_004",
+    "sceneId": "scene_16",
+    "sceneName": "临盘改计划",
+    "os": "计划先放一放。",
+    "reflection_v2": "你放下的不是计划。\n是刚才那个看似更刺激的眼前。",
+    "source": "V2戳心版",
+    "painPoint": "情绪改计划、背叛自己写下的规则",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_16_005",
+    "sceneId": "scene_16",
+    "sceneName": "临盘改计划",
+    "os": "先改一下。",
+    "reflection_v2": "真正改变你的不是市场。\n是市场一动，你的心就变了。",
+    "source": "V2戳心版",
+    "painPoint": "情绪改计划、背叛自己写下的规则",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_16_006",
+    "sceneId": "scene_16",
+    "sceneName": "临盘改计划",
+    "os": "要不换个思路。",
+    "reflection_v2": "你借别人的动作。\n替自己临时换了信号。",
+    "source": "V2戳心版",
+    "painPoint": "情绪改计划、背叛自己写下的规则",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_16_007",
+    "sceneId": "scene_16",
+    "sceneName": "临盘改计划",
+    "os": "这次特殊。",
+    "reflection_v2": "几乎所有失控。\n都喜欢用这次特殊开头。",
+    "source": "V2戳心版",
+    "painPoint": "情绪改计划、背叛自己写下的规则",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_16_008",
+    "sceneId": "scene_16",
+    "sceneName": "临盘改计划",
+    "os": "算了改一下。",
+    "reflection_v2": "你以为在优化。\n其实是在逃避按原计划承担结果。",
+    "source": "V2戳心版",
+    "painPoint": "情绪改计划、背叛自己写下的规则",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_16_009",
+    "sceneId": "scene_16",
+    "sceneName": "临盘改计划",
+    "os": "早知道按原计划。",
+    "reflection_v2": "最痛的不是亏损。\n是你亲手背叛了自己写下的规则。",
+    "source": "V2戳心版",
+    "painPoint": "情绪改计划、背叛自己写下的规则",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_16_010",
+    "sceneId": "scene_16",
+    "sceneName": "临盘改计划",
+    "os": "下次不改了。",
+    "reflection_v2": "计划不一定完美。\n但真正坏事的是你总想临时改命。",
+    "source": "V2戳心版",
+    "painPoint": "情绪改计划、背叛自己写下的规则",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_17_001",
+    "sceneId": "scene_17",
+    "sceneName": "止损后又涨",
+    "os": "卖完就涨。",
+    "reflection_v2": "最难受的不是止损。\n是止损以后，市场像在嘲笑你。",
+    "source": "V2戳心版",
+    "painPoint": "用结果否定规则、后悔动摇系统",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_17_002",
+    "sceneId": "scene_17",
+    "sceneName": "止损后又涨",
+    "os": "我就知道。",
+    "reflection_v2": "你用后来的上涨。\n否定了当时那条救你的规则。",
+    "source": "V2戳心版",
+    "painPoint": "用结果否定规则、后悔动摇系统",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_17_003",
+    "sceneId": "scene_17",
+    "sceneName": "止损后又涨",
+    "os": "白割了。",
+    "reflection_v2": "你说白割了。\n其实是结果又把你拉回后悔里。",
+    "source": "V2戳心版",
+    "painPoint": "用结果否定规则、后悔动摇系统",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_17_004",
+    "sceneId": "scene_17",
+    "sceneName": "止损后又涨",
+    "os": "再等等就好了。",
+    "reflection_v2": "再等等就好了。\n是后悔替你编出的另一个世界。",
+    "source": "V2戳心版",
+    "painPoint": "用结果否定规则、后悔动摇系统",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_17_005",
+    "sceneId": "scene_17",
+    "sceneName": "止损后又涨",
+    "os": "怎么偏偏今天。",
+    "reflection_v2": "你觉得偏偏今天。\n其实是把市场看成了针对你的人。",
+    "source": "V2戳心版",
+    "painPoint": "用结果否定规则、后悔动摇系统",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_17_006",
+    "sceneId": "scene_17",
+    "sceneName": "止损后又涨",
+    "os": "我真服了。",
+    "reflection_v2": "你服的不是行情。\n你是又开始攻击那个按规则走的自己。",
+    "source": "V2戳心版",
+    "painPoint": "用结果否定规则、后悔动摇系统",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_17_007",
+    "sceneId": "scene_17",
+    "sceneName": "止损后又涨",
+    "os": "我割在最低点。",
+    "reflection_v2": "你割在最低点。\n疼的是这句话把你整个人都否定了。",
+    "source": "V2戳心版",
+    "painPoint": "用结果否定规则、后悔动摇系统",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_17_008",
+    "sceneId": "scene_17",
+    "sceneName": "止损后又涨",
+    "os": "要不要追回来。",
+    "reflection_v2": "止损后最危险的不是痛。\n是你想追回去证明自己没错。",
+    "source": "V2戳心版",
+    "painPoint": "用结果否定规则、后悔动摇系统",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_17_009",
+    "sceneId": "scene_17",
+    "sceneName": "止损后又涨",
+    "os": "他们怎么没卖。",
+    "reflection_v2": "刺痛你的不是它涨。\n是别人没卖，显得你更孤单。",
+    "source": "V2戳心版",
+    "painPoint": "用结果否定规则、后悔动摇系统",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_17_010",
+    "sceneId": "scene_17",
+    "sceneName": "止损后又涨",
+    "os": "下次不止损了。",
+    "reflection_v2": "下次不止损。\n是一次后悔，开始动摇整套规则。",
+    "source": "V2戳心版",
+    "painPoint": "用结果否定规则、后悔动摇系统",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_18_001",
+    "sceneId": "scene_18",
+    "sceneName": "止盈后继续涨",
+    "os": "我次奥，还涨。",
+    "reflection_v2": "最难受的不是卖出。\n是你卖完后，它还在替后悔加码。",
+    "source": "V2戳心版",
+    "painPoint": "卖飞后悔、贪恋没吃到的那段",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_18_002",
+    "sceneId": "scene_18",
+    "sceneName": "止盈后继续涨",
+    "os": "怎么还涨。",
+    "reflection_v2": "你怀疑的不是行情。\n是自己是不是又拿不住。",
+    "source": "V2戳心版",
+    "painPoint": "卖飞后悔、贪恋没吃到的那段",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_18_003",
+    "sceneId": "scene_18",
+    "sceneName": "止盈后继续涨",
+    "os": "我刚才卖什么。",
+    "reflection_v2": "你幻想的不是刚才。\n是另一个永远更完美的卖点。",
+    "source": "V2戳心版",
+    "painPoint": "卖飞后悔、贪恋没吃到的那段",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_18_004",
+    "sceneId": "scene_18",
+    "sceneName": "止盈后继续涨",
+    "os": "后面全没吃到。",
+    "reflection_v2": "你不是没赚。\n你是盯着没吃到的那段，把赚到的也抹掉了。",
+    "source": "V2戳心版",
+    "painPoint": "卖飞后悔、贪恋没吃到的那段",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_18_005",
+    "sceneId": "scene_18",
+    "sceneName": "止盈后继续涨",
+    "os": "他们怎么还没卖。",
+    "reflection_v2": "刺痛你的不是继续涨。\n是别人还在里面，而你出来了。",
+    "source": "V2戳心版",
+    "painPoint": "卖飞后悔、贪恋没吃到的那段",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_18_006",
+    "sceneId": "scene_18",
+    "sceneName": "止盈后继续涨",
+    "os": "我就知道。",
+    "reflection_v2": "你说我就知道。\n其实是后悔假装成了先见之明。",
+    "source": "V2戳心版",
+    "painPoint": "卖飞后悔、贪恋没吃到的那段",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_18_007",
+    "sceneId": "scene_18",
+    "sceneName": "止盈后继续涨",
+    "os": "又卖飞了。",
+    "reflection_v2": "你怕的不是这一次。\n是'我怎么总卖飞'。",
+    "source": "标杆版",
+    "painPoint": "卖飞后悔、贪恋没吃到的那段",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_18_008",
+    "sceneId": "scene_18",
+    "sceneName": "止盈后继续涨",
+    "os": "再拿一下就好了。",
+    "reflection_v2": "你责怪的不是卖点。\n你责怪的是那个害怕失去的自己。",
+    "source": "V2戳心版",
+    "painPoint": "卖飞后悔、贪恋没吃到的那段",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_18_009",
+    "sceneId": "scene_18",
+    "sceneName": "止盈后继续涨",
+    "os": "真难受。",
+    "reflection_v2": "利润已经到手。\n后悔却把它说得一文不值。",
+    "source": "V2戳心版",
+    "painPoint": "卖飞后悔、贪恋没吃到的那段",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_18_010",
+    "sceneId": "scene_18",
+    "sceneName": "止盈后继续涨",
+    "os": "下次我一定拿住。",
+    "reflection_v2": "下次一定拿住。\n真正没放下的，是不想错过最高点的执念。",
+    "source": "V2戳心版",
+    "painPoint": "卖飞后悔、贪恋没吃到的那段",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_19_001",
+    "sceneId": "scene_19",
+    "sceneName": "开盘冲动",
+    "os": "我次奥，动了。",
+    "reflection_v2": "开盘最危险的不是波动。\n是它刚动，你的心先冲出去了。",
+    "source": "V2戳心版",
+    "painPoint": "开盘第一口气、心先冲出去了",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_19_002",
+    "sceneId": "scene_19",
+    "sceneName": "开盘冲动",
+    "os": "先进去再说。",
+    "reflection_v2": "规则还没醒。\n情绪已经替你点了买入。",
+    "source": "V2戳心版",
+    "painPoint": "开盘第一口气、心先冲出去了",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_19_003",
+    "sceneId": "scene_19",
+    "sceneName": "开盘冲动",
+    "os": "再不上来不及了。",
+    "reflection_v2": "你不是怕来不及。\n你是怕又一次站在热闹外面。",
+    "source": "V2戳心版",
+    "painPoint": "开盘第一口气、心先冲出去了",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_19_004",
+    "sceneId": "scene_19",
+    "sceneName": "开盘冲动",
+    "os": "干了。",
+    "reflection_v2": "你抢的不是机会。\n是抢在'后悔'之前，先下手。",
+    "source": "标杆版",
+    "painPoint": "开盘第一口气、心先冲出去了",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_19_005",
+    "sceneId": "scene_19",
+    "sceneName": "开盘冲动",
+    "os": "今天肯定有戏。",
+    "reflection_v2": "你把开局的热闹。\n误当成了今天的确定。",
+    "source": "V2戳心版",
+    "painPoint": "开盘第一口气、心先冲出去了",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_19_006",
+    "sceneId": "scene_19",
+    "sceneName": "开盘冲动",
+    "os": "人家都上了。",
+    "reflection_v2": "急的不是行情。\n是别人已经动了，你不想慢。",
+    "source": "V2戳心版",
+    "painPoint": "开盘第一口气、心先冲出去了",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_19_007",
+    "sceneId": "scene_19",
+    "sceneName": "开盘冲动",
+    "os": "不管了。",
+    "reflection_v2": "说不管了的时候。\n纪律已经离开你手边。",
+    "source": "V2戳心版",
+    "painPoint": "开盘第一口气、心先冲出去了",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_19_008",
+    "sceneId": "scene_19",
+    "sceneName": "开盘冲动",
+    "os": "应该没问题。",
+    "reflection_v2": "'应该没问题'。\n你不是判断的，是赌的，现在在求安心。",
+    "source": "标杆版",
+    "painPoint": "开盘第一口气、心先冲出去了",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_19_009",
+    "sceneId": "scene_19",
+    "sceneName": "开盘冲动",
+    "os": "我刚才怎么进的。",
+    "reflection_v2": "你回看买点才发现。\n那不是计划，是心跳。",
+    "source": "V2戳心版",
+    "painPoint": "开盘第一口气、心先冲出去了",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_19_010",
+    "sceneId": "scene_19",
+    "sceneName": "开盘冲动",
+    "os": "开盘又冲动了。",
+    "reflection_v2": "你怕的不是这一次冲动。\n是'我总是管不住手'。",
+    "source": "标杆版",
+    "painPoint": "开盘第一口气、心先冲出去了",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_20_001",
+    "sceneId": "scene_20",
+    "sceneName": "尾盘冲动",
+    "os": "今天总得买点。",
+    "reflection_v2": "你开始为了有仓位。\n而不是为了有机会。",
+    "source": "V2戳心版",
+    "painPoint": "不想空手结束、把焦虑买到明天",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_20_002",
+    "sceneId": "scene_20",
+    "sceneName": "尾盘冲动",
+    "os": "再不上来不及了。",
+    "reflection_v2": "让你急的不是尾盘拉升。\n是你不想空手结束今天。",
+    "source": "V2戳心版",
+    "painPoint": "不想空手结束、把焦虑买到明天",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_20_003",
+    "sceneId": "scene_20",
+    "sceneName": "尾盘冲动",
+    "os": "搞一笔再说。",
+    "reflection_v2": "你不是抓机会。\n你是在逃离空仓的难受。",
+    "source": "V2戳心版",
+    "painPoint": "不想空手结束、把焦虑买到明天",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_20_004",
+    "sceneId": "scene_20",
+    "sceneName": "尾盘冲动",
+    "os": "不买有点亏。",
+    "reflection_v2": "'不买就亏'。\n你把'没参与'，错算成了亏损。",
+    "source": "标杆版",
+    "painPoint": "不想空手结束、把焦虑买到明天",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_20_005",
+    "sceneId": "scene_20",
+    "sceneName": "尾盘冲动",
+    "os": "人家都进了。",
+    "reflection_v2": "'就我没动'。\n你买的不是票，是'别人都动了我也得动'。",
+    "source": "标杆版",
+    "painPoint": "不想空手结束、把焦虑买到明天",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_20_006",
+    "sceneId": "scene_20",
+    "sceneName": "尾盘冲动",
+    "os": "先上车。",
+    "reflection_v2": "先上车。\n是把今晚和明天的焦虑一并买进来。",
+    "source": "V2戳心版",
+    "painPoint": "不想空手结束、把焦虑买到明天",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_20_007",
+    "sceneId": "scene_20",
+    "sceneName": "尾盘冲动",
+    "os": "错过今天又得等。",
+    "reflection_v2": "你不是怕等。\n你是怕今天就这样结束。",
+    "source": "V2戳心版",
+    "painPoint": "不想空手结束、把焦虑买到明天",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_20_008",
+    "sceneId": "scene_20",
+    "sceneName": "尾盘冲动",
+    "os": "买了再说。",
+    "reflection_v2": "买了再说。\n是规则退出之后，情绪给你的口令。",
+    "source": "V2戳心版",
+    "painPoint": "不想空手结束、把焦虑买到明天",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_20_009",
+    "sceneId": "scene_20",
+    "sceneName": "尾盘冲动",
+    "os": "明天应该有戏。",
+    "reflection_v2": "你下单后盼明天。\n说明这笔从一开始就靠希望支撑。",
+    "source": "V2戳心版",
+    "painPoint": "不想空手结束、把焦虑买到明天",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_20_010",
+    "sceneId": "scene_20",
+    "sceneName": "尾盘冲动",
+    "os": "又是尾盘买的。",
+    "reflection_v2": "尾盘让你后悔的不是时间。\n是最后几分钟你还是没守住自己。",
+    "source": "V2戳心版",
+    "painPoint": "不想空手结束、把焦虑买到明天",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_21_001",
+    "sceneId": "scene_21",
+    "sceneName": "收盘后后悔",
+    "os": "我今天到底在干嘛。",
+    "reflection_v2": "难受的不是行情。\n是收盘以后，你终于看见了自己。",
+    "source": "V2戳心版",
+    "painPoint": "事后完美答案、用结果惩罚自己",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_21_002",
+    "sceneId": "scene_21",
+    "sceneName": "收盘后后悔",
+    "os": "当时怎么没买。",
+    "reflection_v2": "你怪的不是那个买点。\n是那个买点面前没敢动的自己。",
+    "source": "V2戳心版",
+    "painPoint": "事后完美答案、用结果惩罚自己",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_21_003",
+    "sceneId": "scene_21",
+    "sceneName": "收盘后后悔",
+    "os": "当时怎么卖了。",
+    "reflection_v2": "后悔最狠的地方。\n是它总能在收盘后给你标准答案。",
+    "source": "V2戳心版",
+    "painPoint": "事后完美答案、用结果惩罚自己",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_21_004",
+    "sceneId": "scene_21",
+    "sceneName": "收盘后后悔",
+    "os": "我本来能赚。",
+    "reflection_v2": "你本来能赚。\n是后悔造出来惩罚你的另一个剧本。",
+    "source": "V2戳心版",
+    "painPoint": "事后完美答案、用结果惩罚自己",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_21_005",
+    "sceneId": "scene_21",
+    "sceneName": "收盘后后悔",
+    "os": "这笔根本不该做。",
+    "reflection_v2": "最痛的不是亏。\n是同一个错误又从记录里站起来。",
+    "source": "V2戳心版",
+    "painPoint": "事后完美答案、用结果惩罚自己",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_21_006",
+    "sceneId": "scene_21",
+    "sceneName": "收盘后后悔",
+    "os": "白看一天。",
+    "reflection_v2": "你白看的不是一天。\n是看着机会从你手边过去。",
+    "source": "V2戳心版",
+    "painPoint": "事后完美答案、用结果惩罚自己",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_21_007",
+    "sceneId": "scene_21",
+    "sceneName": "收盘后后悔",
+    "os": "又白忙活。",
+    "reflection_v2": "你用盈亏评价一天。\n其实是把自己也一起判了。",
+    "source": "V2戳心版",
+    "painPoint": "事后完美答案、用结果惩罚自己",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_21_008",
+    "sceneId": "scene_21",
+    "sceneName": "收盘后后悔",
+    "os": "早知道就好了。",
+    "reflection_v2": "早知道。\n是后悔最会制造的完美幻觉。",
+    "source": "V2戳心版",
+    "painPoint": "事后完美答案、用结果惩罚自己",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_21_009",
+    "sceneId": "scene_21",
+    "sceneName": "收盘后后悔",
+    "os": "下次一定。",
+    "reflection_v2": "下次一定。\n是你给自己开过最多的空头支票。",
+    "source": "V2戳心版",
+    "painPoint": "事后完美答案、用结果惩罚自己",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_21_010",
+    "sceneId": "scene_21",
+    "sceneName": "收盘后后悔",
+    "os": "真不该。",
+    "reflection_v2": "睡不着的不是交易。\n是那口不甘心还在心里翻身。",
+    "source": "V2戳心版",
+    "painPoint": "事后完美答案、用结果惩罚自己",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_22_001",
+    "sceneId": "scene_22",
+    "sceneName": "复盘逃避",
+    "os": "明天再看吧。",
+    "reflection_v2": "你拖延的不是复盘。\n你拖延的是看见自己。",
+    "source": "V2戳心版",
+    "painPoint": "怕看见错误、逃避面对自己",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_22_002",
+    "sceneId": "scene_22",
+    "sceneName": "复盘逃避",
+    "os": "今天有点累。",
+    "reflection_v2": "真正累的不是写记录。\n是承认那笔错误确实发生了。",
+    "source": "V2戳心版",
+    "painPoint": "怕看见错误、逃避面对自己",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_22_003",
+    "sceneId": "scene_22",
+    "sceneName": "复盘逃避",
+    "os": "今天没啥好记的。",
+    "reflection_v2": "不是没啥好记。\n是你不想把失控写下来。",
+    "source": "V2戳心版",
+    "painPoint": "怕看见错误、逃避面对自己",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_22_004",
+    "sceneId": "scene_22",
+    "sceneName": "复盘逃避",
+    "os": "不看了。",
+    "reflection_v2": "不看了不会让问题消失。\n只会让同一个你明天继续下单。",
+    "source": "V2戳心版",
+    "painPoint": "怕看见错误、逃避面对自己",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_22_005",
+    "sceneId": "scene_22",
+    "sceneName": "复盘逃避",
+    "os": "周末再说。",
+    "reflection_v2": "'周末再说'。\n你不是没时间，是不想，现在就面对。",
+    "source": "标杆版",
+    "painPoint": "怕看见错误、逃避面对自己",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_22_006",
+    "sceneId": "scene_22",
+    "sceneName": "复盘逃避",
+    "os": "都过去了。",
+    "reflection_v2": "你把放弃说成过去了。\n其实是怕再看一眼。",
+    "source": "V2戳心版",
+    "painPoint": "怕看见错误、逃避面对自己",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_22_007",
+    "sceneId": "scene_22",
+    "sceneName": "复盘逃避",
+    "os": "算了。",
+    "reflection_v2": "错让你痛。\n但看见错，才会让你变。",
+    "source": "V2戳心版",
+    "painPoint": "怕看见错误、逃避面对自己",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_22_008",
+    "sceneId": "scene_22",
+    "sceneName": "复盘逃避",
+    "os": "没心情复盘。",
+    "reflection_v2": "越没心情复盘。\n越说明那一笔还牵着你。",
+    "source": "V2戳心版",
+    "painPoint": "怕看见错误、逃避面对自己",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_22_009",
+    "sceneId": "scene_22",
+    "sceneName": "复盘逃避",
+    "os": "下次再认真弄。",
+    "reflection_v2": "你放过的不是自己。\n是改变的那个入口。",
+    "source": "标杆版",
+    "painPoint": "怕看见错误、逃避面对自己",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_22_010",
+    "sceneId": "scene_22",
+    "sceneName": "复盘逃避",
+    "os": "明天开始。",
+    "reflection_v2": "你想改变。\n却绕开了改变真正的入口。",
+    "source": "V2戳心版",
+    "painPoint": "怕看见错误、逃避面对自己",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_23_001",
+    "sceneId": "scene_23",
+    "sceneName": "消息刺激",
+    "os": "我次奥，真的假的。",
+    "reflection_v2": "你还没验证消息。\n心已经先替你涨停了。",
+    "source": "V2戳心版",
+    "painPoint": "怕慢别人一步、消息带来的想象",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_23_002",
+    "sceneId": "scene_23",
+    "sceneName": "消息刺激",
+    "os": "都在说这个。",
+    "reflection_v2": "刺激你的不是消息。\n是别人好像都已经知道了。",
+    "source": "V2戳心版",
+    "painPoint": "怕慢别人一步、消息带来的想象",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_23_003",
+    "sceneId": "scene_23",
+    "sceneName": "消息刺激",
+    "os": "这不得涨。",
+    "reflection_v2": "你用标题想象行情。\n情绪已经替判断抢先下单。",
+    "source": "V2戳心版",
+    "painPoint": "怕慢别人一步、消息带来的想象",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_23_004",
+    "sceneId": "scene_23",
+    "sceneName": "消息刺激",
+    "os": "我得赶紧看看。",
+    "reflection_v2": "你怕的不是消息真假。\n是自己又慢别人一步。",
+    "source": "V2戳心版",
+    "painPoint": "怕慢别人一步、消息带来的想象",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_23_005",
+    "sceneId": "scene_23",
+    "sceneName": "消息刺激",
+    "os": "这波稳了。",
+    "reflection_v2": "所有人都觉得稳。\n正是你最容易失去自己的时候。",
+    "source": "V2戳心版",
+    "painPoint": "怕慢别人一步、消息带来的想象",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_23_006",
+    "sceneId": "scene_23",
+    "sceneName": "消息刺激",
+    "os": "先买点。",
+    "reflection_v2": "'先买点'。\n你买的不是消息，是'怕错过'。",
+    "source": "标杆版",
+    "painPoint": "怕慢别人一步、消息带来的想象",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_23_007",
+    "sceneId": "scene_23",
+    "sceneName": "消息刺激",
+    "os": "不上要后悔。",
+    "reflection_v2": "你追的不是消息。\n是追一个不想后悔的自己。",
+    "source": "V2戳心版",
+    "painPoint": "怕慢别人一步、消息带来的想象",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_23_008",
+    "sceneId": "scene_23",
+    "sceneName": "消息刺激",
+    "os": "果然有反应。",
+    "reflection_v2": "你开始找证据。\n不是为了判断，是为了支持刚起的冲动。",
+    "source": "V2戳心版",
+    "painPoint": "怕慢别人一步、消息带来的想象",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_23_009",
+    "sceneId": "scene_23",
+    "sceneName": "消息刺激",
+    "os": "这次赶上了。",
+    "reflection_v2": "让你兴奋的不是机会。\n是终于参与了这场热闹。",
+    "source": "V2戳心版",
+    "painPoint": "怕慢别人一步、消息带来的想象",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_23_010",
+    "sceneId": "scene_23",
+    "sceneName": "消息刺激",
+    "os": "希望消息别落空。",
+    "reflection_v2": "持仓之后。\n你开始希望消息替你负责。",
+    "source": "V2戳心版",
+    "painPoint": "怕慢别人一步、消息带来的想象",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_24_001",
+    "sceneId": "scene_24",
+    "sceneName": "别人喊单依赖",
+    "os": "跟不跟。",
+    "reflection_v2": "你跟的不是票。\n是'有人替我，担这个判断'。",
+    "source": "标杆版",
+    "painPoint": "不敢自己负责、借别人确定感",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_24_002",
+    "sceneId": "scene_24",
+    "sceneName": "别人喊单依赖",
+    "os": "先跟一点。",
+    "reflection_v2": "你借的不是逻辑。\n是别人给你的那点确定感。",
+    "source": "V2戳心版",
+    "painPoint": "不敢自己负责、借别人确定感",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_24_003",
+    "sceneId": "scene_24",
+    "sceneName": "别人喊单依赖",
+    "os": "大家都上了。",
+    "reflection_v2": "大家都上了。\n你最容易在这一刻把自己弄丢。",
+    "source": "V2戳心版",
+    "painPoint": "不敢自己负责、借别人确定感",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_24_004",
+    "sceneId": "scene_24",
+    "sceneName": "别人喊单依赖",
+    "os": "看看老师怎么说。",
+    "reflection_v2": "你要的不是分析。\n是一个，可以不用自己负责的答案。",
+    "source": "标杆版",
+    "painPoint": "不敢自己负责、借别人确定感",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_24_005",
+    "sceneId": "scene_24",
+    "sceneName": "别人喊单依赖",
+    "os": "那就拿着。",
+    "reflection_v2": "你拿着的不是仓位。\n是别人替你做主的安慰。",
+    "source": "V2戳心版",
+    "painPoint": "不敢自己负责、借别人确定感",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_24_006",
+    "sceneId": "scene_24",
+    "sceneName": "别人喊单依赖",
+    "os": "再等等。",
+    "reflection_v2": "你等的不是行情。\n是别人的一句允许。",
+    "source": "V2戳心版",
+    "painPoint": "不敢自己负责、借别人确定感",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_24_007",
+    "sceneId": "scene_24",
+    "sceneName": "别人喊单依赖",
+    "os": "老师怎么还没说。",
+    "reflection_v2": "亏损以后你找老师。\n其实是在找一个替你承担的人。",
+    "source": "V2戳心版",
+    "painPoint": "不敢自己负责、借别人确定感",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_24_008",
+    "sceneId": "scene_24",
+    "sceneName": "别人喊单依赖",
+    "os": "到底听谁的。",
+    "reflection_v2": "问题不是听谁。\n是你从来没把判断收回到自己手里。",
+    "source": "V2戳心版",
+    "painPoint": "不敢自己负责、借别人确定感",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_24_009",
+    "sceneId": "scene_24",
+    "sceneName": "别人喊单依赖",
+    "os": "又跟错了。",
+    "reflection_v2": "跟错最痛的不是别人错。\n是你明明知道自己没有主见。",
+    "source": "V2戳心版",
+    "painPoint": "不敢自己负责、借别人确定感",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_24_010",
+    "sceneId": "scene_24",
+    "sceneName": "别人喊单依赖",
+    "os": "下次还是得靠自己。",
+    "reflection_v2": "靠自己这句话不难。\n难的是愿意为自己的判断付代价。",
+    "source": "V2戳心版",
+    "painPoint": "不敢自己负责、借别人确定感",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_25_001",
+    "sceneId": "scene_25",
+    "sceneName": "热点追逐",
+    "os": "这波不能错过。",
+    "reflection_v2": "你追的不是热点。\n是那个'不想再错过'的自己。",
+    "source": "标杆版",
+    "painPoint": "热闹推着走、怕站错队",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_25_002",
+    "sceneId": "scene_25",
+    "sceneName": "热点追逐",
+    "os": "这几天全在说它。",
+    "reflection_v2": "讨论越多。\n你越容易把别人的兴奋当成自己的判断。",
+    "source": "V2戳心版",
+    "painPoint": "热闹推着走、怕站错队",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_25_003",
+    "sceneId": "scene_25",
+    "sceneName": "热点追逐",
+    "os": "赶紧上车。",
+    "reflection_v2": "'再晚没机会'。\n你怕的不是没机会，是别人都上了就你没上。",
+    "source": "标杆版",
+    "painPoint": "热闹推着走、怕站错队",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_25_004",
+    "sceneId": "scene_25",
+    "sceneName": "热点追逐",
+    "os": "就它了。",
+    "reflection_v2": "你买它的理由，是赌后面有人接。\n不是它本身值多少。",
+    "source": "标杆版",
+    "painPoint": "热闹推着走、怕站错队",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_25_005",
+    "sceneId": "scene_25",
+    "sceneName": "热点追逐",
+    "os": "这次不一样。",
+    "reflection_v2": "每个热点都让人相信：这次例外。\n失控也最喜欢这句话。",
+    "source": "V2戳心版",
+    "painPoint": "热闹推着走、怕站错队",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_25_006",
+    "sceneId": "scene_25",
+    "sceneName": "热点追逐",
+    "os": "大家都在做。",
+    "reflection_v2": "刺激你的不是题材。\n是群体情绪把你推上去。",
+    "source": "V2戳心版",
+    "painPoint": "热闹推着走、怕站错队",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_25_007",
+    "sceneId": "scene_25",
+    "sceneName": "热点追逐",
+    "os": "先买再说。",
+    "reflection_v2": "先买再说。\n是研究退场、冲动进场的声音。",
+    "source": "V2戳心版",
+    "painPoint": "热闹推着走、怕站错队",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_25_008",
+    "sceneId": "scene_25",
+    "sceneName": "热点追逐",
+    "os": "果然强。",
+    "reflection_v2": "热点放大的不是机会。\n是你心里的侥幸。",
+    "source": "V2戳心版",
+    "painPoint": "热闹推着走、怕站错队",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_25_009",
+    "sceneId": "scene_25",
+    "sceneName": "热点追逐",
+    "os": "还得加。",
+    "reflection_v2": "赚钱以后。\n你越来越相信的不是热点，是自己的贪。",
+    "source": "V2戳心版",
+    "painPoint": "热闹推着走、怕站错队",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_25_010",
+    "sceneId": "scene_25",
+    "sceneName": "热点追逐",
+    "os": "明天继续冲。",
+    "reflection_v2": "持仓之后。\n你开始希望热闹永远别散。",
+    "source": "V2戳心版",
+    "painPoint": "热闹推着走、怕站错队",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_26_001",
+    "sceneId": "scene_26",
+    "sceneName": "抄底冲动",
+    "os": "跌这么多了。",
+    "reflection_v2": "你把跌得多当理由。\n其实是把危险说成了便宜。",
+    "source": "V2戳心版",
+    "painPoint": "想证明比市场聪明、把危险说成便宜",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_26_002",
+    "sceneId": "scene_26",
+    "sceneName": "抄底冲动",
+    "os": "这位置差不多了。",
+    "reflection_v2": "市场不知道什么叫差不多。\n只有你在替它划底线。",
+    "source": "V2戳心版",
+    "painPoint": "想证明比市场聪明、把危险说成便宜",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_26_003",
+    "sceneId": "scene_26",
+    "sceneName": "抄底冲动",
+    "os": "机会来了。",
+    "reflection_v2": "你以为勇敢来了。\n其实冲动先到了。",
+    "source": "V2戳心版",
+    "painPoint": "想证明比市场聪明、把危险说成便宜",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_26_004",
+    "sceneId": "scene_26",
+    "sceneName": "抄底冲动",
+    "os": "这不捡钱吗。",
+    "reflection_v2": "你以为在捡钱。\n其实是在接别人的恐慌。",
+    "source": "V2戳心版",
+    "painPoint": "想证明比市场聪明、把危险说成便宜",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_26_005",
+    "sceneId": "scene_26",
+    "sceneName": "抄底冲动",
+    "os": "再跌我就加。",
+    "reflection_v2": "你越盯价格。\n越容易忘了风险还在往下走。",
+    "source": "V2戳心版",
+    "painPoint": "想证明比市场聪明、把危险说成便宜",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_26_006",
+    "sceneId": "scene_26",
+    "sceneName": "抄底冲动",
+    "os": "先进去一点。",
+    "reflection_v2": "你进去的不是确定性。\n是侥幸给你开的门。",
+    "source": "V2戳心版",
+    "painPoint": "想证明比市场聪明、把危险说成便宜",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_26_007",
+    "sceneId": "scene_26",
+    "sceneName": "抄底冲动",
+    "os": "杀过头了。",
+    "reflection_v2": "'杀过头'是你的判断。\n不是市场的承诺。",
+    "source": "标杆版",
+    "painPoint": "想证明比市场聪明、把危险说成便宜",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_26_008",
+    "sceneId": "scene_26",
+    "sceneName": "抄底冲动",
+    "os": "反弹一下就够。",
+    "reflection_v2": "你买的不是反转。\n你买的是那一下反弹的幻想。",
+    "source": "V2戳心版",
+    "painPoint": "想证明比市场聪明、把危险说成便宜",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_26_009",
+    "sceneId": "scene_26",
+    "sceneName": "抄底冲动",
+    "os": "怎么还跌。",
+    "reflection_v2": "你不是抄到底。\n你是在猜自己比市场聪明。",
+    "source": "V2戳心版",
+    "painPoint": "想证明比市场聪明、把危险说成便宜",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_26_010",
+    "sceneId": "scene_26",
+    "sceneName": "抄底冲动",
+    "os": "明天总该反弹了。",
+    "reflection_v2": "当你开始预测最低点。\n规则已经被你留在岸上。",
+    "source": "V2戳心版",
+    "painPoint": "想证明比市场聪明、把危险说成便宜",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_27_001",
+    "sceneId": "scene_27",
+    "sceneName": "高位接盘",
+    "os": "还能涨吧。",
+    "reflection_v2": "让你下单的不是确定。\n是害怕自己又错过最后一段。",
+    "source": "V2戳心版",
+    "painPoint": "热闹推上去、怕成为局外人",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_27_002",
+    "sceneId": "scene_27",
+    "sceneName": "高位接盘",
+    "os": "这次不一样。",
+    "reflection_v2": "每个高位接盘的人。\n都觉得自己不会是最后一个。",
+    "source": "V2戳心版",
+    "painPoint": "热闹推上去、怕成为局外人",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_27_003",
+    "sceneId": "scene_27",
+    "sceneName": "高位接盘",
+    "os": "我也得上。",
+    "reflection_v2": "你想上的不是它。\n是别人赚钱时你不想缺席。",
+    "source": "V2戳心版",
+    "painPoint": "热闹推上去、怕成为局外人",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_27_004",
+    "sceneId": "scene_27",
+    "sceneName": "高位接盘",
+    "os": "太强了。",
+    "reflection_v2": "你买它，是因为相信有'下一个'。\n不是它该值这个价。",
+    "source": "标杆版",
+    "painPoint": "热闹推上去、怕成为局外人",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_27_005",
+    "sceneId": "scene_27",
+    "sceneName": "高位接盘",
+    "os": "先买一点。",
+    "reflection_v2": "'万一继续涨'。\n你为这个'万一'，站到了最危险的位置。",
+    "source": "标杆版",
+    "painPoint": "热闹推上去、怕成为局外人",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_27_006",
+    "sceneId": "scene_27",
+    "sceneName": "高位接盘",
+    "os": "现在不上以后更贵。",
+    "reflection_v2": "'以后更贵'是涨出来的错觉。\n不是你该追的理由。",
+    "source": "标杆版",
+    "painPoint": "热闹推上去、怕成为局外人",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_27_007",
+    "sceneId": "scene_27",
+    "sceneName": "高位接盘",
+    "os": "大家都看好。",
+    "reflection_v2": "所有人都看好。\n正是你最容易放弃自己的时候。",
+    "source": "V2戳心版",
+    "painPoint": "热闹推上去、怕成为局外人",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_27_008",
+    "sceneId": "scene_27",
+    "sceneName": "高位接盘",
+    "os": "果然强。",
+    "reflection_v2": "高位最危险的不是立刻错。\n是短暂正确让你更敢相信。",
+    "source": "V2戳心版",
+    "painPoint": "热闹推上去、怕成为局外人",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_27_009",
+    "sceneId": "scene_27",
+    "sceneName": "高位接盘",
+    "os": "正常调整。",
+    "reflection_v2": "你说正常调整。\n其实是希望在替风险辩护。",
+    "source": "V2戳心版",
+    "painPoint": "热闹推上去、怕成为局外人",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_27_010",
+    "sceneId": "scene_27",
+    "sceneName": "高位接盘",
+    "os": "明天继续冲。",
+    "reflection_v2": "每个人都赌'后面还有人接'。\n你想过吗，最后接住的，可能是你。",
+    "source": "标杆版",
+    "painPoint": "热闹推上去、怕成为局外人",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_28_001",
+    "sceneId": "scene_28",
+    "sceneName": "回本执念",
+    "os": "回本我就走。",
+    "reflection_v2": "你等的不是机会。\n你等的是亏损不用被承认的那一刻。",
+    "source": "V2戳心版",
+    "painPoint": "成本线绑架、等体面离开",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_28_002",
+    "sceneId": "scene_28",
+    "sceneName": "回本执念",
+    "os": "快到了。",
+    "reflection_v2": "你盯的是成本线，不是这家公司，还值不值。",
+    "source": "标杆版",
+    "painPoint": "成本线绑架、等体面离开",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_28_003",
+    "sceneId": "scene_28",
+    "sceneName": "回本执念",
+    "os": "再等等。",
+    "reflection_v2": "很多人不是死在亏损。\n是死在快回本的差一点。",
+    "source": "V2戳心版",
+    "painPoint": "成本线绑架、等体面离开",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_28_004",
+    "sceneId": "scene_28",
+    "sceneName": "回本执念",
+    "os": "回本再卖。",
+    "reflection_v2": "你不是在交易。\n你是在跟成本线较劲。",
+    "source": "V2戳心版",
+    "painPoint": "成本线绑架、等体面离开",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_28_005",
+    "sceneId": "scene_28",
+    "sceneName": "回本执念",
+    "os": "怎么又下来了。",
+    "reflection_v2": "最痛的不是亏。\n是希望快到了又被拉走。",
+    "source": "V2戳心版",
+    "painPoint": "成本线绑架、等体面离开",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_28_006",
+    "sceneId": "scene_28",
+    "sceneName": "回本执念",
+    "os": "先回本再说。",
+    "reflection_v2": "你放不下的不是钱。\n是这局输赢。",
+    "source": "V2戳心版",
+    "painPoint": "成本线绑架、等体面离开",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_28_007",
+    "sceneId": "scene_28",
+    "sceneName": "回本执念",
+    "os": "再给一次机会。",
+    "reflection_v2": "你给的不是它机会。\n是给自己，一个不认错的理由。",
+    "source": "标杆版",
+    "painPoint": "成本线绑架、等体面离开",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_28_008",
+    "sceneId": "scene_28",
+    "sceneName": "回本执念",
+    "os": "都等这么久了。",
+    "reflection_v2": "你用过去的等待，证明该继续等待。\n这是个无底的循环。",
+    "source": "标杆版",
+    "painPoint": "成本线绑架、等体面离开",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_28_009",
+    "sceneId": "scene_28",
+    "sceneName": "回本执念",
+    "os": "我就想回本。",
+    "reflection_v2": "当你只想回本。\n风险已经从你眼里消失了。",
+    "source": "V2戳心版",
+    "painPoint": "成本线绑架、等体面离开",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_28_010",
+    "sceneId": "scene_28",
+    "sceneName": "回本执念",
+    "os": "回本我一定走。",
+    "reflection_v2": "你说回本就走。\n其实这句话已经困了你很久。",
+    "source": "V2戳心版",
+    "painPoint": "成本线绑架、等体面离开",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_29_001",
+    "sceneId": "scene_29",
+    "sceneName": "解套执念",
+    "os": "解套我就走。",
+    "reflection_v2": "你等的不是机会。\n是结束这段，不甘心。",
+    "source": "标杆版",
+    "painPoint": "等不痛的出口、被成本线困住",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_29_002",
+    "sceneId": "scene_29",
+    "sceneName": "解套执念",
+    "os": "快到了。",
+    "reflection_v2": "你熬的不是行情。\n是'我终于不算输'那一刻。",
+    "source": "标杆版",
+    "painPoint": "等不痛的出口、被成本线困住",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_29_003",
+    "sceneId": "scene_29",
+    "sceneName": "解套执念",
+    "os": "再涨一点。",
+    "reflection_v2": "你看的不是趋势。\n是亏损能不能把你放出来。",
+    "source": "V2戳心版",
+    "painPoint": "等不痛的出口、被成本线困住",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_29_004",
+    "sceneId": "scene_29",
+    "sceneName": "解套执念",
+    "os": "先别卖。",
+    "reflection_v2": "很多人不是套在低位。\n是套在快解套的那一点希望里。",
+    "source": "V2戳心版",
+    "painPoint": "等不痛的出口、被成本线困住",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_29_005",
+    "sceneId": "scene_29",
+    "sceneName": "解套执念",
+    "os": "总算回来了。",
+    "reflection_v2": "你放不下的不是股票。\n是这段折磨终于要结束的幻觉。",
+    "source": "V2戳心版",
+    "painPoint": "等不痛的出口、被成本线困住",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_29_006",
+    "sceneId": "scene_29",
+    "sceneName": "解套执念",
+    "os": "怎么又下去了。",
+    "reflection_v2": "最折磨人的不是亏。\n是差一点就可以不亏。",
+    "source": "V2戳心版",
+    "painPoint": "等不痛的出口、被成本线困住",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_29_007",
+    "sceneId": "scene_29",
+    "sceneName": "解套执念",
+    "os": "我等了这么久。",
+    "reflection_v2": "你用等了这么久。\n把继续等待说成了合理。",
+    "source": "V2戳心版",
+    "painPoint": "等不痛的出口、被成本线困住",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_29_008",
+    "sceneId": "scene_29",
+    "sceneName": "解套执念",
+    "os": "我就想解套。",
+    "reflection_v2": "当你只想解套。\n规则已经离开了这笔交易。",
+    "source": "V2戳心版",
+    "painPoint": "等不痛的出口、被成本线困住",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_29_009",
+    "sceneId": "scene_29",
+    "sceneName": "解套执念",
+    "os": "回来就行。",
+    "reflection_v2": "你真正放不下的。\n是'接受这笔亏损'。",
+    "source": "标杆版",
+    "painPoint": "等不痛的出口、被成本线困住",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_29_010",
+    "sceneId": "scene_29",
+    "sceneName": "解套执念",
+    "os": "解套我一定卖。",
+    "reflection_v2": "你说解套一定卖。\n可这句话已经说过太多次。",
+    "source": "V2戳心版",
+    "painPoint": "等不痛的出口、被成本线困住",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_30_001",
+    "sceneId": "scene_30",
+    "sceneName": "看对不敢买",
+    "os": "再等等。",
+    "reflection_v2": "你等的不是更好的点。\n是一个'不用自己负责'的借口。",
+    "source": "标杆版",
+    "painPoint": "看对却不敢承担结果",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_30_002",
+    "sceneId": "scene_30",
+    "sceneName": "看对不敢买",
+    "os": "先别急。",
+    "reflection_v2": "你怕的不是假突破。\n是真突破了，而你又没上。",
+    "source": "标杆版",
+    "painPoint": "看对却不敢承担结果",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_30_003",
+    "sceneId": "scene_30",
+    "sceneName": "看对不敢买",
+    "os": "再确认一下。",
+    "reflection_v2": "很多踏空不是没看见。\n是看见以后，不敢按下去。",
+    "source": "V2戳心版",
+    "painPoint": "看对却不敢承担结果",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_30_004",
+    "sceneId": "scene_30",
+    "sceneName": "看对不敢买",
+    "os": "不会真起来吧。",
+    "reflection_v2": "你已经开始后悔。\n可那只手还是不敢替你承担。",
+    "source": "V2戳心版",
+    "painPoint": "看对却不敢承担结果",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_30_005",
+    "sceneId": "scene_30",
+    "sceneName": "看对不敢买",
+    "os": "刚才该买的。",
+    "reflection_v2": "你怪的不是买点。\n是那个关键时刻停住的自己。",
+    "source": "V2戳心版",
+    "painPoint": "看对却不敢承担结果",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_30_006",
+    "sceneId": "scene_30",
+    "sceneName": "看对不敢买",
+    "os": "他们都敢上。",
+    "reflection_v2": "刺痛你的不是别人赚了。\n是别人敢做，而你又退了。",
+    "source": "V2戳心版",
+    "painPoint": "看对却不敢承担结果",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_30_007",
+    "sceneId": "scene_30",
+    "sceneName": "看对不敢买",
+    "os": "我还是不买了。",
+    "reflection_v2": "'输不起'。\n可你一直在输，输给那个不敢动的自己。",
+    "source": "标杆版",
+    "painPoint": "看对却不敢承担结果",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_30_008",
+    "sceneId": "scene_30",
+    "sceneName": "看对不敢买",
+    "os": "又看飞了。",
+    "reflection_v2": "最难受的不是看错。\n是看对了，却没有成为你的交易。",
+    "source": "V2戳心版",
+    "painPoint": "看对却不敢承担结果",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_30_009",
+    "sceneId": "scene_30",
+    "sceneName": "看对不敢买",
+    "os": "计划明明写了。",
+    "reflection_v2": "计划没输。\n输的是临盘那一秒的胆怯。",
+    "source": "V2戳心版",
+    "painPoint": "看对却不敢承担结果",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_30_010",
+    "sceneId": "scene_30",
+    "sceneName": "看对不敢买",
+    "os": "下次一定买。",
+    "reflection_v2": "下次一定。\n是你给不敢行动的自己留下的台阶。",
+    "source": "V2戳心版",
+    "painPoint": "看对却不敢承担结果",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_31_001",
+    "sceneId": "scene_31",
+    "sceneName": "买后立刻后悔",
+    "os": "我买它干嘛。",
+    "reflection_v2": "你不是买完才后悔。\n你是买之前就没真正相信。",
+    "source": "V2戳心版",
+    "painPoint": "下单后才开始害怕、不确定反扑",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_31_002",
+    "sceneId": "scene_31",
+    "sceneName": "买后立刻后悔",
+    "os": "怎么突然慌了。",
+    "reflection_v2": "让你难受的不是行情。\n是下单以后，不确定突然站了出来。",
+    "source": "V2戳心版",
+    "painPoint": "下单后才开始害怕、不确定反扑",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_31_003",
+    "sceneId": "scene_31",
+    "sceneName": "买后立刻后悔",
+    "os": "不会买错了吧。",
+    "reflection_v2": "你用恐惧审判的。\n是刚刚那个冲进去的自己。",
+    "source": "V2戳心版",
+    "painPoint": "下单后才开始害怕、不确定反扑",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_31_004",
+    "sceneId": "scene_31",
+    "sceneName": "买后立刻后悔",
+    "os": "要不先出来。",
+    "reflection_v2": "买前怕错过。\n买后怕犯错。两边都是同一个乱心。",
+    "source": "V2戳心版",
+    "painPoint": "下单后才开始害怕、不确定反扑",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_31_005",
+    "sceneId": "scene_31",
+    "sceneName": "买后立刻后悔",
+    "os": "感觉不太对。",
+    "reflection_v2": "你不是在分析不对。\n你是在找一个立刻逃跑的理由。",
+    "source": "V2戳心版",
+    "painPoint": "下单后才开始害怕、不确定反扑",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_31_006",
+    "sceneId": "scene_31",
+    "sceneName": "买后立刻后悔",
+    "os": "完了。",
+    "reflection_v2": "一分钟的波动。\n被你当成了最终判决。",
+    "source": "V2戳心版",
+    "painPoint": "下单后才开始害怕、不确定反扑",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_31_007",
+    "sceneId": "scene_31",
+    "sceneName": "买后立刻后悔",
+    "os": "我怎么又这样。",
+    "reflection_v2": "一笔小浮亏。\n你却开始否定整个自己。",
+    "source": "V2戳心版",
+    "painPoint": "下单后才开始害怕、不确定反扑",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_31_008",
+    "sceneId": "scene_31",
+    "sceneName": "买后立刻后悔",
+    "os": "还好没卖。",
+    "reflection_v2": "行情没变几次。\n你的心已经来回翻了几遍。",
+    "source": "V2戳心版",
+    "painPoint": "下单后才开始害怕、不确定反扑",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_31_009",
+    "sceneId": "scene_31",
+    "sceneName": "买后立刻后悔",
+    "os": "当时到底怎么想的。",
+    "reflection_v2": "你说不清。\n是因为下单的，不是想法，是冲动。",
+    "source": "标杆版",
+    "painPoint": "下单后才开始害怕、不确定反扑",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_31_010",
+    "sceneId": "scene_31",
+    "sceneName": "买后立刻后悔",
+    "os": "明天再看吧。",
+    "reflection_v2": "问题不是买错。\n是你从来没有真正确信过。",
+    "source": "V2戳心版",
+    "painPoint": "下单后才开始害怕、不确定反扑",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_32_001",
+    "sceneId": "scene_32",
+    "sceneName": "频繁看账户",
+    "os": "看一下。",
+    "reflection_v2": "你看的不是账户。\n是心里那点安全感还在不在。",
+    "source": "V2戳心版",
+    "painPoint": "反复确认安全感、账户牵着心走",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_32_002",
+    "sceneId": "scene_32",
+    "sceneName": "频繁看账户",
+    "os": "再看看。",
+    "reflection_v2": "你离不开的不是行情。\n是那份'怕错过变化'的不安。",
+    "source": "标杆版",
+    "painPoint": "反复确认安全感、账户牵着心走",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_32_003",
+    "sceneId": "scene_32",
+    "sceneName": "频繁看账户",
+    "os": "怎么跌了。",
+    "reflection_v2": "每一次跳动。\n都在把你的情绪重新牵起来。",
+    "source": "V2戳心版",
+    "painPoint": "反复确认安全感、账户牵着心走",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_32_004",
+    "sceneId": "scene_32",
+    "sceneName": "频繁看账户",
+    "os": "赚了。",
+    "reflection_v2": "你不是看收益。\n你是在让数字决定你今天的心情。",
+    "source": "V2戳心版",
+    "painPoint": "反复确认安全感、账户牵着心走",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_32_005",
+    "sceneId": "scene_32",
+    "sceneName": "频繁看账户",
+    "os": "怎么又绿了。",
+    "reflection_v2": "账户变绿那一刻。\n你的心也被数字按了下去。",
+    "source": "V2戳心版",
+    "painPoint": "反复确认安全感、账户牵着心走",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_32_006",
+    "sceneId": "scene_32",
+    "sceneName": "频繁看账户",
+    "os": "看一眼。",
+    "reflection_v2": "你已经不是在看账户。\n是账户在叫你回来。",
+    "source": "V2戳心版",
+    "painPoint": "反复确认安全感、账户牵着心走",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_32_007",
+    "sceneId": "scene_32",
+    "sceneName": "频繁看账户",
+    "os": "再看一次。",
+    "reflection_v2": "困住你的不是持仓。\n是你反复确认的执念。",
+    "source": "V2戳心版",
+    "painPoint": "反复确认安全感、账户牵着心走",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_32_008",
+    "sceneId": "scene_32",
+    "sceneName": "频繁看账户",
+    "os": "怎么不动。",
+    "reflection_v2": "你要求市场立刻给答案。\n其实是自己受不了悬着。",
+    "source": "V2戳心版",
+    "painPoint": "反复确认安全感、账户牵着心走",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_32_009",
+    "sceneId": "scene_32",
+    "sceneName": "频繁看账户",
+    "os": "我怎么又打开了。",
+    "reflection_v2": "频繁看账户。\n是在一遍遍问：我现在安全吗？",
+    "source": "V2戳心版",
+    "painPoint": "反复确认安全感、账户牵着心走",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_32_010",
+    "sceneId": "scene_32",
+    "sceneName": "频繁看账户",
+    "os": "今天看太多了。",
+    "reflection_v2": "当你离不开账户。\n主动权已经不在你手里。",
+    "source": "V2戳心版",
+    "painPoint": "反复确认安全感、账户牵着心走",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_33_001",
+    "sceneId": "scene_33",
+    "sceneName": "频繁换股",
+    "os": "换一个吧。",
+    "reflection_v2": "你换掉的不是股票。\n是自己受不了等待的心。",
+    "source": "V2戳心版",
+    "painPoint": "受不了等待、总觉得答案在别处",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_33_002",
+    "sceneId": "scene_33",
+    "sceneName": "频繁换股",
+    "os": "那个涨了。",
+    "reflection_v2": "你用别人的上涨，否定了自己的持仓。",
+    "source": "标杆版",
+    "painPoint": "受不了等待、总觉得答案在别处",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_33_003",
+    "sceneId": "scene_33",
+    "sceneName": "频繁换股",
+    "os": "一点意思没有。",
+    "reflection_v2": "你把等待当损失。\n所以总想用换股止痒。",
+    "source": "V2戳心版",
+    "painPoint": "受不了等待、总觉得答案在别处",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_33_004",
+    "sceneId": "scene_33",
+    "sceneName": "频繁换股",
+    "os": "先换过去。",
+    "reflection_v2": "你总觉得机会在别处。\n其实是不愿待在当下。",
+    "source": "V2戳心版",
+    "painPoint": "受不了等待、总觉得答案在别处",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_33_005",
+    "sceneId": "scene_33",
+    "sceneName": "频繁换股",
+    "os": "我次奥。",
+    "reflection_v2": "你离开的未必是错。\n你只是受不了它没立刻证明你对。",
+    "source": "V2戳心版",
+    "painPoint": "受不了等待、总觉得答案在别处",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_33_006",
+    "sceneId": "scene_33",
+    "sceneName": "频繁换股",
+    "os": "怎么又不动。",
+    "reflection_v2": "不是运气差。\n是你换得太勤，没给任何一只，长出来的时间。",
+    "source": "标杆版",
+    "painPoint": "受不了等待、总觉得答案在别处",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_33_007",
+    "sceneId": "scene_33",
+    "sceneName": "频繁换股",
+    "os": "要不再换。",
+    "reflection_v2": "换来换去。\n你真正想换掉的是心里的焦躁。",
+    "source": "V2戳心版",
+    "painPoint": "受不了等待、总觉得答案在别处",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_33_008",
+    "sceneId": "scene_33",
+    "sceneName": "频繁换股",
+    "os": "总得抓住一个。",
+    "reflection_v2": "你不是在交易，是在追逐。\n追逐本身，让你全错。",
+    "source": "标杆版",
+    "painPoint": "受不了等待、总觉得答案在别处",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_33_009",
+    "sceneId": "scene_33",
+    "sceneName": "频繁换股",
+    "os": "白折腾一天。",
+    "reflection_v2": "白折腾的不是一天。\n是耐心又被你交出去了。",
+    "source": "V2戳心版",
+    "painPoint": "受不了等待、总觉得答案在别处",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_33_010",
+    "sceneId": "scene_33",
+    "sceneName": "频繁换股",
+    "os": "明天换个思路。",
+    "reflection_v2": "'换思路'。\n你缺的从来不是思路，是坐得住。",
+    "source": "标杆版",
+    "painPoint": "受不了等待、总觉得答案在别处",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_34_001",
+    "sceneId": "scene_34",
+    "sceneName": "消息面交易",
+    "os": "这消息挺猛。",
+    "reflection_v2": "消息还没被验证。\n你的心已经先涨了。",
+    "source": "V2戳心版",
+    "painPoint": "用消息替代判断、把交易交给未知",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_34_002",
+    "sceneId": "scene_34",
+    "sceneName": "消息面交易",
+    "os": "大家都在传。",
+    "reflection_v2": "你用转发次数。\n代替了自己的判断。",
+    "source": "V2戳心版",
+    "painPoint": "用消息替代判断、把交易交给未知",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_34_003",
+    "sceneId": "scene_34",
+    "sceneName": "消息面交易",
+    "os": "这不得起飞。",
+    "reflection_v2": "标题越刺激。\n情绪越容易抢先下单。",
+    "source": "V2戳心版",
+    "painPoint": "用消息替代判断、把交易交给未知",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_34_004",
+    "sceneId": "scene_34",
+    "sceneName": "消息面交易",
+    "os": "果然有反应。",
+    "reflection_v2": "你开始找证据，去证明那条，你想买的消息。",
+    "source": "标杆版",
+    "painPoint": "用消息替代判断、把交易交给未知",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_34_005",
+    "sceneId": "scene_34",
+    "sceneName": "消息面交易",
+    "os": "先买点看看。",
+    "reflection_v2": "你买的不是逻辑。\n是万一真的成了的幻想。",
+    "source": "V2戳心版",
+    "painPoint": "用消息替代判断、把交易交给未知",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_34_006",
+    "sceneId": "scene_34",
+    "sceneName": "消息面交易",
+    "os": "人家都上了。",
+    "reflection_v2": "'不能慢'。\n你怕的不是消息错，是别人比你先动。",
+    "source": "标杆版",
+    "painPoint": "用消息替代判断、把交易交给未知",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_34_007",
+    "sceneId": "scene_34",
+    "sceneName": "消息面交易",
+    "os": "后面肯定还有。",
+    "reflection_v2": "你用想象。\n把还没发生的行情补成了确定。",
+    "source": "V2戳心版",
+    "painPoint": "用消息替代判断、把交易交给未知",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_34_008",
+    "sceneId": "scene_34",
+    "sceneName": "消息面交易",
+    "os": "等公告落地。",
+    "reflection_v2": "买入以后。\n你开始希望公告替你托住仓位。",
+    "source": "V2戳心版",
+    "painPoint": "用消息替代判断、把交易交给未知",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_34_009",
+    "sceneId": "scene_34",
+    "sceneName": "消息面交易",
+    "os": "消息没兑现？",
+    "reflection_v2": "消息撑不住价格时。\n你才想起风险一直在场。",
+    "source": "V2戳心版",
+    "painPoint": "用消息替代判断、把交易交给未知",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_34_010",
+    "sceneId": "scene_34",
+    "sceneName": "消息面交易",
+    "os": "看晚上怎么发酵。",
+    "reflection_v2": "你把交易交给了未知消息。\n再让自己等它兑现。",
+    "source": "V2戳心版",
+    "painPoint": "用消息替代判断、把交易交给未知",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_35_001",
+    "sceneId": "scene_35",
+    "sceneName": "恐惧持有",
+    "os": "要不先卖了。",
+    "reflection_v2": "你想卖掉的不是仓位。\n是那份不敢拥有利润的慌。",
+    "source": "V2戳心版",
+    "painPoint": "不敢拥有利润、恐惧伪装谨慎",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_35_002",
+    "sceneId": "scene_35",
+    "sceneName": "恐惧持有",
+    "os": "差不多了。",
+    "reflection_v2": "你害怕的不是亏。\n是利润越大，你越不知道怎么拿。",
+    "source": "V2戳心版",
+    "painPoint": "不敢拥有利润、恐惧伪装谨慎",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_35_003",
+    "sceneId": "scene_35",
+    "sceneName": "恐惧持有",
+    "os": "不会吐回去吧。",
+    "reflection_v2": "让你紧张的不是回调。\n是拥有之后随时会失去。",
+    "source": "V2戳心版",
+    "painPoint": "不敢拥有利润、恐惧伪装谨慎",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_35_004",
+    "sceneId": "scene_35",
+    "sceneName": "恐惧持有",
+    "os": "要跑吗。",
+    "reflection_v2": "你想跑的，不是这只票。\n是那份'怕失去'的心慌。",
+    "source": "标杆版",
+    "painPoint": "不敢拥有利润、恐惧伪装谨慎",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_35_005",
+    "sceneId": "scene_35",
+    "sceneName": "恐惧持有",
+    "os": "赚这么多够了。",
+    "reflection_v2": "'不敢贪'听起来克制，其实是，你不习惯赚钱。",
+    "source": "标杆版",
+    "painPoint": "不敢拥有利润、恐惧伪装谨慎",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_35_006",
+    "sceneId": "scene_35",
+    "sceneName": "恐惧持有",
+    "os": "还能拿吗。",
+    "reflection_v2": "你已经提前开始后悔一个还没发生的未来。",
+    "source": "V2戳心版",
+    "painPoint": "不敢拥有利润、恐惧伪装谨慎",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_35_007",
+    "sceneId": "scene_35",
+    "sceneName": "恐惧持有",
+    "os": "心里不踏实。",
+    "reflection_v2": "很多人拿不住利润。\n不是因为不会赚，是不习惯拥有。",
+    "source": "V2戳心版",
+    "painPoint": "不敢拥有利润、恐惧伪装谨慎",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_35_008",
+    "sceneId": "scene_35",
+    "sceneName": "恐惧持有",
+    "os": "赶紧跑。",
+    "reflection_v2": "恐惧最擅长的。\n就是把逃跑说成谨慎。",
+    "source": "V2戳心版",
+    "painPoint": "不敢拥有利润、恐惧伪装谨慎",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_35_009",
+    "sceneId": "scene_35",
+    "sceneName": "恐惧持有",
+    "os": "总算安心了。",
+    "reflection_v2": "你卖完得到的第一件东西。\n不是利润，是安全感。",
+    "source": "V2戳心版",
+    "painPoint": "不敢拥有利润、恐惧伪装谨慎",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_35_010",
+    "sceneId": "scene_35",
+    "sceneName": "恐惧持有",
+    "os": "还好卖了。",
+    "reflection_v2": "卖出以后你希望它跌。\n只是想让市场证明你没有逃。",
+    "source": "V2戳心版",
+    "painPoint": "不敢拥有利润、恐惧伪装谨慎",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_36_001",
+    "sceneId": "scene_36",
+    "sceneName": "害怕认错",
+    "os": "再等等。",
+    "reflection_v2": "你等的不是机会。\n你等的是不用承认自己错了。",
+    "source": "V2戳心版",
+    "painPoint": "最难承认的是自己错了",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_36_002",
+    "sceneId": "scene_36",
+    "sceneName": "害怕认错",
+    "os": "先不急。",
+    "reflection_v2": "'先不急'。\n你不是不急，是不敢。一急，就得认错。",
+    "source": "标杆版",
+    "painPoint": "最难承认的是自己错了",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_36_003",
+    "sceneId": "scene_36",
+    "sceneName": "害怕认错",
+    "os": "不可能这么差。",
+    "reflection_v2": "真正难受的不是亏。\n是这笔交易在说：你错了。",
+    "source": "V2戳心版",
+    "painPoint": "最难承认的是自己错了",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_36_004",
+    "sceneId": "scene_36",
+    "sceneName": "害怕认错",
+    "os": "再观察一下。",
+    "reflection_v2": "你不是在观察市场。\n你是在保护自己的面子。",
+    "source": "V2戳心版",
+    "painPoint": "最难承认的是自己错了",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_36_005",
+    "sceneId": "scene_36",
+    "sceneName": "害怕认错",
+    "os": "万一呢。",
+    "reflection_v2": "'万一'，是你给自己留的最后一个台阶。\n你赌的，是不肯认。",
+    "source": "标杆版",
+    "painPoint": "最难承认的是自己错了",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_36_006",
+    "sceneId": "scene_36",
+    "sceneName": "害怕认错",
+    "os": "我再看看。",
+    "reflection_v2": "规则已经接受现实。\n你还在找一个不认错的缝。",
+    "source": "V2戳心版",
+    "painPoint": "最难承认的是自己错了",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_36_007",
+    "sceneId": "scene_36",
+    "sceneName": "害怕认错",
+    "os": "先放着。",
+    "reflection_v2": "你放不下的不是仓位。\n是自己的自尊。",
+    "source": "V2戳心版",
+    "painPoint": "最难承认的是自己错了",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_36_008",
+    "sceneId": "scene_36",
+    "sceneName": "害怕认错",
+    "os": "当时也没错。",
+    "reflection_v2": "你不是在复盘。\n是在给自己，开一张'无罪证明'。",
+    "source": "标杆版",
+    "painPoint": "最难承认的是自己错了",
+    "painLevel": 4
+  },
+  {
+    "itemId": "scene_36_009",
+    "sceneId": "scene_36",
+    "sceneName": "害怕认错",
+    "os": "算了，再等等。",
+    "reflection_v2": "认错最痛的不是亏损。\n是把“我错了”说给自己听。",
+    "source": "V2戳心版",
+    "painPoint": "最难承认的是自己错了",
+    "painLevel": 5
+  },
+  {
+    "itemId": "scene_36_010",
+    "sceneId": "scene_36",
+    "sceneName": "害怕认错",
+    "os": "明天再说。",
+    "reflection_v2": "你把今天的问题交给明天。\n只是让幻想继续替你挡一晚。",
+    "source": "V2戳心版",
+    "painPoint": "最难承认的是自己错了",
+    "painLevel": 5
+  }
+]

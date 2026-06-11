@@ -56,8 +56,8 @@ test("mirror archive page exposes Sprint 11 MVP sections", async () => {
   const source = await readFile(pageUrl, "utf8")
 
   ;[
-    "心镜档案馆",
-    "心镜档案馆 · 归档中心",
+    "心镜档案",
+    "心镜档案 · 归档中心",
     "报告、心证、修行、复盘、复测，全部归档",
     "日课路线和真实复盘路线的证据都会留在这里",
     "心镜报告数量",

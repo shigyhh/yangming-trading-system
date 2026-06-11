@@ -37,9 +37,13 @@ export type TodayInsightRecordInput = {
   id?: string
   date: string
   dayIndex?: number
+  inputText?: string
+  source?: OneThoughtRecord["source"]
   tradeMoment: string
   os: string
   reflection: string
+  reflection_v2?: string
+  reflectionFinal?: string
   thief: string
   mirrorId: string
   mirrorName?: string
@@ -121,6 +125,8 @@ function createRecordFromToday(today: TodayOneThoughtSnapshot): OneThoughtRecord
     recordId: `one_thought_preview_${today.dateKey}_${today.thoughtId}`,
     date: today.dateKey,
     dayIndex: 0,
+    inputText: today.os,
+    source: "today_one_thought",
     thoughtId: today.thoughtId,
     sceneId: today.sceneId,
     sceneName: today.sceneName,
@@ -129,7 +135,9 @@ function createRecordFromToday(today: TodayOneThoughtSnapshot): OneThoughtRecord
     tradeMoment: today.tradeMoment,
     thief: today.thief,
     os: today.os,
-    reflection: today.reflection,
+    reflection: today.reflectionFinal || today.reflection,
+    reflection_v2: today.reflection_v2,
+    reflectionFinal: today.reflectionFinal || today.reflection,
     evidence: today.evidence,
     practice: today.practice,
     completed: false,
@@ -145,6 +153,8 @@ export function createTodayInsightRecord(input: TodayInsightRecordInput): OneTho
     recordId,
     date: input.date,
     dayIndex: input.dayIndex ?? 0,
+    inputText: input.inputText ?? input.os,
+    source: input.source ?? "user_input",
     thoughtId: input.thoughtId ?? recordId,
     sceneId: input.sceneId,
     sceneName: input.sceneName,
@@ -153,7 +163,9 @@ export function createTodayInsightRecord(input: TodayInsightRecordInput): OneTho
     tradeMoment: input.tradeMoment,
     thief: input.thief,
     os: input.os,
-    reflection: input.reflection,
+    reflection: input.reflectionFinal ?? input.reflection,
+    reflection_v2: input.reflection_v2 ?? input.reflection,
+    reflectionFinal: input.reflectionFinal ?? input.reflection,
     evidence: input.evidence,
     practice: input.practice,
     completed: input.completed,

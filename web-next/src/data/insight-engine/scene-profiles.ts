@@ -10,6 +10,7 @@ export type SceneProfile = {
   negativeKeywords: string[]
   examples: string[]
   avoidExamples: string[]
+  reflection_v2?: string
 }
 
 export const sceneProfiles: SceneProfile[] = [

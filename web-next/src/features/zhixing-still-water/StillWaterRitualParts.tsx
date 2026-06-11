@@ -136,7 +136,7 @@ export function HistoryStation({
         </button>
         <div className="history-detail">
           <dl>
-            <div><dt>照回</dt><dd>{record.reflection}</dd></div>
+            <div><dt>照回</dt><dd>{record.reflectionFinal || record.reflection}</dd></div>
             <div><dt>心贼</dt><dd>{record.thief}</dd></div>
             <div><dt>九镜</dt><dd>{record.mirrorName}</dd></div>
             <div><dt>今日心证</dt><dd>{record.evidence}</dd></div>

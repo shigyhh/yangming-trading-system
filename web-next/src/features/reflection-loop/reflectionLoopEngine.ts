@@ -96,7 +96,7 @@ const loopGuidanceByNodeId: Record<
   },
   daily_thought: {
     nextEvidenceText: "生成 daily_thought_id，让今天最先浮上的一念有来源。",
-    activeActionText: "进入今日一念，从三十六场景里等到被戳中的那句。",
+    activeActionText: "进入今日照见，从三十六场景里等到被戳中的那句。",
   },
   reflection_back: {
     nextEvidenceText: "生成 reflection_back_id，把这一念照回情绪、场景和反应。",
@@ -124,7 +124,7 @@ const loopGuidanceByNodeId: Record<
   },
   mirror_report: {
     nextEvidenceText: "生成 mirror_report_id，沉淀当天照见总结与训练处方。",
-    activeActionText: "先看今天这张心镜报告，再归入心镜档案馆。",
+    activeActionText: "先看今天这张心镜报告，再归入心镜档案。",
   },
   trade_review: {
     nextEvidenceText: "生成 trade_review_id，把真实交易复盘写入档案。",
@@ -132,7 +132,7 @@ const loopGuidanceByNodeId: Record<
   },
   mirror_archive: {
     nextEvidenceText: "生成 mirror_archive_id，把报告、心证、修行、复盘、复测全部归档。",
-    activeActionText: "进入心镜档案馆，先把证据收好，再展开成长叙事。",
+    activeActionText: "进入心镜档案，先把证据收好，再展开成长叙事。",
   },
   mirror_scroll: {
     nextEvidenceText: "生成 mirror_scroll_id，把每日证据连成心镜长卷。",
