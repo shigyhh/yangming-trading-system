@@ -5,6 +5,7 @@ import test from "node:test"
 const profileUrl = new URL("./heartThiefProfileService.ts", import.meta.url)
 const ruleGuardUrl = new URL("../rule-guard/ruleGuardService.ts", import.meta.url)
 const archivePageUrl = new URL("../../app/mind-archive/page.tsx", import.meta.url)
+const dangAnGuanArchiveUrl = new URL("../../components/archive/DangAnGuanArchive.tsx", import.meta.url)
 const todaySealedPageUrl = new URL("../../app/today-sealed/page.tsx", import.meta.url)
 const assessmentEntryPageUrl = new URL("../../app/assessment-entry/page.tsx", import.meta.url)
 const archiveStatsUrl = new URL("./archiveStatsService.ts", import.meta.url)
@@ -139,9 +140,10 @@ test("P4 ruleGuardService only emits reminders from sealed events and existing t
 
 test("P4 reminders surface in archive museum and today sealed without blocking actions", async () => {
   const archivePage = await readFile(archivePageUrl, "utf8")
+  const dangAnGuanArchive = await readFile(dangAnGuanArchiveUrl, "utf8")
   const todaySealedPage = await readFile(todaySealedPageUrl, "utf8")
   const assessmentEntryPage = await readFile(assessmentEntryPageUrl, "utf8")
-  const source = `${archivePage}\n${todaySealedPage}\n${assessmentEntryPage}`
+  const source = `${archivePage}\n${dangAnGuanArchive}\n${todaySealedPage}\n${assessmentEntryPage}`
 
   ;[
     "getHeartThiefProfile",

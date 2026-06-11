@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises"
 import test from "node:test"
 
 const archivePageUrl = new URL("../../app/mind-archive/page.tsx", import.meta.url)
+const dangAnGuanArchiveUrl = new URL("../../components/archive/DangAnGuanArchive.tsx", import.meta.url)
 const mindScrollPageUrl = new URL("../../app/mind-scroll/page.tsx", import.meta.url)
 const mindScrollServiceUrl = new URL("./mindScrollService.ts", import.meta.url)
 const zhixingScrollPageUrl = new URL("../../app/zhixing-scroll/page.tsx", import.meta.url)
@@ -21,15 +22,18 @@ const forbiddenSourceTokens = [
 
 test("P3 archive museum is the private entry and reads only archive/review services", async () => {
   const archivePage = await readFile(archivePageUrl, "utf8")
+  const dangAnGuanArchive = await readFile(dangAnGuanArchiveUrl, "utf8")
+  const archiveSource = `${archivePage}\n${dangAnGuanArchive}`
 
   ;[
+    "DangAnGuanArchive",
     "getMindArchiveStats",
     "getRecentSealedThoughtEvents",
     "listRecentTradeReviews",
     "档案馆",
     "这里收藏你已照见、已落印、已复盘的一念。",
     "当前卷：一念档案",
-    "今日所照摘要",
+    "今日所照",
     "近日最强心贼",
     "最近一念",
     "一念档案摘要",
@@ -44,12 +48,12 @@ test("P3 archive museum is the private entry and reads only archive/review servi
     "/zhixing-scroll",
     "/review?linkedOneThoughtEventId=",
   ].forEach((token) => {
-    assert.equal(archivePage.includes(token), true, `missing P3 archive token: ${token}`)
+    assert.equal(archiveSource.includes(token), true, `missing P3 archive token: ${token}`)
   })
 
-  assert.doesNotMatch(archivePage, /心镜档案/)
+  assert.doesNotMatch(archiveSource, /心镜档案/)
   forbiddenSourceTokens.forEach((token) => {
-    assert.equal(archivePage.includes(token), false, `archive page crosses P3 boundary: ${token}`)
+    assert.equal(archiveSource.includes(token), false, `archive page crosses P3 boundary: ${token}`)
   })
 })
 

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react"
 import { useRouter } from "next/navigation"
 
-import HeroRightZhaoSeal from "@/components/home/HeroRightZhaoSeal"
+import HeroRightWaitingMirror from "@/components/home/HeroRightWaitingMirror"
 import { YangmingA1Mark } from "@/components/brand/yangming-mark"
 
 import styles from "./HomeStillWaterHero.module.css"
@@ -228,7 +228,7 @@ export default function HomeStillWaterHero() {
         </div>
 
         <div className={styles.rightSealStage}>
-          <HeroRightZhaoSeal className={styles.rightSealWatermark} />
+          <HeroRightWaitingMirror className={styles.rightSealWatermark} />
         </div>
       </div>
 
