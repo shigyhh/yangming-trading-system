@@ -11,6 +11,7 @@ const gatewayUrl = new URL("../../features/assessment/MirrorGateway.tsx", import
 const entryPageUrl = new URL("../../app/assessment-entry/page.tsx", import.meta.url)
 const todaySealedPageUrl = new URL("../../app/today-sealed/page.tsx", import.meta.url)
 const mindArchivePageUrl = new URL("../../app/mind-archive/page.tsx", import.meta.url)
+const dangAnGuanArchiveUrl = new URL("../../components/archive/DangAnGuanArchive.tsx", import.meta.url)
 const lakePageUrl = new URL("../../features/one-thought-lake/OneThoughtLakePage.tsx", import.meta.url)
 
 test("OneThoughtEvent contract names the P0 ritual boundary", async () => {
@@ -187,58 +188,105 @@ test("今日所照 page reads sealed stats and records the P1 final action", asy
 
 test("档案馆 page collects the private archive IA without lake or old reflection sources", async () => {
   const mindArchivePage = await readFile(mindArchivePageUrl, "utf8")
+  const dangAnGuanArchive = await readFile(dangAnGuanArchiveUrl, "utf8")
+  const archiveSource = `${mindArchivePage}\n${dangAnGuanArchive}`
 
   ;[
+    "DangAnGuanArchive",
     "getMindArchiveStats",
     "getRecentSealedThoughtEvents",
     "listRecentTradeReviews",
     "getHeartThiefProfile",
     "getRuleGuardReminders",
+    "todaySealedCount: stats?.todayTotal ?? 0",
+    "seenCount: stats?.todaySeen ?? 0",
+    "stoppedCount: stats?.todayStopped ?? 0",
+    "stillMovingCount: stats?.todayStillMoving ?? 0",
+    "pendingReviewCount: stats?.pendingReviewCount ?? 0",
+    "stopRate: stats?.stopRate ?? 0",
+    "name: heartThiefProfile?.dominantHeartThief || \"待显影\"",
+    "riskLabel: heartThiefProfile?.riskLabel || \"先照一念，档案才会说话。\"",
+    "recentEntries={recentArchiveEvents.map",
+    "time: formatTime(event.createdAt)",
+    "recurringThoughts={recurringThoughts.map",
+    "ruleGuardNotices={reminders.slice(0, 3)}",
+    "onOpenMindArchive",
+    "onOpenHeartMirrorScroll={() => router.push(\"/mind-scroll\")}",
+    "onOpenZhixingScroll={() => router.push(\"/zhixing-scroll\")}",
+    "onOpenTradeReview={() => openTradeReview(pendingReviewEvents[0]?.id)}",
+    "onContinueRitual={() => router.push(\"/assessment-entry\")}",
+    "danganguan-page",
+    "danganguan-mount",
+    "danganguan-overview",
+    "danganguan-main-axis",
+    "danganguan-side-axis",
+    "danganguan-colophon",
     "档案馆",
     "一念档案",
     "这里收藏你已照见、已落印、已复盘的一念。",
     "不记行情，只记你被哪一念牵走，又有没有照着做。",
     "当前卷：一念档案",
-    "archive-overview-deck",
-    "overview-today-pane",
-    "overview-thief-pane",
     "今日落印",
-    "今日所照摘要",
     "近日最强心贼",
     "待显影",
-    "archive-main-grid",
-    "archive-primary-axis",
-    "archive-side-rail",
     "最近一念",
     "一念档案摘要",
     "查看一念档案",
-    "scroll-gate-line",
     "心镜长卷",
     "看心怎么动。",
     "进入长卷 →",
     "知行长卷",
     "看照见后有没有做到。",
     "真实复盘入口",
-    "review-rail-section",
-    "review-rail-section is-empty",
     "暂无待复盘的一念。",
     "复发念",
     "这不是第一次来，也不会是最后一次。",
     "规则守护",
-    "reminders.slice(0, 3)",
     "recentSealedEvents",
     "pendingReviewEvents",
-    "stats.recurringThoughts",
+    "recurringThoughts",
     "reflectionFinal",
-    "心贼标签待补齐",
     "这一念之后你交易了，后面还欠一次回头看。",
-    "width: min(100%, 1160px)",
-    "@media (max-width: 720px)",
+    "width: min(1160px, 100%)",
+    "@media (max-width: 430px)",
   ].forEach((token) => {
-    assert.equal(mindArchivePage.includes(token), true, `missing mind archive page token: ${token}`)
+    assert.equal(archiveSource.includes(token), true, `missing mind archive page token: ${token}`)
   })
 
-  assert.doesNotMatch(mindArchivePage, /心镜档案/)
-  assert.doesNotMatch(mindArchivePage, /reflection_v2/)
-  assert.doesNotMatch(mindArchivePage, /anonymousThoughtLakeEntry/)
+  assert.doesNotMatch(archiveSource, /心镜档案/)
+  assert.doesNotMatch(archiveSource, /reflection_v2/)
+  assert.doesNotMatch(archiveSource, /anonymousThoughtLakeEntry/)
+})
+
+test("档案馆展示层空数据时也必须显示正文而不是挂轴空壳", async () => {
+  const dangAnGuanArchive = await readFile(dangAnGuanArchiveUrl, "utf8")
+
+  ;[
+    "fallbackSummary",
+    "todaySealedCount: 0",
+    "seenCount: 0",
+    "stoppedCount: 0",
+    "stillMovingCount: 0",
+    "pendingReviewCount: 0",
+    "stopRate: 0",
+    "safeSummary",
+    "safeRecentEntries",
+    "safeRecurringThoughts",
+    "safeRuleGuardNotices",
+    "fallbackStrongestHeartThief",
+    'name: "待显影"',
+    "近日最强心贼：{heartName}",
+    "先照一念，档案才会说话。",
+    "暂无落印的一念。",
+    "先完成一次照见一念仪轨，档案馆才会留下第一痕。",
+    "暂无待复盘的一念。",
+    "暂无复发念。",
+    "暂无规则守护提醒。",
+    "opacity: 1;",
+    "transform: none;",
+  ].forEach((token) => {
+    assert.equal(dangAnGuanArchive.includes(token), true, `missing archive fallback/display token: ${token}`)
+  })
+
+  assert.equal(dangAnGuanArchive.includes("opacity: 0;"), false, "archive content must not start invisible and depend on scroll reveal")
 })

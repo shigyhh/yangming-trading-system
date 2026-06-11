@@ -589,6 +589,16 @@
     filter: blur(14px);
   }
 
+  .rightSealWatermark {
+    width: clamp(96px, 28vw, 140px) !important;
+    max-width: 140px !important;
+    opacity: 0.28;
+  }
+
+  .rightSealWatermark :global(.waiting-mirror-caption) {
+    display: none;
+  }
+
   .zhaoMark,
   .title,
   .couplet,
