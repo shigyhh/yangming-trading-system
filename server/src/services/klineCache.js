@@ -260,7 +260,7 @@ export async function backfillKlineCache({
   now = new Date()
 } = {}) {
   const requestedTimeframes = normalizeTimeframeList(timeframes.length ? timeframes : [timeframe || DEFAULT_TIMEFRAME]);
-  const resolvedSymbols = await resolveSymbols({ dataRoot, symbols: all ? [] : symbols, limit: 0 });
+  const resolvedSymbols = await resolveSymbols({ dataRoot, market, symbols: all ? [] : symbols, limit: 0, all });
   const range = resolveBackfillRange({ years, months, now });
   const startedAt = new Date().toISOString();
   const results = [];
@@ -423,9 +423,22 @@ async function waitProviderInterval(providerKey, env = {}) {
   if (total > 0) await new Promise((resolve) => setTimeout(resolve, total));
 }
 
-async function resolveSymbols({ dataRoot, symbols = [], limit = 0 }) {
+async function resolveSymbols({ dataRoot, market = DEFAULT_MARKET, symbols = [], limit = 0, all = false }) {
   const direct = uniqueStrings(symbols);
   if (direct.length) return direct;
+  if (all) {
+    const symbolsPath = path.join(dataRoot, market, "symbols.json");
+    const pool = await readJson(symbolsPath, null);
+    if (!pool) {
+      throw new Error("A股股票池不存在，请先生成 symbols.json。");
+    }
+    const rows = Array.isArray(pool.symbols) ? pool.symbols : [];
+    const resolved = rows.map((item) => String(item.code || item.symbol || "").trim()).filter(Boolean);
+    if (!resolved.length) {
+      throw new Error("A股股票池为空，请先生成 symbols.json。");
+    }
+    return resolved;
+  }
   const pool = await readJson(path.join(dataRoot, "stock-pool.json"), null);
   const rows = Array.isArray(pool?.stocks) ? pool.stocks : [];
   const resolved = rows.map((item) => String(item.code || item.symbol || "").trim()).filter(Boolean);

@@ -334,6 +334,76 @@ test("multi-timeframe backfill dry-run writes nothing", async () => {
   await assert.rejects(() => fs.access(path.join(root, "ashare", "30m", "600519.json")));
 });
 
+test("backfill --all reads symbols.json from KLINE_CACHE_ROOT style data root", async () => {
+  const root = await makeFixtureRoot();
+  await writeJson(path.join(root, "ashare", "symbols.json"), {
+    market: "ashare",
+    source: "fixture",
+    updated_at: "2024-06-30T00:00:00.000Z",
+    symbols_count: 2,
+    symbols: [
+      { code: "600519", name: "贵州茅台", exchange: "SH", raw_code: "sh.600519" },
+      { code: "300750", name: "宁德时代", exchange: "SZ", raw_code: "sz.300750" }
+    ]
+  });
+  const scriptPath = await writeBaostockFixtureScript({
+    symbols: {
+      "600519": {
+        code: "600519",
+        candles: [
+          { time: "2024-01-03", open: 11, high: 12, low: 10, close: 11.5, volume: 1000, amount: 11000 }
+        ]
+      },
+      "300750": {
+        code: "300750",
+        candles: [
+          { time: "2024-01-03", open: 20, high: 21, low: 19, close: 20.5, volume: 100, amount: 2000 }
+        ]
+      }
+    },
+    errors: []
+  }, { timeframe: "101" });
+
+  const result = await backfillKlineCache({
+    market: "ashare",
+    timeframe: "101",
+    all: true,
+    months: 6,
+    providerChain: ["baostock"],
+    dataRoot: root,
+    dryRun: true,
+    now: new Date("2024-06-30T00:00:00Z"),
+    env: {
+      BAOSTOCK_PYTHON_BIN: nodeBin,
+      BAOSTOCK_SCRIPT_PATH: scriptPath
+    }
+  });
+
+  assert.equal(result.timeframes[0].total_symbols, 2);
+  assert.equal(result.timeframes[0].updated_symbols, 2);
+  await assert.rejects(() => fs.access(path.join(root, "ashare", "101", "manifest.json")));
+});
+
+test("backfill --all reports missing symbols.json instead of silent zero symbols", async () => {
+  const root = await makeFixtureRoot();
+
+  await assert.rejects(
+    () => backfillKlineCache({
+      market: "ashare",
+      timeframe: "101",
+      all: true,
+      months: 6,
+      providerChain: ["baostock"],
+      dataRoot: root,
+      dryRun: true,
+      now: new Date("2024-06-30T00:00:00Z"),
+      env: {}
+    }),
+    /A股股票池不存在，请先生成 symbols\.json。/
+  );
+  await assert.rejects(() => fs.access(path.join(root, "ashare", "101", "manifest.json")));
+});
+
 test("multi-timeframe backfill writes separate cache, manifests and checkpoints", async () => {
   const root = await makeFixtureRoot();
   const scriptPath = await writeBaostockFixtureScript({
