@@ -680,7 +680,12 @@ CREATE TABLE IF NOT EXISTS course_users (
   course_name VARCHAR(160) NOT NULL,
   status VARCHAR(30) NOT NULL DEFAULT 'active',
   paid_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  added_wechat BOOLEAN NOT NULL DEFAULT false,
+  joined_group BOOLEAN NOT NULL DEFAULT false,
+  added_wechat_at TIMESTAMPTZ,
+  joined_group_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE INDEX IF NOT EXISTS idx_course_users_openid ON course_users(openid);

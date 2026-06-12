@@ -20,7 +20,7 @@ import { dispatchTrainingPrescriptionBinding, generateShareCardBinding, getAdmin
 import { getGlobalReflectionToday, listGlobalReflectionChoices, submitGlobalReflectionVote } from "../services/globalReflection.js";
 import { buildHistoricalKlineSlice, downloadHistoricalKline, getHistoricalKlineRules, listHistoricalKlineCatalog, listHistoricalKlineInstruments, revealHistoricalKlineSlice } from "../services/historicalKline.js";
 import { buildTradeReviewOcrDraft } from "../services/tradeReviewOcr.js";
-import { createYmtyOrder, getYmtyAdminCampaign, getYmtyAfterpayEntrance, getYmtyAuditLogs, getYmtyOrderStatus, getYmtyPublicCampaign, listYmtyOrders, markYmtyMockPaySuccess, updateYmtyCampaign, updateYmtyLivecode } from "../services/ymtyCampaign.js";
+import { createYmtyOrder, getYmtyAdminCampaign, getYmtyAfterpayEntrance, getYmtyAuditLogs, getYmtyOrderStatus, getYmtyPublicCampaign, listYmtyOrders, markYmtyMockPaySuccess, updateYmtyCampaign, updateYmtyCourseUserStatus, updateYmtyLivecode } from "../services/ymtyCampaign.js";
 
 export async function route(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
@@ -125,12 +125,13 @@ export async function route(req, res) {
 
   if (req.method === "POST" && pathname === "/api/pay/create") {
     const body = await readJson(req);
+    const track = body.track && typeof body.track === "object" ? body.track : {};
     const result = await createYmtyOrder({
       productCode: body.product_code || body.productCode,
       payChannel: body.pay_channel || body.payChannel || "mock",
-      channel: body.channel,
-      campaign: body.campaign,
-      creative: body.creative
+      channel: body.channel || track.channel,
+      campaign: body.campaign || track.campaign,
+      creative: body.creative || track.creative
     });
     return sendJson(res, 200, { ok: true, ...result });
   }
@@ -192,6 +193,19 @@ export async function route(req, res) {
   if (req.method === "GET" && pathname === "/api/admin/orders") {
     assertYmtyAdminAccess(req);
     const result = await listYmtyOrders();
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const ymtyOrderStatusMatch = pathname.match(/^\/api\/admin\/orders\/([^/]+)\/course-user$/);
+  if (req.method === "POST" && ymtyOrderStatusMatch) {
+    const admin = assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await updateYmtyCourseUserStatus({
+      adminId: admin.adminId,
+      orderId: ymtyOrderStatusMatch[1],
+      patch: body,
+      ip: getIp(req)
+    });
     return sendJson(res, 200, { ok: true, ...result });
   }
 

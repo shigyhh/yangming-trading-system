@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>阳明心学交易体验营</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #080807;
+        --ink: #11100d;
+        --paper: #f4ebdd;
+        --gold: #d8b76f;
+        --green: #5f8475;
+        --red: #783c2d;
+        --line: rgba(217, 189, 122, .16);
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(circle at 18% 10%, rgba(216, 183, 111, .14), transparent 30rem),
+          radial-gradient(circle at 84% 16%, rgba(95, 132, 117, .13), transparent 28rem),
+          linear-gradient(180deg, rgba(8, 8, 7, .84), #080807 68%);
+        color: var(--paper);
+        font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background:
+          linear-gradient(110deg, transparent 0 30%, rgba(216, 183, 111, .08) 42%, transparent 54%),
+          radial-gradient(ellipse at 50% 82%, rgba(244, 235, 221, .08), transparent 34rem);
+        opacity: .54;
+        animation: gold-breath 12s ease-in-out infinite alternate;
+      }
+
+      main {
+        position: relative;
+        z-index: 1;
+        width: min(1120px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 28px 0 36px;
+      }
+
+      .nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding-bottom: 30px;
+      }
+
+      .mark {
+        display: inline-grid;
+        place-items: center;
+        width: 48px;
+        height: 48px;
+        border: 1px solid rgba(216, 183, 111, .34);
+        background: rgba(17, 16, 13, .72);
+        color: var(--gold);
+        font-family: "Kaiti SC", "STKaiti", serif;
+        font-size: 28px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, .28);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .brand strong {
+        display: block;
+        font-family: "Songti SC", "Noto Serif SC", serif;
+        font-size: 15px;
+        letter-spacing: .08em;
+      }
+
+      .brand span, .nav-note, .muted {
+        color: rgba(244, 235, 221, .58);
+        font-size: 12px;
+        line-height: 1.8;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.08fr) minmax(320px, .72fr);
+        gap: 28px;
+        align-items: stretch;
+      }
+
+      .hero-copy {
+        min-height: 620px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 34px 0 44px;
+      }
+
+      .eyebrow {
+        color: rgba(216, 183, 111, .78);
+        font-size: 12px;
+        letter-spacing: .28em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 22px 0 0;
+        max-width: 680px;
+        font-family: "Songti SC", "Noto Serif SC", serif;
+        font-size: clamp(48px, 8vw, 88px);
+        font-weight: 600;
+        line-height: 1.08;
+        letter-spacing: .04em;
+      }
+
+      .subtitle {
+        max-width: 650px;
+        margin: 22px 0 0;
+        color: rgba(244, 235, 221, .76);
+        font-size: clamp(17px, 2.2vw, 22px);
+        line-height: 1.95;
+      }
+
+      .system-line {
+        margin-top: 24px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .system-line span {
+        border: 1px solid rgba(217, 189, 122, .16);
+        background: rgba(17, 16, 13, .58);
+        padding: 8px 12px;
+        color: rgba(244, 235, 221, .74);
+        font-size: 13px;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        background: rgba(17, 16, 13, .78);
+        padding: 24px;
+        box-shadow: 0 30px 90px rgba(0, 0, 0, .34);
+        backdrop-filter: blur(18px);
+      }
+
+      .offer {
+        align-self: center;
+        width: 100%;
+      }
+
+      .offer h2 {
+        margin: 0;
+        font-family: "Songti SC", "Noto Serif SC", serif;
+        font-size: 26px;
+      }
+
+      .price {
+        margin-top: 24px;
+        color: var(--gold);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 44px;
+      }
+
+      .meta {
+        display: grid;
+        gap: 10px;
+        margin: 22px 0;
+      }
+
+      .meta div {
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        border-bottom: 1px solid rgba(217, 189, 122, .1);
+        padding-bottom: 10px;
+        color: rgba(244, 235, 221, .7);
+        font-size: 14px;
+      }
+
+      .meta b {
+        color: rgba(244, 235, 221, .94);
+        font-weight: 500;
+        text-align: right;
+      }
+
+      .actions {
+        display: grid;
+        gap: 12px;
+      }
+
+      button, .ghost-link {
+        width: 100%;
+        min-height: 48px;
+        border: 1px solid rgba(216, 183, 111, .28);
+        background: linear-gradient(135deg, rgba(216, 183, 111, .9), rgba(164, 120, 49, .86));
+        color: #16120b;
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: .04em;
+        cursor: pointer;
+      }
+
+      button.secondary {
+        background: rgba(244, 235, 221, .045);
+        color: rgba(244, 235, 221, .86);
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        opacity: .48;
+      }
+
+      .result {
+        min-height: 24px;
+        margin-top: 14px;
+        color: rgba(244, 235, 221, .66);
+        font-size: 13px;
+        line-height: 1.7;
+      }
+
+      .story {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+        margin-top: 24px;
+      }
+
+      .story article {
+        border: 1px solid rgba(217, 189, 122, .12);
+        background: rgba(244, 235, 221, .035);
+        padding: 18px;
+      }
+
+      .story h3 {
+        margin: 0 0 8px;
+        font-family: "Songti SC", "Noto Serif SC", serif;
+        font-size: 18px;
+      }
+
+      .story p {
+        margin: 0;
+        color: rgba(244, 235, 221, .6);
+        font-size: 13px;
+        line-height: 1.9;
+      }
+
+      footer {
+        margin-top: 34px;
+        border-top: 1px solid rgba(217, 189, 122, .12);
+        padding-top: 18px;
+        color: rgba(244, 235, 221, .46);
+        font-size: 12px;
+        line-height: 1.9;
+      }
+
+      @keyframes gold-breath {
+        from { transform: translateX(-3%); opacity: .38; }
+        to { transform: translateX(3%); opacity: .62; }
+      }
+
+      @media (max-width: 860px) {
+        main { width: min(100% - 24px, 560px); padding-top: 18px; }
+        .nav { align-items: flex-start; }
+        .hero { grid-template-columns: 1fr; }
+        .hero-copy { min-height: auto; padding: 28px 0 8px; }
+        .story { grid-template-columns: 1fr; }
+        .nav-note { display: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <nav class="nav" aria-label="顶部">
+        <div class="brand">
+          <div class="mark">照</div>
+          <div>
+            <strong>阳明心学交易体验营</strong>
+            <span>湖南坤铘紫垣传媒有限公司</span>
+          </div>
+        </div>
+        <div class="nav-note">xxjyxt.com · 湘ICP备2026021493号-1</div>
+      </nav>
+
+      <section class="hero">
+        <div class="hero-copy">
+          <div class="eyebrow">YANGMING TRADING PRACTICE</div>
+          <h1 aria-label="心不静，交易必乱。">心不静，<br />交易必乱。</h1>
+          <p class="subtitle">
+            一个动作：停十秒，先照心。<br />
+            一个系统：心证、取证、训练、复盘、纪律。
+          </p>
+          <div class="system-line" aria-label="训练系统">
+            <span>心证</span>
+            <span>取证</span>
+            <span>训练</span>
+            <span>复盘</span>
+            <span>纪律</span>
+          </div>
+        </div>
+
+        <aside class="panel offer" aria-label="报名信息">
+          <p class="eyebrow">7 DAY CAMP</p>
+          <h2 id="productName">阳明心学交易体验营</h2>
+          <div class="price"><span id="price">1.68</span> 元</div>
+          <div class="meta">
+            <div><span>训练周期</span><b id="cycle">7天训练</b></div>
+            <div><span>开课时间</span><b id="startTime">每周滚动开营｜晚20:00</b></div>
+            <div><span>主讲</span><b id="lecturer">知行飞哥</b></div>
+            <div><span>客服方式</span><b id="serviceText">支付后添加课程助教微信</b></div>
+          </div>
+          <div class="actions">
+            <button id="wechatButton" type="button">微信支付</button>
+            <button id="alipayButton" class="secondary" type="button">支付宝支付</button>
+          </div>
+          <p id="result" class="result" aria-live="polite"></p>
+          <p class="muted">前端价格只用于展示，订单金额以后端创建结果为准。</p>
+        </aside>
+      </section>
+
+      <section class="story" aria-label="体验营内容">
+        <article>
+          <h3>先照心</h3>
+          <p>下单前、追涨前、扛单前，先停十秒，看见那个最先冒出来的念头。</p>
+        </article>
+        <article>
+          <h3>再取证</h3>
+          <p>用交易截图、复盘记录、训练打卡取证，不靠情绪评价自己。</p>
+        </article>
+        <article>
+          <h3>后训练</h3>
+          <p>七天只练一个动作：让手慢下来，让纪律回到计划里。</p>
+        </article>
+      </section>
+
+      <footer>
+        <div>本系统仅用于交易认知、行为训练与风险教育；不荐股、不喊单、不承诺收益、不代客理财、不组织实盘跟单。</div>
+        <div>湖南坤铘紫垣传媒有限公司 · xxjyxt.com · 湘ICP备2026021493号-1</div>
+      </footer>
+    </main>
+
+    <script>
+      const state = {
+        productCode: "YMXX_JY_TY",
+        status: "loading",
+      };
+
+      const nodes = {
+        productName: document.getElementById("productName"),
+        price: document.getElementById("price"),
+        cycle: document.getElementById("cycle"),
+        startTime: document.getElementById("startTime"),
+        lecturer: document.getElementById("lecturer"),
+        serviceText: document.getElementById("serviceText"),
+        wechatButton: document.getElementById("wechatButton"),
+        alipayButton: document.getElementById("alipayButton"),
+        result: document.getElementById("result"),
+      };
+
+      function isWechatBrowser() {
+        return /MicroMessenger/i.test(navigator.userAgent || "");
+      }
+
+      async function loadCampaign() {
+        try {
+          const response = await fetch("/api/public/campaign/ymty", { cache: "no-store" });
+          const data = await response.json();
+          if (!response.ok || data.ok === false) throw new Error(data.error || "读取报名配置失败");
+          const product = data.product || {};
+          const livecode = data.livecode || {};
+
+          state.productCode = product.product_code || "YMXX_JY_TY";
+          state.status = product.status || "offline";
+          nodes.productName.textContent = product.product_name || "阳明心学交易体验营";
+          nodes.price.textContent = Number(product.display_price_yuan || 0).toFixed(2);
+          nodes.cycle.textContent = product.cycle || "7天训练";
+          nodes.startTime.textContent = product.start_time || "每周滚动开营｜晚20:00";
+          nodes.lecturer.textContent = product.lecturer || "知行飞哥";
+          nodes.serviceText.textContent = livecode.service_text || "客服方式：支付后添加课程助教微信";
+
+          if (state.status !== "online") {
+            setButtonsDisabled(true, "暂停报名");
+            nodes.result.textContent = "当前暂未开放报名。";
+          } else {
+            setButtonsDisabled(false);
+          }
+        } catch (error) {
+          state.status = "offline";
+          setButtonsDisabled(true, "暂停报名");
+          nodes.result.textContent = error instanceof Error ? error.message : "读取报名配置失败";
+        }
+      }
+
+      function setButtonsDisabled(disabled, label) {
+        nodes.wechatButton.disabled = disabled;
+        nodes.alipayButton.disabled = disabled;
+        if (label) {
+          nodes.wechatButton.textContent = label;
+          nodes.alipayButton.textContent = label;
+        }
+      }
+
+      async function createOrder(payChannel) {
+        if (state.status !== "online") return;
+        setButtonsDisabled(true);
+        nodes.result.textContent = "正在建立报名订单...";
+        const successUrl = new URL("/hd/ymty/success.html", window.location.origin).toString();
+
+        try {
+          const response = await fetch("/api/pay/create", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              product_code: state.productCode,
+              pay_channel: payChannel,
+              success_url: successUrl,
+              track: {
+                channel: "h5",
+                campaign: "ymty_v1",
+                creative: payChannel,
+              },
+            }),
+          });
+          const data = await response.json();
+          if (!response.ok || data.ok === false) throw new Error(data.error || "订单创建失败");
+
+          const order = data.order || {};
+          nodes.result.textContent = "订单已建立，正在确认支付状态...";
+          await finishMockPayment(order.order_id, order.order_token, successUrl);
+        } catch (error) {
+          nodes.result.textContent = error instanceof Error ? error.message : "订单创建失败";
+          setButtonsDisabled(false);
+        }
+      }
+
+      async function finishMockPayment(orderId, token, successUrl) {
+        try {
+          const response = await fetch("/api/mock/pay-success", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              order_id: orderId,
+              token,
+              transaction_id: `mock-h5-${Date.now()}`,
+            }),
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok || data.ok === false) {
+            window.location.href = `${successUrl}?order_id=${encodeURIComponent(orderId)}&token=${encodeURIComponent(token)}`;
+            return;
+          }
+          window.location.href = `${successUrl}?order_id=${encodeURIComponent(orderId)}&token=${encodeURIComponent(token)}`;
+        } catch {
+          window.location.href = `${successUrl}?order_id=${encodeURIComponent(orderId)}&token=${encodeURIComponent(token)}`;
+        }
+      }
+
+      nodes.wechatButton.addEventListener("click", () => {
+        createOrder(isWechatBrowser() ? "wechat_jsapi" : "wechat_h5");
+      });
+      nodes.alipayButton.addEventListener("click", () => createOrder("alipay_wap"));
+
+      loadCampaign();
+    </script>
+  </body>
+</html>

@@ -169,6 +169,7 @@ export async function getYmtyAfterpayEntrance({ orderId = "", token = "" } = {})
       name: livecode.name,
       wecom_link: livecode.wecom_link,
       qr_image: livecode.qr_image,
+      auto_redirect: Boolean(livecode.auto_redirect_after_paid),
       auto_redirect_after_paid: Boolean(livecode.auto_redirect_after_paid),
       redirect_delay_ms: Number(livecode.redirect_delay_ms || 0),
       remark: livecode.remark,
@@ -289,13 +290,66 @@ export async function updateYmtyLivecode({ adminId = "dev-admin", patch = {}, ip
 }
 
 export async function listYmtyOrders() {
-  const orders = await readRuntimeRecords(ORDER_FILE);
+  const [orders, courseUsers] = await Promise.all([
+    readRuntimeRecords(ORDER_FILE),
+    readRuntimeRecords(COURSE_USER_FILE)
+  ]);
+  const courseUserByOrderId = new Map(courseUsers.map((item) => [item.order_id, publicCourseUser(item)]));
   return {
     orders: orders
       .slice()
       .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
-      .map((order) => publicOrder(order))
+      .map((order) => ({
+        ...publicOrder(order),
+        course_user: courseUserByOrderId.get(order.order_id) || emptyCourseUserSummary(order.order_id)
+      }))
   };
+}
+
+export async function updateYmtyCourseUserStatus({ adminId = "dev-admin", orderId = "", patch = {}, ip = "" } = {}) {
+  const orders = await readRuntimeRecords(ORDER_FILE);
+  const order = orders.find((item) => item?.order_id === String(orderId || ""));
+  if (!order) {
+    const error = new Error("订单不存在");
+    error.statusCode = 404;
+    throw error;
+  }
+  if (order.pay_status !== "paid") {
+    const error = new Error("未支付订单不能标记课程承接状态");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  let before = null;
+  let after = null;
+  const now = new Date().toISOString();
+  await updateRuntimeRecords(COURSE_USER_FILE, (records) => {
+    const existing = records.find((item) => item?.order_id === order.order_id);
+    const base = existing || buildCourseUser(order, now);
+    before = existing || null;
+    after = {
+      ...base,
+      added_wechat: Boolean(patch.added_wechat ?? patch.addedWechat ?? base.added_wechat),
+      joined_group: Boolean(patch.joined_group ?? patch.joinedGroup ?? base.joined_group),
+      added_wechat_at: patch.added_wechat || patch.addedWechat ? base.added_wechat_at || now : base.added_wechat_at || null,
+      joined_group_at: patch.joined_group || patch.joinedGroup ? base.joined_group_at || now : base.joined_group_at || null,
+      updated_at: now
+    };
+    if (existing) return records.map((item) => (item.order_id === order.order_id ? after : item));
+    return records.concat(after);
+  });
+
+  await appendAuditLog({
+    adminId,
+    action: "update_course_user_status",
+    targetType: "course_users",
+    targetId: order.order_id,
+    before,
+    after,
+    ip
+  });
+
+  return { course_user: publicCourseUser(after) };
 }
 
 export async function getYmtyAuditLogs() {
@@ -372,20 +426,29 @@ async function ensureCourseUser(order) {
       courseUser = existing;
       return records;
     }
-    courseUser = {
-      user_id: `ymty_${crypto.randomUUID()}`,
-      openid: "",
-      unionid: "",
-      order_id: order.order_id,
-      product_code: order.product_code,
-      course_name: order.product_name,
-      status: "active",
-      paid_at: order.paid_at || now,
-      created_at: now
-    };
+    courseUser = buildCourseUser(order, now);
     return records.concat(courseUser);
   });
   return courseUser;
+}
+
+function buildCourseUser(order, now) {
+  return {
+    user_id: `ymty_${crypto.randomUUID()}`,
+    openid: "",
+    unionid: "",
+    order_id: order.order_id,
+    product_code: order.product_code,
+    course_name: order.product_name,
+    status: "active",
+    paid_at: order.paid_at || now,
+    added_wechat: false,
+    joined_group: false,
+    added_wechat_at: null,
+    joined_group_at: null,
+    created_at: now,
+    updated_at: now
+  };
 }
 
 async function appendAuditLog({ adminId, action, targetType, targetId, before, after, ip }) {
@@ -448,6 +511,33 @@ function publicOrder(order, { includeToken = false } = {}) {
     paid_at: order.paid_at,
     created_at: order.created_at,
     updated_at: order.updated_at
+  };
+}
+
+function publicCourseUser(courseUser) {
+  return {
+    user_id: courseUser.user_id,
+    order_id: courseUser.order_id,
+    product_code: courseUser.product_code,
+    course_name: courseUser.course_name,
+    status: courseUser.status,
+    paid_at: courseUser.paid_at,
+    added_wechat: Boolean(courseUser.added_wechat),
+    joined_group: Boolean(courseUser.joined_group),
+    added_wechat_at: courseUser.added_wechat_at || null,
+    joined_group_at: courseUser.joined_group_at || null,
+    created_at: courseUser.created_at,
+    updated_at: courseUser.updated_at || courseUser.created_at
+  };
+}
+
+function emptyCourseUserSummary(orderId) {
+  return {
+    order_id: orderId,
+    added_wechat: false,
+    joined_group: false,
+    added_wechat_at: null,
+    joined_group_at: null
   };
 }
 

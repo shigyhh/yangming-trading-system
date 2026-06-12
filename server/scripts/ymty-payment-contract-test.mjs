@@ -11,6 +11,7 @@ import {
   markYmtyMockPaySuccess,
   resetYmtyForTests,
   seedYmtyDefaults,
+  updateYmtyCourseUserStatus,
   updateYmtyCampaign,
   updateYmtyLivecode
 } from "../src/services/ymtyCampaign.js";
@@ -112,9 +113,27 @@ test("ymty mock payment flow uses backend price and unlocks livecode only after 
     assert.equal(orders.orders.find((item) => item.order_id === order.order.order_id)?.amount_cents, 168);
     assert.equal(orders.orders.find((item) => item.order_id === newOrder.order.order_id)?.amount_cents, 990);
 
+    const courseStatus = await updateYmtyCourseUserStatus({
+      adminId: "contract-test-admin",
+      orderId: order.order.order_id,
+      patch: {
+        added_wechat: true,
+        joined_group: true
+      },
+      ip: "127.0.0.1"
+    });
+    assert.equal(courseStatus.course_user.added_wechat, true);
+    assert.equal(courseStatus.course_user.joined_group, true);
+
+    const fulfilledOrders = await listYmtyOrders();
+    const fulfilledOrder = fulfilledOrders.orders.find((item) => item.order_id === order.order.order_id);
+    assert.equal(fulfilledOrder?.course_user?.added_wechat, true);
+    assert.equal(fulfilledOrder?.course_user?.joined_group, true);
+
     const audit = await getYmtyAuditLogs();
     assert.ok(audit.audit_logs.some((item) => item.action === "update_product" && item.before_json?.amount_cents === 168 && item.after_json?.amount_cents === 990));
     assert.ok(audit.audit_logs.some((item) => item.action === "update_livecode"));
+    assert.ok(audit.audit_logs.some((item) => item.action === "update_course_user_status"));
   } finally {
     await resetYmtyForTests();
     await seedYmtyDefaults();

@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>体验营入口解锁</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #080807;
+        --ink: #11100d;
+        --paper: #f4ebdd;
+        --gold: #d8b76f;
+        --green: #5f8475;
+        --line: rgba(217, 189, 122, .16);
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background:
+          radial-gradient(circle at 18% 12%, rgba(216, 183, 111, .13), transparent 28rem),
+          radial-gradient(circle at 86% 18%, rgba(95, 132, 117, .12), transparent 30rem),
+          linear-gradient(180deg, rgba(8, 8, 7, .82), #080807);
+        color: var(--paper);
+        font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      }
+
+      .shell {
+        width: min(560px, 100%);
+        border: 1px solid var(--line);
+        background: rgba(17, 16, 13, .82);
+        padding: clamp(22px, 5vw, 36px);
+        box-shadow: 0 32px 90px rgba(0, 0, 0, .36);
+      }
+
+      .mark {
+        display: inline-grid;
+        place-items: center;
+        width: 48px;
+        height: 48px;
+        border: 1px solid rgba(216, 183, 111, .34);
+        color: var(--gold);
+        font-family: "Kaiti SC", "STKaiti", serif;
+        font-size: 28px;
+      }
+
+      h1 {
+        margin: 22px 0 0;
+        font-family: "Songti SC", "Noto Serif SC", serif;
+        font-size: clamp(30px, 8vw, 46px);
+        letter-spacing: .04em;
+      }
+
+      .status {
+        margin-top: 14px;
+        color: rgba(244, 235, 221, .68);
+        font-size: 15px;
+        line-height: 1.9;
+      }
+
+      .entrance {
+        margin-top: 24px;
+      }
+
+      .qr-wrap {
+        display: none;
+        margin-top: 18px;
+        text-align: center;
+      }
+
+      .qr-wrap.is-visible {
+        display: block;
+      }
+
+      img {
+        width: min(280px, 86vw);
+        height: auto;
+        border: 1px solid rgba(217, 189, 122, .2);
+        background: #fff;
+        padding: 10px;
+      }
+
+      .remark {
+        margin-top: 14px;
+        color: rgba(216, 183, 111, .86);
+        font-size: 14px;
+        line-height: 1.8;
+      }
+
+      button, a.button {
+        display: inline-flex;
+        width: 100%;
+        min-height: 48px;
+        align-items: center;
+        justify-content: center;
+        margin-top: 16px;
+        border: 1px solid rgba(216, 183, 111, .3);
+        background: linear-gradient(135deg, rgba(216, 183, 111, .9), rgba(164, 120, 49, .86));
+        color: #16120b;
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: .04em;
+        text-decoration: none;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      footer {
+        margin-top: 24px;
+        border-top: 1px solid rgba(217, 189, 122, .12);
+        padding-top: 16px;
+        color: rgba(244, 235, 221, .46);
+        font-size: 12px;
+        line-height: 1.9;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <div class="mark">照</div>
+      <h1 id="title">正在确认入口</h1>
+      <p id="statusText" class="status">正在读取订单状态，请稍候。</p>
+
+      <section id="entrance" class="entrance hidden" aria-label="课程助教入口">
+        <div id="qrWrap" class="qr-wrap">
+          <img id="qrImage" src="" alt="阳明心学交易体验营课程助教二维码" />
+          <p class="remark">长按识别二维码，添加课程助教</p>
+        </div>
+        <p id="remark" class="remark"></p>
+        <a id="wecomButton" class="button hidden" href="#" rel="noreferrer">如未自动跳转，点击添加课程助教</a>
+      </section>
+
+      <footer>
+        本系统仅用于交易认知、行为训练与风险教育；不荐股、不喊单、不承诺收益、不代客理财、不组织实盘跟单。
+      </footer>
+    </main>
+
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const orderId = params.get("order_id") || "";
+      const token = params.get("token") || "";
+
+      const nodes = {
+        title: document.getElementById("title"),
+        statusText: document.getElementById("statusText"),
+        entrance: document.getElementById("entrance"),
+        qrWrap: document.getElementById("qrWrap"),
+        qrImage: document.getElementById("qrImage"),
+        remark: document.getElementById("remark"),
+        wecomButton: document.getElementById("wecomButton"),
+      };
+
+      async function loadEntrance() {
+        if (!orderId || !token) {
+          lockEntrance("入口未解锁", "缺少订单信息，请回到报名页重新进入。");
+          return;
+        }
+
+        try {
+          const statusResponse = await fetch(`/api/order/status?order_id=${encodeURIComponent(orderId)}&token=${encodeURIComponent(token)}`, { cache: "no-store" });
+          const statusData = await statusResponse.json();
+          if (!statusResponse.ok || statusData.ok === false) throw new Error(statusData.error || "订单状态读取失败");
+          if (statusData.order?.pay_status !== "paid") {
+            lockEntrance("入口未解锁", "系统尚未确认支付完成，课程助教入口暂不展示。");
+            return;
+          }
+
+          const entranceResponse = await fetch(`/api/afterpay/entrance?order_id=${encodeURIComponent(orderId)}&token=${encodeURIComponent(token)}`, { cache: "no-store" });
+          const entranceData = await entranceResponse.json();
+          if (!entranceResponse.ok || entranceData.ok === false) throw new Error(entranceData.error || "课程助教入口读取失败");
+          unlockEntrance(entranceData.livecode || {});
+        } catch (error) {
+          lockEntrance("入口未解锁", error instanceof Error ? error.message : "课程助教入口读取失败");
+        }
+      }
+
+      function lockEntrance(title, message) {
+        nodes.title.textContent = title;
+        nodes.statusText.textContent = message;
+        nodes.entrance.classList.add("hidden");
+        nodes.qrImage.removeAttribute("src");
+        nodes.wecomButton.removeAttribute("href");
+      }
+
+      function unlockEntrance(livecode) {
+        const wecomLink = livecode.wecom_link || "";
+        const qrImage = livecode.qr_image || "";
+        const autoRedirect = livecode.auto_redirect === true || livecode.auto_redirect_after_paid === true;
+        const redirectDelayMs = Number(livecode.redirect_delay_ms || 600);
+
+        nodes.title.textContent = "入口已解锁";
+        nodes.statusText.textContent = livecode.service_text || "支付已确认，请添加课程助教微信。";
+        nodes.entrance.classList.remove("hidden");
+        nodes.remark.textContent = livecode.remark ? `添加备注：${livecode.remark}` : "";
+
+        if (qrImage) {
+          nodes.qrImage.src = qrImage;
+          nodes.qrWrap.classList.add("is-visible");
+        } else {
+          nodes.qrWrap.classList.remove("is-visible");
+          nodes.qrImage.removeAttribute("src");
+        }
+
+        if (wecomLink) {
+          nodes.wecomButton.href = wecomLink;
+          nodes.wecomButton.textContent = livecode.button_text || "如未自动跳转，点击添加课程助教";
+          nodes.wecomButton.classList.remove("hidden");
+        } else {
+          nodes.wecomButton.classList.add("hidden");
+          nodes.wecomButton.removeAttribute("href");
+        }
+
+        if (!wecomLink && !qrImage) {
+          nodes.statusText.textContent = "助教入口配置中，请联系管理员";
+          return;
+        }
+
+        if (autoRedirect && wecomLink) {
+          nodes.statusText.textContent = `入口已解锁，${Math.max(redirectDelayMs, 0)}ms 后将前往课程助教入口。`;
+          window.setTimeout(() => {
+            window.location.href = wecomLink;
+          }, Math.max(redirectDelayMs, 0));
+        }
+      }
+
+      loadEntrance();
+    </script>
+  </body>
+</html>
