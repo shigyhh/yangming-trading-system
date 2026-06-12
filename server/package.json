@@ -14,6 +14,7 @@
     "download:kline": "node scripts/download-kline-history.mjs",
     "kline:update": "node scripts/update-kline-cache.js",
     "kline:verify": "node scripts/verify-kline-cache.js",
+    "kline:benchmark": "node scripts/benchmark-kline-providers.js",
     "kline:backfill": "node scripts/backfill-kline-cache.js",
     "update:ashare": "node scripts/cache-ashare-market-data.mjs --limit all --timeframes 101 --delay 300 --incremental --summary-only",
     "test:smoke": "node scripts/smoke-test.mjs",

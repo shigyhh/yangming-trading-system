@@ -114,7 +114,7 @@ export default function ZhixingScrollPage() {
         <div className="scroll-actions">
           <Link href="/mind-archive">回到档案馆</Link>
           <Link href="/mind-scroll">进入心镜长卷</Link>
-          <Link href="/review">进入真实复盘</Link>
+          <Link href="/trade-review">进入真实复盘</Link>
         </div>
       </main>
 

@@ -217,7 +217,7 @@ export default function TodaySealedPage() {
                         </button>
                       </div>
                       {event.actualAction === "traded" && event.reviewStatus === "pending" ? (
-                        <Link href={`/review?linkedOneThoughtEventId=${encodeURIComponent(event.id)}`}>
+                        <Link href={`/trade-review?linkedOneThoughtEventId=${encodeURIComponent(event.id)}`}>
                           稍后真实复盘
                         </Link>
                       ) : null}

@@ -62,11 +62,11 @@ export default function MindArchivePage() {
 
   function openTradeReview(oneThoughtEventId?: string) {
     if (oneThoughtEventId) {
-      router.push(`/review?linkedOneThoughtEventId=${encodeURIComponent(oneThoughtEventId)}`)
+      router.push(`/trade-review?linkedOneThoughtEventId=${encodeURIComponent(oneThoughtEventId)}`)
       return
     }
 
-    router.push("/review")
+    router.push("/trade-review")
   }
 
   return (

@@ -2,10 +2,10 @@
   "market": "ashare",
   "timeframe": "101",
   "source": "baostock",
-  "last_trade_date": "20260611",
-  "updated_at": "2026-06-12T00:35:34.128Z",
-  "symbols_count": 13,
-  "candles_count": 47991,
+  "last_trade_date": "20260612",
+  "updated_at": "2026-06-12T01:35:23.017Z",
+  "symbols_count": 14,
+  "candles_count": 48139,
   "status": "ok",
   "errors": []
 }

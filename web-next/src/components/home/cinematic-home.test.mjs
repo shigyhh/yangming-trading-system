@@ -343,7 +343,7 @@ test("home first viewport is a still-water seeing entrance", async () => {
     assert.equal(stillHero.includes(forbiddenMarketToken), false, `hero should not include readable market info: ${forbiddenMarketToken}`)
   })
 
-  ;["/today-sealed", "/review", "/mind-archive", "/lake"].forEach((href) => {
+  ;["/today-sealed", "/trade-review", "/mind-archive", "/lake"].forEach((href) => {
     assert.ok(topNav.includes(`href: "${href}"`), `home nav missing route: ${href}`)
   })
   assert.ok(topNav.includes("privateNavLinks"), "home top nav should keep private route group separate")
@@ -364,9 +364,10 @@ test("home first viewport is a still-water seeing entrance", async () => {
   })
   assert.ok(appBottomNav.includes("shouldShowBottomNav"), "bottom nav should be route-scoped instead of shown on the home page")
   assert.match(reflectAlias, /getTodayInsightRecord/)
-  assert.match(reviewAlias, /ReviewPageContent/)
-  assert.match(reviewAlias, /createTradeReview/)
-  assert.match(tradeReviewAlias, /redirect\("\/review"\)/)
+  assert.match(reviewAlias, /redirect\(suffix \? `\/trade-review\?\$\{suffix\}` : "\/trade-review"\)/)
+  assert.doesNotMatch(reviewAlias, /ReviewPageContent|getPendingReviewEvents|createTradeReview/)
+  assert.match(tradeReviewAlias, /ReviewPageContent/)
+  assert.match(tradeReviewAlias, /createTradeReview/)
   assert.match(archiveAlias, /redirect\("\/mind-archive"\)/)
   assert.match(lakeAlias, /<OneThoughtLakePage \/>/)
   assert.match(scrollAlias, /redirect\("\/mirror-scroll"\)/)

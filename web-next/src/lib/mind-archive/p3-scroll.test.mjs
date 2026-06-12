@@ -46,7 +46,7 @@ test("P3 archive museum is the private entry and reads only archive/review servi
     "规则守护",
     "/mind-scroll",
     "/zhixing-scroll",
-    "/review?linkedOneThoughtEventId=",
+    "/trade-review?linkedOneThoughtEventId=",
   ].forEach((token) => {
     assert.equal(archiveSource.includes(token), true, `missing P3 archive token: ${token}`)
   })

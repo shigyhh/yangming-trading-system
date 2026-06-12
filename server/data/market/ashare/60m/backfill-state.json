@@ -1,0 +1,24 @@
+{
+  "timeframe": "60m",
+  "range": {
+    "start_date": "20251212",
+    "end_date": "20260612"
+  },
+  "total_symbols": 4,
+  "completed_symbols": [
+    "000001",
+    "000002",
+    "300750",
+    "600519"
+  ],
+  "failed_symbols": [],
+  "last_symbol": "000002",
+  "provider_chain": [
+    "baostock",
+    "akshare"
+  ],
+  "started_at": "2026-06-12T01:42:01.758Z",
+  "updated_at": "2026-06-12T01:42:24.358Z",
+  "concurrency": 1,
+  "batch_size": 100
+}

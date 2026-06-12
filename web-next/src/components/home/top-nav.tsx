@@ -16,7 +16,7 @@ import { STORAGE_KEYS } from "@/lib/user-flow/visitor-state"
 
 const privateNavLinks = [
   { label: "今日所照", href: "/today-sealed" },
-  { label: "真实复盘", href: "/review" },
+  { label: "真实复盘", href: "/trade-review" },
   { label: "档案馆", href: "/mind-archive" },
 ] as const
 
@@ -92,7 +92,7 @@ export function TopNav() {
   function isActive(href: string) {
     if (href === "/today-sealed") return pathname === "/today-sealed"
     if (href === "/lake") return pathname === "/lake" || pathname === "/one-thought-lake"
-    if (href === "/review") return pathname === "/review" || pathname === "/trade-review"
+    if (href === "/trade-review") return pathname === "/review" || pathname === "/trade-review"
     if (href === "/mind-archive") {
       return pathname === "/mind-archive" || pathname === "/me/archive" || pathname === "/mirror-archive"
     }

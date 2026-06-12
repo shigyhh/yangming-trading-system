@@ -105,6 +105,11 @@ npm run update:ashare
 python3 -m pip install akshare pandas
 npm run cache:akshare -- --limit all --timeframes 101 --delay 300 --refresh-pool --summary-only
 
+# P2.2-A.2：真实复盘自动盘证使用的每日 K线缓存更新，也可指定 AKShare provider
+python3 -m pip install -r requirements.txt
+npm run kline:update -- --market ashare --timeframe 101 --provider akshare --symbols 600519,300750 --dry-run
+npm run kline:update -- --market ashare --timeframe 101 --provider akshare --symbols 600519,300750
+
 # 指定少量股票验证 AkShare 补库
 npm run cache:akshare -- --codes 600519,000001,300750 --timeframes 101 --summary-only
 
