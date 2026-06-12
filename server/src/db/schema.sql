@@ -602,3 +602,161 @@ CREATE TABLE IF NOT EXISTS dojo_mind_records (
 
 CREATE INDEX IF NOT EXISTS idx_dojo_mind_records_user_id ON dojo_mind_records(user_id);
 CREATE INDEX IF NOT EXISTS idx_dojo_mind_records_date_key ON dojo_mind_records(date_key);
+
+CREATE TABLE IF NOT EXISTS products (
+  product_code VARCHAR(80) PRIMARY KEY,
+  product_name VARCHAR(160) NOT NULL,
+  display_price_yuan NUMERIC(10,2) NOT NULL,
+  amount_cents INTEGER NOT NULL CHECK (amount_cents > 0),
+  currency VARCHAR(16) NOT NULL DEFAULT 'CNY',
+  cycle VARCHAR(80),
+  start_time VARCHAR(120),
+  lecturer VARCHAR(80),
+  status VARCHAR(30) NOT NULL DEFAULT 'offline',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_products_status ON products(status);
+
+CREATE TABLE IF NOT EXISTS livecodes (
+  code_key VARCHAR(80) PRIMARY KEY,
+  name VARCHAR(120) NOT NULL,
+  wecom_link TEXT,
+  qr_image TEXT,
+  auto_redirect_after_paid BOOLEAN NOT NULL DEFAULT false,
+  redirect_delay_ms INTEGER NOT NULL DEFAULT 600,
+  remark TEXT,
+  button_text VARCHAR(80),
+  service_text VARCHAR(160),
+  status VARCHAR(30) NOT NULL DEFAULT 'inactive',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_livecodes_status ON livecodes(status);
+
+CREATE TABLE IF NOT EXISTS orders (
+  order_id VARCHAR(80) PRIMARY KEY,
+  order_token VARCHAR(160) NOT NULL,
+  product_code VARCHAR(80) NOT NULL REFERENCES products(product_code),
+  product_name VARCHAR(160) NOT NULL,
+  amount_cents INTEGER NOT NULL CHECK (amount_cents > 0),
+  pay_channel VARCHAR(32) NOT NULL DEFAULT 'mock',
+  pay_status VARCHAR(30) NOT NULL DEFAULT 'pending',
+  transaction_id VARCHAR(120),
+  channel VARCHAR(80),
+  campaign VARCHAR(80),
+  creative VARCHAR(80),
+  paid_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_orders_product_code ON orders(product_code);
+CREATE INDEX IF NOT EXISTS idx_orders_pay_status ON orders(pay_status);
+CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at DESC);
+
+CREATE TABLE IF NOT EXISTS payment_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id VARCHAR(80) NOT NULL REFERENCES orders(order_id),
+  pay_channel VARCHAR(32) NOT NULL,
+  event_type VARCHAR(60) NOT NULL,
+  raw_payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+  verify_status VARCHAR(40) NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_payment_logs_order_id ON payment_logs(order_id);
+CREATE INDEX IF NOT EXISTS idx_payment_logs_event_type ON payment_logs(event_type);
+CREATE INDEX IF NOT EXISTS idx_payment_logs_created_at ON payment_logs(created_at DESC);
+
+CREATE TABLE IF NOT EXISTS course_users (
+  user_id VARCHAR(120) PRIMARY KEY,
+  openid VARCHAR(160),
+  unionid VARCHAR(160),
+  order_id VARCHAR(80) NOT NULL UNIQUE REFERENCES orders(order_id),
+  product_code VARCHAR(80) NOT NULL REFERENCES products(product_code),
+  course_name VARCHAR(160) NOT NULL,
+  status VARCHAR(30) NOT NULL DEFAULT 'active',
+  paid_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_course_users_openid ON course_users(openid);
+CREATE INDEX IF NOT EXISTS idx_course_users_unionid ON course_users(unionid);
+CREATE INDEX IF NOT EXISTS idx_course_users_product_code ON course_users(product_code);
+
+CREATE TABLE IF NOT EXISTS admin_users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  username VARCHAR(80) NOT NULL UNIQUE,
+  password_hash VARCHAR(200) NOT NULL,
+  role VARCHAR(40) NOT NULL DEFAULT 'admin',
+  status VARCHAR(30) NOT NULL DEFAULT 'active',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_admin_users_status ON admin_users(status);
+
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  admin_id VARCHAR(120),
+  action VARCHAR(80) NOT NULL,
+  target_type VARCHAR(80) NOT NULL,
+  target_id VARCHAR(120) NOT NULL,
+  before_json JSONB,
+  after_json JSONB,
+  ip INET,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_logs_admin_id ON audit_logs(admin_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_target ON audit_logs(target_type, target_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at DESC);
+
+INSERT INTO products (
+  product_code,
+  product_name,
+  display_price_yuan,
+  amount_cents,
+  currency,
+  cycle,
+  start_time,
+  lecturer,
+  status
+) VALUES (
+  'YMXX_JY_TY',
+  '阳明心学交易体验营',
+  1.68,
+  168,
+  'CNY',
+  '7天训练',
+  '每周滚动开营｜晚20:00',
+  '知行飞哥',
+  'online'
+) ON CONFLICT (product_code) DO NOTHING;
+
+INSERT INTO livecodes (
+  code_key,
+  name,
+  wecom_link,
+  qr_image,
+  auto_redirect_after_paid,
+  redirect_delay_ms,
+  remark,
+  button_text,
+  service_text,
+  status
+) VALUES (
+  'YMXX_YMTY_DEFAULT',
+  '阳明心学交易体验营默认活码',
+  'https://work.weixin.qq.com/ca/mock',
+  '/assets/wecom-livecode-placeholder.svg',
+  false,
+  600,
+  '知行 + 手机号后4位',
+  '添加课程助教微信',
+  '客服方式：支付后添加课程助教微信',
+  'active'
+) ON CONFLICT (code_key) DO NOTHING;

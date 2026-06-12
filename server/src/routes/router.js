@@ -20,6 +20,7 @@ import { dispatchTrainingPrescriptionBinding, generateShareCardBinding, getAdmin
 import { getGlobalReflectionToday, listGlobalReflectionChoices, submitGlobalReflectionVote } from "../services/globalReflection.js";
 import { buildHistoricalKlineSlice, downloadHistoricalKline, getHistoricalKlineRules, listHistoricalKlineCatalog, listHistoricalKlineInstruments, revealHistoricalKlineSlice } from "../services/historicalKline.js";
 import { buildTradeReviewOcrDraft } from "../services/tradeReviewOcr.js";
+import { createYmtyOrder, getYmtyAdminCampaign, getYmtyAfterpayEntrance, getYmtyAuditLogs, getYmtyOrderStatus, getYmtyPublicCampaign, listYmtyOrders, markYmtyMockPaySuccess, updateYmtyCampaign, updateYmtyLivecode } from "../services/ymtyCampaign.js";
 
 export async function route(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
@@ -115,6 +116,89 @@ export async function route(req, res) {
   if (req.method === "GET" && pathname === "/api/v1/stats/public") {
     const stats = await getPublicStats();
     return sendJson(res, 200, { ok: true, ...stats });
+  }
+
+  if (req.method === "GET" && pathname === "/api/public/campaign/ymty") {
+    const campaign = await getYmtyPublicCampaign();
+    return sendJson(res, 200, { ok: true, ...campaign });
+  }
+
+  if (req.method === "POST" && pathname === "/api/pay/create") {
+    const body = await readJson(req);
+    const result = await createYmtyOrder({
+      productCode: body.product_code || body.productCode,
+      payChannel: body.pay_channel || body.payChannel || "mock",
+      channel: body.channel,
+      campaign: body.campaign,
+      creative: body.creative
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/order/status") {
+    const result = await getYmtyOrderStatus({
+      orderId: url.searchParams.get("order_id") || url.searchParams.get("orderId") || "",
+      token: url.searchParams.get("token") || ""
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/afterpay/entrance") {
+    const result = await getYmtyAfterpayEntrance({
+      orderId: url.searchParams.get("order_id") || url.searchParams.get("orderId") || "",
+      token: url.searchParams.get("token") || ""
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "POST" && pathname === "/api/mock/pay-success") {
+    const body = await readJson(req);
+    const result = await markYmtyMockPaySuccess({
+      orderId: body.order_id || body.orderId || url.searchParams.get("order_id") || "",
+      token: body.token || url.searchParams.get("token") || "",
+      transactionId: body.transaction_id || body.transactionId || ""
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/campaign/ymty") {
+    assertYmtyAdminAccess(req);
+    const result = await getYmtyAdminCampaign();
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "POST" && pathname === "/api/admin/campaign/ymty") {
+    const admin = assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await updateYmtyCampaign({
+      adminId: admin.adminId,
+      patch: body,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "POST" && pathname === "/api/admin/livecode") {
+    const admin = assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await updateYmtyLivecode({
+      adminId: admin.adminId,
+      patch: body,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/orders") {
+    assertYmtyAdminAccess(req);
+    const result = await listYmtyOrders();
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/audit-logs") {
+    assertYmtyAdminAccess(req);
+    const result = await getYmtyAuditLogs();
+    return sendJson(res, 200, { ok: true, ...result });
   }
 
   if (req.method === "GET" && pathname === "/api/v1/questions/stats") {
@@ -964,6 +1048,20 @@ function assertKlineDownloadAccess(req) {
   const provided = String(req.headers["x-kline-download-token"] || req.headers.authorization || "").replace(/^Bearer\s+/i, "").trim();
   if (configuredToken && provided === configuredToken) return;
   const error = new Error("K线下载服务未授权");
+  error.statusCode = 403;
+  throw error;
+}
+
+function assertYmtyAdminAccess(req) {
+  const configuredToken = process.env.YMTY_ADMIN_TOKEN || "";
+  const providedToken = String(req.headers["x-admin-token"] || req.headers.authorization || "").replace(/^Bearer\s+/i, "").trim();
+  if (configuredToken && providedToken === configuredToken) {
+    return { adminId: String(req.headers["x-admin-id"] || "ymty-admin") };
+  }
+  if (!configuredToken && config.nodeEnv !== "production") {
+    return { adminId: String(req.headers["x-admin-id"] || "dev-admin") };
+  }
+  const error = new Error("体验营后台未授权");
   error.statusCode = 403;
   throw error;
 }
