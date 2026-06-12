@@ -8,6 +8,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, "../..");
 const indexPath = resolve(repoRoot, "web-mvp/hd/ymty/index.html");
 const successPath = resolve(repoRoot, "web-mvp/hd/ymty/success.html");
+const adminPath = resolve(repoRoot, "web-mvp/admin/ymty/index.html");
 
 function readUtf8(path) {
   return readFileSync(path, "utf8");
@@ -163,4 +164,27 @@ test("ymty success page unlocks after paid status only", () => {
 
   assertNotIncludes(html, "技术提示");
   assertNotIncludes(html, "客服电话待补充");
+});
+
+test("ymty admin page requires session token and supports livecode QR upload", () => {
+  const html = readUtf8(adminPath);
+
+  [
+    "Admin Token",
+    "sessionStorage",
+    "Authorization",
+    "Bearer",
+    "无权限或登录已失效",
+    "/api/admin/campaign/ymty",
+    "/api/admin/livecode",
+    "/api/admin/upload",
+    "上传二维码",
+    "qr_image",
+    "wecom_link",
+    "auto_redirect_after_paid",
+    "redirect_delay_ms",
+    "remark",
+    "button_text",
+    "service_text",
+  ].forEach((text) => assertIncludes(html, text));
 });

@@ -25,6 +25,7 @@
     "test:kline-history": "node --test scripts/historical-kline-contract-test.mjs",
     "test:ymty": "node --test scripts/ymty-payment-contract-test.mjs",
     "test:ymty-h5": "node --test scripts/ymty-h5-static-test.mjs",
+    "test:ymty-upload": "node --test scripts/ymty-admin-upload-test.mjs",
     "check": "node --check src/index.js"
   },
   "engines": {

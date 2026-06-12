@@ -21,6 +21,7 @@ import { getGlobalReflectionToday, listGlobalReflectionChoices, submitGlobalRefl
 import { buildHistoricalKlineSlice, downloadHistoricalKline, getHistoricalKlineRules, listHistoricalKlineCatalog, listHistoricalKlineInstruments, revealHistoricalKlineSlice } from "../services/historicalKline.js";
 import { buildTradeReviewOcrDraft } from "../services/tradeReviewOcr.js";
 import { createYmtyOrder, getYmtyAdminCampaign, getYmtyAfterpayEntrance, getYmtyAuditLogs, getYmtyOrderStatus, getYmtyPublicCampaign, listYmtyOrders, markYmtyMockPaySuccess, updateYmtyCampaign, updateYmtyLivecode } from "../services/ymtyCampaign.js";
+import { saveYmtyLivecodeUpload } from "../services/ymtyUpload.js";
 
 export async function route(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
@@ -188,6 +189,19 @@ export async function route(req, res) {
       ip: getIp(req)
     });
     return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "POST" && pathname === "/api/admin/upload") {
+    try {
+      assertYmtyAdminAccess(req);
+      const result = await saveYmtyLivecodeUpload(req);
+      return sendJson(res, 200, { code: 0, data: result });
+    } catch (error) {
+      return sendJson(res, error.statusCode || 400, {
+        code: error.statusCode || 400,
+        message: error.message || "上传失败"
+      });
+    }
   }
 
   if (req.method === "GET" && pathname === "/api/admin/orders") {
@@ -1054,17 +1068,21 @@ function assertKlineDownloadAccess(req) {
 }
 
 function assertYmtyAdminAccess(req) {
-  const configuredToken = process.env.YMTY_ADMIN_TOKEN || "";
+  const configuredToken = getYmtyAdminToken();
   const providedToken = String(req.headers["x-admin-token"] || req.headers.authorization || "").replace(/^Bearer\s+/i, "").trim();
   if (configuredToken && providedToken === configuredToken) {
     return { adminId: String(req.headers["x-admin-id"] || "ymty-admin") };
   }
-  if (!configuredToken && config.nodeEnv !== "production") {
-    return { adminId: String(req.headers["x-admin-id"] || "dev-admin") };
-  }
-  const error = new Error("体验营后台未授权");
-  error.statusCode = 403;
+  const error = new Error("无权限或登录已失效");
+  error.statusCode = providedToken ? 403 : 401;
   throw error;
+}
+
+function getYmtyAdminToken() {
+  const configuredToken = process.env.YMTY_ADMIN_TOKEN || "";
+  if (configuredToken) return configuredToken;
+  if (config.nodeEnv !== "production") return "local-dev-admin-token";
+  return "";
 }
 
 function maskPhone(phone) {

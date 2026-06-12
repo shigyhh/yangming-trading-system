@@ -32,7 +32,7 @@ export function sendJson(res, statusCode, payload) {
     "Content-Type": "application/json; charset=utf-8",
     ...corsHeaders(res),
     "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, x-admin-token, x-admin-id",
     "Cache-Control": "no-store"
   });
   res.end(body);
@@ -42,7 +42,7 @@ export function sendOptions(res) {
   res.writeHead(204, {
     ...corsHeaders(res),
     "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization"
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, x-admin-token, x-admin-id"
   });
   res.end();
 }
