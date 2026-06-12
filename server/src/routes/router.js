@@ -22,6 +22,7 @@ import { buildHistoricalKlineSlice, downloadHistoricalKline, getHistoricalKlineR
 import { buildTradeReviewOcrDraft } from "../services/tradeReviewOcr.js";
 import { createYmtyOrder, getYmtyAdminCampaign, getYmtyAfterpayEntrance, getYmtyAuditLogs, getYmtyOrderStatus, getYmtyPublicCampaign, listYmtyOrders, markYmtyMockPaySuccess, updateYmtyCampaign, updateYmtyLivecode } from "../services/ymtyCampaign.js";
 import { saveYmtyLivecodeUpload } from "../services/ymtyUpload.js";
+import { assertRealPayConfigReady, isPaymentConfigError, normalizePayChannel } from "../services/payments/index.js";
 
 export async function route(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
@@ -127,9 +128,29 @@ export async function route(req, res) {
   if (req.method === "POST" && pathname === "/api/pay/create") {
     const body = await readJson(req);
     const track = body.track && typeof body.track === "object" ? body.track : {};
+    const payChannel = normalizePayChannel(body.pay_channel || body.payChannel || "mock");
+    try {
+      assertRealPayConfigReady(payChannel);
+    } catch (error) {
+      if (isPaymentConfigError(error)) {
+        return sendJson(res, error.statusCode || 503, {
+          code: error.statusCode || 503,
+          message: error.message
+        });
+      }
+      throw error;
+    }
+
+    if (payChannel !== "mock") {
+      return sendJson(res, 501, {
+        code: 501,
+        message: "真实支付适配器尚未实现"
+      });
+    }
+
     const result = await createYmtyOrder({
       productCode: body.product_code || body.productCode,
-      payChannel: body.pay_channel || body.payChannel || "mock",
+      payChannel,
       channel: body.channel || track.channel,
       campaign: body.campaign || track.campaign,
       creative: body.creative || track.creative
