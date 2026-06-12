@@ -20,6 +20,7 @@ import { dispatchTrainingPrescriptionBinding, generateShareCardBinding, getAdmin
 import { getGlobalReflectionToday, listGlobalReflectionChoices, submitGlobalReflectionVote } from "../services/globalReflection.js";
 import { buildHistoricalKlineSlice, downloadHistoricalKline, getHistoricalKlineRules, listHistoricalKlineCatalog, listHistoricalKlineInstruments, revealHistoricalKlineSlice } from "../services/historicalKline.js";
 import { buildTradeReviewOcrDraft } from "../services/tradeReviewOcr.js";
+import { completeMockYmtyPayment, createYmtyOrder, getYmtyAfterpayEntrance, getYmtyOrderStatus, listYmtyCourses, recordYmtyPaymentNotification } from "../services/ymty.js";
 
 export async function route(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
@@ -99,9 +100,55 @@ export async function route(req, res) {
         i18n_bundle: "GET /api/v1/i18n/bundle?locale=zh-CN",
         global_reflection_options: "GET /api/v1/global-reflection/options",
         global_reflection_today: "GET /api/v1/global-reflection/today",
-        global_reflection_vote: "POST /api/v1/global-reflection/vote"
+        global_reflection_vote: "POST /api/v1/global-reflection/vote",
+        ymty_pay_create: "POST /api/pay/create",
+        ymty_mock_pay_complete: "POST /api/pay/mock/complete",
+        ymty_wechat_notify: "POST /api/pay/wechat/notify",
+        ymty_alipay_notify: "POST /api/pay/alipay/notify",
+        ymty_order_status: "GET /api/order/status?order_id=ymty_xxx",
+        ymty_afterpay_entrance: "GET /api/afterpay/entrance?order_id=ymty_xxx",
+        ymty_course_my: "GET /api/course/my?user_id=xxx"
       }
     });
+  }
+
+  if (req.method === "POST" && pathname === "/api/pay/create") {
+    const body = await readJson(req);
+    const result = await createYmtyOrder(body);
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "POST" && pathname === "/api/pay/mock/complete") {
+    const body = await readJson(req);
+    const result = await completeMockYmtyPayment(body);
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "POST" && pathname === "/api/pay/wechat/notify") {
+    const body = await readJson(req);
+    const result = await recordYmtyPaymentNotification("wechat", body);
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "POST" && pathname === "/api/pay/alipay/notify") {
+    const body = await readJson(req);
+    const result = await recordYmtyPaymentNotification("alipay", body);
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/order/status") {
+    const result = await getYmtyOrderStatus(Object.fromEntries(url.searchParams.entries()));
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/afterpay/entrance") {
+    const result = await getYmtyAfterpayEntrance(Object.fromEntries(url.searchParams.entries()));
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/course/my") {
+    const result = await listYmtyCourses(Object.fromEntries(url.searchParams.entries()));
+    return sendJson(res, 200, { ok: true, ...result });
   }
 
   if (req.method === "GET" && pathname === "/health") {

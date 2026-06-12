@@ -82,6 +82,116 @@ CREATE TABLE IF NOT EXISTS invite_codes (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS ymty_product_configs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id VARCHAR(80) NOT NULL UNIQUE,
+  course_id VARCHAR(80) NOT NULL,
+  course_name VARCHAR(160) NOT NULL,
+  organizer VARCHAR(160),
+  price_cents INTEGER NOT NULL,
+  currency VARCHAR(12) NOT NULL DEFAULT 'CNY',
+  training_days INTEGER NOT NULL DEFAULT 7,
+  opening_time_text VARCHAR(160),
+  lecturer VARCHAR(80),
+  compliance_text TEXT,
+  status VARCHAR(30) NOT NULL DEFAULT 'active',
+  afterpay_config JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ymty_product_configs_status ON ymty_product_configs(status);
+
+CREATE TABLE IF NOT EXISTS ymty_orders (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_no VARCHAR(80) NOT NULL UNIQUE,
+  client_order_no VARCHAR(120),
+  user_id UUID REFERENCES users(id),
+  openid VARCHAR(160),
+  unionid VARCHAR(160),
+  phone_hash VARCHAR(160),
+  phone_mask VARCHAR(32),
+  product_id VARCHAR(80) NOT NULL,
+  course_id VARCHAR(80) NOT NULL,
+  course_name VARCHAR(160) NOT NULL,
+  amount_cents INTEGER NOT NULL,
+  currency VARCHAR(12) NOT NULL DEFAULT 'CNY',
+  status VARCHAR(30) NOT NULL DEFAULT 'pending',
+  payment_channel VARCHAR(40) NOT NULL DEFAULT 'mock',
+  payment_mode VARCHAR(40) NOT NULL DEFAULT 'mock',
+  transaction_id VARCHAR(160),
+  source_channel VARCHAR(80),
+  paid_at TIMESTAMPTZ,
+  expires_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ymty_orders_user_id ON ymty_orders(user_id);
+CREATE INDEX IF NOT EXISTS idx_ymty_orders_openid ON ymty_orders(openid);
+CREATE INDEX IF NOT EXISTS idx_ymty_orders_phone_hash ON ymty_orders(phone_hash);
+CREATE INDEX IF NOT EXISTS idx_ymty_orders_status ON ymty_orders(status);
+CREATE INDEX IF NOT EXISTS idx_ymty_orders_created_at ON ymty_orders(created_at DESC);
+
+CREATE TABLE IF NOT EXISTS ymty_payment_notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  provider VARCHAR(40) NOT NULL,
+  order_no VARCHAR(80),
+  transaction_id VARCHAR(160),
+  verify_status VARCHAR(40) NOT NULL DEFAULT 'pending',
+  handled_status VARCHAR(40) NOT NULL DEFAULT 'received',
+  raw_summary JSONB,
+  received_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  handled_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ymty_payment_notifications_provider ON ymty_payment_notifications(provider);
+CREATE INDEX IF NOT EXISTS idx_ymty_payment_notifications_order_no ON ymty_payment_notifications(order_no);
+CREATE INDEX IF NOT EXISTS idx_ymty_payment_notifications_received_at ON ymty_payment_notifications(received_at DESC);
+
+CREATE TABLE IF NOT EXISTS ymty_course_enrollments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  enrollment_no VARCHAR(80) NOT NULL UNIQUE,
+  order_no VARCHAR(80) NOT NULL,
+  user_id UUID REFERENCES users(id),
+  openid VARCHAR(160),
+  phone_hash VARCHAR(160),
+  phone_mask VARCHAR(32),
+  product_id VARCHAR(80) NOT NULL,
+  course_id VARCHAR(80) NOT NULL,
+  course_name VARCHAR(160) NOT NULL,
+  status VARCHAR(30) NOT NULL DEFAULT 'active',
+  training_days INTEGER NOT NULL DEFAULT 7,
+  opening_time_text VARCHAR(160),
+  lecturer VARCHAR(80),
+  miniprogram_path TEXT,
+  unlocked_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ymty_course_enrollments_order_no ON ymty_course_enrollments(order_no);
+CREATE INDEX IF NOT EXISTS idx_ymty_course_enrollments_user_id ON ymty_course_enrollments(user_id);
+CREATE INDEX IF NOT EXISTS idx_ymty_course_enrollments_openid ON ymty_course_enrollments(openid);
+CREATE INDEX IF NOT EXISTS idx_ymty_course_enrollments_phone_hash ON ymty_course_enrollments(phone_hash);
+
+CREATE TABLE IF NOT EXISTS ymty_afterpay_entrances (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  entrance_key VARCHAR(80) NOT NULL UNIQUE,
+  product_id VARCHAR(80) NOT NULL,
+  entrance_type VARCHAR(40) NOT NULL DEFAULT 'assistant_qr_rotation',
+  lead_link TEXT,
+  miniprogram_path TEXT,
+  live_code_config JSONB,
+  status VARCHAR(30) NOT NULL DEFAULT 'active',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ymty_afterpay_entrances_product_id ON ymty_afterpay_entrances(product_id);
+CREATE INDEX IF NOT EXISTS idx_ymty_afterpay_entrances_status ON ymty_afterpay_entrances(status);
+
 CREATE TABLE IF NOT EXISTS question_bank (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   question_code VARCHAR(40) NOT NULL UNIQUE,

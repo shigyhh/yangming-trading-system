@@ -22,6 +22,7 @@
     "test:global-reflection": "node --test scripts/global-reflection-test.mjs",
     "test:i18n": "node --test scripts/i18n-contract-test.mjs",
     "test:kline-history": "node --test scripts/historical-kline-contract-test.mjs",
+    "test:ymty": "node --test scripts/ymty-mock-payment.test.mjs",
     "check": "node --check src/index.js"
   },
   "engines": {
