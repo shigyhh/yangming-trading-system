@@ -1,9 +1,16 @@
+import { spawn } from "node:child_process";
+import { fileURLToPath } from "node:url";
+
 const PROVIDER_LABELS = {
+  akshare: "AKShare",
+  baostock: "BaoStock",
   tushare: "Tushare Pro",
   futu: "Futu OpenAPI Bridge",
   okx: "OKX"
 };
 
+const AKSHARE_SCRIPT_PATH = fileURLToPath(new URL("../../scripts/providers/fetch-akshare-daily.py", import.meta.url));
+const BAOSTOCK_SCRIPT_PATH = fileURLToPath(new URL("../../scripts/providers/fetch-baostock-daily.py", import.meta.url));
 const TUSHARE_ENDPOINT = "https://api.tushare.pro";
 const OKX_ENDPOINT = "https://www.okx.com";
 
@@ -44,6 +51,22 @@ const OKX_BAR_MAP = {
 
 export function listKlineProviders() {
   return [
+    {
+      key: "akshare",
+      label: PROVIDER_LABELS.akshare,
+      markets: ["cn_equity"],
+      timeframes: ["1d"],
+      requires: ["python3", "akshare"],
+      note: "适合 A股日线历史缓存。通过服务端 Python 脚本调用 AKShare，不需要 TUSHARE_TOKEN。"
+    },
+    {
+      key: "baostock",
+      label: PROVIDER_LABELS.baostock,
+      markets: ["cn_equity"],
+      timeframes: ["1d"],
+      requires: ["python3", "baostock"],
+      note: "作为 A股日线历史缓存的 AKShare fallback，不需要 TUSHARE_TOKEN。"
+    },
     {
       key: "tushare",
       label: PROVIDER_LABELS.tushare,
@@ -86,9 +109,16 @@ export async function fetchProviderKlines({
   startDate = "",
   endDate = "",
   limit = 1000,
-  fetchImpl = globalThis.fetch
+  fetchImpl = globalThis.fetch,
+  env = process.env
 } = {}) {
   const key = String(provider || resolveDefaultProvider(market?.key)).trim().toLowerCase();
+  if (key === "akshare") {
+    return fetchAkshareKlines({ market, symbol, timeframe, adjustmentMode, startDate, endDate, env });
+  }
+  if (key === "baostock") {
+    return fetchBaostockKlines({ market, symbol, timeframe, adjustmentMode, startDate, endDate, env });
+  }
   if (key === "tushare") {
     return fetchTushareKlines({ market, symbol, timeframe, adjustmentMode, startDate, endDate, limit, fetchImpl });
   }
@@ -101,6 +131,107 @@ export async function fetchProviderKlines({
   const error = new Error(`暂不支持该K线数据源：${provider}`);
   error.statusCode = 400;
   throw error;
+}
+
+async function fetchAkshareKlines({ market, symbol, timeframe, adjustmentMode, startDate, endDate, env }) {
+  assertMarketProvider("akshare", market?.key);
+  if (timeframe?.key !== "1d") {
+    const error = new Error(`AKShare 当前仅接入 A股日线缓存，不支持周期：${timeframe?.key || ""}`);
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const safeSymbol = String(symbol || "").trim();
+  if (!/^\d{6}$/.test(safeSymbol)) {
+    const error = new Error(`AKShare A股 symbol 必须是 6 位代码：${symbol}`);
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return fetchPythonDailyKlines({
+    provider: "akshare",
+    source: "akshare",
+    safeSymbol,
+    startDate,
+    endDate,
+    adjustmentMode,
+    env,
+    runScript: runAkshareDailyScript
+  });
+}
+
+async function fetchBaostockKlines({ market, symbol, timeframe, adjustmentMode, startDate, endDate, env }) {
+  assertMarketProvider("baostock", market?.key);
+  if (timeframe?.key !== "1d") {
+    const error = new Error(`BaoStock 当前仅接入 A股日线缓存，不支持周期：${timeframe?.key || ""}`);
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const safeSymbol = String(symbol || "").trim();
+  if (!/^\d{6}$/.test(safeSymbol)) {
+    const error = new Error(`BaoStock A股 symbol 必须是 6 位代码：${symbol}`);
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return fetchPythonDailyKlines({
+    provider: "baostock",
+    source: "baostock",
+    safeSymbol,
+    startDate,
+    endDate,
+    adjustmentMode,
+    env,
+    runScript: runBaostockDailyScript
+  });
+}
+
+async function fetchPythonDailyKlines({ provider, source, safeSymbol, startDate, endDate, adjustmentMode, env, runScript }) {
+  const retryOptions = getRetryOptions(env, provider);
+  let lastError = null;
+
+  for (let attempt = 1; attempt <= retryOptions.maxRetries; attempt += 1) {
+    try {
+      const payload = await runScript({
+        symbols: [safeSymbol],
+        startDate,
+        endDate,
+        adjustmentMode,
+        env,
+        requestTimeoutMs: retryOptions.requestTimeoutMs
+      });
+      const symbolPayload = payload?.symbols?.[safeSymbol];
+      const symbolError = Array.isArray(payload?.errors)
+        ? payload.errors.find((item) => String(item?.symbol || "") === safeSymbol || String(item?.symbol || "") === "*")
+        : null;
+
+      if (symbolError) {
+        const error = new Error(`${PROVIDER_LABELS[provider] || provider} ${safeSymbol} 获取失败：${symbolError.message || "unknown error"}`);
+        error.statusCode = 502;
+        throw error;
+      }
+
+      const candles = Array.isArray(symbolPayload?.candles) ? symbolPayload.candles : [];
+      if (!candles.length) {
+        const error = new Error(`${PROVIDER_LABELS[provider] || provider} 未返回可用K线：${safeSymbol}`);
+        error.statusCode = 502;
+        throw error;
+      }
+
+      return {
+        provider,
+        source,
+        candles: candles.map(normalizeGenericProviderCandle)
+      };
+    } catch (error) {
+      lastError = error;
+      if (attempt >= retryOptions.maxRetries || !isRetryableProviderError(error)) break;
+      await sleep(retryOptions.retryDelayMs + randomJitter(retryOptions.jitterMs));
+    }
+  }
+
+  throw lastError;
 }
 
 async function fetchTushareKlines({ market, symbol, timeframe, adjustmentMode, startDate, endDate, limit, fetchImpl }) {
@@ -145,6 +276,162 @@ async function fetchTushareKlines({ market, symbol, timeframe, adjustmentMode, s
       pct_chg: item.pct_chg
     }))
   };
+}
+
+function runAkshareDailyScript({ symbols, startDate, endDate, adjustmentMode, env, requestTimeoutMs }) {
+  const pythonBin = env?.AKSHARE_PYTHON_BIN || process.env.AKSHARE_PYTHON_BIN || "python3";
+  const scriptPath = env?.AKSHARE_SCRIPT_PATH || process.env.AKSHARE_SCRIPT_PATH || AKSHARE_SCRIPT_PATH;
+  return runPythonProviderScript({
+    provider: "akshare",
+    pythonBin,
+    scriptPath,
+    args: [
+      scriptPath,
+      "--symbols",
+      symbols.join(","),
+      "--start-date",
+      normalizeProviderDate(startDate),
+      "--end-date",
+      normalizeProviderDate(endDate),
+      "--adjust",
+      normalizeAkshareAdjust(adjustmentMode),
+      "--timeout",
+      String(Math.max(Number(requestTimeoutMs || 15000), 1))
+    ],
+    env,
+    requestTimeoutMs,
+    noProxy: isTruthy(env?.AKSHARE_NO_PROXY || process.env.AKSHARE_NO_PROXY)
+  });
+}
+
+function runBaostockDailyScript({ symbols, startDate, endDate, adjustmentMode, env, requestTimeoutMs }) {
+  const pythonBin = env?.BAOSTOCK_PYTHON_BIN || process.env.BAOSTOCK_PYTHON_BIN || env?.AKSHARE_PYTHON_BIN || process.env.AKSHARE_PYTHON_BIN || "python3";
+  const scriptPath = env?.BAOSTOCK_SCRIPT_PATH || process.env.BAOSTOCK_SCRIPT_PATH || BAOSTOCK_SCRIPT_PATH;
+  return runPythonProviderScript({
+    provider: "baostock",
+    pythonBin,
+    scriptPath,
+    args: [
+      scriptPath,
+      "--symbols",
+      symbols.join(","),
+      "--start-date",
+      normalizeProviderDate(startDate),
+      "--end-date",
+      normalizeProviderDate(endDate),
+      "--adjust",
+      normalizeAkshareAdjust(adjustmentMode),
+      "--timeout",
+      String(Math.max(Number(requestTimeoutMs || 15000), 1))
+    ],
+    env,
+    requestTimeoutMs,
+    noProxy: isTruthy(env?.BAOSTOCK_NO_PROXY || process.env.BAOSTOCK_NO_PROXY)
+  });
+}
+
+function runPythonProviderScript({ provider, pythonBin, scriptPath, args, env, requestTimeoutMs, noProxy }) {
+  return new Promise((resolve, reject) => {
+    const childEnv = buildPythonProviderEnv(env, noProxy);
+    const child = spawn(pythonBin, args, {
+      cwd: fileURLToPath(new URL("../..", import.meta.url)),
+      env: childEnv,
+      stdio: ["ignore", "pipe", "pipe"]
+    });
+    let stdout = "";
+    let stderr = "";
+    let settled = false;
+    const timeoutMs = Math.max(Number(requestTimeoutMs || 15000), 1);
+    const timer = setTimeout(() => {
+      settled = true;
+      child.kill("SIGTERM");
+      reject(new Error(`${PROVIDER_LABELS[provider] || provider} Python 请求超时：${timeoutMs}ms`));
+    }, timeoutMs);
+
+    child.stdout.setEncoding("utf8");
+    child.stderr.setEncoding("utf8");
+    child.stdout.on("data", (chunk) => { stdout += chunk; });
+    child.stderr.on("data", (chunk) => { stderr += chunk; });
+    child.on("error", (error) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      reject(new Error(`${PROVIDER_LABELS[provider] || provider} Python 启动失败：${error.message}。请确认已安装 python3 和对应 provider 依赖。`));
+    });
+    child.on("close", (code) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      if (code !== 0) {
+        reject(new Error(`${PROVIDER_LABELS[provider] || provider} Python 脚本退出 ${code}：${stderr || stdout || "请确认 provider 依赖已安装。"}`));
+        return;
+      }
+      try {
+        const payload = JSON.parse(stdout);
+        if (!payload || typeof payload !== "object") throw new Error("stdout 不是 JSON object");
+        resolve(payload);
+      } catch (error) {
+        reject(new Error(`${PROVIDER_LABELS[provider] || provider} Python 输出解析失败：${error.message}`));
+      }
+    });
+  });
+}
+
+function buildPythonProviderEnv(env = {}, noProxy = false) {
+  const childEnv = { ...process.env, ...env };
+  if (noProxy) {
+    delete childEnv.HTTP_PROXY;
+    delete childEnv.HTTPS_PROXY;
+    delete childEnv.http_proxy;
+    delete childEnv.https_proxy;
+    childEnv.NO_PROXY = "*";
+    childEnv.no_proxy = "*";
+  }
+  return childEnv;
+}
+
+function getRetryOptions(env = {}, provider = "akshare") {
+  const prefix = provider === "baostock" ? "BAOSTOCK" : "AKSHARE";
+  return {
+    maxRetries: positiveInt(env?.[`${prefix}_MAX_RETRIES`] ?? process.env[`${prefix}_MAX_RETRIES`], 3),
+    retryDelayMs: positiveInt(env?.[`${prefix}_RETRY_DELAY_MS`] ?? process.env[`${prefix}_RETRY_DELAY_MS`], 1200),
+    jitterMs: positiveInt(env?.[`${prefix}_JITTER_MS`] ?? process.env[`${prefix}_JITTER_MS`], 500),
+    requestTimeoutMs: positiveInt(env?.[`${prefix}_REQUEST_TIMEOUT_MS`] ?? process.env[`${prefix}_REQUEST_TIMEOUT_MS`], 15000)
+  };
+}
+
+function isRetryableProviderError(error) {
+  const message = String(error?.message || error || "").toLowerCase();
+  return [
+    "remotedisconnected",
+    "remote end closed",
+    "timeout",
+    "timed out",
+    "econnreset",
+    "connection reset",
+    "http 5",
+    " 5",
+    "502",
+    "503",
+    "504"
+  ].some((token) => message.includes(token));
+}
+
+function sleep(ms) {
+  return ms > 0 ? new Promise((resolve) => setTimeout(resolve, ms)) : Promise.resolve();
+}
+
+function randomJitter(ms) {
+  return ms > 0 ? Math.floor(Math.random() * (ms + 1)) : 0;
+}
+
+function positiveInt(value, fallback) {
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) && numberValue >= 0 ? Math.trunc(numberValue) : fallback;
+}
+
+function isTruthy(value) {
+  return ["1", "true", "yes", "on"].includes(String(value || "").trim().toLowerCase());
 }
 
 async function fetchFutuKlines({ market, symbol, timeframe, adjustmentMode, startDate, endDate, limit, fetchImpl }) {
@@ -283,13 +570,16 @@ function normalizeTushareItems(response) {
 function normalizeGenericProviderCandle(item = {}) {
   return {
     date: item.date || item.time || item.datetime || item.timestamp || item.ts,
+    code: item.code || item.symbol,
     open: item.open,
     high: item.high,
     low: item.low,
     close: item.close,
     volume: item.volume || item.vol,
     amount: item.amount || item.turnover,
-    pct_chg: item.pct_chg ?? item.pctChg ?? item.change_pct ?? null
+    pct_chg: item.pct_chg ?? item.pctChg ?? item.change_pct ?? null,
+    amplitude: item.amplitude,
+    turnover: item.turnover ?? item.turnover_rate
   };
 }
 
@@ -303,6 +593,11 @@ function pruneEmpty(params) {
 function normalizeProviderDate(value = "") {
   const digits = String(value || "").replace(/\D/g, "");
   return digits.length >= 8 ? digits.slice(0, 8) : "";
+}
+
+function normalizeAkshareAdjust(value = "") {
+  const key = String(value || "").trim().toLowerCase();
+  return key === "qfq" || key === "hfq" ? key : "none";
 }
 
 function dateToEpochMs(value = "") {

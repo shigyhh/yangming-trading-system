@@ -19,6 +19,7 @@ export function mergeCandles(existing = [], incoming = []) {
 export async function updateKlineCache({
   market = DEFAULT_MARKET,
   timeframe = DEFAULT_TIMEFRAME,
+  provider = "",
   date = "",
   symbols = [],
   limit = 0,
@@ -33,15 +34,16 @@ export async function updateKlineCache({
   const startedAt = new Date().toISOString();
   const manifestPath = getManifestPath(dataRoot, normalized);
   const selectedSymbols = await resolveSymbols({ dataRoot, symbols, limit });
+  const providerKey = normalizeProvider(provider);
   const token = env.TUSHARE_TOKEN || "";
 
-  if (!token) {
+  if (providerKey === "tushare" && !token) {
     const existingStats = await readCacheStats(dataRoot, normalized);
     const manifest = buildManifest({
       scope: normalized,
       lastTradeDate,
       updatedAt: startedAt,
-      source: "tushare",
+      source: providerKey,
       status: "error",
       errors: ["TUSHARE_TOKEN 未配置，无法更新 K线缓存。"],
       symbolsCount: existingStats.symbolsCount,
@@ -57,18 +59,21 @@ export async function updateKlineCache({
   const errors = [];
   let candlesCount = 0;
   const touchedSymbols = new Set();
+  const sourceCounts = {};
 
-  for (const symbol of selectedSymbols) {
+  for (let index = 0; index < selectedSymbols.length; index += 1) {
+    const symbol = selectedSymbols[index];
     try {
-      const result = await withProviderEnv(env, () => fetchProviderKlines({
-        provider: "tushare",
+      const result = await withProviderEnv(env, () => fetchSymbolKlinesWithProviderChain({
+        providerKey,
         market: { key: "cn_equity" },
         symbol,
         timeframe: { key: "1d" },
         startDate: lastTradeDate,
         endDate: lastTradeDate,
         limit: 20,
-        fetchImpl
+        fetchImpl,
+        env
       }));
       const incoming = normalizeCandles(result.candles || []);
       if (!incoming.length) {
@@ -76,6 +81,7 @@ export async function updateKlineCache({
         continue;
       }
 
+      const sourceKey = normalizeSourceKey(result.source || result.provider || providerKey);
       const filePath = getSymbolPath(dataRoot, normalized, symbol);
       const existing = await readJson(filePath, null);
       const existingCandles = Array.isArray(existing?.candles) ? existing.candles : [];
@@ -87,7 +93,7 @@ export async function updateKlineCache({
         klt: normalized.timeframe,
         timeframe: normalized.timeframe,
         timeframe_label: TIMEFRAME_LABELS[normalized.timeframe] || normalized.timeframe,
-        source: result.source || "tushare",
+        source: sourceKey,
         updated_at: new Date().toISOString(),
         candles: merged
       };
@@ -97,8 +103,12 @@ export async function updateKlineCache({
       addedCandles += added;
       candlesCount += merged.length;
       touchedSymbols.add(symbol);
+      sourceCounts[sourceKey] = (sourceCounts[sourceKey] || 0) + 1;
     } catch (error) {
       errors.push(`${symbol}: ${error.message}`);
+    }
+    if (index < selectedSymbols.length - 1) {
+      await waitProviderInterval(providerKey, env);
     }
   }
 
@@ -108,7 +118,7 @@ export async function updateKlineCache({
     scope: normalized,
     lastTradeDate,
     updatedAt: new Date().toISOString(),
-    source: "tushare",
+    source: resolveManifestSource(providerKey, sourceCounts),
     status,
     errors,
     symbolsCount: Math.max(existingStats.symbolsCount, touchedSymbols.size),
@@ -122,6 +132,7 @@ export async function updateKlineCache({
     updated_symbols: updatedSymbols,
     added_candles: addedCandles,
     skipped_symbols: skippedSymbols,
+    sources: sourceCounts,
     dry_run: Boolean(dryRun)
   };
 }
@@ -143,7 +154,7 @@ export async function verifyKlineCache({
     errors.push(`manifest 不存在：${path.relative(dataRoot, manifestPath)}`);
   }
 
-  if (!env.TUSHARE_TOKEN) {
+  if (manifest && !["akshare", "baostock", "mixed"].includes(String(manifest.source || "")) && !env.TUSHARE_TOKEN) {
     warnings.push("TUSHARE_TOKEN 未配置，verify 标记为 stale。");
   }
 
@@ -201,6 +212,51 @@ function normalizeScope({ market, timeframe }) {
   return { market: safeMarket, timeframe: safeTimeframe };
 }
 
+function normalizeProvider(value = "") {
+  const key = String(value || "").trim().toLowerCase();
+  return key || "tushare";
+}
+
+async function fetchSymbolKlinesWithProviderChain({ providerKey, ...params }) {
+  if (providerKey !== "akshare") {
+    return fetchProviderKlines({ provider: providerKey, ...params });
+  }
+
+  try {
+    return await fetchProviderKlines({ provider: "akshare", ...params });
+  } catch (akshareError) {
+    try {
+      return await fetchProviderKlines({ provider: "baostock", ...params });
+    } catch (baostockError) {
+      throw new Error(`AKShare 失败：${akshareError.message}；BaoStock 失败：${baostockError.message}`);
+    }
+  }
+}
+
+function normalizeSourceKey(value = "") {
+  const key = String(value || "").trim().toLowerCase();
+  if (key.includes("akshare")) return "akshare";
+  if (key.includes("baostock")) return "baostock";
+  if (key.includes("tushare")) return "tushare";
+  if (key.includes("futu")) return "futu";
+  if (key.includes("okx")) return "okx";
+  return key || "unknown";
+}
+
+function resolveManifestSource(providerKey, sourceCounts) {
+  const sources = Object.keys(sourceCounts || {}).filter(Boolean);
+  if (sources.length > 1) return "mixed";
+  return sources[0] || providerKey;
+}
+
+async function waitProviderInterval(providerKey, env = {}) {
+  if (providerKey !== "akshare") return;
+  const delayMs = positiveInt(env.AKSHARE_REQUEST_INTERVAL_MS ?? process.env.AKSHARE_REQUEST_INTERVAL_MS, 0);
+  const jitterMs = positiveInt(env.AKSHARE_JITTER_MS ?? process.env.AKSHARE_JITTER_MS, 0);
+  const total = delayMs + (jitterMs > 0 ? Math.floor(Math.random() * (jitterMs + 1)) : 0);
+  if (total > 0) await new Promise((resolve) => setTimeout(resolve, total));
+}
+
 async function resolveSymbols({ dataRoot, symbols = [], limit = 0 }) {
   const direct = uniqueStrings(symbols);
   if (direct.length) return direct;
@@ -228,7 +284,9 @@ function normalizeCandles(candles = []) {
         low: Math.min(high, low),
         volume: finiteNumber(item.volume ?? item.vol, 0),
         amount: finiteNumber(item.amount, 0),
-        pct_chg: finiteNumber(item.pct_chg ?? item.pctChg, null)
+        pct_chg: finiteNumber(item.pct_chg ?? item.pctChg, null),
+        amplitude: finiteNumber(item.amplitude, null),
+        turnover: finiteNumber(item.turnover ?? item.turnover_rate, null)
       };
     })
     .filter(Boolean)
@@ -355,6 +413,11 @@ function uniqueStrings(values = []) {
 function finiteNumber(value, fallback) {
   const next = Number(value);
   return Number.isFinite(next) ? next : fallback;
+}
+
+function positiveInt(value, fallback) {
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) && numberValue >= 0 ? Math.trunc(numberValue) : fallback;
 }
 
 function compareDateText(a, b) {

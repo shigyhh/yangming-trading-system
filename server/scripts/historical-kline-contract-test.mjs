@@ -19,7 +19,7 @@ test("historical kline catalog exposes markets, cycles and rules", () => {
   assert.ok(timeframeKeys.includes("5m"));
   assert.ok(timeframeKeys.includes("1y"));
   assert.equal(catalog.markets.find((item) => item.key === "cn_equity").rules.settlement, "T+1");
-  assert.deepEqual(catalog.providers.map((item) => item.key), ["tushare", "futu", "okx"]);
+  assert.deepEqual(catalog.providers.map((item) => item.key), ["akshare", "baostock", "tushare", "futu", "okx"]);
 });
 
 test("historical kline instruments report local cache availability", async () => {

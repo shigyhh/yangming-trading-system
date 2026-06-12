@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import test from "node:test";
 
 import {
@@ -9,6 +10,9 @@ import {
   updateKlineCache,
   verifyKlineCache
 } from "../src/services/klineCache.js";
+import { fetchProviderKlines, listKlineProviders } from "../src/services/klineProviders.js";
+
+const nodeBin = process.execPath;
 
 test("mergeCandles deduplicates by date and sorts ascending", () => {
   const merged = mergeCandles(
@@ -144,6 +148,359 @@ test("dry-run does not write symbol cache or manifest", async () => {
   await assert.rejects(() => fs.access(path.join(root, "ashare", "101", "manifest.json")));
 });
 
+test("provider=akshare does not require TUSHARE_TOKEN and parses python output", async () => {
+  const scriptPath = await writeAkshareFixtureScript({
+    symbols: {
+      "600519": {
+        code: "600519",
+        candles: [
+          { time: "2024-01-03", code: "600519", open: 11, high: 12, low: 10, close: 11.5, volume: 1000, amount: 11000, pct_chg: 1.2, amplitude: 2.4, turnover: 0.8 }
+        ]
+      }
+    },
+    errors: []
+  });
+
+  const result = await fetchProviderKlines({
+    provider: "akshare",
+    market: { key: "cn_equity" },
+    symbol: "600519",
+    timeframe: { key: "1d" },
+    startDate: "20240103",
+    endDate: "20240103",
+    env: {
+      AKSHARE_PYTHON_BIN: nodeBin,
+      AKSHARE_SCRIPT_PATH: scriptPath
+    }
+  });
+
+  assert.equal(result.provider, "akshare");
+  assert.equal(result.source, "akshare");
+  assert.deepEqual(result.candles.map((item) => item.date), ["2024-01-03"]);
+  assert.equal(result.candles[0].pct_chg, 1.2);
+  assert.equal(result.candles[0].amplitude, 2.4);
+  assert.equal(result.candles[0].turnover, 0.8);
+});
+
+test("akshare update merges candles and records manifest source", async () => {
+  const root = await makeFixtureRoot();
+  await writeJson(path.join(root, "ashare", "101", "600519.json"), {
+    code: "600519",
+    market: "ashare",
+    klt: "101",
+    timeframe: "101",
+    timeframe_label: "日K",
+    source: "fixture",
+    updated_at: "2024-01-02T00:00:00.000Z",
+    candles: [{ date: "2024-01-02", open: 10, high: 11, low: 9, close: 10 }]
+  });
+  const scriptPath = await writeAkshareFixtureScript({
+    symbols: {
+      "600519": {
+        code: "600519",
+        candles: [
+          { time: "2024-01-03", code: "600519", open: 11, high: 12, low: 10, close: 11.5, volume: 1000, amount: 11000, pct_chg: 1.2, amplitude: 2.4, turnover: 0.8 },
+          { time: "2024-01-02", code: "600519", open: 10, high: 11, low: 9, close: 10.2, volume: 800, amount: 8200, pct_chg: 0.8, amplitude: 1.8, turnover: 0.6 }
+        ]
+      }
+    },
+    errors: []
+  });
+
+  const result = await updateKlineCache({
+    market: "ashare",
+    timeframe: "101",
+    provider: "akshare",
+    date: "20240103",
+    symbols: ["600519"],
+    dataRoot: root,
+    env: {
+      AKSHARE_PYTHON_BIN: nodeBin,
+      AKSHARE_SCRIPT_PATH: scriptPath
+    }
+  });
+  const file = await readJson(path.join(root, "ashare", "101", "600519.json"));
+  const manifest = await readJson(path.join(root, "ashare", "101", "manifest.json"));
+
+  assert.equal(result.status, "ok");
+  assert.equal(file.source, "akshare");
+  assert.deepEqual(file.candles.map((item) => item.date), ["2024-01-02", "2024-01-03"]);
+  assert.equal(file.candles.at(-1).pct_chg, 1.2);
+  assert.equal(file.candles.at(-1).amplitude, 2.4);
+  assert.equal(file.candles.at(-1).turnover, 0.8);
+  assert.equal(manifest.source, "akshare");
+  assert.equal(manifest.candles_count, 2);
+});
+
+test("akshare single symbol failure does not block other symbols", async () => {
+  const root = await makeFixtureRoot();
+  const scriptPath = await writeAkshareFixtureScript({
+    symbols: {
+      "300750": {
+        code: "300750",
+        candles: [
+          { time: "2024-01-03", open: 20, high: 21, low: 19, close: 20.5, volume: 100, amount: 2000 }
+        ]
+      }
+    },
+    errors: [{ symbol: "600519", message: "AKShare fixture error" }]
+  });
+
+  const result = await updateKlineCache({
+    market: "ashare",
+    timeframe: "101",
+    provider: "akshare",
+    date: "20240103",
+    symbols: ["600519", "300750"],
+    dataRoot: root,
+    env: {
+      AKSHARE_PYTHON_BIN: nodeBin,
+      AKSHARE_SCRIPT_PATH: scriptPath
+    }
+  });
+
+  assert.equal(result.status, "partial");
+  assert.equal(result.updated_symbols, 1);
+  assert.ok(result.errors.some((item) => item.includes("600519")));
+  assert.equal((await readJson(path.join(root, "ashare", "101", "300750.json"))).source, "akshare");
+});
+
+test("akshare provider failure keeps existing cache and dry-run writes nothing", async () => {
+  const root = await makeFixtureRoot();
+  const filePath = path.join(root, "ashare", "101", "600519.json");
+  const original = {
+    code: "600519",
+    market: "ashare",
+    klt: "101",
+    timeframe: "101",
+    timeframe_label: "日K",
+    source: "fixture",
+    updated_at: "2024-01-02T00:00:00.000Z",
+    candles: [{ date: "2024-01-02", open: 10, high: 11, low: 9, close: 10 }]
+  };
+  await writeJson(filePath, original);
+
+  const failed = await updateKlineCache({
+    market: "ashare",
+    timeframe: "101",
+    provider: "akshare",
+    date: "20240103",
+    symbols: ["600519"],
+    dataRoot: root,
+    env: {
+      AKSHARE_PYTHON_BIN: nodeBin,
+      AKSHARE_SCRIPT_PATH: path.join(root, "missing-akshare-script.js")
+    }
+  });
+  assert.equal(failed.status, "error");
+  assert.deepEqual(await readJson(filePath), original);
+
+  const scriptPath = await writeAkshareFixtureScript({
+    symbols: {
+      "300750": {
+        code: "300750",
+        candles: [
+          { time: "2024-01-03", open: 20, high: 21, low: 19, close: 20.5, volume: 100, amount: 2000 }
+        ]
+      }
+    },
+    errors: []
+  });
+  const dryRunRoot = await makeFixtureRoot();
+  const dryRun = await updateKlineCache({
+    market: "ashare",
+    timeframe: "101",
+    provider: "akshare",
+    date: "20240103",
+    symbols: ["300750"],
+    dataRoot: dryRunRoot,
+    dryRun: true,
+    env: {
+      AKSHARE_PYTHON_BIN: nodeBin,
+      AKSHARE_SCRIPT_PATH: scriptPath
+    }
+  });
+
+  assert.equal(dryRun.status, "ok");
+  await assert.rejects(() => fs.access(path.join(dryRunRoot, "ashare", "101", "300750.json")));
+  await assert.rejects(() => fs.access(path.join(dryRunRoot, "ashare", "101", "manifest.json")));
+});
+
+test("akshare provider is listed without TUSHARE_TOKEN requirement and reports missing runtime clearly", async () => {
+  const provider = listKlineProviders().find((item) => item.key === "akshare");
+  assert.ok(provider);
+  assert.deepEqual(provider.requires, ["python3", "akshare"]);
+
+  await assert.rejects(
+    () => fetchProviderKlines({
+      provider: "akshare",
+      market: { key: "cn_equity" },
+      symbol: "600519",
+      timeframe: { key: "1d" },
+      env: {
+        AKSHARE_PYTHON_BIN: nodeBin,
+        AKSHARE_SCRIPT_PATH: path.join(os.tmpdir(), "not-found-akshare-script.py")
+      }
+    }),
+    /AKShare|akshare|Python|退出/
+  );
+});
+
+test("akshare provider retries retryable failures before succeeding", async () => {
+  const stateFile = path.join(await makeFixtureRoot(), "attempts.json");
+  const scriptPath = await writeRetryFixtureScript({
+    stateFile,
+    failUntil: 2,
+    provider: "akshare",
+    symbol: "600519"
+  });
+
+  const result = await fetchProviderKlines({
+    provider: "akshare",
+    market: { key: "cn_equity" },
+    symbol: "600519",
+    timeframe: { key: "1d" },
+    startDate: "20240103",
+    endDate: "20240103",
+    env: {
+      AKSHARE_PYTHON_BIN: nodeBin,
+      AKSHARE_SCRIPT_PATH: scriptPath,
+      AKSHARE_MAX_RETRIES: "3",
+      AKSHARE_RETRY_DELAY_MS: "1",
+      AKSHARE_JITTER_MS: "0"
+    }
+  });
+  const state = await readJson(stateFile);
+
+  assert.equal(result.provider, "akshare");
+  assert.equal(result.candles.length, 1);
+  assert.equal(state.attempts, 3);
+});
+
+test("AKSHARE_NO_PROXY clears proxy variables for the python child process", async () => {
+  const envFile = path.join(await makeFixtureRoot(), "env.json");
+  const scriptPath = await writeEnvFixtureScript(envFile);
+
+  await fetchProviderKlines({
+    provider: "akshare",
+    market: { key: "cn_equity" },
+    symbol: "600519",
+    timeframe: { key: "1d" },
+    startDate: "20240103",
+    endDate: "20240103",
+    env: {
+      AKSHARE_PYTHON_BIN: nodeBin,
+      AKSHARE_SCRIPT_PATH: scriptPath,
+      AKSHARE_NO_PROXY: "true",
+      HTTP_PROXY: "http://127.0.0.1:1087",
+      HTTPS_PROXY: "http://127.0.0.1:1087",
+      http_proxy: "http://127.0.0.1:1087",
+      https_proxy: "http://127.0.0.1:1087"
+    }
+  });
+  const childEnv = await readJson(envFile);
+
+  assert.equal(childEnv.HTTP_PROXY, undefined);
+  assert.equal(childEnv.HTTPS_PROXY, undefined);
+  assert.equal(childEnv.http_proxy, undefined);
+  assert.equal(childEnv.https_proxy, undefined);
+  assert.equal(childEnv.NO_PROXY, "*");
+  assert.equal(childEnv.no_proxy, "*");
+});
+
+test("provider=akshare falls back to baostock per symbol and records mixed source", async () => {
+  const root = await makeFixtureRoot();
+  const akshareScriptPath = await writeAkshareFixtureScript({
+    symbols: {
+      "600519": {
+        code: "600519",
+        candles: [
+          { time: "2024-01-03", open: 11, high: 12, low: 10, close: 11.5, volume: 1000, amount: 11000 }
+        ]
+      }
+    },
+    errors: [{ symbol: "300750", message: "RemoteDisconnected" }]
+  });
+  const baostockScriptPath = await writeBaostockFixtureScript({
+    symbols: {
+      "300750": {
+        code: "300750",
+        candles: [
+          { time: "2024-01-03", open: 20, high: 21, low: 19, close: 20.5, volume: 100, amount: 2000 }
+        ]
+      }
+    },
+    errors: []
+  });
+
+  const result = await updateKlineCache({
+    market: "ashare",
+    timeframe: "101",
+    provider: "akshare",
+    date: "20240103",
+    symbols: ["600519", "300750"],
+    dataRoot: root,
+    env: {
+      AKSHARE_PYTHON_BIN: nodeBin,
+      AKSHARE_SCRIPT_PATH: akshareScriptPath,
+      BAOSTOCK_PYTHON_BIN: nodeBin,
+      BAOSTOCK_SCRIPT_PATH: baostockScriptPath
+    }
+  });
+  const akshareFile = await readJson(path.join(root, "ashare", "101", "600519.json"));
+  const baostockFile = await readJson(path.join(root, "ashare", "101", "300750.json"));
+  const manifest = await readJson(path.join(root, "ashare", "101", "manifest.json"));
+
+  assert.equal(result.status, "ok");
+  assert.equal(akshareFile.source, "akshare");
+  assert.equal(baostockFile.source, "baostock");
+  assert.equal(manifest.source, "mixed");
+  assert.equal(result.sources.akshare, 1);
+  assert.equal(result.sources.baostock, 1);
+});
+
+test("provider chain failure keeps existing cache", async () => {
+  const root = await makeFixtureRoot();
+  const filePath = path.join(root, "ashare", "101", "600519.json");
+  const original = {
+    code: "600519",
+    market: "ashare",
+    klt: "101",
+    timeframe: "101",
+    timeframe_label: "日K",
+    source: "fixture",
+    updated_at: "2024-01-02T00:00:00.000Z",
+    candles: [{ date: "2024-01-02", open: 10, high: 11, low: 9, close: 10 }]
+  };
+  await writeJson(filePath, original);
+
+  const result = await updateKlineCache({
+    market: "ashare",
+    timeframe: "101",
+    provider: "akshare",
+    date: "20240103",
+    symbols: ["600519"],
+    dataRoot: root,
+    env: {
+      AKSHARE_PYTHON_BIN: nodeBin,
+      AKSHARE_SCRIPT_PATH: path.join(root, "missing-akshare-script.mjs"),
+      BAOSTOCK_PYTHON_BIN: nodeBin,
+      BAOSTOCK_SCRIPT_PATH: path.join(root, "missing-baostock-script.mjs")
+    }
+  });
+
+  assert.equal(result.status, "error");
+  assert.deepEqual(await readJson(filePath), original);
+});
+
+test("requirements pins urllib3 below v2 for Python 3.9 LibreSSL compatibility", async () => {
+  const requirements = await fs.readFile(new URL("../requirements.txt", import.meta.url), "utf8");
+
+  assert.match(requirements, /^akshare$/m);
+  assert.match(requirements, /^baostock$/m);
+  assert.match(requirements, /^urllib3<2$/m);
+});
+
 test("verifyKlineCache detects empty cache, duplicate candles and missing OHLC", async () => {
   const emptyRoot = await makeFixtureRoot();
   const emptyResult = await verifyKlineCache({
@@ -214,4 +571,85 @@ function providerResponse(items) {
       };
     }
   };
+}
+
+async function writeAkshareFixtureScript(payload) {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "ym-akshare-fixture-"));
+  const filePath = path.join(dir, "fetch-akshare-fixture.mjs");
+  await fs.writeFile(filePath, `console.log(${JSON.stringify(JSON.stringify({
+    provider: "akshare",
+    market: "ashare",
+    timeframe: "101",
+    ...payload
+  }))});\n`, "utf8");
+  return filePath;
+}
+
+async function writeBaostockFixtureScript(payload) {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "ym-baostock-fixture-"));
+  const filePath = path.join(dir, "fetch-baostock-fixture.mjs");
+  await fs.writeFile(filePath, `console.log(${JSON.stringify(JSON.stringify({
+    provider: "baostock",
+    market: "ashare",
+    timeframe: "101",
+    ...payload
+  }))});\n`, "utf8");
+  return filePath;
+}
+
+async function writeRetryFixtureScript({ stateFile, failUntil, provider, symbol }) {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "ym-retry-fixture-"));
+  const filePath = path.join(dir, "fetch-retry-fixture.mjs");
+  await fs.writeFile(filePath, `
+import fs from "node:fs";
+const stateFile = ${JSON.stringify(stateFile)};
+let state = { attempts: 0 };
+try { state = JSON.parse(fs.readFileSync(stateFile, "utf8")); } catch {}
+state.attempts += 1;
+fs.writeFileSync(stateFile, JSON.stringify(state));
+if (state.attempts <= ${Number(failUntil)}) {
+  console.error("RemoteDisconnected");
+  process.exit(1);
+}
+console.log(JSON.stringify({
+  provider: ${JSON.stringify(provider)},
+  market: "ashare",
+  timeframe: "101",
+  symbols: {
+    [${JSON.stringify(symbol)}]: {
+      code: ${JSON.stringify(symbol)},
+      candles: [{ time: "2024-01-03", open: 11, high: 12, low: 10, close: 11.5, volume: 1000, amount: 11000 }]
+    }
+  },
+  errors: []
+}));
+`, "utf8");
+  return filePath;
+}
+
+async function writeEnvFixtureScript(envFile) {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "ym-env-fixture-"));
+  const filePath = path.join(dir, "fetch-env-fixture.mjs");
+  await fs.writeFile(filePath, `
+import fs from "node:fs";
+const keys = ["HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy", "NO_PROXY", "no_proxy"];
+const env = {};
+for (const key of keys) {
+  if (process.env[key] !== undefined) env[key] = process.env[key];
+}
+fs.writeFileSync(${JSON.stringify(envFile)}, JSON.stringify(env));
+console.log(JSON.stringify({
+  provider: "akshare",
+  market: "ashare",
+  timeframe: "101",
+  symbols: {
+    "600519": {
+      code: "600519",
+      candles: [{ time: "2024-01-03", open: 11, high: 12, low: 10, close: 11.5, volume: 1000, amount: 11000 }]
+    }
+  },
+  errors: []
+}));
+`, "utf8");
+  return filePath;
 }
