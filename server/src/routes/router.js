@@ -125,12 +125,13 @@ export async function route(req, res) {
 
   if (req.method === "POST" && pathname === "/api/pay/create") {
     const body = await readJson(req);
+    const track = body.track && typeof body.track === "object" ? body.track : {};
     const result = await createYmtyOrder({
       productCode: body.product_code || body.productCode,
       payChannel: body.pay_channel || body.payChannel || "mock",
-      channel: body.channel,
-      campaign: body.campaign,
-      creative: body.creative
+      channel: body.channel || track.channel,
+      campaign: body.campaign || track.campaign,
+      creative: body.creative || track.creative
     });
     return sendJson(res, 200, { ok: true, ...result });
   }
