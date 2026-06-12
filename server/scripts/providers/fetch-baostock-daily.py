@@ -12,6 +12,7 @@ def parse_args():
     parser.add_argument("--start-date", default="", help="YYYYMMDD")
     parser.add_argument("--end-date", default="", help="YYYYMMDD")
     parser.add_argument("--adjust", default="none", choices=["none", "qfq", "hfq"])
+    parser.add_argument("--frequency", default="d", choices=["d", "30", "60"])
     parser.add_argument("--timeout", default="15000", help="Reserved for provider parity; milliseconds")
     return parser.parse_args()
 
@@ -55,8 +56,18 @@ def normalize_adjust(value):
 
 
 def normalize_row(row, symbol):
+    raw_time = row.get("time") or ""
+    date_text = row.get("date") or ""
+    if raw_time and len(str(raw_time)) >= 14:
+        time_text = str(raw_time)
+        display_time = f"{time_text[:4]}-{time_text[4:6]}-{time_text[6:8]} {time_text[8:10]}:{time_text[10:12]}:{time_text[12:14]}"
+    elif raw_time and date_text:
+        display_time = f"{date_text} {raw_time}"
+    else:
+        display_time = date_text
+
     return {
-        "time": row.get("date") or "",
+        "time": display_time,
         "code": symbol,
         "open": normalize_number(row.get("open")),
         "high": normalize_number(row.get("high")),
@@ -81,7 +92,7 @@ def main():
     payload = {
         "provider": "baostock",
         "market": "ashare",
-        "timeframe": "101",
+        "timeframe": "101" if args.frequency == "d" else f"{args.frequency}m",
         "adjust": args.adjust,
         "symbols": {},
         "errors": [],
@@ -109,13 +120,16 @@ def main():
     try:
         for symbol in symbols:
             try:
+                fields = "date,code,open,high,low,close,volume,amount,turn,pctChg"
+                if args.frequency in ("30", "60"):
+                    fields = "date,time,code,open,high,low,close,volume,amount"
                 query = call_quietly(
                     bs.query_history_k_data_plus,
                     normalize_symbol(symbol),
-                    "date,code,open,high,low,close,volume,amount,turn,pctChg",
+                    fields,
                     start_date=normalize_date(args.start_date),
                     end_date=normalize_date(args.end_date),
-                    frequency="d",
+                    frequency=args.frequency,
                     adjustflag=normalize_adjust(args.adjust),
                 )
                 rows = []

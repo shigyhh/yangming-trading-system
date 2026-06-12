@@ -6,7 +6,9 @@ import { fileURLToPath } from "node:url";
 import test from "node:test";
 
 import {
+  backfillKlineCache,
   mergeCandles,
+  normalizeKlineTimeframe,
   updateKlineCache,
   verifyKlineCache
 } from "../src/services/klineCache.js";
@@ -28,6 +30,28 @@ test("mergeCandles deduplicates by date and sorts ascending", () => {
 
   assert.deepEqual(merged.map((item) => item.date), ["2024-01-01", "2024-01-02", "2024-01-03"]);
   assert.equal(merged.at(-1).open, 30);
+});
+
+test("mergeCandles preserves intraday candle timestamps", () => {
+  const merged = mergeCandles(
+    [],
+    [
+      { time: "2024-01-03 10:30:00", open: 10, high: 11, low: 9, close: 10.5 },
+      { time: "2024-01-03 11:30:00", open: 10.5, high: 12, low: 10, close: 11 }
+    ]
+  );
+
+  assert.deepEqual(merged.map((item) => item.date), ["2024-01-03 10:30:00", "2024-01-03 11:30:00"]);
+});
+
+test("timeframe aliases map to one stable cache directory", () => {
+  assert.equal(normalizeKlineTimeframe("101").timeframe, "101");
+  assert.equal(normalizeKlineTimeframe("1d").timeframe, "101");
+  assert.equal(normalizeKlineTimeframe("daily").timeframe, "101");
+  assert.equal(normalizeKlineTimeframe("60").timeframe, "60m");
+  assert.equal(normalizeKlineTimeframe("60m").timeframe, "60m");
+  assert.equal(normalizeKlineTimeframe("30").timeframe, "30m");
+  assert.equal(normalizeKlineTimeframe("30m").timeframe, "30m");
 });
 
 test("updateKlineCache writes merged symbol cache and manifest", async () => {
@@ -182,6 +206,48 @@ test("provider=akshare does not require TUSHARE_TOKEN and parses python output",
   assert.equal(result.candles[0].turnover, 0.8);
 });
 
+test("baostock supports 30m and 60m provider timeframes", async () => {
+  const envFile = path.join(await makeFixtureRoot(), "baostock-args.json");
+  const scriptPath = await writeBaostockArgsFixtureScript(envFile);
+
+  await fetchProviderKlines({
+    provider: "baostock",
+    market: { key: "cn_equity" },
+    symbol: "600519",
+    timeframe: { key: "60m", minutes: 60 },
+    startDate: "20240101",
+    endDate: "20240131",
+    env: {
+      BAOSTOCK_PYTHON_BIN: nodeBin,
+      BAOSTOCK_SCRIPT_PATH: scriptPath
+    }
+  });
+
+  await fetchProviderKlines({
+    provider: "baostock",
+    market: { key: "cn_equity" },
+    symbol: "300750",
+    timeframe: { key: "30m", minutes: 30 },
+    startDate: "20240101",
+    endDate: "20240131",
+    env: {
+      BAOSTOCK_PYTHON_BIN: nodeBin,
+      BAOSTOCK_SCRIPT_PATH: scriptPath
+    }
+  });
+
+  const calls = await readJson(envFile);
+  assert.ok(calls.some((item) => item.includes("--frequency") && item.includes("60")));
+  assert.ok(calls.some((item) => item.includes("--frequency") && item.includes("30")));
+});
+
+test("baostock minute provider avoids unsupported daily-only fields", async () => {
+  const script = await fs.readFile(new URL("./providers/fetch-baostock-daily.py", import.meta.url), "utf8");
+
+  assert.match(script, /if args\.frequency in \("30", "60"\):/);
+  assert.match(script, /fields = "date,time,code,open,high,low,close,volume,amount"/);
+});
+
 test("akshare update merges candles and records manifest source", async () => {
   const root = await makeFixtureRoot();
   await writeJson(path.join(root, "ashare", "101", "600519.json"), {
@@ -230,6 +296,171 @@ test("akshare update merges candles and records manifest source", async () => {
   assert.equal(file.candles.at(-1).turnover, 0.8);
   assert.equal(manifest.source, "akshare");
   assert.equal(manifest.candles_count, 2);
+});
+
+test("multi-timeframe backfill dry-run writes nothing", async () => {
+  const root = await makeFixtureRoot();
+  const scriptPath = await writeBaostockFixtureScript({
+    symbols: {
+      "600519": {
+        code: "600519",
+        candles: [
+          { time: "2024-01-03 10:30:00", open: 11, high: 12, low: 10, close: 11.5, volume: 1000, amount: 11000 }
+        ]
+      }
+    },
+    errors: []
+  }, { timeframe: "60m" });
+
+  const result = await backfillKlineCache({
+    market: "ashare",
+    timeframes: ["101", "60m", "30m"],
+    symbols: ["600519"],
+    months: 6,
+    providerChain: ["baostock"],
+    dataRoot: root,
+    dryRun: true,
+    now: new Date("2024-06-30T00:00:00Z"),
+    env: {
+      BAOSTOCK_PYTHON_BIN: nodeBin,
+      BAOSTOCK_SCRIPT_PATH: scriptPath
+    }
+  });
+
+  assert.equal(result.dry_run, true);
+  assert.deepEqual(result.timeframes.map((item) => item.timeframe), ["101", "60m", "30m"]);
+  await assert.rejects(() => fs.access(path.join(root, "ashare", "101", "600519.json")));
+  await assert.rejects(() => fs.access(path.join(root, "ashare", "60m", "600519.json")));
+  await assert.rejects(() => fs.access(path.join(root, "ashare", "30m", "600519.json")));
+});
+
+test("multi-timeframe backfill writes separate cache, manifests and checkpoints", async () => {
+  const root = await makeFixtureRoot();
+  const scriptPath = await writeBaostockFixtureScript({
+    symbols: {
+      "600519": {
+        code: "600519",
+        candles: [
+          { time: "2024-01-03 10:30:00", open: 11, high: 12, low: 10, close: 11.5, volume: 1000, amount: 11000 }
+        ]
+      }
+    },
+    errors: []
+  }, { timeframe: "101" });
+
+  const result = await backfillKlineCache({
+    market: "ashare",
+    timeframes: ["101", "60", "30"],
+    symbols: ["600519"],
+    months: 6,
+    providerChain: ["baostock"],
+    dataRoot: root,
+    now: new Date("2024-06-30T00:00:00Z"),
+    env: {
+      BAOSTOCK_PYTHON_BIN: nodeBin,
+      BAOSTOCK_SCRIPT_PATH: scriptPath
+    }
+  });
+
+  assert.equal(result.status, "ok");
+  for (const timeframe of ["101", "60m", "30m"]) {
+    const file = await readJson(path.join(root, "ashare", timeframe, "600519.json"));
+    const manifest = await readJson(path.join(root, "ashare", timeframe, "manifest.json"));
+    const state = await readJson(path.join(root, "ashare", timeframe, "backfill-state.json"));
+    assert.equal(file.timeframe, timeframe);
+    assert.equal(file.source, "baostock");
+    assert.equal(manifest.source, "baostock");
+    assert.equal(state.timeframe, timeframe);
+    assert.deepEqual(state.completed_symbols, ["600519"]);
+  }
+});
+
+test("intraday update drops legacy date-only candles before merging", async () => {
+  const root = await makeFixtureRoot();
+  await writeJson(path.join(root, "ashare", "30m", "600519.json"), {
+    code: "600519",
+    market: "ashare",
+    timeframe: "30m",
+    source: "baostock",
+    candles: [
+      { date: "2024-01-03", open: 1, high: 2, low: 1, close: 1.5, source: "baostock", adjust: "none" }
+    ]
+  });
+  const scriptPath = await writeBaostockFixtureScript({
+    symbols: {
+      "600519": {
+        code: "600519",
+        candles: [
+          { time: "2024-01-03 10:30:00", open: 11, high: 12, low: 10, close: 11.5, volume: 1000, amount: 11000 },
+          { time: "2024-01-03 11:00:00", open: 11.5, high: 12.2, low: 11, close: 12, volume: 900, amount: 10800 }
+        ]
+      }
+    },
+    errors: []
+  }, { timeframe: "30m" });
+
+  await updateKlineCache({
+    market: "ashare",
+    timeframe: "30m",
+    providerChain: ["baostock"],
+    startDate: "20240101",
+    endDate: "20240131",
+    symbols: ["600519"],
+    dataRoot: root,
+    env: {
+      BAOSTOCK_PYTHON_BIN: nodeBin,
+      BAOSTOCK_SCRIPT_PATH: scriptPath
+    }
+  });
+
+  const file = await readJson(path.join(root, "ashare", "30m", "600519.json"));
+  assert.deepEqual(file.candles.map((item) => item.date), ["2024-01-03 10:30:00", "2024-01-03 11:00:00"]);
+});
+
+test("backfill resume skips completed symbols per timeframe", async () => {
+  const root = await makeFixtureRoot();
+  await writeJson(path.join(root, "ashare", "60m", "backfill-state.json"), {
+    timeframe: "60m",
+    range: { start_date: "20240101", end_date: "20240630" },
+    total_symbols: 2,
+    completed_symbols: ["600519"],
+    failed_symbols: [],
+    last_symbol: "600519",
+    provider_chain: ["baostock"],
+    started_at: "2024-06-30T00:00:00.000Z",
+    updated_at: "2024-06-30T00:00:00.000Z"
+  });
+  const scriptPath = await writeBaostockFixtureScript({
+    symbols: {
+      "300750": {
+        code: "300750",
+        candles: [
+          { time: "2024-01-03 10:30:00", open: 20, high: 21, low: 19, close: 20.5, volume: 100, amount: 2000 }
+        ]
+      }
+    },
+    errors: [{ symbol: "600519", message: "should be skipped" }]
+  }, { timeframe: "60m" });
+
+  const result = await backfillKlineCache({
+    market: "ashare",
+    timeframes: ["60m"],
+    symbols: ["600519", "300750"],
+    months: 6,
+    providerChain: ["baostock"],
+    resume: true,
+    dataRoot: root,
+    now: new Date("2024-06-30T00:00:00Z"),
+    env: {
+      BAOSTOCK_PYTHON_BIN: nodeBin,
+      BAOSTOCK_SCRIPT_PATH: scriptPath
+    }
+  });
+
+  const state = await readJson(path.join(root, "ashare", "60m", "backfill-state.json"));
+  assert.equal(result.timeframes[0].skipped_completed, 1);
+  assert.deepEqual(state.completed_symbols.sort(), ["300750", "600519"]);
+  await assert.rejects(() => fs.access(path.join(root, "ashare", "60m", "600519.json")));
 });
 
 test("akshare single symbol failure does not block other symbols", async () => {
@@ -545,6 +776,43 @@ test("verifyKlineCache detects empty cache, duplicate candles and missing OHLC",
   assert.ok(badResult.errors.some((item) => item.includes("open/high/low/close")));
 });
 
+test("verifyKlineCache validates multi-timeframe cache and KLINE_CACHE_ROOT style roots", async () => {
+  const root = await makeFixtureRoot();
+  for (const timeframe of ["101", "60m", "30m"]) {
+    await writeJson(path.join(root, "ashare", timeframe, "manifest.json"), {
+      market: "ashare",
+      timeframe,
+      source: "baostock",
+      last_trade_date: "20240628",
+      updated_at: "2024-06-30T00:00:00.000Z",
+      symbols_count: 1,
+      candles_count: 1,
+      status: "ok",
+      errors: []
+    });
+    await writeJson(path.join(root, "ashare", timeframe, "600519.json"), {
+      code: "600519",
+      market: "ashare",
+      timeframe,
+      source: "baostock",
+      candles: [
+        { date: timeframe === "101" ? "2024-06-28" : "2024-06-28 10:30:00", open: 10, high: 11, low: 9, close: 10, volume: 100, source: "baostock", adjust: "none" }
+      ]
+    });
+  }
+
+  const result = await verifyKlineCache({
+    market: "ashare",
+    timeframes: ["101", "60", "30m"],
+    dataRoot: root,
+    now: new Date("2024-06-29T00:00:00Z")
+  });
+
+  assert.equal(result.status, "ok");
+  assert.deepEqual(result.timeframes.map((item) => item.timeframe), ["101", "60m", "30m"]);
+  assert.equal(result.timeframes[1].candles_count, 1);
+});
+
 async function makeFixtureRoot() {
   return fs.mkdtemp(path.join(os.tmpdir(), "ym-kline-cache-"));
 }
@@ -573,27 +841,53 @@ function providerResponse(items) {
   };
 }
 
-async function writeAkshareFixtureScript(payload) {
+async function writeAkshareFixtureScript(payload, extra = {}) {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), "ym-akshare-fixture-"));
   const filePath = path.join(dir, "fetch-akshare-fixture.mjs");
   await fs.writeFile(filePath, `console.log(${JSON.stringify(JSON.stringify({
     provider: "akshare",
     market: "ashare",
-    timeframe: "101",
+    timeframe: extra.timeframe || "101",
     ...payload
   }))});\n`, "utf8");
   return filePath;
 }
 
-async function writeBaostockFixtureScript(payload) {
+async function writeBaostockFixtureScript(payload, extra = {}) {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), "ym-baostock-fixture-"));
   const filePath = path.join(dir, "fetch-baostock-fixture.mjs");
   await fs.writeFile(filePath, `console.log(${JSON.stringify(JSON.stringify({
     provider: "baostock",
     market: "ashare",
-    timeframe: "101",
+    timeframe: extra.timeframe || "101",
     ...payload
   }))});\n`, "utf8");
+  return filePath;
+}
+
+async function writeBaostockArgsFixtureScript(envFile) {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "ym-baostock-args-fixture-"));
+  const filePath = path.join(dir, "fetch-baostock-args-fixture.mjs");
+  await fs.writeFile(filePath, `
+import fs from "node:fs";
+const file = ${JSON.stringify(envFile)};
+let calls = [];
+try { calls = JSON.parse(fs.readFileSync(file, "utf8")); } catch {}
+calls.push(process.argv.join(" "));
+fs.writeFileSync(file, JSON.stringify(calls));
+console.log(JSON.stringify({
+  provider: "baostock",
+  market: "ashare",
+  timeframe: "101",
+  symbols: {
+    [process.argv[process.argv.indexOf("--symbols") + 1]]: {
+      code: process.argv[process.argv.indexOf("--symbols") + 1],
+      candles: [{ time: "2024-01-03 10:30:00", open: 11, high: 12, low: 10, close: 11.5, volume: 1000, amount: 11000 }]
+    }
+  },
+  errors: []
+}));
+`, "utf8");
   return filePath;
 }
 

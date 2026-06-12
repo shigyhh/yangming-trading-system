@@ -17,7 +17,7 @@ export const config = {
   publicBaseUrl: process.env.PUBLIC_BASE_URL || "",
   serveWeb: process.env.SERVE_WEB !== "false",
   dataDir: path.resolve(serverRoot, "data"),
-  marketDataDir: path.resolve(serverRoot, "data", "market"),
+  marketDataDir: path.resolve(process.env.KLINE_CACHE_ROOT || path.resolve(serverRoot, "data", "market")),
   runtimeDir: path.resolve(serverRoot, "data", "runtime"),
   questionBankPath: path.resolve(serverRoot, "data", "question-bank.json"),
   klinePracticeBankPath: path.resolve(serverRoot, "data", "kline-practice-bank.json"),

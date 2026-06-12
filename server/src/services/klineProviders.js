@@ -63,9 +63,9 @@ export function listKlineProviders() {
       key: "baostock",
       label: PROVIDER_LABELS.baostock,
       markets: ["cn_equity"],
-      timeframes: ["1d"],
+      timeframes: ["30m", "60m", "1d"],
       requires: ["python3", "baostock"],
-      note: "作为 A股日线历史缓存的 AKShare fallback，不需要 TUSHARE_TOKEN。"
+      note: "作为 A股日线与 30/60 分钟线缓存主源，不需要 TUSHARE_TOKEN。"
     },
     {
       key: "tushare",
@@ -152,6 +152,7 @@ async function fetchAkshareKlines({ market, symbol, timeframe, adjustmentMode, s
     provider: "akshare",
     source: "akshare",
     safeSymbol,
+    timeframeKey: timeframe?.key,
     startDate,
     endDate,
     adjustmentMode,
@@ -162,8 +163,8 @@ async function fetchAkshareKlines({ market, symbol, timeframe, adjustmentMode, s
 
 async function fetchBaostockKlines({ market, symbol, timeframe, adjustmentMode, startDate, endDate, env }) {
   assertMarketProvider("baostock", market?.key);
-  if (timeframe?.key !== "1d") {
-    const error = new Error(`BaoStock 当前仅接入 A股日线缓存，不支持周期：${timeframe?.key || ""}`);
+  if (!["1d", "30m", "60m"].includes(timeframe?.key)) {
+    const error = new Error(`BaoStock 当前仅接入 A股日线/30分钟/60分钟缓存，不支持周期：${timeframe?.key || ""}`);
     error.statusCode = 400;
     throw error;
   }
@@ -179,6 +180,7 @@ async function fetchBaostockKlines({ market, symbol, timeframe, adjustmentMode, 
     provider: "baostock",
     source: "baostock",
     safeSymbol,
+    timeframeKey: timeframe?.key,
     startDate,
     endDate,
     adjustmentMode,
@@ -187,7 +189,7 @@ async function fetchBaostockKlines({ market, symbol, timeframe, adjustmentMode, 
   });
 }
 
-async function fetchPythonDailyKlines({ provider, source, safeSymbol, startDate, endDate, adjustmentMode, env, runScript }) {
+async function fetchPythonDailyKlines({ provider, source, safeSymbol, timeframeKey, startDate, endDate, adjustmentMode, env, runScript }) {
   const retryOptions = getRetryOptions(env, provider);
   let lastError = null;
 
@@ -195,6 +197,7 @@ async function fetchPythonDailyKlines({ provider, source, safeSymbol, startDate,
     try {
       const payload = await runScript({
         symbols: [safeSymbol],
+        timeframeKey,
         startDate,
         endDate,
         adjustmentMode,
@@ -304,7 +307,7 @@ function runAkshareDailyScript({ symbols, startDate, endDate, adjustmentMode, en
   });
 }
 
-function runBaostockDailyScript({ symbols, startDate, endDate, adjustmentMode, env, requestTimeoutMs }) {
+function runBaostockDailyScript({ symbols, timeframeKey = "1d", startDate, endDate, adjustmentMode, env, requestTimeoutMs }) {
   const pythonBin = env?.BAOSTOCK_PYTHON_BIN || process.env.BAOSTOCK_PYTHON_BIN || env?.AKSHARE_PYTHON_BIN || process.env.AKSHARE_PYTHON_BIN || "python3";
   const scriptPath = env?.BAOSTOCK_SCRIPT_PATH || process.env.BAOSTOCK_SCRIPT_PATH || BAOSTOCK_SCRIPT_PATH;
   return runPythonProviderScript({
@@ -321,6 +324,8 @@ function runBaostockDailyScript({ symbols, startDate, endDate, adjustmentMode, e
       normalizeProviderDate(endDate),
       "--adjust",
       normalizeAkshareAdjust(adjustmentMode),
+      "--frequency",
+      String(resolveBaostockFrequency(timeframeKey)),
       "--timeout",
       String(Math.max(Number(requestTimeoutMs || 15000), 1))
     ],
@@ -328,6 +333,12 @@ function runBaostockDailyScript({ symbols, startDate, endDate, adjustmentMode, e
     requestTimeoutMs,
     noProxy: isTruthy(env?.BAOSTOCK_NO_PROXY || process.env.BAOSTOCK_NO_PROXY)
   });
+}
+
+function resolveBaostockFrequency(timeframeKey = "1d") {
+  if (timeframeKey === "30m") return "30";
+  if (timeframeKey === "60m") return "60";
+  return "d";
 }
 
 function runPythonProviderScript({ provider, pythonBin, scriptPath, args, env, requestTimeoutMs, noProxy }) {
