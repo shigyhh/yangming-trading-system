@@ -1,7 +1,9 @@
 const WECHAT_REQUIRED_KEYS = [
+  "WECHAT_PAY_MODE",
   "WECHAT_MCH_ID",
   "WECHAT_SERVICE_APP_ID",
   "WECHAT_MINI_APP_ID",
+  "WECHAT_SERVICE_APP_SECRET",
   "WECHAT_API_V3_KEY",
   "WECHAT_CERT_SERIAL_NO",
   "WECHAT_PRIVATE_KEY_PATH",
@@ -21,16 +23,30 @@ const ALIPAY_REQUIRED_KEYS = [
 ];
 
 export class PaymentConfigError extends Error {
-  constructor(message, status) {
+  constructor(message, status, statusCode = 503) {
     super(message);
     this.name = "PaymentConfigError";
-    this.statusCode = 503;
+    this.statusCode = statusCode;
     this.status = status;
   }
 }
 
 export function checkWechatConfig(env = process.env) {
-  return checkRequiredConfig("wechat", WECHAT_REQUIRED_KEYS, env);
+  const mode = getWechatPayMode(env);
+  if (mode === "partner") {
+    return {
+      provider: "wechat",
+      mode,
+      ok: false,
+      missing: [],
+      keys: [{ key: "WECHAT_PAY_MODE", status: "present" }],
+      unsupported: "partner"
+    };
+  }
+  return {
+    ...checkRequiredConfig("wechat", WECHAT_REQUIRED_KEYS, { ...env, WECHAT_PAY_MODE: mode }),
+    mode
+  };
 }
 
 export function checkAlipayConfig(env = process.env) {
@@ -40,6 +56,9 @@ export function checkAlipayConfig(env = process.env) {
 export function assertWechatConfig(env = process.env) {
   const status = checkWechatConfig(env);
   if (status.ok) return status;
+  if (status.unsupported === "partner") {
+    throw new PaymentConfigError("微信服务商模式暂未实现", status, 501);
+  }
   throw new PaymentConfigError("微信支付配置未完成", status);
 }
 
@@ -54,6 +73,11 @@ export function getPaymentConfigStatus(env = process.env) {
     wechat: checkWechatConfig(env),
     alipay: checkAlipayConfig(env)
   };
+}
+
+export function getWechatPayMode(env = process.env) {
+  const mode = String(env.WECHAT_PAY_MODE || "direct").trim().toLowerCase();
+  return mode === "partner" ? "partner" : "direct";
 }
 
 function checkRequiredConfig(provider, requiredKeys, env) {

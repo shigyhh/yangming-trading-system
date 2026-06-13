@@ -90,6 +90,11 @@ test("ymty landing page uses live public campaign config and safe order payload"
     "status !== \"online\"",
     "order_id",
     "order_token",
+    "jsapi_params",
+    "WeixinJSBridge",
+    "pay_url",
+    "form_html",
+    "mock_payment",
   ].forEach((text) => assertIncludes(html, text));
 
   [

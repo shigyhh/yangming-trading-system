@@ -3,9 +3,15 @@ import { Readable } from "node:stream";
 import test from "node:test";
 
 const paymentEnvKeys = [
+  "WECHAT_PAY_MODE",
   "WECHAT_MCH_ID",
   "WECHAT_SERVICE_APP_ID",
+  "WECHAT_SERVICE_APP_SECRET",
   "WECHAT_MINI_APP_ID",
+  "WECHAT_SP_MCH_ID",
+  "WECHAT_SUB_MCH_ID",
+  "WECHAT_SP_APP_ID",
+  "WECHAT_SUB_APP_ID",
   "WECHAT_API_V3_KEY",
   "WECHAT_CERT_SERIAL_NO",
   "WECHAT_PRIVATE_KEY_PATH",
@@ -61,7 +67,9 @@ test("real payment config precheck reports missing keys without leaking secret v
 
   const secretEnv = {
     WECHAT_MCH_ID: "sensitive-wechat-mch",
+    WECHAT_PAY_MODE: "direct",
     WECHAT_SERVICE_APP_ID: "sensitive-service-app",
+    WECHAT_SERVICE_APP_SECRET: "sensitive-service-secret",
     WECHAT_MINI_APP_ID: "sensitive-mini-app",
     WECHAT_API_V3_KEY: "sensitive-api-v3-key",
     WECHAT_CERT_SERIAL_NO: "sensitive-cert-serial",
@@ -81,7 +89,10 @@ test("real payment config precheck reports missing keys without leaking secret v
     wechat: checkWechatConfig(secretEnv),
     alipay: checkAlipayConfig(secretEnv)
   });
-  Object.values(secretEnv).forEach((value) => {
+  Object.entries(secretEnv)
+    .filter(([key]) => key !== "WECHAT_PAY_MODE")
+    .map(([, value]) => value)
+    .forEach((value) => {
     assert.equal(summary.includes(value), false, `config summary leaked ${value}`);
   });
 });

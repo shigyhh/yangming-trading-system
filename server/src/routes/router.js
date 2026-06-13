@@ -1,5 +1,5 @@
 import { config } from "../config.js";
-import { readJson, sendJson, notFound, serveStatic } from "../lib/http.js";
+import { readJson, readRawBody, sendJson, notFound, serveStatic } from "../lib/http.js";
 import { startAssessment, submitAssessment, getAssessment, getUserAssessmentHistory } from "../services/assessments.js";
 import { getNextAssistantQr } from "../services/assistantQr.js";
 import { assertUserAccess, authenticateRequest, getUser, loginOrRegisterUser } from "../services/auth.js";
@@ -20,9 +20,9 @@ import { dispatchTrainingPrescriptionBinding, generateShareCardBinding, getAdmin
 import { getGlobalReflectionToday, listGlobalReflectionChoices, submitGlobalReflectionVote } from "../services/globalReflection.js";
 import { buildHistoricalKlineSlice, downloadHistoricalKline, getHistoricalKlineRules, listHistoricalKlineCatalog, listHistoricalKlineInstruments, revealHistoricalKlineSlice } from "../services/historicalKline.js";
 import { buildTradeReviewOcrDraft } from "../services/tradeReviewOcr.js";
-import { createYmtyOrder, getYmtyAdminCampaign, getYmtyAfterpayEntrance, getYmtyAuditLogs, getYmtyOrderStatus, getYmtyPublicCampaign, listYmtyOrders, markYmtyMockPaySuccess, updateYmtyCampaign, updateYmtyLivecode } from "../services/ymtyCampaign.js";
+import { createYmtyOrder, getYmtyAdminCampaign, getYmtyAfterpayEntrance, getYmtyAuditLogs, getYmtyOrderForPayment, getYmtyOrderStatus, getYmtyPublicCampaign, listYmtyOrders, markYmtyMockPaySuccess, markYmtyOrderPaid, updateYmtyCampaign, updateYmtyLivecode } from "../services/ymtyCampaign.js";
 import { saveYmtyLivecodeUpload } from "../services/ymtyUpload.js";
-import { assertRealPayConfigReady, isPaymentConfigError, normalizePayChannel } from "../services/payments/index.js";
+import { assertRealPayConfigReady, createH5Order, createJsapiOrder, createWapOrder, isPaymentConfigError, normalizePayChannel, parseAlipayNotify, parseWechatNotify, validateAlipayPayment, validateWechatPayment, verifyAlipayNotify, verifyWechatNotify } from "../services/payments/index.js";
 
 export async function route(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
@@ -141,21 +141,44 @@ export async function route(req, res) {
       throw error;
     }
 
-    if (payChannel !== "mock") {
-      return sendJson(res, 501, {
-        code: 501,
-        message: "真实支付适配器尚未实现"
-      });
+    if (payChannel === "wechat_jsapi") {
+      const openid = body.openid || body.openId || getCookie(req, "ymty_wechat_openid");
+      if (!openid) {
+        const oauthReturnUrl = body.oauth_return_url || body.oauthReturnUrl || req.headers.referer || "/hd/ymty/index.html";
+        return sendJson(res, 428, {
+          code: 428,
+          message: "微信 JSAPI 支付需要 openid，请先完成微信网页授权",
+          oauth_url: buildWechatOAuthStartUrl(req, oauthReturnUrl)
+        });
+      }
     }
 
-    const result = await createYmtyOrder({
+    const created = await createYmtyOrder({
       productCode: body.product_code || body.productCode,
       payChannel,
       channel: body.channel || track.channel,
       campaign: body.campaign || track.campaign,
       creative: body.creative || track.creative
     });
-    return sendJson(res, 200, { ok: true, ...result });
+
+    if (payChannel !== "mock") {
+      const redirectUrl = buildSuccessUrl(req, created.order, body.success_url || body.successUrl || "");
+      const context = {
+        ip: getIp(req),
+        userAgent: req.headers["user-agent"] || "",
+        redirectUrl,
+        returnUrl: redirectUrl,
+        openid: body.openid || body.openId || getCookie(req, "ymty_wechat_openid")
+      };
+      const payment = payChannel === "wechat_jsapi"
+        ? await createJsapiOrder(created.order, context)
+        : payChannel === "wechat_h5"
+          ? await createH5Order(created.order, context)
+          : await createWapOrder(created.order, context);
+      return sendJson(res, 200, { ok: true, order: created.order, payment });
+    }
+
+    return sendJson(res, 200, { ok: true, ...created });
   }
 
   if (req.method === "GET" && pathname === "/api/order/status") {
@@ -182,6 +205,92 @@ export async function route(req, res) {
       transactionId: body.transaction_id || body.transactionId || ""
     });
     return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/wechat/oauth/start") {
+    const oauthUrl = buildWechatOAuthAuthorizeUrl(req, url.searchParams.get("return_url") || "");
+    res.writeHead(302, {
+      Location: oauthUrl,
+      "Cache-Control": "no-store"
+    });
+    return res.end();
+  }
+
+  if (req.method === "GET" && pathname === "/api/wechat/oauth/callback") {
+    const result = await exchangeWechatOAuthCode({
+      code: url.searchParams.get("code") || ""
+    });
+    const state = parseOAuthState(url.searchParams.get("state") || "");
+    res.writeHead(302, {
+      Location: normalizeOAuthReturnUrl(req, state.returnUrl || ""),
+      "Set-Cookie": `ymty_wechat_openid=${encodeURIComponent(result.openid)}; HttpOnly; Path=/; SameSite=Lax; Max-Age=1800`,
+      "Cache-Control": "no-store"
+    });
+    return res.end();
+  }
+
+  if (req.method === "POST" && pathname === "/api/pay/wechat/notify") {
+    const rawBody = await readRawBody(req, 1024 * 1024);
+    try {
+      await verifyWechatNotify(req.headers, rawBody);
+      const payload = await parseWechatNotify(rawBody);
+      const order = await getYmtyOrderForPayment(payload.out_trade_no);
+      validateWechatPayment(payload, order);
+      await markYmtyOrderPaid({
+        orderId: order.order_id,
+        payChannel: order.pay_channel,
+        transactionId: payload.transaction_id,
+        eventType: "wechat_pay_success",
+        rawPayload: {
+          out_trade_no: payload.out_trade_no,
+          transaction_id: payload.transaction_id,
+          trade_state: payload.trade_state,
+          amount: payload.amount
+        },
+        verifyStatus: "wechat_verified"
+      });
+      return sendJson(res, 200, { code: "SUCCESS", message: "成功" });
+    } catch (error) {
+      return sendJson(res, error.statusCode || 400, {
+        code: "FAIL",
+        message: error.message || "微信支付通知处理失败"
+      });
+    }
+  }
+
+  if (req.method === "POST" && pathname === "/api/pay/alipay/notify") {
+    const rawBody = await readRawBody(req, 1024 * 1024);
+    const params = Object.fromEntries(new URLSearchParams(rawBody.toString("utf8")));
+    try {
+      await verifyAlipayNotify(params);
+      const payload = await parseAlipayNotify(params);
+      const order = await getYmtyOrderForPayment(payload.out_trade_no);
+      validateAlipayPayment(payload, order);
+      await markYmtyOrderPaid({
+        orderId: order.order_id,
+        payChannel: order.pay_channel,
+        transactionId: payload.trade_no,
+        eventType: "alipay_pay_success",
+        rawPayload: {
+          out_trade_no: payload.out_trade_no,
+          trade_no: payload.trade_no,
+          trade_status: payload.trade_status,
+          total_amount: payload.total_amount
+        },
+        verifyStatus: "alipay_verified"
+      });
+      res.writeHead(200, {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-store"
+      });
+      return res.end("success");
+    } catch (error) {
+      res.writeHead(error.statusCode || 400, {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-store"
+      });
+      return res.end("fail");
+    }
   }
 
   if (req.method === "GET" && pathname === "/api/admin/campaign/ymty") {
@@ -1070,6 +1179,98 @@ function getPublicOrigin(req) {
   if (config.publicBaseUrl) return config.publicBaseUrl.replace(/\/$/, "");
   const proto = req.headers["x-forwarded-proto"] || "http";
   return `${proto}://${req.headers.host}`;
+}
+
+function buildSuccessUrl(req, order, providedSuccessUrl = "") {
+  const base = String(providedSuccessUrl || process.env.ALIPAY_RETURN_URL || `${getPublicOrigin(req)}/hd/ymty/success.html`).split("?")[0];
+  const url = new URL(base, getPublicOrigin(req));
+  url.searchParams.set("order_id", order.order_id);
+  url.searchParams.set("token", order.order_token);
+  return url.toString();
+}
+
+function buildWechatOAuthStartUrl(req, returnUrl = "") {
+  const url = new URL("/api/wechat/oauth/start", getPublicOrigin(req));
+  if (returnUrl) url.searchParams.set("return_url", returnUrl);
+  return `${url.pathname}${url.search}`;
+}
+
+function buildWechatOAuthAuthorizeUrl(req, returnUrl = "") {
+  assertWechatOAuthConfig();
+  const callbackUrl = process.env.WECHAT_JSAPI_OAUTH_REDIRECT_URL || `${getPublicOrigin(req)}/api/wechat/oauth/callback`;
+  const state = Buffer.from(JSON.stringify({
+    returnUrl: normalizeOAuthReturnUrl(req, returnUrl)
+  })).toString("base64url");
+  const params = new URLSearchParams({
+    appid: process.env.WECHAT_SERVICE_APP_ID,
+    redirect_uri: callbackUrl,
+    response_type: "code",
+    scope: "snsapi_base",
+    state,
+    connect_redirect: "1"
+  });
+  return `https://open.weixin.qq.com/connect/oauth2/authorize?${params.toString()}#wechat_redirect`;
+}
+
+async function exchangeWechatOAuthCode({ code = "" } = {}) {
+  assertWechatOAuthConfig();
+  if (!code) {
+    const error = new Error("微信 OAuth code 缺失");
+    error.statusCode = 400;
+    throw error;
+  }
+  const params = new URLSearchParams({
+    appid: process.env.WECHAT_SERVICE_APP_ID,
+    secret: process.env.WECHAT_SERVICE_APP_SECRET,
+    code,
+    grant_type: "authorization_code"
+  });
+  const response = await fetch(`https://api.weixin.qq.com/sns/oauth2/access_token?${params.toString()}`);
+  const data = await response.json();
+  if (!response.ok || !data.openid) {
+    const error = new Error(data.errmsg || "微信 OAuth 获取 openid 失败");
+    error.statusCode = response.status || 502;
+    throw error;
+  }
+  return { openid: data.openid };
+}
+
+function parseOAuthState(state = "") {
+  try {
+    const parsed = JSON.parse(Buffer.from(state, "base64url").toString("utf8"));
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function normalizeOAuthReturnUrl(req, returnUrl = "") {
+  const fallback = "/hd/ymty/index.html";
+  if (!returnUrl) return fallback;
+  try {
+    const origin = getPublicOrigin(req);
+    const url = new URL(returnUrl, origin);
+    if (url.origin !== origin) return fallback;
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return fallback;
+  }
+}
+
+function assertWechatOAuthConfig() {
+  if (process.env.WECHAT_SERVICE_APP_ID && process.env.WECHAT_SERVICE_APP_SECRET) return;
+  const error = new Error("微信 OAuth 配置未完成");
+  error.statusCode = 503;
+  throw error;
+}
+
+function getCookie(req, key) {
+  const raw = String(req.headers.cookie || "");
+  const item = raw
+    .split(";")
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(`${key}=`));
+  return item ? decodeURIComponent(item.slice(key.length + 1)) : "";
 }
 
 function getBooleanParam(url, key, fallback = false) {

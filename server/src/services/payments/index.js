@@ -4,12 +4,14 @@ import {
   createJsapiOrder,
   parseWechatNotify,
   queryWechatOrder,
+  validateWechatPayment,
   verifyWechatNotify
 } from "./wechatPay.js";
 import {
   createWapOrder,
   parseAlipayNotify,
   queryAlipayOrder,
+  validateAlipayPayment,
   verifyAlipayNotify
 } from "./alipayPay.js";
 
@@ -21,6 +23,8 @@ export {
   parseWechatNotify,
   queryAlipayOrder,
   queryWechatOrder,
+  validateAlipayPayment,
+  validateWechatPayment,
   verifyAlipayNotify,
   verifyWechatNotify
 };

@@ -182,6 +182,35 @@ export async function getYmtyAfterpayEntrance({ orderId = "", token = "" } = {})
 export async function markYmtyMockPaySuccess({ orderId = "", token = "", transactionId = "" } = {}) {
   assertMockPayAllowed();
   const existingOrder = await getOrderWithToken(orderId, token);
+  return markYmtyOrderPaid({
+    orderId: existingOrder.order_id,
+    payChannel: existingOrder.pay_channel,
+    transactionId: transactionId || `mock-${existingOrder.order_id}`,
+    eventType: existingOrder.pay_status === "paid" ? "mock_pay_success_idempotent" : "mock_pay_success",
+    rawPayload: {
+      order_id: existingOrder.order_id,
+      transaction_id: transactionId || existingOrder.transaction_id,
+      source: "mock"
+    },
+    verifyStatus: "mock_verified"
+  });
+}
+
+export async function markYmtyOrderPaid({
+  orderId = "",
+  payChannel = "",
+  transactionId = "",
+  eventType = "payment_success",
+  rawPayload = {},
+  verifyStatus = "verified"
+} = {}) {
+  const existingOrder = await getOrderById(orderId);
+  if (payChannel && existingOrder.pay_channel !== payChannel) {
+    const error = new Error("支付渠道不匹配");
+    error.statusCode = 400;
+    throw error;
+  }
+
   const now = new Date().toISOString();
   let paidOrder = existingOrder;
 
@@ -191,7 +220,7 @@ export async function markYmtyMockPaySuccess({ orderId = "", token = "", transac
       paidOrder = {
         ...order,
         pay_status: "paid",
-        transaction_id: cleanText(transactionId || `mock-${order.order_id}`, 120),
+        transaction_id: cleanText(transactionId || order.transaction_id || `paid-${order.order_id}`, 120),
         paid_at: now,
         updated_at: now
       };
@@ -202,13 +231,9 @@ export async function markYmtyMockPaySuccess({ orderId = "", token = "", transac
   const paymentLog = await appendPaymentLog({
     order_id: paidOrder.order_id,
     pay_channel: paidOrder.pay_channel,
-    event_type: existingOrder.pay_status === "paid" ? "mock_pay_success_idempotent" : "mock_pay_success",
-    raw_payload: {
-      order_id: paidOrder.order_id,
-      transaction_id: transactionId || paidOrder.transaction_id,
-      source: "mock"
-    },
-    verify_status: "mock_verified"
+    event_type: existingOrder.pay_status === "paid" ? `${eventType}_idempotent` : eventType,
+    raw_payload: sanitizePaymentPayload(rawPayload),
+    verify_status: verifyStatus
   });
   const courseUser = await ensureCourseUser(paidOrder);
 
@@ -217,6 +242,11 @@ export async function markYmtyMockPaySuccess({ orderId = "", token = "", transac
     payment_log: paymentLog,
     course_user: courseUser
   };
+}
+
+export async function getYmtyOrderForPayment(orderId = "") {
+  const order = await getOrderById(orderId);
+  return publicOrder(order, { includeToken: true });
 }
 
 export async function updateYmtyCampaign({ adminId = "dev-admin", patch = {}, ip = "" } = {}) {
@@ -307,6 +337,13 @@ export async function getYmtyAuditLogs() {
   };
 }
 
+export async function listYmtyCourseUsers() {
+  const courseUsers = await readRuntimeRecords(COURSE_USER_FILE);
+  return {
+    course_users: courseUsers.slice()
+  };
+}
+
 async function getActiveYmtyConfig() {
   await seedYmtyDefaults();
   const [product, livecode] = await Promise.all([getProductByCode(DEFAULT_PRODUCT_CODE), getActiveLivecode()]);
@@ -333,16 +370,21 @@ async function getActiveLivecode() {
 }
 
 async function getOrderWithToken(orderId, token) {
+  const order = await getOrderById(orderId);
+  if (!token || token !== order.order_token) {
+    const error = new Error("订单令牌无效");
+    error.statusCode = 403;
+    throw error;
+  }
+  return order;
+}
+
+async function getOrderById(orderId) {
   const orders = await readRuntimeRecords(ORDER_FILE);
   const order = orders.find((item) => item?.order_id === String(orderId || ""));
   if (!order) {
     const error = new Error("订单不存在");
     error.statusCode = 404;
-    throw error;
-  }
-  if (!token || token !== order.order_token) {
-    const error = new Error("订单令牌无效");
-    error.statusCode = 403;
     throw error;
   }
   return order;
@@ -501,4 +543,13 @@ function normalizeEnum(value, fallback, maxLength) {
 
 function cleanText(value, maxLength) {
   return String(value ?? "").trim().slice(0, maxLength);
+}
+
+function sanitizePaymentPayload(payload) {
+  const text = JSON.stringify(payload || {});
+  return JSON.parse(text, (key, value) => {
+    if (/key|secret|private|certificate|token|sign/i.test(key)) return "[redacted]";
+    if (typeof value === "string" && value.length > 500) return `${value.slice(0, 120)}...[truncated]`;
+    return value;
+  });
 }

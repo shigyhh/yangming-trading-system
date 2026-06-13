@@ -845,7 +845,7 @@
           </article>
           <article class="faq-item">
             <h3>价格可以退款吗？</h3>
-            <p>请以报名页展示和后续客服说明为准；未接真实支付前，本地仅用于 mock 测试闭环。</p>
+            <p>请以报名页展示和后续客服说明为准；订单状态以后端查询和支付回调为准。</p>
           </article>
         </div>
       </section>
@@ -980,9 +980,11 @@
         });
         const data = await response.json().catch(() => ({}));
         if (!response.ok || !data.ok || !data.order) {
-          throw new Error(data.error || "create order failed");
+          const error = new Error(data.message || data.error || "create order failed");
+          error.data = data;
+          throw error;
         }
-        return data.order;
+        return data;
       }
 
       async function tryMockPaySuccess(order) {
@@ -1012,6 +1014,65 @@
         window.location.href = `/hd/ymty/success.html?${params.toString()}`;
       }
 
+      function invokeWechatJsapi(jsapi_params, order) {
+        return new Promise((resolve) => {
+          const invoke = () => {
+            if (!window.WeixinJSBridge) {
+              setPayMessage("请在微信内完成支付，支付完成后返回成功页查看入营入口。");
+              goSuccess(order);
+              resolve();
+              return;
+            }
+            window.WeixinJSBridge.invoke("getBrandWCPayRequest", jsapi_params, () => {
+              goSuccess(order);
+              resolve();
+            });
+          };
+          if (typeof window.WeixinJSBridge === "undefined" && document.addEventListener) {
+            document.addEventListener("WeixinJSBridgeReady", invoke, false);
+            window.setTimeout(invoke, 1200);
+            return;
+          }
+          invoke();
+        });
+      }
+
+      function submitAlipayForm(form_html) {
+        const container = document.createElement("div");
+        container.hidden = true;
+        container.innerHTML = form_html;
+        document.body.appendChild(container);
+        const form = container.querySelector("form");
+        if (form) form.submit();
+      }
+
+      async function continuePayment(data) {
+        const order = data.order;
+        const payment = data.payment || {};
+        if (data.mock_payment) {
+          setPayMessage("订单已创建，正在进入支付成功页...");
+          await tryMockPaySuccess(order);
+          goSuccess(order);
+          return;
+        }
+        if (payment.jsapi_params) {
+          setPayMessage("正在调起微信支付...");
+          await invokeWechatJsapi(payment.jsapi_params, order);
+          return;
+        }
+        if (payment.pay_url) {
+          setPayMessage("正在跳转支付页面...");
+          window.location.href = payment.pay_url;
+          return;
+        }
+        if (payment.form_html) {
+          setPayMessage("正在打开支付宝支付...");
+          submitAlipayForm(payment.form_html);
+          return;
+        }
+        goSuccess(order);
+      }
+
       async function handlePay(event) {
         const kind = event.currentTarget.dataset.channel || "wechat";
         if (state.product.status !== "online" || state.loadingPay) return;
@@ -1019,12 +1080,15 @@
         renderCampaign();
         setPayMessage("正在创建报名订单，请稍候...");
         try {
-          const order = await createOrder(kind);
-          setPayMessage("订单已创建，正在进入支付成功页...");
-          await tryMockPaySuccess(order);
-          goSuccess(order);
-        } catch {
-          setPayMessage("订单创建失败，请稍后再试。");
+          const data = await createOrder(kind);
+          await continuePayment(data);
+        } catch (error) {
+          if (error.data?.oauth_url) {
+            setPayMessage("正在进入微信授权...");
+            window.location.href = error.data.oauth_url;
+            return;
+          }
+          setPayMessage(error.message || "订单创建失败，请稍后再试。");
         } finally {
           state.loadingPay = false;
           renderCampaign();
