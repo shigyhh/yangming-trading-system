@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
-import { assertWechatConfig } from "../paymentConfig.js";
+import { assertWechatConfig, getWechatVerifyMode } from "../paymentConfig.js";
 
 export class NotImplementedError extends Error {
   constructor(message) {
@@ -85,14 +85,15 @@ export async function verifyWechatNotify(headers = {}, body = Buffer.alloc(0)) {
   assertWechatConfig();
   const timestamp = getHeader(headers, "wechatpay-timestamp");
   const nonce = getHeader(headers, "wechatpay-nonce");
+  const serial = getHeader(headers, "wechatpay-serial");
   const signature = getHeader(headers, "wechatpay-signature");
-  if (!timestamp || !nonce || !signature) {
+  if (!timestamp || !nonce || !serial || !signature) {
     const error = new Error("微信支付通知签名头缺失");
     error.statusCode = 401;
     throw error;
   }
 
-  const publicKey = await readWechatPlatformPublicKey();
+  const publicKey = await readWechatNotifyPublicKey(serial);
   const verifier = crypto.createVerify("RSA-SHA256");
   verifier.update(`${timestamp}\n${nonce}\n${body.toString("utf8")}\n`);
   verifier.end();
@@ -203,7 +204,16 @@ async function readWechatPrivateKey() {
   return fs.readFile(process.env.WECHAT_PRIVATE_KEY_PATH, "utf8");
 }
 
-async function readWechatPlatformPublicKey() {
+async function readWechatNotifyPublicKey(serial) {
+  const verifyMode = getWechatVerifyMode();
+  if (verifyMode === "public_key") {
+    if (serial !== process.env.WECHAT_PAY_PUBLIC_KEY_ID) {
+      const error = new Error("微信支付公钥 ID 不一致");
+      error.statusCode = 401;
+      throw error;
+    }
+    return fs.readFile(process.env.WECHAT_PAY_PUBLIC_KEY_PATH, "utf8");
+  }
   return fs.readFile(process.env.WECHAT_PLATFORM_CERT_PATH, "utf8");
 }
 

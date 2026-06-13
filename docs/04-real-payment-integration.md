@@ -1,6 +1,6 @@
 # 阳明心学交易体验营 V1 真实支付接入
 
-更新时间：2026-06-12
+更新时间：2026-06-13
 
 本步骤把 `/api/pay/create` 从 mock 扩展到微信 JSAPI、微信 H5、支付宝 WAP，并实现微信 / 支付宝异步通知的验签、金额校验、订单 paid 更新和课程权益幂等发放。
 
@@ -9,9 +9,9 @@
 ## 修改文件
 
 - `server/.env.example`：新增真实支付和微信 OAuth 变量名，不含真实值。
-- `server/src/services/paymentConfig.js`：补充 `WECHAT_PAY_MODE`、OAuth secret 和 partner 模式识别。
-- `server/src/services/payments/wechatPay.js`：实现微信 API v3 下单签名、JSAPI 参数签名、通知验签、resource 解密、金额校验。
-- `server/src/services/payments/alipayPay.js`：实现支付宝 WAP 表单签名、异步通知验签、金额校验。
+- `server/src/services/paymentConfig.js`：补充 `WECHAT_PAY_MODE`、`WECHAT_VERIFY_MODE`、OAuth secret、微信支付公钥路径和 partner 模式识别。
+- `server/src/services/payments/wechatPay.js`：实现微信 API v3 下单签名、JSAPI 参数签名、public_key 模式通知验签、resource 解密、金额校验。
+- `server/src/services/payments/alipayPay.js`：实现支付宝 WAP 表单签名、基于 key path 的异步通知验签、金额校验。
 - `server/src/services/payments/index.js`：导出真实支付适配器与通道检查。
 - `server/src/services/ymtyCampaign.js`：新增真实支付 paid 更新、课程权益幂等发放、课程用户列表测试辅助。
 - `server/src/routes/router.js`：接入真实支付创建、微信 OAuth、微信通知、支付宝通知。
@@ -24,6 +24,7 @@
 
 - `WECHAT_PAY_MODE` 未设置或为 `direct`：按普通直连商户模式处理。
 - `WECHAT_PAY_MODE=partner`：当前仅预留变量，服务商 / 特约商户模式暂未实现，真实支付创建会返回“微信服务商模式暂未实现”。
+- 当前生产建议使用 `WECHAT_VERIFY_MODE=public_key`，并配置 `WECHAT_PAY_PUBLIC_KEY_ID`、`WECHAT_PAY_PUBLIC_KEY_PATH`。
 
 ## 微信 JSAPI 接入说明
 
@@ -82,13 +83,15 @@
 微信回调 `/api/pay/wechat/notify`：
 
 - 验证 `Wechatpay-Signature`。
+- `WECHAT_VERIFY_MODE=public_key` 时，先校验 `Wechatpay-Serial` 是否等于 `WECHAT_PAY_PUBLIC_KEY_ID`，再使用 `WECHAT_PAY_PUBLIC_KEY_PATH` 指向的微信支付公钥验签。
 - 使用 `WECHAT_API_V3_KEY` 解密 `resource`。
 - 校验 `mchid`、`appid`、`out_trade_no`、`trade_state`、`amount.total`。
 - 只有 `trade_state=SUCCESS` 且金额等于订单金额才更新 paid。
 
 支付宝回调 `/api/pay/alipay/notify`：
 
-- 使用 `ALIPAY_PUBLIC_KEY` 验签。
+- 使用 `ALIPAY_PUBLIC_KEY_PATH` 指向的支付宝公钥验签。
+- 请求签名使用 `ALIPAY_PRIVATE_KEY_PATH` 指向的应用私钥。
 - 校验 `app_id`、`out_trade_no`、`total_amount`、`trade_status`。
 - 只有 `TRADE_SUCCESS` 或 `TRADE_FINISHED` 且金额等于订单金额才更新 paid。
 
@@ -112,6 +115,9 @@
 - `WECHAT_SERVICE_APP_ID`
 - `WECHAT_SERVICE_APP_SECRET`
 - `WECHAT_MINI_APP_ID`
+- `WECHAT_VERIFY_MODE`
+- `WECHAT_PAY_PUBLIC_KEY_ID`
+- `WECHAT_PAY_PUBLIC_KEY_PATH`
 - `WECHAT_SP_MCH_ID`
 - `WECHAT_SUB_MCH_ID`
 - `WECHAT_SP_APP_ID`
@@ -119,7 +125,6 @@
 - `WECHAT_API_V3_KEY`
 - `WECHAT_CERT_SERIAL_NO`
 - `WECHAT_PRIVATE_KEY_PATH`
-- `WECHAT_PLATFORM_CERT_PATH`
 - `WECHAT_NOTIFY_URL`
 - `WECHAT_H5_SCENE_INFO`
 - `WECHAT_JSAPI_OAUTH_REDIRECT_URL`
@@ -127,8 +132,8 @@
 支付宝：
 
 - `ALIPAY_APP_ID`
-- `ALIPAY_PRIVATE_KEY`
-- `ALIPAY_PUBLIC_KEY`
+- `ALIPAY_PRIVATE_KEY_PATH`
+- `ALIPAY_PUBLIC_KEY_PATH`
 - `ALIPAY_GATEWAY_URL`
 - `ALIPAY_NOTIFY_URL`
 - `ALIPAY_RETURN_URL`
@@ -148,7 +153,8 @@
 - H5 支付域名：`xxjyxt.com`。
 - JSAPI 支付授权目录：`https://xxjyxt.com/hd/ymty/`。
 - 通知地址：`https://xxjyxt.com/api/pay/wechat/notify`。
-- API v3 key、商户私钥、平台证书放在服务器安全路径。
+- API v3 key、商户私钥、微信支付公钥放在服务器安全路径。
+- 记录微信支付公钥 ID，配置为 `WECHAT_PAY_PUBLIC_KEY_ID`。
 
 微信公众平台：
 
@@ -158,7 +164,7 @@
 支付宝开放平台：
 
 - 开通手机网站支付。
-- 配置应用私钥与支付宝公钥。
+- 应用私钥和支付宝公钥保存为服务器安全路径文件，并通过 `ALIPAY_PRIVATE_KEY_PATH`、`ALIPAY_PUBLIC_KEY_PATH` 指定。
 - 异步通知：`https://xxjyxt.com/api/pay/alipay/notify`。
 - 同步返回：`https://xxjyxt.com/hd/ymty/success.html`。
 
@@ -181,7 +187,7 @@ curl -s -X POST http://127.0.0.1:8787/api/pay/create \
 
 ## 真实小额订单测试
 
-1. 在服务器配置 `.env`，不要提交。
+1. 在服务器配置 `.env` 或本地私有 `.env.local`，不要读取、打印或提交。
 2. 确认产品金额为小额测试价。
 3. 微信内打开 `https://xxjyxt.com/hd/ymty/index.html` 测 JSAPI。
 4. 微信外手机浏览器打开同一链接测微信 H5。
@@ -196,7 +202,9 @@ curl -s -X POST http://127.0.0.1:8787/api/pay/create \
 ## 上线前检查清单
 
 - `.env` 未进入 Git。
-- 商户私钥、API v3 key、支付宝私钥未写入代码。
+- 商户私钥、API v3 key、AppSecret、支付宝私钥未写入代码。
+- 微信支付公钥路径和公钥 ID 已配置。
+- 支付宝应用私钥与支付宝公钥均通过路径配置。
 - 微信 / 支付宝回调域名可公网 HTTPS 访问。
 - 订单金额只来自数据库 `products.amount_cents`。
 - 回调金额校验已开启。
@@ -207,4 +215,4 @@ curl -s -X POST http://127.0.0.1:8787/api/pay/create \
 
 ## 密钥提醒
 
-不要提交 `.env`、`.env.local`、真实商户号、Key、证书、私钥、服务器证书路径下的文件、`server/.venv` 或 `node_modules`。如发生泄露，应立即轮换密钥和证书。
+不要提交 `.env`、`.env.local`、真实商户号、APIv3 Key、AppSecret、证书、私钥、公钥文件、服务器密钥路径下的文件、`server/.venv` 或 `node_modules`。如发生泄露，应立即轮换密钥和证书。

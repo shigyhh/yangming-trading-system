@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import fs from "node:fs/promises";
 import { assertAlipayConfig } from "../paymentConfig.js";
 
 export async function createWapOrder(order, clientContext = {}) {
@@ -20,7 +21,7 @@ export async function createWapOrder(order, clientContext = {}) {
       product_code: "QUICK_WAP_WAY"
     })
   };
-  const sign = signAlipayParams(params);
+  const sign = await signAlipayParams(params);
   const signedParams = { ...params, sign };
   return {
     channel: "alipay_wap",
@@ -40,7 +41,7 @@ export async function verifyAlipayNotify(params = {}) {
   const verifier = crypto.createVerify("RSA-SHA256");
   verifier.update(canonicalAlipayString(params));
   verifier.end();
-  const ok = verifier.verify(process.env.ALIPAY_PUBLIC_KEY, signature, "base64");
+  const ok = verifier.verify(await readAlipayPublicKey(), signature, "base64");
   if (!ok) {
     const error = new Error("支付宝通知验签失败");
     error.statusCode = 401;
@@ -73,7 +74,7 @@ export async function queryAlipayOrder(order) {
     version: "1.0",
     biz_content: JSON.stringify({ out_trade_no: order.order_id })
   };
-  const signedParams = { ...params, sign: signAlipayParams(params) };
+  const signedParams = { ...params, sign: await signAlipayParams(params) };
   const response = await fetch(process.env.ALIPAY_GATEWAY_URL, {
     method: "POST",
     headers: {
@@ -98,11 +99,19 @@ export function validateAlipayPayment(payload, order) {
   return true;
 }
 
-function signAlipayParams(params) {
+async function signAlipayParams(params) {
   const signer = crypto.createSign("RSA-SHA256");
   signer.update(canonicalAlipayString(params));
   signer.end();
-  return signer.sign(process.env.ALIPAY_PRIVATE_KEY, "base64");
+  return signer.sign(await readAlipayPrivateKey(), "base64");
+}
+
+async function readAlipayPrivateKey() {
+  return fs.readFile(process.env.ALIPAY_PRIVATE_KEY_PATH, "utf8");
+}
+
+async function readAlipayPublicKey() {
+  return fs.readFile(process.env.ALIPAY_PUBLIC_KEY_PATH, "utf8");
 }
 
 function canonicalAlipayString(params) {

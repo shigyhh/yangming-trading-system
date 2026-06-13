@@ -8,6 +8,9 @@ const paymentEnvKeys = [
   "WECHAT_SERVICE_APP_ID",
   "WECHAT_SERVICE_APP_SECRET",
   "WECHAT_MINI_APP_ID",
+  "WECHAT_VERIFY_MODE",
+  "WECHAT_PAY_PUBLIC_KEY_ID",
+  "WECHAT_PAY_PUBLIC_KEY_PATH",
   "WECHAT_SP_MCH_ID",
   "WECHAT_SUB_MCH_ID",
   "WECHAT_SP_APP_ID",
@@ -20,8 +23,8 @@ const paymentEnvKeys = [
   "WECHAT_H5_SCENE_INFO",
   "WECHAT_JSAPI_OAUTH_REDIRECT_URL",
   "ALIPAY_APP_ID",
-  "ALIPAY_PRIVATE_KEY",
-  "ALIPAY_PUBLIC_KEY",
+  "ALIPAY_PRIVATE_KEY_PATH",
+  "ALIPAY_PUBLIC_KEY_PATH",
   "ALIPAY_GATEWAY_URL",
   "ALIPAY_NOTIFY_URL",
   "ALIPAY_RETURN_URL"
@@ -63,7 +66,7 @@ test("real payment config precheck reports missing keys without leaking secret v
   const alipay = checkAlipayConfig({});
   assert.equal(alipay.ok, false);
   assert.ok(alipay.missing.includes("missing ALIPAY_APP_ID"));
-  assert.ok(alipay.missing.includes("missing ALIPAY_PRIVATE_KEY"));
+  assert.ok(alipay.missing.includes("missing ALIPAY_PRIVATE_KEY_PATH"));
 
   const secretEnv = {
     WECHAT_MCH_ID: "sensitive-wechat-mch",
@@ -71,16 +74,18 @@ test("real payment config precheck reports missing keys without leaking secret v
     WECHAT_SERVICE_APP_ID: "sensitive-service-app",
     WECHAT_SERVICE_APP_SECRET: "sensitive-service-secret",
     WECHAT_MINI_APP_ID: "sensitive-mini-app",
+    WECHAT_VERIFY_MODE: "public_key",
+    WECHAT_PAY_PUBLIC_KEY_ID: "sensitive-pay-public-key-id",
+    WECHAT_PAY_PUBLIC_KEY_PATH: "sensitive-pay-public-key-path",
     WECHAT_API_V3_KEY: "sensitive-api-v3-key",
     WECHAT_CERT_SERIAL_NO: "sensitive-cert-serial",
     WECHAT_PRIVATE_KEY_PATH: "sensitive-private-key-path",
-    WECHAT_PLATFORM_CERT_PATH: "sensitive-platform-cert-path",
     WECHAT_NOTIFY_URL: "sensitive-notify-url",
     WECHAT_H5_SCENE_INFO: "sensitive-scene-info",
     WECHAT_JSAPI_OAUTH_REDIRECT_URL: "sensitive-oauth-url",
     ALIPAY_APP_ID: "sensitive-alipay-app",
-    ALIPAY_PRIVATE_KEY: "sensitive-alipay-private",
-    ALIPAY_PUBLIC_KEY: "sensitive-alipay-public",
+    ALIPAY_PRIVATE_KEY_PATH: "sensitive-alipay-private-path",
+    ALIPAY_PUBLIC_KEY_PATH: "sensitive-alipay-public-path",
     ALIPAY_GATEWAY_URL: "sensitive-alipay-gateway",
     ALIPAY_NOTIFY_URL: "sensitive-alipay-notify",
     ALIPAY_RETURN_URL: "sensitive-alipay-return"
@@ -90,7 +95,7 @@ test("real payment config precheck reports missing keys without leaking secret v
     alipay: checkAlipayConfig(secretEnv)
   });
   Object.entries(secretEnv)
-    .filter(([key]) => key !== "WECHAT_PAY_MODE")
+    .filter(([key]) => !["WECHAT_PAY_MODE", "WECHAT_VERIFY_MODE"].includes(key))
     .map(([, value]) => value)
     .forEach((value) => {
     assert.equal(summary.includes(value), false, `config summary leaked ${value}`);

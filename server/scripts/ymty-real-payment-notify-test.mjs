@@ -10,17 +10,20 @@ const paymentEnvKeys = [
   "WECHAT_PAY_MODE",
   "WECHAT_MCH_ID",
   "WECHAT_SERVICE_APP_ID",
+  "WECHAT_SERVICE_APP_SECRET",
   "WECHAT_MINI_APP_ID",
+  "WECHAT_VERIFY_MODE",
+  "WECHAT_PAY_PUBLIC_KEY_ID",
+  "WECHAT_PAY_PUBLIC_KEY_PATH",
   "WECHAT_API_V3_KEY",
   "WECHAT_CERT_SERIAL_NO",
   "WECHAT_PRIVATE_KEY_PATH",
-  "WECHAT_PLATFORM_CERT_PATH",
   "WECHAT_NOTIFY_URL",
   "WECHAT_H5_SCENE_INFO",
   "WECHAT_JSAPI_OAUTH_REDIRECT_URL",
   "ALIPAY_APP_ID",
-  "ALIPAY_PRIVATE_KEY",
-  "ALIPAY_PUBLIC_KEY",
+  "ALIPAY_PRIVATE_KEY_PATH",
+  "ALIPAY_PUBLIC_KEY_PATH",
   "ALIPAY_GATEWAY_URL",
   "ALIPAY_NOTIFY_URL",
   "ALIPAY_RETURN_URL"
@@ -55,6 +58,13 @@ test("wechat notify verifies signature, checks amount, and grants paid rights id
       signatureOverride: "bad-signature"
     });
     assert.equal(badSignature.statusCode, 401);
+    assert.equal((await getYmtyOrderStatus({ orderId: order.order.order_id, token: order.order.order_token })).order.pay_status, "pending");
+
+    const wrongPublicKeyId = await wechatNotify({
+      payload: buildWechatPayload(order.order, { total: order.order.amount_cents }),
+      serialOverride: "WRONG_PUBLIC_KEY_ID"
+    });
+    assert.equal(wrongPublicKeyId.statusCode, 401);
     assert.equal((await getYmtyOrderStatus({ orderId: order.order.order_id, token: order.order.order_token })).order.pay_status, "pending");
 
     const wrongAmount = await wechatNotify({
@@ -182,30 +192,36 @@ async function setupPaymentEnv() {
   const alipayKeys = crypto.generateKeyPairSync("rsa", { modulusLength: 2048 });
 
   const wechatPrivateKey = wechatMerchantKeys.privateKey.export({ type: "pkcs8", format: "pem" });
-  const wechatPlatformPublicKey = wechatPlatformKeys.publicKey.export({ type: "spki", format: "pem" });
+  const wechatPayPublicKey = wechatPlatformKeys.publicKey.export({ type: "spki", format: "pem" });
   const alipayPrivateKey = alipayKeys.privateKey.export({ type: "pkcs8", format: "pem" });
   const alipayPublicKey = alipayKeys.publicKey.export({ type: "spki", format: "pem" });
 
   const wechatPrivatePath = join(tempDir, "wechat-private.pem");
-  const wechatPlatformPath = join(tempDir, "wechat-platform.pem");
+  const wechatPayPublicKeyPath = join(tempDir, "wechat-pay-public.pem");
+  const alipayPrivatePath = join(tempDir, "alipay-private.pem");
+  const alipayPublicPath = join(tempDir, "alipay-public.pem");
   await writeFile(wechatPrivatePath, wechatPrivateKey);
-  await writeFile(wechatPlatformPath, wechatPlatformPublicKey);
+  await writeFile(wechatPayPublicKeyPath, wechatPayPublicKey);
+  await writeFile(alipayPrivatePath, alipayPrivateKey);
+  await writeFile(alipayPublicPath, alipayPublicKey);
 
   process.env.WECHAT_PAY_MODE = "direct";
   process.env.WECHAT_MCH_ID = "1900000001";
   process.env.WECHAT_SERVICE_APP_ID = "wxserviceappid";
   process.env.WECHAT_MINI_APP_ID = "wxminiappid";
   process.env.WECHAT_SERVICE_APP_SECRET = "service-secret-for-test";
+  process.env.WECHAT_VERIFY_MODE = "public_key";
+  process.env.WECHAT_PAY_PUBLIC_KEY_ID = "PUB_KEY_ID_TEST";
+  process.env.WECHAT_PAY_PUBLIC_KEY_PATH = wechatPayPublicKeyPath;
   process.env.WECHAT_API_V3_KEY = "12345678901234567890123456789012";
   process.env.WECHAT_CERT_SERIAL_NO = "TESTMERCHANTSERIAL";
   process.env.WECHAT_PRIVATE_KEY_PATH = wechatPrivatePath;
-  process.env.WECHAT_PLATFORM_CERT_PATH = wechatPlatformPath;
   process.env.WECHAT_NOTIFY_URL = "https://xxjyxt.com/api/pay/wechat/notify";
   process.env.WECHAT_H5_SCENE_INFO = "{\"payer_client_ip\":\"127.0.0.1\",\"h5_info\":{\"type\":\"Wap\"}}";
   process.env.WECHAT_JSAPI_OAUTH_REDIRECT_URL = "https://xxjyxt.com/api/wechat/oauth/callback";
   process.env.ALIPAY_APP_ID = "2026000000000000";
-  process.env.ALIPAY_PRIVATE_KEY = alipayPrivateKey;
-  process.env.ALIPAY_PUBLIC_KEY = alipayPublicKey;
+  process.env.ALIPAY_PRIVATE_KEY_PATH = alipayPrivatePath;
+  process.env.ALIPAY_PUBLIC_KEY_PATH = alipayPublicPath;
   process.env.ALIPAY_GATEWAY_URL = "https://openapi.alipay.com/gateway.do";
   process.env.ALIPAY_NOTIFY_URL = "https://xxjyxt.com/api/pay/alipay/notify";
   process.env.ALIPAY_RETURN_URL = "https://xxjyxt.com/hd/ymty/success.html";
@@ -216,7 +232,7 @@ async function setupPaymentEnv() {
 }
 
 function restoreEnv() {
-  for (const key of paymentEnvKeys.concat("WECHAT_SERVICE_APP_SECRET")) {
+  for (const key of paymentEnvKeys) {
     if (originalEnv[key] === undefined) {
       delete process.env[key];
     } else {
@@ -242,7 +258,7 @@ function buildWechatPayload(order, { total }) {
   };
 }
 
-async function wechatNotify({ payload, signatureOverride = "" }) {
+async function wechatNotify({ payload, signatureOverride = "", serialOverride = "" }) {
   const bodyText = JSON.stringify({
     id: crypto.randomUUID(),
     create_time: new Date().toISOString(),
@@ -266,7 +282,7 @@ async function wechatNotify({ payload, signatureOverride = "" }) {
       "content-length": String(Buffer.byteLength(bodyText)),
       "wechatpay-timestamp": timestamp,
       "wechatpay-nonce": nonce,
-      "wechatpay-serial": "TESTPLATFORMSERIAL",
+      "wechatpay-serial": serialOverride || process.env.WECHAT_PAY_PUBLIC_KEY_ID,
       "wechatpay-signature": signature
     },
     body: Buffer.from(bodyText)
