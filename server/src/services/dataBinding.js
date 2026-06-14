@@ -861,7 +861,7 @@ async function normalizeTradeReview(review, userRecord, fallbackTime, source) {
     timeframeKey,
     tradeDate,
     symbol: rawSymbol
-  });
+  }, review.marketContext || review.market_context || null);
 
   const normalized = {
     id: String(review.id || crypto.randomUUID()),
@@ -884,10 +884,31 @@ async function normalizeTradeReview(review, userRecord, fallbackTime, source) {
     reviewText,
     ocrDraft: normalizeTradeReviewOcrDraft(review.ocrDraft || review.ocr_draft || null),
     marketContext,
+    reviewSummary: normalizeTradeReviewSummary(review.reviewSummary || review.review_summary || null, fallbackTime),
     createdAt: review.createdAt || review.created_at || fallbackTime,
     source
   };
   return withTradeReviewCrossEndStatus(normalized, userRecord);
+}
+
+function normalizeTradeReviewSummary(summary, fallbackTime) {
+  if (!summary || typeof summary !== "object") return null;
+
+  const normalized = {
+    version: cleanText(summary.version || "pan_xin_he_zheng_v1", 60),
+    thoughtText: cleanText(summary.thoughtText || summary.thought_text || "", 240),
+    marketText: cleanText(summary.marketText || summary.market_text || "", 240),
+    behaviorText: cleanText(summary.behaviorText || summary.behavior_text || "", 220),
+    judgementText: cleanText(summary.judgementText || summary.judgement_text || "", 160),
+    practiceText: cleanText(summary.practiceText || summary.practice_text || "", 180),
+    generatedAt: cleanText(summary.generatedAt || summary.generated_at || fallbackTime, 40)
+  };
+
+  if (!normalized.thoughtText && !normalized.marketText && !normalized.behaviorText && !normalized.judgementText && !normalized.practiceText) {
+    return null;
+  }
+
+  return normalized;
 }
 
 function withTradeReviewCrossEndStatus(review = {}, record = {}) {
@@ -963,7 +984,7 @@ function toTime(value) {
   return Number.isNaN(time) ? 0 : time;
 }
 
-async function buildTradeReviewMarketContext({ id = "", marketType = "", timeframeKey = "1d", tradeDate = "", symbol = "" } = {}) {
+async function buildTradeReviewMarketContext({ id = "", marketType = "", timeframeKey = "1d", tradeDate = "", symbol = "" } = {}, incomingContext = null) {
   const marketKey = toKlineMarketKey(marketType);
   const safeSymbol = cleanLookupSymbol(symbol);
   const safeTimeframe = toKlineTimeframeKey(timeframeKey);
@@ -980,16 +1001,17 @@ async function buildTradeReviewMarketContext({ id = "", marketType = "", timefra
     dataEnd: "",
     candleCount: 0,
     source: "",
+    sliceSource: "",
     rulesSummary: "",
     complianceNotice: "仅用于回看当时市场环境与交易心理反应，不构成投资建议。"
   };
   if (!safeSymbol) {
-    return {
+    return mergeTradeReviewMarketContext({
       ...base,
       status: "missing_symbol",
       sourceStatus: "未提供可回看标的",
       positionLabel: "手动复盘优先"
-    };
+    }, incomingContext);
   }
 
   try {
@@ -1004,7 +1026,7 @@ async function buildTradeReviewMarketContext({ id = "", marketType = "", timefra
       endDate: tradeDate || "",
       anchor: "end"
     });
-    return {
+    return mergeTradeReviewMarketContext({
       ...base,
       status: "ready",
       marketKey: slice.market.key,
@@ -1017,17 +1039,110 @@ async function buildTradeReviewMarketContext({ id = "", marketType = "", timefra
       dataEnd: slice.data_range?.end || "",
       candleCount: slice.visible_count || 0,
       source: slice.source || "",
+      sliceSource: slice.source || "",
       rulesSummary: slice.rules?.session || "",
       reviewPrompt: slice.training?.review_prompt || ""
-    };
+    }, incomingContext);
   } catch (error) {
-    return {
+    return mergeTradeReviewMarketContext({
       ...base,
       status: error && error.statusCode === 404 ? "missing_cache" : "failed",
       sourceStatus: error && error.message ? cleanText(error.message, 160) : "历史片段暂未载入",
       positionLabel: "先完成手动复盘，待历史数据载入后回看"
-    };
+    }, incomingContext);
   }
+}
+
+function mergeTradeReviewMarketContext(base = {}, incoming = null) {
+  if (!incoming || typeof incoming !== "object") return base;
+
+  const source = cleanText(incoming.source || incoming.dataSource || incoming.data_source || "", 40);
+  const fallbackReason = cleanText(incoming.fallbackReason || incoming.fallback_reason || "", 180);
+  const primaryTimeframe = normalizeTradeReviewMarketContextTimeframe(incoming.primaryTimeframe || incoming.primary_timeframe);
+  const attemptedTimeframes = normalizeTradeReviewAttemptedTimeframes(incoming.attemptedTimeframes || incoming.attempted_timeframes);
+  const fallbackChain = normalizeTradeReviewFallbackChain(incoming.fallbackChain || incoming.fallback_chain);
+  const availability = normalizeTradeReviewAvailability(incoming.availability);
+  const summary = normalizeTradeReviewMarketContextSummary(incoming.summary);
+  const candlesCount = normalizeFiniteNumber(incoming.candlesCount ?? incoming.candles_count);
+  const klineAvailable = typeof incoming.klineAvailable === "boolean"
+    ? incoming.klineAvailable
+    : typeof incoming.kline_available === "boolean"
+      ? incoming.kline_available
+      : undefined;
+  const manifestStatus = cleanText(incoming.manifestStatus || incoming.manifest_status || "", 80);
+  const sliceSource = cleanText(incoming.sliceSource || incoming.slice_source || base.sliceSource || base.source || "", 80);
+
+  return {
+    ...base,
+    source: source || base.source,
+    fallbackReason: fallbackReason || undefined,
+    primaryTimeframe: primaryTimeframe || undefined,
+    attemptedTimeframes: attemptedTimeframes.length ? attemptedTimeframes : undefined,
+    fallbackChain: fallbackChain.length ? fallbackChain : undefined,
+    availability: availability || undefined,
+    summary: summary || undefined,
+    klineAvailable,
+    candlesCount: candlesCount ?? undefined,
+    manifestStatus: manifestStatus || undefined,
+    sliceSource: sliceSource || undefined
+  };
+}
+
+function normalizeTradeReviewMarketContextTimeframe(value) {
+  if (value === "30m" || value === "60m" || value === "101") return value;
+  return "";
+}
+
+function normalizeTradeReviewAttemptedTimeframes(value) {
+  if (!Array.isArray(value)) return [];
+  return Array.from(new Set(value.map(normalizeTradeReviewMarketContextTimeframe).filter(Boolean)));
+}
+
+function normalizeTradeReviewFallbackChain(value) {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => {
+    if (!item || typeof item !== "object") return null;
+    const timeframe = normalizeTradeReviewMarketContextTimeframe(item.timeframe);
+    const status = normalizeTradeReviewFallbackStatus(item.status);
+    if (!timeframe || !status) return null;
+
+    return {
+      timeframe,
+      status,
+      reason: cleanText(item.reason || "", 180)
+    };
+  }).filter(Boolean);
+}
+
+function normalizeTradeReviewFallbackStatus(value) {
+  if (value === "ok" || value === "insufficient_data" || value === "missing" || value === "error") return value;
+  return "";
+}
+
+function normalizeTradeReviewAvailability(value) {
+  if (!value || typeof value !== "object") return null;
+  return ["30m", "60m", "101"].reduce((result, timeframe) => {
+    result[timeframe] = normalizeTradeReviewFallbackStatus(value[timeframe]) || "missing";
+    return result;
+  }, {});
+}
+
+function normalizeTradeReviewMarketContextSummary(value) {
+  if (!value || typeof value !== "object") return null;
+  const summary = {
+    dailyText: cleanText(value.dailyText || value.daily_text || "", 240),
+    h60Text: cleanText(value.h60Text || value.h60_text || "", 240),
+    m30Text: cleanText(value.m30Text || value.m30_text || "", 240),
+    finalText: cleanText(value.finalText || value.final_text || "", 260)
+  };
+
+  return Object.values(summary).some(Boolean) ? summary : null;
+}
+
+function normalizeFiniteNumber(value) {
+  if (value === undefined || value === null || value === "") return undefined;
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) ? numberValue : undefined;
 }
 
 function toKlineMarketKey(value) {

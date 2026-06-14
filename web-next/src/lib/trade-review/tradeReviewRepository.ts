@@ -7,12 +7,17 @@ import {
   type ChartEvidence,
   type ChartEvidenceType,
   type HeartJudgement,
+  type KlineContextResult,
   type MarketPattern,
   type MarketTrend,
   type PriceLocation,
   type TradeReview,
+  type TradeReviewSyncStatus,
   type VolumeState,
 } from "@/lib/mind-archive/types"
+
+type MarketContextTimeframeKey = "30m" | "60m" | "101"
+type MarketContextAvailability = "ok" | "insufficient_data" | "missing" | "error"
 
 export type CreateTradeReviewInput = Omit<TradeReview, "id" | "heartJudgement" | "createdAt" | "updatedAt"> & {
   id?: string
@@ -175,9 +180,25 @@ function normalizeConfidence(value: unknown): "low" | "medium" | "high" | undefi
   return undefined
 }
 
+function normalizeTradeReviewSyncStatus(value: unknown): TradeReviewSyncStatus | undefined {
+  if (value === "pending" || value === "synced" || value === "failed") return value
+  return undefined
+}
+
+function normalizeOptionalString(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined
+  const normalized = value.trim()
+  return normalized || undefined
+}
+
 function normalizeMarketContextDataSource(value: unknown): NonNullable<TradeReview["marketContext"]>["dataSource"] {
   if (value === "kline_db" || value === "screenshot" || value === "insufficient_data") return value
   return "manual"
+}
+
+function normalizeMarketContextSource(value: unknown): NonNullable<TradeReview["marketContext"]>["source"] {
+  if (value === "server" || value === "manual") return value
+  return undefined
 }
 
 function normalizeMarketContextEvidence(value: unknown): NonNullable<TradeReview["marketContext"]>["evidence"] {
@@ -195,6 +216,126 @@ function normalizeMarketContextEvidence(value: unknown): NonNullable<TradeReview
   }
 }
 
+function normalizeKlineContextResult(value: unknown): KlineContextResult | null {
+  if (!value || typeof value !== "object") return null
+  const item = value as Partial<KlineContextResult>
+  const candlesUsed = Number(item.candlesUsed)
+
+  return {
+    symbol: item.symbol ? String(item.symbol).trim() : "",
+    timeframe: item.timeframe ? String(item.timeframe).trim() : "1d",
+    entryTime: item.entryTime ? String(item.entryTime).trim() : "",
+    candlesUsed: Number.isFinite(candlesUsed) ? Math.max(0, Math.trunc(candlesUsed)) : 0,
+    marketTrend: normalizeMarketTrend(item.marketTrend),
+    priceLocation: normalizePriceLocation(item.priceLocation),
+    pattern: normalizePattern(item.pattern),
+    volumeState: normalizeVolumeState(item.volumeState),
+    confidence: normalizeConfidence(item.confidence) || "low",
+    dataSource:
+      item.dataSource === "kline_db" || item.dataSource === "manual" || item.dataSource === "insufficient_data"
+        ? item.dataSource
+        : "insufficient_data",
+    evidence: normalizeMarketContextEvidence(item.evidence) || {},
+    manifestStatus: normalizeOptionalString(item.manifestStatus),
+    sliceSource: normalizeOptionalString(item.sliceSource),
+    notes: Array.isArray(item.notes) ? item.notes.map((note) => String(note)) : undefined,
+  }
+}
+
+function normalizeMarketContextPrimaryTimeframe(
+  value: unknown,
+): NonNullable<TradeReview["marketContext"]>["primaryTimeframe"] {
+  if (value === "30m" || value === "60m" || value === "101") return value
+  if (value === null) return null
+  return undefined
+}
+
+function normalizeMarketContextTimeframes(
+  value: unknown,
+): NonNullable<TradeReview["marketContext"]>["timeframes"] {
+  if (!value || typeof value !== "object") return undefined
+  const item = value as Record<MarketContextTimeframeKey, unknown>
+
+  return {
+    "30m": normalizeKlineContextResult(item["30m"]),
+    "60m": normalizeKlineContextResult(item["60m"]),
+    "101": normalizeKlineContextResult(item["101"]),
+  }
+}
+
+function normalizeMarketContextAvailabilityValue(value: unknown): MarketContextAvailability {
+  if (value === "ok" || value === "insufficient_data" || value === "missing" || value === "error") return value
+  return "missing"
+}
+
+function normalizeMarketContextAvailability(
+  value: unknown,
+): NonNullable<TradeReview["marketContext"]>["availability"] {
+  if (!value || typeof value !== "object") return undefined
+  const item = value as Record<MarketContextTimeframeKey, unknown>
+
+  return {
+    "30m": normalizeMarketContextAvailabilityValue(item["30m"]),
+    "60m": normalizeMarketContextAvailabilityValue(item["60m"]),
+    "101": normalizeMarketContextAvailabilityValue(item["101"]),
+  }
+}
+
+function normalizeMarketContextTimeframeKey(value: unknown): MarketContextTimeframeKey | null {
+  if (value === "30m" || value === "60m" || value === "101") return value
+  return null
+}
+
+function normalizeMarketContextAttemptedTimeframes(
+  value: unknown,
+): NonNullable<TradeReview["marketContext"]>["attemptedTimeframes"] {
+  if (!Array.isArray(value)) return undefined
+
+  const normalized = value
+    .map(normalizeMarketContextTimeframeKey)
+    .filter((timeframe): timeframe is MarketContextTimeframeKey => Boolean(timeframe))
+
+  return normalized.length ? Array.from(new Set(normalized)) : undefined
+}
+
+function normalizeMarketContextFallbackStep(
+  value: unknown,
+): NonNullable<NonNullable<TradeReview["marketContext"]>["fallbackChain"]>[number] | null {
+  if (!value || typeof value !== "object") return null
+  const item = value as Record<string, unknown>
+  const timeframe = normalizeMarketContextTimeframeKey(item.timeframe)
+  if (!timeframe) return null
+
+  return {
+    timeframe,
+    status: normalizeMarketContextAvailabilityValue(item.status),
+    reason: normalizeOptionalString(item.reason),
+  }
+}
+
+function normalizeMarketContextFallbackChain(
+  value: unknown,
+): NonNullable<TradeReview["marketContext"]>["fallbackChain"] {
+  if (!Array.isArray(value)) return undefined
+  const normalized = value
+    .map(normalizeMarketContextFallbackStep)
+    .filter((step): step is NonNullable<NonNullable<TradeReview["marketContext"]>["fallbackChain"]>[number] => Boolean(step))
+
+  return normalized.length ? normalized : undefined
+}
+
+function normalizeMarketContextSummary(value: unknown): NonNullable<TradeReview["marketContext"]>["summary"] {
+  if (!value || typeof value !== "object") return undefined
+  const item = value as Record<string, unknown>
+
+  return {
+    dailyText: item.dailyText ? String(item.dailyText) : undefined,
+    h60Text: item.h60Text ? String(item.h60Text) : undefined,
+    m30Text: item.m30Text ? String(item.m30Text) : undefined,
+    finalText: item.finalText ? String(item.finalText) : undefined,
+  }
+}
+
 function normalizeMarketContext(value: unknown): TradeReview["marketContext"] {
   if (!value || typeof value !== "object") return undefined
   const item = value as Partial<NonNullable<TradeReview["marketContext"]>>
@@ -204,6 +345,18 @@ function normalizeMarketContext(value: unknown): TradeReview["marketContext"] {
     timeframe: item.timeframe ? String(item.timeframe).trim() : undefined,
     entryTime: item.entryTime ? String(item.entryTime).trim() : undefined,
     entryPrice: normalizeOptionalNumber(item.entryPrice),
+    primaryTimeframe: normalizeMarketContextPrimaryTimeframe(item.primaryTimeframe),
+    timeframes: normalizeMarketContextTimeframes(item.timeframes),
+    availability: normalizeMarketContextAvailability(item.availability),
+    source: normalizeMarketContextSource(item.source),
+    fallbackReason: normalizeOptionalString(item.fallbackReason),
+    attemptedTimeframes: normalizeMarketContextAttemptedTimeframes(item.attemptedTimeframes),
+    fallbackChain: normalizeMarketContextFallbackChain(item.fallbackChain),
+    klineAvailable: typeof item.klineAvailable === "boolean" ? item.klineAvailable : undefined,
+    candlesCount: normalizeOptionalNumber(item.candlesCount),
+    manifestStatus: normalizeOptionalString(item.manifestStatus),
+    sliceSource: normalizeOptionalString(item.sliceSource),
+    summary: normalizeMarketContextSummary(item.summary),
     marketTrend: normalizeMarketTrend(item.marketTrend),
     priceLocation: normalizePriceLocation(item.priceLocation),
     pattern: normalizePattern(item.pattern),
@@ -230,13 +383,18 @@ function normalizeBehaviorEvidence(value: unknown): TradeReview["behaviorEvidenc
 function normalizeReviewSummary(value: unknown): TradeReview["reviewSummary"] {
   if (!value || typeof value !== "object") return undefined
   const item = value as Partial<NonNullable<TradeReview["reviewSummary"]>>
+  const result: NonNullable<TradeReview["reviewSummary"]> = {}
 
-  return {
-    marketText: item.marketText ? String(item.marketText) : undefined,
-    behaviorText: item.behaviorText ? String(item.behaviorText) : undefined,
-    heartText: item.heartText ? String(item.heartText) : undefined,
-    practiceText: item.practiceText ? String(item.practiceText) : undefined,
-  }
+  if (item.version) result.version = String(item.version)
+  if (item.thoughtText) result.thoughtText = String(item.thoughtText)
+  if (item.marketText) result.marketText = String(item.marketText)
+  if (item.behaviorText) result.behaviorText = String(item.behaviorText)
+  if (item.heartText) result.heartText = String(item.heartText)
+  if (item.judgementText) result.judgementText = String(item.judgementText)
+  if (item.practiceText) result.practiceText = String(item.practiceText)
+  if (item.generatedAt) result.generatedAt = String(item.generatedAt)
+
+  return Object.keys(result).length ? result : undefined
 }
 
 export function calculateHeartJudgement(
@@ -316,6 +474,9 @@ function normalizeTradeReview(value: unknown): TradeReview | null {
     reviewText: item.reviewText ? String(item.reviewText) : undefined,
     reviewSummary: normalizeReviewSummary(item.reviewSummary),
     heartJudgement: item.heartJudgement || calculateHeartJudgement(pnl, followedPlan, brokeRule),
+    tradeReviewSyncStatus: normalizeTradeReviewSyncStatus(item.tradeReviewSyncStatus),
+    tradeReviewLastSyncedAt: item.tradeReviewLastSyncedAt ? String(item.tradeReviewLastSyncedAt) : undefined,
+    syncError: item.syncError ? String(item.syncError) : undefined,
     createdAt,
     updatedAt: String(item.updatedAt || createdAt),
   }

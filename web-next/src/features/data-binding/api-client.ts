@@ -145,7 +145,7 @@ export async function syncRetestResultBinding({
   )
 }
 
-export async function syncTradeReviewBinding(review: Partial<TradeReview>) {
+export async function syncTradeReviewBinding(review: unknown) {
   const user = getDataBindingUserProfile()
   const payload: DataBindingTradeReviewPayload = {
     user,

@@ -97,6 +97,28 @@ test("data binding service stores assessment, training, kline and retest in runt
       symbolMasked: "****19",
       marketType: "a_share",
       timeframeKey: "1d",
+      marketContext: {
+        source: "server",
+        primaryTimeframe: "60m",
+        fallbackChain: [
+          { timeframe: "30m", status: "insufficient_data", reason: "K线数量不足，自动盘证暂不启用。" },
+          { timeframe: "60m", status: "ok", reason: "server slice 可用于盘证" }
+        ],
+        attemptedTimeframes: ["30m", "60m"],
+        klineAvailable: true,
+        fallbackReason: "",
+        candlesCount: 80,
+        sliceSource: "baostock",
+        manifestStatus: "ok",
+        availability: {
+          "30m": "insufficient_data",
+          "60m": "ok",
+          "101": "missing"
+        },
+        summary: {
+          finalText: "最终盘证：以60分钟盘证为主，冲高回落，不构成交易建议。"
+        }
+      },
       buyReason: "看到快速拉升，担心错过机会。",
       sellReason: "回看后发现当时没有写清边界。",
       strongestThought: "怕错过",
@@ -104,6 +126,15 @@ test("data binding service stores assessment, training, kline and retest in runt
       wasPlanned: false,
       changedPlanDuringTrade: true,
       hadExitRule: false,
+      reviewSummary: {
+        version: "pan_xin_he_zheng_v1",
+        thoughtText: "当时那一念：怕错过。",
+        marketText: "最终盘证：以日线位置回看为主。",
+        behaviorText: "当时那只手：未按计划，破戒。",
+        judgementText: "贼胜：钱赚了，但这笔是心贼赢了。",
+        practiceText: "给自己三分钟，不用一根 K线证明自己。",
+        generatedAt: "2026-06-12T11:09:00.000Z"
+      },
       ocrDraft: {
         status: "provider_not_configured",
         provider: "manual_confirmation",
@@ -195,12 +226,26 @@ test("data binding service stores assessment, training, kline and retest in runt
   assert.equal(tradeReview.review.wasPlanned, false);
   assert.equal(tradeReview.review.changedPlanDuringTrade, true);
   assert.equal(tradeReview.review.hadExitRule, false);
+  assert.equal(tradeReview.review.reviewSummary.version, "pan_xin_he_zheng_v1");
+  assert.equal(tradeReview.review.reviewSummary.practiceText, "给自己三分钟，不用一根 K线证明自己。");
   assert.equal(tradeReview.review.ocrDraft.status, "provider_not_configured");
   assert.ok(["待回看", "待训练"].includes(tradeReview.review.crossEndStatusText));
   assert.ok(tradeReview.review.crossEndStatusSteps.some((step) => step.label === "待确认"));
   assert.ok(tradeReview.review.crossEndStatusSteps.some((step) => step.label === "已入镜"));
   assert.equal(tradeReview.review.marketContext.schemaVersion, "trade_review_market_context_v1");
   assert.equal(tradeReview.review.marketContext.marketKey, "cn_equity");
+  assert.equal(tradeReview.review.marketContext.source, "server");
+  assert.equal(tradeReview.review.marketContext.primaryTimeframe, "60m");
+  assert.deepEqual(tradeReview.review.marketContext.attemptedTimeframes, ["30m", "60m"]);
+  assert.equal(tradeReview.review.marketContext.fallbackChain[0].timeframe, "30m");
+  assert.equal(tradeReview.review.marketContext.fallbackChain[0].status, "insufficient_data");
+  assert.equal(tradeReview.review.marketContext.fallbackChain[1].status, "ok");
+  assert.equal(tradeReview.review.marketContext.klineAvailable, true);
+  assert.equal(tradeReview.review.marketContext.candlesCount, 80);
+  assert.equal(tradeReview.review.marketContext.sliceSource, "baostock");
+  assert.equal(tradeReview.review.marketContext.manifestStatus, "ok");
+  assert.equal(tradeReview.review.marketContext.availability["60m"], "ok");
+  assert.equal(tradeReview.review.marketContext.summary.finalText, "最终盘证：以60分钟盘证为主，冲高回落，不构成交易建议。");
   assert.ok(["ready", "missing_cache", "failed"].includes(tradeReview.review.marketContext.status));
   if (tradeReview.review.marketContext.status === "ready") {
     assert.match(tradeReview.review.marketContext.positionLabel, /阶段|区间|波动/);
@@ -212,6 +257,9 @@ test("data binding service stores assessment, training, kline and retest in runt
   assert.ok(tradeReview.living_mirror_profile.tripleReflection.proofLine.includes("→ 追涨之镜增强"));
   assert.equal(tradeReviewList.trade_reviews.length, 1);
   assert.equal(tradeReviewList.trade_reviews[0].id, tradeReview.review.id);
+  assert.equal(tradeReviewList.trade_reviews[0].marketContext.primaryTimeframe, "60m");
+  assert.equal(tradeReviewList.trade_reviews[0].marketContext.fallbackChain[1].status, "ok");
+  assert.equal(tradeReviewList.trade_reviews[0].reviewSummary.practiceText, "给自己三分钟，不用一根 K线证明自己。");
   assert.equal(tradeReviewList.trade_reviews[0].crossEndStatusText, tradeReview.review.crossEndStatusText);
   assert.equal(tradeReviewList.living_mirror_profile.tripleReflection.title, "三证互照");
   assert.equal(ocrDraft.status, "provider_not_configured");
@@ -236,6 +284,7 @@ test("data binding service stores assessment, training, kline and retest in runt
   assert.equal(aliasSummary.training_records.length, 2);
   assert.equal(summary.kline_records.length, 1);
   assert.equal(summary.trade_reviews.length, 1);
+  assert.equal(summary.trade_reviews[0].reviewSummary.version, "pan_xin_he_zheng_v1");
   assert.equal(summary.trade_reviews[0].crossEndStatusText, "已复测");
   assert.equal(summary.mirror_report.mainMirror, "追涨之镜");
   assert.equal(summary.mirror_report.schemaVersion, "living_mirror_v1");
@@ -273,6 +322,7 @@ test("data binding service stores assessment, training, kline and retest in runt
   assert.equal(reloadedSummary.training_records.length, 2);
   assert.equal(reloadedSummary.kline_records.length, 1);
   assert.equal(reloadedSummary.trade_reviews.length, 1);
+  assert.equal(reloadedSummary.trade_reviews[0].reviewSummary.practiceText, "给自己三分钟，不用一根 K线证明自己。");
   assert.equal(reloadedSummary.living_mirror_stats.loopRelapseCount, 1);
   assert.equal(reloadedSummary.living_mirror_profile.latestMarketContext.schemaVersion, "trade_review_market_context_v1");
   assert.equal(reloadedSummary.training_prescription.status, "dispatched");

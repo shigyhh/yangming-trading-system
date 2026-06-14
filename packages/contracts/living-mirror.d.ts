@@ -263,6 +263,16 @@ export type TradeReviewCrossEndStatusStep = {
   source: "miniprogram" | "web-next" | "server" | "admin" | string
 }
 
+export type TradeReviewSummary = {
+  version: "pan_xin_he_zheng_v1" | string
+  thoughtText?: string
+  marketText?: string
+  behaviorText?: string
+  judgementText?: string
+  practiceText?: string
+  generatedAt: string
+}
+
 export type TradeReview = {
   id: string
   reviewId?: string
@@ -294,6 +304,7 @@ export type TradeReview = {
   reviewText: string
   ocrDraft?: TradeReviewOcrDraft | null
   marketContext?: TradeReviewMarketContext | null
+  reviewSummary?: TradeReviewSummary | null
   crossEndStatus?: TradeReviewCrossEndStatusKey
   crossEndStatusText?: TradeReviewCrossEndStatusText
   crossEndStatusSteps?: TradeReviewCrossEndStatusStep[]
@@ -318,6 +329,25 @@ export type TradeReviewMarketContext = {
   dataEnd: string
   candleCount: number
   source: string
+  fallbackReason?: string
+  primaryTimeframe?: "30m" | "60m" | "101" | string
+  attemptedTimeframes?: Array<"30m" | "60m" | "101" | string>
+  fallbackChain?: Array<{
+    timeframe: "30m" | "60m" | "101" | string
+    status: "ok" | "insufficient_data" | "missing" | "error" | string
+    reason?: string
+  }>
+  availability?: Record<string, "ok" | "insufficient_data" | "missing" | "error" | string>
+  summary?: {
+    dailyText?: string
+    h60Text?: string
+    m30Text?: string
+    finalText?: string
+  }
+  klineAvailable?: boolean
+  candlesCount?: number
+  manifestStatus?: string
+  sliceSource?: string
   rulesSummary: string
   reviewPrompt?: string
   complianceNotice: "仅用于回看当时市场环境与交易心理反应，不构成投资建议。" | string
