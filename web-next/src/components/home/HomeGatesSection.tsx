@@ -35,7 +35,7 @@ const gates: Gate[] = [
     side: "left",
   },
   {
-    href: "/review",
+    href: "/trade-review",
     mark: "盘",
     name: "真实复盘",
     line: "不复盘行情对错，只复盘谁在下单。",

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AppBottomNav } from "@/components/app-bottom-nav";
+import { SiteFooter } from "@/components/site-footer";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -26,6 +27,7 @@ export default function RootLayout({
     >
       <body className="font-function min-h-full flex flex-col">
         {children}
+        <SiteFooter />
         <AppBottomNav />
       </body>
     </html>

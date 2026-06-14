@@ -187,6 +187,7 @@ export default function HomeStillWaterHero() {
       ref={rootRef}
       id="hero"
       data-home-roll="hero"
+      data-home-scene="1"
       data-phase={phase}
       aria-label="阳明心学交易系统首屏"
       className={styles.root}

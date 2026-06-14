@@ -14,7 +14,7 @@ const waterSealEntries = [
     description: "查看今日已照见的一念。",
   },
   {
-    href: "/review",
+    href: "/trade-review",
     glyph: "review" as const,
     label: "真实复盘",
     description: "只复盘谁在下单。",

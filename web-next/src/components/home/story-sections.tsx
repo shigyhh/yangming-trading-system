@@ -272,9 +272,11 @@ export function StorySections() {
       ref={rootRef}
       id="three-breaths"
       data-home-roll="three-breaths"
+      data-home-scene="2"
       aria-label="三息入照"
       className="relative z-20 min-h-[230svh] overflow-x-clip overflow-y-visible px-5 md:px-8"
     >
+      <span data-home-scene="3" className="pointer-events-none absolute left-0 top-[62svh] h-px w-px" aria-hidden="true" />
       <div data-three-breath-stage className="relative flex min-h-[100svh] items-start justify-center pt-[14svh] pb-24 md:pt-[12svh] md:pb-28">
         <div data-breath-panel="second" className="absolute -top-[12svh] inset-x-0 mx-auto flex min-h-[100svh] max-w-[1080px] flex-col items-center justify-center text-center md:-top-[10svh]">
           <div className="relative flex min-h-[24rem] w-full flex-col items-center justify-center gap-6 md:min-h-[30rem] md:gap-7">

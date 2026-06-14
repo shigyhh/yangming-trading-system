@@ -5,6 +5,7 @@ import test from "node:test"
 const homeShellUrl = new URL("./cinematic-home.tsx", import.meta.url)
 const heroUrl = new URL("./hero-section.tsx", import.meta.url)
 const storySectionsUrl = new URL("./story-sections.tsx", import.meta.url)
+const homeMobileScrollGuideUrl = new URL("./HomeMobileScrollGuide.tsx", import.meta.url)
 const stillHeroUrl = new URL("./HomeStillWaterHero.tsx", import.meta.url)
 const stillHeroCssUrl = new URL("./HomeStillWaterHero.module.css", import.meta.url)
 const heroRightWaitingMirrorUrl = new URL("./HeroRightWaitingMirror.tsx", import.meta.url)
@@ -14,6 +15,7 @@ const mindLakeBackdropUrl = new URL("./HomeMindLakeBackdrop.tsx", import.meta.ur
 const mindLakeBackdropCssUrl = new URL("./HomeMindLakeBackdrop.module.css", import.meta.url)
 const topNavUrl = new URL("./top-nav.tsx", import.meta.url)
 const appBottomNavUrl = new URL("../app-bottom-nav.tsx", import.meta.url)
+const siteFooterUrl = new URL("../site-footer.tsx", import.meta.url)
 const layoutUrl = new URL("../../app/layout.tsx", import.meta.url)
 const globalsCssUrl = new URL("../../app/globals.css", import.meta.url)
 const reflectAliasUrl = new URL("../../app/reflect/page.tsx", import.meta.url)
@@ -76,12 +78,12 @@ test("home first viewport is a still-water seeing entrance", async () => {
   assert.equal(homeShell.includes("HomeGatesSection"), false, "home should not render the five-gate directory as the second screen")
   assert.equal(homeShell.includes("顺这片水，往下走"), false, "home should stay a single world-view entrance, not a directory scroll")
   assert.equal(homeShell.includes("PersonalityGrid"), false, "home should not turn the second breath into a product grid")
-  assert.ok(homeShell.includes("本系统仅用于交易认知、行为训练与风险教育；"), "home should keep the compliance copy")
-  assert.ok(homeShell.includes("不荐股、不喊单、不承诺收益。"), "home should keep the compliance copy")
-  assert.ok(homeShell.includes("sticky bottom-[max(.75rem,env(safe-area-inset-bottom))]"), "home compliance should sit at the screen bottom safe area")
-  assert.ok(homeShell.includes("text-[rgba(220,212,195,.32)]"), "home compliance should be visually quiet")
-  assert.ok(homeShell.includes("pointer-events-none"), "home compliance should not block the final one-thought entrance")
-  assert.ok(homeShell.includes("mt-24"), "home compliance should keep distance from the main third-breath story")
+  assert.equal(homeShell.includes('id="compliance"'), false, "home should not keep a duplicate screen-bottom compliance footer")
+  assert.equal(
+    homeShell.includes("sticky bottom-[max(.75rem,env(safe-area-inset-bottom))]"),
+    false,
+    "home should leave compliance and ICP to the shared site footer",
+  )
 
   assert.ok(waterStage.includes("canvasRef"), "shared water stage should own the only page-level canvas")
   assert.ok(waterStage.includes("ripplesRef"), "shared water stage should manage ripples")
@@ -343,7 +345,7 @@ test("home first viewport is a still-water seeing entrance", async () => {
     assert.equal(stillHero.includes(forbiddenMarketToken), false, `hero should not include readable market info: ${forbiddenMarketToken}`)
   })
 
-  ;["/today-sealed", "/review", "/mind-archive", "/lake"].forEach((href) => {
+  ;["/today-sealed", "/trade-review", "/mind-archive", "/lake"].forEach((href) => {
     assert.ok(topNav.includes(`href: "${href}"`), `home nav missing route: ${href}`)
   })
   assert.ok(topNav.includes("privateNavLinks"), "home top nav should keep private route group separate")
@@ -364,12 +366,72 @@ test("home first viewport is a still-water seeing entrance", async () => {
   })
   assert.ok(appBottomNav.includes("shouldShowBottomNav"), "bottom nav should be route-scoped instead of shown on the home page")
   assert.match(reflectAlias, /getTodayInsightRecord/)
-  assert.match(reviewAlias, /ReviewPageContent/)
-  assert.match(reviewAlias, /createTradeReview/)
-  assert.match(tradeReviewAlias, /redirect\("\/review"\)/)
+  assert.match(reviewAlias, /redirect\(`\/trade-review/)
+  assert.match(tradeReviewAlias, /ReviewPageContent/)
+  assert.match(tradeReviewAlias, /createTradeReview/)
   assert.match(archiveAlias, /redirect\("\/mind-archive"\)/)
   assert.match(lakeAlias, /<OneThoughtLakePage \/>/)
   assert.match(scrollAlias, /redirect\("\/mirror-scroll"\)/)
   assert.match(meAlias, /redirect\("\/me\/archive"\)/)
   assert.match(meArchiveAlias, /redirect\("\/mind-archive"\)/)
+})
+
+test("home mobile scroll guide is scoped, interruptible, and session-gated", async () => {
+  const homeShell = await readFile(homeShellUrl, "utf8")
+  const guide = await readFile(homeMobileScrollGuideUrl, "utf8")
+  const stillHero = await readFile(stillHeroUrl, "utf8")
+  const storySections = await readFile(storySectionsUrl, "utf8")
+  const todaySealed = await readFile(new URL("../../app/today-sealed/page.tsx", import.meta.url), "utf8")
+  const reviewPage = await readFile(reviewAliasUrl, "utf8")
+  const mindArchive = await readFile(new URL("../../app/mind-archive/page.tsx", import.meta.url), "utf8")
+  const lakePage = await readFile(lakeAliasUrl, "utf8")
+
+  assert.ok(homeShell.includes("<HomeMobileScrollGuide />"), "home should mount the mobile-only scroll guide")
+  assert.ok(stillHero.includes('data-home-scene="1"'), "first viewport should expose a stable home scene anchor")
+  assert.ok(storySections.includes('data-home-scene="2"'), "second breath should expose a stable home scene anchor")
+  assert.ok(storySections.includes('data-home-scene="3"'), "third breath should expose a stable home scene anchor")
+  assert.ok(guide.includes('SCENE_TARGET_SELECTOR = "[data-home-scene=\\"3\\"]"'), "guide should target the third home scene")
+  assert.ok(guide.includes('SESSION_KEY = "home_mobile_scroll_guide_seen"'), "guide should be gated by the requested session key")
+  assert.ok(guide.includes('MOBILE_QUERY = "(max-width: 768px)"'), "guide should be mobile-only")
+  assert.ok(guide.includes('REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)"'), "guide should respect reduced motion")
+  assert.ok(guide.includes("GUIDE_DELAY_MS = 1400"), "guide should wait briefly before starting")
+  assert.ok(guide.includes("GUIDE_DURATION_MS = 8000"), "guide should scroll slowly")
+  assert.ok(guide.includes("requestAnimationFrame"), "guide should use requestAnimationFrame")
+  assert.equal(guide.includes("setInterval"), false, "guide should not use setInterval")
+  assert.equal(guide.includes("scrollIntoView"), false, "guide should not jump with scrollIntoView")
+  ;["touchstart", "wheel", "pointerdown", "keydown", "click", "scroll"].forEach((eventName) => {
+    assert.ok(guide.includes(eventName), `guide should stop on ${eventName}`)
+  })
+  assert.ok(guide.includes("handleUserIntent"), "user input should stop the guide without blocking CTA clicks")
+  assert.ok(guide.includes("handleManualScroll"), "manual scroll should stop the guide")
+
+  ;[todaySealed, reviewPage, mindArchive, lakePage].forEach((source) => {
+    assert.equal(source.includes("HomeMobileScrollGuide"), false, "mobile scroll guide should stay home-only")
+    assert.equal(source.includes("home_mobile_scroll_guide_seen"), false, "inner pages should not own home scroll state")
+  })
+})
+
+test("site footer shows compliance copy and ICP on public pages only", async () => {
+  const layout = await readFile(layoutUrl, "utf8")
+  const footer = await readFile(siteFooterUrl, "utf8")
+
+  assert.ok(layout.includes("SiteFooter"), "root layout should mount the shared site footer")
+  assert.ok(layout.includes("<SiteFooter />"), "site footer should sit outside page content")
+  assert.ok(footer.includes("usePathname"), "site footer should be route-scoped")
+  ;["/", "/today-sealed", "/review", "/trade-review", "/mind-archive", "/archive", "/lake", "/one-thought-lake"].forEach((route) => {
+    assert.ok(footer.includes(`"${route}"`), `site footer missing public route: ${route}`)
+  })
+  ;["/assessment-entry", "/assessment-ritual", "/assessment", "/reflect"].forEach((route) => {
+    assert.equal(footer.includes(`"${route}"`), false, `site footer should not be forced onto immersive route: ${route}`)
+  })
+  assert.ok(footer.includes("本系统仅用于交易认知、行为训练与风险教育；"), "site footer should include the compliance lead")
+  assert.ok(footer.includes("不荐股、不喊单、不承诺收益。"), "site footer should include the compliance boundary")
+  assert.equal(footer.includes("<p>本系统仅用于交易认知、行为训练与风险教育；</p>"), false, "site footer should not split compliance into stacked lines")
+  assert.equal(footer.includes("<p>不荐股、不喊单、不承诺收益。</p>"), false, "site footer should not split compliance into stacked lines")
+  assert.ok(footer.includes("whitespace-nowrap"), "site footer should keep desktop content on one line")
+  assert.ok(footer.includes("湘ICP备2026021493号-1"), "site footer should show ICP filing")
+  assert.ok(footer.includes('href="https://beian.miit.gov.cn"'), "ICP should link to MIIT")
+  assert.ok(footer.includes('target="_blank"'), "ICP should open in a new tab")
+  assert.ok(footer.includes('rel="noreferrer"'), "ICP link should avoid referrer leakage")
+  assert.ok(footer.includes("border-[rgba(217,189,122,.12)]"), "site footer should keep the quiet dark-gold style")
 })
