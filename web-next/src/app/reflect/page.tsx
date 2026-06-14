@@ -325,7 +325,7 @@ function ReflectPageContent() {
     if (updated) setActiveEvent(updated)
 
     if (actualAction === "traded") {
-      router.push(`/review?linkedOneThoughtEventId=${encodeURIComponent(event.id)}`)
+      router.push(`/trade-review?linkedOneThoughtEventId=${encodeURIComponent(event.id)}`)
       return
     }
 
