@@ -8,6 +8,7 @@ import ts from "typescript"
 const repositoryUrl = new URL("./tradeReviewRepository.ts", import.meta.url)
 const klineContextServiceUrl = new URL("./klineContextService.ts", import.meta.url)
 const panXinReportRulesUrl = new URL("./panXinReport.ts", import.meta.url)
+const capitalStabilityUrl = new URL("./capitalStability.ts", import.meta.url)
 const oneThoughtRepositoryUrl = new URL("../mind-archive/oneThoughtEventRepository.ts", import.meta.url)
 const tradeReviewPageUrl = new URL("../../app/trade-review/page.tsx", import.meta.url)
 const reviewRedirectPageUrl = new URL("../../app/review/page.tsx", import.meta.url)
@@ -326,6 +327,9 @@ test("P2 review page requires a linked oneThoughtEvent and carries its reflectio
     "marketContext",
     "behaviorEvidence",
     "reviewSummary",
+    "accountSnapshot",
+    "riskEvidence",
+    "capitalStability",
     "getMultiTimeframeKlineContext",
     "自动识别盘面",
     "盘面识别结果",
@@ -358,6 +362,24 @@ test("P2 review page requires a linked oneThoughtEvent and carries its reflectio
     "tradeReviewLastSyncedAt",
     "syncError",
     "updateTradeReview(review.id",
+    "buildCapitalStabilityResult",
+    "资金证",
+    "不只看这笔赚没赚，要看这笔有没有让资金开始失稳。",
+    "交易前账户权益",
+    "交易后账户权益",
+    "本笔仓位金额",
+    "原计划最大风险",
+    "本笔实际亏损",
+    "杠杆倍数",
+    "手续费",
+    "是否加仓",
+    "是否移动止损",
+    "是否临盘改计划",
+    "accountEquityBefore",
+    "accountEquityAfter",
+    "positionValue",
+    "plannedRiskAmount",
+    "actualLossAmount",
     "confidenceLabels",
     "dataSourceLabels",
     "editedByUser",
@@ -715,6 +737,11 @@ test("P2.3 trade review submit renders the PanXinHeZheng report from the created
     "setCreatedReview(review)",
     "setCreatedReportEvent(selectedEvent)",
     "<PanXinHeZhengReport review={createdReview} event={createdReportEvent} />",
+    "capitalStability",
+    "buildCapitalStabilityResult({",
+    "tradeReview: created",
+    "recentTradeReviews",
+    "linkedOneThoughtEvent: selectedEvent",
     "最近真实复盘",
     "查看盘心合证报告",
     "<PanXinHeZhengReport review={historyReview} event={null} />",
@@ -726,7 +753,8 @@ test("P2.3 trade review submit renders the PanXinHeZheng report from the created
 test("P2.3 PanXinHeZheng report shows thought, market, hand, judgement and deterministic practice", async () => {
   const report = await readFile(panXinReportUrl, "utf8")
   const reportRules = await readFile(panXinReportRulesUrl, "utf8")
-  const reportSurface = `${report}\n${reportRules}`
+  const capitalStabilityRules = await readFile(capitalStabilityUrl, "utf8")
+  const reportSurface = `${report}\n${reportRules}\n${capitalStabilityRules}`
 
   ;[
     "export function PanXinHeZhengReport",
@@ -734,6 +762,7 @@ test("P2.3 PanXinHeZheng report shows thought, market, hand, judgement and deter
     "当时那张盘",
     "当时那只手",
     "这笔心性判定",
+    "这笔资金是否稳定",
     "下次同类场景修行",
     "交易之后，回到当时那一念。",
     "日线看大势。",
@@ -757,6 +786,18 @@ test("P2.3 PanXinHeZheng report shows thought, market, hand, judgement and deter
     "钱赚了，但这笔是心贼赢了。",
     "钱亏了，但心没有失守。",
     "钱也亏了，心也被带走了。",
+    "稳中有戒",
+    "钱稳心动",
+    "钱动心乱",
+    "双失守",
+    "资金波动可控，规则基本守住。",
+    "资金暂时没坏，但心还在动。赚钱不代表这笔是正的。",
+    "补上账户权益、仓位金额或计划风险，才能看清这笔交易有没有让资金失稳。",
+    "capitalStability",
+    "capitalStabilityCopy",
+    "riskPctOfEquity",
+    "positionPctOfEquity",
+    "exceededPlannedRisk",
     "心还在动时，不加仓。",
     "先守规则，再谈判断。",
     "给自己三分钟，不用一根 K线证明自己。",

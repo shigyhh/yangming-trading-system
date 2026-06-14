@@ -29,6 +29,7 @@ import {
   getMultiTimeframeKlineContext,
   type MultiTimeframeKlineContextResult,
 } from "@/lib/trade-review/klineContextService"
+import { buildCapitalStabilityResult } from "@/lib/trade-review/capitalStability"
 import { buildPanXinReviewSummary } from "@/lib/trade-review/panXinReport"
 import {
   createTradeReview,
@@ -254,6 +255,13 @@ function ReviewPageContent() {
   const [exitPrice, setExitPrice] = useState("")
   const [quantity, setQuantity] = useState("")
   const [pnl, setPnl] = useState("")
+  const [accountEquityBefore, setAccountEquityBefore] = useState("")
+  const [accountEquityAfter, setAccountEquityAfter] = useState("")
+  const [positionValue, setPositionValue] = useState("")
+  const [plannedRiskAmount, setPlannedRiskAmount] = useState("")
+  const [actualLossAmount, setActualLossAmount] = useState("")
+  const [leverage, setLeverage] = useState("")
+  const [fee, setFee] = useState("")
   const [followedPlan, setFollowedPlan] = useState(true)
   const [brokeRule, setBrokeRule] = useState(false)
   const [changedPlanIntraday, setChangedPlanIntraday] = useState(false)
@@ -509,20 +517,40 @@ function ReviewPageContent() {
         movedStopLoss,
         emotionDrivenEntry,
       },
+      accountSnapshot: {
+        accountEquityBefore: optionalNumber(accountEquityBefore),
+        accountEquityAfter: optionalNumber(accountEquityAfter),
+      },
+      riskEvidence: {
+        positionValue: optionalNumber(positionValue),
+        plannedRiskAmount: optionalNumber(plannedRiskAmount),
+        actualLossAmount: optionalNumber(actualLossAmount),
+        leverage: optionalNumber(leverage),
+        fee: optionalNumber(fee),
+        addedPosition,
+        movedStopLoss,
+        changedPlanIntraday,
+      },
       reviewText: reviewText.trim() || undefined,
       reviewSummary,
       tradeReviewSyncStatus: "pending",
     }
 
     const created = createTradeReview(input)
+    const capitalStability = buildCapitalStabilityResult({
+      tradeReview: created,
+      recentTradeReviews,
+      linkedOneThoughtEvent: selectedEvent,
+    })
     const panXinSummary = buildPanXinReviewSummary({
       event: selectedEvent,
       review: created,
       generatedAt: created.createdAt,
     })
-    const review = updateTradeReview(created.id, { reviewSummary: panXinSummary }) ?? {
+    const review = updateTradeReview(created.id, { reviewSummary: panXinSummary, capitalStability }) ?? {
       ...created,
       reviewSummary: panXinSummary,
+      capitalStability,
     }
     void syncTradeReviewToServer(review)
     setCreatedJudgement(review.heartJudgement)
@@ -887,6 +915,98 @@ function ReviewPageContent() {
               </label>
             </section>
 
+            <section className="review-panel review-form capital-proof-form" aria-label="资金证">
+              <p>资金证</p>
+              <h2>这笔资金是否开始失稳。</h2>
+              <span className="section-note">不只看这笔赚没赚，要看这笔有没有让资金开始失稳。</span>
+              <div className="form-grid capital-form-grid">
+                <label>
+                  交易前账户权益
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="any"
+                    value={accountEquityBefore}
+                    onChange={(event) => setAccountEquityBefore(event.target.value)}
+                  />
+                </label>
+                <label>
+                  交易后账户权益
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="any"
+                    value={accountEquityAfter}
+                    onChange={(event) => setAccountEquityAfter(event.target.value)}
+                  />
+                </label>
+                <label>
+                  本笔仓位金额
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="any"
+                    value={positionValue}
+                    onChange={(event) => setPositionValue(event.target.value)}
+                  />
+                </label>
+                <label>
+                  原计划最大风险
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="any"
+                    value={plannedRiskAmount}
+                    onChange={(event) => setPlannedRiskAmount(event.target.value)}
+                  />
+                </label>
+                <label>
+                  本笔实际亏损
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="any"
+                    value={actualLossAmount}
+                    onChange={(event) => setActualLossAmount(event.target.value)}
+                  />
+                </label>
+                <label>
+                  杠杆倍数
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="any"
+                    value={leverage}
+                    onChange={(event) => setLeverage(event.target.value)}
+                  />
+                </label>
+                <label>
+                  手续费
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="any"
+                    value={fee}
+                    onChange={(event) => setFee(event.target.value)}
+                  />
+                </label>
+              </div>
+              <div className="check-row capital-check-row">
+                <label>
+                  <input type="checkbox" checked={addedPosition} onChange={(event) => setAddedPosition(event.target.checked)} />
+                  是否加仓
+                </label>
+                <label>
+                  <input type="checkbox" checked={movedStopLoss} onChange={(event) => setMovedStopLoss(event.target.checked)} />
+                  是否移动止损
+                </label>
+                <label>
+                  <input type="checkbox" checked={changedPlanIntraday} onChange={(event) => setChangedPlanIntraday(event.target.checked)} />
+                  是否临盘改计划
+                </label>
+              </div>
+            </section>
+
             {previewJudgement ? (
               <section className="review-result" aria-live="polite">
                 <p>心性判定</p>
@@ -1179,6 +1299,7 @@ function ReviewPageContent() {
         select,
         input,
         textarea {
+          box-sizing: border-box;
           width: 100%;
           border: 1px solid rgba(216, 183, 111, 0.26);
           border-radius: 14px;
@@ -1426,6 +1547,14 @@ function ReviewPageContent() {
 
         .check-row input {
           width: auto;
+        }
+
+        .capital-proof-form h2 {
+          font-size: clamp(26px, 3.2vw, 42px);
+        }
+
+        .capital-check-row {
+          margin-bottom: 0;
         }
 
         .wide-label {

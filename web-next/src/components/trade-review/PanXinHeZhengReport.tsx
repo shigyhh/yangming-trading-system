@@ -2,6 +2,7 @@
 
 import type {
   ActualAction,
+  CapitalStabilityLevel,
   HeartJudgement,
   KlineContextResult,
   MarketContextDataSource,
@@ -123,6 +124,20 @@ const heartJudgementCopy: Record<HeartJudgement, { label: string; text: string }
   shuang_shu: { label: "双输", text: "钱也亏了，心也被带走了。" },
 }
 
+const capitalStabilityCopy: Record<CapitalStabilityLevel, { label: string; text: string }> = {
+  stable_with_guard: { label: "稳中有戒", text: "资金波动可控，规则基本守住。" },
+  money_stable_heart_moving: { label: "钱稳心动", text: "资金暂时没坏，但心还在动。赚钱不代表这笔是正的。" },
+  money_moving_heart_chaotic: {
+    label: "钱动心乱",
+    text: "资金波动开始被心贼牵动，仓位、风险或规则已经出现偏移。",
+  },
+  double_unstable: { label: "双失守", text: "钱也失守，心也失守。先停一笔，不用下一笔把自己救回来。" },
+  insufficient_data: {
+    label: "数据不足",
+    text: "补上账户权益、仓位金额或计划风险，才能看清这笔交易有没有让资金失稳。",
+  },
+}
+
 function formatText(value: string | number | undefined | null) {
   if (value === undefined || value === null || value === "") return "未记录"
   return String(value)
@@ -134,6 +149,10 @@ function formatNumber(value: number | undefined) {
 
 function formatBoolean(value: boolean | undefined) {
   return value ? "是" : "否"
+}
+
+function formatPercent(value: number | undefined) {
+  return typeof value === "number" && Number.isFinite(value) ? `${value}%` : "未记录"
 }
 
 function getTimeframeValues(result: KlineContextResult | null | undefined) {
@@ -173,6 +192,9 @@ export function PanXinHeZhengReport({ review, event }: { review: TradeReview; ev
   const primaryTimeframe = marketContext?.primaryTimeframe ?? null
   const behaviorEvidence = review.behaviorEvidence
   const judgement = heartJudgementCopy[review.heartJudgement]
+  const capitalStability = review.capitalStability
+  const capitalLevel = capitalStability?.level || "insufficient_data"
+  const capitalCopy = capitalStabilityCopy[capitalLevel]
   const fallbackText = getFallbackText({ primaryTimeframe, availability })
   const practiceSentence = persistedSummary?.practiceText || buildPanXinPracticeSentence({ event, review })
 
@@ -198,6 +220,16 @@ export function PanXinHeZhengReport({ review, event }: { review: TradeReview; ev
     { label: "entryPrice", value: formatNumber(review.entryPrice) },
     { label: "exitPrice", value: formatNumber(review.exitPrice) },
   ]
+  const capitalMetricRows = [
+    { label: "pnlPctOfEquity", value: formatPercent(capitalStability?.metrics.pnlPctOfEquity) },
+    { label: "positionPctOfEquity", value: formatPercent(capitalStability?.metrics.positionPctOfEquity) },
+    { label: "riskPctOfEquity", value: formatPercent(capitalStability?.metrics.riskPctOfEquity) },
+    { label: "exceededPlannedRisk", value: capitalStability?.metrics.exceededPlannedRisk ? "是" : "否" },
+    { label: "lossStreak", value: formatText(capitalStability?.metrics.lossStreak) },
+    { label: "brokeRuleLossPct", value: formatPercent(capitalStability?.metrics.brokeRuleLossPct) },
+  ]
+  const capitalReasons = capitalStability?.reasons.length ? capitalStability.reasons : [capitalCopy.text]
+  const capitalWarnings = capitalStability?.warnings.length ? capitalStability.warnings : []
 
   return (
     <section className="panxin-report" aria-label="盘心合证报告">
@@ -309,8 +341,55 @@ export function PanXinHeZhengReport({ review, event }: { review: TradeReview; ev
         <p className="judgement-copy">{judgement.text}</p>
       </article>
 
-      <article className="report-section practice-section">
+      <article className="report-section capital-section">
         <p>五</p>
+        <h3>这笔资金是否稳定</h3>
+        <div className="capital-status">
+          <div>
+            <span>level</span>
+            <strong>{capitalCopy.label}</strong>
+          </div>
+          {typeof capitalStability?.score === "number" ? (
+            <div>
+              <span>score</span>
+              <strong>{capitalStability.score}</strong>
+            </div>
+          ) : null}
+        </div>
+        <p className="capital-copy">{capitalCopy.text}</p>
+        <dl className="report-grid capital-metrics">
+          {capitalMetricRows.map((item) => (
+            <div key={item.label}>
+              <dt>{item.label}</dt>
+              <dd>{item.value}</dd>
+            </div>
+          ))}
+        </dl>
+        <div className="capital-lists">
+          <section>
+            <h4>reasons</h4>
+            <ul>
+              {capitalReasons.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </section>
+          {capitalWarnings.length ? (
+            <section>
+              <h4>warnings</h4>
+              <ul>
+                {capitalWarnings.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+        </div>
+        {capitalStability?.practiceText ? <strong className="capital-practice">{capitalStability.practiceText}</strong> : null}
+      </article>
+
+      <article className="report-section practice-section">
+        <p>六</p>
         <h3>下次同类场景修行</h3>
         <strong>{practiceSentence}</strong>
       </article>
@@ -501,6 +580,80 @@ export function PanXinHeZhengReport({ review, event }: { review: TradeReview; ev
           padding: 8px 16px;
         }
 
+        .capital-status {
+          align-items: center;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 12px;
+          margin-top: 16px;
+        }
+
+        .capital-status div {
+          border: 1px solid rgba(216, 183, 111, 0.18);
+          border-radius: 14px;
+          background: rgba(8, 8, 7, 0.22);
+          display: grid;
+          gap: 6px;
+          min-width: 0;
+          padding: 12px 14px;
+        }
+
+        .capital-status span,
+        .capital-lists h4 {
+          color: rgba(216, 183, 111, 0.52);
+          font-size: 12px;
+          font-weight: 500;
+          letter-spacing: 0.12em;
+          margin: 0;
+        }
+
+        .capital-status strong {
+          color: rgba(216, 183, 111, 0.9);
+          font-family: var(--font-serif);
+          font-size: 24px;
+          font-weight: 400;
+          line-height: 1.25;
+        }
+
+        .capital-copy {
+          color: rgba(244, 235, 221, 0.66);
+          line-height: 1.85;
+          margin: 12px 0 0;
+        }
+
+        .capital-lists {
+          display: grid;
+          gap: 12px;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          margin-top: 16px;
+        }
+
+        .capital-lists section {
+          border: 1px solid rgba(216, 183, 111, 0.12);
+          border-radius: 14px;
+          background: rgba(8, 8, 7, 0.22);
+          min-width: 0;
+          padding: 14px;
+        }
+
+        .capital-lists ul {
+          color: rgba(244, 235, 221, 0.72);
+          line-height: 1.8;
+          margin: 10px 0 0;
+          padding-left: 18px;
+        }
+
+        .capital-practice {
+          border-top: 1px solid rgba(216, 183, 111, 0.12);
+          color: rgba(244, 235, 221, 0.82);
+          display: block;
+          font-size: 15px;
+          font-weight: 500;
+          line-height: 1.85;
+          margin-top: 16px;
+          padding-top: 14px;
+        }
+
         @media (max-width: 760px) {
           .panxin-report {
             border-radius: 16px;
@@ -509,6 +662,7 @@ export function PanXinHeZhengReport({ review, event }: { review: TradeReview; ev
 
           .report-grid,
           .market-meta,
+          .capital-lists,
           .timeframe-grid,
           .timeframe-card dl {
             grid-template-columns: 1fr;
