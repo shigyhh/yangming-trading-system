@@ -12,7 +12,10 @@ import {
   getRecentSealedThoughtEvents,
 } from "@/lib/mind-archive/archiveStatsService"
 import { getRuleGuardReminders, type RuleGuardReminder } from "@/lib/rule-guard/ruleGuardService"
-import { listRecentTradeReviews } from "@/lib/trade-review/tradeReviewRepository"
+import {
+  listRecentTradeReviews,
+  listTradeReviewsByOneThoughtEvent,
+} from "@/lib/trade-review/tradeReviewRepository"
 import {
   DEFAULT_MIND_ARCHIVE_USER_ID,
   type ArchiveStats,
@@ -32,6 +35,14 @@ function formatTime(value: string) {
   })
 }
 
+function getMarketContextSummary(review?: TradeReview) {
+  return review?.marketContext?.summary?.finalText || review?.reviewSummary?.marketText
+}
+
+function getReviewPracticeText(review?: TradeReview) {
+  return review?.reviewSummary?.practiceText
+}
+
 export default function MindArchivePage() {
   const router = useRouter()
   const [stats, setStats] = useState<ArchiveStats | null>(null)
@@ -42,9 +53,18 @@ export default function MindArchivePage() {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
+      const sealedEvents = getRecentSealedThoughtEvents(DEFAULT_MIND_ARCHIVE_USER_ID, 5)
+      const linkedReviews = sealedEvents
+        .map((event) => listTradeReviewsByOneThoughtEvent(DEFAULT_MIND_ARCHIVE_USER_ID, event.id).at(0))
+        .filter((review): review is TradeReview => Boolean(review))
+      const recentReviews = listRecentTradeReviews(DEFAULT_MIND_ARCHIVE_USER_ID, 20)
+
       setStats(getMindArchiveStats(DEFAULT_MIND_ARCHIVE_USER_ID))
-      setRecentSealedEvents(getRecentSealedThoughtEvents(DEFAULT_MIND_ARCHIVE_USER_ID, 5))
-      setRecentTradeReviews(listRecentTradeReviews(DEFAULT_MIND_ARCHIVE_USER_ID, 3))
+      setRecentSealedEvents(sealedEvents)
+      setRecentTradeReviews([
+        ...linkedReviews,
+        ...recentReviews.filter((review) => !linkedReviews.some((linked) => linked.id === review.id)),
+      ])
       setHeartThiefProfile(getHeartThiefProfile(DEFAULT_MIND_ARCHIVE_USER_ID))
       setReminders(getRuleGuardReminders(DEFAULT_MIND_ARCHIVE_USER_ID))
     }, 0)
@@ -62,11 +82,11 @@ export default function MindArchivePage() {
 
   function openTradeReview(oneThoughtEventId?: string) {
     if (oneThoughtEventId) {
-      router.push(`/review?linkedOneThoughtEventId=${encodeURIComponent(oneThoughtEventId)}`)
+      router.push(`/trade-review?linkedOneThoughtEventId=${encodeURIComponent(oneThoughtEventId)}`)
       return
     }
 
-    router.push("/review")
+    router.push("/trade-review")
   }
 
   return (
@@ -104,6 +124,16 @@ export default function MindArchivePage() {
         }))}
         ruleGuardNotices={reminders.slice(0, 3)}
         completedReviewCount={recentTradeReviews.length}
+        reviewByEventId={Object.fromEntries(
+          recentTradeReviews.map((review) => [
+            review.linkedOneThoughtEventId,
+            {
+              heartJudgement: review.heartJudgement,
+              marketContextSummary: getMarketContextSummary(review),
+              practiceText: getReviewPracticeText(review),
+            },
+          ]),
+        )}
         onOpenMindArchive={openMindArchive}
         onOpenHeartMirrorScroll={() => router.push("/mind-scroll")}
         onOpenZhixingScroll={() => router.push("/zhixing-scroll")}

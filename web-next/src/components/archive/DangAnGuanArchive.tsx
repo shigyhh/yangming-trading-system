@@ -34,6 +34,9 @@ export type ThoughtEntry = {
   userReaction?: "seen" | "not_hit" | "stopped" | "still_moving"
   actualAction?: "no_trade" | "traded" | "paused" | "watched" | "unknown"
   reviewStatus?: "none" | "pending" | "completed"
+  heartJudgement?: "zheng_sheng" | "zei_sheng" | "zheng_kui" | "shuang_shu"
+  marketContextSummary?: string
+  practiceText?: string
 }
 
 export type RecurringThought = {
@@ -57,6 +60,7 @@ export type DangAnGuanArchiveProps = {
   recurringThoughts?: RecurringThought[]
   ruleGuardNotices?: RuleGuardNotice[]
   completedReviewCount?: number
+  reviewByEventId?: Record<string, Pick<ThoughtEntry, "heartJudgement" | "marketContextSummary" | "practiceText">>
   onOpenMindArchive?: () => void
   onOpenHeartMirrorScroll?: () => void
   onOpenZhixingScroll?: () => void
@@ -84,6 +88,13 @@ const reviewLabel: Record<NonNullable<ThoughtEntry["reviewStatus"]>, string> = {
   none: "无需复盘",
   pending: "待复盘",
   completed: "已复盘",
+}
+
+const heartJudgementLabel: Record<NonNullable<ThoughtEntry["heartJudgement"]>, string> = {
+  zheng_sheng: "正胜",
+  zei_sheng: "贼胜",
+  zheng_kui: "正亏",
+  shuang_shu: "双输",
 }
 
 const fallbackSummary: ArchiveSummary = {
@@ -189,6 +200,7 @@ export default function DangAnGuanArchive({
   recurringThoughts = [],
   ruleGuardNotices = [],
   completedReviewCount = 0,
+  reviewByEventId = {},
   onOpenMindArchive,
   onOpenHeartMirrorScroll,
   onOpenZhixingScroll,
@@ -296,25 +308,38 @@ export default function DangAnGuanArchive({
 
               <div className="danganguan-timeline">
                 {safeRecentEntries.length > 0 ? (
-                  safeRecentEntries.slice(0, 5).map((entry, index) => (
-                    <Reveal disabled={reduced} delay={index * 90} key={entry.id}>
-                      <article className="danganguan-entry">
-                        <span className="danganguan-node" aria-hidden="true" />
-                        <div className="danganguan-entry-head">
-                          <span>{entry.time}</span>
-                          <span>{entry.tradeMoment}</span>
-                        </div>
-                        <p className="danganguan-say">「{entry.os}」</p>
-                        <p className="danganguan-reflection">{entry.reflectionFinal}</p>
-                        <div className="danganguan-meta">
-                          <Meta label="心贼" value={entry.heartThief || "待显影"} active />
-                          <Meta label="反馈" value={entry.userReaction ? reactionLabel[entry.userReaction] : "待记录"} active />
-                          <Meta label="动作" value={entry.actualAction ? actionLabel[entry.actualAction] : "待记录"} />
-                          <Meta label="复盘" value={entry.reviewStatus ? reviewLabel[entry.reviewStatus] : "待记录"} />
-                        </div>
-                      </article>
-                    </Reveal>
-                  ))
+                  safeRecentEntries.slice(0, 5).map((entry, index) => {
+                    const linkedReview = reviewByEventId[entry.id]
+
+                    return (
+                      <Reveal disabled={reduced} delay={index * 90} key={entry.id}>
+                        <article className="danganguan-entry">
+                          <span className="danganguan-node" aria-hidden="true" />
+                          <div className="danganguan-entry-head">
+                            <span>{entry.time}</span>
+                            <span>{entry.tradeMoment}</span>
+                          </div>
+                          <p className="danganguan-say">「{entry.os}」</p>
+                          <p className="danganguan-reflection">{entry.reflectionFinal}</p>
+                          <div className="danganguan-meta">
+                            <Meta label="心贼" value={entry.heartThief || "待显影"} active />
+                            <Meta label="反馈" value={entry.userReaction ? reactionLabel[entry.userReaction] : "待记录"} active />
+                            <Meta label="动作" value={entry.actualAction ? actionLabel[entry.actualAction] : "待记录"} />
+                            <Meta label="复盘" value={entry.reviewStatus ? reviewLabel[entry.reviewStatus] : "待记录"} />
+                            {linkedReview?.heartJudgement ? (
+                              <Meta label="心判" value={heartJudgementLabel[linkedReview.heartJudgement]} active />
+                            ) : null}
+                            {linkedReview?.marketContextSummary ? (
+                              <Meta label="盘证" value={linkedReview.marketContextSummary} />
+                            ) : null}
+                            {linkedReview?.practiceText ? (
+                              <Meta label="下次修行" value={linkedReview.practiceText} />
+                            ) : null}
+                          </div>
+                        </article>
+                      </Reveal>
+                    )
+                  })
                 ) : (
                   <Reveal disabled={reduced}>
                     <div className="danganguan-empty-main">

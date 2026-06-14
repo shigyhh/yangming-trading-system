@@ -104,6 +104,18 @@ export default function ZhixingScrollPage() {
                   <dt>复盘心判</dt>
                   <dd>{item.heartJudgement || "未复盘"}</dd>
                 </div>
+                <div>
+                  <dt>盘证</dt>
+                  <dd>{item.marketContextSummary || "未复盘"}</dd>
+                </div>
+                <div>
+                  <dt>下次修行</dt>
+                  <dd>{item.practiceText || "未复盘"}</dd>
+                </div>
+                <div>
+                  <dt>是否已有盘证</dt>
+                  <dd>{item.hasMarketContext ? "已有盘证" : "未复盘"}</dd>
+                </div>
               </dl>
             </article>
           )) : (
@@ -114,7 +126,7 @@ export default function ZhixingScrollPage() {
         <div className="scroll-actions">
           <Link href="/mind-archive">回到档案馆</Link>
           <Link href="/mind-scroll">进入心镜长卷</Link>
-          <Link href="/review">进入真实复盘</Link>
+          <Link href="/trade-review">进入真实复盘</Link>
         </div>
       </main>
 

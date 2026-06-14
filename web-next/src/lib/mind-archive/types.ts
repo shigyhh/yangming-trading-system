@@ -218,6 +218,8 @@ export interface KlineContextResult {
     slopePct?: number
     volumeRatio?: number
   }
+  manifestStatus?: string
+  sliceSource?: string
   notes?: string[]
 }
 
@@ -234,6 +236,27 @@ export type TradeReviewMarketContext = {
   timeframe?: string
   entryTime?: string
   entryPrice?: number
+  primaryTimeframe?: "30m" | "60m" | "101" | null
+  timeframes?: Record<"30m" | "60m" | "101", KlineContextResult | null>
+  availability?: Record<"30m" | "60m" | "101", "ok" | "insufficient_data" | "missing" | "error">
+  source?: "server" | "manual"
+  fallbackReason?: string
+  attemptedTimeframes?: Array<"30m" | "60m" | "101">
+  fallbackChain?: Array<{
+    timeframe: "30m" | "60m" | "101"
+    status: "ok" | "insufficient_data" | "missing" | "error"
+    reason?: string
+  }>
+  klineAvailable?: boolean
+  candlesCount?: number
+  manifestStatus?: string
+  sliceSource?: string
+  summary?: {
+    dailyText?: string
+    h60Text?: string
+    m30Text?: string
+    finalText?: string
+  }
   marketTrend?: MarketTrend
   priceLocation?: PriceLocation
   pattern?: MarketPattern
@@ -252,11 +275,17 @@ export type TradeReviewBehaviorEvidence = {
 }
 
 export type TradeReviewSummary = {
+  version?: "pan_xin_he_zheng_v1" | string
+  thoughtText?: string
   marketText?: string
   behaviorText?: string
   heartText?: string
+  judgementText?: string
   practiceText?: string
+  generatedAt?: string
 }
+
+export type TradeReviewSyncStatus = "pending" | "synced" | "failed"
 
 export interface TradeReview {
   id: string
@@ -287,6 +316,9 @@ export interface TradeReview {
   reviewText?: string
   reviewSummary?: TradeReviewSummary
   heartJudgement: HeartJudgement
+  tradeReviewSyncStatus?: TradeReviewSyncStatus
+  tradeReviewLastSyncedAt?: string
+  syncError?: string
   createdAt: string
   updatedAt: string
 }

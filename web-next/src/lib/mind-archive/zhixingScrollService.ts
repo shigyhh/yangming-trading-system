@@ -20,6 +20,7 @@ export type ZhixingState =
 
 export type ZhixingScrollItem = {
   oneThoughtEventId: string
+  linkedOneThoughtEventId?: string
   tradeReviewId?: string
   createdAt: string
   os: string
@@ -31,6 +32,9 @@ export type ZhixingScrollItem = {
   followedPlan?: boolean
   brokeRule?: boolean
   heartJudgement?: HeartJudgement
+  marketContextSummary?: string
+  practiceText?: string
+  hasMarketContext: boolean
   zhixingState: ZhixingState
 }
 
@@ -63,6 +67,7 @@ export function getZhixingScrollItems(
 
     return {
       oneThoughtEventId: event.id,
+      linkedOneThoughtEventId: review?.linkedOneThoughtEventId,
       tradeReviewId: review?.id,
       createdAt: review?.createdAt || event.updatedAt || event.createdAt,
       os: event.os,
@@ -74,6 +79,9 @@ export function getZhixingScrollItems(
       followedPlan: review?.followedPlan,
       brokeRule: review?.brokeRule,
       heartJudgement: review?.heartJudgement,
+      marketContextSummary: review?.marketContext?.summary?.finalText || review?.reviewSummary?.marketText,
+      practiceText: review?.reviewSummary?.practiceText,
+      hasMarketContext: Boolean(review?.marketContext?.summary?.finalText || review?.marketContext?.timeframes || review?.reviewSummary?.marketText),
       zhixingState,
     }
   })
