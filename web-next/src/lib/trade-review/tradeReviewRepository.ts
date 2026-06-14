@@ -380,6 +380,41 @@ function normalizeBehaviorEvidence(value: unknown): TradeReview["behaviorEvidenc
   }
 }
 
+function normalizeAccountSnapshot(value: unknown): TradeReview["accountSnapshot"] {
+  if (!value || typeof value !== "object") return undefined
+  const item = value as Partial<NonNullable<TradeReview["accountSnapshot"]>>
+  const result: NonNullable<TradeReview["accountSnapshot"]> = {}
+
+  const accountEquityBefore = normalizeOptionalNumber(item.accountEquityBefore)
+  const accountEquityAfter = normalizeOptionalNumber(item.accountEquityAfter)
+  if (accountEquityBefore !== undefined) result.accountEquityBefore = accountEquityBefore
+  if (accountEquityAfter !== undefined) result.accountEquityAfter = accountEquityAfter
+
+  return Object.keys(result).length ? result : undefined
+}
+
+function normalizeRiskEvidence(value: unknown): TradeReview["riskEvidence"] {
+  if (!value || typeof value !== "object") return undefined
+  const item = value as Partial<NonNullable<TradeReview["riskEvidence"]>>
+  const result: NonNullable<TradeReview["riskEvidence"]> = {}
+  const positionValue = normalizeOptionalNumber(item.positionValue)
+  const plannedRiskAmount = normalizeOptionalNumber(item.plannedRiskAmount)
+  const actualLossAmount = normalizeOptionalNumber(item.actualLossAmount)
+  const leverage = normalizeOptionalNumber(item.leverage)
+  const fee = normalizeOptionalNumber(item.fee)
+
+  if (positionValue !== undefined) result.positionValue = positionValue
+  if (plannedRiskAmount !== undefined) result.plannedRiskAmount = plannedRiskAmount
+  if (actualLossAmount !== undefined) result.actualLossAmount = actualLossAmount
+  if (leverage !== undefined) result.leverage = leverage
+  if (fee !== undefined) result.fee = fee
+  if ("addedPosition" in item) result.addedPosition = Boolean(item.addedPosition)
+  if ("movedStopLoss" in item) result.movedStopLoss = Boolean(item.movedStopLoss)
+  if ("changedPlanIntraday" in item) result.changedPlanIntraday = Boolean(item.changedPlanIntraday)
+
+  return Object.keys(result).length ? result : undefined
+}
+
 function normalizeReviewSummary(value: unknown): TradeReview["reviewSummary"] {
   if (!value || typeof value !== "object") return undefined
   const item = value as Partial<NonNullable<TradeReview["reviewSummary"]>>
@@ -395,6 +430,62 @@ function normalizeReviewSummary(value: unknown): TradeReview["reviewSummary"] {
   if (item.generatedAt) result.generatedAt = String(item.generatedAt)
 
   return Object.keys(result).length ? result : undefined
+}
+
+function normalizeCapitalStabilityLevel(value: unknown): NonNullable<TradeReview["capitalStability"]>["level"] | null {
+  if (
+    value === "stable_with_guard" ||
+    value === "money_stable_heart_moving" ||
+    value === "money_moving_heart_chaotic" ||
+    value === "double_unstable" ||
+    value === "insufficient_data"
+  ) {
+    return value
+  }
+  return null
+}
+
+function normalizeCapitalStabilityMetrics(value: unknown): NonNullable<TradeReview["capitalStability"]>["metrics"] {
+  if (!value || typeof value !== "object") return {}
+  const item = value as Partial<NonNullable<TradeReview["capitalStability"]>["metrics"]>
+  const result: NonNullable<TradeReview["capitalStability"]>["metrics"] = {}
+  const pnlPctOfEquity = normalizeOptionalNumber(item.pnlPctOfEquity)
+  const positionPctOfEquity = normalizeOptionalNumber(item.positionPctOfEquity)
+  const riskPctOfEquity = normalizeOptionalNumber(item.riskPctOfEquity)
+  const lossStreak = normalizeOptionalNumber(item.lossStreak)
+  const brokeRuleLossPct = normalizeOptionalNumber(item.brokeRuleLossPct)
+  const zeiShengCount = normalizeOptionalNumber(item.zeiShengCount)
+  const shuangShuCount = normalizeOptionalNumber(item.shuangShuCount)
+
+  if (pnlPctOfEquity !== undefined) result.pnlPctOfEquity = pnlPctOfEquity
+  if (positionPctOfEquity !== undefined) result.positionPctOfEquity = positionPctOfEquity
+  if (riskPctOfEquity !== undefined) result.riskPctOfEquity = riskPctOfEquity
+  if ("exceededPlannedRisk" in item) result.exceededPlannedRisk = Boolean(item.exceededPlannedRisk)
+  if (lossStreak !== undefined) result.lossStreak = lossStreak
+  if (brokeRuleLossPct !== undefined) result.brokeRuleLossPct = brokeRuleLossPct
+  if (zeiShengCount !== undefined) result.zeiShengCount = zeiShengCount
+  if (shuangShuCount !== undefined) result.shuangShuCount = shuangShuCount
+
+  return result
+}
+
+function normalizeCapitalStability(value: unknown): TradeReview["capitalStability"] {
+  if (!value || typeof value !== "object") return undefined
+  const item = value as Partial<NonNullable<TradeReview["capitalStability"]>>
+  const level = normalizeCapitalStabilityLevel(item.level)
+  if (!level) return undefined
+  const score = item.score === null ? null : normalizeOptionalNumber(item.score)
+
+  return {
+    version: "capital_stability_v1",
+    level,
+    score,
+    reasons: Array.isArray(item.reasons) ? item.reasons.map((reason) => String(reason)).filter(Boolean) : [],
+    warnings: Array.isArray(item.warnings) ? item.warnings.map((warning) => String(warning)).filter(Boolean) : [],
+    metrics: normalizeCapitalStabilityMetrics(item.metrics),
+    practiceText: item.practiceText ? String(item.practiceText) : undefined,
+    generatedAt: String(item.generatedAt || new Date().toISOString()),
+  }
 }
 
 export function calculateHeartJudgement(
@@ -471,8 +562,11 @@ function normalizeTradeReview(value: unknown): TradeReview | null {
       : undefined,
     marketContext: normalizeMarketContext(item.marketContext),
     behaviorEvidence: normalizeBehaviorEvidence(item.behaviorEvidence),
+    accountSnapshot: normalizeAccountSnapshot(item.accountSnapshot),
+    riskEvidence: normalizeRiskEvidence(item.riskEvidence),
     reviewText: item.reviewText ? String(item.reviewText) : undefined,
     reviewSummary: normalizeReviewSummary(item.reviewSummary),
+    capitalStability: normalizeCapitalStability(item.capitalStability),
     heartJudgement: item.heartJudgement || calculateHeartJudgement(pnl, followedPlan, brokeRule),
     tradeReviewSyncStatus: normalizeTradeReviewSyncStatus(item.tradeReviewSyncStatus),
     tradeReviewLastSyncedAt: item.tradeReviewLastSyncedAt ? String(item.tradeReviewLastSyncedAt) : undefined,

@@ -274,6 +274,49 @@ export type TradeReviewBehaviorEvidence = {
   emotionDrivenEntry?: boolean
 }
 
+export type TradeReviewAccountSnapshot = {
+  accountEquityBefore?: number
+  accountEquityAfter?: number
+}
+
+export type TradeReviewRiskEvidence = {
+  positionValue?: number
+  plannedRiskAmount?: number
+  actualLossAmount?: number
+  leverage?: number
+  fee?: number
+  addedPosition?: boolean
+  movedStopLoss?: boolean
+  changedPlanIntraday?: boolean
+}
+
+export type CapitalStabilityLevel =
+  | "stable_with_guard"
+  | "money_stable_heart_moving"
+  | "money_moving_heart_chaotic"
+  | "double_unstable"
+  | "insufficient_data"
+
+export type TradeReviewCapitalStability = {
+  version: "capital_stability_v1"
+  level: CapitalStabilityLevel
+  score?: number | null
+  reasons: string[]
+  warnings: string[]
+  metrics: {
+    pnlPctOfEquity?: number
+    positionPctOfEquity?: number
+    riskPctOfEquity?: number
+    exceededPlannedRisk?: boolean
+    lossStreak?: number
+    brokeRuleLossPct?: number
+    zeiShengCount?: number
+    shuangShuCount?: number
+  }
+  practiceText?: string
+  generatedAt: string
+}
+
 export type TradeReviewSummary = {
   version?: "pan_xin_he_zheng_v1" | string
   thoughtText?: string
@@ -313,8 +356,11 @@ export interface TradeReview {
   chartEvidence?: ChartEvidence[]
   marketContext?: TradeReviewMarketContext
   behaviorEvidence?: TradeReviewBehaviorEvidence
+  accountSnapshot?: TradeReviewAccountSnapshot
+  riskEvidence?: TradeReviewRiskEvidence
   reviewText?: string
   reviewSummary?: TradeReviewSummary
+  capitalStability?: TradeReviewCapitalStability
   heartJudgement: HeartJudgement
   tradeReviewSyncStatus?: TradeReviewSyncStatus
   tradeReviewLastSyncedAt?: string

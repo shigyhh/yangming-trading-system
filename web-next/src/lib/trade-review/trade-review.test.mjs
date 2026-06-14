@@ -219,6 +219,20 @@ function buildTradeReviewInput(event, overrides = {}) {
       movedStopLoss: false,
       emotionDrivenEntry: true,
     },
+    accountSnapshot: {
+      accountEquityBefore: 100000,
+      accountEquityAfter: 99880,
+    },
+    riskEvidence: {
+      positionValue: 12000,
+      plannedRiskAmount: 1000,
+      actualLossAmount: 120,
+      leverage: 1,
+      fee: 8,
+      addedPosition: false,
+      movedStopLoss: false,
+      changedPlanIntraday: false,
+    },
     reviewSummary: {
       marketText: "最终盘证：以60分钟盘证为主，冲高回落，突破失败。",
       behaviorText: "按计划，未破戒。",
@@ -445,6 +459,19 @@ test("P2 TradeReview type stores linked oneThoughtEvent snapshot fields", async 
     "tradeReviewLastSyncedAt?: string",
     "syncError?: string",
     "behaviorEvidence?: TradeReviewBehaviorEvidence",
+    "accountSnapshot?: TradeReviewAccountSnapshot",
+    "riskEvidence?: TradeReviewRiskEvidence",
+    "capitalStability?: TradeReviewCapitalStability",
+    "export type CapitalStabilityLevel",
+    "stable_with_guard",
+    "money_stable_heart_moving",
+    "money_moving_heart_chaotic",
+    "double_unstable",
+    "insufficient_data",
+    "version: \"capital_stability_v1\"",
+    "accountEquityBefore?: number",
+    "plannedRiskAmount?: number",
+    "riskPctOfEquity?: number",
     "reviewSummary?: TradeReviewSummary",
     "version?: \"pan_xin_he_zheng_v1\" | string",
     "thoughtText?: string",
@@ -508,6 +535,9 @@ test("P2.2-C.3 createTradeReview saves multi-timeframe marketContext and complet
   assert.equal(storedReview.marketContext.editedByUser, true)
   assert.equal(storedReview.tradeReviewSyncStatus, "pending")
   assert.equal(storedReview.heartJudgement, "zheng_kui")
+  assert.equal(storedReview.accountSnapshot.accountEquityBefore, 100000)
+  assert.equal(storedReview.riskEvidence.positionValue, 12000)
+  assert.equal(storedReview.riskEvidence.plannedRiskAmount, 1000)
   assert.equal(linkedEvent.reviewStatus, "completed")
   assert.equal(linkedEvent.tradeReviewId, review.id)
   assert.equal(archiveStatsService.getPendingReviewEvents(event.userId, storage).length, 0)
@@ -568,6 +598,67 @@ test("P2.3.1 createTradeReview persists PanXin reviewSummary and keeps legacy re
   )
 
   assert.equal(tradeReviewRepository.getTradeReview(legacyReview.id, storage).reviewSummary, undefined)
+  assert.equal(tradeReviewRepository.getTradeReview(legacyReview.id, storage).capitalStability, undefined)
+})
+
+test("P2.4-A createTradeReview persists accountSnapshot riskEvidence and capitalStability", async () => {
+  const { oneThoughtRepository, tradeReviewRepository } = await importReviewFlowModules()
+  const storage = createMemoryStorage()
+  const event = oneThoughtRepository.createOneThoughtEvent(buildPendingEvent({ id: "one_thought_capital_save" }), storage)
+  const capitalStability = {
+    version: "capital_stability_v1",
+    level: "money_moving_heart_chaotic",
+    score: 42,
+    reasons: ["实际亏损超过计划风险。", "临盘改计划使资金波动放大。"],
+    warnings: ["先记录资金边界，再复盘这笔手。"],
+    metrics: {
+      pnlPctOfEquity: -1.2,
+      positionPctOfEquity: 20,
+      riskPctOfEquity: 1.2,
+      exceededPlannedRisk: true,
+      lossStreak: 2,
+      brokeRuleLossPct: 1.2,
+      zeiShengCount: 1,
+      shuangShuCount: 0,
+    },
+    practiceText: "资金开始被心贼牵动。下一笔先降仓位，再谈判断。",
+    generatedAt: "2026-06-12T11:20:00.000Z",
+  }
+
+  const review = tradeReviewRepository.createTradeReview(
+    buildTradeReviewInput(event, {
+      id: "trade_review_capital_save",
+      pnl: -1200,
+      followedPlan: true,
+      brokeRule: false,
+      accountSnapshot: {
+        accountEquityBefore: 100000,
+        accountEquityAfter: 98800,
+      },
+      riskEvidence: {
+        positionValue: 20000,
+        plannedRiskAmount: 800,
+        actualLossAmount: 1200,
+        leverage: 1,
+        fee: 12,
+        addedPosition: false,
+        movedStopLoss: false,
+        changedPlanIntraday: true,
+      },
+      capitalStability,
+    }),
+    storage,
+  )
+  const reloaded = tradeReviewRepository.getTradeReview(review.id, storage)
+
+  assert.deepEqual(reloaded.accountSnapshot, {
+    accountEquityBefore: 100000,
+    accountEquityAfter: 98800,
+  })
+  assert.equal(reloaded.riskEvidence.actualLossAmount, 1200)
+  assert.equal(reloaded.riskEvidence.changedPlanIntraday, true)
+  assert.deepEqual(reloaded.capitalStability, capitalStability)
+  assert.equal(reloaded.heartJudgement, "zheng_kui")
 })
 
 test("P2 completed reviews leave the pending archive list through oneThoughtEvent status", async () => {
@@ -759,6 +850,12 @@ test("P2.3.1 data-binding contract and server preserve reviewSummary", async () 
     "practiceText?: string",
     "generatedAt: string",
     "reviewSummary?: TradeReviewSummary | null",
+    "export type TradeReviewAccountSnapshot",
+    "export type TradeReviewRiskEvidence",
+    "export type TradeReviewCapitalStability",
+    "accountSnapshot?: TradeReviewAccountSnapshot | null",
+    "riskEvidence?: TradeReviewRiskEvidence | null",
+    "capitalStability?: TradeReviewCapitalStability | null",
   ].forEach((token) => {
     assert.equal(contract.includes(token), true, `missing data-binding contract token: ${token}`)
   })
@@ -767,6 +864,10 @@ test("P2.3.1 data-binding contract and server preserve reviewSummary", async () 
     "normalizeTradeReviewSummary",
     "reviewSummary: normalizeTradeReviewSummary",
     "pan_xin_he_zheng_v1",
+    "normalizeTradeReviewAccountSnapshot",
+    "normalizeTradeReviewRiskEvidence",
+    "normalizeTradeReviewCapitalStability",
+    "capitalStability: normalizeTradeReviewCapitalStability",
   ].forEach((token) => {
     assert.equal(serverDataBinding.includes(token), true, `missing server reviewSummary token: ${token}`)
   })

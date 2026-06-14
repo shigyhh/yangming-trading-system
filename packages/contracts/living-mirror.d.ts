@@ -273,6 +273,49 @@ export type TradeReviewSummary = {
   generatedAt: string
 }
 
+export type TradeReviewAccountSnapshot = {
+  accountEquityBefore?: number
+  accountEquityAfter?: number
+}
+
+export type TradeReviewRiskEvidence = {
+  positionValue?: number
+  plannedRiskAmount?: number
+  actualLossAmount?: number
+  leverage?: number
+  fee?: number
+  addedPosition?: boolean
+  movedStopLoss?: boolean
+  changedPlanIntraday?: boolean
+}
+
+export type CapitalStabilityLevel =
+  | "stable_with_guard"
+  | "money_stable_heart_moving"
+  | "money_moving_heart_chaotic"
+  | "double_unstable"
+  | "insufficient_data"
+
+export type TradeReviewCapitalStability = {
+  version: "capital_stability_v1"
+  level: CapitalStabilityLevel
+  score?: number | null
+  reasons: string[]
+  warnings: string[]
+  metrics: {
+    pnlPctOfEquity?: number
+    positionPctOfEquity?: number
+    riskPctOfEquity?: number
+    exceededPlannedRisk?: boolean
+    lossStreak?: number
+    brokeRuleLossPct?: number
+    zeiShengCount?: number
+    shuangShuCount?: number
+  }
+  practiceText?: string
+  generatedAt: string
+}
+
 export type TradeReview = {
   id: string
   reviewId?: string
@@ -305,6 +348,9 @@ export type TradeReview = {
   ocrDraft?: TradeReviewOcrDraft | null
   marketContext?: TradeReviewMarketContext | null
   reviewSummary?: TradeReviewSummary | null
+  accountSnapshot?: TradeReviewAccountSnapshot | null
+  riskEvidence?: TradeReviewRiskEvidence | null
+  capitalStability?: TradeReviewCapitalStability | null
   crossEndStatus?: TradeReviewCrossEndStatusKey
   crossEndStatusText?: TradeReviewCrossEndStatusText
   crossEndStatusSteps?: TradeReviewCrossEndStatusStep[]

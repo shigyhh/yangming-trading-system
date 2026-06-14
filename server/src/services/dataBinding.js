@@ -884,11 +884,41 @@ async function normalizeTradeReview(review, userRecord, fallbackTime, source) {
     reviewText,
     ocrDraft: normalizeTradeReviewOcrDraft(review.ocrDraft || review.ocr_draft || null),
     marketContext,
+    accountSnapshot: normalizeTradeReviewAccountSnapshot(review.accountSnapshot || review.account_snapshot || null),
+    riskEvidence: normalizeTradeReviewRiskEvidence(review.riskEvidence || review.risk_evidence || null),
     reviewSummary: normalizeTradeReviewSummary(review.reviewSummary || review.review_summary || null, fallbackTime),
+    capitalStability: normalizeTradeReviewCapitalStability(review.capitalStability || review.capital_stability || null, fallbackTime),
     createdAt: review.createdAt || review.created_at || fallbackTime,
     source
   };
   return withTradeReviewCrossEndStatus(normalized, userRecord);
+}
+
+function normalizeTradeReviewAccountSnapshot(snapshot) {
+  if (!snapshot || typeof snapshot !== "object") return null;
+  const normalized = {
+    accountEquityBefore: normalizeFiniteNumber(snapshot.accountEquityBefore ?? snapshot.account_equity_before),
+    accountEquityAfter: normalizeFiniteNumber(snapshot.accountEquityAfter ?? snapshot.account_equity_after)
+  };
+
+  if (normalized.accountEquityBefore === undefined && normalized.accountEquityAfter === undefined) return null;
+  return normalized;
+}
+
+function normalizeTradeReviewRiskEvidence(evidence) {
+  if (!evidence || typeof evidence !== "object") return null;
+  const normalized = {
+    positionValue: normalizeFiniteNumber(evidence.positionValue ?? evidence.position_value),
+    plannedRiskAmount: normalizeFiniteNumber(evidence.plannedRiskAmount ?? evidence.planned_risk_amount),
+    actualLossAmount: normalizeFiniteNumber(evidence.actualLossAmount ?? evidence.actual_loss_amount),
+    leverage: normalizeFiniteNumber(evidence.leverage),
+    fee: normalizeFiniteNumber(evidence.fee),
+    addedPosition: normalizeOptionalBoolean(evidence.addedPosition ?? evidence.added_position),
+    movedStopLoss: normalizeOptionalBoolean(evidence.movedStopLoss ?? evidence.moved_stop_loss),
+    changedPlanIntraday: normalizeOptionalBoolean(evidence.changedPlanIntraday ?? evidence.changed_plan_intraday)
+  };
+
+  return Object.values(normalized).some((value) => value !== undefined && value !== null) ? normalized : null;
 }
 
 function normalizeTradeReviewSummary(summary, fallbackTime) {
@@ -909,6 +939,61 @@ function normalizeTradeReviewSummary(summary, fallbackTime) {
   }
 
   return normalized;
+}
+
+function normalizeTradeReviewCapitalStability(stability, fallbackTime) {
+  if (!stability || typeof stability !== "object") return null;
+  const level = normalizeCapitalStabilityLevel(stability.level);
+  if (!level) return null;
+  const score = stability.score === null ? null : normalizeFiniteNumber(stability.score);
+  const normalized = {
+    version: "capital_stability_v1",
+    level,
+    score,
+    reasons: Array.isArray(stability.reasons)
+      ? stability.reasons.map((item) => cleanText(item, 160)).filter(Boolean).slice(0, 10)
+      : [],
+    warnings: Array.isArray(stability.warnings)
+      ? stability.warnings.map((item) => cleanText(item, 160)).filter(Boolean).slice(0, 10)
+      : [],
+    metrics: normalizeCapitalStabilityMetrics(stability.metrics),
+    practiceText: cleanText(stability.practiceText || stability.practice_text || "", 180),
+    generatedAt: cleanText(stability.generatedAt || stability.generated_at || fallbackTime, 40)
+  };
+
+  return normalized;
+}
+
+function normalizeCapitalStabilityLevel(value) {
+  if (
+    value === "stable_with_guard" ||
+    value === "money_stable_heart_moving" ||
+    value === "money_moving_heart_chaotic" ||
+    value === "double_unstable" ||
+    value === "insufficient_data"
+  ) {
+    return value;
+  }
+  return "";
+}
+
+function normalizeCapitalStabilityMetrics(metrics) {
+  if (!metrics || typeof metrics !== "object") return {};
+  const normalized = {
+    pnlPctOfEquity: normalizeFiniteNumber(metrics.pnlPctOfEquity ?? metrics.pnl_pct_of_equity),
+    positionPctOfEquity: normalizeFiniteNumber(metrics.positionPctOfEquity ?? metrics.position_pct_of_equity),
+    riskPctOfEquity: normalizeFiniteNumber(metrics.riskPctOfEquity ?? metrics.risk_pct_of_equity),
+    exceededPlannedRisk: normalizeOptionalBoolean(metrics.exceededPlannedRisk ?? metrics.exceeded_planned_risk),
+    lossStreak: normalizeFiniteNumber(metrics.lossStreak ?? metrics.loss_streak),
+    brokeRuleLossPct: normalizeFiniteNumber(metrics.brokeRuleLossPct ?? metrics.broke_rule_loss_pct),
+    zeiShengCount: normalizeFiniteNumber(metrics.zeiShengCount ?? metrics.zei_sheng_count),
+    shuangShuCount: normalizeFiniteNumber(metrics.shuangShuCount ?? metrics.shuang_shu_count)
+  };
+
+  return Object.entries(normalized).reduce((result, [key, value]) => {
+    if (value !== undefined && value !== null) result[key] = value;
+    return result;
+  }, {});
 }
 
 function withTradeReviewCrossEndStatus(review = {}, record = {}) {

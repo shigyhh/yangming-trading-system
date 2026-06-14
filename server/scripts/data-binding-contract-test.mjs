@@ -126,6 +126,39 @@ test("data binding service stores assessment, training, kline and retest in runt
       wasPlanned: false,
       changedPlanDuringTrade: true,
       hadExitRule: false,
+      accountSnapshot: {
+        accountEquityBefore: 100000,
+        accountEquityAfter: 99200
+      },
+      riskEvidence: {
+        positionValue: 18000,
+        plannedRiskAmount: 800,
+        actualLossAmount: 900,
+        leverage: 1,
+        fee: 10,
+        addedPosition: false,
+        movedStopLoss: false,
+        changedPlanIntraday: true
+      },
+      capitalStability: {
+        version: "capital_stability_v1",
+        level: "money_moving_heart_chaotic",
+        score: 42,
+        reasons: ["实际亏损超过计划风险。", "临盘改计划使资金波动放大。"],
+        warnings: ["先记录资金边界，再复盘这笔手。"],
+        metrics: {
+          pnlPctOfEquity: -0.9,
+          positionPctOfEquity: 18,
+          riskPctOfEquity: 0.9,
+          exceededPlannedRisk: true,
+          lossStreak: 1,
+          brokeRuleLossPct: 0.9,
+          zeiShengCount: 1,
+          shuangShuCount: 0
+        },
+        practiceText: "资金开始被心贼牵动。下一笔先降仓位，再谈判断。",
+        generatedAt: "2026-06-12T11:20:00.000Z"
+      },
       reviewSummary: {
         version: "pan_xin_he_zheng_v1",
         thoughtText: "当时那一念：怕错过。",
@@ -226,6 +259,13 @@ test("data binding service stores assessment, training, kline and retest in runt
   assert.equal(tradeReview.review.wasPlanned, false);
   assert.equal(tradeReview.review.changedPlanDuringTrade, true);
   assert.equal(tradeReview.review.hadExitRule, false);
+  assert.equal(tradeReview.review.accountSnapshot.accountEquityBefore, 100000);
+  assert.equal(tradeReview.review.riskEvidence.plannedRiskAmount, 800);
+  assert.equal(tradeReview.review.riskEvidence.changedPlanIntraday, true);
+  assert.equal(tradeReview.review.capitalStability.version, "capital_stability_v1");
+  assert.equal(tradeReview.review.capitalStability.level, "money_moving_heart_chaotic");
+  assert.equal(tradeReview.review.capitalStability.metrics.exceededPlannedRisk, true);
+  assert.equal(tradeReview.review.capitalStability.practiceText, "资金开始被心贼牵动。下一笔先降仓位，再谈判断。");
   assert.equal(tradeReview.review.reviewSummary.version, "pan_xin_he_zheng_v1");
   assert.equal(tradeReview.review.reviewSummary.practiceText, "给自己三分钟，不用一根 K线证明自己。");
   assert.equal(tradeReview.review.ocrDraft.status, "provider_not_configured");
@@ -260,6 +300,7 @@ test("data binding service stores assessment, training, kline and retest in runt
   assert.equal(tradeReviewList.trade_reviews[0].marketContext.primaryTimeframe, "60m");
   assert.equal(tradeReviewList.trade_reviews[0].marketContext.fallbackChain[1].status, "ok");
   assert.equal(tradeReviewList.trade_reviews[0].reviewSummary.practiceText, "给自己三分钟，不用一根 K线证明自己。");
+  assert.equal(tradeReviewList.trade_reviews[0].capitalStability.metrics.riskPctOfEquity, 0.9);
   assert.equal(tradeReviewList.trade_reviews[0].crossEndStatusText, tradeReview.review.crossEndStatusText);
   assert.equal(tradeReviewList.living_mirror_profile.tripleReflection.title, "三证互照");
   assert.equal(ocrDraft.status, "provider_not_configured");
@@ -285,6 +326,7 @@ test("data binding service stores assessment, training, kline and retest in runt
   assert.equal(summary.kline_records.length, 1);
   assert.equal(summary.trade_reviews.length, 1);
   assert.equal(summary.trade_reviews[0].reviewSummary.version, "pan_xin_he_zheng_v1");
+  assert.equal(summary.trade_reviews[0].capitalStability.level, "money_moving_heart_chaotic");
   assert.equal(summary.trade_reviews[0].crossEndStatusText, "已复测");
   assert.equal(summary.mirror_report.mainMirror, "追涨之镜");
   assert.equal(summary.mirror_report.schemaVersion, "living_mirror_v1");
@@ -323,6 +365,7 @@ test("data binding service stores assessment, training, kline and retest in runt
   assert.equal(reloadedSummary.kline_records.length, 1);
   assert.equal(reloadedSummary.trade_reviews.length, 1);
   assert.equal(reloadedSummary.trade_reviews[0].reviewSummary.practiceText, "给自己三分钟，不用一根 K线证明自己。");
+  assert.equal(reloadedSummary.trade_reviews[0].capitalStability.practiceText, "资金开始被心贼牵动。下一笔先降仓位，再谈判断。");
   assert.equal(reloadedSummary.living_mirror_stats.loopRelapseCount, 1);
   assert.equal(reloadedSummary.living_mirror_profile.latestMarketContext.schemaVersion, "trade_review_market_context_v1");
   assert.equal(reloadedSummary.training_prescription.status, "dispatched");
