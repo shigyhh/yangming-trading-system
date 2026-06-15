@@ -15,6 +15,7 @@ const reviewRedirectPageUrl = new URL("../../app/review/page.tsx", import.meta.u
 const panXinReportUrl = new URL("../../components/trade-review/PanXinHeZhengReport.tsx", import.meta.url)
 const mindArchiveTypesUrl = new URL("../mind-archive/types.ts", import.meta.url)
 const archiveStatsUrl = new URL("../mind-archive/archiveStatsService.ts", import.meta.url)
+const reviewArchiveServiceUrl = new URL("../mind-archive/reviewArchiveService.ts", import.meta.url)
 const dataBindingClientUrl = new URL("../../features/data-binding/api-client.ts", import.meta.url)
 const lakePageUrl = new URL("../../features/one-thought-lake/OneThoughtLakePage.tsx", import.meta.url)
 const topNavUrl = new URL("../../components/home/top-nav.tsx", import.meta.url)
@@ -36,6 +37,7 @@ async function importReviewFlowModules() {
   const oneThoughtSource = await readFile(oneThoughtRepositoryUrl, "utf8")
   const tradeReviewSource = await readFile(repositoryUrl, "utf8")
   const archiveStatsSource = await readFile(archiveStatsUrl, "utf8")
+  const reviewArchiveServiceSource = await readFile(reviewArchiveServiceUrl, "utf8")
 
   await writeFile(path.join(dir, "types.mjs"), transpileTs(typesSource), "utf8")
   await writeFile(path.join(dir, "reflectionService.mjs"), "export function createReflectionKey(sceneId, itemId) { return `${sceneId}:${itemId}` }\n", "utf8")
@@ -54,9 +56,15 @@ async function importReviewFlowModules() {
     "utf8",
   )
   await writeFile(
+    path.join(dir, "reviewArchiveService.mjs"),
+    transpileTs(reviewArchiveServiceSource).replaceAll('from "./types"', 'from "./types.mjs"'),
+    "utf8",
+  )
+  await writeFile(
     path.join(dir, "archiveStatsService.mjs"),
     transpileTs(archiveStatsSource)
       .replaceAll('from "@/lib/mind-archive/oneThoughtEventRepository"', 'from "./oneThoughtEventRepository.mjs"')
+      .replaceAll('from "@/lib/mind-archive/reviewArchiveService"', 'from "./reviewArchiveService.mjs"')
       .replaceAll('from "@/lib/mind-archive/types"', 'from "./types.mjs"')
       .replaceAll('from "@/lib/trade-review/tradeReviewRepository"', 'from "./tradeReviewRepository.mjs"'),
     "utf8",
@@ -694,8 +702,10 @@ test("P2.2-C.3 server sync and archive-read surfaces stay wired without blocking
   const reviewPage = await readFile(tradeReviewPageUrl, "utf8")
   const dataBindingClient = await readFile(dataBindingClientUrl, "utf8")
   const archivePage = await readFile(mindArchivePageUrl, "utf8")
+  const dangAnGuanArchive = await readFile(new URL("../../components/archive/DangAnGuanArchive.tsx", import.meta.url), "utf8")
   const zhixingService = await readFile(zhixingScrollServiceUrl, "utf8")
   const zhixingPage = await readFile(zhixingScrollPageUrl, "utf8")
+  const archiveSurface = `${archivePage}\n${dangAnGuanArchive}`
 
   ;[
     "syncTradeReviewBinding",
@@ -712,10 +722,10 @@ test("P2.2-C.3 server sync and archive-read surfaces stay wired without blocking
   assert.match(dataBindingClient, /\/api\/v1\/data-binding\/users\/\$\{encodeURIComponent\(user\.userId\)\}\/trade-reviews/)
   assert.match(dataBindingClient, /return requestJson<DataBindingTradeReviewPayload, DataBindingTradeReviewResponse>/)
 
-  ;["listTradeReviewsByOneThoughtEvent", "marketContextSummary", "practiceText", "heartJudgement", "actualAction"].forEach((token) => {
-    assert.equal(archivePage.includes(token), true, `archive cannot read completed review token: ${token}`)
+  ;["buildReviewArchive", "reviewArchiveItems", "reviewArchiveStats", "reviewRiskSignals", "ruleGuardInsights", "marketContextSummary", "practiceText", "heartJudgement", "actualAction"].forEach((token) => {
+    assert.equal(archiveSurface.includes(token), true, `archive cannot read completed review token: ${token}`)
   })
-  ;["marketContextSummary", "review?.marketContext?.summary?.finalText", "practiceText", "hasMarketContext", "linkedOneThoughtEventId", "heartJudgement", "actualAction"].forEach((token) => {
+  ;["marketContextSummary", "review?.marketText", "practiceText", "hasMarketContext", "linkedOneThoughtEventId", "heartJudgement", "actualAction"].forEach((token) => {
     assert.equal(zhixingService.includes(token), true, `zhixing service cannot read completed review token: ${token}`)
   })
   ;["盘证", "item.marketContextSummary", "下次修行", "item.practiceText", "是否已有盘证", "item.hasMarketContext", "复盘心判"].forEach((token) => {
