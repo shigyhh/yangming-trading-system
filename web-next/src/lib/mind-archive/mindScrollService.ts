@@ -1,4 +1,5 @@
 import { listSealedOneThoughtEvents } from "@/lib/mind-archive/oneThoughtEventRepository"
+import { buildCycleMirror, getTopCycleItems } from "@/lib/mind-archive/cycleMirrorService"
 import { buildReviewArchive } from "@/lib/mind-archive/reviewArchiveService"
 import { formatTopReviewRiskSignalSummary } from "@/lib/mind-archive/reviewRiskSignalDisplay"
 import {
@@ -37,6 +38,13 @@ export type MindScrollItem = Pick<
 export type MindScrollData = {
   items: MindScrollItem[]
   ruleGuardSummary: string
+  cycleMirrorSummary: {
+    strongestHeartThief?: string
+    recurringHeartThieves: string[]
+    heartThiefCycleText?: string
+    recurringThoughtText?: string
+    conclusionText: string
+  }
 }
 
 export function getMindScrollData(
@@ -50,6 +58,11 @@ export function getMindScrollData(
   const { reviewArchiveItems, reviewRiskSignals } = buildReviewArchive({
     tradeReviews,
     oneThoughtEvents: events,
+  })
+  const cycleMirror = buildCycleMirror({
+    oneThoughtEvents: events,
+    reviewArchiveItems,
+    reviewRiskSignals,
   })
   const reviewByEventId = new Map(
     reviewArchiveItems
@@ -87,6 +100,14 @@ export function getMindScrollData(
   return {
     items,
     ruleGuardSummary: formatTopReviewRiskSignalSummary(reviewRiskSignals),
+    cycleMirrorSummary: {
+      strongestHeartThief: cycleMirror.cycleSummary.strongestHeartThief,
+      recurringHeartThieves: getTopCycleItems(cycleMirror.recurringHeartThieves, 3)
+        .map((item) => `${item.heartThief} · ${item.count} 次`),
+      heartThiefCycleText: cycleMirror.cycleSignals.find((signal) => signal.type === "heart_thief_cycle")?.text,
+      recurringThoughtText: getTopCycleItems(cycleMirror.recurringThoughts, 1)[0]?.text,
+      conclusionText: cycleMirror.cycleSummary.conclusionText,
+    },
   }
 }
 

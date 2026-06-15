@@ -3,10 +3,12 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 
 import ArchiveRuleGuardPanel from "@/components/archive/ArchiveRuleGuardPanel"
+import CycleMirrorPanel from "@/components/archive/CycleMirrorPanel"
 import {
   CAPITAL_STABILITY_MISSING_LABEL,
   capitalStabilityLevelLabels,
 } from "@/lib/mind-archive/types"
+import type { CycleMirrorResult } from "@/lib/mind-archive/cycleMirrorService"
 import type {
   ReviewArchiveItem,
   ReviewArchiveStats,
@@ -68,6 +70,7 @@ export type DangAnGuanArchiveProps = {
   reviewArchiveItems?: ReviewArchiveItem[]
   reviewArchiveStats?: Partial<ReviewArchiveStats>
   reviewRiskSignals?: ReviewRiskSignal[]
+  cycleMirror?: CycleMirrorResult | null
   reviewByEventId?: Record<
     string,
     Pick<
@@ -263,6 +266,7 @@ export default function DangAnGuanArchive({
   reviewArchiveItems = [],
   reviewArchiveStats,
   reviewRiskSignals = [],
+  cycleMirror,
   reviewByEventId = {},
   onOpenMindArchive,
   onOpenHeartMirrorScroll,
@@ -629,6 +633,10 @@ export default function DangAnGuanArchive({
               </Reveal>
 
               <Reveal disabled={reduced} delay={340}>
+                <CycleMirrorPanel cycleMirror={cycleMirror} />
+              </Reveal>
+
+              <Reveal disabled={reduced} delay={400}>
                 <section className="danganguan-side-block">
                   <div className="danganguan-eyebrow">复发念</div>
                   <h3>这不是第一次来，也不会是最后一次。</h3>
@@ -647,7 +655,7 @@ export default function DangAnGuanArchive({
                 </section>
               </Reveal>
 
-              <Reveal disabled={reduced} delay={400}>
+              <Reveal disabled={reduced} delay={460}>
                 <ArchiveRuleGuardPanel reviewRiskSignals={safeReviewRiskSignals} />
               </Reveal>
             </aside>
@@ -1250,6 +1258,40 @@ const CSS = `
 
   .danganguan-signal-list small {
     display: block;
+  }
+
+  .danganguan-cycle-list {
+    display: grid;
+    gap: 12px;
+    margin: 16px 0 0;
+  }
+
+  .danganguan-cycle-list div {
+    border-top: 1px solid ${HAIR};
+    padding: 12px 0 0;
+  }
+
+  .danganguan-cycle-list span,
+  .danganguan-cycle-list small,
+  .danganguan-cycle-empty {
+    display: block;
+    color: ${DIM};
+    font-size: 12px;
+    line-height: 1.8;
+  }
+
+  .danganguan-cycle-list strong {
+    display: block;
+    margin: 4px 0;
+    color: ${GOLD};
+    font-weight: 500;
+    line-height: 1.7;
+  }
+
+  .danganguan-cycle-conclusion {
+    border-top: 1px solid ${HAIR};
+    margin-top: 14px;
+    padding-top: 12px;
   }
 
   .danganguan-plain-list strong {

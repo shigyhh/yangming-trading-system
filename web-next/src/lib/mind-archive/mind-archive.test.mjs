@@ -9,6 +9,7 @@ const typesUrl = new URL("./types.ts", import.meta.url)
 const eventRepoUrl = new URL("./oneThoughtEventRepository.ts", import.meta.url)
 const archiveStatsUrl = new URL("./archiveStatsService.ts", import.meta.url)
 const reviewArchiveServiceUrl = new URL("./reviewArchiveService.ts", import.meta.url)
+const cycleMirrorServiceUrl = new URL("./cycleMirrorService.ts", import.meta.url)
 const tradeReviewRepoUrl = new URL("../trade-review/tradeReviewRepository.ts", import.meta.url)
 const ritualFlowUrl = new URL("../../features/assessment/ZhaoxinRitualFlow.tsx", import.meta.url)
 const ritualFacadeUrl = new URL("../../features/assessment/OneThoughtRitualFlow.tsx", import.meta.url)
@@ -18,6 +19,7 @@ const todaySealedPageUrl = new URL("../../app/today-sealed/page.tsx", import.met
 const mindArchivePageUrl = new URL("../../app/mind-archive/page.tsx", import.meta.url)
 const dangAnGuanArchiveUrl = new URL("../../components/archive/DangAnGuanArchive.tsx", import.meta.url)
 const archiveRuleGuardPanelUrl = new URL("../../components/archive/ArchiveRuleGuardPanel.tsx", import.meta.url)
+const cycleMirrorPanelUrl = new URL("../../components/archive/CycleMirrorPanel.tsx", import.meta.url)
 const reviewRiskSignalDisplayUrl = new URL("./reviewRiskSignalDisplay.ts", import.meta.url)
 const lakePageUrl = new URL("../../features/one-thought-lake/OneThoughtLakePage.tsx", import.meta.url)
 
@@ -40,11 +42,19 @@ async function importArchiveReviewModules() {
   const tradeReviewSource = await readFile(tradeReviewRepoUrl, "utf8")
   const archiveStatsSource = await readFile(archiveStatsUrl, "utf8")
   const reviewArchiveServiceSource = await readFile(reviewArchiveServiceUrl, "utf8")
+  const cycleMirrorServiceSource = await readFile(cycleMirrorServiceUrl, "utf8")
 
   await writeFile(path.join(dir, "types.mjs"), transpileTs(typesSource), "utf8")
   await writeFile(
     path.join(dir, "reviewArchiveService.mjs"),
     transpileTs(reviewArchiveServiceSource).replaceAll('from "./types"', 'from "./types.mjs"'),
+    "utf8",
+  )
+  await writeFile(
+    path.join(dir, "cycleMirrorService.mjs"),
+    transpileTs(cycleMirrorServiceSource)
+      .replaceAll('from "./types"', 'from "./types.mjs"')
+      .replaceAll('from "./reviewArchiveService"', 'from "./reviewArchiveService.mjs"'),
     "utf8",
   )
   await writeFile(path.join(dir, "reflectionService.mjs"), "export function createReflectionKey(sceneId, itemId) { return `${sceneId}:${itemId}` }\n", "utf8")
@@ -306,8 +316,10 @@ test("档案馆 page collects the private archive IA without lake or old reflect
   const mindArchivePage = await readFile(mindArchivePageUrl, "utf8")
   const dangAnGuanArchive = await readFile(dangAnGuanArchiveUrl, "utf8")
   const archiveRuleGuardPanel = await readFile(archiveRuleGuardPanelUrl, "utf8")
+  const cycleMirrorPanel = await readFile(cycleMirrorPanelUrl, "utf8")
   const reviewRiskSignalDisplay = await readFile(reviewRiskSignalDisplayUrl, "utf8")
-  const archiveSource = `${mindArchivePage}\n${dangAnGuanArchive}\n${archiveRuleGuardPanel}\n${reviewRiskSignalDisplay}`
+  const cycleMirrorService = await readFile(cycleMirrorServiceUrl, "utf8")
+  const archiveSource = `${mindArchivePage}\n${dangAnGuanArchive}\n${archiveRuleGuardPanel}\n${cycleMirrorPanel}\n${reviewRiskSignalDisplay}\n${cycleMirrorService}`
 
   ;[
     "DangAnGuanArchive",
@@ -315,9 +327,11 @@ test("档案馆 page collects the private archive IA without lake or old reflect
     "getRecentSealedThoughtEvents",
     "listRecentTradeReviews",
     "buildReviewArchive",
+    "buildCycleMirror",
     "reviewArchiveItems",
     "reviewArchiveStats",
     "reviewRiskSignals",
+    "cycleMirror",
     "getHeartThiefProfile",
     "todaySealedCount: stats?.todayTotal ?? 0",
     "seenCount: stats?.todaySeen ?? 0",
@@ -331,6 +345,8 @@ test("档案馆 page collects the private archive IA without lake or old reflect
     "time: formatTime(event.createdAt)",
     "recurringThoughts={recurringThoughts.map",
     "ArchiveRuleGuardPanel",
+    "CycleMirrorPanel",
+    "cycleMirror={cycleMirror}",
     "reviewRiskSignals={reviewArchive?.reviewRiskSignals ?? []}",
     "onOpenMindArchive",
     "onOpenHeartMirrorScroll={() => router.push(\"/mind-scroll\")}",
@@ -378,6 +394,18 @@ test("档案馆 page collects the private archive IA without lake or old reflect
     "暂无待复盘的一念。",
     "复发念",
     "这不是第一次来，也不会是最后一次。",
+    "循环之镜",
+    "你以为这是新行情，其实是旧心贼换了张脸。",
+    "最强复发念",
+    "最强复发行为",
+    "最强资金伤害",
+    "cycleSummary.conclusionText",
+    "暂无明显循环。",
+    "不是没有问题，而是还需要更多真实复盘样本。",
+    "getTopCycleItems",
+    "recurringBehaviorLabels",
+    "recurringCapitalPatternLabels",
+    "cycleSeverityLabels",
     "规则守护",
     "不强制拦截，只做提醒。",
     "看见这类循环，下一笔才有可能停住。",
@@ -458,8 +486,9 @@ test("P2.4-C archive reads saved capitalStability summary and counts missing sep
 test("档案馆展示层空数据时也必须显示正文而不是挂轴空壳", async () => {
   const dangAnGuanArchive = await readFile(dangAnGuanArchiveUrl, "utf8")
   const archiveRuleGuardPanel = await readFile(archiveRuleGuardPanelUrl, "utf8")
+  const cycleMirrorPanel = await readFile(cycleMirrorPanelUrl, "utf8")
   const reviewRiskSignalDisplay = await readFile(reviewRiskSignalDisplayUrl, "utf8")
-  const archiveDisplaySource = `${dangAnGuanArchive}\n${archiveRuleGuardPanel}\n${reviewRiskSignalDisplay}`
+  const archiveDisplaySource = `${dangAnGuanArchive}\n${archiveRuleGuardPanel}\n${cycleMirrorPanel}\n${reviewRiskSignalDisplay}`
 
   ;[
     "fallbackSummary",
@@ -481,6 +510,9 @@ test("档案馆展示层空数据时也必须显示正文而不是挂轴空壳",
     "暂无待复盘的一念。",
     "暂无复发念。",
     "ArchiveRuleGuardPanel",
+    "CycleMirrorPanel",
+    "暂无明显循环。",
+    "不是没有问题，而是还需要更多真实复盘样本。",
     "暂无规则守护提醒。",
     "不是没有风险，而是还需要更多复盘样本。",
     "opacity: 1;",

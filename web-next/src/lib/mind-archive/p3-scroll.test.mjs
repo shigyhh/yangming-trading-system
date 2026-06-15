@@ -10,6 +10,7 @@ const mindScrollServiceUrl = new URL("./mindScrollService.ts", import.meta.url)
 const zhixingScrollPageUrl = new URL("../../app/zhixing-scroll/page.tsx", import.meta.url)
 const zhixingScrollServiceUrl = new URL("./zhixingScrollService.ts", import.meta.url)
 const reviewRiskSignalDisplayUrl = new URL("./reviewRiskSignalDisplay.ts", import.meta.url)
+const cycleMirrorServiceUrl = new URL("./cycleMirrorService.ts", import.meta.url)
 
 const forbiddenSourceTokens = [
   "OneThoughtLake",
@@ -63,19 +64,26 @@ test("P3 mind scroll only displays sealed oneThoughtEvent fields and reflectionF
   const mindScrollPage = await readFile(mindScrollPageUrl, "utf8")
   const mindScrollService = await readFile(mindScrollServiceUrl, "utf8")
   const reviewRiskSignalDisplay = await readFile(reviewRiskSignalDisplayUrl, "utf8")
+  const cycleMirrorService = await readFile(cycleMirrorServiceUrl, "utf8")
   const types = await readFile(typesUrl, "utf8")
-  const source = `${mindScrollPage}\n${mindScrollService}\n${reviewRiskSignalDisplay}\n${types}`
+  const source = `${mindScrollPage}\n${mindScrollService}\n${reviewRiskSignalDisplay}\n${cycleMirrorService}\n${types}`
 
   ;[
     "getMindScrollItems",
     "listSealedOneThoughtEvents",
     "buildReviewArchive",
+    "buildCycleMirror",
     "reviewArchiveItems",
     "reviewRiskSignals",
     "getMindScrollData",
     "ruleGuardSummary",
+    "cycleMirrorSummary",
+    "strongestHeartThief",
+    "recurringHeartThieves",
+    "heart_thief_cycle",
     "这里不记行情，只记你被哪一念牵走。",
     "最近反复接管你的心贼",
+    "这条循环已经出现多次",
     "最近心怎么动",
     "哪个心贼常来",
     "哪些念头反复出现",
@@ -113,17 +121,23 @@ test("P3 zhixing scroll merges oneThoughtEvent and tradeReview without new judge
   const zhixingPage = await readFile(zhixingScrollPageUrl, "utf8")
   const zhixingService = await readFile(zhixingScrollServiceUrl, "utf8")
   const reviewRiskSignalDisplay = await readFile(reviewRiskSignalDisplayUrl, "utf8")
+  const cycleMirrorService = await readFile(cycleMirrorServiceUrl, "utf8")
   const types = await readFile(typesUrl, "utf8")
-  const source = `${zhixingPage}\n${zhixingService}\n${reviewRiskSignalDisplay}\n${types}`
+  const source = `${zhixingPage}\n${zhixingService}\n${reviewRiskSignalDisplay}\n${cycleMirrorService}\n${types}`
 
   ;[
     "getZhixingScrollItems",
     "listSealedOneThoughtEvents",
     "buildReviewArchive",
+    "buildCycleMirror",
     "reviewArchiveItems",
     "reviewRiskSignals",
     "getZhixingScrollData",
     "ruleGuardSummary",
+    "cycleMirrorSummary",
+    "same_behavior_repeated",
+    "same_capital_damage_repeated",
+    "heart_thief_cycle",
     "oneThoughtEventId",
     "tradeReviewId",
     "reflectionFinal",
@@ -160,7 +174,11 @@ test("P3 zhixing scroll merges oneThoughtEvent and tradeReview without new judge
     "照见之后，有没有做到？",
     "做了以后，钱有没有跟着心乱？",
     "守护提醒",
+    "循环提醒",
+    "做了以后，是否又进入同一条循环？",
     "这类失守最近已出现",
+    "这说明：",
+    "你不是没看见，是看见后还没有停住。",
   ].forEach((token) => {
     assert.equal(source.includes(token), true, `missing P3 zhixing token: ${token}`)
   })

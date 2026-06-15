@@ -48,6 +48,10 @@ export default function ZhixingScrollPage() {
   const [scrollData, setScrollData] = useState<ZhixingScrollData>({
     items: [],
     ruleGuardSummary: "暂无规则守护提醒。不是没有风险，而是还需要更多复盘样本。",
+    cycleMirrorSummary: {
+      cycleReminderText: "你以为这是新行情，其实是旧心贼换了张脸。",
+      conclusionText: "你以为这是新行情，其实是旧心贼换了张脸。",
+    },
   })
 
   useEffect(() => {
@@ -70,9 +74,11 @@ export default function ZhixingScrollPage() {
           <span>照见之后，有没有做到？做了以后，钱有没有跟着心乱？</span>
         </header>
 
-        <section className="guard-summary" aria-label="守护提醒">
-          <span>守护提醒</span>
-          <p>{scrollData.ruleGuardSummary}</p>
+        <section className="guard-summary" aria-label="循环提醒">
+          <span>循环提醒</span>
+          <strong>做了以后，是否又进入同一条循环？</strong>
+          <p>{scrollData.cycleMirrorSummary.cycleReminderText}</p>
+          <small>这说明：你不是没看见，是看见后还没有停住。</small>
         </section>
 
         <section className="scroll-list" aria-label="知行长卷时间线">
@@ -197,6 +203,21 @@ export default function ZhixingScrollPage() {
         .guard-summary p {
           max-width: 760px;
           color: rgba(244, 235, 221, 0.6);
+          line-height: 1.8;
+        }
+
+        .guard-summary strong {
+          display: block;
+          margin-top: 10px;
+          color: rgba(216, 183, 111, 0.92);
+          font-family: var(--font-serif);
+          font-size: clamp(26px, 3vw, 42px);
+          font-weight: 400;
+          line-height: 1.35;
+        }
+
+        .guard-summary small {
+          color: rgba(244, 235, 221, 0.42);
           line-height: 1.8;
         }
 

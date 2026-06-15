@@ -58,6 +58,10 @@ export default function MindScrollPage() {
   const [scrollData, setScrollData] = useState<MindScrollData>({
     items: [],
     ruleGuardSummary: "暂无规则守护提醒。不是没有风险，而是还需要更多复盘样本。",
+    cycleMirrorSummary: {
+      recurringHeartThieves: [],
+      conclusionText: "你以为这是新行情，其实是旧心贼换了张脸。",
+    },
   })
 
   useEffect(() => {
@@ -109,7 +113,15 @@ export default function MindScrollPage() {
 
         <section className="guard-summary" aria-label="最近反复接管你的心贼">
           <span>最近反复接管你的心贼</span>
-          <p>{scrollData.ruleGuardSummary}</p>
+          <strong>{scrollData.cycleMirrorSummary.strongestHeartThief || "待显影"}</strong>
+          <p>
+            {scrollData.cycleMirrorSummary.heartThiefCycleText ||
+              scrollData.cycleMirrorSummary.recurringThoughtText ||
+              scrollData.cycleMirrorSummary.conclusionText}
+          </p>
+          {scrollData.cycleMirrorSummary.recurringHeartThieves.length > 0 ? (
+            <small>{scrollData.cycleMirrorSummary.recurringHeartThieves.join(" / ")}</small>
+          ) : null}
         </section>
 
         <section className="scroll-list" aria-label="心念时间线">
@@ -229,6 +241,20 @@ export default function MindScrollPage() {
         .guard-summary p {
           max-width: 760px;
           color: rgba(244, 235, 221, 0.6);
+          line-height: 1.8;
+        }
+
+        .guard-summary strong {
+          display: block;
+          margin-top: 10px;
+          color: rgba(216, 183, 111, 0.92);
+          font-family: var(--font-serif);
+          font-size: clamp(30px, 4vw, 54px);
+          font-weight: 400;
+        }
+
+        .guard-summary small {
+          color: rgba(244, 235, 221, 0.42);
           line-height: 1.8;
         }
 

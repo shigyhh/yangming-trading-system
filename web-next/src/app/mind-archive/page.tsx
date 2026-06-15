@@ -11,6 +11,7 @@ import {
   getMindArchiveStats,
   getRecentSealedThoughtEvents,
 } from "@/lib/mind-archive/archiveStatsService"
+import { buildCycleMirror, type CycleMirrorResult } from "@/lib/mind-archive/cycleMirrorService"
 import { buildReviewArchive, type ReviewArchiveResult } from "@/lib/mind-archive/reviewArchiveService"
 import { listRecentTradeReviews } from "@/lib/trade-review/tradeReviewRepository"
 import {
@@ -36,6 +37,7 @@ export default function MindArchivePage() {
   const [stats, setStats] = useState<ArchiveStats | null>(null)
   const [recentSealedEvents, setRecentSealedEvents] = useState<OneThoughtEvent[]>([])
   const [reviewArchive, setReviewArchive] = useState<ReviewArchiveResult | null>(null)
+  const [cycleMirror, setCycleMirror] = useState<CycleMirrorResult | null>(null)
   const [heartThiefProfile, setHeartThiefProfile] = useState<HeartThiefProfile | null>(null)
 
   useEffect(() => {
@@ -47,10 +49,17 @@ export default function MindArchivePage() {
         oneThoughtEvents: sealedEvents,
         recentDays: 30,
       })
+      const nextCycleMirror = buildCycleMirror({
+        oneThoughtEvents: sealedEvents,
+        reviewArchiveItems: nextReviewArchive.reviewArchiveItems,
+        reviewRiskSignals: nextReviewArchive.reviewRiskSignals,
+        recentDays: 30,
+      })
 
       setStats(getMindArchiveStats(DEFAULT_MIND_ARCHIVE_USER_ID))
       setRecentSealedEvents(sealedEvents)
       setReviewArchive(nextReviewArchive)
+      setCycleMirror(nextCycleMirror)
       setHeartThiefProfile(getHeartThiefProfile(DEFAULT_MIND_ARCHIVE_USER_ID))
     }, 0)
 
@@ -112,6 +121,7 @@ export default function MindArchivePage() {
         reviewArchiveItems={reviewArchiveItems}
         reviewArchiveStats={reviewArchive?.reviewArchiveStats}
         reviewRiskSignals={reviewArchive?.reviewRiskSignals ?? []}
+        cycleMirror={cycleMirror}
         onOpenMindArchive={openMindArchive}
         onOpenHeartMirrorScroll={() => router.push("/mind-scroll")}
         onOpenZhixingScroll={() => router.push("/zhixing-scroll")}

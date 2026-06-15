@@ -1,4 +1,5 @@
 import { listSealedOneThoughtEvents } from "@/lib/mind-archive/oneThoughtEventRepository"
+import { buildCycleMirror } from "@/lib/mind-archive/cycleMirrorService"
 import { buildReviewArchive } from "@/lib/mind-archive/reviewArchiveService"
 import { formatTopReviewRiskSignalSummary } from "@/lib/mind-archive/reviewRiskSignalDisplay"
 import {
@@ -49,6 +50,10 @@ export type ZhixingScrollItem = {
 export type ZhixingScrollData = {
   items: ZhixingScrollItem[]
   ruleGuardSummary: string
+  cycleMirrorSummary: {
+    cycleReminderText: string
+    conclusionText: string
+  }
 }
 
 export const zhixingStateDescriptions: Record<ZhixingState, string> = {
@@ -73,6 +78,14 @@ export function getZhixingScrollData(
     tradeReviews,
     oneThoughtEvents: events,
   })
+  const cycleMirror = buildCycleMirror({
+    oneThoughtEvents: events,
+    reviewArchiveItems,
+    reviewRiskSignals,
+  })
+  const strongestCycleSignal = cycleMirror.cycleSignals.find((signal) => signal.type === "heart_thief_cycle") ||
+    cycleMirror.cycleSignals.find((signal) => signal.type === "same_behavior_repeated") ||
+    cycleMirror.cycleSignals.find((signal) => signal.type === "same_capital_damage_repeated")
   const reviewByEventId = new Map(
     reviewArchiveItems
       .filter((item) => Boolean(item.linkedOneThoughtEventId))
@@ -118,6 +131,10 @@ export function getZhixingScrollData(
   return {
     items,
     ruleGuardSummary: formatTopReviewRiskSignalSummary(reviewRiskSignals),
+    cycleMirrorSummary: {
+      cycleReminderText: strongestCycleSignal?.text || cycleMirror.cycleSummary.strongestCycleText || cycleMirror.cycleSummary.conclusionText,
+      conclusionText: cycleMirror.cycleSummary.conclusionText,
+    },
   }
 }
 
