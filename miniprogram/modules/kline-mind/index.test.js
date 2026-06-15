@@ -13,7 +13,7 @@ const {
 
 assert.strictEqual(SIX_GATE_MAP.length, 6);
 assert.ok(Object.keys(PERSONALITY_KLINE_PRESCRIPTIONS).length >= 9);
-assert.deepStrictEqual(Object.keys(MARKET_CATALOG), ["cn_equity", "futures", "us_equity", "hk_equity", "crypto"]);
+assert.deepStrictEqual(Object.keys(MARKET_CATALOG), ["cn_equity", "futures", "us_equity", "crypto"]);
 assert.deepStrictEqual(TIMEFRAME_CATALOG.map((item) => item.key), ["5m", "10m", "30m", "60m", "1d", "1w", "1mo", "1y"]);
 assert.ok(KLINE_TRAINING_METHODS.find((item) => item.key === "firecracker"));
 assert.ok(getPersonalityKlineDrill("焦虑型").drillAction.includes("固定观察窗口"));

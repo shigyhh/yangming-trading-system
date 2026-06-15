@@ -22,7 +22,11 @@ const { syncLocalState, syncAssessmentReport } = require("../../utils/api");
 const { buildDailyLoopState } = require("../../modules/daily-loop/index");
 const { promptShareMoment } = require("../../utils/share-moments");
 
-const DEFAULT_MODE_KEY = "9";
+const DEFAULT_MODE_KEY = "27";
+
+function normalizeModeKey(modeKey) {
+  return getAssessmentMode(modeKey || DEFAULT_MODE_KEY).key;
+}
 
 function buildSelectedBoundaryInsight(question, selectedValue) {
   if (!question) return "先完成这一题，再看见当前边界。";
@@ -57,8 +61,8 @@ Page({
     behaviorPreview: buildBehaviorContextFromState({})
   },
 
-  onLoad() {
-    const modeKey = DEFAULT_MODE_KEY;
+  onLoad(options = {}) {
+    const modeKey = normalizeModeKey(options.mode);
     const questions = getAssessmentQuestions(modeKey);
     const answers = getAssessmentAnswers(modeKey);
     const safeAnswers = Array.isArray(answers) ? answers : [];
@@ -107,7 +111,7 @@ Page({
   },
 
   selectMode(e) {
-    const modeKey = e.currentTarget.dataset.mode;
+    const modeKey = normalizeModeKey(e.currentTarget.dataset.mode);
     if (!modeKey || modeKey === this.data.modeKey) return;
     const questions = getAssessmentQuestions(modeKey);
     const answers = getAssessmentAnswers(modeKey);

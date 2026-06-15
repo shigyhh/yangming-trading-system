@@ -26,10 +26,14 @@ const {
   getRetestSnapshotState,
   getSubscriptionView,
   saveSubscriptionPlan,
-  getMockUserProfile,
+  getLocalUserProfile,
   getLivingMirrorStats,
   getAssistantHandoff,
-  clearMockMvpState,
+  getEvidenceSummary,
+  getClosureEvidenceChain,
+  getUnifiedJourneyView,
+  getDebugMode,
+  clearLocalMvpState,
   todayKey
 } = require("../../utils/store");
 const { getApiBase, setApiBase, getAuthSession, pullRemoteState, syncLocalState } = require("../../utils/api");
@@ -55,6 +59,22 @@ const SHARE_MOMENT_ENTRIES = [
   { key: "profile_album", label: "心证卡册" }
 ];
 
+const USER_DATA_CHAIN = [
+  "训练记录",
+  "交易复盘",
+  "活镜变化",
+  "助教承接"
+];
+
+const DEBUG_DATA_CHAIN = [
+  "TrainingRecord",
+  "TradeReview",
+  "LivingMirrorStats",
+  "AssistantHandoff"
+];
+
+const TECHNICAL_MESSAGE_RE = /(request:fail|ERR_CONNECTION_REFUSED|ERR_|接口错误|网络连接失败|请求失败|localhost|127\.0\.0\.1)/i;
+
 function buildShareMomentEntries() {
   return SHARE_MOMENT_ENTRIES.map((entry) => {
     const moment = SHARE_MOMENTS[entry.key] || {};
@@ -64,6 +84,40 @@ function buildShareMomentEntries() {
       cardLabel: TYPE_LABELS[moment.cardType] || "心证卡"
     });
   });
+}
+
+function buildAuthFallback(syncStatus = {}) {
+  const failed = !!syncStatus.failedAt && !syncStatus.ok;
+  return {
+    visible: failed,
+    title: syncStatus.fallbackTitle || "连接未完成",
+    text: syncStatus.fallbackText || "本地档案已保存。可稍后再同步，也可以先继续今日修行。",
+    message: syncStatus.message || ""
+  };
+}
+
+function buildSyncView(syncStatus = {}, debugMode = false) {
+  const rawMessage = String(syncStatus.message || "");
+  const technicalMessage = String(syncStatus.technicalMessage || rawMessage || "");
+  const hasTechnicalMessage = TECHNICAL_MESSAGE_RE.test(rawMessage) || TECHNICAL_MESSAGE_RE.test(technicalMessage);
+  let message = "本地档案已保存";
+  if (syncStatus.syncing) {
+    message = "正在连接心镜档案";
+  } else if (syncStatus.ok) {
+    message = rawMessage && !TECHNICAL_MESSAGE_RE.test(rawMessage) ? rawMessage : "已完成同步";
+  } else if (syncStatus.failedAt || hasTechnicalMessage) {
+    message = "后端同步暂未连接";
+  } else if (rawMessage && rawMessage !== "未同步") {
+    message = rawMessage;
+  }
+  return {
+    message,
+    detail: syncStatus.ok ? "网站与小程序将读取同一份心镜档案。" : "本地档案已保存。连接完成后再同步到同一用户档案。",
+    statusText: syncStatus.ok ? "已连接" : "本地优先",
+    statusClass: syncStatus.ok ? "ok" : "warn",
+    showTechnical: !!debugMode && !!technicalMessage,
+    technicalMessage: technicalMessage || "无技术信息"
+  };
 }
 
 Page({
@@ -88,9 +142,18 @@ Page({
     groupPractice: {},
     retestSnapshots: {},
     subscriptionView: getSubscriptionView(),
-    mockUserProfile: getMockUserProfile(),
+    localUserProfile: getLocalUserProfile(),
     livingMirrorStats: getLivingMirrorStats(),
     assistantHandoff: getAssistantHandoff(),
+    evidenceSummary: getEvidenceSummary({ limit: 6 }),
+    evidenceRows: [],
+    closureEvidenceChain: getClosureEvidenceChain(),
+    unifiedJourneyView: getUnifiedJourneyView(),
+    authFallback: buildAuthFallback(getSyncStatus()),
+    debugMode: getDebugMode(),
+    syncView: buildSyncView(getSyncStatus(), getDebugMode()),
+    userDataChain: USER_DATA_CHAIN,
+    debugDataChain: DEBUG_DATA_CHAIN,
     shareMoments: buildShareMomentEntries(),
     menu: []
   },
@@ -109,8 +172,11 @@ Page({
     const zhixingScoreState = getZhixingScoreState();
     const dailyContent = getTodayContent();
     const livingMirrorStats = getLivingMirrorStats();
+    const evidenceSummary = getEvidenceSummary({ limit: 6 });
     const retentionState = getRetentionState();
     const loopState = getDailyLoopState();
+    const syncStatus = getSyncStatus();
+    const debugMode = getDebugMode();
     const today = todayKey();
     const trainingDone = Object.keys(training.steps || {}).filter((key) => training.steps[key]).length;
     const continuity = buildContinuityState({
@@ -149,7 +215,7 @@ Page({
       trainingDone,
       reviewSaved: !!review,
       apiBase: getApiBase(),
-      syncStatus: getSyncStatus(),
+      syncStatus,
       authUser: auth?.user || null,
       growth,
       continuity,
@@ -164,9 +230,18 @@ Page({
       groupPractice: getGroupPracticeState(),
       retestSnapshots: getRetestSnapshotState(),
       subscriptionView: getSubscriptionView(),
-      mockUserProfile: getMockUserProfile(),
+      localUserProfile: getLocalUserProfile(),
       livingMirrorStats,
       assistantHandoff: getAssistantHandoff(),
+      evidenceSummary,
+      evidenceRows: evidenceSummary.rows || [],
+      closureEvidenceChain: getClosureEvidenceChain(),
+      unifiedJourneyView: getUnifiedJourneyView(),
+      authFallback: buildAuthFallback(syncStatus),
+      debugMode,
+      syncView: buildSyncView(syncStatus, debugMode),
+      userDataChain: USER_DATA_CHAIN,
+      debugDataChain: DEBUG_DATA_CHAIN,
       shareMoments: buildShareMomentEntries(),
       menu: [
         { key: "report", title: "交易人格心证", subtitle: result ? `${result.primary} · ${result.secondary}` : "完成照见后生成" },
@@ -215,6 +290,14 @@ Page({
     syncLocalState({ silent: false })
       .then(() => this.onShow())
       .catch(() => this.onShow());
+  },
+
+  goReportFallback() {
+    wx.navigateTo({ url: "/pages/report/index" });
+  },
+
+  goPracticeFallback() {
+    wx.redirectTo({ url: "/pages/home/index" });
   },
 
   toggleReminder(e) {
@@ -350,16 +433,25 @@ Page({
   },
 
   contactAssistant() {
+    const handoff = getAssistantHandoff();
     wx.setClipboardData({
-      data: "知行修行营助理暗号：事上练",
+      data: handoff.coachCopyText || handoff.handoffSummary || "阳明心学交易系统 · 助教承接摘要待生成",
       success: () => {
         wx.showModal({
-          title: "助理暗号已复制",
-          content: "后续正式上线时，这里可替换为企业微信二维码或客服入口。",
+          title: "承接摘要已复制",
+          content: "这份摘要会带上统一档案、人格、复盘念头、活镜变化与建议训练动作，方便助教继续陪跑。",
           showCancel: false,
           confirmText: "知道了"
         });
       }
+    });
+  },
+
+  copyAssistantHandoff() {
+    const handoff = getAssistantHandoff();
+    wx.setClipboardData({
+      data: handoff.coachCopyText || handoff.handoffSummary || "阳明心学交易系统 · 助教承接摘要待生成",
+      success: () => wx.showToast({ title: "承接摘要已复制", icon: "success" })
     });
   },
 
@@ -390,15 +482,15 @@ Page({
     wx.navigateTo({ url: "/pages/share-card/index?type=membership_identity&sourceScene=membership_identity" });
   },
 
-  clearMockData() {
+  clearLocalData() {
     wx.showModal({
       title: "重置本地 MVP 数据",
       content: "将清空今日三印、训练进度、心证卡册、讲堂预约与本地指数记录。手机号绑定与测评报告不会在此处主动清除。",
       confirmText: "重置",
       success: (res) => {
         if (!res.confirm) return;
-        clearMockMvpState();
-        wx.showToast({ title: "本地 mock 已重置", icon: "success" });
+        clearLocalMvpState();
+        wx.showToast({ title: "本地数据已重置", icon: "success" });
         this.onShow();
       }
     });

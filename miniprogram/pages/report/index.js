@@ -8,7 +8,8 @@ const {
   getKlineReviewReports,
   getUserBinding,
   updateProfile,
-  saveMindProfile
+  saveMindProfile,
+  formatRiskLevel
 } = require("../../utils/store");
 const { COMPLIANCE_TEXT, getMirrorBinding } = require("../../utils/content");
 const { getPersonalityArchive } = require("../../modules/personality/index");
@@ -17,7 +18,7 @@ const { getPersonalityStagePlan } = require("../../core/personality-stage-map");
 const { buildSevenDayChange } = require("../../modules/retest-change/index");
 const { promptShareMoment } = require("../../utils/share-moments");
 const { syncAssessmentReport } = require("../../utils/api");
-const { buildKlineChange } = require("../../modules/kline-simulator/index");
+const { buildKlineChange, buildKlineDayRetestComparison, getKlineRecommendationForMirror } = require("../../modules/kline-simulator/index");
 
 function buildReportBlocks(type) {
   const archive = getPersonalityArchive(type);
@@ -82,6 +83,7 @@ function buildRadarRows(result, primary, secondary) {
         key: item.key || item.label,
         label: item.label,
         value,
+        displayValue: formatRiskLevel(value, { hideLowScore: true }),
         level: radarLevel(value),
         description: item.description || "观察交易里的第一反应。"
       };
@@ -93,7 +95,10 @@ function buildRadarRows(result, primary, secondary) {
     { key: "proving", label: "证明执念", value: primary === "偏执型" || secondary === "赌徒型" ? 76 : 40, description: "观察动作是否服务于证明自己。" },
     { key: "execution", label: "执行断裂", value: primary === "拖延型" || secondary === "完美型" ? 74 : 38, description: "观察知与行之间是否断开。" }
   ];
-  return fallback.map((item) => Object.assign({}, item, { level: radarLevel(item.value) }));
+  return fallback.map((item) => Object.assign({}, item, {
+    displayValue: formatRiskLevel(item.value, { hideLowScore: true }),
+    level: radarLevel(item.value)
+  }));
 }
 
 function radarLevel(value) {
@@ -198,6 +203,8 @@ Page({
     assessmentHistory: [],
     retestChange: buildRetestChange([], null),
     klineChange: buildKlineChange(getKlineReviewReports()),
+    klineDayRetest: buildKlineDayRetestComparison(getKlineReviewReports()),
+    klineRecommendation: getKlineRecommendationForMirror(""),
     miniReport: buildMiniReport(null, null, null)
   },
 
@@ -218,6 +225,8 @@ Page({
         assessmentHistory,
         retestChange: buildRetestChange(assessmentHistory, null),
         klineChange: buildKlineChange(getKlineReviewReports()),
+        klineDayRetest: buildKlineDayRetestComparison(getKlineReviewReports()),
+        klineRecommendation: getKlineRecommendationForMirror(""),
         miniReport: buildMiniReport(null, null, null)
       });
       return;
@@ -244,6 +253,8 @@ Page({
     const training7State = getTraining7State();
     const retestChange = buildRetestChange(assessmentHistory, result);
     const klineChange = buildKlineChange(klineReports);
+    const klineDayRetest = buildKlineDayRetestComparison(klineReports);
+    const klineRecommendation = getKlineRecommendationForMirror(result.primaryMirror || result.primary);
 
     this.setData({
       hasResult: true,
@@ -258,6 +269,8 @@ Page({
       evidenceChain: buildEvidenceChain({ result, klineReports, training7State, retestChange }),
       retestChange,
       klineChange,
+      klineDayRetest,
+      klineRecommendation,
       miniReport: buildMiniReport(result, archive, stagePlan)
     });
   },
@@ -271,7 +284,8 @@ Page({
   },
 
   goKlineSimulator() {
-    wx.navigateTo({ url: "/pages/kline-simulator/index" });
+    const recommendation = this.data.klineRecommendation || {};
+    wx.navigateTo({ url: recommendation.path || "/pages/kline-simulator/index" });
   },
 
   goTradeReview() {

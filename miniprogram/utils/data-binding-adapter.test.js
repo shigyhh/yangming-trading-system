@@ -8,6 +8,7 @@ const {
   shouldSyncRetest,
   buildTrainingBindingPayload,
   buildKLineBindingPayload,
+  buildTradeReviewBindingPayload,
   buildShareCardBindingPayload
 } = require("./data-binding-adapter");
 
@@ -27,6 +28,8 @@ const state = {
     inviteSource: "ZX567877"
   },
   user_binding: {
+    userId: "phone_13812345678",
+    userIdDisplay: "phone_138****5678",
     phone: "13812345678",
     phoneMask: "138****5678",
     inviteSource: "ZX567877",
@@ -127,12 +130,39 @@ const state = {
       createdAt: 1764547200000
     },
     records: {}
+  },
+  trade_review_records: {
+    latest: {
+      id: "tr-local-001",
+      screenshotPath: "wxfile://review-001.png",
+      tradeDate: "2026-06-01",
+      marketKey: "cn",
+      symbol: "600519",
+      entryReason: "看到波动变快，心里怕错过。",
+      exitReason: "回看后发现边界没有提前写清。",
+      firstThought: "怕错过",
+      inPlan: "no",
+      changedPlan: "yes",
+      exitPrepared: "no",
+      relatedMirror: "追涨之镜",
+      heartThieves: ["贪", "急"],
+      actionLabel: "计划外动作",
+      emotion: "急躁",
+      verdict: "这次复盘照见的是怕错过带动动作。",
+      nextAction: "边界前停十秒，先写第一念。",
+      ocrDraft: {
+        status: "provider_not_configured",
+        needsUserConfirmation: true
+      },
+      createdAt: 1764547400000
+    },
+    records: []
   }
 };
 
 const assessmentPayload = buildAssessmentBindingPayload({ auth, state });
 assert.strictEqual(assessmentPayload.source, "miniprogram");
-assert.strictEqual(assessmentPayload.user.userId, "mp-user-001");
+assert.strictEqual(assessmentPayload.user.userId, "phone_13812345678");
 assert.strictEqual(assessmentPayload.user.maskedPhone, "138****5678");
 assert.strictEqual(assessmentPayload.report.schemaVersion, "assessment_report_v1");
 assert.strictEqual(assessmentPayload.report.primaryType.label, "冲动型");
@@ -167,6 +197,57 @@ assert.ok(klinePayload.record.scene.includes("边界触碰"));
 assert.strictEqual(klinePayload.record.reaction, "急躁");
 assert.strictEqual(klinePayload.record.disciplineAction, "停十秒");
 
+const directKlinePayload = buildKLineBindingPayload({
+  auth,
+  state,
+  klineRecord: {
+    id: "kr-local-001",
+    sessionId: "ks-local-001",
+    sceneId: "scene-fast-001",
+    sceneTitle: "快速拉升场景",
+    marketKey: "cn",
+    timeframeKey: "1d",
+    symbol: "历史盲练切片",
+    startedAt: 1764547200000,
+    completedAt: 1764547300000,
+    candlesRange: { start: "2026-06-01", end: "2026-06-10" },
+    userActions: [{ optionId: "rush", label: "想追", reactionTimeMs: 2400 }],
+    mistakes: ["边界差点失守"],
+    heartThieves: ["贪", "急"],
+    scores: { boundaryKeeping: 54, impulseDelay: 42 },
+    insight: "你已经看见第一念，下一步是让手慢半拍。",
+    trainingSuggestion: "建议进入 Day 1：观入场冲动。",
+    linkedTradeReviewId: "tr-from-kr-local-001",
+    linkedOneThoughtEventId: "ot-local-001",
+    source: "miniprogram",
+    createdAt: 1764547300000
+  }
+});
+assert.ok(directKlinePayload);
+assert.strictEqual(directKlinePayload.record.id, "kr-local-001");
+assert.strictEqual(directKlinePayload.record.idempotencyKey, "kr-local-001");
+assert.strictEqual(directKlinePayload.record.userId, "phone_13812345678");
+assert.strictEqual(directKlinePayload.record.sessionId, "ks-local-001");
+assert.strictEqual(directKlinePayload.record.sceneId, "scene-fast-001");
+assert.strictEqual(directKlinePayload.record.linkedTradeReviewId, "tr-from-kr-local-001");
+assert.strictEqual(directKlinePayload.record.disciplineScore, 54);
+assert.strictEqual(directKlinePayload.record.processScores.boundaryKeeping, 54);
+assert.strictEqual(directKlinePayload.record.processInsight, "你已经看见第一念，下一步是让手慢半拍。");
+
+const tradeReviewPayload = buildTradeReviewBindingPayload({ auth, state });
+assert.ok(tradeReviewPayload);
+assert.strictEqual(tradeReviewPayload.user.userId, "phone_13812345678");
+assert.strictEqual(tradeReviewPayload.review.id, "tr-local-001");
+assert.strictEqual(tradeReviewPayload.review.marketType, "a_share");
+assert.strictEqual(tradeReviewPayload.review.symbol, "600519");
+assert.strictEqual(tradeReviewPayload.review.timeframeKey, "1d");
+assert.strictEqual(tradeReviewPayload.review.detectedMirror, "追涨之镜");
+assert.deepStrictEqual(tradeReviewPayload.review.detectedThieves, ["贪", "急"]);
+assert.strictEqual(tradeReviewPayload.review.wasPlanned, false);
+assert.strictEqual(tradeReviewPayload.review.hadExitRule, false);
+assert.strictEqual(tradeReviewPayload.review.changedPlanDuringTrade, true);
+assert.strictEqual(tradeReviewPayload.review.ocrDraft.status, "provider_not_configured");
+
 const sharePayload = buildShareCardBindingPayload({
   auth,
   state,
@@ -175,17 +256,60 @@ const sharePayload = buildShareCardBindingPayload({
 assert.strictEqual(sharePayload.channel, "ZX567877");
 assert.strictEqual(sharePayload.source_channel, "微信小程序MVP");
 
+const localIdentityPayload = buildShareCardBindingPayload({
+  auth: {},
+  state,
+  event: { shareCardType: "daily_mantra" }
+});
+assert.strictEqual(localIdentityPayload.user.userId, "phone_13812345678");
+assert.strictEqual(localIdentityPayload.user.maskedPhone, "138****5678");
+
 const forbiddenPhrases = ["推荐买入", "推荐卖出", "必赚", "稳赚", "收益保证", "喊单", "抄底", "逃顶"];
-const serialized = JSON.stringify({ assessmentPayload, retestPayload, trainingPayload, klinePayload, sharePayload });
+const serialized = JSON.stringify({ assessmentPayload, retestPayload, trainingPayload, klinePayload, tradeReviewPayload, sharePayload });
 forbiddenPhrases.forEach((phrase) => {
   assert.strictEqual(serialized.includes(phrase), false, `payload should not include ${phrase}`);
 });
 
 const apiSource = fs.readFileSync(path.join(__dirname, "api.js"), "utf8");
+const adapterSource = fs.readFileSync(path.join(__dirname, "data-binding-adapter.js"), "utf8");
+const tradeReviewModuleSource = fs.readFileSync(path.join(__dirname, "../modules/trade-review/index.js"), "utf8");
 assert.ok(apiSource.includes("/api/v1/data-binding/assessment-report"));
 assert.ok(apiSource.includes("/api/v1/data-binding/users/"));
+assert.ok(apiSource.includes("/trade-reviews"));
+assert.ok(apiSource.includes("syncKlineTrainingRecord"));
+assert.ok(apiSource.includes("klineTrainingSyncStatus"));
+assert.ok(apiSource.includes("klineTrainingLastSyncedAt"));
+assert.ok(apiSource.includes("klineTrainingSyncStartedAt"));
+assert.ok(apiSource.includes("force"));
+assert.ok(apiSource.includes("tradeReviewSyncStatus"));
+assert.ok(apiSource.includes("tradeReviewLastSyncedAt"));
+assert.strictEqual(adapterSource.includes(["h", "k", "_stock"].join("")), false);
+assert.strictEqual(adapterSource.includes(["港", "股"].join("")), false);
+assert.strictEqual(tradeReviewModuleSource.includes(["h", "k", "_equity"].join("")), false);
+assert.strictEqual(tradeReviewModuleSource.includes(["h", "k", "_stock"].join("")), false);
+assert.ok(apiSource.includes("/trade-review-ocr"));
+assert.ok(apiSource.includes("/training-prescription"));
+assert.ok(apiSource.includes("pullTrainingPrescription"));
 assert.strictEqual(apiSource.includes("/assessment-report`"), false);
 assert.strictEqual(apiSource.includes("/training-progress`"), false);
 assert.strictEqual(apiSource.includes("/share-attribution`"), false);
+
+const klineSessionSource = fs.readFileSync(path.join(__dirname, "../pages/kline-session/index.js"), "utf8");
+assert.ok(klineSessionSource.includes("syncKlineTrainingRecord"));
+assert.ok(klineSessionSource.includes("linkedTradeReviewId"));
+assert.ok(klineSessionSource.includes("if (!result || !result.ok)"));
+assert.ok(klineSessionSource.includes("marketContext"));
+assert.ok(klineSessionSource.includes("klineSource: \"server\""));
+assert.strictEqual(klineSessionSource.includes("使用离线训练样本"), false);
+assert.ok(klineSessionSource.includes("klineTrainingSyncStartedAt"));
+assert.ok(klineSessionSource.includes("force: true"));
+assert.ok(klineSessionSource.includes(".catch(() => {})"));
+const klineReviewSource = fs.readFileSync(path.join(__dirname, "../pages/kline-review/index.js"), "utf8");
+assert.ok(klineReviewSource.includes("syncKlineTrainingRecord"));
+const klineMindSource = fs.readFileSync(path.join(__dirname, "../pages/kline-mind/index.js"), "utf8");
+assert.ok(klineMindSource.includes("fetchKlineTrainingSlice"));
+assert.strictEqual(klineMindSource.includes("getKlineHistoryCache"), false);
+assert.ok(klineMindSource.includes("historySlice"));
+assert.ok(klineMindSource.includes("K线服务暂不可用"));
 
 console.log("miniprogram data-binding adapter tests passed");

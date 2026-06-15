@@ -41,4 +41,14 @@ assert.ok(cards.some((item) => item.type === "group_kline_mirror"));
 assert.ok(cards.some((item) => item.type === "mirror_challenge"));
 assert.ok(cards.some((item) => item.type === "impulse_delay"));
 
+const inviteCard = buildShareCardPreview("companion_invite", {
+  inviteCode: "ZX567877",
+  livingMirrorStats: { currentMirror: "追涨之镜" },
+  training7View: { today: { title: "观入场冲动" } },
+  assistantHandoff: { statusText: "可承接", sharePrompt: "我照见了自己的第一念，邀一位同修同行。" }
+});
+assert.ok(inviteCard.insight.includes("第一念"));
+assert.ok(inviteCard.metrics.some((item) => item.label === "承接状态" && item.value === "可承接"));
+assert.ok(!inviteCard.metrics.some((item) => item.value.includes("占位")));
+
 console.log("share-card module tests passed");

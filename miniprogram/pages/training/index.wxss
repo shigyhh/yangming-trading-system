@@ -1,3 +1,41 @@
+.training-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin-bottom: 28rpx;
+}
+
+.training-brand-mark {
+  width: 82rpx;
+  height: 82rpx;
+  flex: 0 0 82rpx;
+  border-radius: 24rpx;
+  border: 1rpx solid rgba(217, 189, 122, 0.16);
+  background:
+    radial-gradient(circle at 50% 42%, rgba(216, 183, 111, 0.12), transparent 66%),
+    rgba(17, 16, 13, 0.42);
+  box-shadow:
+    inset 0 1rpx 0 rgba(244, 235, 221, 0.1),
+    0 20rpx 42rpx rgba(0, 0, 0, 0.26);
+}
+
+.training-brand-copy text {
+  display: block;
+  color: rgba(244, 235, 221, 0.86);
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", serif;
+  font-size: 28rpx;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.training-brand-copy view {
+  margin-top: 8rpx;
+  color: rgba(216, 183, 111, 0.46);
+  font-size: 20rpx;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
 .pre-card {
   margin-top: 28rpx;
   padding: 26rpx;
@@ -140,6 +178,12 @@
   font-weight: 900;
 }
 
+.mind-seal.brand-zhao-mini {
+  display: flex;
+  gap: 6rpx;
+  font-size: 0;
+}
+
 .mind-copy text {
   display: block;
   color: #f1d27d;
@@ -231,7 +275,7 @@
 
 .progress-ring text {
   color: #f1d27d;
-  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
   font-size: 34rpx;
   font-weight: 900;
   letter-spacing: 0;
@@ -240,7 +284,7 @@
 
 .progress-ring view {
   color: rgba(247, 239, 223, 0.5);
-  font-family: "ZX-Harmony", "HarmonyOS Sans SC", "HarmonyOS Sans", -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
   font-size: 20rpx;
 }
 
@@ -314,6 +358,62 @@
   font-size: 23rpx;
   font-weight: 800;
   letter-spacing: 0.14em;
+}
+
+.training-field .field-label {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  margin-bottom: 12rpx;
+  color: #b49355;
+}
+
+.training-field.jade .field-label {
+  color: #58c2ad;
+}
+
+.training-field .field-label text {
+  margin: 0;
+  color: currentColor;
+  font-size: 23rpx;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.mini-glyph {
+  position: relative;
+  width: 28rpx;
+  height: 28rpx;
+  flex: 0 0 28rpx;
+  color: currentColor;
+  opacity: 0.86;
+}
+
+.mini-glyph-train,
+.mini-glyph-train::before,
+.mini-glyph-train::after {
+  border-top: 3rpx solid currentColor;
+  border-radius: 999rpx;
+}
+
+.mini-glyph-train {
+  margin-top: 6rpx;
+}
+
+.mini-glyph-train::before,
+.mini-glyph-train::after {
+  content: "";
+  position: absolute;
+  left: 4rpx;
+  right: -4rpx;
+}
+
+.mini-glyph-train::before {
+  top: 8rpx;
+}
+
+.mini-glyph-train::after {
+  top: 16rpx;
 }
 
 .training-field.jade text {

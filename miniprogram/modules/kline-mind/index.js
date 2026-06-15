@@ -105,7 +105,7 @@ const PERSONALITY_KLINE_PRESCRIPTIONS = {
     heartThief: "执己为理",
     watchPoint: "已有判断后，最容易只看支持自己的部分。",
     firstQuestion: "我是在看见事实，还是在维护原来的解释？",
-    boundaryPractice: "写下一条反向证据，让事实先于立场。",
+    boundaryPractice: "写下一条反向事实，让事实先于立场。",
     dangerMoment: "图形不配合原判断，心里开始找解释。"
   },
   "拖延型": {
@@ -156,16 +156,6 @@ const MARKET_CATALOG = {
     triggerLabel: "真实历史片段",
     mindQuestion: "缺口之后，你是在观察结构，还是在被错过感牵动？",
     guardrail: "本训练使用历史数据，不形成任何当下市场判断。"
-  },
-  hk_equity: {
-    key: "hk_equity",
-    name: "港股",
-    rhythm: "流动性切换、跳动明显、反复试探",
-    defaultSymbol: "00700.HK",
-    rule: "T+0、交易单位与流动性需标记",
-    triggerLabel: "真实历史片段",
-    mindQuestion: "反复试探时，你是在等待证据，还是被不确定感牵走？",
-    guardrail: "只做心理训练记录，不给出任何交易结论。"
   },
   crypto: {
     key: "crypto",
@@ -261,7 +251,7 @@ const PERSONALITY_KLINE_DRILLS = {
   },
   "偏执型": {
     targetScene: "图形不配合原判断的片段",
-    drillAction: "写下一条反向证据，让事实先于立场。",
+    drillAction: "写下一条反向事实，让事实先于立场。",
     reviewPrompt: "我是在照见事实，还是在维护原解释？"
   },
   "拖延型": {
@@ -476,6 +466,7 @@ function buildKlineMindSession({
   const scenario = DAY_SCENARIOS[day] || DAY_SCENARIOS[1];
   const marketKey = (record || {}).marketKey || "cn_equity";
   const timeframeKey = (record || {}).timeframeKey || "1d";
+  const timeframeMeta = TIMEFRAME_CATALOG.find((item) => item.key === timeframeKey) || TIMEFRAME_CATALOG[4];
   const market = getMarketConfig(marketKey);
   const historySlice = (record || {}).historySlice || getHistorySlice(historyCache, market.key, timeframeKey);
   const rawCandles = normalizeHistoryCandles(historySlice || {});
@@ -496,6 +487,7 @@ function buildKlineMindSession({
     market,
     marketOptions: buildMarketOptions(market.key),
     timeframeKey,
+    timeframeLabel: timeframeMeta.label,
     timeframeOptions: buildTimeframeOptions(timeframeKey),
     historySlice: historySlice || null,
     hasHistoricalData: candles.length > 0,

@@ -1,7 +1,9 @@
 const {
   collectLocalState,
   applyRemoteState,
+  applyTrainingPrescriptionDispatch,
   getProfile,
+  saveKlineReviewSyncStatus,
   saveSyncStatus
 } = require("./store");
 const {
@@ -10,21 +12,52 @@ const {
   shouldSyncRetest,
   buildTrainingBindingPayload,
   buildKLineBindingPayload,
-  buildShareCardBindingPayload
+  buildTradeReviewBindingPayload,
+  buildShareCardBindingPayload,
+  buildDataBindingUser
 } = require("./data-binding-adapter");
 
 const API_BASE_KEY = "zhixing_api_base";
+const API_BASE_ENABLED_KEY = "zhixing_api_base_enabled";
 const AUTH_KEY = "zhixing_api_auth";
 const CLIENT_ID_KEY = "zhixing_client_id";
+const PRODUCTION_API_BASE = "https://xxjyxt.com";
 const DEFAULT_API_BASE = "http://127.0.0.1:8787";
+const KLINE_MIN_CANDLES = 6;
+const SAFE_CONNECTION_MESSAGE = "后端同步：暂未连接";
+const SAFE_FALLBACK_TEXT = "本地档案已保存。可稍后再同步，也可以先继续今日修行。";
+
+function getMiniProgramEnvVersion() {
+  try {
+    return ((wx.getAccountInfoSync() || {}).miniProgram || {}).envVersion || "develop";
+  } catch (error) {
+    return "develop";
+  }
+}
+
+function isReleaseEnv() {
+  return getMiniProgramEnvVersion() === "release";
+}
 
 function getApiBase() {
+  if (isReleaseEnv()) return PRODUCTION_API_BASE;
   return wx.getStorageSync(API_BASE_KEY) || DEFAULT_API_BASE;
 }
 
+function hasConfiguredApiBase() {
+  if (isReleaseEnv()) return true;
+  return !!wx.getStorageSync(API_BASE_ENABLED_KEY);
+}
+
 function setApiBase(value) {
+  if (isReleaseEnv()) {
+    wx.setStorageSync(API_BASE_KEY, PRODUCTION_API_BASE);
+    wx.setStorageSync(API_BASE_ENABLED_KEY, true);
+    return PRODUCTION_API_BASE;
+  }
   const next = String(value || "").trim().replace(/\/$/, "");
   wx.setStorageSync(API_BASE_KEY, next || DEFAULT_API_BASE);
+  wx.setStorageSync(API_BASE_ENABLED_KEY, true);
   return getApiBase();
 }
 
@@ -35,6 +68,22 @@ function getAuthSession() {
 function saveAuthSession(session) {
   wx.setStorageSync(AUTH_KEY, session);
   return session;
+}
+
+function getTechnicalMessage(error) {
+  return error && error.message ? String(error.message).slice(0, 180) : "";
+}
+
+function saveConnectionFallback(error, message = SAFE_CONNECTION_MESSAGE) {
+  saveSyncStatus({
+    ok: false,
+    syncing: false,
+    message,
+    fallbackTitle: "连接未完成",
+    fallbackText: SAFE_FALLBACK_TEXT,
+    technicalMessage: getTechnicalMessage(error),
+    failedAt: Date.now()
+  });
 }
 
 function getClientId() {
@@ -49,6 +98,10 @@ function getClientId() {
 function request({ path, method = "GET", data = null, token = "" }) {
   const apiBase = getApiBase();
   return new Promise((resolve, reject) => {
+    if (!hasConfiguredApiBase()) {
+      reject(new Error("连接未完成"));
+      return;
+    }
     wx.request({
       url: `${apiBase}${path}`,
       method,
@@ -82,17 +135,23 @@ async function ensureAuth() {
   }
 
   const profile = getProfile();
-  const result = await request({
-    path: "/api/v1/auth/demo-login",
-    method: "POST",
-    data: {
-      method: "wechat_miniprogram_demo",
-      display_name: profile.nickname || "修行者",
-      contact: profile.phone || getClientId(),
-      wechat_bound: true,
-      source_channel: "微信小程序MVP"
-    }
-  });
+  let result;
+  try {
+    result = await request({
+      path: "/api/v1/auth/demo-login",
+      method: "POST",
+      data: {
+        method: "wechat_miniprogram_demo",
+        display_name: profile.nickname || "修行者",
+        contact: profile.phone || getClientId(),
+        wechat_bound: true,
+        source_channel: "微信小程序MVP"
+      }
+    });
+  } catch (error) {
+    saveConnectionFallback(error);
+    throw error;
+  }
 
   return saveAuthSession({
     user: result.user,
@@ -125,13 +184,8 @@ async function syncLocalState({ silent = true } = {}) {
     if (!silent) wx.showToast({ title: "已同步到后端", icon: "success" });
     return result.state;
   } catch (error) {
-    saveSyncStatus({
-      ok: false,
-      syncing: false,
-      message: error.message || "同步失败",
-      failedAt: Date.now()
-    });
-    if (!silent) wx.showToast({ title: "同步失败，请检查后端地址", icon: "none" });
+    saveConnectionFallback(error);
+    if (!silent) wx.showToast({ title: "连接未完成，本地已保存", icon: "none" });
     throw error;
   }
 }
@@ -157,106 +211,274 @@ async function pullRemoteState({ silent = true } = {}) {
     if (!silent) wx.showToast({ title: "已从后端拉取", icon: "success" });
     return result.state;
   } catch (error) {
-    saveSyncStatus({
-      ok: false,
-      syncing: false,
-      message: error.message || "拉取失败",
-      failedAt: Date.now()
-    });
-    if (!silent) wx.showToast({ title: "拉取失败，请检查后端地址", icon: "none" });
+    saveConnectionFallback(error);
+    if (!silent) wx.showToast({ title: "连接未完成，本地已保存", icon: "none" });
     throw error;
   }
 }
 
 async function syncCheckIn(note = "") {
-  const auth = await ensureAuth();
-  return request({
-    path: `/api/v1/users/${auth.user.id}/check-in`,
-    method: "POST",
-    token: auth.access_token,
-    data: {
-      source_channel: "微信小程序MVP",
-      note
-    }
-  });
+  try {
+    const auth = await ensureAuth();
+    return request({
+      path: `/api/v1/users/${auth.user.id}/check-in`,
+      method: "POST",
+      token: auth.access_token,
+      data: {
+        source_channel: "微信小程序MVP",
+        note
+      }
+    });
+  } catch (error) {
+    saveConnectionFallback(error);
+    throw error;
+  }
 }
 
 async function syncAssessmentReport(report = null) {
-  const auth = await ensureAuth();
-  const state = collectLocalState();
-  const payload = buildAssessmentBindingPayload({ auth, state, report: report || state.assessment_result });
-  const result = await request({
-    path: "/api/v1/data-binding/assessment-report",
-    method: "POST",
-    token: auth.access_token,
-    data: payload
-  });
-
-  if (shouldSyncRetest(state)) {
-    const boundUserId = (result.user && result.user.id) || payload.user.userId || auth.user.id;
-    request({
-      path: `/api/v1/data-binding/users/${encodeURIComponent(boundUserId)}/retests`,
+  try {
+    const auth = await ensureAuth();
+    const state = collectLocalState();
+    const payload = buildAssessmentBindingPayload({ auth, state, report: report || state.assessment_result });
+    const result = await request({
+      path: "/api/v1/data-binding/assessment-report",
       method: "POST",
       token: auth.access_token,
-      data: buildRetestBindingPayload({ auth, state, report: report || state.assessment_result })
-    }).catch(() => {});
-  }
+      data: payload
+    });
 
-  return result;
+    if (shouldSyncRetest(state)) {
+      const boundUserId = (result.user && result.user.id) || payload.user.userId || auth.user.id;
+      request({
+        path: `/api/v1/data-binding/users/${encodeURIComponent(boundUserId)}/retests`,
+        method: "POST",
+        token: auth.access_token,
+        data: buildRetestBindingPayload({ auth, state, report: report || state.assessment_result })
+      }).catch(() => {});
+    }
+
+    return result;
+  } catch (error) {
+    saveConnectionFallback(error);
+    throw error;
+  }
 }
 
 async function syncTrainingProgress(progress = null) {
-  const auth = await ensureAuth();
-  const state = collectLocalState();
-  const trainingPayload = buildTrainingBindingPayload({ auth, state, progress });
-  if (!trainingPayload) {
-    return { ok: true, skipped: true, reason: "暂无训练记录" };
-  }
+  try {
+    const auth = await ensureAuth();
+    const state = collectLocalState();
+    const trainingPayload = buildTrainingBindingPayload({ auth, state, progress });
+    if (!trainingPayload) {
+      return { ok: true, skipped: true, reason: "暂无训练记录" };
+    }
 
-  const result = await request({
-    path: `/api/v1/data-binding/users/${encodeURIComponent(trainingPayload.user.userId)}/training-records`,
-    method: "POST",
-    token: auth.access_token,
-    data: trainingPayload
-  });
-
-  const klinePayload = buildKLineBindingPayload({
-    auth,
-    state,
-    progress: trainingPayload.practiceState,
-    trainingRecord: trainingPayload.record
-  });
-
-  if (klinePayload) {
-    request({
-      path: `/api/v1/data-binding/users/${encodeURIComponent(klinePayload.user.userId)}/kline-records`,
+    const result = await request({
+      path: `/api/v1/data-binding/users/${encodeURIComponent(trainingPayload.user.userId)}/training-records`,
       method: "POST",
       token: auth.access_token,
-      data: klinePayload
-    }).catch(() => {});
+      data: trainingPayload
+    });
+
+    const klinePayload = buildKLineBindingPayload({
+      auth,
+      state,
+      progress: trainingPayload.practiceState,
+      trainingRecord: trainingPayload.record
+    });
+
+    if (klinePayload) {
+      request({
+        path: `/api/v1/data-binding/users/${encodeURIComponent(klinePayload.user.userId)}/kline-records`,
+        method: "POST",
+        token: auth.access_token,
+        data: klinePayload
+      }).catch(() => {});
+    }
+
+    return result;
+  } catch (error) {
+    saveConnectionFallback(error);
+    throw error;
+  }
+}
+
+function isRecentKlineSyncPending(record = {}) {
+  if ((record || {}).klineTrainingSyncStatus !== "pending") return false;
+  const startedAt = Date.parse((record || {}).klineTrainingSyncStartedAt || "");
+  if (!Number.isFinite(startedAt)) return false;
+  return Date.now() - startedAt < 30000;
+}
+
+async function syncKlineTrainingRecord(record = null, options = {}) {
+  const reviewId = String((record || {}).id || "");
+  if ((record || {}).klineTrainingSyncStatus === "synced") {
+    return { ok: true, skipped: true, reason: "K线训练已同步" };
+  }
+  if (!options.force && isRecentKlineSyncPending(record || {})) {
+    return { ok: true, skipped: true, reason: "K线训练同步进行中" };
   }
 
-  return result;
+  try {
+    const auth = await ensureAuth();
+    const state = collectLocalState();
+    const payload = buildKLineBindingPayload({ auth, state, klineRecord: record });
+    if (!payload) {
+      return { ok: true, skipped: true, reason: "暂无K线训练记录" };
+    }
+
+    saveKlineReviewSyncStatus(reviewId || payload.record.id, {
+      klineTrainingSyncStatus: "pending",
+      klineTrainingSyncStartedAt: new Date().toISOString(),
+      klineTrainingSyncError: ""
+    });
+
+    const result = await request({
+      path: `/api/v1/data-binding/users/${encodeURIComponent(payload.user.userId)}/kline-records`,
+      method: "POST",
+      token: auth.access_token,
+      data: payload
+    });
+    const syncedAt = new Date().toISOString();
+    saveKlineReviewSyncStatus(reviewId || payload.record.id, {
+      klineTrainingSyncStatus: "synced",
+      klineTrainingLastSyncedAt: syncedAt,
+      klineTrainingSyncStartedAt: "",
+      klineTrainingSyncError: ""
+    });
+    saveSyncStatus({
+      ok: true,
+      syncing: false,
+      message: "K线训练已同步",
+      userId: payload.user.userId,
+      klineTrainingSyncStatus: "synced",
+      klineTrainingLastSyncedAt: syncedAt,
+      klineTrainingId: payload.record.id
+    });
+    return result;
+  } catch (error) {
+    saveKlineReviewSyncStatus(reviewId, {
+      klineTrainingSyncStatus: "failed",
+      klineTrainingSyncError: getTechnicalMessage(error)
+    });
+    saveSyncStatus({
+      ok: false,
+      syncing: false,
+      message: SAFE_CONNECTION_MESSAGE,
+      klineTrainingSyncStatus: "failed",
+      klineTrainingSyncError: getTechnicalMessage(error),
+      failedAt: Date.now()
+    });
+    throw error;
+  }
+}
+
+async function syncTradeReviewRecord(review = null) {
+  try {
+    const auth = await ensureAuth();
+    const state = collectLocalState();
+    const payload = buildTradeReviewBindingPayload({ auth, state, review });
+    if (!payload) {
+      return { ok: true, skipped: true, reason: "暂无真实复盘" };
+    }
+    const result = await request({
+      path: `/api/v1/data-binding/users/${encodeURIComponent(payload.user.userId)}/trade-reviews`,
+      method: "POST",
+      token: auth.access_token,
+      data: payload
+    });
+    saveSyncStatus({
+      ok: true,
+      syncing: false,
+      message: "真实复盘已同步",
+      userId: payload.user.userId,
+      tradeReviewSyncStatus: "synced",
+      tradeReviewLastSyncedAt: Date.now(),
+      tradeReviewId: payload.review.id
+    });
+    return result;
+  } catch (error) {
+    saveConnectionFallback(error);
+    throw error;
+  }
+}
+
+async function requestTradeReviewOcrDraft({ imagePath = "", imageMeta = {} } = {}) {
+  try {
+    const auth = await ensureAuth();
+    const state = collectLocalState();
+    const user = buildDataBindingUser(auth, state);
+    return request({
+      path: `/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/trade-review-ocr`,
+      method: "POST",
+      token: auth.access_token,
+      data: {
+        user,
+        image: {
+          localPath: imagePath,
+          fileName: imageMeta.fileName || "",
+          size: imageMeta.size || 0,
+          width: imageMeta.width || 0,
+          height: imageMeta.height || 0
+        },
+        source: "miniprogram"
+      }
+    });
+  } catch (error) {
+    saveConnectionFallback(error);
+    throw error;
+  }
+}
+
+async function pullTrainingPrescription({ silent = true } = {}) {
+  try {
+    const auth = await ensureAuth();
+    const state = collectLocalState();
+    const user = buildDataBindingUser(auth, state);
+    const result = await request({
+      path: `/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/training-prescription`,
+      method: "GET",
+      token: auth.access_token
+    });
+    const prescription = applyTrainingPrescriptionDispatch(result);
+    saveSyncStatus({
+      ok: true,
+      syncing: false,
+      message: "已接收今日训练",
+      userId: user.userId,
+      syncedAt: Date.now()
+    });
+    if (!silent) wx.showToast({ title: "已接收今日训练", icon: "success" });
+    return prescription;
+  } catch (error) {
+    saveConnectionFallback(error);
+    if (!silent) wx.showToast({ title: "连接未完成，本地已保存", icon: "none" });
+    throw error;
+  }
 }
 
 async function syncShareAttribution(event = null) {
-  const auth = await ensureAuth();
-  const state = collectLocalState();
-  const payload = buildShareCardBindingPayload({ auth, state, event });
-  return request({
-    path: `/api/v1/data-binding/users/${encodeURIComponent(payload.user.userId)}/share-card`,
-    method: "POST",
-    token: auth.access_token,
-    data: {
-      channel: payload.channel,
-      source_channel: payload.source_channel
-    }
-  });
+  try {
+    const auth = await ensureAuth();
+    const state = collectLocalState();
+    const payload = buildShareCardBindingPayload({ auth, state, event });
+    return request({
+      path: `/api/v1/data-binding/users/${encodeURIComponent(payload.user.userId)}/share-card`,
+      method: "POST",
+      token: auth.access_token,
+      data: {
+        channel: payload.channel,
+        source_channel: payload.source_channel
+      }
+    });
+  } catch (error) {
+    saveConnectionFallback(error);
+    throw error;
+  }
 }
 
 const KLINE_MARKET_MAP = {
   cn: "cn_equity",
-  hk: "hk_equity",
   us: "us_equity",
   futures: "futures",
   crypto: "crypto"
@@ -298,11 +520,84 @@ async function fetchKlineTrainingSlice({
     `blind=${blind ? "1" : "0"}`,
     seed ? `seed=${encodeURIComponent(seed)}` : ""
   ].filter(Boolean).join("&");
-  return request({ path: `/api/v1/kline-history/slice?${query}` });
+  try {
+    const result = await request({ path: `/api/v1/kline-history/slice?${query}` });
+    return normalizeKlineTrainingSliceResult(result, { market, timeframe, symbol });
+  } catch (error) {
+    saveConnectionFallback(error, "历史数据连接未完成");
+    return {
+      ok: false,
+      symbol,
+      timeframe,
+      candles: [],
+      bars: [],
+      source: "server",
+      manifestStatus: "unavailable",
+      barCount: 0,
+      reason: "network_error",
+      errorMessage: getTechnicalMessage(error) || "K线服务暂不可用",
+      raw: null
+    };
+  }
+}
+
+function normalizeKlineCandle(candle = {}) {
+  return {
+    time: candle.time || candle.date || candle.label || "",
+    label: candle.label || candle.date || candle.time || "",
+    open: Number(candle.open || 0),
+    high: Number(candle.high || 0),
+    low: Number(candle.low || 0),
+    close: Number(candle.close || 0),
+    volume: Number(candle.volume || 0)
+  };
+}
+
+function normalizeKlineTrainingSliceResult(result = {}, context = {}) {
+  const slice = result.slice || result.data || result;
+  const rawCandles = Array.isArray(slice.candles) ? slice.candles : (Array.isArray(slice.bars) ? slice.bars : []);
+  const candles = rawCandles.map(normalizeKlineCandle).filter((item) => item.open || item.high || item.low || item.close);
+  const barCount = Number(slice.barCount || slice.bar_count || candles.length || 0);
+  const reason = candles.length <= 0
+    ? "empty_slice"
+    : candles.length < KLINE_MIN_CANDLES ? "insufficient_slice" : "";
+  const ok = result.ok !== false && !reason;
+  const symbol = slice.symbol || (slice.instrument || {}).symbol || context.symbol || "";
+  const timeframeValue = slice.timeframe || {};
+  const timeframe = typeof timeframeValue === "object"
+    ? (timeframeValue.key || timeframeValue.value || context.timeframe || "")
+    : (timeframeValue || context.timeframe || "");
+  const manifestStatus = slice.manifestStatus || slice.manifest_status || slice.status || (ok ? "ok" : "missing");
+
+  return {
+    ok,
+    symbol,
+    timeframe,
+    candles,
+    bars: candles,
+    source: "server",
+    manifestStatus,
+    barCount,
+    reason,
+    errorMessage: reason === "empty_slice"
+      ? "历史数据未载入"
+      : reason === "insufficient_slice" ? "历史数据未载入完整" : "",
+    raw: result,
+    slice: Object.assign({}, slice, {
+      symbol,
+      timeframe,
+      candles,
+      source: "server",
+      manifestStatus,
+      barCount
+    })
+  };
 }
 
 module.exports = {
+  PRODUCTION_API_BASE,
   DEFAULT_API_BASE,
+  KLINE_MIN_CANDLES,
   getApiBase,
   setApiBase,
   getAuthSession,
@@ -312,6 +607,11 @@ module.exports = {
   syncCheckIn,
   syncAssessmentReport,
   syncTrainingProgress,
+  syncKlineTrainingRecord,
+  syncTradeReviewRecord,
+  requestTradeReviewOcrDraft,
+  pullTrainingPrescription,
   syncShareAttribution,
-  fetchKlineTrainingSlice
+  fetchKlineTrainingSlice,
+  normalizeKlineTrainingSliceResult
 };

@@ -18,6 +18,7 @@ const {
   getTodayIntradayBoundaryRecord,
   getTodayKlineMindRecord,
   getTraining7State,
+  getRetestSnapshotState,
   saveTraining7Task,
   getTodayThreeSeals,
   saveTodayThreeSeals,
@@ -27,7 +28,18 @@ const {
   saveTodayHeartCard,
   clearTodayHeartCard,
   saveInviteEvent,
+  saveMiniBridgeLinkToken,
+  getMiniLoopProgress,
+  createMiniHeartProofFromDaily,
   getTradeReviewRecords,
+  appendEvidence,
+  getEvidenceSummary,
+  getClosureEvidenceChain,
+  getJourneySnapshot,
+  saveJourneyCheckpoint,
+  getTodayCompletionState,
+  getUnifiedJourneyView,
+  resolveJourneyPagePath,
   todayKey
 } = require("../../utils/store");
 const { syncLocalState, syncTrainingProgress, syncShareAttribution } = require("../../utils/api");
@@ -42,6 +54,7 @@ const { buildRetentionState } = require("../../modules/retention/index");
 const { buildTraining7View } = require("../../modules/training7/index");
 const { buildClassroomView } = require("../../modules/classroom/index");
 const { buildLiveMirrorReminder } = require("../../modules/trade-review/index");
+const { buildMiniHomeView } = require("../../modules/mini-loop/index");
 
 const ENTRY_STATE_KEY = "zhixing_ritual_entry";
 const REACTION_TAGS = ["恐惧", "贪念", "证明", "后悔", "急躁", "逃避"];
@@ -54,6 +67,7 @@ const QR_BLOCKS = Array.from({ length: 25 }).map((_, index) => ({
   key: index,
   active: [0, 1, 2, 4, 5, 7, 9, 10, 12, 14, 15, 17, 20, 21, 23, 24].includes(index)
 }));
+const INITIAL_MINI_HOME_VIEW = buildMiniHomeView({});
 
 function getStoredEntryState() {
   try {
@@ -492,18 +506,18 @@ function drawHeartProofPoster(ctx, payload, width, height) {
 
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
-  ctx.font = '600 17px "HarmonyOS Sans SC", sans-serif';
+  ctx.font = '600 17px "PingFang SC", "Noto Sans SC", sans-serif';
   ctx.fillStyle = "rgba(255,255,245,0.9)";
   ctx.fillText(card.brand || "阳明心学交易系统", margin + 68, 66);
-  ctx.font = '600 10px "HarmonyOS Sans SC", sans-serif';
+  ctx.font = '600 10px "PingFang SC", "Noto Sans SC", sans-serif';
   ctx.fillStyle = "rgba(232,199,106,0.56)";
   ctx.fillText("今日心证 · 照见本心", margin + 68, 86);
 
-  ctx.font = '700 13px "HarmonyOS Sans SC", sans-serif';
+  ctx.font = '700 13px "PingFang SC", "Noto Sans SC", sans-serif';
   ctx.fillStyle = "rgba(232,199,106,0.68)";
   ctx.fillText(stageText, margin, posterTop + 48);
 
-  ctx.font = '700 13px "HarmonyOS Sans SC", sans-serif';
+  ctx.font = '700 13px "PingFang SC", "Noto Sans SC", sans-serif';
   ctx.fillStyle = "rgba(232,199,106,0.5)";
   ctx.fillText("今日心证", margin, posterTop + 92);
 
@@ -513,31 +527,31 @@ function drawHeartProofPoster(ctx, payload, width, height) {
     ctx.fillText(line, margin, posterTop + 152 + index * Math.round(width * 0.122));
   });
 
-  ctx.font = '16px "HarmonyOS Sans SC", sans-serif';
+  ctx.font = '16px "PingFang SC", "Noto Sans SC", sans-serif';
   ctx.fillStyle = "rgba(255,255,245,0.58)";
   drawWrappedText(ctx, interpretation, margin, posterTop + 276, posterWidth, 28, 2);
 
   const lawTop = posterTop + 360;
-  ctx.font = '700 11px "HarmonyOS Sans SC", sans-serif';
+  ctx.font = '700 11px "PingFang SC", "Noto Sans SC", sans-serif';
   ctx.fillStyle = "rgba(232,199,106,0.54)";
   ctx.fillText("今日戒律", margin, lawTop);
   ctx.font = '500 20px "LXGW WenKai", "Songti SC", serif';
   ctx.fillStyle = "rgba(255,250,235,0.88)";
   drawWrappedText(ctx, commandment, margin, lawTop + 34, posterWidth, 30, 2);
 
-  ctx.font = '700 11px "HarmonyOS Sans SC", sans-serif';
+  ctx.font = '700 11px "PingFang SC", "Noto Sans SC", sans-serif';
   ctx.fillStyle = "rgba(232,199,106,0.46)";
   ctx.fillText("今日事上练", margin, lawTop + 104);
-  ctx.font = '14px "HarmonyOS Sans SC", sans-serif';
+  ctx.font = '14px "PingFang SC", "Noto Sans SC", sans-serif';
   ctx.fillStyle = "rgba(255,255,245,0.52)";
   drawWrappedText(ctx, training, margin, lawTop + 130, posterWidth - 80, 24, 3);
 
   drawSeal(ctx, width - margin - 78, posterBottom - 106, 78, (card.stageSeal || {}).seal || "知");
 
-  ctx.font = '700 12px "HarmonyOS Sans SC", sans-serif';
+  ctx.font = '700 12px "PingFang SC", "Noto Sans SC", sans-serif';
   ctx.fillStyle = "rgba(232,199,106,0.58)";
   ctx.fillText(`${card.rankName || "观己"} · ${card.streakText || "0日连修"} · ${card.scoreText || "待生成知行"}`, margin, posterBottom + 44);
-  ctx.font = '11px "HarmonyOS Sans SC", sans-serif';
+  ctx.font = '11px "PingFang SC", "Noto Sans SC", sans-serif';
   ctx.fillStyle = "rgba(255,255,245,0.36)";
   ctx.fillText(card.footer || "不做行情评判，不推荐标的。只修说到做到。", margin, posterBottom + 72);
   drawQrMark(ctx, width - margin - 54, posterBottom + 22, 54);
@@ -663,15 +677,304 @@ function buildReportBridge(assessment, syncStatus = {}) {
   };
 }
 
-function buildTraining7Summary(training7View = {}) {
+function buildTraining7Summary(training7View = {}, unifiedView = {}) {
   return {
     title: "7 天交易观心陪跑",
-    statusText: training7View.progressText || "0/7",
-    progress: training7View.progressPercent || 0,
-    currentText: `当前 Day ${training7View.currentDay || 1}`,
-    todayTitle: ((training7View.today || {}).title) || "观入场冲动",
-    retestText: training7View.canRetest ? "开始复测" : "第 7 天开放复测"
+    statusText: unifiedView.sevenDayText || training7View.progressText || "七日复测 0/7",
+    progress: unifiedView.sevenDayProgressPercent !== undefined ? unifiedView.sevenDayProgressPercent : training7View.progressPercent || 0,
+    currentText: unifiedView.dailyPracticeDayText || `今日训练：Day ${training7View.currentDay || 1}`,
+    todayTitle: unifiedView.currentTrainingTitle || ((training7View.today || {}).title) || "观入场冲动",
+    retestText: unifiedView.canRetest ? "开始复测" : (unifiedView.retestText || "七日未满，继续修行")
   };
+}
+
+function buildJourneyResumeView(journeyState = {}) {
+  const map = {
+    daily_practice_started: {
+      visible: true,
+      completed: [],
+      pending: ["签到", "观念", "落印"]
+    },
+    daily_checkin_done: {
+      visible: true,
+      completed: ["签到"],
+      pending: ["观念", "落印"]
+    },
+    daily_concept_done: {
+      visible: true,
+      completed: ["签到", "观念"],
+      pending: ["落印"]
+    },
+    daily_seal_done: {
+      visible: true,
+      completed: ["签到", "观念", "落印"],
+      pending: ["今日心证"]
+    }
+  };
+  const view = map[journeyState.currentStep] || { visible: false, completed: [], pending: [] };
+  return Object.assign({}, view, {
+    title: journeyState.title || "今日修行尚未落印",
+    buttonText: journeyState.nextActionText || "继续修行",
+    completedText: (view.completed || []).join("、"),
+    pendingText: (view.pending || []).join("、")
+  });
+}
+
+function buildHomeFocusView({ primaryAction = {}, miniHomeView = {}, journeyState = {}, completionView = {} } = {}) {
+  const key = primaryAction.key || miniHomeView.primaryActionKey || journeyState.currentStep || "mind";
+  const defaultText = primaryAction.text || miniHomeView.primaryText || journeyState.nextActionText || "照见今日";
+  const byKey = {
+    mind: {
+      title: "先照见今日这一念",
+      body: "先把状态照清楚。",
+      primaryText: "进入照心"
+    },
+    "trade-review": {
+      title: "上传一条真实记录",
+      body: "复盘，是你写下事实；活镜，是系统照见反复出现的念头。",
+      primaryText: "上传真实记录"
+    },
+    seal: {
+      title: "落下今日三印",
+      body: "写下一念、一惧、一界。",
+      primaryText: "落印"
+    },
+    "heart-proof": {
+      title: "生成今日心证卡",
+      body: "把这一次照见收成心证。",
+      primaryText: "生成心证卡"
+    },
+    archive: {
+      title: "存入活镜档案",
+      body: "把今日心证写入活镜。",
+      primaryText: "存入档案"
+    },
+    "living-mirror": {
+      title: "回看活镜变化",
+      body: "看见本次照见如何进入长期印记。",
+      primaryText: "看活镜"
+    }
+  };
+  const current = byKey[key] || {
+    title: miniHomeView.stateHint || journeyState.title || "今日下一步",
+    body: primaryAction.hint || journeyState.progressLabel || "只守住当下这一步。",
+    primaryText: defaultText
+  };
+  const showThreeSeals = key === "seal" || [
+    "daily_practice_started",
+    "daily_checkin_done",
+    "daily_concept_done"
+  ].includes(journeyState.currentStep);
+  const isClosedToday = !!(completionView || {}).done && (
+    primaryAction.stateLabel === "已完成" || primaryAction.key === "living-mirror"
+  );
+  const linkByKey = {
+    mind: [{ key: "trade-review", text: "真实复盘" }],
+    "trade-review": [{ key: "living-mirror", text: "看活镜" }],
+    seal: [{ key: "trade-review", text: "真实复盘" }],
+    "heart-proof": [{ key: "living-mirror", text: "看活镜" }],
+    archive: [{ key: "living-mirror", text: "看活镜" }],
+    "living-mirror": []
+  };
+  const links = linkByKey[key] || [];
+
+  return {
+    key,
+    eyebrow: "当前一步",
+    statusLine: primaryAction.stateLabel || miniHomeView.stateLabel || "今日下一步",
+    title: current.title,
+    body: current.body || primaryAction.hint || miniHomeView.primaryHint || "",
+    primaryText: current.primaryText || defaultText,
+    links,
+    showThreeSeals: !!showThreeSeals && !isClosedToday,
+    done: isClosedToday
+  };
+}
+
+function buildHomePrimaryAction({ unifiedView = {}, mind = null, evidenceSummary = {} } = {}) {
+  const todayByType = (evidenceSummary || {}).todayByType || {};
+  const hasReview = !!unifiedView.hasReviewToday || Number(todayByType.review_record || 0) > 0;
+  const hasSeal = !!unifiedView.hasSeal;
+  const hasHeartProof = !!unifiedView.hasHeartProof;
+  const hasArchived = !!unifiedView.hasArchived;
+
+  if (!hasReview) {
+    return {
+      key: "trade-review",
+      text: "上传真实记录",
+      hint: "先留住当时第一念。",
+      stateLabel: "待复盘",
+      stateHint: "把真实动作写入活镜，今天才有可回看的记录。"
+    };
+  }
+  if (!mind) {
+    return {
+      key: "mind",
+      text: "照见今日",
+      hint: "先照见这一念。",
+      stateLabel: "待照心",
+      stateHint: "真实记录已留住，下一步照见今日状态。"
+    };
+  }
+  if (!hasSeal) {
+    return {
+      key: "seal",
+      text: "落下今日之印",
+      hint: "落下一念、一惧、一界。",
+      stateLabel: "待落印",
+      stateHint: "把今日照见落成一枚可归档的印。"
+    };
+  }
+  if (!hasHeartProof) {
+    return {
+      key: "heart-proof",
+      text: "生成今日心证卡",
+      hint: "收成今日心证。",
+      stateLabel: "已落印",
+      stateHint: "今日之印已落下，心证等待回看。"
+    };
+  }
+  if (hasHeartProof && !hasArchived) {
+    return {
+      key: "archive",
+      text: "存入活镜档案",
+      hint: "沉入活镜档案。",
+      stateLabel: "待入档",
+      stateHint: "今日心证等待进入长期档案。"
+    };
+  }
+  return {
+    key: "heart-proof",
+    text: "查看今日心证",
+    hint: "今日闭环已完成。",
+    stateLabel: "已完成",
+    stateHint: "今日照见、复盘与活镜已经形成记录。"
+  };
+}
+
+function applyJourneyToMiniHomeView(miniHomeView = {}, journeyState = {}, completionView = {}, evidenceSummary = {}, unifiedView = {}, primaryAction = {}) {
+  const noEvidence = !Number((evidenceSummary || {}).total || 0);
+  const byType = (evidenceSummary || {}).byType || {};
+  const reviewCount = Number((evidenceSummary || {}).reviewCount || 0);
+  const stateLabel = primaryAction.stateLabel || unifiedView.stateLabel || (byType.daily_seal
+    ? reviewCount > 0 || journeyState.currentStep === "share_ready" || journeyState.currentStep === "archived" ? "已归卷" : "待复盘"
+    : journeyState.currentStep === "new_user" || journeyState.currentStep === "mind_check_started" ? "未照见" : "待落印");
+  const stateHintMap = {
+    "未照见": "先看见今日这一念。",
+    "待落印": "把一念、一惧、一界落下。",
+    "待复盘": "本次照见已写入活镜，下一步做一次真实复盘。",
+    "待入档": "把今日心证沉入活镜档案。",
+    "已归卷": "今日照见、复盘与活镜已形成记录。"
+  };
+  const growthParts = [
+    Number((evidenceSummary || {}).heartProofCount || 0) ? `已生成 ${evidenceSummary.heartProofCount} 枚心证` : "",
+    reviewCount ? `真实复盘 ${reviewCount} 次` : "",
+    Number((evidenceSummary || {}).retestCount || 0) ? "复测变化已入档" : ""
+  ].filter(Boolean);
+  const growthText = unifiedView.growthText || (noEvidence
+    ? "这里还没有心证。完成今日落印后，第一枚心证会存入档案。"
+    : growthParts.length
+      ? growthParts.join(" · ")
+      : byType.mind_report
+        ? "心镜报告已入档。完成今日落印后，第一枚心证会存入档案。"
+        : "心证正在沉淀，下一步先完成今日落印。");
+  const todayOneThought = primaryAction.key === "trade-review"
+    ? "上传一条真实记录，先照见一次第一念。"
+    : primaryAction.key === "mind"
+    ? "先看见今日这一念。"
+    : miniHomeView.todayOneThought;
+  return Object.assign({}, miniHomeView, {
+    title: unifiedView.title || journeyState.title || miniHomeView.title,
+    stateLabel,
+    stateHint: primaryAction.stateHint || unifiedView.stateHint || stateHintMap[stateLabel],
+    positionText: unifiedView.dayText || journeyState.progressLabel || miniHomeView.positionText,
+    progressText: unifiedView.dailyProgressText || miniHomeView.progressText,
+    primaryText: primaryAction.text || unifiedView.nextActionText || journeyState.nextActionText || miniHomeView.primaryText,
+    primaryHint: primaryAction.hint || "",
+    primaryActionKey: primaryAction.key || "",
+    todayOneThought,
+    dayText: unifiedView.dayText || miniHomeView.dayText,
+    livingMirrorFeedback: unifiedView.livingMirrorFeedback || (byType.daily_seal ? "本次照见已写入活镜" : miniHomeView.livingMirrorFeedback),
+    growthText,
+    retestText: unifiedView.retestText || completionView.retestText || miniHomeView.retestText
+  });
+}
+
+function normalizeRetentionView(retentionView = {}, unifiedView = {}, loopSteps = []) {
+  const hasPractice = Number(unifiedView.yearlyDay || 0) > 0;
+  const nextStep = (loopSteps || []).find((item) => !item.done && !item.locked) || (retentionView.loop || {});
+  const doneCount = (loopSteps || []).filter((item) => item.done).length;
+  const loopProgress = loopSteps.length ? Math.round((doneCount / loopSteps.length) * 100) : ((retentionView.loop || {}).progress || 0);
+  const loop = Object.assign({}, retentionView.loop || {}, {
+    statusText: unifiedView.dailyProgressText || ((retentionView.loop || {}).statusText || "今日修行 0/3"),
+    progress: loopProgress,
+    nextName: nextStep.name || ((retentionView.loop || {}).nextName),
+    nextAction: nextStep.action || ((retentionView.loop || {}).nextAction),
+    nextRoute: nextStep.route || ((retentionView.loop || {}).nextRoute)
+  });
+  return Object.assign({}, retentionView, {
+    dailyHook: unifiedView.stateLabel === "待复盘"
+      ? "今日之印已落下，下一步做一次真实复盘。"
+      : unifiedView.stateLabel === "已归卷"
+        ? "今日照见已入活镜，继续看见重复反应。"
+        : hasPractice
+          ? "今日进度从心证、复盘与活镜记录统一计算。"
+          : "完成今日落印后，第一枚心证会存入档案。",
+    loop,
+    content365: Object.assign({}, retentionView.content365 || {}, {
+      subtitle: unifiedView.yearlySubtitle || ((retentionView.content365 || {}).subtitle),
+      progress: unifiedView.yearlyProgress !== undefined ? unifiedView.yearlyProgress : ((retentionView.content365 || {}).progress || 0),
+      nextText: unifiedView.yearlyNextText || ((retentionView.content365 || {}).nextText)
+    }),
+    longTraining: Object.assign({}, retentionView.longTraining || {}, {
+      title: hasPractice ? `${unifiedView.yearlyDay}日累计修行` : "个人修行待开启",
+      progress: unifiedView.yearlyProgress !== undefined ? unifiedView.yearlyProgress : ((retentionView.longTraining || {}).progress || 0),
+      subtitle: hasPractice ? "由心证、复盘与活镜记录共同沉淀" : "完成今日落印后开始累计"
+    }),
+    retest: Object.assign({}, retentionView.retest || {}, {
+      due: !!unifiedView.canRetest,
+      label: unifiedView.canRetest ? "今日可复测" : `${unifiedView.retestRemaining || 7}日后复测`,
+      actionText: unifiedView.canRetest ? "开始复测" : "等待复测窗口",
+      hint: unifiedView.retestText || ((retentionView.retest || {}).hint)
+    })
+  });
+}
+
+function normalizeTraining7View(training7View = {}, unifiedView = {}) {
+  const currentDay = Number(unifiedView.currentTrainingDay || training7View.currentDay || 1);
+  const days = (training7View.days || []).map((item) => Object.assign({}, item, {
+    active: Number(item.day || 0) === currentDay
+  }));
+  const today = days.find((item) => Number(item.day || 0) === currentDay) || training7View.today || {};
+  return Object.assign({}, training7View, {
+    currentDay,
+    today,
+    days
+  });
+}
+
+function normalizeLoopSteps(loopSteps = [], unifiedView = {}, context = {}) {
+  const doneByKey = {
+    heartProof: !!unifiedView.hasSeal,
+    mind: !!context.mind,
+    assessment: !!unifiedView.hasReport,
+    training: !!(context.training && context.training.completed) || !!(context.klineMindRecord && context.klineMindRecord.completed),
+    review: !!context.todayReview || !!unifiedView.hasReviewToday,
+    zhixing: !!context.zhixingReady,
+    heartCard: !!unifiedView.hasHeartProof
+  };
+  const nextSteps = [];
+  (loopSteps || []).forEach((step, index) => {
+    const done = !!doneByKey[step.key];
+    const previousDone = index === 0 ? true : !!(nextSteps[index - 1] || {}).done;
+    nextSteps.push(Object.assign({}, step, {
+      done,
+      active: !done && previousDone,
+      locked: !done && !previousDone,
+      status: done ? "已完成" : previousDone ? "进行中" : "待开启"
+    }));
+  });
+  return nextSteps;
 }
 
 function buildTodayStages({ mind = null, intradayBoundaryRecord = null, review = null } = {}) {
@@ -705,7 +1008,8 @@ function buildHeroTasks({ reactionRecord = null, training = {}, dailyContent = {
   const sevenDayTasks = Array.isArray(trainingDay.tasks) ? trainingDay.tasks : [];
   if (sevenDayTasks.length) {
     return {
-      trainingButtonText: `${training.completed ? "继续" : "开始"}第 ${trainingDay.day || 1} 天训练`,
+      trainingButtonText: training.completed ? "继续训练" : "开始训练",
+      klineDone: !!(training.completed || (klineMindRecord && klineMindRecord.completed)),
       list: sevenDayTasks.map((task) => Object.assign({}, task, {
         status: task.done ? "已完成" : "待完成"
       }))
@@ -713,8 +1017,10 @@ function buildHeroTasks({ reactionRecord = null, training = {}, dailyContent = {
   }
   const steps = (training || {}).steps || {};
   const dayNumber = Number((dailyContent || {}).dayNumber || 1);
+  const klineDone = !!(steps.trigger || training.completed || (klineMindRecord && klineMindRecord.completed));
   return {
-    trainingButtonText: `进入第 ${dayNumber} 天训练`,
+    trainingButtonText: dayNumber > 1 ? "继续训练" : "开始训练",
+    klineDone,
     list: [
       {
         key: "reaction",
@@ -725,8 +1031,8 @@ function buildHeroTasks({ reactionRecord = null, training = {}, dailyContent = {
       {
         key: "kline",
         title: "完成一次 K 线历史训练",
-        status: steps.trigger || training.completed || (klineMindRecord && klineMindRecord.completed) ? "已完成" : "待完成",
-        done: !!(steps.trigger || training.completed || (klineMindRecord && klineMindRecord.completed))
+        status: klineDone ? "已完成" : "待完成",
+        done: klineDone
       },
       {
         key: "checkin",
@@ -751,6 +1057,10 @@ const initialRetentionView = buildRetentionState({
 });
 const initialTraining7View = buildTraining7View(getTraining7State(), {});
 const initialLiveMirrorReminder = buildLiveMirrorReminder(getTradeReviewRecords());
+const initialUnifiedJourneyView = getUnifiedJourneyView({
+  training7View: initialTraining7View,
+  dailyContent: initialDailyContent
+});
 
 Page({
   data: {
@@ -762,7 +1072,6 @@ Page({
     ritualProgress: buildRitualProgress(0, initialHomeRitualState),
     qrBlocks: QR_BLOCKS,
     buttonText: initialHomeRitualState.buttonText,
-    ripple: null,
     posterMode: false,
     dailyContent: initialDailyContent,
     hasAssessment: false,
@@ -800,10 +1109,32 @@ Page({
     todayStages: buildTodayStages({}),
     classroomView: buildClassroomView(),
     liveMirrorReminder: initialLiveMirrorReminder,
-    userBinding: getUserBinding()
+    miniLoopProgress: getMiniLoopProgress(),
+    miniHomeView: INITIAL_MINI_HOME_VIEW,
+    journeyState: getJourneySnapshot({ lastPage: "home" }),
+    journeyResumeView: buildJourneyResumeView(getJourneySnapshot({ lastPage: "home" })),
+    unifiedJourneyView: initialUnifiedJourneyView,
+    completionView: getTodayCompletionState(),
+    homeFocusView: buildHomeFocusView({
+      primaryAction: { key: "mind", text: "照见今日" },
+      miniHomeView: INITIAL_MINI_HOME_VIEW,
+      journeyState: getJourneySnapshot({ lastPage: "home" }),
+      completionView: getTodayCompletionState()
+    }),
+    evidenceSummary: getEvidenceSummary({ limit: 4 }),
+    closureEvidenceChain: getClosureEvidenceChain(),
+    cardGenerating: false,
+    userBinding: getUserBinding(),
+    entryRitualVisible: false
   },
 
   onLoad(options = {}) {
+    if (options.link_token) {
+      saveMiniBridgeLinkToken(options.link_token, {
+        reportId: options.report_id || "",
+        anonymousId: options.anonymous_id || ""
+      });
+    }
     if (options.invite) {
       saveInviteSource(options.invite, {
         sourceScene: options.sourceScene || "home_invite_activation",
@@ -818,10 +1149,30 @@ Page({
 
   onShow() {
     this.loadEntryState();
+    this.maybeShowEntryRitual();
   },
 
   onUnload() {
     clearTimeout(this.sealEffectTimer);
+    clearTimeout(this.entryRitualTimer);
+  },
+
+  maybeShowEntryRitual() {
+    const currentDay = todayKey();
+    const stored = getStoredEntryState();
+    const today = ((stored || {}).daily || {})[currentDay] || {};
+    if (today.entryRitualSeen) return;
+    this.saveTodayEntryState({ entryRitualSeen: true });
+    this.setData({ entryRitualVisible: true });
+    clearTimeout(this.entryRitualTimer);
+    this.entryRitualTimer = setTimeout(() => {
+      this.setData({ entryRitualVisible: false });
+    }, 980);
+  },
+
+  closeEntryRitual() {
+    clearTimeout(this.entryRitualTimer);
+    this.setData({ entryRitualVisible: false });
   },
 
   loadEntryState() {
@@ -950,6 +1301,76 @@ Page({
     const reportBridge = buildReportBridge(assessment, syncStatus);
     const heroTasks = buildHeroTasks({ reactionRecord, training, dailyContent, training7View, klineMindRecord });
     const liveMirrorReminder = buildLiveMirrorReminder(tradeReviewState);
+    const miniLoopProgress = getMiniLoopProgress();
+    const rawMiniHomeView = buildMiniHomeView({
+      loopProgress: miniLoopProgress,
+      training7View,
+      threeSeals,
+      liveMirrorReminder,
+      checkedIn: checkedCount > 0
+    });
+    const evidenceSummary = getEvidenceSummary({ limit: 4 });
+    const closureEvidenceChain = getClosureEvidenceChain({
+      completedDays: training7View.completedCount || 0
+    });
+    const journeyState = getJourneySnapshot({
+      completedDays: training7View.completedCount || 0,
+      hasReport: !!assessment,
+      hasRetest: !!(getRetestSnapshotState() || {}).retest,
+      lastPage: "home"
+    });
+    const completionView = getTodayCompletionState({
+      completedDays: training7View.completedCount || 0,
+      thought: ((training7View.today || {}).title) || dailyContent.stageName || threeSeals.thought,
+      boundary: threeSeals.boundary || ((training7View.today || {}).boundaryPractice) || dailyContent.trainingAction,
+      zhixingChange: 3
+    });
+    const unifiedJourneyView = getUnifiedJourneyView({
+      completedDays: training7View.completedCount || 0,
+      hasReport: !!assessment,
+      hasRetest: !!(getRetestSnapshotState() || {}).retest,
+      journeyState,
+      completionView,
+      evidenceSummary,
+      training7View,
+      dailyContent
+    });
+    const displayTraining7View = normalizeTraining7View(training7View, unifiedJourneyView);
+    const displayHeroView = buildHeroView(dailyContent, displayTraining7View);
+    const displayHeroTasks = buildHeroTasks({
+      reactionRecord,
+      training,
+      dailyContent,
+      training7View: displayTraining7View,
+      klineMindRecord
+    });
+    const finalRawMiniHomeView = buildMiniHomeView({
+      loopProgress: miniLoopProgress,
+      training7View: displayTraining7View,
+      threeSeals,
+      liveMirrorReminder,
+      checkedIn: checkedCount > 0
+    });
+    const primaryAction = buildHomePrimaryAction({
+      unifiedView: unifiedJourneyView,
+      mind,
+      evidenceSummary
+    });
+    const miniHomeView = applyJourneyToMiniHomeView(finalRawMiniHomeView, journeyState, completionView, evidenceSummary, unifiedJourneyView, primaryAction);
+    const homeFocusView = buildHomeFocusView({
+      primaryAction,
+      miniHomeView,
+      journeyState,
+      completionView
+    });
+    const unifiedLoopSteps = normalizeLoopSteps(loopState.steps, unifiedJourneyView, {
+      mind,
+      training,
+      todayReview,
+      klineMindRecord,
+      zhixingReady: isTodayScoreReady(zhixingScoreState, currentDay, todayReview)
+    });
+    const unifiedRetentionView = normalizeRetentionView(retentionView, unifiedJourneyView, unifiedLoopSteps);
     this.setData({
       phone: stored.phone || profile.phone || "",
       vows: buildVows(checkedMap),
@@ -960,7 +1381,7 @@ Page({
       primaryTaskLabel: homeRitualState.primaryLabel,
       primaryTaskText: homeRitualState.primaryText,
       homeRitualState,
-      heroView,
+      heroView: displayHeroView,
       stageState,
       stageView,
       companionView,
@@ -968,19 +1389,28 @@ Page({
       heartCardRecord: todayHeartCard,
       heartCardImagePath: (todayHeartCard || {}).imagePath || "",
       loopState,
-      loopSteps: loopState.steps,
-      retentionView,
+      loopSteps: unifiedLoopSteps,
+      retentionView: unifiedRetentionView,
       todayActionView,
       reportBridge,
       reactionRecord,
       selectedReactionTag: (reactionRecord || {}).tag || "",
       reactionDraft: (reactionRecord || {}).note || "",
-      heroTasks,
-      training7View,
-      training7Summary: buildTraining7Summary(training7View),
+      heroTasks: displayHeroTasks,
+      training7View: displayTraining7View,
+      training7Summary: buildTraining7Summary(displayTraining7View, unifiedJourneyView),
       threeSeals,
       todayStages: buildTodayStages({ mind, intradayBoundaryRecord, review: todayReview }),
       liveMirrorReminder,
+      miniLoopProgress,
+      miniHomeView,
+      homeFocusView,
+      journeyState,
+      journeyResumeView: buildJourneyResumeView(journeyState),
+      unifiedJourneyView,
+      completionView,
+      evidenceSummary,
+      closureEvidenceChain,
       userBinding: getUserBinding(),
       dailyContent,
       hasAssessment: !!assessment
@@ -1032,10 +1462,18 @@ Page({
       return;
     }
     const saved = saveTodayThreeSeals(seals);
+    createMiniHeartProofFromDaily({
+      reflectionText: saved.thought || saved.boundary || "",
+      proofText: `我今天照见的是：${saved.thought || "这一念"}。`,
+      nextActionText: saved.boundary ? `今天先守住：${saved.boundary}` : "下一次同场景，先停十秒。"
+    });
     syncLocalState({ silent: true }).catch(() => {});
     syncTrainingProgress().catch(() => {});
     this.setData({ threeSeals: saved });
-    wx.showToast({ title: "今日已照见", icon: "success" });
+    this.loadEntryState();
+    if (!this.revealCompletionPanelIfReady("今日之印已落下")) {
+      wx.showToast({ title: "今日之印已落下", icon: "none" });
+    }
     promptShareMoment("three_seals_completed", { sourceScene: "three_seals_completed" });
   },
 
@@ -1070,6 +1508,10 @@ Page({
       training: getTodayTraining(),
       klineMindRecord: getTodayKlineMindRecord()
     });
+    const unifiedJourneyView = getUnifiedJourneyView({
+      training7View,
+      dailyContent: this.data.dailyContent
+    });
     syncLocalState({ silent: true }).catch(() => {});
     syncTrainingProgress().catch(() => {});
     wx.showToast({ title: "行为打卡已记录", icon: "success" });
@@ -1083,7 +1525,7 @@ Page({
         klineMindRecord: getTodayKlineMindRecord()
       }),
       training7View,
-      training7Summary: buildTraining7Summary(training7View),
+      training7Summary: buildTraining7Summary(training7View, unifiedJourneyView),
       todayStages: buildTodayStages({
         mind: getTodayMind(),
         intradayBoundaryRecord: getTodayIntradayBoundaryRecord(),
@@ -1097,6 +1539,7 @@ Page({
         assessment: getAssessmentResult()
       })
     });
+    this.loadEntryState();
   },
 
   completeTodayCheckIn() {
@@ -1110,9 +1553,12 @@ Page({
       training: getTodayTraining(),
       klineMindRecord: getTodayKlineMindRecord()
     });
+    const unifiedJourneyView = getUnifiedJourneyView({
+      training7View,
+      dailyContent: this.data.dailyContent
+    });
     syncLocalState({ silent: true }).catch(() => {});
     syncTrainingProgress().catch(() => {});
-    wx.showToast({ title: "今日打卡已完成", icon: "success" });
     if (day >= 3) {
       promptShareMoment("streak_3_days", { sourceScene: "training_day_3" });
     }
@@ -1121,7 +1567,7 @@ Page({
     }
     this.setData({
       training7View,
-      training7Summary: buildTraining7Summary(training7View),
+      training7Summary: buildTraining7Summary(training7View, unifiedJourneyView),
       heroView: buildHeroView(this.data.dailyContent, training7View),
       heroTasks: buildHeroTasks({
         reactionRecord: getTodayReaction(),
@@ -1131,6 +1577,24 @@ Page({
         klineMindRecord: getTodayKlineMindRecord()
       })
     });
+    this.loadEntryState();
+    if (!this.revealCompletionPanelIfReady("今日签到已记下")) {
+      wx.showToast({ title: "今日签到已记下", icon: "none" });
+    }
+  },
+
+  revealCompletionPanelIfReady() {
+    const completionView = getTodayCompletionState({
+      completedDays: ((this.data.training7View || {}).completedCount || 0),
+      thought: (((this.data.training7View || {}).today || {}).title) || ((this.data.dailyContent || {}).stageName) || ((this.data.threeSeals || {}).thought),
+      boundary: ((this.data.threeSeals || {}).boundary) || (((this.data.training7View || {}).today || {}).boundaryPractice) || ((this.data.dailyContent || {}).trainingAction),
+      zhixingChange: 3
+    });
+    if (!completionView.done) return false;
+    setTimeout(() => {
+      wx.pageScrollTo({ selector: ".journey-complete", duration: 420 });
+    }, 120);
+    return true;
   },
 
   toggleVow(e) {
@@ -1252,7 +1716,8 @@ Page({
   },
 
   async completeHeartCard({ preview = false } = {}) {
-    wx.showLoading({ title: "落成中", mask: true });
+    if (this.data.cardGenerating) return;
+    this.setData({ cardGenerating: true });
     try {
       const tempFilePath = await this.generateHeartCardImage();
       const imagePath = await this.persistHeartCardImage(tempFilePath);
@@ -1289,7 +1754,7 @@ Page({
       updateProfile({ lastHeartCardDay: todayKey(), lastHeartCardAt: Date.now() });
       syncLocalState({ silent: true }).catch(() => {});
       syncTrainingProgress().catch(() => {});
-      wx.hideLoading();
+      this.setData({ cardGenerating: false });
       wx.showToast({ title: "心证卡已落成", icon: "success" });
       this.loadEntryState();
       setTimeout(() => {
@@ -1303,7 +1768,7 @@ Page({
         });
       }, 380);
     } catch (error) {
-      wx.hideLoading();
+      this.setData({ cardGenerating: false });
       wx.showToast({ title: error.message || "心证卡生成失败", icon: "none" });
     }
   },
@@ -1388,20 +1853,145 @@ Page({
     wx.navigateTo({ url: "/pages/trade-review-archive/index" });
   },
 
+  goLivingMirror() {
+    saveJourneyCheckpoint({
+      lastPage: "mirror-scroll",
+      pendingAction: "等待七日复测"
+    });
+    wx.redirectTo({ url: "/pages/living-mirror/index" });
+  },
+
+  handleHomeFocusLink(e) {
+    const action = e.currentTarget.dataset.action;
+    if (action === "trade-review") {
+      this.goTradeReview();
+      return;
+    }
+    if (action === "living-mirror") {
+      this.goLivingMirror();
+      return;
+    }
+    if (action === "profile") {
+      this.goProfile();
+    }
+  },
+
+  goMiniPrimary(e) {
+    const primaryText = String(((e || {}).currentTarget || {}).dataset.primaryText || (this.data.miniHomeView || {}).primaryText || "");
+    if (/照见|照心/.test(primaryText)) {
+      wx.redirectTo({ url: "/pages/mind/index" });
+      return;
+    }
+    const actionKey = (this.data.miniHomeView || {}).primaryActionKey || "";
+    if (actionKey === "mind") {
+      wx.redirectTo({ url: "/pages/mind/index" });
+      return;
+    }
+    if (actionKey === "trade-review") {
+      this.goTradeReview();
+      return;
+    }
+    if (actionKey === "seal") {
+      wx.pageScrollTo({ selector: ".three-seals-block", duration: 420 });
+      return;
+    }
+    if (actionKey === "heart-proof") {
+      this.goTodayHeartProof();
+      return;
+    }
+    if (actionKey === "archive") {
+      this.archiveTodayHeartProof();
+      return;
+    }
+    if (actionKey === "living-mirror") {
+      this.goLivingMirror();
+      return;
+    }
+    const journey = this.data.journeyState || {};
+    if (journey.currentStep === "seven_day_retest_pending") {
+      this.goRetest();
+      return;
+    }
+    if (journey.nextPage === "assessment") {
+      wx.redirectTo({ url: resolveJourneyPagePath(journey.nextPage) });
+      return;
+    }
+    if (journey.nextPage === "share-card") {
+      this.goTodayHeartProof();
+      return;
+    }
+    if (journey.nextPage === "mirror-archive") {
+      this.goTradeReviewArchive();
+      return;
+    }
+    if (journey.nextPage === "mirror-scroll") {
+      this.goLivingMirror();
+      return;
+    }
+    if (journey.currentStep === "mind_report_ready" || journey.currentStep === "daily_practice_started") {
+      wx.pageScrollTo({ selector: ".three-seals-block", duration: 420 });
+      return;
+    }
+    if (journey.currentStep === "daily_checkin_done" || journey.currentStep === "daily_concept_done") {
+      wx.pageScrollTo({ selector: ".three-seals-block", duration: 420 });
+      return;
+    }
+    wx.pageScrollTo({ selector: ".scene-edict", duration: 420 });
+  },
+
+  handleCompletionAction(e) {
+    const action = e.currentTarget.dataset.action;
+    if (action === "card") {
+      this.goTodayHeartProof();
+      return;
+    }
+    if (action === "share") {
+      this.goShareCard({ currentTarget: { dataset: { type: "companion_invite" } } });
+      return;
+    }
+    this.archiveTodayHeartProof();
+  },
+
+  archiveTodayHeartProof() {
+    appendEvidence({
+      type: "heart_proof_card",
+      day: todayKey(),
+      stage: "活镜档案",
+      action: "存入活镜档案",
+      reflection: (this.data.completionView || {}).thought || "今日心证已存入活镜档案。",
+      zhixingChange: 3,
+      sourcePage: "home_archive_action",
+      sourceId: todayKey(),
+      archived: true
+    });
+    this.loadEntryState();
+    this.goLivingMirror();
+  },
+
+  goTodayHeartProof() {
+    wx.navigateTo({ url: "/pages/share-card/index?type=daily_mantra&sourceScene=mini_home_heart_proof" });
+  },
+
   goTodayStage(e) {
     const route = e.currentTarget.dataset.route;
     if (route) wx.redirectTo({ url: route });
   },
 
   goRetest() {
-    if (!(this.data.training7View || {}).canRetest) {
-      wx.showToast({ title: "第7天开放复测", icon: "none" });
+    const journey = this.data.journeyState || {};
+    const unified = this.data.unifiedJourneyView || {};
+    if (journey.currentStep === "seven_day_retest_pending" || unified.canRetest) {
+      wx.redirectTo({ url: "/pages/assessment/index" });
       return;
     }
-    wx.redirectTo({ url: "/pages/assessment/index" });
+    wx.showToast({ title: unified.retestText || "七日未满，继续修行", icon: "none" });
   },
 
   goTrainingDay() {
+    wx.redirectTo({ url: "/pages/kline-mind/index" });
+  },
+
+  goKlineMind() {
     wx.redirectTo({ url: "/pages/kline-mind/index" });
   },
 
@@ -1470,8 +2060,7 @@ Page({
 
   openPosterMode() {
     this.setData({
-      posterMode: true,
-      ripple: null
+      posterMode: true
     });
   },
 
@@ -1480,24 +2069,6 @@ Page({
   },
 
   noop() {},
-
-  createRipple(e) {
-    if (this.data.posterMode) return;
-    if (e.target && e.target.dataset && e.target.dataset.noripple) return;
-    const touch = e.touches && e.touches[0];
-    if (!touch) return;
-    const id = Date.now();
-    this.setData({
-      ripple: {
-        id,
-        x: touch.clientX,
-        y: touch.clientY
-      }
-    });
-    setTimeout(() => {
-      if (this.data.ripple?.id === id) this.setData({ ripple: null });
-    }, 460);
-  },
 
   onShareAppMessage() {
     const card = this.data.shareCard || {};

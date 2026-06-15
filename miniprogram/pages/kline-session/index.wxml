@@ -12,50 +12,63 @@
     <view class="chart-card card">
       <view class="chart-head">
         <text>{{scene.dataSourceLabel || '历史片段'}}</text>
-        <view>已显露 {{candles.length}} / {{scene.candles.length}} · 未来不可见</view>
+        <view>{{chartRevealText}} · 未来不可见</view>
       </view>
-      <view class="chart-frame">
-        <view class="price-axis">
-          <text>{{chartScale.high}}</text>
-          <text>{{chartScale.mid}}</text>
-          <text>{{chartScale.low}}</text>
-        </view>
-        <view class="mock-chart">
-          <view class="grid-line top"></view>
-          <view class="grid-line mid"></view>
-          <view class="grid-line bottom"></view>
-          <view wx:for="{{candles}}" wx:key="key" class="candle-wrap">
-            <view class="wick" style="height: {{item.wickHeight}}rpx; top: {{item.wickTop}}rpx;"></view>
-            <view class="candle {{item.up ? 'up' : 'down'}}" style="height: {{item.bodyHeight}}rpx; top: {{item.bodyTop}}rpx;"></view>
-            <view class="volume {{item.up ? 'up' : 'down'}}" style="height: {{item.volumeHeight}}rpx;"></view>
+      <block wx:if="{{historicalReady}}">
+        <view class="chart-frame">
+          <view class="price-axis">
+            <text>{{chartScale.high}}</text>
+            <text>{{chartScale.mid}}</text>
+            <text>{{chartScale.low}}</text>
           </view>
-          <view wx:for="{{futureBars}}" wx:key="key" class="candle-wrap future">
-            <view class="future-mask"></view>
+          <view class="training-chart">
+            <view class="grid-line top"></view>
+            <view class="grid-line mid"></view>
+            <view class="grid-line bottom"></view>
+            <view wx:for="{{candles}}" wx:key="key" class="candle-wrap">
+              <view class="wick" style="height: {{item.wickHeight}}rpx; top: {{item.wickTop}}rpx;"></view>
+              <view class="candle {{item.up ? 'up' : 'down'}}" style="height: {{item.bodyHeight}}rpx; top: {{item.bodyTop}}rpx;"></view>
+              <view class="volume {{item.up ? 'up' : 'down'}}" style="height: {{item.volumeHeight}}rpx;"></view>
+            </view>
+            <view wx:for="{{futureBars}}" wx:key="key" class="candle-wrap future">
+              <view class="future-mask"></view>
+            </view>
           </view>
         </view>
-      </view>
-      <view class="chart-foot">
-        <text>{{firstCandleText}}</text>
-        <text>盲练切片</text>
-        <text>{{lastCandleText}}</text>
+        <view class="chart-foot">
+          <text>{{firstCandleText}}</text>
+          <text>盲练切片</text>
+          <text>{{lastCandleText}}</text>
+        </view>
+      </block>
+      <view wx:else class="history-required">
+        <view>历史数据未载入</view>
+        <text>{{historicalEmptyText}}</text>
+        <text>本训练只使用已缓存的历史 OHLCV，不连接实时数据，不开放操作功能。</text>
       </view>
     </view>
 
     <view class="question-card card">
-      <view class="step-line">第 {{checkpoint.step}} 步 · 已停留 {{elapsedText}}</view>
-      <view class="question-text">{{checkpoint.question}}</view>
-      <view class="reaction-time">{{reactionHint}}</view>
-      <view class="options">
-        <button
-          wx:for="{{checkpoint.options}}"
-          wx:key="id"
-          class="option {{selectedOption === item.id ? 'selected' : ''}}"
-          data-id="{{item.id}}"
-          bindtap="selectOption"
-        >
-          <text>{{item.label}}</text>
-          <view>{{item.trait}}</view>
-        </button>
+      <block wx:if="{{historicalReady}}">
+        <view class="step-line">第 {{checkpoint.step}} 步 · 已停留 {{elapsedText}}</view>
+        <view class="question-text">{{checkpoint.question}}</view>
+        <view class="reaction-time">{{reactionHint}}</view>
+        <view class="options">
+          <button
+            wx:for="{{checkpoint.options}}"
+            wx:key="id"
+            class="option {{selectedOption === item.id ? 'selected' : ''}}"
+            data-id="{{item.id}}"
+            bindtap="selectOption"
+          >
+            <text>{{item.label}}</text>
+            <view>{{item.trait}}</view>
+          </button>
+        </view>
+      </block>
+      <view wx:else class="question-waiting">
+        <text>等待历史切片显露</text>
+        <view>切片载入后开始计时，避免把网络等待算成你的第一反应。</view>
       </view>
     </view>
 
@@ -100,7 +113,7 @@
       />
     </view>
 
-    <button class="primary-btn main-action" bindtap="nextStep">{{session.completed ? '生成复盘' : '记录并继续'}}</button>
+    <button class="primary-btn main-action" disabled="{{!historicalReady}}" bindtap="nextStep">{{mainActionText}}</button>
     <compliance-notice />
   </view>
   <bottom-tab-bar active="mind" />

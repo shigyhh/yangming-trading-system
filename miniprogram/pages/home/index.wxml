@@ -1,4 +1,4 @@
-<view class="ritual-shell {{posterMode ? 'poster-open' : ''}}" bindtap="createRipple">
+<view class="ritual-shell {{posterMode ? 'poster-open' : ''}}">
   <view class="mist-layer"></view>
   <view class="grain-layer"></view>
   <view class="ink-mountains">
@@ -6,7 +6,14 @@
     <view class="mountain mountain-b"></view>
     <view class="mountain mountain-c"></view>
   </view>
-  <view wx:if="{{ripple}}" class="mind-ripple" style="left: {{ripple.x}}px; top: {{ripple.y}}px;"></view>
+
+  <view wx:if="{{entryRitualVisible}}" class="entry-ritual" bindtap="closeEntryRitual" data-noripple="1">
+    <view class="entry-ritual-card">
+      <view class="entry-ritual-seal">照</view>
+      <text>一息照心</text>
+      <view>今日先照见这一念。</view>
+    </view>
+  </view>
 
   <view class="ritual-content">
     <view class="scene scene-edict edict-hero">
@@ -15,37 +22,248 @@
       <view class="edict-bg edict-bg-grain"></view>
 
       <view class="edict-header">
-        <view class="brand-seal">知</view>
+        <view class="brand-seal brand-zhao-mini" aria-label="阳明照见 C16 小标">
+          <view class="zhao-eyes">
+            <view class="zhao-eye"></view>
+            <view class="zhao-eye"></view>
+          </view>
+          <view class="zhao-mirror"></view>
+          <view class="zhao-fire">
+            <view class="zhao-fire-dot"></view>
+            <view class="zhao-fire-dot"></view>
+          </view>
+        </view>
         <view class="brand-copy">
           <view class="brand-title">阳明心学交易系统</view>
           <view class="brand-subtitle">每日一页 · 照见本心</view>
         </view>
       </view>
 
-      <view class="edict-scroll" bindlongpress="openPosterMode">
-        <view class="hero-stage-line">
-          <text>{{heroView.daySimpleLabel}} / {{heroView.stageOrderLabel}} / {{heroView.stageNameLabel}}</text>
+      <view class="mini-mirror-card">
+        <view wx:if="{{false}}" class="daily-state-row">
+          <text>{{miniHomeView.stateLabel}}</text>
+          <view>{{unifiedJourneyView.currentTheme}}</view>
         </view>
-        <view class="hero-theme-line">{{heroView.dayProgressLabel}} · {{heroView.themeLabel}}</view>
-
-        <view class="heart-proof-block">
-          <view class="edict-label">今日法旨</view>
-          <view class="edict-main">
+        <view wx:if="{{false}}" class="daily-progress-grid">
+          <view>
+            <text>今日训练</text>
+            <view>{{unifiedJourneyView.dailyPracticeDay}}</view>
+          </view>
+          <view>
+            <text>全年修行</text>
+            <view>{{unifiedJourneyView.annualPracticeDay}}</view>
+          </view>
+          <view>
+            <text>七日复测</text>
+            <view>{{unifiedJourneyView.sevenDayProgress}}</view>
+          </view>
+          <view>
+            <text>今日三印</text>
+            <view>{{unifiedJourneyView.todaySealProgress}}</view>
+          </view>
+        </view>
+        <view class="daily-proof">
+          <view class="mini-mirror-eyebrow">今日心证</view>
+          <view class="daily-proof-lines">
             <text wx:for="{{heroView.heartProofLines}}" wx:key="*this">{{item}}</text>
           </view>
         </view>
+        <view class="mini-mirror-one">
+          <text>今日只练一件事</text>
+          <view>{{miniHomeView.todayOneThought}}</view>
+        </view>
+        <view wx:if="{{homeFocusView.done}}" class="living-written">
+          <view class="living-written-mark brand-zhao-mini" aria-label="今日已照见小标">
+            <view class="zhao-eyes">
+              <view class="zhao-eye"></view>
+              <view class="zhao-eye"></view>
+            </view>
+            <view class="zhao-mirror"></view>
+            <view class="zhao-fire">
+              <view class="zhao-fire-dot"></view>
+              <view class="zhao-fire-dot"></view>
+            </view>
+          </view>
+          <view class="living-written-copy">
+            <text>{{miniHomeView.livingMirrorFeedback}}</text>
+            <view>{{miniHomeView.stateHint}}</view>
+          </view>
+        </view>
+        <button
+          data-noripple="1"
+          data-primary-text="{{miniHomeView.primaryText}}"
+          class="mini-primary"
+          bindtap="goMiniPrimary"
+        >{{miniHomeView.primaryText}}</button>
+        <view wx:if="{{miniHomeView.primaryHint}}" class="mini-primary-hint">{{miniHomeView.primaryHint}}</view>
+      </view>
 
-        <view class="contemplation-block">
+      <view class="kline-mind-entry" bindtap="goKlineMind" data-noripple="1">
+        <view>
+          <text>今日 K 线观心</text>
+          <view>用历史 K 线片段，看见第一反应。</view>
+        </view>
+        <text>{{heroTasks.klineDone ? '已练' : '去练'}}</text>
+      </view>
+
+      <view class="edict-scroll" bindlongpress="openPosterMode">
+        <view class="practice-detail-head">
+          <view class="edict-label">当前状态</view>
+          <view>{{homeFocusView.statusLine}}</view>
+        </view>
+        <view wx:if="{{!homeFocusView.done}}" class="home-focus-card">
+          <view class="home-focus-kicker">{{homeFocusView.eyebrow}}</view>
+          <text class="home-focus-title">{{homeFocusView.title}}</text>
+          <view class="home-focus-body">{{homeFocusView.body}}</view>
+          <view class="home-focus-action-line">
+            <text>今日主动作</text>
+            <view>{{homeFocusView.primaryText}}</view>
+          </view>
+          <view wx:if="{{homeFocusView.links.length}}" class="home-focus-links">
+            <button
+              wx:for="{{homeFocusView.links}}"
+              wx:key="key"
+              data-noripple="1"
+              data-action="{{item.key}}"
+              bindtap="handleHomeFocusLink"
+            >{{item.text}}</button>
+          </view>
+        </view>
+        <view wx:if="{{homeFocusView.done}}" class="journey-complete short-complete">
+          <view class="completion-brief-head">
+            <view class="completion-seal">印</view>
+            <view>
+              <view class="completion-kicker">今日已写入活镜</view>
+              <text class="completion-title">{{completionView.title}}</text>
+            </view>
+          </view>
+          <view class="completion-living-rite">
+            <view class="completion-living-mark brand-zhao-mini" aria-label="今日已写入活镜">
+              <view class="zhao-eyes">
+                <view class="zhao-eye"></view>
+                <view class="zhao-eye"></view>
+              </view>
+              <view class="zhao-mirror"></view>
+              <view class="zhao-fire">
+                <view class="zhao-fire-dot"></view>
+                <view class="zhao-fire-dot"></view>
+              </view>
+            </view>
+            <view class="completion-living-copy">
+              <text>今日已写入活镜</text>
+              <view>这一次照见，会进入你的长期行为印记。</view>
+            </view>
+          </view>
+          <view class="completion-slim-lines">
+            <view>
+              <text>今日照见</text>
+              <view>{{completionView.thought}}</view>
+            </view>
+            <view>
+              <text>今日守住</text>
+              <view>{{completionView.boundary}}</view>
+            </view>
+          </view>
+          <view class="completion-meta-line">
+            <text>{{completionView.heartProofText}}</text>
+            <text>知行 {{completionView.zhixingChangeText}}</text>
+            <text>{{completionView.retestText}}</text>
+          </view>
+          <view class="journey-complete-actions">
+            <button
+              wx:for="{{completionView.actions}}"
+              wx:key="key"
+              data-noripple="1"
+              data-action="{{item.key}}"
+              class="{{item.primary ? 'primary' : ''}}"
+              bindtap="handleCompletionAction"
+            >{{item.text}}</button>
+          </view>
+        </view>
+
+        <view wx:if="{{false}}" class="journey-resume">
+          <text>{{journeyResumeView.title}}</text>
+          <view wx:if="{{journeyResumeView.completedText}}">
+            已完成：{{journeyResumeView.completedText}}
+          </view>
+          <view wx:if="{{journeyResumeView.pendingText}}">
+            未完成：{{journeyResumeView.pendingText}}
+          </view>
+        </view>
+
+        <view wx:if="{{false}}" class="closure-chain-card">
+          <view class="closure-chain-head">
+            <view>
+              <text>{{closureEvidenceChain.title}}</text>
+              <view>{{closureEvidenceChain.subtitle}}</view>
+            </view>
+            <text>{{closureEvidenceChain.progressText}}</text>
+          </view>
+          <view class="closure-chain-list">
+            <view
+              wx:for="{{closureEvidenceChain.steps}}"
+              wx:key="key"
+              class="{{item.done ? 'done' : item.current ? 'current' : ''}}"
+            >
+              <text>{{item.numberText}}</text>
+              <view>
+                <text>{{item.title}}</text>
+                <view>{{item.detail}}</view>
+              </view>
+              <text>{{item.statusText}}</text>
+            </view>
+          </view>
+          <view class="closure-next-action">下一步：{{closureEvidenceChain.nextActionText}}</view>
+        </view>
+
+        <view wx:if="{{homeFocusView.showThreeSeals}}" class="three-seals-block">
+          <view class="edict-label">今日之印</view>
+          <view class="three-seal-field">
+            <text>一念</text>
+            <input data-key="thought" value="{{threeSeals.thought}}" bindinput="inputThreeSeal" placeholder="我今天最明显的念头是什么？" />
+          </view>
+          <view class="three-seal-field">
+            <text>一惧</text>
+            <input data-key="fear" value="{{threeSeals.fear}}" bindinput="inputThreeSeal" placeholder="我今天最怕发生什么？" />
+          </view>
+          <view class="three-seal-field">
+            <text>一界</text>
+            <input data-key="boundary" value="{{threeSeals.boundary}}" bindinput="inputThreeSeal" placeholder="我今天必须守住哪条边界？" />
+          </view>
+          <button data-noripple="1" class="three-seal-save" bindtap="saveThreeSeals">{{threeSeals.completed ? '更新今日之印' : '落下今日之印'}}</button>
+          <view wx:if="{{threeSeals.completed}}" class="seal-open-panel">
+            <view class="seal-mark-large brand-zhao-mini" aria-label="今日之印小标">
+              <view class="zhao-eyes">
+                <view class="zhao-eye"></view>
+                <view class="zhao-eye"></view>
+              </view>
+              <view class="zhao-mirror"></view>
+              <view class="zhao-fire">
+                <view class="zhao-fire-dot"></view>
+                <view class="zhao-fire-dot"></view>
+              </view>
+            </view>
+            <view>
+              <text>朱砂印落下：今日已照见</text>
+              <view>今日训练已开启，下一步只做真实动作。</view>
+            </view>
+            <button data-noripple="1" bindtap="goTrainingDay">去训练</button>
+            <button data-noripple="1" bindtap="goTradeReview">去复盘</button>
+            <button data-noripple="1" bindtap="goLivingMirror">看活镜</button>
+          </view>
+        </view>
+
+        <view wx:if="{{false}}" class="contemplation-block compact">
           <view class="edict-label">今日观心</view>
           <view>
             <text wx:for="{{heroView.contemplationLines}}" wx:key="*this">{{item}}</text>
           </view>
         </view>
 
-        <view class="live-mirror-block">
+        <view wx:if="{{false}}" class="live-mirror-block">
           <view class="live-mirror-head">
             <view>
-              <view class="edict-label">真实交易复盘</view>
+              <view class="edict-label">真实复盘</view>
               <text>活镜提醒</text>
             </view>
             <text>{{liveMirrorReminder.statusText}}</text>
@@ -79,24 +297,7 @@
           </view>
         </view>
 
-        <view class="three-seals-block">
-          <view class="edict-label">今日之印</view>
-          <view class="three-seal-field">
-            <text>一念</text>
-            <input data-key="thought" value="{{threeSeals.thought}}" bindinput="inputThreeSeal" placeholder="我今天最明显的念头是什么？" />
-          </view>
-          <view class="three-seal-field">
-            <text>一惧</text>
-            <input data-key="fear" value="{{threeSeals.fear}}" bindinput="inputThreeSeal" placeholder="我今天最怕发生什么？" />
-          </view>
-          <view class="three-seal-field">
-            <text>一界</text>
-            <input data-key="boundary" value="{{threeSeals.boundary}}" bindinput="inputThreeSeal" placeholder="我今天必须守住哪条边界？" />
-          </view>
-          <button data-noripple="1" class="three-seal-save" bindtap="saveThreeSeals">{{threeSeals.completed ? '更新今日之印' : '落下今日之印'}}</button>
-        </view>
-
-        <view class="today-stage-block">
+        <view wx:if="{{false}}" class="today-stage-block">
           <view class="edict-label">今日阶段</view>
           <button
             wx:for="{{todayStages}}"
@@ -111,12 +312,7 @@
           </button>
         </view>
 
-        <view class="practice-block">
-          <view class="edict-label">今日只练一件事</view>
-          <view>{{training7View.today.boundaryPractice}}</view>
-        </view>
-
-        <view class="today-three">
+        <view wx:if="{{false}}" class="today-three">
           <view class="edict-label">今日任务清单</view>
           <button
             wx:for="{{heroTasks.list}}"
@@ -130,26 +326,26 @@
             <view>{{item.title}}</view>
             <text>{{item.status}}</text>
           </button>
-          <button data-noripple="1" class="today-checkin-button" bindtap="completeTodayCheckIn">完成今日打卡</button>
+          <button data-noripple="1" class="today-checkin-button" bindtap="completeTodayCheckIn">今日打卡</button>
         </view>
 
-        <view class="hero-bottom-actions">
-          <button data-noripple="1" bindtap="goReportBridge">查看我的人格报告</button>
+        <view wx:if="{{false}}" class="hero-bottom-actions">
+          <button data-noripple="1" bindtap="goReportBridge">看报告</button>
           <button data-noripple="1" bindtap="goTrainingDay">{{heroTasks.trainingButtonText}}</button>
         </view>
-        <view class="hero-secondary-actions">
+        <view wx:if="{{false}}" class="hero-secondary-actions">
           <button data-noripple="1" bindtap="goZhixingIndex">知行指数</button>
           <button data-noripple="1" bindtap="goClassroom">知行讲堂</button>
         </view>
-        <view class="hero-share-actions">
-          <button data-noripple="1" data-type="daily_mantra" bindtap="goShareCard">生成今日心证卡</button>
-          <button data-noripple="1" data-type="companion_invite" bindtap="goShareCard">邀一位同修同行</button>
+        <view wx:if="{{false}}" class="hero-share-actions">
+          <button data-noripple="1" data-type="daily_mantra" bindtap="goShareCard">生成心证卡</button>
+          <button data-noripple="1" data-type="companion_invite" bindtap="goShareCard">邀同修</button>
         </view>
-        <view data-noripple="1" class="edict-footnote" bindtap="openPosterMode">长按收藏 / 记录今日心证</view>
+        <view wx:if="{{false}}" data-noripple="1" class="edict-footnote" bindtap="openPosterMode">长按收藏 / 记录今日心证</view>
       </view>
     </view>
 
-    <view class="scene scene-reaction-detail">
+    <view wx:if="{{false}}" class="scene scene-reaction-detail">
       <view class="reaction-recorder">
         <view class="reaction-head">
           <view>
@@ -177,11 +373,11 @@
           placeholder-class="reaction-placeholder"
           bindinput="inputReaction"
         />
-        <button data-noripple="1" class="reaction-save" bindtap="saveReactionRecord">{{reactionRecord ? '更新今日行为打卡' : '记录今日行为打卡'}}</button>
+        <button data-noripple="1" class="reaction-save" bindtap="saveReactionRecord">{{reactionRecord ? '更新记录' : '记录反应'}}</button>
       </view>
     </view>
 
-    <view class="scene scene-retention">
+    <view wx:if="{{false}}" class="scene scene-retention">
       <view class="retention-card seven-day-card">
         <view class="retention-head">
           <view>
@@ -198,8 +394,8 @@
           </view>
         </view>
         <button data-noripple="1" class="retention-next" bindtap="goRetest">
-          <text>复测变化</text>
-          <view>{{training7Summary.retestText}}</view>
+          <text class="retention-next-label">复测变化</text>
+          <view class="retention-next-detail">{{training7Summary.retestText}}</view>
         </button>
       </view>
 
@@ -226,14 +422,14 @@
           </button>
         </view>
         <button data-noripple="1" class="retention-next" bindtap="goNextStep">
-          <text>下一步</text>
-          <view>{{retentionView.loop.nextName}} · {{retentionView.loop.nextAction}}</view>
+          <text class="retention-next-label">下一步</text>
+          <view class="retention-next-detail">{{retentionView.loop.nextName}} · {{retentionView.loop.nextAction}}</view>
         </button>
       </view>
 
       <view class="retention-grid">
         <view data-noripple="1" class="retention-mini" bindtap="goContent365">
-          <text>365天修行</text>
+          <text>全年修行</text>
           <view>{{retentionView.content365.subtitle}}</view>
           <view class="mini-progress"><view style="width: {{retentionView.content365.progress}}%;"></view></view>
           <text>{{retentionView.content365.nextText}}</text>
@@ -255,7 +451,7 @@
       </view>
     </view>
 
-    <view class="scene scene-oath {{ritualProgress.ready ? 'ready' : ''}}">
+    <view wx:if="{{false}}" class="scene scene-oath {{ritualProgress.ready ? 'ready' : ''}}">
       <view class="scene-ordinal">第二幕 · 立誓</view>
       <view class="vow-head">
         <view>
@@ -287,7 +483,7 @@
       </view>
     </view>
 
-    <view class="scene scene-practice {{ritualProgress.ready ? 'ready' : ''}} {{homeRitualState.cardDone ? 'card-done' : ''}}">
+    <view wx:if="{{false}}" class="scene scene-practice {{ritualProgress.ready ? 'ready' : ''}} {{homeRitualState.cardDone ? 'card-done' : ''}}">
       <view class="scene-ordinal">第三幕 · 入事</view>
       <view class="primary-task-label">{{primaryTaskLabel}}</view>
       <view class="primary-task-text">{{primaryTaskText}}</view>
@@ -316,7 +512,7 @@
       </view>
     </view>
 
-    <view class="scene scene-companion {{homeRitualState.completed ? 'closed' : ''}}">
+    <view wx:if="{{false}}" class="scene scene-companion {{homeRitualState.completed ? 'closed' : ''}}">
       <view class="scene-ordinal">第四幕 · 归卷</view>
       <view class="section-label">同行</view>
       <view class="companion-title">{{companionView.unityLine}}</view>
@@ -342,7 +538,7 @@
       </view>
     </view>
 
-    <view class="entry-panel sync-entry-panel">
+    <view wx:if="{{false}}" class="entry-panel sync-entry-panel">
       <label class="phone-field">
         <text>手机号 · 贯穿报告、训练、复测与助教</text>
         <input
@@ -396,7 +592,15 @@
     </view>
   </view>
 
+  <view wx:if="{{cardGenerating}}" class="quiet-loading" catchtap="noop" catchtouchmove="noop">
+    <view class="quiet-loading-card">
+      <view class="quiet-loading-seal">证</view>
+      <text>正在落成心证卡</text>
+      <view>正在把今日照见写入心镜档案，请稍候。</view>
+    </view>
+  </view>
+
   <canvas type="2d" id="heartCardCanvas" class="heart-card-canvas"></canvas>
 
-  <bottom-tab-bar wx:if="{{!posterMode}}" active="home" />
+  <bottom-tab-bar wx:if="{{!posterMode}}" active="today" />
 </view>

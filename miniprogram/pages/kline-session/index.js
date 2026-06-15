@@ -1,14 +1,20 @@
 const {
   saveKlineSessionRecord,
-  saveKlineReviewReport
+  saveKlineReviewReport,
+  saveTodayKlineMindRecord,
+  saveTradeReviewRecord,
+  saveTraining7Task,
+  getTraining7State,
+  saveInviteConversionEvent
 } = require("../../utils/store");
 const {
+  buildKlineTradeReviewRecord,
   buildKlineReview,
   createKlineSession,
   getKlineScenario,
   recordKlineReaction
 } = require("../../modules/kline-simulator/index");
-const { fetchKlineTrainingSlice } = require("../../utils/api");
+const { fetchKlineTrainingSlice, syncKlineTrainingRecord } = require("../../utils/api");
 
 const CHART_PRICE_HEIGHT = 190;
 const VOLUME_MAX_HEIGHT = 56;
@@ -105,12 +111,54 @@ function buildChartView(scene, stepIndex) {
   };
 }
 
+function buildEmptyChartView() {
+  return {
+    candles: [],
+    chartScale: { high: "-", mid: "-", low: "-", rangeText: "等待历史数据" },
+    futureBars: [],
+    firstCandleText: "待载入",
+    lastCandleText: "待载入"
+  };
+}
+
+function buildCandlesRange(scene) {
+  const candles = (scene || {}).candles || [];
+  const first = candles[0] || {};
+  const last = candles[candles.length - 1] || {};
+  return {
+    start: first.date || first.time || "",
+    end: last.date || last.time || "",
+    count: candles.length
+  };
+}
+
+function buildTrainingMistakes(review) {
+  return [
+    review && review.changedPlan ? "训练中曾临时改计划" : "",
+    review && review.boundaryState && review.boundaryState !== "kept" ? (review.boundaryStateLabel || "边界未完全守住") : ""
+  ].filter(Boolean);
+}
+
+function buildChartRevealText(scene, candles, ready) {
+  if (!ready) return "等待历史数据";
+  return `已显露 ${(candles || []).length} / ${((scene || {}).candles || []).length}`;
+}
+
 function mergeServerSlice(scene, slice) {
   if (!slice || !Array.isArray(slice.candles) || !slice.candles.length) return scene;
   const market = slice.market || {};
-  const timeframe = slice.timeframe || {};
+  const timeframe = typeof slice.timeframe === "object" ? slice.timeframe : { key: slice.timeframe };
   const instrument = slice.instrument || {};
   const rules = slice.rules || {};
+  const marketContext = {
+    source: "server",
+    sliceId: slice.id || "",
+    symbol: slice.symbol || instrument.symbol || "",
+    market: market.key || scene.marketKey || "",
+    timeframe: timeframe.key || scene.timeframeKey || "",
+    manifestStatus: slice.manifestStatus || slice.manifest_status || "",
+    barCount: slice.barCount || (slice.candles || []).length
+  };
   return Object.assign({}, scene, {
     title: `${scene.title}`,
     subtitle: `${scene.subtitle} · 已接入后端历史切片`,
@@ -119,10 +167,11 @@ function mergeServerSlice(scene, slice) {
     marketSession: rules.session || scene.marketSession,
     marketLabel: market.label || scene.marketLabel,
     timeframeLabel: timeframe.label || scene.timeframeLabel,
-    dataSourceLabel: "真实历史切片",
+    dataSourceLabel: "真实历史数据切片",
     isRealHistorical: true,
     serverSliceId: slice.id,
     serverRevealToken: slice.reveal_token,
+    marketContext,
     candles: slice.candles.map((item) => ({
       open: item.open,
       high: item.high,
@@ -132,6 +181,13 @@ function mergeServerSlice(scene, slice) {
       date: item.label || item.time
     }))
   });
+}
+
+function getSliceErrorText(result) {
+  if (!result) return "K线服务暂不可用";
+  if (result.reason === "insufficient_slice") return "历史数据未载入完整";
+  if (result.reason === "empty_slice") return "历史数据未载入";
+  return result.errorMessage || "K线服务暂不可用";
 }
 
 function formatElapsed(ms) {
@@ -146,8 +202,8 @@ Page({
     checkpoint: { step: 1, options: [] },
     selectedOption: "",
     selectedAt: 0,
-    elapsedText: "0.0 秒",
-    reactionHint: "先停一息，再照见第一反应。",
+    elapsedText: "等待历史数据",
+    reactionHint: "历史切片显露后，再开始记录第一反应。",
     emotionOptions: ["平静", "急躁", "兴奋", "恐惧", "不甘", "想证明", "逃避"],
     selectedEmotion: "",
     firstThought: "",
@@ -163,7 +219,12 @@ Page({
     futureBars: [],
     firstCandleText: "起点隐藏",
     lastCandleText: "当前",
-    dataStatus: "正在读取历史切片"
+    dataStatus: "正在读取后端历史数据切片",
+    chartRevealText: "等待历史数据",
+    mainActionText: "等待历史数据",
+    historicalReady: false,
+    historicalError: "",
+    historicalEmptyText: "正在读取后端历史数据切片。未载入前不展示占位 K线。"
   },
 
   onLoad(options = {}) {
@@ -173,7 +234,7 @@ Page({
     };
     const scene = getKlineScenario(options.sceneId || "", scenarioOptions);
     const session = createKlineSession(scene.id, scenarioOptions);
-    const chartView = buildChartView(scene, 0);
+    const chartView = buildEmptyChartView();
     saveKlineSessionRecord(session);
     this.setData({
       scene,
@@ -184,8 +245,15 @@ Page({
       lastCandleText: chartView.lastCandleText,
       session,
       checkpoint: scene.checkpoints[0],
-      dataStatus: "正在读取历史切片"
-    }, this.startStepTimer);
+      dataStatus: "正在读取后端历史数据切片",
+      chartRevealText: "等待历史数据",
+      mainActionText: "等待历史数据",
+      historicalReady: false,
+      historicalError: "",
+      historicalEmptyText: "正在读取后端历史数据切片。未载入前不展示占位 K线。",
+      elapsedText: "等待历史数据",
+      reactionHint: "历史切片显露后，再开始记录第一反应。"
+    });
     this.loadServerSlice(options, scene);
   },
 
@@ -200,24 +268,78 @@ Page({
       blind: true,
       seed: options.sceneId || fallbackScene.id
     }).then((result) => {
+      if (!result || !result.ok) {
+        if (this.stepTimer) clearInterval(this.stepTimer);
+        const chartView = buildEmptyChartView();
+        const errorText = getSliceErrorText(result);
+        this.setData({
+          candles: chartView.candles,
+          chartScale: chartView.chartScale,
+          futureBars: chartView.futureBars,
+          firstCandleText: chartView.firstCandleText,
+          lastCandleText: chartView.lastCandleText,
+          dataStatus: errorText,
+          chartRevealText: "等待历史数据",
+          mainActionText: "等待历史数据",
+          historicalReady: false,
+          historicalError: errorText,
+          historicalEmptyText: errorText,
+          elapsedText: "等待历史数据",
+          reactionHint: "历史切片显露后，再开始记录第一反应。"
+        });
+        return;
+      }
       const scene = mergeServerSlice(fallbackScene, result.slice);
       const chartView = buildChartView(scene, this.data.session.stepIndex || 0);
+      const visibleAt = Date.now();
+      const session = Object.assign({}, this.data.session, {
+        startedAt: visibleAt,
+        lastStepAt: visibleAt
+      });
+      saveKlineSessionRecord(session);
       this.setData({
         scene,
+        session,
         candles: chartView.candles,
         chartScale: chartView.chartScale,
         futureBars: chartView.futureBars,
         firstCandleText: chartView.firstCandleText,
         lastCandleText: chartView.lastCandleText,
-        dataStatus: "已载入真实历史切片"
-      });
+        dataStatus: "已载入历史数据切片（非实时）",
+        chartRevealText: buildChartRevealText(scene, chartView.candles, true),
+        mainActionText: "记录并继续",
+        historicalReady: true,
+        historicalError: "",
+        historicalEmptyText: "",
+        elapsedText: "0.0 秒",
+        reactionHint: "先停一息，再照见第一反应。"
+      }, this.startStepTimer);
     }).catch(() => {
-      // 后端未缓存真实历史数据时保留离线训练样本，保证小程序训练不中断。
-      this.setData({ dataStatus: "使用离线训练样本，等待真实历史切片接入" });
+      if (this.stepTimer) clearInterval(this.stepTimer);
+      const chartView = buildEmptyChartView();
+      this.setData({
+        candles: chartView.candles,
+        chartScale: chartView.chartScale,
+        futureBars: chartView.futureBars,
+        firstCandleText: chartView.firstCandleText,
+        lastCandleText: chartView.lastCandleText,
+        dataStatus: "历史数据未载入",
+        chartRevealText: "等待历史数据",
+        mainActionText: "等待历史数据",
+        historicalReady: false,
+        historicalError: "请先在后端下载并缓存对应市场、标的与周期的历史K线。",
+        historicalEmptyText: "请先在后端下载并缓存对应市场、标的与周期的历史K线。",
+        elapsedText: "等待历史数据",
+        reactionHint: "历史切片显露后，再开始记录第一反应。"
+      });
     });
   },
 
   selectOption(e) {
+    if (!this.data.historicalReady) {
+      wx.showToast({ title: "请先载入历史数据", icon: "none" });
+      return;
+    }
     const optionId = e.currentTarget.dataset.id;
     const selectedAt = Date.now();
     const elapsedMs = selectedAt - Number((this.data.session || {}).lastStepAt || selectedAt);
@@ -255,6 +377,10 @@ Page({
   },
 
   nextStep() {
+    if (!this.data.historicalReady) {
+      wx.showToast({ title: "请先载入历史数据", icon: "none" });
+      return;
+    }
     if (!this.data.selectedOption) {
       wx.showToast({ title: "先选择第一反应", icon: "none" });
       return;
@@ -284,8 +410,60 @@ Page({
         emotion: this.data.selectedEmotion,
         firstThought: this.data.firstThought
       });
-      saveKlineReviewReport(review);
-      wx.redirectTo({ url: `/pages/kline-review/index?reviewId=${review.id}` });
+      const tradeReviewRecord = buildKlineTradeReviewRecord(review);
+      const completedAt = Date.now();
+      const klineTrainingRecord = Object.assign({}, review, {
+        sessionId: nextSession.id,
+        startedAt: nextSession.startedAt,
+        completedAt,
+        candlesRange: buildCandlesRange(this.data.scene),
+        userActions: nextSession.reactions || [],
+        mistakes: buildTrainingMistakes(review),
+        disciplineScore: (review.scores || {}).boundaryKeeping || 0,
+        reviewText: review.insight || "",
+        linkedTradeReviewId: tradeReviewRecord.id,
+        linkedOneThoughtEventId: "",
+        marketContext: (this.data.scene || {}).marketContext || { source: "server" },
+        chartEvidence: {
+          source: "server",
+          serverSliceId: (this.data.scene || {}).serverSliceId || "",
+          candlesRange: buildCandlesRange(this.data.scene)
+        },
+        behaviorEvidence: nextSession.reactions || [],
+        reviewSummary: review.insight || "",
+        klineSource: "server",
+        source: "miniprogram",
+        klineTrainingSyncStatus: "pending",
+        klineTrainingSyncStartedAt: new Date(completedAt).toISOString(),
+        klineTrainingSyncError: ""
+      });
+      saveKlineReviewReport(klineTrainingRecord);
+      saveTradeReviewRecord(tradeReviewRecord);
+      saveTodayKlineMindRecord({
+        marketKey: klineTrainingRecord.marketKey,
+        timeframeKey: klineTrainingRecord.timeframeKey,
+        dataSource: "历史数据切片",
+        symbol: klineTrainingRecord.sceneTitle,
+        personalityType: klineTrainingRecord.relatedPersonality,
+        stageName: `Day ${klineTrainingRecord.trainingDay || 1} · ${klineTrainingRecord.trainingFocus || "K线事上练"}`,
+        firstReaction: klineTrainingRecord.primaryReaction,
+        bodySignal: klineTrainingRecord.emotion,
+        boundaryChoice: klineTrainingRecord.boundaryStateLabel,
+        insightLine: klineTrainingRecord.insight,
+        score: (klineTrainingRecord.scores || {}).boundaryKeeping || 0,
+        completed: true
+      });
+      const day = Math.max(1, Math.min(7, Number((getTraining7State() || {}).currentDay || klineTrainingRecord.trainingDay || 1)));
+      saveTraining7Task(day, "daily_practice", true);
+      saveTraining7Task(day, "kline", true);
+      saveInviteConversionEvent("kline_training_completed", {
+        sourcePage: "kline_session",
+        shareCardType: "kline_insight",
+        trainingDay: klineTrainingRecord.trainingDay || day,
+        relatedMirror: klineTrainingRecord.relatedMirror || ""
+      });
+      syncKlineTrainingRecord(klineTrainingRecord, { force: true }).catch(() => {});
+      wx.redirectTo({ url: `/pages/kline-review/index?reviewId=${klineTrainingRecord.id}` });
       return;
     }
 
@@ -298,6 +476,8 @@ Page({
       futureBars: chartView.futureBars,
       firstCandleText: chartView.firstCandleText,
       lastCandleText: chartView.lastCandleText,
+      chartRevealText: buildChartRevealText(this.data.scene, chartView.candles, true),
+      mainActionText: "记录并继续",
       selectedOption: "",
       selectedAt: 0,
       elapsedText: "0.0 秒",
@@ -311,6 +491,7 @@ Page({
   startStepTimer() {
     if (this.stepTimer) clearInterval(this.stepTimer);
     this.stepTimer = setInterval(() => {
+      if (!this.data.historicalReady) return;
       const session = this.data.session || {};
       if (this.data.selectedAt) return;
       const elapsedMs = Date.now() - Number(session.lastStepAt || session.startedAt || Date.now());

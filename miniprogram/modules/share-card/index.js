@@ -75,6 +75,10 @@ function buildShareCardPreview(type, context = {}) {
   const subscription = context.subscriptionView || {};
   const klineReview = ((context.klineReviewReports || {}).latest) || {};
   const mirrorChallenge = ((context.klineMirrorChallenges || {}).latest) || {};
+  const tradeReview = ((context.tradeReviewRecords || {}).latest) || {};
+  const livingMirror = context.livingMirrorStats || {};
+  const assistantHandoff = context.assistantHandoff || {};
+  const userBinding = context.userBinding || {};
   const subscriptionProof = subscription.proof || {};
   const groupDayStats = (groupPractice.dayStats || {})[trainingDay.day || 1] || {};
   const radar = assessment.radar || {};
@@ -84,7 +88,7 @@ function buildShareCardPreview(type, context = {}) {
   const templates = {
     daily_mantra: {
       headline: daily.heartProof || trainingDay.mantra || "真正的事上练，是边界到了能知行合一。",
-      body: trainingDay.reflectionQuestion || daily.reflectionQuestion || "行情触碰边界时，我是在执行计划，还是在证明自己？",
+      body: `我的主镜：${livingMirror.currentMirror || tradeReview.relatedMirror || "待照见"}\n一句判词：${tradeReview.verdict || "今日先照见这一念，再入事上练。"}\n今日修行：${trainingDay.boundaryPractice || daily.trainingAction || "只守住今日这一念。"}`,
       insight: "今天这句话，有点照到我了。",
       cta: "生成今日心证卡",
       shareTitle: "今日心证：先照见自己，再进入事上练心。"
@@ -267,13 +271,15 @@ function buildShareCardPreview(type, context = {}) {
     companion_invite: {
       headline: "我照见了自己的交易人格",
       body: "你也可以照见一下：到底是你在交易，还是情绪在替你交易？",
-      insight: inviteCode ? `同修码：${inviteCode}` : "邀一位同修同行，不聊外物，只照见自己。",
+      insight: assistantHandoff.sharePrompt || (inviteCode ? `同修码：${inviteCode}` : "邀一位同修同行，不聊外物，只照见自己。"),
       cta: "邀一位同修照见",
       shareTitle: "邀你一起照见交易里的自己。",
       metrics: [
+        buildMetric("我的主镜", livingMirror.currentMirror || assessment.primaryMirror || "待照见"),
         buildMetric("今日主题", trainingDay.title || "每日观心"),
-        buildMetric("同修方式", "完成测评后同行训练"),
-        buildMetric("承接状态", "助教摘要占位")
+        buildMetric("同修方式", "照见后同行训练"),
+        buildMetric("承接状态", assistantHandoff.statusText || "待沉淀"),
+        buildMetric("同修码", inviteCode || userBinding.inviteCode || "待生成")
       ]
     }
   };

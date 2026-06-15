@@ -113,9 +113,10 @@ function buildTrainingBindingPayload({ auth = {}, state = {}, progress = null } 
   };
 }
 
-function buildKLineBindingPayload({ auth = {}, state = {}, progress = null, trainingRecord = null } = {}) {
+function buildKLineBindingPayload({ auth = {}, state = {}, progress = null, trainingRecord = null, klineRecord = null } = {}) {
+  const user = buildDataBindingUser(auth, state);
   const practiceState = progress || buildPracticeState(state);
-  const sourceRecord = getLatestRecordFromSources([
+  const sourceRecord = klineRecord || getLatestRecordFromSources([
     practiceState.intraday_boundary_records,
     state.intraday_boundary_records,
     practiceState.kline_mind_records,
@@ -130,17 +131,111 @@ function buildKLineBindingPayload({ auth = {}, state = {}, progress = null, trai
   if (!sourceRecord) return null;
 
   return {
+    user,
+    record: normalizeKLineRecordForBinding(sourceRecord, {
+      user,
+      trainingRecord,
+      practiceState
+    }),
+    source: SOURCE
+  };
+}
+
+function normalizeKLineRecordForBinding(sourceRecord = {}, context = {}) {
+  const trainingRecord = context.trainingRecord || {};
+  const practiceState = context.practiceState || {};
+  const user = context.user || {};
+  const localId = pickText(sourceRecord.id, sourceRecord.reviewId, sourceRecord.recordId, sourceRecord.sceneKey, "");
+  const userActions = Array.isArray(sourceRecord.userActions)
+    ? sourceRecord.userActions
+    : Array.isArray(sourceRecord.reactions) ? sourceRecord.reactions : [];
+  const processScores = sourceRecord.processScores || sourceRecord.process_scores || sourceRecord.scores || {};
+  const firstAction = userActions[0] || {};
+  const heartThieves = Array.isArray(sourceRecord.heartThieves || sourceRecord.detectedThieves)
+    ? (sourceRecord.heartThieves || sourceRecord.detectedThieves)
+    : [];
+  const disciplineScore = Number(
+    sourceRecord.disciplineScore ||
+    processScores.boundaryKeeping ||
+    processScores.planExecution ||
+    sourceRecord.score ||
+    0
+  );
+  const recordedAt = toIso(sourceRecord.completedAt || sourceRecord.updatedAt || sourceRecord.createdAt || Date.now());
+
+  return {
+    id: localId,
+    idempotencyKey: localId,
+    userId: pickText(user.userId, sourceRecord.userId),
+    day: Number((trainingRecord || {}).day || sourceRecord.day || (practiceState.training7_state || {}).currentDay || 1),
+    recordedAt,
+    symbol: pickText(sourceRecord.symbol, sourceRecord.sceneTitle, ""),
+    market: pickText(sourceRecord.market, sourceRecord.marketName, sourceRecord.marketKey, sourceRecord.marketLabel, ""),
+    timeframe: pickText(sourceRecord.timeframe, sourceRecord.timeframeKey, sourceRecord.timeframeLabel, ""),
+    sessionId: pickText(sourceRecord.sessionId, sourceRecord.session_id),
+    sceneId: pickText(sourceRecord.sceneId, sourceRecord.scene_id),
+    startedAt: sourceRecord.startedAt ? toIso(sourceRecord.startedAt) : "",
+    completedAt: sourceRecord.completedAt ? toIso(sourceRecord.completedAt) : recordedAt,
+    candlesRange: sourceRecord.candlesRange || sourceRecord.candles_range || null,
+    userActions,
+    mistakes: Array.isArray(sourceRecord.mistakes) ? sourceRecord.mistakes : buildKLineMistakes(sourceRecord),
+    heartThief: pickText(sourceRecord.heartThief, heartThieves.join("、")),
+    disciplineScore,
+    reviewText: pickText(sourceRecord.reviewText, sourceRecord.processInsight, sourceRecord.insight, sourceRecord.verdict, sourceRecord.reviewNote),
+    linkedTradeReviewId: pickText(sourceRecord.linkedTradeReviewId, sourceRecord.tradeReviewId),
+    linkedOneThoughtEventId: pickText(sourceRecord.linkedOneThoughtEventId, sourceRecord.oneThoughtEventId),
+    source: pickText(sourceRecord.source, SOURCE),
+    createdAt: toIso(sourceRecord.createdAt || sourceRecord.completedAt || Date.now()),
+    sceneKey: pickText(sourceRecord.sceneKey, sourceRecord.sceneId, localId),
+    reactionKey: pickText(sourceRecord.reactionKey, firstAction.optionId, sourceRecord.primaryReaction, sourceRecord.firstReaction),
+    scene: pickText(sourceRecord.scene, sourceRecord.sceneTitle, sourceRecord.scenarioTitle, sourceRecord.trigger, sourceRecord.currentStatus, sourceRecord.todayRisk, "小程序训练场景"),
+    dataSource: pickText(sourceRecord.dataSource, sourceRecord.dataSourceLabel, ""),
+    reaction: pickText(sourceRecord.reaction, sourceRecord.primaryReaction, sourceRecord.firstReaction, sourceRecord.firstThought, sourceRecord.note, "已觉察，未展开"),
+    disciplineAction: pickText(sourceRecord.disciplineAction, sourceRecord.boundaryChoice, sourceRecord.boundary, sourceRecord.action, sourceRecord.nextAction, "先停一息，再复盘"),
+    feedback: pickText(sourceRecord.feedback, sourceRecord.trainingSuggestion, sourceRecord.trainingAction),
+    reactionTimeMs: Number(sourceRecord.reactionTimeMs || firstAction.reactionTimeMs || 0),
+    processScores,
+    processInsight: pickText(sourceRecord.processInsight, sourceRecord.insight, sourceRecord.reviewText),
+    trainingSuggestion: pickText(sourceRecord.trainingSuggestion, sourceRecord.nextAction)
+  };
+}
+
+function buildKLineMistakes(sourceRecord = {}) {
+  return [
+    sourceRecord.changedPlan ? "训练中曾临时改计划" : "",
+    sourceRecord.boundaryState && sourceRecord.boundaryState !== "kept" ? (sourceRecord.boundaryStateLabel || "边界未完全守住") : ""
+  ].filter(Boolean);
+}
+
+function buildTradeReviewBindingPayload({ auth = {}, state = {}, review = null } = {}) {
+  const sourceReview = review || getLatestTradeReview(state);
+  if (!sourceReview) return null;
+
+  return {
     user: buildDataBindingUser(auth, state),
-    record: {
-      day: Number((trainingRecord || {}).day || sourceRecord.day || (practiceState.training7_state || {}).currentDay || 1),
-      recordedAt: toIso(sourceRecord.updatedAt || sourceRecord.createdAt || Date.now()),
-      scene: pickText(sourceRecord.scene, sourceRecord.scenarioTitle, sourceRecord.trigger, sourceRecord.currentStatus, sourceRecord.todayRisk, "小程序训练场景"),
-      market: pickText(sourceRecord.marketName, sourceRecord.marketKey, ""),
-      timeframe: pickText(sourceRecord.timeframeKey, ""),
-      symbol: pickText(sourceRecord.symbol, ""),
-      dataSource: pickText(sourceRecord.dataSource, ""),
-      reaction: pickText(sourceRecord.reaction, sourceRecord.firstReaction, sourceRecord.firstThought, sourceRecord.note, "已觉察，未展开"),
-      disciplineAction: pickText(sourceRecord.disciplineAction, sourceRecord.boundaryChoice, sourceRecord.boundary, sourceRecord.action, sourceRecord.nextAction, "先停一息，再复盘")
+    review: {
+      id: String(sourceReview.id || sourceReview.reviewId || sourceReview.review_id || `mp-trade-review-${Date.now()}`),
+      reviewId: String(sourceReview.id || sourceReview.reviewId || sourceReview.review_id || ""),
+      imageUrl: pickText(sourceReview.imageUrl, sourceReview.image_url, sourceReview.screenshotPath, sourceReview.screenshot_path),
+      tradeDate: pickText(sourceReview.tradeDate, sourceReview.trade_date, sourceReview.date, toIso(sourceReview.createdAt || Date.now()).slice(0, 10)),
+      symbol: pickText(sourceReview.symbol, sourceReview.symbolMasked, sourceReview.symbol_masked),
+      marketType: normalizeMarketType(sourceReview.marketType || sourceReview.market_type || sourceReview.marketKey || sourceReview.marketLabel),
+      timeframeKey: pickText(sourceReview.timeframeKey, sourceReview.timeframe_key, sourceReview.period, sourceReview.cycle, "1d"),
+      buyReason: pickText(sourceReview.buyReason, sourceReview.buy_reason, sourceReview.entryReason, sourceReview.actionLabel),
+      sellReason: pickText(sourceReview.sellReason, sourceReview.sell_reason, sourceReview.exitReason, sourceReview.afterReaction, sourceReview.reviewNote),
+      strongestThought: pickText(sourceReview.strongestThought, sourceReview.strongest_thought, sourceReview.firstThought, sourceReview.actionLabel),
+      wasPlanned: normalizeBoolean(sourceReview.wasPlanned, sourceReview.was_planned, sourceReview.inPlan === "yes" ? true : sourceReview.inPlan === "no" ? false : null),
+      hadExitRule: normalizeBoolean(sourceReview.hadExitRule, sourceReview.had_exit_rule, sourceReview.exitPrepared === "yes" ? true : sourceReview.exitPrepared === "no" ? false : null),
+      changedPlanDuringTrade: normalizeBoolean(sourceReview.changedPlanDuringTrade, sourceReview.changed_plan_during_trade, sourceReview.changedPlan === "yes" ? true : sourceReview.changedPlan === "no" ? false : null),
+      detectedMirror: pickText(sourceReview.detectedMirror, sourceReview.detected_mirror, sourceReview.relatedMirror),
+      detectedThieves: Array.isArray(sourceReview.detectedThieves || sourceReview.detected_thieves)
+        ? (sourceReview.detectedThieves || sourceReview.detected_thieves)
+        : (sourceReview.heartThieves || []),
+      behaviorTags: buildTradeReviewBehaviorTags(sourceReview),
+      reviewText: pickText(sourceReview.reviewText, sourceReview.review_text, sourceReview.verdict, sourceReview.oneLine, sourceReview.reviewNote, sourceReview.trainingAction),
+      nextAction: pickText(sourceReview.nextAction, sourceReview.trainingAction),
+      ocrDraft: sourceReview.ocrDraft || sourceReview.ocr_draft || null,
+      createdAt: toIso(sourceReview.createdAt || sourceReview.updatedAt || Date.now())
     },
     source: SOURCE
   };
@@ -163,6 +258,43 @@ function buildShareCardBindingPayload({ auth = {}, state = {}, event = null } = 
   };
 }
 
+function getLatestTradeReview(state = {}) {
+  const tradeState = state.trade_review_records || state.shared_entities?.TradeReview || {};
+  return tradeState.latest || getLatestRecord(tradeState.records) || null;
+}
+
+function buildTradeReviewBehaviorTags(sourceReview = {}) {
+  return [
+    sourceReview.sourceType === "kline_training" ? "K线盲练" : "真实复盘",
+    sourceReview.actionLabel,
+    sourceReview.emotion,
+    sourceReview.boundaryStateLabel,
+    sourceReview.stageGate
+  ]
+    .map((item) => pickText(item))
+    .filter(Boolean)
+    .slice(0, 8);
+}
+
+function normalizeBoolean() {
+  for (let index = 0; index < arguments.length; index += 1) {
+    const value = arguments[index];
+    if (value === true || value === false) return value;
+    if (value === "yes" || value === "true") return true;
+    if (value === "no" || value === "false") return false;
+  }
+  return null;
+}
+
+function normalizeMarketType(value) {
+  const text = String(value || "").toLowerCase();
+  if (["cn", "cn_equity", "a_share", "ashare"].includes(text) || String(value || "").includes("A股")) return "a_share";
+  if (["us", "us_equity", "us_stock"].includes(text) || String(value || "").includes("美股")) return "us_stock";
+  if (["futures", "future"].includes(text) || String(value || "").includes("期货")) return "futures";
+  if (["crypto", "digital_currency"].includes(text) || String(value || "").includes("数字货币")) return "crypto";
+  return text || "other";
+}
+
 function buildDataBindingUser(auth = {}, state = {}) {
   const profile = state.profile || {};
   const binding = state.user_binding || {};
@@ -170,7 +302,7 @@ function buildDataBindingUser(auth = {}, state = {}) {
   const rawPhone = binding.phone || profile.phone || authUser.phone || authUser.contact || "";
   const maskedPhone = binding.phoneMask || profile.phoneMask || authUser.phone_mask || maskPhone(rawPhone);
   const phoneTail = getPhoneTail(rawPhone, maskedPhone);
-  const userId = String(authUser.id || binding.userId || binding.user_id || profile.userId || profile.openid || `mp-${Date.now()}`);
+  const userId = String(binding.userId || binding.user_id || state.user_id || profile.userId || profile.openid || authUser.id || `mp-${Date.now()}`);
 
   return {
     userId,
@@ -489,6 +621,7 @@ module.exports = {
   shouldSyncRetest,
   buildTrainingBindingPayload,
   buildKLineBindingPayload,
+  buildTradeReviewBindingPayload,
   buildShareCardBindingPayload,
   normalizeAssessmentReportForBinding,
   buildDataBindingUser

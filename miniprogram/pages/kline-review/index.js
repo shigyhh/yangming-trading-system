@@ -2,6 +2,7 @@ const {
   getKlineReviewReports,
   saveShareCard
 } = require("../../utils/store");
+const { syncKlineTrainingRecord } = require("../../utils/api");
 
 function buildScoreRows(review) {
   const scores = (review || {}).scores || {};
@@ -9,8 +10,18 @@ function buildScoreRows(review) {
   return Object.keys(scores).map((key) => ({
     key,
     label: labels[key] || key,
-    value: scores[key]
+    value: scores[key],
+    displayValue: formatScoreLevel(scores[key])
   }));
+}
+
+function formatScoreLevel(score) {
+  const value = Math.max(0, Math.min(100, Math.round(Number(score || 0))));
+  if (value <= 20) return `较低 · ${value}`;
+  if (value <= 40) return `轻微 · ${value}`;
+  if (value <= 60) return `中等 · ${value}`;
+  if (value <= 80) return `明显 · ${value}`;
+  return `强烈 · ${value}`;
 }
 
 Page({
@@ -34,6 +45,9 @@ Page({
       scoreRows: buildScoreRows(reviewView),
       statsRows: ((reviewView || {}).anonymousStats || {}).rows || []
     });
+    if (review && review.klineTrainingSyncStatus !== "synced") {
+      syncKlineTrainingRecord(review).catch(() => {});
+    }
   },
 
   goSimulator() {

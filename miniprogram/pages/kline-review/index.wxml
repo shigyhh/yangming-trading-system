@@ -49,7 +49,7 @@
       </view>
 
       <view class="evidence-card card">
-        <text>事上练证据</text>
+        <text>事上练印记</text>
         <view wx:for="{{review.processEvidence}}" wx:key="label" class="evidence-row">
           <view>
             <text>{{item.label}}</text>
@@ -69,7 +69,7 @@
         <text>过程评分</text>
         <view wx:for="{{scoreRows}}" wx:key="key" class="score-row">
           <view>{{item.label}}</view>
-          <text>{{item.value}}</text>
+          <text>{{item.displayValue}}</text>
           <view class="score-bar"><view style="width: {{item.value}}%;"></view></view>
         </view>
       </view>

@@ -1,5 +1,22 @@
 <view class="page-shell">
   <view class="page-content">
+    <view class="report-brand-row">
+      <view class="report-brand-mark brand-zhao-mini" aria-label="阳明照见报告小标">
+        <view class="zhao-eyes">
+          <view class="zhao-eye"></view>
+          <view class="zhao-eye"></view>
+        </view>
+        <view class="zhao-mirror"></view>
+        <view class="zhao-fire">
+          <view class="zhao-fire-dot"></view>
+          <view class="zhao-fire-dot"></view>
+        </view>
+      </view>
+      <view class="report-brand-copy">
+        <text>阳明照见报告</text>
+        <view>心证 · 复盘 · 训练 · 纪律</view>
+      </view>
+    </view>
     <text class="eyebrow">PERSONALITY · 观心</text>
     <view class="page-title">九型人格<br />心证</view>
     <view class="page-subtitle">不是评判你，而是照见惯性动作，把它转成每日修行。</view>
@@ -69,6 +86,19 @@
         <view class="binding-note">{{klineChange.insight}}</view>
       </view>
 
+      <view class="kline-change-card card">
+        <text>{{klineDayRetest.title}}</text>
+        <view class="kline-change-meta">{{klineDayRetest.stageText}}</view>
+        <view class="kline-change-meta">{{klineDayRetest.mirrorLine}}</view>
+        <view class="retest-metrics">
+          <view wx:for="{{klineDayRetest.metrics}}" wx:key="key">
+            <text>{{item.label}}</text>
+            <view>{{item.value}}</view>
+          </view>
+        </view>
+        <view class="binding-note">{{klineDayRetest.insight}}</view>
+      </view>
+
       <view class="mini-report-card card">
         <text>一句话照见</text>
         <view>{{miniReport.oneLine}}</view>
@@ -93,13 +123,21 @@
         </view>
       </view>
 
+      <view class="kline-prescription-card card">
+        <text>专属 K线处方</text>
+        <view class="kline-prescription-title">{{klineRecommendation.title}}</view>
+        <view class="kline-prescription-reason">{{klineRecommendation.reason}}</view>
+        <view class="kline-prescription-meta">{{klineRecommendation.marketLabel}} · {{klineRecommendation.timeframeLabel}} · Day {{klineRecommendation.trainingDay}}</view>
+        <button class="primary-btn" bindtap="goKlineSimulator">{{klineRecommendation.actionText}}</button>
+      </view>
+
       <view class="mini-report-card card">
         <text>九镜与六贼</text>
         <view>{{miniReport.mirrorLine}}</view>
       </view>
 
       <view class="evidence-card card">
-        <text>行为证据链</text>
+        <text>行为印记链</text>
         <view class="evidence-mantra">问卷照见倾向，K线照见反应，复盘照见模式，训练照见变化。</view>
         <view wx:for="{{evidenceChain}}" wx:key="source" class="evidence-row">
           <view class="evidence-weight">{{item.weight}}</view>
@@ -116,7 +154,7 @@
           <view wx:for="{{miniReport.radar}}" wx:key="key">
             <view class="risk-row-head">
               <text>{{item.label}}</text>
-              <text>{{item.value}}</text>
+              <text>{{item.displayValue}}</text>
             </view>
             <view class="risk-bar"><view style="width: {{item.value}}%;"></view></view>
             <view class="risk-level">{{item.level}}</view>

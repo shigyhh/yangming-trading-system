@@ -39,7 +39,6 @@ Page({
     ritual: buildMindRitual("jing"),
     loop: CULTIVATION_LOOP,
     saved: false,
-    ripple: null,
     breathActive: false,
     breathStep: 0,
     breathText: "三息未启",
@@ -213,22 +212,5 @@ Page({
     const page = e.currentTarget.dataset.page;
     if (!page) return;
     wx.redirectTo({ url: page });
-  },
-
-  createRipple(e) {
-    if (e.target && e.target.dataset && e.target.dataset.noripple) return;
-    const touch = e.touches && e.touches[0];
-    if (!touch) return;
-    const id = Date.now();
-    this.setData({
-      ripple: {
-        id,
-        x: touch.clientX,
-        y: touch.clientY
-      }
-    });
-    setTimeout(() => {
-      if (this.data.ripple && this.data.ripple.id === id) this.setData({ ripple: null });
-    }, 900);
   }
 });

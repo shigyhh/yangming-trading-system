@@ -57,6 +57,16 @@ const THIEF_TRAINING_MAP = {
   疑: "把计划依据写成一句话，减少临场摇摆。"
 };
 
+const TRADE_REVIEW_STATUS_STEPS = [
+  { key: "pending_confirmation", label: "待确认", detail: "截图、自述与第一念等待确认。" },
+  { key: "pending_market_review", label: "待回看", detail: "等待历史位置回看完成。" },
+  { key: "mirrored", label: "已照见", detail: "九镜六贼已生成照见结果。" },
+  { key: "archived", label: "已入镜", detail: "真实记录已写入活镜档案。" },
+  { key: "training_pending", label: "待训练", detail: "等待对应训练动作完成。" },
+  { key: "trained", label: "已训练", detail: "训练动作已回流到这条记录。" },
+  { key: "retested", label: "已复测", detail: "复测变化已回看。" }
+];
+
 const KEYWORD_MIRROR_RULES = [
   {
     mirrorName: "追涨之镜",
@@ -83,7 +93,7 @@ const KEYWORD_MIRROR_RULES = [
     trainingAction: "写一条反向事实，让事实照见继续解释的惯性。"
   },
   {
-    mirrorName: "赌性之镜",
+    mirrorName: "执念之镜",
     type: "赌徒型",
     keywords: ["翻本", "梭哈", "加大仓位"],
     thieves: ["贪", "急", "痴"],
@@ -154,6 +164,8 @@ function inferType(input = {}) {
   const stage = getOption(STAGE_POSITIONS, input.stagePositionKey);
   const emotionType = EMOTION_TYPE_MAP[input.emotion] || "";
   const boundary = getOption(BOUNDARY_STATES, input.boundaryState);
+  if (input.changedPlan === "yes" || input.inPlan === "no") return "冲动型";
+  if (input.exitPrepared === "no") return "拖延型";
   if (boundary.key === "lost" && action.type !== "平衡型") return action.type;
   if (emotionType && emotionType !== "平衡型") return emotionType;
   if (action.type !== "平衡型") return action.type;
@@ -165,6 +177,8 @@ function matchKeywordMirrorRule(input = {}) {
     input.entryReason,
     input.exitReason,
     input.firstThought,
+    input.afterReaction,
+    input.nextAction,
     input.reviewNote,
     input.planBoundary
   ].filter(Boolean).join(" ");
@@ -172,6 +186,9 @@ function matchKeywordMirrorRule(input = {}) {
 }
 
 function buildHistoricalMatch(input = {}) {
+  if (input.marketContext && typeof input.marketContext === "object") {
+    return buildHistoricalMatchFromMarketContext(input.marketContext, input);
+  }
   const marketLabel = getMarketLabel(input.marketKey);
   const timeframeLabel = getTimeframeLabel(input.timeframeKey);
   const stage = getOption(STAGE_POSITIONS, input.stagePositionKey);
@@ -184,11 +201,159 @@ function buildHistoricalMatch(input = {}) {
     symbol: input.symbol || "待补充",
     stagePosition: stage.label,
     stageGate: stage.gate,
-    sourceStatus: input.historyMatched ? "已匹配历史切片" : "待服务端匹配历史分时",
+    sourceStatus: input.historyMatched ? "已匹配历史切片" : "等待历史数据回看",
     sourceNote: input.historyMatched
       ? "已将记录归入对应历史切片。"
-      : "MVP 先保存复盘证据；服务端接入后会按品类、日期、标的匹配分时与多周期位置。"
+      : "先保存复盘事实；历史数据载入后会按品类、日期、标的匹配分时与多周期位置。"
   };
+}
+
+function buildHistoricalMatchFromMarketContext(context = {}, fallback = {}) {
+  const status = context.status || "";
+  const stage = getOption(STAGE_POSITIONS, fallback.stagePositionKey);
+  const sourceStatusMap = {
+    ready: context.sourceStatus || "历史位置已回看",
+    missing_cache: "历史数据缓存待载入",
+    missing_symbol: "待补充标的后回看",
+    failed: "回看服务暂未完成"
+  };
+  const sourceNoteMap = {
+    ready: "已按市场、标的、周期和记录日期回看当时历史片段。",
+    missing_cache: "服务端已接通回看链路，等待该品类历史数据缓存载入。",
+    missing_symbol: "补充可回看的标的或合约后，系统会重新匹配当时位置。",
+    failed: "本地复盘已保存，可稍后重新同步回看。"
+  };
+  return {
+    marketKey: toLocalMarketKey(context.marketKey || fallback.marketKey || "cn"),
+    marketLabel: context.marketLabel || getMarketLabel(fallback.marketKey),
+    timeframeKey: toLocalTimeframeKey(context.timeframeKey || fallback.timeframeKey || "1d"),
+    timeframeLabel: context.timeframeLabel || getTimeframeLabel(fallback.timeframeKey),
+    tradeDate: context.tradeDate || fallback.tradeDate || "",
+    symbol: context.symbolMasked || fallback.symbol || "待补充",
+    stagePosition: context.positionLabel || stage.label,
+    stageGate: fallback.stageGate || stage.gate,
+    sourceStatus: sourceStatusMap[status] || context.sourceStatus || "历史位置待回看",
+    sourceNote: sourceNoteMap[status] || "系统会按真实历史数据回看当时位置。",
+    source: context.source || "",
+    sourceDataStatus: status || "pending",
+    dataStart: context.dataStart || "",
+    dataEnd: context.dataEnd || "",
+    candleCount: Number(context.candleCount || 0),
+    rulesSummary: context.rulesSummary || "",
+    reviewPrompt: context.reviewPrompt || "",
+    historyMatched: status === "ready"
+  };
+}
+
+function applyServerTradeReviewResult(record = {}, result = {}) {
+  const serverReview = result.review || result.trade_review || {};
+  const profile = result.living_mirror_profile || result.livingMirrorProfile || null;
+  const marketContext = serverReview.marketContext || serverReview.market_context || (profile || {}).latestMarketContext || null;
+  const historicalMatch = marketContext
+    ? buildHistoricalMatchFromMarketContext(marketContext, Object.assign({}, record, record.historicalMatch || {}))
+    : (record.historicalMatch || buildHistoricalMatch(record));
+
+  const merged = Object.assign({}, record, {
+    serverReviewId: serverReview.id || record.serverReviewId || "",
+    dataBindingSyncedAt: Date.now(),
+    marketContext: marketContext || record.marketContext || null,
+    serverLivingMirrorProfile: profile || record.serverLivingMirrorProfile || null,
+    historicalMatch,
+    marketKey: historicalMatch.marketKey || record.marketKey,
+    marketLabel: historicalMatch.marketLabel || record.marketLabel,
+    timeframeKey: historicalMatch.timeframeKey || record.timeframeKey,
+    timeframeLabel: historicalMatch.timeframeLabel || record.timeframeLabel,
+    tradeDate: serverReview.tradeDate || serverReview.trade_date || record.tradeDate,
+    symbol: historicalMatch.symbol || serverReview.symbolMasked || serverReview.symbol_masked || record.symbol,
+    relatedMirror: serverReview.detectedMirror || serverReview.detected_mirror || record.relatedMirror,
+    heartThieves: Array.isArray(serverReview.detectedThieves || serverReview.detected_thieves)
+      ? (serverReview.detectedThieves || serverReview.detected_thieves)
+      : (record.heartThieves || []),
+    verdict: serverReview.reviewText || serverReview.review_text || record.verdict,
+    crossEndStatus: serverReview.crossEndStatus || serverReview.cross_end_status || record.crossEndStatus,
+    crossEndStatusText: serverReview.crossEndStatusText || serverReview.cross_end_status_text || record.crossEndStatusText,
+    crossEndStatusSteps: serverReview.crossEndStatusSteps || serverReview.cross_end_status_steps || record.crossEndStatusSteps,
+    statusUpdatedAt: serverReview.statusUpdatedAt || serverReview.status_updated_at || record.statusUpdatedAt,
+    updatedAt: Date.now()
+  });
+  return withTradeReviewCrossEndStatus(merged, { force: true });
+}
+
+function toLocalMarketKey(value) {
+  const text = String(value || "").toLowerCase();
+  if (["cn_equity", "a_share", "ashare", "cn"].includes(text)) return "cn";
+  if (["us_equity", "us_stock", "us"].includes(text)) return "us";
+  if (["futures", "future"].includes(text)) return "futures";
+  if (["crypto", "digital_currency"].includes(text)) return "crypto";
+  return text || "cn";
+}
+
+function toLocalTimeframeKey(value) {
+  const text = String(value || "").toLowerCase();
+  if (text === "1mo") return "1m";
+  if (["5m", "10m", "30m", "60m", "1d", "1w", "1m", "1y"].includes(text)) return text;
+  return "1d";
+}
+
+function withTradeReviewCrossEndStatus(record = {}, context = {}) {
+  if (!context.force && !context.trainingCompleted && !context.retested && Array.isArray(record.crossEndStatusSteps) && record.crossEndStatus && record.crossEndStatusText) {
+    return record;
+  }
+  const status = buildTradeReviewCrossEndStatus(record, context);
+  return Object.assign({}, record, {
+    crossEndStatus: status.key,
+    crossEndStatusText: status.label,
+    crossEndStatusSteps: status.steps,
+    statusUpdatedAt: status.updatedAt
+  });
+}
+
+function buildTradeReviewCrossEndStatus(record = {}, context = {}) {
+  const confirmed = !!String(record.firstThought || record.strongestThought || "").trim() &&
+    !!String(record.entryReason || record.exitReason || record.screenshotPath || record.imageUrl || "").trim();
+  const historicalMatch = record.historicalMatch || {};
+  const marketContext = record.marketContext || {};
+  const marketReady = historicalMatch.historyMatched === true || marketContext.status === "ready" || historicalMatch.sourceDataStatus === "ready";
+  const mirrored = !!(record.relatedMirror || record.detectedMirror) && !!(record.verdict || record.reviewText || record.oneLine);
+  const archived = !!record.id;
+  const trained = !!(record.trainingCompleted || context.trainingCompleted);
+  const retested = !!(record.retested || context.retested);
+  const source = record.sourceType || "miniprogram";
+  const doneMap = {
+    pending_confirmation: confirmed,
+    pending_market_review: marketReady,
+    mirrored,
+    archived,
+    training_pending: trained,
+    trained,
+    retested
+  };
+  const currentKey = resolveTradeReviewCurrentStatus({ confirmed, marketReady, mirrored, archived, trained, retested });
+  const steps = TRADE_REVIEW_STATUS_STEPS.map((step) => ({
+    key: step.key,
+    label: step.label,
+    done: !!doneMap[step.key],
+    current: step.key === currentKey,
+    detail: step.detail,
+    source
+  }));
+  const current = steps.find((step) => step.current) || steps[0];
+  return {
+    key: current.key,
+    label: current.label,
+    steps,
+    updatedAt: Date.now()
+  };
+}
+
+function resolveTradeReviewCurrentStatus({ confirmed, marketReady, mirrored, archived, trained, retested }) {
+  if (!confirmed) return "pending_confirmation";
+  if (!marketReady) return "pending_market_review";
+  if (!mirrored) return "mirrored";
+  if (!archived) return "archived";
+  if (!trained) return "training_pending";
+  if (!retested) return "trained";
+  return "retested";
 }
 
 function buildProcessScores(input = {}, type) {
@@ -196,12 +361,15 @@ function buildProcessScores(input = {}, type) {
   const boundary = getOption(BOUNDARY_STATES, input.boundaryState);
   const reactionPenalty = action.type === "平衡型" ? 0 : 14;
   const emotionPenalty = input.emotion && input.emotion !== "平静" ? 8 : 0;
+  const planPenalty = input.inPlan === "no" ? 14 : 0;
+  const changedPlanPenalty = input.changedPlan === "yes" ? 12 : 0;
+  const exitPenalty = input.exitPrepared === "no" ? 10 : 0;
   return {
-    awareness: clamp(70 + (input.firstThought ? 12 : -8) + (input.reviewNote ? 8 : 0), 20, 96),
-    boundary: clamp(boundary.score, 18, 96),
-    execution: clamp(action.score + (boundary.key === "kept" ? 6 : -10), 18, 96),
-    stability: clamp(82 - reactionPenalty - emotionPenalty, 18, 96),
-    review: clamp(input.reviewNote ? 86 : 62, 18, 96),
+    awareness: clamp(70 + (input.firstThought ? 12 : -8) + (input.nextAction ? 8 : 0), 20, 96),
+    boundary: clamp(boundary.score - exitPenalty, 18, 96),
+    execution: clamp(action.score + (boundary.key === "kept" ? 6 : -10) - planPenalty - changedPlanPenalty, 18, 96),
+    stability: clamp(82 - reactionPenalty - emotionPenalty - changedPlanPenalty, 18, 96),
+    review: clamp(input.nextAction || input.afterReaction ? 86 : 62, 18, 96),
     personalityCalibration: clamp(type === "平衡型" ? 76 : 66, 18, 96)
   };
 }
@@ -210,7 +378,7 @@ function buildTrainingAction(type, boundaryState) {
   if (type === "冲动型") return "下一次记录前先停十秒，写下理由、边界和复盘依据。";
   if (type === "扛单型") return "下次只练一件事：边界出现后，不再临场解释，先回到预案。";
   if (type === "赌徒型") return "连续不顺后，把动作降到只记录，不让不甘心接管节奏。";
-  if (type === "偏执型") return "复盘时写一条反向证据，让事实照见想证明自己的念头。";
+  if (type === "偏执型") return "复盘时写一条反向事实，让它照见想证明自己的念头。";
   if (type === "拖延型") return "今天只完成三行复盘：触发、第一念、下一次边界。";
   if (type === "焦虑型") return "把观察窗口固定下来，窗口外只记录心境，不反复确认。";
   if (boundaryState === "lost") return "先复盘失守前的一念，不急着追求完整解释。";
@@ -233,7 +401,9 @@ function buildTradeReview(input = {}, context = {}) {
   const boundary = getOption(BOUNDARY_STATES, input.boundaryState);
   const report = {
     id: input.id || `tr-${Date.now()}`,
+    sourceType: "trade_review",
     screenshotPath: input.screenshotPath || "",
+    ocrDraft: input.ocrDraft || null,
     marketKey: historicalMatch.marketKey,
     marketLabel: historicalMatch.marketLabel,
     timeframeKey: historicalMatch.timeframeKey,
@@ -245,6 +415,11 @@ function buildTradeReview(input = {}, context = {}) {
     emotion: input.emotion || "未记录",
     entryReason: input.entryReason || "未记录",
     exitReason: input.exitReason || "未记录",
+    inPlan: input.inPlan || "yes",
+    changedPlan: input.changedPlan || "no",
+    exitPrepared: input.exitPrepared || "yes",
+    afterReaction: input.afterReaction || "未记录",
+    nextAction: input.nextAction || "",
     firstThought: input.firstThought || "未记录",
     planBoundary: input.planBoundary || "未记录",
     boundaryState: boundary.key,
@@ -266,26 +441,62 @@ function buildTradeReview(input = {}, context = {}) {
     compliance: COMPLIANCE_TEXT,
     createdAt: Date.now()
   };
-  return report;
+  return withTradeReviewCrossEndStatus(report, context);
 }
 
 function buildTradeReviewRecordView(record = {}) {
+  const normalized = withTradeReviewCrossEndStatus(record);
   const scores = record.scores || {};
   const heartThieves = record.heartThieves || [];
   const historicalMatch = record.historicalMatch || {};
-  return Object.assign({}, record, {
+  return Object.assign({}, normalized, {
     heartThievesText: heartThieves.length ? heartThieves.join("、") : (record.virtuePractice || "知止、守心、执行"),
     scoreRows: Object.keys(scores).map((key) => ({
       key,
       label: SCORE_LABELS[key] || key,
-      value: scores[key]
+      value: scores[key],
+      displayValue: formatScoreLevel(scores[key])
     })),
     createdAtText: formatDateTime(record.createdAt || record.updatedAt),
     archiveTitle: `${record.tradeDate || "未填日期"} · ${record.marketLabel || historicalMatch.marketLabel || "待定位"}`,
     marketLine: `${record.marketLabel || historicalMatch.marketLabel || "待定位"} · ${record.timeframeLabel || historicalMatch.timeframeLabel || "待周期"} · ${record.symbol || "待补充"}`,
     stageLine: `${historicalMatch.stagePosition || record.stageGate || "待定位"} · ${record.relatedMirror || "待照见"}`,
-    sourceLine: historicalMatch.sourceStatus || "待服务端匹配历史分时"
+    sourceLine: historicalMatch.sourceStatus || "待服务端匹配历史分时",
+    statusLine: normalized.crossEndStatusText || "待确认"
   });
+}
+
+function formatScoreLevel(score) {
+  const value = clamp(score, 0, 100);
+  if (value <= 20) return `较低 · ${value}`;
+  if (value <= 40) return `轻微 · ${value}`;
+  if (value <= 60) return `中等 · ${value}`;
+  if (value <= 80) return `明显 · ${value}`;
+  return `强烈 · ${value}`;
+}
+
+function buildTradeReviewClosure(record = {}, reminder = {}) {
+  const normalized = withTradeReviewCrossEndStatus(record);
+  const heartThieves = record.heartThieves || [];
+  const mirrorName = record.relatedMirror || "待照见";
+  const trainingAction = reminder.mainTraining || record.trainingAction || "把第一念记录下来。";
+  return {
+    title: "本次复盘已入活镜",
+    mirrorLine: `${mirrorName} · ${heartThieves.length ? heartThieves.join("、") : (record.virtuePractice || "知止、守心、执行")}`,
+    trainingAction,
+    proofLine: record.oneLine || record.verdict || "这条记录已经进入行为印记。",
+    statusText: normalized.crossEndStatusText || "已入镜",
+    steps: (normalized.crossEndStatusSteps || []).map((step) => ({
+      key: step.key,
+      label: step.label,
+      value: step.detail,
+      done: step.done,
+      current: step.current
+    })),
+    primaryActionText: "查看活镜成长",
+    detailActionText: "查看复盘详情",
+    klineActionText: "进入 K 线观心"
+  };
 }
 
 function buildLiveMirrorReminder(tradeReviewState = {}) {
@@ -352,14 +563,17 @@ function buildOneLine({ type, input, action, boundary, historicalMatch }) {
 
 function buildEvidenceChain({ input, action, boundary, historicalMatch, binding, context }) {
   return [
-    { label: "截图记录", value: input.screenshotPath ? "已上传" : "待上传", detail: "用于保留真实交易记录证据。" },
+    { label: "截图记录", value: input.screenshotPath ? "已上传" : "待上传", detail: "用于保留真实交易事实。" },
     { label: "历史位置", value: historicalMatch.stagePosition, detail: `${historicalMatch.marketLabel} · ${historicalMatch.timeframeLabel} · ${historicalMatch.sourceStatus}` },
-    { label: "建仓理由", value: input.entryReason || "待补充", detail: "用于照见行动前的第一层依据。" },
-    { label: "离场理由", value: input.exitReason || "待补充", detail: "用于照见边界触碰后的反应。" },
+    { label: "计划状态", value: input.inPlan === "no" ? "计划外" : "计划内", detail: input.changedPlan === "yes" ? "曾临盘改计划。" : "未记录临盘改计划。" },
+    { label: "行动理由", value: input.entryReason || "待补充", detail: "用于照见行动前的第一层依据。" },
+    { label: "边界理由", value: input.exitReason || "待补充", detail: "用于照见边界触碰后的反应。" },
+    { label: "边界条件", value: input.exitPrepared === "no" ? "未写清" : "已写清", detail: "用于照见边界是否提前立住。" },
     { label: "第一反应", value: action.label, detail: input.firstThought || "第一念待补充。" },
+    { label: "事后反应", value: input.afterReaction || "待补充", detail: input.nextAction || "下一次动作待补充。" },
     { label: "守界状态", value: boundary.label, detail: input.planBoundary || "边界待补充。" },
     { label: "九镜六贼", value: binding.mirrorName, detail: (binding.thieves || []).length ? `对应：${binding.thieves.join("、")}` : (binding.virtue || "知止、守心、执行") },
-    { label: "档案联通", value: (context.assessment || {}).primary || "待照见", detail: "会进入小程序、网页与后续 App 的行为证据链。" }
+    { label: "档案联通", value: (context.assessment || {}).primary || "待照见", detail: "会进入小程序、网页与后续 App 的行为印记。" }
   ];
 }
 
@@ -505,8 +719,13 @@ module.exports = {
   STAGE_POSITIONS,
   SCORE_LABELS,
   buildHistoricalMatch,
+  buildHistoricalMatchFromMarketContext,
+  applyServerTradeReviewResult,
+  buildTradeReviewCrossEndStatus,
+  withTradeReviewCrossEndStatus,
   buildTradeReview,
   buildTradeReviewRecordView,
+  buildTradeReviewClosure,
   buildLiveMirrorReminder,
   buildLivingMirrorStats
 };
