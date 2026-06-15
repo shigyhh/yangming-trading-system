@@ -1,13 +1,17 @@
 import { listSealedOneThoughtEvents } from "@/lib/mind-archive/oneThoughtEventRepository"
+import { buildReviewArchive } from "@/lib/mind-archive/reviewArchiveService"
 import {
+  CAPITAL_STABILITY_MISSING_LABEL,
   DEFAULT_MIND_ARCHIVE_USER_ID,
+  capitalStabilityLevelLabels,
   type ActualAction,
   type BrowserStorageLike,
+  type CapitalStabilityLevel,
   type HeartJudgement,
   type OneThoughtReaction,
   type ReviewStatus,
 } from "@/lib/mind-archive/types"
-import { listTradeReviewsByOneThoughtEvent } from "@/lib/trade-review/tradeReviewRepository"
+import { listTradeReviews } from "@/lib/trade-review/tradeReviewRepository"
 
 export type ZhixingState =
   | "止念成行"
@@ -34,6 +38,9 @@ export type ZhixingScrollItem = {
   heartJudgement?: HeartJudgement
   marketContextSummary?: string
   practiceText?: string
+  capitalStabilityLevel?: CapitalStabilityLevel
+  capitalStabilityLabel: string
+  capitalStabilityPracticeText?: string
   hasMarketContext: boolean
   zhixingState: ZhixingState
 }
@@ -55,20 +62,31 @@ export function getZhixingScrollItems(
   const events = storage === undefined
     ? listSealedOneThoughtEvents(userId)
     : listSealedOneThoughtEvents(userId, storage)
+  const tradeReviews = listTradeReviews(userId, storage)
+  const { reviewArchiveItems } = buildReviewArchive({
+    tradeReviews,
+    oneThoughtEvents: events,
+  })
+  const reviewByEventId = new Map(
+    reviewArchiveItems
+      .filter((item) => Boolean(item.linkedOneThoughtEventId))
+      .map((item) => [item.linkedOneThoughtEventId as string, item]),
+  )
 
   return events.map((event) => {
-    const review = listTradeReviewsByOneThoughtEvent(userId, event.id, storage).at(0)
+    const review = reviewByEventId.get(event.id)
     const zhixingState = resolveZhixingState({
       userReaction: event.userReaction,
       actualAction: event.actualAction,
       reviewStatus: event.reviewStatus,
       heartJudgement: review?.heartJudgement,
     })
+    const capitalStabilityLevel = review?.capitalStabilityLevel
 
     return {
       oneThoughtEventId: event.id,
       linkedOneThoughtEventId: review?.linkedOneThoughtEventId,
-      tradeReviewId: review?.id,
+      tradeReviewId: review?.tradeReviewId,
       createdAt: review?.createdAt || event.updatedAt || event.createdAt,
       os: event.os,
       reflectionFinal: event.reflectionFinal,
@@ -79,9 +97,14 @@ export function getZhixingScrollItems(
       followedPlan: review?.followedPlan,
       brokeRule: review?.brokeRule,
       heartJudgement: review?.heartJudgement,
-      marketContextSummary: review?.marketContext?.summary?.finalText || review?.reviewSummary?.marketText,
-      practiceText: review?.reviewSummary?.practiceText,
-      hasMarketContext: Boolean(review?.marketContext?.summary?.finalText || review?.marketContext?.timeframes || review?.reviewSummary?.marketText),
+      marketContextSummary: review?.marketText,
+      practiceText: review?.practiceText,
+      capitalStabilityLevel,
+      capitalStabilityLabel: capitalStabilityLevel
+        ? capitalStabilityLevelLabels[capitalStabilityLevel]
+        : CAPITAL_STABILITY_MISSING_LABEL,
+      capitalStabilityPracticeText: review?.capitalPracticeText,
+      hasMarketContext: Boolean(review?.hasMarketContext),
       zhixingState,
     }
   })

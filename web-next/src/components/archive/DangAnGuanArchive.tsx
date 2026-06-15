@@ -2,6 +2,16 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 
+import {
+  CAPITAL_STABILITY_MISSING_LABEL,
+  capitalStabilityLevelLabels,
+} from "@/lib/mind-archive/types"
+import type {
+  ReviewArchiveItem,
+  ReviewArchiveStats,
+  ReviewRiskSignal,
+} from "@/lib/mind-archive/reviewArchiveService"
+
 const GOLD = "#c8ab6f"
 const INK = "#ece9e1"
 const SUB = "#a7a9a1"
@@ -37,6 +47,8 @@ export type ThoughtEntry = {
   heartJudgement?: "zheng_sheng" | "zei_sheng" | "zheng_kui" | "shuang_shu"
   marketContextSummary?: string
   practiceText?: string
+  capitalStabilityLabel?: string
+  capitalStabilityPracticeText?: string
 }
 
 export type RecurringThought = {
@@ -60,7 +72,16 @@ export type DangAnGuanArchiveProps = {
   recurringThoughts?: RecurringThought[]
   ruleGuardNotices?: RuleGuardNotice[]
   completedReviewCount?: number
-  reviewByEventId?: Record<string, Pick<ThoughtEntry, "heartJudgement" | "marketContextSummary" | "practiceText">>
+  reviewArchiveItems?: ReviewArchiveItem[]
+  reviewArchiveStats?: Partial<ReviewArchiveStats>
+  reviewRiskSignals?: ReviewRiskSignal[]
+  reviewByEventId?: Record<
+    string,
+    Pick<
+      ThoughtEntry,
+      "heartJudgement" | "marketContextSummary" | "practiceText" | "capitalStabilityLabel" | "capitalStabilityPracticeText"
+    >
+  >
   onOpenMindArchive?: () => void
   onOpenHeartMirrorScroll?: () => void
   onOpenZhixingScroll?: () => void
@@ -106,6 +127,35 @@ const fallbackSummary: ArchiveSummary = {
   stopRate: 0,
 }
 
+const fallbackReviewArchiveStats: ReviewArchiveStats = {
+  heartJudgementCounts: {
+    zhengSheng: 0,
+    zeiSheng: 0,
+    zhengKui: 0,
+    shuangShu: 0,
+    missing: 0,
+  },
+  capitalStabilityCounts: {
+    stableWithGuard: 0,
+    moneyStableHeartMoving: 0,
+    moneyMovingHeartChaotic: 0,
+    doubleUnstable: 0,
+    insufficientData: 0,
+    missing: 0,
+  },
+  behaviorCounts: {
+    brokeRule: 0,
+    addedPosition: 0,
+    movedStopLoss: 0,
+    changedPlanIntraday: 0,
+    stillMovingThenTraded: 0,
+  },
+  marketContextCounts: {
+    hasMarketContext: 0,
+    missingMarketContext: 0,
+  },
+}
+
 const fallbackStrongestHeartThief: Required<StrongestHeartThief> = {
   name: "待显影",
   riskLabel: "先照一念，档案才会说话。",
@@ -113,6 +163,24 @@ const fallbackStrongestHeartThief: Required<StrongestHeartThief> = {
 
 function safeCount(value: number | undefined) {
   return Number.isFinite(value) ? Number(value) : 0
+}
+
+function formatHeartJudgement(value: ReviewArchiveItem["heartJudgement"]) {
+  return value ? heartJudgementLabel[value] : "未记录"
+}
+
+function formatCapitalStability(value: ReviewArchiveItem["capitalStabilityLevel"]) {
+  return value ? capitalStabilityLevelLabels[value] : CAPITAL_STABILITY_MISSING_LABEL
+}
+
+function formatPlan(value: boolean | undefined) {
+  if (value === undefined) return "未记录"
+  return value ? "守计划" : "未守计划"
+}
+
+function formatRule(value: boolean | undefined) {
+  if (value === undefined) return "未记录"
+  return value ? "破戒" : "未破戒"
 }
 
 function useReducedMotion() {
@@ -200,6 +268,9 @@ export default function DangAnGuanArchive({
   recurringThoughts = [],
   ruleGuardNotices = [],
   completedReviewCount = 0,
+  reviewArchiveItems = [],
+  reviewArchiveStats,
+  reviewRiskSignals = [],
   reviewByEventId = {},
   onOpenMindArchive,
   onOpenHeartMirrorScroll,
@@ -218,9 +289,39 @@ export default function DangAnGuanArchive({
     pendingReviewCount: safeCount(summary?.pendingReviewCount ?? fallbackSummary.pendingReviewCount),
     stopRate: safeCount(summary?.stopRate ?? fallbackSummary.stopRate),
   }
+  const safeReviewArchiveStats: ReviewArchiveStats = {
+    heartJudgementCounts: {
+      zhengSheng: safeCount(reviewArchiveStats?.heartJudgementCounts?.zhengSheng ?? fallbackReviewArchiveStats.heartJudgementCounts.zhengSheng),
+      zeiSheng: safeCount(reviewArchiveStats?.heartJudgementCounts?.zeiSheng ?? fallbackReviewArchiveStats.heartJudgementCounts.zeiSheng),
+      zhengKui: safeCount(reviewArchiveStats?.heartJudgementCounts?.zhengKui ?? fallbackReviewArchiveStats.heartJudgementCounts.zhengKui),
+      shuangShu: safeCount(reviewArchiveStats?.heartJudgementCounts?.shuangShu ?? fallbackReviewArchiveStats.heartJudgementCounts.shuangShu),
+      missing: safeCount(reviewArchiveStats?.heartJudgementCounts?.missing ?? fallbackReviewArchiveStats.heartJudgementCounts.missing),
+    },
+    capitalStabilityCounts: {
+      stableWithGuard: safeCount(reviewArchiveStats?.capitalStabilityCounts?.stableWithGuard ?? fallbackReviewArchiveStats.capitalStabilityCounts.stableWithGuard),
+      moneyStableHeartMoving: safeCount(reviewArchiveStats?.capitalStabilityCounts?.moneyStableHeartMoving ?? fallbackReviewArchiveStats.capitalStabilityCounts.moneyStableHeartMoving),
+      moneyMovingHeartChaotic: safeCount(reviewArchiveStats?.capitalStabilityCounts?.moneyMovingHeartChaotic ?? fallbackReviewArchiveStats.capitalStabilityCounts.moneyMovingHeartChaotic),
+      doubleUnstable: safeCount(reviewArchiveStats?.capitalStabilityCounts?.doubleUnstable ?? fallbackReviewArchiveStats.capitalStabilityCounts.doubleUnstable),
+      insufficientData: safeCount(reviewArchiveStats?.capitalStabilityCounts?.insufficientData ?? fallbackReviewArchiveStats.capitalStabilityCounts.insufficientData),
+      missing: safeCount(reviewArchiveStats?.capitalStabilityCounts?.missing ?? fallbackReviewArchiveStats.capitalStabilityCounts.missing),
+    },
+    behaviorCounts: {
+      brokeRule: safeCount(reviewArchiveStats?.behaviorCounts?.brokeRule ?? fallbackReviewArchiveStats.behaviorCounts.brokeRule),
+      addedPosition: safeCount(reviewArchiveStats?.behaviorCounts?.addedPosition ?? fallbackReviewArchiveStats.behaviorCounts.addedPosition),
+      movedStopLoss: safeCount(reviewArchiveStats?.behaviorCounts?.movedStopLoss ?? fallbackReviewArchiveStats.behaviorCounts.movedStopLoss),
+      changedPlanIntraday: safeCount(reviewArchiveStats?.behaviorCounts?.changedPlanIntraday ?? fallbackReviewArchiveStats.behaviorCounts.changedPlanIntraday),
+      stillMovingThenTraded: safeCount(reviewArchiveStats?.behaviorCounts?.stillMovingThenTraded ?? fallbackReviewArchiveStats.behaviorCounts.stillMovingThenTraded),
+    },
+    marketContextCounts: {
+      hasMarketContext: safeCount(reviewArchiveStats?.marketContextCounts?.hasMarketContext ?? fallbackReviewArchiveStats.marketContextCounts.hasMarketContext),
+      missingMarketContext: safeCount(reviewArchiveStats?.marketContextCounts?.missingMarketContext ?? fallbackReviewArchiveStats.marketContextCounts.missingMarketContext),
+    },
+  }
   const safeRecentEntries = recentEntries ?? []
+  const safeReviewArchiveItems = reviewArchiveItems
   const safeRecurringThoughts = recurringThoughts ?? []
   const safeRuleGuardNotices = ruleGuardNotices ?? []
+  const safeReviewRiskSignals = reviewRiskSignals
 
   const stats = useMemo(
     () => [
@@ -232,6 +333,89 @@ export default function DangAnGuanArchive({
     ],
     [safeSummary.pendingReviewCount, safeSummary.seenCount, safeSummary.stillMovingCount, safeSummary.stoppedCount, safeSummary.todaySealedCount],
   )
+  const reviewStatGroups = useMemo(
+    () => [
+      {
+        title: "心判统计",
+        items: [
+          { k: "正胜", v: safeReviewArchiveStats.heartJudgementCounts.zhengSheng },
+          { k: "贼胜", v: safeReviewArchiveStats.heartJudgementCounts.zeiSheng },
+          { k: "正亏", v: safeReviewArchiveStats.heartJudgementCounts.zhengKui },
+          { k: "双输", v: safeReviewArchiveStats.heartJudgementCounts.shuangShu },
+          { k: "未记录", v: safeReviewArchiveStats.heartJudgementCounts.missing },
+        ],
+      },
+      {
+        title: "资金稳定概览",
+        items: [
+          { k: "稳中有戒", v: safeReviewArchiveStats.capitalStabilityCounts.stableWithGuard },
+          { k: "钱稳心动", v: safeReviewArchiveStats.capitalStabilityCounts.moneyStableHeartMoving },
+          { k: "钱动心乱", v: safeReviewArchiveStats.capitalStabilityCounts.moneyMovingHeartChaotic },
+          { k: "双失守", v: safeReviewArchiveStats.capitalStabilityCounts.doubleUnstable },
+          { k: "数据不足", v: safeReviewArchiveStats.capitalStabilityCounts.insufficientData },
+          { k: "资金证未记录", v: safeReviewArchiveStats.capitalStabilityCounts.missing },
+        ],
+      },
+      {
+        title: "行为统计",
+        items: [
+          { k: "破戒", v: safeReviewArchiveStats.behaviorCounts.brokeRule },
+          { k: "加仓", v: safeReviewArchiveStats.behaviorCounts.addedPosition },
+          { k: "移动止损", v: safeReviewArchiveStats.behaviorCounts.movedStopLoss },
+          { k: "临盘改计划", v: safeReviewArchiveStats.behaviorCounts.changedPlanIntraday },
+          { k: "心还在动仍交易", v: safeReviewArchiveStats.behaviorCounts.stillMovingThenTraded },
+        ],
+      },
+      {
+        title: "盘证统计",
+        items: [
+          { k: "已有盘证", v: safeReviewArchiveStats.marketContextCounts.hasMarketContext },
+          { k: "盘证未记录", v: safeReviewArchiveStats.marketContextCounts.missingMarketContext },
+        ],
+      },
+    ],
+    [
+      safeReviewArchiveStats.behaviorCounts.addedPosition,
+      safeReviewArchiveStats.behaviorCounts.brokeRule,
+      safeReviewArchiveStats.behaviorCounts.changedPlanIntraday,
+      safeReviewArchiveStats.behaviorCounts.movedStopLoss,
+      safeReviewArchiveStats.behaviorCounts.stillMovingThenTraded,
+      safeReviewArchiveStats.capitalStabilityCounts.doubleUnstable,
+      safeReviewArchiveStats.capitalStabilityCounts.insufficientData,
+      safeReviewArchiveStats.capitalStabilityCounts.missing,
+      safeReviewArchiveStats.capitalStabilityCounts.moneyMovingHeartChaotic,
+      safeReviewArchiveStats.capitalStabilityCounts.moneyStableHeartMoving,
+      safeReviewArchiveStats.capitalStabilityCounts.stableWithGuard,
+      safeReviewArchiveStats.heartJudgementCounts.missing,
+      safeReviewArchiveStats.heartJudgementCounts.shuangShu,
+      safeReviewArchiveStats.heartJudgementCounts.zhengKui,
+      safeReviewArchiveStats.heartJudgementCounts.zhengSheng,
+      safeReviewArchiveStats.heartJudgementCounts.zeiSheng,
+      safeReviewArchiveStats.marketContextCounts.hasMarketContext,
+      safeReviewArchiveStats.marketContextCounts.missingMarketContext,
+    ],
+  )
+  const archiveReviewByEventId = useMemo(() => {
+    const fromItems = Object.fromEntries(
+      safeReviewArchiveItems
+        .filter((item) => Boolean(item.linkedOneThoughtEventId))
+        .map((item) => [
+          item.linkedOneThoughtEventId as string,
+          {
+            heartJudgement: item.heartJudgement,
+            marketContextSummary: item.marketText,
+            practiceText: item.practiceText,
+            capitalStabilityLabel: formatCapitalStability(item.capitalStabilityLevel),
+            capitalStabilityPracticeText: item.capitalPracticeText,
+          },
+        ]),
+    )
+
+    return {
+      ...fromItems,
+      ...reviewByEventId,
+    }
+  }, [reviewByEventId, safeReviewArchiveItems])
 
   const heartName = strongestHeartThief?.name?.trim() || fallbackStrongestHeartThief.name
   const riskLabel = strongestHeartThief?.riskLabel?.trim() || fallbackStrongestHeartThief.riskLabel
@@ -309,7 +493,7 @@ export default function DangAnGuanArchive({
               <div className="danganguan-timeline">
                 {safeRecentEntries.length > 0 ? (
                   safeRecentEntries.slice(0, 5).map((entry, index) => {
-                    const linkedReview = reviewByEventId[entry.id]
+                    const linkedReview = archiveReviewByEventId[entry.id]
 
                     return (
                       <Reveal disabled={reduced} delay={index * 90} key={entry.id}>
@@ -329,8 +513,21 @@ export default function DangAnGuanArchive({
                             {linkedReview?.heartJudgement ? (
                               <Meta label="心判" value={heartJudgementLabel[linkedReview.heartJudgement]} active />
                             ) : null}
+                            {linkedReview ? (
+                              <Meta
+                                label="资金"
+                                value={linkedReview.capitalStabilityLabel || CAPITAL_STABILITY_MISSING_LABEL}
+                                active={Boolean(
+                                  linkedReview.capitalStabilityLabel &&
+                                    linkedReview.capitalStabilityLabel !== CAPITAL_STABILITY_MISSING_LABEL,
+                                )}
+                              />
+                            ) : null}
                             {linkedReview?.marketContextSummary ? (
                               <Meta label="盘证" value={linkedReview.marketContextSummary} />
+                            ) : null}
+                            {linkedReview?.capitalStabilityPracticeText ? (
+                              <Meta label="资金修行" value={linkedReview.capitalStabilityPracticeText} />
                             ) : null}
                             {linkedReview?.practiceText ? (
                               <Meta label="下次修行" value={linkedReview.practiceText} />
@@ -394,6 +591,53 @@ export default function DangAnGuanArchive({
               </Reveal>
 
               <Reveal disabled={reduced} delay={220}>
+                <section className="danganguan-side-block" aria-label="最近真实复盘">
+                  <div className="danganguan-eyebrow">最近真实复盘</div>
+                  {safeReviewArchiveItems.length > 0 ? (
+                    <ul className="danganguan-review-list">
+                      {safeReviewArchiveItems.slice(0, 3).map((item) => (
+                        <li key={item.tradeReviewId}>
+                          <strong>「{item.os || "一念未记录"}」</strong>
+                          <span>{item.symbol || "标的未记录"} · {formatHeartJudgement(item.heartJudgement)} · {formatCapitalStability(item.capitalStabilityLevel)}</span>
+                          <span>{formatPlan(item.followedPlan)} · {formatRule(item.brokeRule)} · {item.hasMarketContext ? "已有盘证" : "盘证未记录"}</span>
+                          {item.marketText ? <em>{item.marketText}</em> : null}
+                          {item.capitalPracticeText || item.practiceText ? (
+                            <em>{item.capitalPracticeText || item.practiceText}</em>
+                          ) : null}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p>暂无已入档的真实复盘。</p>
+                  )}
+                </section>
+              </Reveal>
+
+              <Reveal disabled={reduced} delay={280}>
+                <section className="danganguan-side-block" aria-label="复盘统计">
+                  <div className="danganguan-eyebrow">复盘统计</div>
+                  <h3>不只看这笔赚没赚。</h3>
+                  <p>要看这笔有没有让资金开始失稳。</p>
+                  <div className="danganguan-review-stat-groups">
+                    {reviewStatGroups.map((group) => (
+                      <div className="danganguan-review-stat-group" key={group.title}>
+                        <h4>{group.title}</h4>
+                        <div className="danganguan-capital-grid">
+                          {group.items.map((item) => (
+                            <div key={`${group.title}-${item.k}`}>
+                              <strong>{item.v}</strong>
+                              <span>{item.k}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p>复盘风险信号 {safeReviewRiskSignals.length} 条，先留给规则守护读取。</p>
+                </section>
+              </Reveal>
+
+              <Reveal disabled={reduced} delay={340}>
                 <section className="danganguan-side-block">
                   <div className="danganguan-eyebrow">复发念</div>
                   <h3>这不是第一次来，也不会是最后一次。</h3>
@@ -412,7 +656,7 @@ export default function DangAnGuanArchive({
                 </section>
               </Reveal>
 
-              <Reveal disabled={reduced} delay={280}>
+              <Reveal disabled={reduced} delay={400}>
                 <section className="danganguan-side-block">
                   <div className="danganguan-eyebrow">规则守护</div>
                   {safeRuleGuardNotices.length > 0 ? (
@@ -890,6 +1134,91 @@ const CSS = `
     color: ${SUB};
     font-size: 14.5px;
     line-height: 1.75;
+  }
+
+  .danganguan-capital-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .danganguan-capital-grid div {
+    min-width: 0;
+    padding: 12px 10px;
+    border-top: 1px solid ${HAIR};
+    background: rgba(255,255,255,0.008);
+  }
+
+  .danganguan-capital-grid strong {
+    display: block;
+    color: ${INK};
+    font-size: 24px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .danganguan-capital-grid span {
+    display: block;
+    margin-top: 6px;
+    color: ${DIM};
+    font-size: 12px;
+    line-height: 1.45;
+    letter-spacing: 0.08em;
+  }
+
+  .danganguan-review-stat-groups {
+    display: grid;
+    gap: 16px;
+  }
+
+  .danganguan-review-stat-group h4 {
+    margin: 0;
+    color: rgba(200,171,111,0.76);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+  }
+
+  .danganguan-review-list {
+    display: grid;
+    gap: 14px;
+    list-style: none;
+    margin: 18px 0 0;
+    padding: 0;
+  }
+
+  .danganguan-review-list li {
+    min-width: 0;
+    padding-top: 14px;
+    border-top: 1px solid ${HAIR};
+  }
+
+  .danganguan-review-list strong,
+  .danganguan-review-list span,
+  .danganguan-review-list em {
+    display: block;
+    min-width: 0;
+  }
+
+  .danganguan-review-list strong {
+    color: ${INK};
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.7;
+  }
+
+  .danganguan-review-list span,
+  .danganguan-review-list em {
+    margin-top: 6px;
+    color: ${SUB};
+    font-size: 13.5px;
+    font-style: normal;
+    line-height: 1.65;
+  }
+
+  .danganguan-review-list em {
+    color: ${DIM};
   }
 
   .danganguan-side-axis {

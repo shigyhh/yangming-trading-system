@@ -4,6 +4,7 @@ import test from "node:test"
 
 const archivePageUrl = new URL("../../app/mind-archive/page.tsx", import.meta.url)
 const dangAnGuanArchiveUrl = new URL("../../components/archive/DangAnGuanArchive.tsx", import.meta.url)
+const typesUrl = new URL("./types.ts", import.meta.url)
 const mindScrollPageUrl = new URL("../../app/mind-scroll/page.tsx", import.meta.url)
 const mindScrollServiceUrl = new URL("./mindScrollService.ts", import.meta.url)
 const zhixingScrollPageUrl = new URL("../../app/zhixing-scroll/page.tsx", import.meta.url)
@@ -60,11 +61,14 @@ test("P3 archive museum is the private entry and reads only archive/review servi
 test("P3 mind scroll only displays sealed oneThoughtEvent fields and reflectionFinal", async () => {
   const mindScrollPage = await readFile(mindScrollPageUrl, "utf8")
   const mindScrollService = await readFile(mindScrollServiceUrl, "utf8")
-  const source = `${mindScrollPage}\n${mindScrollService}`
+  const types = await readFile(typesUrl, "utf8")
+  const source = `${mindScrollPage}\n${mindScrollService}\n${types}`
 
   ;[
     "getMindScrollItems",
     "listSealedOneThoughtEvents",
+    "buildReviewArchive",
+    "reviewArchiveItems",
     "这里不记行情，只记你被哪一念牵走。",
     "最近心怎么动",
     "哪个心贼常来",
@@ -77,11 +81,19 @@ test("P3 mind scroll only displays sealed oneThoughtEvent fields and reflectionF
     "heartThief",
     "heartEvidence",
     "practiceText",
+    "reviewPracticeText",
     "userReaction",
     "actualAction",
     "reviewStatus",
+    "heartJudgement",
+    "capitalStabilityLabel",
+    "资金证未记录",
   ].forEach((token) => {
     assert.equal(source.includes(token), true, `missing P3 mind scroll token: ${token}`)
+  })
+
+  ;["calculateHeartJudgement", "judgeTradeHeart", "buildCapitalStabilityResult"].forEach((token) => {
+    assert.equal(source.includes(token), false, `mind scroll recalculates review judgement or capital stability: ${token}`)
   })
 
   forbiddenSourceTokens.forEach((token) => {
@@ -92,12 +104,14 @@ test("P3 mind scroll only displays sealed oneThoughtEvent fields and reflectionF
 test("P3 zhixing scroll merges oneThoughtEvent and tradeReview without new judgement", async () => {
   const zhixingPage = await readFile(zhixingScrollPageUrl, "utf8")
   const zhixingService = await readFile(zhixingScrollServiceUrl, "utf8")
-  const source = `${zhixingPage}\n${zhixingService}`
+  const types = await readFile(typesUrl, "utf8")
+  const source = `${zhixingPage}\n${zhixingService}\n${types}`
 
   ;[
     "getZhixingScrollItems",
     "listSealedOneThoughtEvents",
-    "listTradeReviewsByOneThoughtEvent",
+    "buildReviewArchive",
+    "reviewArchiveItems",
     "oneThoughtEventId",
     "tradeReviewId",
     "reflectionFinal",
@@ -106,6 +120,8 @@ test("P3 zhixing scroll merges oneThoughtEvent and tradeReview without new judge
     "followedPlan",
     "brokeRule",
     "heartJudgement",
+    "capitalStabilityLabel",
+    "capitalStabilityPracticeText",
     "zhixingState",
     'return "止念成行"',
     'return "心动未复"',
@@ -119,11 +135,25 @@ test("P3 zhixing scroll merges oneThoughtEvent and tradeReview without new judge
     "钱赚了，但这笔是心贼赢了。",
     "钱亏了，但心没有失守。",
     "钱也亏了，心也被带走了。",
+    "资金",
+    "资金证未记录",
+    "盘证未记录",
+    "稳中有戒",
+    "钱稳心动",
+    "钱动心乱",
+    "双失守",
+    "数据不足",
+    "下次修行",
+    "是否已有盘证",
+    "照见之后，有没有做到？",
+    "做了以后，钱有没有跟着心乱？",
   ].forEach((token) => {
     assert.equal(source.includes(token), true, `missing P3 zhixing token: ${token}`)
   })
 
-  ;["calculateHeartJudgement", "judgeTradeHeart"].forEach((token) => {
+  assert.equal(source.includes("listTradeReviewsByOneThoughtEvent"), false, "zhixing scroll must use reviewArchiveItems instead of per-event review lookup")
+
+  ;["calculateHeartJudgement", "judgeTradeHeart", "buildCapitalStabilityResult"].forEach((token) => {
     assert.equal(source.includes(token), false, `zhixing scroll recalculates P2 judgement: ${token}`)
   })
 

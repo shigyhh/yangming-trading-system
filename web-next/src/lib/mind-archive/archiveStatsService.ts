@@ -4,13 +4,14 @@ import {
   type ArchiveRange,
   type ArchiveStats,
   type BrowserStorageLike,
+  type CapitalStabilityStats,
   type CountItem,
-  type HeartJudgement,
   type OneThoughtEvent,
   type RecurringThoughtItem,
   type ReviewJudgementCounts,
   type TopSceneItem,
 } from "@/lib/mind-archive/types"
+import { buildReviewArchive } from "@/lib/mind-archive/reviewArchiveService"
 import { listTradeReviews } from "@/lib/trade-review/tradeReviewRepository"
 
 const emptyJudgementCounts: ReviewJudgementCounts = {
@@ -18,6 +19,15 @@ const emptyJudgementCounts: ReviewJudgementCounts = {
   zei_sheng: 0,
   zheng_kui: 0,
   shuang_shu: 0,
+}
+
+const emptyCapitalStabilityStats: CapitalStabilityStats = {
+  stableWithGuard: 0,
+  moneyStableHeartMoving: 0,
+  moneyMovingHeartChaotic: 0,
+  doubleUnstable: 0,
+  insufficientData: 0,
+  missing: 0,
 }
 
 function getEventTime(event: Pick<OneThoughtEvent, "createdAt" | "updatedAt">) {
@@ -34,6 +44,12 @@ function getRangeStart(range: ArchiveRange, now = new Date()) {
 function filterEventsByRange(events: OneThoughtEvent[], range: ArchiveRange, now = new Date()) {
   const start = getRangeStart(range, now)
   return events.filter((event) => getEventTime(event) >= start)
+}
+
+function rangeToRecentDays(range: ArchiveRange) {
+  if (range === "24h") return 1
+  if (range === "7d") return 7
+  return undefined
 }
 
 function listArchiveEvents(
@@ -170,16 +186,33 @@ export function getReviewJudgementCounts(
   storage?: BrowserStorageLike | null,
   now = new Date(),
 ) {
-  const start = getRangeStart(range, now)
-  const counts: ReviewJudgementCounts = { ...emptyJudgementCounts }
+  const archive = buildReviewArchive({
+    tradeReviews: listTradeReviews(userId, storage),
+    oneThoughtEvents: listArchiveEvents(userId, storage),
+    recentDays: rangeToRecentDays(range),
+    now,
+  })
 
-  for (const review of listTradeReviews(userId, storage)) {
-    const time = new Date(review.updatedAt || review.createdAt).getTime()
-    if (Number.isNaN(time) || time < start) continue
-    counts[review.heartJudgement as HeartJudgement] += 1
+  return {
+    zheng_sheng: archive.reviewArchiveStats.heartJudgementCounts.zhengSheng,
+    zei_sheng: archive.reviewArchiveStats.heartJudgementCounts.zeiSheng,
+    zheng_kui: archive.reviewArchiveStats.heartJudgementCounts.zhengKui,
+    shuang_shu: archive.reviewArchiveStats.heartJudgementCounts.shuangShu,
   }
+}
 
-  return counts
+export function getCapitalStabilityStats(
+  userId = DEFAULT_MIND_ARCHIVE_USER_ID,
+  range: ArchiveRange = "7d",
+  storage?: BrowserStorageLike | null,
+  now = new Date(),
+) {
+  return buildReviewArchive({
+    tradeReviews: listTradeReviews(userId, storage),
+    oneThoughtEvents: listArchiveEvents(userId, storage),
+    recentDays: rangeToRecentDays(range),
+    now,
+  }).reviewArchiveStats.capitalStabilityCounts
 }
 
 export function getRecentSealedThoughtEvents(
@@ -263,6 +296,7 @@ export function getArchiveStats(
     topScenes: getTopScenes(userId, range, storage, now),
     recurringThoughts: getRecurringThoughts(userId, range, storage, now),
     reviewJudgementCounts: reviews.length ? getReviewJudgementCounts(userId, range, storage, now) : { ...emptyJudgementCounts },
+    capitalStabilityStats: reviews.length ? getCapitalStabilityStats(userId, range, storage, now) : { ...emptyCapitalStabilityStats },
   }
 }
 

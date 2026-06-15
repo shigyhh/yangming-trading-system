@@ -297,6 +297,16 @@ export type CapitalStabilityLevel =
   | "double_unstable"
   | "insufficient_data"
 
+export const CAPITAL_STABILITY_MISSING_LABEL = "资金证未记录"
+
+export const capitalStabilityLevelLabels: Record<CapitalStabilityLevel, string> = {
+  stable_with_guard: "稳中有戒",
+  money_stable_heart_moving: "钱稳心动",
+  money_moving_heart_chaotic: "钱动心乱",
+  double_unstable: "双失守",
+  insufficient_data: "数据不足",
+}
+
 export type TradeReviewCapitalStability = {
   version: "capital_stability_v1"
   level: CapitalStabilityLevel
@@ -400,6 +410,15 @@ export type RecurringThoughtItem = {
 
 export type ReviewJudgementCounts = Record<HeartJudgement, number>
 
+export type CapitalStabilityStats = {
+  stableWithGuard: number
+  moneyStableHeartMoving: number
+  moneyMovingHeartChaotic: number
+  doubleUnstable: number
+  insufficientData: number
+  missing: number
+}
+
 export type ArchiveStats = {
   userId: string
   totalEvents: number
@@ -418,4 +437,5 @@ export type ArchiveStats = {
   topScenes: TopSceneItem[]
   recurringThoughts: RecurringThoughtItem[]
   reviewJudgementCounts: ReviewJudgementCounts
+  capitalStabilityStats: CapitalStabilityStats
 }

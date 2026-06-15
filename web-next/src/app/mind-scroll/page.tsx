@@ -29,6 +29,13 @@ const reviewLabels = {
   completed: "已复盘",
 } as const
 
+const heartJudgementLabels = {
+  zheng_sheng: "正胜",
+  zei_sheng: "贼胜",
+  zheng_kui: "正亏",
+  shuang_shu: "双输",
+} as const
+
 function formatTime(value: string) {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return value
@@ -130,6 +137,18 @@ export default function MindScrollPage() {
                 <div>
                   <dt>复盘</dt>
                   <dd>{item.reviewStatus ? reviewLabels[item.reviewStatus] : "未记录"}</dd>
+                </div>
+                <div>
+                  <dt>复盘心判</dt>
+                  <dd>{item.heartJudgement ? heartJudgementLabels[item.heartJudgement] : "未复盘"}</dd>
+                </div>
+                <div>
+                  <dt>资金</dt>
+                  <dd>{item.tradeReviewId ? item.capitalStabilityLabel : "未复盘"}</dd>
+                </div>
+                <div>
+                  <dt>复盘修行</dt>
+                  <dd>{item.reviewPracticeText || "未复盘"}</dd>
                 </div>
               </dl>
             </article>

@@ -1,10 +1,15 @@
 import assert from "node:assert/strict"
-import { readFile } from "node:fs/promises"
+import { mkdir, readFile, writeFile } from "node:fs/promises"
+import { tmpdir } from "node:os"
+import path from "node:path"
 import test from "node:test"
+import ts from "typescript"
 
 const typesUrl = new URL("./types.ts", import.meta.url)
 const eventRepoUrl = new URL("./oneThoughtEventRepository.ts", import.meta.url)
 const archiveStatsUrl = new URL("./archiveStatsService.ts", import.meta.url)
+const reviewArchiveServiceUrl = new URL("./reviewArchiveService.ts", import.meta.url)
+const tradeReviewRepoUrl = new URL("../trade-review/tradeReviewRepository.ts", import.meta.url)
 const ritualFlowUrl = new URL("../../features/assessment/ZhaoxinRitualFlow.tsx", import.meta.url)
 const ritualFacadeUrl = new URL("../../features/assessment/OneThoughtRitualFlow.tsx", import.meta.url)
 const gatewayUrl = new URL("../../features/assessment/MirrorGateway.tsx", import.meta.url)
@@ -13,6 +18,115 @@ const todaySealedPageUrl = new URL("../../app/today-sealed/page.tsx", import.met
 const mindArchivePageUrl = new URL("../../app/mind-archive/page.tsx", import.meta.url)
 const dangAnGuanArchiveUrl = new URL("../../components/archive/DangAnGuanArchive.tsx", import.meta.url)
 const lakePageUrl = new URL("../../features/one-thought-lake/OneThoughtLakePage.tsx", import.meta.url)
+
+function transpileTs(source) {
+  return ts.transpileModule(source, {
+    compilerOptions: {
+      module: ts.ModuleKind.ES2022,
+      target: ts.ScriptTarget.ES2022,
+      moduleResolution: ts.ModuleResolutionKind.Bundler,
+    },
+  }).outputText
+}
+
+async function importArchiveReviewModules() {
+  const dir = path.join(tmpdir(), "yangming-mind-archive-capital-tests")
+  await mkdir(dir, { recursive: true })
+
+  const typesSource = await readFile(typesUrl, "utf8")
+  const eventRepoSource = await readFile(eventRepoUrl, "utf8")
+  const tradeReviewSource = await readFile(tradeReviewRepoUrl, "utf8")
+  const archiveStatsSource = await readFile(archiveStatsUrl, "utf8")
+  const reviewArchiveServiceSource = await readFile(reviewArchiveServiceUrl, "utf8")
+
+  await writeFile(path.join(dir, "types.mjs"), transpileTs(typesSource), "utf8")
+  await writeFile(
+    path.join(dir, "reviewArchiveService.mjs"),
+    transpileTs(reviewArchiveServiceSource).replaceAll('from "./types"', 'from "./types.mjs"'),
+    "utf8",
+  )
+  await writeFile(path.join(dir, "reflectionService.mjs"), "export function createReflectionKey(sceneId, itemId) { return `${sceneId}:${itemId}` }\n", "utf8")
+  await writeFile(
+    path.join(dir, "oneThoughtEventRepository.mjs"),
+    transpileTs(eventRepoSource)
+      .replaceAll('from "@/lib/reflections/reflectionService"', 'from "./reflectionService.mjs"')
+      .replaceAll('from "./types"', 'from "./types.mjs"'),
+    "utf8",
+  )
+  await writeFile(
+    path.join(dir, "tradeReviewRepository.mjs"),
+    transpileTs(tradeReviewSource)
+      .replaceAll('from "@/lib/mind-archive/oneThoughtEventRepository"', 'from "./oneThoughtEventRepository.mjs"')
+      .replaceAll('from "@/lib/mind-archive/types"', 'from "./types.mjs"'),
+    "utf8",
+  )
+  await writeFile(
+    path.join(dir, "archiveStatsService.mjs"),
+    transpileTs(archiveStatsSource)
+      .replaceAll('from "@/lib/mind-archive/oneThoughtEventRepository"', 'from "./oneThoughtEventRepository.mjs"')
+      .replaceAll('from "@/lib/mind-archive/types"', 'from "./types.mjs"')
+      .replaceAll('from "@/lib/mind-archive/reviewArchiveService"', 'from "./reviewArchiveService.mjs"')
+      .replaceAll('from "@/lib/trade-review/tradeReviewRepository"', 'from "./tradeReviewRepository.mjs"'),
+    "utf8",
+  )
+
+  return {
+    archiveStatsService: await import(`file://${path.join(dir, `archiveStatsService.mjs?${Date.now()}`)}`),
+    tradeReviewRepository: await import(`file://${path.join(dir, `tradeReviewRepository.mjs?${Date.now()}`)}`),
+  }
+}
+
+function createMemoryStorage() {
+  const data = new Map()
+
+  return {
+    getItem(key) {
+      return data.has(key) ? data.get(key) : null
+    },
+    setItem(key, value) {
+      data.set(key, String(value))
+    },
+    removeItem(key) {
+      data.delete(key)
+    },
+  }
+}
+
+function buildTradeReviewInput(overrides = {}) {
+  return {
+    id: "trade_review_archive_capital_1",
+    userId: "local_zhaojian_user",
+    linkedOneThoughtEventId: "one_thought_archive_capital_1",
+    sceneId: "scene_chase",
+    itemId: "item_1",
+    key: "scene_chase:item_1",
+    os: "明知不可追，见涨仍动心。",
+    reflectionFinal: "此念一起，先照见急心，再回到规则。",
+    reflectionVersion: "reflection_final_shenji_zeyou_v1",
+    symbol: "600519",
+    direction: "buy",
+    pnl: 100,
+    followedPlan: true,
+    brokeRule: false,
+    heartJudgement: "zheng_sheng",
+    createdAt: "2026-06-12T10:30:00.000Z",
+    updatedAt: "2026-06-12T10:30:00.000Z",
+    ...overrides,
+  }
+}
+
+function buildCapitalStability(level, practiceText = "继续按计划做，不用一笔交易证明自己。") {
+  return {
+    version: "capital_stability_v1",
+    level,
+    score: null,
+    reasons: ["读取已保存资金证。"],
+    warnings: [],
+    metrics: {},
+    practiceText,
+    generatedAt: "2026-06-12T10:31:00.000Z",
+  }
+}
 
 test("OneThoughtEvent contract names the P0 ritual boundary", async () => {
   const types = await readFile(typesUrl, "utf8")
@@ -196,6 +310,10 @@ test("档案馆 page collects the private archive IA without lake or old reflect
     "getMindArchiveStats",
     "getRecentSealedThoughtEvents",
     "listRecentTradeReviews",
+    "buildReviewArchive",
+    "reviewArchiveItems",
+    "reviewArchiveStats",
+    "reviewRiskSignals",
     "getHeartThiefProfile",
     "getRuleGuardReminders",
     "todaySealedCount: stats?.todayTotal ?? 0",
@@ -238,6 +356,21 @@ test("档案馆 page collects the private archive IA without lake or old reflect
     "知行长卷",
     "看照见后有没有做到。",
     "真实复盘入口",
+    "最近真实复盘",
+    "复盘统计",
+    "心判统计",
+    "行为统计",
+    "盘证统计",
+    "资金稳定概览",
+    "不只看这笔赚没赚。",
+    "资金证未记录",
+    "盘证未记录",
+    "资金",
+    "稳中有戒",
+    "钱稳心动",
+    "钱动心乱",
+    "双失守",
+    "数据不足",
     "暂无待复盘的一念。",
     "复发念",
     "这不是第一次来，也不会是最后一次。",
@@ -254,8 +387,53 @@ test("档案馆 page collects the private archive IA without lake or old reflect
   })
 
   assert.doesNotMatch(archiveSource, /心镜档案/)
+  assert.doesNotMatch(archiveSource, /getCapitalStabilityLabel/)
+  assert.doesNotMatch(archiveSource, /getCapitalStabilityPracticeText/)
+  assert.doesNotMatch(archiveSource, /capitalStabilityStats/)
   assert.doesNotMatch(archiveSource, /reflection_v2/)
   assert.doesNotMatch(archiveSource, /anonymousThoughtLakeEntry/)
+})
+
+test("P2.4-C archive reads saved capitalStability summary and counts missing separately", async () => {
+  const { archiveStatsService, tradeReviewRepository } = await importArchiveReviewModules()
+  const storage = createMemoryStorage()
+
+  ;[
+    ["stable_with_guard", "稳中有戒"],
+    ["money_stable_heart_moving", "钱稳心动"],
+    ["money_moving_heart_chaotic", "钱动心乱"],
+    ["double_unstable", "双失守"],
+    ["insufficient_data", "数据不足"],
+  ].forEach(([level, label], index) => {
+    tradeReviewRepository.createTradeReview(
+      buildTradeReviewInput({
+        id: `trade_review_archive_capital_${index}`,
+        linkedOneThoughtEventId: `one_thought_archive_capital_${index}`,
+        capitalStability: buildCapitalStability(level, label),
+      }),
+      storage,
+    )
+  })
+
+  tradeReviewRepository.createTradeReview(
+    buildTradeReviewInput({
+      id: "trade_review_archive_capital_missing",
+      linkedOneThoughtEventId: "one_thought_archive_capital_missing",
+      capitalStability: undefined,
+    }),
+    storage,
+  )
+
+  const stats = archiveStatsService.getMindArchiveStats("local_zhaojian_user", "all", storage)
+
+  assert.deepEqual(stats.capitalStabilityStats, {
+    stableWithGuard: 1,
+    moneyStableHeartMoving: 1,
+    moneyMovingHeartChaotic: 1,
+    doubleUnstable: 1,
+    insufficientData: 1,
+    missing: 1,
+  })
 })
 
 test("档案馆展示层空数据时也必须显示正文而不是挂轴空壳", async () => {

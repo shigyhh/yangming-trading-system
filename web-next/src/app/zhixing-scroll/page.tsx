@@ -62,7 +62,7 @@ export default function ZhixingScrollPage() {
         <header className="scroll-hero">
           <p>知行长卷</p>
           <h1>看照见之后，有没有做到。</h1>
-          <span>只合并已落印的一念与真实复盘，不重新判断，不生成新照回。</span>
+          <span>照见之后，有没有做到？做了以后，钱有没有跟着心乱？</span>
         </header>
 
         <section className="scroll-list" aria-label="知行长卷时间线">
@@ -105,8 +105,16 @@ export default function ZhixingScrollPage() {
                   <dd>{item.heartJudgement || "未复盘"}</dd>
                 </div>
                 <div>
+                  <dt>资金</dt>
+                  <dd>{item.capitalStabilityLabel}</dd>
+                </div>
+                <div>
+                  <dt>资金修行</dt>
+                  <dd>{item.capitalStabilityPracticeText || "资金证未记录"}</dd>
+                </div>
+                <div>
                   <dt>盘证</dt>
-                  <dd>{item.marketContextSummary || "未复盘"}</dd>
+                  <dd>{item.hasMarketContext ? item.marketContextSummary || "已有盘证" : "盘证未记录"}</dd>
                 </div>
                 <div>
                   <dt>下次修行</dt>
@@ -114,7 +122,7 @@ export default function ZhixingScrollPage() {
                 </div>
                 <div>
                   <dt>是否已有盘证</dt>
-                  <dd>{item.hasMarketContext ? "已有盘证" : "未复盘"}</dd>
+                  <dd>{item.hasMarketContext ? "已有盘证" : "盘证未记录"}</dd>
                 </div>
               </dl>
             </article>

@@ -11,16 +11,13 @@ import {
   getMindArchiveStats,
   getRecentSealedThoughtEvents,
 } from "@/lib/mind-archive/archiveStatsService"
+import { buildReviewArchive, type ReviewArchiveResult } from "@/lib/mind-archive/reviewArchiveService"
 import { getRuleGuardReminders, type RuleGuardReminder } from "@/lib/rule-guard/ruleGuardService"
-import {
-  listRecentTradeReviews,
-  listTradeReviewsByOneThoughtEvent,
-} from "@/lib/trade-review/tradeReviewRepository"
+import { listRecentTradeReviews } from "@/lib/trade-review/tradeReviewRepository"
 import {
   DEFAULT_MIND_ARCHIVE_USER_ID,
   type ArchiveStats,
   type OneThoughtEvent,
-  type TradeReview,
 } from "@/lib/mind-archive/types"
 
 function formatTime(value: string) {
@@ -35,36 +32,27 @@ function formatTime(value: string) {
   })
 }
 
-function getMarketContextSummary(review?: TradeReview) {
-  return review?.marketContext?.summary?.finalText || review?.reviewSummary?.marketText
-}
-
-function getReviewPracticeText(review?: TradeReview) {
-  return review?.reviewSummary?.practiceText
-}
-
 export default function MindArchivePage() {
   const router = useRouter()
   const [stats, setStats] = useState<ArchiveStats | null>(null)
   const [recentSealedEvents, setRecentSealedEvents] = useState<OneThoughtEvent[]>([])
-  const [recentTradeReviews, setRecentTradeReviews] = useState<TradeReview[]>([])
+  const [reviewArchive, setReviewArchive] = useState<ReviewArchiveResult | null>(null)
   const [heartThiefProfile, setHeartThiefProfile] = useState<HeartThiefProfile | null>(null)
   const [reminders, setReminders] = useState<RuleGuardReminder[]>([])
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      const sealedEvents = getRecentSealedThoughtEvents(DEFAULT_MIND_ARCHIVE_USER_ID, 5)
-      const linkedReviews = sealedEvents
-        .map((event) => listTradeReviewsByOneThoughtEvent(DEFAULT_MIND_ARCHIVE_USER_ID, event.id).at(0))
-        .filter((review): review is TradeReview => Boolean(review))
+      const sealedEvents = getRecentSealedThoughtEvents(DEFAULT_MIND_ARCHIVE_USER_ID, 50)
       const recentReviews = listRecentTradeReviews(DEFAULT_MIND_ARCHIVE_USER_ID, 20)
+      const nextReviewArchive = buildReviewArchive({
+        tradeReviews: recentReviews,
+        oneThoughtEvents: sealedEvents,
+        recentDays: 30,
+      })
 
       setStats(getMindArchiveStats(DEFAULT_MIND_ARCHIVE_USER_ID))
       setRecentSealedEvents(sealedEvents)
-      setRecentTradeReviews([
-        ...linkedReviews,
-        ...recentReviews.filter((review) => !linkedReviews.some((linked) => linked.id === review.id)),
-      ])
+      setReviewArchive(nextReviewArchive)
       setHeartThiefProfile(getHeartThiefProfile(DEFAULT_MIND_ARCHIVE_USER_ID))
       setReminders(getRuleGuardReminders(DEFAULT_MIND_ARCHIVE_USER_ID))
     }, 0)
@@ -75,6 +63,7 @@ export default function MindArchivePage() {
   const pendingReviewEvents = stats ? stats.pendingReviewEvents : []
   const recurringThoughts = stats ? stats.recurringThoughts : []
   const recentArchiveEvents = recentSealedEvents.slice(0, 5)
+  const reviewArchiveItems = reviewArchive?.reviewArchiveItems ?? []
 
   function openMindArchive() {
     document.getElementById("one-thought-ledger")?.scrollIntoView({ behavior: "smooth", block: "start" })
@@ -123,17 +112,10 @@ export default function MindArchivePage() {
           lastSeenAt: formatTime(item.lastSeenAt),
         }))}
         ruleGuardNotices={reminders.slice(0, 3)}
-        completedReviewCount={recentTradeReviews.length}
-        reviewByEventId={Object.fromEntries(
-          recentTradeReviews.map((review) => [
-            review.linkedOneThoughtEventId,
-            {
-              heartJudgement: review.heartJudgement,
-              marketContextSummary: getMarketContextSummary(review),
-              practiceText: getReviewPracticeText(review),
-            },
-          ]),
-        )}
+        completedReviewCount={reviewArchiveItems.length}
+        reviewArchiveItems={reviewArchiveItems}
+        reviewArchiveStats={reviewArchive?.reviewArchiveStats}
+        reviewRiskSignals={reviewArchive?.reviewRiskSignals ?? []}
         onOpenMindArchive={openMindArchive}
         onOpenHeartMirrorScroll={() => router.push("/mind-scroll")}
         onOpenZhixingScroll={() => router.push("/zhixing-scroll")}
