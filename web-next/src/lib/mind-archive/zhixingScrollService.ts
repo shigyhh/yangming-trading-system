@@ -1,5 +1,6 @@
 import { listSealedOneThoughtEvents } from "@/lib/mind-archive/oneThoughtEventRepository"
 import { buildReviewArchive } from "@/lib/mind-archive/reviewArchiveService"
+import { formatTopReviewRiskSignalSummary } from "@/lib/mind-archive/reviewRiskSignalDisplay"
 import {
   CAPITAL_STABILITY_MISSING_LABEL,
   DEFAULT_MIND_ARCHIVE_USER_ID,
@@ -45,6 +46,11 @@ export type ZhixingScrollItem = {
   zhixingState: ZhixingState
 }
 
+export type ZhixingScrollData = {
+  items: ZhixingScrollItem[]
+  ruleGuardSummary: string
+}
+
 export const zhixingStateDescriptions: Record<ZhixingState, string> = {
   止念成行: "这一次，照见之后你停住了。",
   心动未复: "心已经动了，也交易了，但还没有回头看。",
@@ -55,15 +61,15 @@ export const zhixingStateDescriptions: Record<ZhixingState, string> = {
   待记录: "这一念已经照见，后面的行动还没留下记录。",
 }
 
-export function getZhixingScrollItems(
+export function getZhixingScrollData(
   userId = DEFAULT_MIND_ARCHIVE_USER_ID,
   storage?: BrowserStorageLike | null,
-): ZhixingScrollItem[] {
+): ZhixingScrollData {
   const events = storage === undefined
     ? listSealedOneThoughtEvents(userId)
     : listSealedOneThoughtEvents(userId, storage)
   const tradeReviews = listTradeReviews(userId, storage)
-  const { reviewArchiveItems } = buildReviewArchive({
+  const { reviewArchiveItems, reviewRiskSignals } = buildReviewArchive({
     tradeReviews,
     oneThoughtEvents: events,
   })
@@ -73,7 +79,7 @@ export function getZhixingScrollItems(
       .map((item) => [item.linkedOneThoughtEventId as string, item]),
   )
 
-  return events.map((event) => {
+  const items = events.map((event) => {
     const review = reviewByEventId.get(event.id)
     const zhixingState = resolveZhixingState({
       userReaction: event.userReaction,
@@ -108,6 +114,18 @@ export function getZhixingScrollItems(
       zhixingState,
     }
   })
+
+  return {
+    items,
+    ruleGuardSummary: formatTopReviewRiskSignalSummary(reviewRiskSignals),
+  }
+}
+
+export function getZhixingScrollItems(
+  userId = DEFAULT_MIND_ARCHIVE_USER_ID,
+  storage?: BrowserStorageLike | null,
+): ZhixingScrollItem[] {
+  return getZhixingScrollData(userId, storage).items
 }
 
 export function resolveZhixingState(input: {

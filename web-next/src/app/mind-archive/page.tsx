@@ -12,7 +12,6 @@ import {
   getRecentSealedThoughtEvents,
 } from "@/lib/mind-archive/archiveStatsService"
 import { buildReviewArchive, type ReviewArchiveResult } from "@/lib/mind-archive/reviewArchiveService"
-import { getRuleGuardReminders, type RuleGuardReminder } from "@/lib/rule-guard/ruleGuardService"
 import { listRecentTradeReviews } from "@/lib/trade-review/tradeReviewRepository"
 import {
   DEFAULT_MIND_ARCHIVE_USER_ID,
@@ -38,7 +37,6 @@ export default function MindArchivePage() {
   const [recentSealedEvents, setRecentSealedEvents] = useState<OneThoughtEvent[]>([])
   const [reviewArchive, setReviewArchive] = useState<ReviewArchiveResult | null>(null)
   const [heartThiefProfile, setHeartThiefProfile] = useState<HeartThiefProfile | null>(null)
-  const [reminders, setReminders] = useState<RuleGuardReminder[]>([])
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -54,7 +52,6 @@ export default function MindArchivePage() {
       setRecentSealedEvents(sealedEvents)
       setReviewArchive(nextReviewArchive)
       setHeartThiefProfile(getHeartThiefProfile(DEFAULT_MIND_ARCHIVE_USER_ID))
-      setReminders(getRuleGuardReminders(DEFAULT_MIND_ARCHIVE_USER_ID))
     }, 0)
 
     return () => window.clearTimeout(timer)
@@ -111,7 +108,6 @@ export default function MindArchivePage() {
           count: item.count,
           lastSeenAt: formatTime(item.lastSeenAt),
         }))}
-        ruleGuardNotices={reminders.slice(0, 3)}
         completedReviewCount={reviewArchiveItems.length}
         reviewArchiveItems={reviewArchiveItems}
         reviewArchiveStats={reviewArchive?.reviewArchiveStats}

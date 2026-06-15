@@ -1,5 +1,6 @@
 import { listSealedOneThoughtEvents } from "@/lib/mind-archive/oneThoughtEventRepository"
 import { buildReviewArchive } from "@/lib/mind-archive/reviewArchiveService"
+import { formatTopReviewRiskSignalSummary } from "@/lib/mind-archive/reviewRiskSignalDisplay"
 import {
   CAPITAL_STABILITY_MISSING_LABEL,
   DEFAULT_MIND_ARCHIVE_USER_ID,
@@ -33,15 +34,20 @@ export type MindScrollItem = Pick<
   reviewPracticeText?: string
 }
 
-export function getMindScrollItems(
+export type MindScrollData = {
+  items: MindScrollItem[]
+  ruleGuardSummary: string
+}
+
+export function getMindScrollData(
   userId = DEFAULT_MIND_ARCHIVE_USER_ID,
   storage?: BrowserStorageLike | null,
-): MindScrollItem[] {
+): MindScrollData {
   const events = storage === undefined
     ? listSealedOneThoughtEvents(userId)
     : listSealedOneThoughtEvents(userId, storage)
   const tradeReviews = listTradeReviews(userId, storage)
-  const { reviewArchiveItems } = buildReviewArchive({
+  const { reviewArchiveItems, reviewRiskSignals } = buildReviewArchive({
     tradeReviews,
     oneThoughtEvents: events,
   })
@@ -51,7 +57,7 @@ export function getMindScrollItems(
       .map((item) => [item.linkedOneThoughtEventId as string, item]),
   )
 
-  return events.map((event) => {
+  const items = events.map((event) => {
     const review = reviewByEventId.get(event.id)
     const capitalStabilityLevel = review?.capitalStabilityLevel
 
@@ -77,4 +83,16 @@ export function getMindScrollItems(
       reviewPracticeText: review?.practiceText,
     }
   })
+
+  return {
+    items,
+    ruleGuardSummary: formatTopReviewRiskSignalSummary(reviewRiskSignals),
+  }
+}
+
+export function getMindScrollItems(
+  userId = DEFAULT_MIND_ARCHIVE_USER_ID,
+  storage?: BrowserStorageLike | null,
+): MindScrollItem[] {
+  return getMindScrollData(userId, storage).items
 }

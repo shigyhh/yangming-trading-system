@@ -9,6 +9,7 @@ const mindScrollPageUrl = new URL("../../app/mind-scroll/page.tsx", import.meta.
 const mindScrollServiceUrl = new URL("./mindScrollService.ts", import.meta.url)
 const zhixingScrollPageUrl = new URL("../../app/zhixing-scroll/page.tsx", import.meta.url)
 const zhixingScrollServiceUrl = new URL("./zhixingScrollService.ts", import.meta.url)
+const reviewRiskSignalDisplayUrl = new URL("./reviewRiskSignalDisplay.ts", import.meta.url)
 
 const forbiddenSourceTokens = [
   "OneThoughtLake",
@@ -61,15 +62,20 @@ test("P3 archive museum is the private entry and reads only archive/review servi
 test("P3 mind scroll only displays sealed oneThoughtEvent fields and reflectionFinal", async () => {
   const mindScrollPage = await readFile(mindScrollPageUrl, "utf8")
   const mindScrollService = await readFile(mindScrollServiceUrl, "utf8")
+  const reviewRiskSignalDisplay = await readFile(reviewRiskSignalDisplayUrl, "utf8")
   const types = await readFile(typesUrl, "utf8")
-  const source = `${mindScrollPage}\n${mindScrollService}\n${types}`
+  const source = `${mindScrollPage}\n${mindScrollService}\n${reviewRiskSignalDisplay}\n${types}`
 
   ;[
     "getMindScrollItems",
     "listSealedOneThoughtEvents",
     "buildReviewArchive",
     "reviewArchiveItems",
+    "reviewRiskSignals",
+    "getMindScrollData",
+    "ruleGuardSummary",
     "这里不记行情，只记你被哪一念牵走。",
+    "最近反复接管你的心贼",
     "最近心怎么动",
     "哪个心贼常来",
     "哪些念头反复出现",
@@ -88,6 +94,8 @@ test("P3 mind scroll only displays sealed oneThoughtEvent fields and reflectionF
     "heartJudgement",
     "capitalStabilityLabel",
     "资金证未记录",
+    "暂无规则守护提醒。",
+    "不是没有风险，而是还需要更多复盘样本。",
   ].forEach((token) => {
     assert.equal(source.includes(token), true, `missing P3 mind scroll token: ${token}`)
   })
@@ -104,14 +112,18 @@ test("P3 mind scroll only displays sealed oneThoughtEvent fields and reflectionF
 test("P3 zhixing scroll merges oneThoughtEvent and tradeReview without new judgement", async () => {
   const zhixingPage = await readFile(zhixingScrollPageUrl, "utf8")
   const zhixingService = await readFile(zhixingScrollServiceUrl, "utf8")
+  const reviewRiskSignalDisplay = await readFile(reviewRiskSignalDisplayUrl, "utf8")
   const types = await readFile(typesUrl, "utf8")
-  const source = `${zhixingPage}\n${zhixingService}\n${types}`
+  const source = `${zhixingPage}\n${zhixingService}\n${reviewRiskSignalDisplay}\n${types}`
 
   ;[
     "getZhixingScrollItems",
     "listSealedOneThoughtEvents",
     "buildReviewArchive",
     "reviewArchiveItems",
+    "reviewRiskSignals",
+    "getZhixingScrollData",
+    "ruleGuardSummary",
     "oneThoughtEventId",
     "tradeReviewId",
     "reflectionFinal",
@@ -147,6 +159,8 @@ test("P3 zhixing scroll merges oneThoughtEvent and tradeReview without new judge
     "是否已有盘证",
     "照见之后，有没有做到？",
     "做了以后，钱有没有跟着心乱？",
+    "守护提醒",
+    "这类失守最近已出现",
   ].forEach((token) => {
     assert.equal(source.includes(token), true, `missing P3 zhixing token: ${token}`)
   })

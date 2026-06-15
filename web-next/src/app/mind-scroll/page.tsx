@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 
 import { ReturnHomeLink } from "@/components/navigation/ReturnHomeLink"
 import { AssessmentShell } from "@/features/assessment/components"
-import { getMindScrollItems, type MindScrollItem } from "@/lib/mind-archive/mindScrollService"
+import { getMindScrollData, type MindScrollData } from "@/lib/mind-archive/mindScrollService"
 import { DEFAULT_MIND_ARCHIVE_USER_ID } from "@/lib/mind-archive/types"
 
 const reactionLabels = {
@@ -55,16 +55,20 @@ function topValue(values: Array<string | undefined>) {
 }
 
 export default function MindScrollPage() {
-  const [items, setItems] = useState<MindScrollItem[]>([])
+  const [scrollData, setScrollData] = useState<MindScrollData>({
+    items: [],
+    ruleGuardSummary: "暂无规则守护提醒。不是没有风险，而是还需要更多复盘样本。",
+  })
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      setItems(getMindScrollItems(DEFAULT_MIND_ARCHIVE_USER_ID))
+      setScrollData(getMindScrollData(DEFAULT_MIND_ARCHIVE_USER_ID))
     }, 0)
 
     return () => window.clearTimeout(timer)
   }, [])
 
+  const items = scrollData.items
   const topThief = topValue(items.map((item) => item.heartThief))
   const repeatedThought = topValue(items.map((item) => item.os))
   const stoppedCount = items.filter((item) => item.userReaction === "stopped").length
@@ -101,6 +105,11 @@ export default function MindScrollPage() {
             <span>哪些照回之后还是交易了</span>
             <strong>{tradedCount}</strong>
           </article>
+        </section>
+
+        <section className="guard-summary" aria-label="最近反复接管你的心贼">
+          <span>最近反复接管你的心贼</span>
+          <p>{scrollData.ruleGuardSummary}</p>
         </section>
 
         <section className="scroll-list" aria-label="心念时间线">
@@ -203,6 +212,24 @@ export default function MindScrollPage() {
           grid-template-columns: repeat(5, minmax(0, 1fr));
           gap: 12px;
           margin-bottom: 34px;
+        }
+
+        .guard-summary {
+          border-top: 1px solid rgba(216, 183, 111, 0.18);
+          margin: 0 0 30px;
+          padding: 18px 0 4px;
+        }
+
+        .guard-summary span {
+          color: rgba(216, 183, 111, 0.66);
+          font-size: 13px;
+          letter-spacing: 0.18em;
+        }
+
+        .guard-summary p {
+          max-width: 760px;
+          color: rgba(244, 235, 221, 0.6);
+          line-height: 1.8;
         }
 
         .question-grid article,

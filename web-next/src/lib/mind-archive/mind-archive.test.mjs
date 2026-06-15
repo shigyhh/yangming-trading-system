@@ -17,6 +17,8 @@ const entryPageUrl = new URL("../../app/assessment-entry/page.tsx", import.meta.
 const todaySealedPageUrl = new URL("../../app/today-sealed/page.tsx", import.meta.url)
 const mindArchivePageUrl = new URL("../../app/mind-archive/page.tsx", import.meta.url)
 const dangAnGuanArchiveUrl = new URL("../../components/archive/DangAnGuanArchive.tsx", import.meta.url)
+const archiveRuleGuardPanelUrl = new URL("../../components/archive/ArchiveRuleGuardPanel.tsx", import.meta.url)
+const reviewRiskSignalDisplayUrl = new URL("./reviewRiskSignalDisplay.ts", import.meta.url)
 const lakePageUrl = new URL("../../features/one-thought-lake/OneThoughtLakePage.tsx", import.meta.url)
 
 function transpileTs(source) {
@@ -303,7 +305,9 @@ test("今日所照 page reads sealed stats and records the P1 final action", asy
 test("档案馆 page collects the private archive IA without lake or old reflection sources", async () => {
   const mindArchivePage = await readFile(mindArchivePageUrl, "utf8")
   const dangAnGuanArchive = await readFile(dangAnGuanArchiveUrl, "utf8")
-  const archiveSource = `${mindArchivePage}\n${dangAnGuanArchive}`
+  const archiveRuleGuardPanel = await readFile(archiveRuleGuardPanelUrl, "utf8")
+  const reviewRiskSignalDisplay = await readFile(reviewRiskSignalDisplayUrl, "utf8")
+  const archiveSource = `${mindArchivePage}\n${dangAnGuanArchive}\n${archiveRuleGuardPanel}\n${reviewRiskSignalDisplay}`
 
   ;[
     "DangAnGuanArchive",
@@ -315,7 +319,6 @@ test("档案馆 page collects the private archive IA without lake or old reflect
     "reviewArchiveStats",
     "reviewRiskSignals",
     "getHeartThiefProfile",
-    "getRuleGuardReminders",
     "todaySealedCount: stats?.todayTotal ?? 0",
     "seenCount: stats?.todaySeen ?? 0",
     "stoppedCount: stats?.todayStopped ?? 0",
@@ -327,7 +330,8 @@ test("档案馆 page collects the private archive IA without lake or old reflect
     "recentEntries={recentArchiveEvents.map",
     "time: formatTime(event.createdAt)",
     "recurringThoughts={recurringThoughts.map",
-    "ruleGuardNotices={reminders.slice(0, 3)}",
+    "ArchiveRuleGuardPanel",
+    "reviewRiskSignals={reviewArchive?.reviewRiskSignals ?? []}",
     "onOpenMindArchive",
     "onOpenHeartMirrorScroll={() => router.push(\"/mind-scroll\")}",
     "onOpenZhixingScroll={() => router.push(\"/zhixing-scroll\")}",
@@ -375,6 +379,19 @@ test("档案馆 page collects the private archive IA without lake or old reflect
     "复发念",
     "这不是第一次来，也不会是最后一次。",
     "规则守护",
+    "不强制拦截，只做提醒。",
+    "看见这类循环，下一笔才有可能停住。",
+    "getTopReviewRiskSignals(reviewRiskSignals)",
+    "reviewRiskSignalTypeLabels",
+    "reviewRiskSignalLevelLabels",
+    "反复破戒",
+    "贼胜反复",
+    "双输反复",
+    "资金双失守",
+    "心还在动仍交易",
+    "强守护",
+    "守护提醒",
+    "轻提醒",
     "recentSealedEvents",
     "pendingReviewEvents",
     "recurringThoughts",
@@ -390,6 +407,8 @@ test("档案馆 page collects the private archive IA without lake or old reflect
   assert.doesNotMatch(archiveSource, /getCapitalStabilityLabel/)
   assert.doesNotMatch(archiveSource, /getCapitalStabilityPracticeText/)
   assert.doesNotMatch(archiveSource, /capitalStabilityStats/)
+  assert.doesNotMatch(archiveSource, /getRuleGuardReminders/)
+  assert.doesNotMatch(archiveSource, /ruleGuardNotices/)
   assert.doesNotMatch(archiveSource, /reflection_v2/)
   assert.doesNotMatch(archiveSource, /anonymousThoughtLakeEntry/)
 })
@@ -438,6 +457,9 @@ test("P2.4-C archive reads saved capitalStability summary and counts missing sep
 
 test("档案馆展示层空数据时也必须显示正文而不是挂轴空壳", async () => {
   const dangAnGuanArchive = await readFile(dangAnGuanArchiveUrl, "utf8")
+  const archiveRuleGuardPanel = await readFile(archiveRuleGuardPanelUrl, "utf8")
+  const reviewRiskSignalDisplay = await readFile(reviewRiskSignalDisplayUrl, "utf8")
+  const archiveDisplaySource = `${dangAnGuanArchive}\n${archiveRuleGuardPanel}\n${reviewRiskSignalDisplay}`
 
   ;[
     "fallbackSummary",
@@ -450,7 +472,6 @@ test("档案馆展示层空数据时也必须显示正文而不是挂轴空壳",
     "safeSummary",
     "safeRecentEntries",
     "safeRecurringThoughts",
-    "safeRuleGuardNotices",
     "fallbackStrongestHeartThief",
     'name: "待显影"',
     "近日最强心贼：{heartName}",
@@ -459,11 +480,13 @@ test("档案馆展示层空数据时也必须显示正文而不是挂轴空壳",
     "先完成一次照见一念仪轨，档案馆才会留下第一痕。",
     "暂无待复盘的一念。",
     "暂无复发念。",
+    "ArchiveRuleGuardPanel",
     "暂无规则守护提醒。",
+    "不是没有风险，而是还需要更多复盘样本。",
     "opacity: 1;",
     "transform: none;",
   ].forEach((token) => {
-    assert.equal(dangAnGuanArchive.includes(token), true, `missing archive fallback/display token: ${token}`)
+    assert.equal(archiveDisplaySource.includes(token), true, `missing archive fallback/display token: ${token}`)
   })
 
   assert.equal(dangAnGuanArchive.includes("opacity: 0;"), false, "archive content must not start invisible and depend on scroll reveal")

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 
+import ArchiveRuleGuardPanel from "@/components/archive/ArchiveRuleGuardPanel"
 import {
   CAPITAL_STABILITY_MISSING_LABEL,
   capitalStabilityLevelLabels,
@@ -58,19 +59,11 @@ export type RecurringThought = {
   lastSeenAt?: string
 }
 
-export type RuleGuardNotice = {
-  id: string
-  title: string
-  message: string
-  severity?: "low" | "medium" | "high"
-}
-
 export type DangAnGuanArchiveProps = {
   summary?: Partial<ArchiveSummary>
   strongestHeartThief?: StrongestHeartThief
   recentEntries?: ThoughtEntry[]
   recurringThoughts?: RecurringThought[]
-  ruleGuardNotices?: RuleGuardNotice[]
   completedReviewCount?: number
   reviewArchiveItems?: ReviewArchiveItem[]
   reviewArchiveStats?: Partial<ReviewArchiveStats>
@@ -266,7 +259,6 @@ export default function DangAnGuanArchive({
   strongestHeartThief,
   recentEntries,
   recurringThoughts = [],
-  ruleGuardNotices = [],
   completedReviewCount = 0,
   reviewArchiveItems = [],
   reviewArchiveStats,
@@ -320,7 +312,6 @@ export default function DangAnGuanArchive({
   const safeRecentEntries = recentEntries ?? []
   const safeReviewArchiveItems = reviewArchiveItems
   const safeRecurringThoughts = recurringThoughts ?? []
-  const safeRuleGuardNotices = ruleGuardNotices ?? []
   const safeReviewRiskSignals = reviewRiskSignals
 
   const stats = useMemo(
@@ -657,24 +648,7 @@ export default function DangAnGuanArchive({
               </Reveal>
 
               <Reveal disabled={reduced} delay={400}>
-                <section className="danganguan-side-block">
-                  <div className="danganguan-eyebrow">规则守护</div>
-                  {safeRuleGuardNotices.length > 0 ? (
-                    <ul className="danganguan-notices">
-                      {safeRuleGuardNotices.slice(0, 3).map((notice) => (
-                        <li key={notice.id}>
-                          <strong>{notice.title}</strong>
-                          <span>{notice.message}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <>
-                      <h3>暂无规则守护提醒。</h3>
-                      <p>不做强制拦截，只做提醒。</p>
-                    </>
-                  )}
-                </section>
+                <ArchiveRuleGuardPanel reviewRiskSignals={safeReviewRiskSignals} />
               </Reveal>
             </aside>
           </div>
@@ -1228,14 +1202,13 @@ const CSS = `
   }
 
   .danganguan-plain-list,
-  .danganguan-notices {
+  .danganguan-signal-list {
     list-style: none;
     padding: 0;
     margin: 18px 0 0;
   }
 
-  .danganguan-plain-list li,
-  .danganguan-notices li {
+  .danganguan-plain-list li {
     display: flex;
     justify-content: space-between;
     gap: 16px;
@@ -1246,15 +1219,37 @@ const CSS = `
     line-height: 1.65;
   }
 
-  .danganguan-notices li {
-    display: block;
+  .danganguan-signal-list li {
+    padding: 14px 0;
+    border-top: 1px solid ${HAIR};
   }
 
-  .danganguan-notices strong {
-    display: block;
-    margin-bottom: 6px;
+  .danganguan-signal-list div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .danganguan-signal-list strong {
     color: ${GOLD};
     font-weight: 500;
+  }
+
+  .danganguan-signal-list span,
+  .danganguan-signal-list small,
+  .danganguan-signal-empty {
+    color: ${DIM};
+    font-size: 12px;
+    line-height: 1.8;
+  }
+
+  .danganguan-signal-list p {
+    margin: 8px 0 4px;
+  }
+
+  .danganguan-signal-list small {
+    display: block;
   }
 
   .danganguan-plain-list strong {
