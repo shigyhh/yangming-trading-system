@@ -2,7 +2,7 @@
   <view class="page-content">
     <text class="eyebrow">KLINE · 事上练</text>
     <view class="page-title">历史 K线<br />观心训练</view>
-    <view class="page-subtitle">选择 A股、美股、期货、数字货币等品类后，系统读取对应历史切片做盲练；不显示未来，不评价对错，只记录第一念、边界和复盘。</view>
+    <view class="page-subtitle">第一阶段只读取 A股历史切片做盲练；不显示未来，不评价对错，只记录第一念、边界和复盘。</view>
 
     <view class="intro-card card">
       <text>今日校准</text>

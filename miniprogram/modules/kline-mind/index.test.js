@@ -13,8 +13,8 @@ const {
 
 assert.strictEqual(SIX_GATE_MAP.length, 6);
 assert.ok(Object.keys(PERSONALITY_KLINE_PRESCRIPTIONS).length >= 9);
-assert.deepStrictEqual(Object.keys(MARKET_CATALOG), ["cn_equity", "futures", "us_equity", "crypto"]);
-assert.deepStrictEqual(TIMEFRAME_CATALOG.map((item) => item.key), ["5m", "10m", "30m", "60m", "1d", "1w", "1mo", "1y"]);
+assert.deepStrictEqual(Object.keys(MARKET_CATALOG), ["cn_equity"]);
+assert.deepStrictEqual(TIMEFRAME_CATALOG.map((item) => item.key), ["30m", "60m", "1d"]);
 assert.ok(KLINE_TRAINING_METHODS.find((item) => item.key === "firecracker"));
 assert.ok(getPersonalityKlineDrill("焦虑型").drillAction.includes("固定观察窗口"));
 
@@ -65,8 +65,39 @@ assert.strictEqual(record.scenarioTitle, "边界触碰");
 assert.strictEqual(record.marketKey, "cn_equity");
 assert.strictEqual(record.timeframeKey, "1d");
 assert.strictEqual(record.symbol, "000001.SZ");
+assert.strictEqual(record.klineSource, "verified_fixture");
+assert.strictEqual(record.source, "miniprogram");
 assert.ok(record.score >= 80);
 assert.strictEqual(calculateKlineMindScore({}), 28);
+
+const demoSession = buildKlineMindSession({
+  assessment: { primary: "冲动型" },
+  trainingDay: { day: 1 },
+  record: {
+    marketKey: "cn_equity",
+    timeframeKey: "30m",
+    historySlice: {
+      source: "local_demo",
+      klineSource: "local_demo",
+      sliceSource: "local_demo",
+      serverSliceStatus: "network_error",
+      serverSliceError: "K线服务暂不可用",
+      symbol: "local-demo",
+      candles: historicalSlice.candles
+    }
+  }
+});
+const demoRecord = buildKlineMindRecord({
+  selectedCandleKey: demoSession.selectedCandleKey,
+  firstReaction: "急躁",
+  boundaryChoice: "停十秒",
+  insightLine: "当前为本地练习样本，我只记录第一念。"
+}, demoSession);
+assert.strictEqual(demoSession.dataStatusText, "当前为本地练习样本");
+assert.strictEqual(demoRecord.klineSource, "local_demo");
+assert.strictEqual(demoRecord.sliceSource, "local_demo");
+assert.strictEqual(demoRecord.serverSliceStatus, "network_error");
+assert.strictEqual(demoRecord.serverSliceError, "K线服务暂不可用");
 
 const fallback = buildKlineMindSession({
   assessment: { primary: "未知型" },

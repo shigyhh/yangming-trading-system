@@ -46,6 +46,11 @@ const TIMEFRAME_PRESETS = [
   { key: "5m", label: "5分钟", pace: "快速", candleWindow: 6 }
 ];
 
+const KLINE_TRAINING_MARKET_PRESETS = MARKET_PRESETS.filter((item) => item.key === "cn");
+const KLINE_TRAINING_TIMEFRAME_PRESETS = ["30m", "60m", "1d"]
+  .map((key) => TIMEFRAME_PRESETS.find((item) => item.key === key))
+  .filter(Boolean);
+
 const MOCK_KLINE_SCENARIOS = [
   {
     id: "scene-fast-001",
@@ -348,7 +353,7 @@ function getMarketPreset(key) {
 }
 
 function getTimeframePreset(key) {
-  return TIMEFRAME_PRESETS.find((item) => item.key === key) || TIMEFRAME_PRESETS[3];
+  return TIMEFRAME_PRESETS.find((item) => item.key === key) || TIMEFRAME_PRESETS.find((item) => item.key === "1d") || TIMEFRAME_PRESETS[0];
 }
 
 function decorateScenario(scene, options = {}) {
@@ -796,6 +801,8 @@ module.exports = {
   PROCESS_SCORE_LABELS,
   MARKET_PRESETS,
   TIMEFRAME_PRESETS,
+  KLINE_TRAINING_MARKET_PRESETS,
+  KLINE_TRAINING_TIMEFRAME_PRESETS,
   MOCK_KLINE_SCENARIOS,
   getMarketPreset,
   getTimeframePreset,

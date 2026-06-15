@@ -146,12 +146,13 @@ function buildChartRevealText(scene, candles, ready) {
 
 function mergeServerSlice(scene, slice) {
   if (!slice || !Array.isArray(slice.candles) || !slice.candles.length) return scene;
-  const market = slice.market || {};
+  const market = typeof slice.market === "object" ? slice.market : { key: slice.market };
   const timeframe = typeof slice.timeframe === "object" ? slice.timeframe : { key: slice.timeframe };
   const instrument = slice.instrument || {};
   const rules = slice.rules || {};
+  const sliceSource = slice.source || "server_cache";
   const marketContext = {
-    source: "server",
+    source: sliceSource,
     sliceId: slice.id || "",
     symbol: slice.symbol || instrument.symbol || "",
     market: market.key || scene.marketKey || "",
@@ -169,6 +170,10 @@ function mergeServerSlice(scene, slice) {
     timeframeLabel: timeframe.label || scene.timeframeLabel,
     dataSourceLabel: "真实历史数据切片",
     isRealHistorical: true,
+    klineSource: sliceSource,
+    sliceSource,
+    serverSliceStatus: marketContext.manifestStatus || "ready",
+    serverSliceError: "",
     serverSliceId: slice.id,
     serverRevealToken: slice.reveal_token,
     marketContext,
@@ -180,6 +185,31 @@ function mergeServerSlice(scene, slice) {
       volume: item.volume,
       date: item.label || item.time
     }))
+  });
+}
+
+function mergeLocalDemoSlice(scene, result) {
+  const reason = (result || {}).reason || "server_unavailable";
+  const errorMessage = getSliceErrorText(result);
+  const marketContext = {
+    source: "local_demo",
+    sliceId: "",
+    symbol: scene.symbol || "",
+    market: scene.marketKey || "cn",
+    timeframe: scene.timeframeKey || "1d",
+    manifestStatus: reason,
+    barCount: (scene.candles || []).length
+  };
+  return Object.assign({}, scene, {
+    subtitle: `${scene.subtitle} · 当前为本地练习样本`,
+    segmentLabel: `${scene.marketLabel || "A股"} · ${scene.timeframeLabel || "日线"} · 本地练习样本`,
+    dataSourceLabel: "本地练习样本",
+    isRealHistorical: false,
+    klineSource: "local_demo",
+    sliceSource: "local_demo",
+    serverSliceStatus: reason,
+    serverSliceError: errorMessage,
+    marketContext
   });
 }
 
@@ -269,24 +299,31 @@ Page({
       seed: options.sceneId || fallbackScene.id
     }).then((result) => {
       if (!result || !result.ok) {
-        if (this.stepTimer) clearInterval(this.stepTimer);
-        const chartView = buildEmptyChartView();
-        const errorText = getSliceErrorText(result);
+        const scene = mergeLocalDemoSlice(fallbackScene, result);
+        const chartView = buildChartView(scene, this.data.session.stepIndex || 0);
+        const visibleAt = Date.now();
+        const session = Object.assign({}, this.data.session, {
+          startedAt: visibleAt,
+          lastStepAt: visibleAt
+        });
+        saveKlineSessionRecord(session);
         this.setData({
+          scene,
+          session,
           candles: chartView.candles,
           chartScale: chartView.chartScale,
           futureBars: chartView.futureBars,
           firstCandleText: chartView.firstCandleText,
           lastCandleText: chartView.lastCandleText,
-          dataStatus: errorText,
-          chartRevealText: "等待历史数据",
-          mainActionText: "等待历史数据",
-          historicalReady: false,
-          historicalError: errorText,
-          historicalEmptyText: errorText,
-          elapsedText: "等待历史数据",
-          reactionHint: "历史切片显露后，再开始记录第一反应。"
-        });
+          dataStatus: "当前为本地练习样本",
+          chartRevealText: buildChartRevealText(scene, chartView.candles, true),
+          mainActionText: "记录并继续",
+          historicalReady: true,
+          historicalError: scene.serverSliceError,
+          historicalEmptyText: "当前为本地练习样本",
+          elapsedText: "0.0 秒",
+          reactionHint: "当前为本地练习样本；先停一息，再照见第一反应。"
+        }, this.startStepTimer);
         return;
       }
       const scene = mergeServerSlice(fallbackScene, result.slice);
@@ -305,7 +342,7 @@ Page({
         futureBars: chartView.futureBars,
         firstCandleText: chartView.firstCandleText,
         lastCandleText: chartView.lastCandleText,
-        dataStatus: "已载入历史数据切片（非实时）",
+        dataStatus: "已载入 server 历史数据切片（非实时）",
         chartRevealText: buildChartRevealText(scene, chartView.candles, true),
         mainActionText: "记录并继续",
         historicalReady: true,
@@ -315,23 +352,31 @@ Page({
         reactionHint: "先停一息，再照见第一反应。"
       }, this.startStepTimer);
     }).catch(() => {
-      if (this.stepTimer) clearInterval(this.stepTimer);
-      const chartView = buildEmptyChartView();
+      const scene = mergeLocalDemoSlice(fallbackScene, { reason: "network_error", errorMessage: "K线服务暂不可用" });
+      const chartView = buildChartView(scene, this.data.session.stepIndex || 0);
+      const visibleAt = Date.now();
+      const session = Object.assign({}, this.data.session, {
+        startedAt: visibleAt,
+        lastStepAt: visibleAt
+      });
+      saveKlineSessionRecord(session);
       this.setData({
+        scene,
+        session,
         candles: chartView.candles,
         chartScale: chartView.chartScale,
         futureBars: chartView.futureBars,
         firstCandleText: chartView.firstCandleText,
         lastCandleText: chartView.lastCandleText,
-        dataStatus: "历史数据未载入",
-        chartRevealText: "等待历史数据",
-        mainActionText: "等待历史数据",
-        historicalReady: false,
-        historicalError: "请先在后端下载并缓存对应市场、标的与周期的历史K线。",
-        historicalEmptyText: "请先在后端下载并缓存对应市场、标的与周期的历史K线。",
-        elapsedText: "等待历史数据",
-        reactionHint: "历史切片显露后，再开始记录第一反应。"
-      });
+        dataStatus: "当前为本地练习样本",
+        chartRevealText: buildChartRevealText(scene, chartView.candles, true),
+        mainActionText: "记录并继续",
+        historicalReady: true,
+        historicalError: scene.serverSliceError,
+        historicalEmptyText: "当前为本地练习样本",
+        elapsedText: "0.0 秒",
+        reactionHint: "当前为本地练习样本；先停一息，再照见第一反应。"
+      }, this.startStepTimer);
     });
   },
 
@@ -423,15 +468,18 @@ Page({
         reviewText: review.insight || "",
         linkedTradeReviewId: tradeReviewRecord.id,
         linkedOneThoughtEventId: "",
-        marketContext: (this.data.scene || {}).marketContext || { source: "server" },
+        marketContext: (this.data.scene || {}).marketContext || { source: (this.data.scene || {}).klineSource || "local_demo" },
         chartEvidence: {
-          source: "server",
+          source: (this.data.scene || {}).klineSource || "local_demo",
           serverSliceId: (this.data.scene || {}).serverSliceId || "",
           candlesRange: buildCandlesRange(this.data.scene)
         },
         behaviorEvidence: nextSession.reactions || [],
         reviewSummary: review.insight || "",
-        klineSource: "server",
+        klineSource: (this.data.scene || {}).klineSource || "local_demo",
+        serverSliceStatus: (this.data.scene || {}).serverSliceStatus || "",
+        serverSliceError: (this.data.scene || {}).serverSliceError || "",
+        sliceSource: (this.data.scene || {}).sliceSource || (this.data.scene || {}).klineSource || "local_demo",
         source: "miniprogram",
         klineTrainingSyncStatus: "pending",
         klineTrainingSyncStartedAt: new Date(completedAt).toISOString(),

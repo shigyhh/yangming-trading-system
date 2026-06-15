@@ -19,7 +19,10 @@ const {
   buildKlineMindSession,
   buildKlineMindRecord
 } = require("../../modules/kline-mind/index");
-const { buildKlineTradeReviewRecord: buildKlineMirrorRecord } = require("../../modules/kline-simulator/index");
+const {
+  buildKlineTradeReviewRecord: buildKlineMirrorRecord,
+  getKlineScenario
+} = require("../../modules/kline-simulator/index");
 
 function inferHeartThieves(text) {
   const value = String(text || "");
@@ -82,10 +85,34 @@ function buildForm(record = {}, session = {}) {
   };
 }
 
-function buildMindHistorySlice(result) {
-  if (!result || !result.ok) return null;
+function buildLocalDemoHistorySlice(record = {}, result = {}) {
+  const scene = getKlineScenario(record.scenarioId || "scene-fast-001", {
+    marketKey: "cn",
+    timeframeKey: record.timeframeKey || "1d"
+  });
+  return {
+    source: "local_demo",
+    sliceSource: "local_demo",
+    klineSource: "local_demo",
+    symbol: record.symbol || "local-demo",
+    start: "",
+    end: "",
+    serverSliceStatus: (result || {}).reason || "server_unavailable",
+    serverSliceError: (result || {}).errorMessage || "K线服务暂不可用",
+    candles: (scene.candles || []).map((item, index) => Object.assign({}, item, {
+      date: item.date || item.time || `demo-${index + 1}`
+    }))
+  };
+}
+
+function buildMindHistorySlice(result, record = {}) {
+  if (!result || !result.ok) return buildLocalDemoHistorySlice(record, result);
   return Object.assign({}, result.slice || {}, {
-    source: "server",
+    source: result.source || ((result.slice || {}).source) || "server_cache",
+    sliceSource: result.source || ((result.slice || {}).source) || "server_cache",
+    klineSource: result.source || ((result.slice || {}).source) || "server_cache",
+    serverSliceStatus: result.manifestStatus || ((result.slice || {}).manifestStatus) || "ready",
+    serverSliceError: "",
     symbol: result.symbol || ((result.slice || {}).symbol) || "",
     timeframe: result.timeframe || ((result.slice || {}).timeframe) || "",
     candles: result.candles || []
@@ -177,29 +204,14 @@ Page({
       seed: baseRecord.scenarioId || ""
     }).then((result) => {
       if (this.latestHistoryRequestKey !== requestKey) return;
-      const historySlice = buildMindHistorySlice(result);
-      if (!historySlice) {
-        const session = Object.assign({}, this.buildSession(baseRecord), {
-          hasHistoricalData: false,
-          candles: [],
-          historySlice: null,
-          dataStatusText: (result && result.errorMessage) || "K线服务暂不可用"
-        });
-        this.setData({
-          session,
-          form: Object.assign({}, this.data.form, baseRecord, { historySlice: null, selectedCandleKey: "" }),
-          historyLoading: false,
-          historyError: session.dataStatusText
-        });
-        return;
-      }
+      const historySlice = buildMindHistorySlice(result, baseRecord);
       const recordWithSlice = Object.assign({}, baseRecord, { historySlice });
       const session = this.buildSession(recordWithSlice);
       this.setData({
         session,
         form: Object.assign({}, this.data.form, recordWithSlice, { selectedCandleKey: session.selectedCandleKey }),
         historyLoading: false,
-        historyError: ""
+        historyError: historySlice.source === "local_demo" ? "当前为本地练习样本" : ""
       });
     });
   },

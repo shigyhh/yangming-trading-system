@@ -9,7 +9,11 @@ const {
   buildKlineDayRetestComparison,
   getKlineRecommendationForMirror,
   createMirrorChallenge,
-  buildKlineChange
+  buildKlineChange,
+  MARKET_PRESETS,
+  TIMEFRAME_PRESETS,
+  KLINE_TRAINING_MARKET_PRESETS,
+  KLINE_TRAINING_TIMEFRAME_PRESETS
 } = require("./index");
 
 const scenarios = getKlineScenarios();
@@ -20,6 +24,10 @@ assert.strictEqual(scenarios[0].timeframeLabel, "日线");
 
 const availableMarkets = new Set(getKlineScenarios().map((item) => item.marketKey));
 assert.strictEqual(availableMarkets.has(["h", "k"].join("")), false);
+assert.ok(MARKET_PRESETS.find((item) => item.key === "crypto"));
+assert.ok(TIMEFRAME_PRESETS.find((item) => item.key === "5m"));
+assert.deepStrictEqual(KLINE_TRAINING_MARKET_PRESETS.map((item) => item.key), ["cn"]);
+assert.deepStrictEqual(KLINE_TRAINING_TIMEFRAME_PRESETS.map((item) => item.key), ["30m", "60m", "1d"]);
 
 const scene = getKlineScenario("scene-fast-001");
 let session = createKlineSession(scene.id);

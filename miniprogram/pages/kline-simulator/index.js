@@ -1,17 +1,22 @@
 const { getAssessmentResult, saveKlineScenarioState } = require("../../utils/store");
 const {
-  MARKET_PRESETS,
-  TIMEFRAME_PRESETS,
+  KLINE_TRAINING_MARKET_PRESETS,
+  KLINE_TRAINING_TIMEFRAME_PRESETS,
   getKlineRecommendationForMirror,
   getKlineScenarios
 } = require("../../modules/kline-simulator/index");
+
+function stripScenarioRuntimeData(scene = {}) {
+  const { candles, checkpoints, ...metadata } = scene;
+  return metadata;
+}
 
 Page({
   data: {
     assessment: {},
     scenarios: [],
-    markets: MARKET_PRESETS,
-    timeframes: TIMEFRAME_PRESETS,
+    markets: KLINE_TRAINING_MARKET_PRESETS,
+    timeframes: KLINE_TRAINING_TIMEFRAME_PRESETS,
     marketKey: "cn",
     timeframeKey: "1d",
     recommendation: getKlineRecommendationForMirror("")
@@ -46,7 +51,7 @@ Page({
       if (!left.recommended && right.recommended) return 1;
       return Number(left.trainingDay || 0) - Number(right.trainingDay || 0);
     });
-    saveKlineScenarioState(scenarios);
+    saveKlineScenarioState(scenarios.map(stripScenarioRuntimeData));
     this.setData({
       assessment,
       recommendation,

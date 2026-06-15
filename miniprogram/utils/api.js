@@ -516,42 +516,40 @@ async function syncShareAttribution(event = null) {
 }
 
 const KLINE_MARKET_MAP = {
+  cn_equity: "cn_equity",
   cn: "cn_equity",
-  us: "us_equity",
-  futures: "futures",
-  crypto: "crypto"
+  ashare: "cn_equity"
 };
 
 const KLINE_TIMEFRAME_MAP = {
-  "1m": "1mo",
-  "1mo": "1mo",
-  "1y": "1y",
-  "1w": "1w",
-  "1d": "1d",
+  "101": "101",
+  "1d": "101",
   "60m": "60m",
-  "30m": "30m",
-  "10m": "10m",
-  "5m": "5m"
+  "30m": "30m"
 };
 
 async function fetchKlineTrainingSlice({
   marketKey = "cn",
-  timeframeKey = "1d",
+  timeframeKey = "101",
   symbol = "",
   windowSize = 60,
-  mode = "firecracker",
+  mode = "step_replay",
+  endDate = "",
+  entryTime = "",
   personalityType = "",
   gateKey = "shi_shang_mo",
   blind = true,
   seed = ""
 } = {}) {
-  const market = KLINE_MARKET_MAP[marketKey] || marketKey || "cn_equity";
-  const timeframe = KLINE_TIMEFRAME_MAP[timeframeKey] || timeframeKey || "1d";
+  const market = KLINE_MARKET_MAP[marketKey] || "cn_equity";
+  const timeframe = KLINE_TIMEFRAME_MAP[timeframeKey] || "101";
   const query = [
     `market=${encodeURIComponent(market)}`,
     symbol ? `symbol=${encodeURIComponent(symbol)}` : "",
     `timeframe=${encodeURIComponent(timeframe)}`,
     `window=${encodeURIComponent(windowSize)}`,
+    endDate ? `end_date=${encodeURIComponent(endDate)}` : "",
+    entryTime ? `entryTime=${encodeURIComponent(entryTime)}` : "",
     `mode=${encodeURIComponent(mode)}`,
     personalityType ? `personality_type=${encodeURIComponent(personalityType)}` : "",
     gateKey ? `gate=${encodeURIComponent(gateKey)}` : "",
@@ -569,12 +567,18 @@ async function fetchKlineTrainingSlice({
       timeframe,
       candles: [],
       bars: [],
-      source: "server",
+      source: "local_demo",
       manifestStatus: "unavailable",
       barCount: 0,
       reason: "network_error",
       errorMessage: getTechnicalMessage(error) || "K线服务暂不可用",
-      raw: null
+      raw: null,
+      slice: {
+        source: "local_demo",
+        candles: [],
+        manifestStatus: "unavailable",
+        barCount: 0
+      }
     };
   }
 }
@@ -613,7 +617,7 @@ function normalizeKlineTrainingSliceResult(result = {}, context = {}) {
     timeframe,
     candles,
     bars: candles,
-    source: "server",
+    source: ok ? (slice.source || "server_cache") : "local_demo",
     manifestStatus,
     barCount,
     reason,
@@ -625,7 +629,7 @@ function normalizeKlineTrainingSliceResult(result = {}, context = {}) {
       symbol,
       timeframe,
       candles,
-      source: "server",
+      source: ok ? (slice.source || "server_cache") : "local_demo",
       manifestStatus,
       barCount
     })

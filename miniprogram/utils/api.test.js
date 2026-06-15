@@ -18,6 +18,7 @@ global.wx = {
 const {
   PRODUCTION_API_BASE,
   getApiBase,
+  fetchKlineTrainingSlice,
   normalizeKlineTrainingSliceResult,
   syncKlineTrainingRecord,
   retryPendingKlineTrainingSync
@@ -61,6 +62,72 @@ assert.strictEqual(empty.reason, "empty_slice");
 const insufficient = normalizeKlineTrainingSliceResult({ ok: true, slice: { candles: [{ open: 1 }] } });
 assert.strictEqual(insufficient.ok, false);
 assert.strictEqual(insufficient.reason, "insufficient_slice");
+
+async function runKlineSliceTests() {
+  resetStorage();
+  envVersion = "release";
+  let requestedUrl = "";
+  global.wx.request = (options) => {
+    requestedUrl = options.url;
+    options.success({
+      statusCode: 200,
+      data: {
+        ok: true,
+        slice: {
+          id: "server-slice-001",
+          source: "server_cache",
+          symbol: "600519",
+          timeframe: "101",
+          candles: [
+            { time: "2026-01-01", open: 1, high: 2, low: 0.8, close: 1.5 },
+            { time: "2026-01-02", open: 1, high: 2, low: 0.8, close: 1.5 },
+            { time: "2026-01-03", open: 1, high: 2, low: 0.8, close: 1.5 },
+            { time: "2026-01-04", open: 1, high: 2, low: 0.8, close: 1.5 },
+            { time: "2026-01-05", open: 1, high: 2, low: 0.8, close: 1.5 },
+            { time: "2026-01-06", open: 1, high: 2, low: 0.8, close: 1.5 }
+          ]
+        }
+      }
+    });
+  };
+  const serverSlice = await fetchKlineTrainingSlice({
+    marketKey: "cn",
+    symbol: "600519",
+    timeframeKey: "1d",
+    windowSize: 60,
+    endDate: "2026-06-15"
+  });
+  assert.ok(requestedUrl.startsWith("https://xxjyxt.com/api/v1/kline-history/slice?"));
+  assert.ok(requestedUrl.includes("market=cn_equity"));
+  assert.ok(requestedUrl.includes("symbol=600519"));
+  assert.ok(requestedUrl.includes("timeframe=101"));
+  assert.ok(requestedUrl.includes("mode=step_replay"));
+  assert.ok(requestedUrl.includes("end_date=2026-06-15"));
+  assert.strictEqual(requestedUrl.includes("localhost"), false);
+  assert.strictEqual(requestedUrl.includes("127.0.0.1"), false);
+  assert.strictEqual(serverSlice.ok, true);
+  assert.strictEqual(serverSlice.source, "server_cache");
+  assert.strictEqual(serverSlice.slice.source, "server_cache");
+  assert.strictEqual(serverSlice.slice.candles.length, 6);
+
+  global.wx.request = (options) => {
+    options.success({ statusCode: 200, data: { ok: true, slice: { source: "server_cache", candles: [] } } });
+  };
+  const emptySlice = await fetchKlineTrainingSlice({ marketKey: "cn", timeframeKey: "30m" });
+  assert.strictEqual(emptySlice.ok, false);
+  assert.strictEqual(emptySlice.source, "local_demo");
+  assert.strictEqual(emptySlice.reason, "empty_slice");
+  assert.ok(emptySlice.errorMessage.includes("历史数据未载入"));
+
+  global.wx.request = (options) => {
+    options.fail({ errMsg: "network down" });
+  };
+  const networkSlice = await fetchKlineTrainingSlice({ marketKey: "cn", timeframeKey: "60m" });
+  assert.strictEqual(networkSlice.ok, false);
+  assert.strictEqual(networkSlice.source, "local_demo");
+  assert.strictEqual(networkSlice.reason, "network_error");
+  assert.ok(networkSlice.errorMessage.includes("network down"));
+}
 
 function resetStorage() {
   Object.keys(storage).forEach((key) => {
@@ -203,7 +270,8 @@ async function runKlineSyncTests() {
   );
 }
 
-runKlineSyncTests()
+runKlineSliceTests()
+  .then(runKlineSyncTests)
   .then(() => console.log("miniprogram api tests passed"))
   .catch((error) => {
     console.error(error);

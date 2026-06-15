@@ -136,48 +136,13 @@ const MARKET_CATALOG = {
     triggerLabel: "真实历史片段",
     mindQuestion: "你看到快速放大时，是守住计划观察，还是想马上证明判断？",
     guardrail: "只记录触发与边界，不把历史片段当成当下判断。"
-  },
-  futures: {
-    key: "futures",
-    name: "期货",
-    rhythm: "节奏快、长影线、情绪放大",
-    defaultSymbol: "IF主连",
-    rule: "保证金、连续合约、夜盘差异",
-    triggerLabel: "真实历史片段",
-    mindQuestion: "速度变快时，你能否先停住身体，再回到预设边界？",
-    guardrail: "训练只看反应速度与守界能力，不输出操作方向。"
-  },
-  us_equity: {
-    key: "us_equity",
-    name: "美股",
-    rhythm: "缺口、趋势段、尾盘波动",
-    defaultSymbol: "AAPL",
-    rule: "T+0、盘前盘后需独立标记",
-    triggerLabel: "真实历史片段",
-    mindQuestion: "缺口之后，你是在观察结构，还是在被错过感牵动？",
-    guardrail: "本训练使用历史数据，不形成任何当下市场判断。"
-  },
-  crypto: {
-    key: "crypto",
-    name: "数字货币",
-    rhythm: "连续交易、波动密集、情绪放大",
-    defaultSymbol: "BTCUSDT",
-    rule: "7x24、无涨跌幅、需标注交易所来源",
-    triggerLabel: "真实历史片段",
-    mindQuestion: "连续波动中，你是在守住观察窗口，还是被不断变化牵走？",
-    guardrail: "只做心理训练记录，不关联任何当下决策。"
   }
 };
 
 const TIMEFRAME_CATALOG = [
-  { key: "5m", label: "5分钟", granularity: "intraday", required: true },
-  { key: "10m", label: "10分钟", granularity: "intraday", required: true },
   { key: "30m", label: "30分钟", granularity: "intraday", required: true },
   { key: "60m", label: "60分钟", granularity: "intraday", required: true },
-  { key: "1d", label: "日线", granularity: "daily", required: true },
-  { key: "1w", label: "周线", granularity: "weekly", required: true },
-  { key: "1mo", label: "月线", granularity: "monthly", required: true },
-  { key: "1y", label: "年线", granularity: "yearly", required: true }
+  { key: "1d", label: "日线", granularity: "daily", required: true }
 ];
 
 const KLINE_TRAINING_METHODS = [
@@ -491,7 +456,9 @@ function buildKlineMindSession({
     timeframeOptions: buildTimeframeOptions(timeframeKey),
     historySlice: historySlice || null,
     hasHistoricalData: candles.length > 0,
-    dataStatusText: candles.length ? "真实历史数据已载入" : "等待历史数据同步",
+    dataStatusText: candles.length
+      ? ((historySlice || {}).source === "local_demo" ? "当前为本地练习样本" : "server 历史数据已载入")
+      : "等待历史数据同步",
     marketQuestion: market.mindQuestion,
     marketGuardrail: market.guardrail,
     trainingMethods: KLINE_TRAINING_METHODS,
@@ -541,6 +508,11 @@ function buildKlineMindRecord(input = {}, session = {}) {
     marketName: ((session.market || {}).name) || input.marketName || "A股",
     timeframeKey: session.timeframeKey || input.timeframeKey || "1d",
     dataSource: ((session.historySlice || {}).source) || input.dataSource || "",
+    klineSource: ((session.historySlice || {}).klineSource) || ((session.historySlice || {}).source) || input.klineSource || "",
+    source: "miniprogram",
+    sliceSource: ((session.historySlice || {}).sliceSource) || ((session.historySlice || {}).source) || input.sliceSource || "",
+    serverSliceStatus: ((session.historySlice || {}).serverSliceStatus) || input.serverSliceStatus || "",
+    serverSliceError: ((session.historySlice || {}).serverSliceError) || input.serverSliceError || "",
     symbol: ((session.historySlice || {}).symbol) || input.symbol || ((session.market || {}).defaultSymbol) || "",
     dataStart: ((session.historySlice || {}).start) || input.dataStart || "",
     dataEnd: ((session.historySlice || {}).end) || input.dataEnd || "",
