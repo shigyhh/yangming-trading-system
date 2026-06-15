@@ -1,7 +1,7 @@
 import { listSealedOneThoughtEvents } from "@/lib/mind-archive/oneThoughtEventRepository"
 import { buildCycleMirror, getTopCycleItems } from "@/lib/mind-archive/cycleMirrorService"
 import { buildReviewArchive } from "@/lib/mind-archive/reviewArchiveService"
-import { formatTopReviewRiskSignalSummary } from "@/lib/mind-archive/reviewRiskSignalDisplay"
+import { buildRuleGuardInsights, formatTopRuleGuardInsightSummary } from "@/lib/mind-archive/ruleGuardInsightService"
 import {
   CAPITAL_STABILITY_MISSING_LABEL,
   DEFAULT_MIND_ARCHIVE_USER_ID,
@@ -38,6 +38,7 @@ export type MindScrollItem = Pick<
 export type MindScrollData = {
   items: MindScrollItem[]
   ruleGuardSummary: string
+  ruleGuardInsightSummary: string
   cycleMirrorSummary: {
     strongestHeartThief?: string
     recurringHeartThieves: string[]
@@ -64,6 +65,12 @@ export function getMindScrollData(
     reviewArchiveItems,
     reviewRiskSignals,
   })
+  const ruleGuardInsights = buildRuleGuardInsights({
+    reviewRiskSignals,
+    cycleSignals: cycleMirror.cycleSignals,
+    cycleSummary: cycleMirror.cycleSummary,
+  })
+  const ruleGuardInsightSummary = formatTopRuleGuardInsightSummary(ruleGuardInsights)
   const reviewByEventId = new Map(
     reviewArchiveItems
       .filter((item) => Boolean(item.linkedOneThoughtEventId))
@@ -99,7 +106,8 @@ export function getMindScrollData(
 
   return {
     items,
-    ruleGuardSummary: formatTopReviewRiskSignalSummary(reviewRiskSignals),
+    ruleGuardSummary: ruleGuardInsightSummary,
+    ruleGuardInsightSummary,
     cycleMirrorSummary: {
       strongestHeartThief: cycleMirror.cycleSummary.strongestHeartThief,
       recurringHeartThieves: getTopCycleItems(cycleMirror.recurringHeartThieves, 3)

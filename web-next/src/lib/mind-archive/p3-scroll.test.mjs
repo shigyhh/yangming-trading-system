@@ -4,6 +4,7 @@ import test from "node:test"
 
 const archivePageUrl = new URL("../../app/mind-archive/page.tsx", import.meta.url)
 const dangAnGuanArchiveUrl = new URL("../../components/archive/DangAnGuanArchive.tsx", import.meta.url)
+const archiveRuleGuardPanelUrl = new URL("../../components/archive/ArchiveRuleGuardPanel.tsx", import.meta.url)
 const typesUrl = new URL("./types.ts", import.meta.url)
 const mindScrollPageUrl = new URL("../../app/mind-scroll/page.tsx", import.meta.url)
 const mindScrollServiceUrl = new URL("./mindScrollService.ts", import.meta.url)
@@ -11,6 +12,7 @@ const zhixingScrollPageUrl = new URL("../../app/zhixing-scroll/page.tsx", import
 const zhixingScrollServiceUrl = new URL("./zhixingScrollService.ts", import.meta.url)
 const reviewRiskSignalDisplayUrl = new URL("./reviewRiskSignalDisplay.ts", import.meta.url)
 const cycleMirrorServiceUrl = new URL("./cycleMirrorService.ts", import.meta.url)
+const ruleGuardInsightServiceUrl = new URL("./ruleGuardInsightService.ts", import.meta.url)
 
 const forbiddenSourceTokens = [
   "OneThoughtLake",
@@ -26,7 +28,8 @@ const forbiddenSourceTokens = [
 test("P3 archive museum is the private entry and reads only archive/review services", async () => {
   const archivePage = await readFile(archivePageUrl, "utf8")
   const dangAnGuanArchive = await readFile(dangAnGuanArchiveUrl, "utf8")
-  const archiveSource = `${archivePage}\n${dangAnGuanArchive}`
+  const archiveRuleGuardPanel = await readFile(archiveRuleGuardPanelUrl, "utf8")
+  const archiveSource = `${archivePage}\n${dangAnGuanArchive}\n${archiveRuleGuardPanel}`
 
   ;[
     "DangAnGuanArchive",
@@ -65,24 +68,30 @@ test("P3 mind scroll only displays sealed oneThoughtEvent fields and reflectionF
   const mindScrollService = await readFile(mindScrollServiceUrl, "utf8")
   const reviewRiskSignalDisplay = await readFile(reviewRiskSignalDisplayUrl, "utf8")
   const cycleMirrorService = await readFile(cycleMirrorServiceUrl, "utf8")
+  const ruleGuardInsightService = await readFile(ruleGuardInsightServiceUrl, "utf8")
   const types = await readFile(typesUrl, "utf8")
-  const source = `${mindScrollPage}\n${mindScrollService}\n${reviewRiskSignalDisplay}\n${cycleMirrorService}\n${types}`
+  const source = `${mindScrollPage}\n${mindScrollService}\n${reviewRiskSignalDisplay}\n${ruleGuardInsightService}\n${cycleMirrorService}\n${types}`
 
   ;[
     "getMindScrollItems",
     "listSealedOneThoughtEvents",
     "buildReviewArchive",
     "buildCycleMirror",
+    "buildRuleGuardInsights",
     "reviewArchiveItems",
     "reviewRiskSignals",
+    "cycleSignals",
+    "cycleSummary",
     "getMindScrollData",
     "ruleGuardSummary",
+    "ruleGuardInsightSummary",
     "cycleMirrorSummary",
     "strongestHeartThief",
     "recurringHeartThieves",
     "heart_thief_cycle",
     "这里不记行情，只记你被哪一念牵走。",
     "最近反复接管你的心贼",
+    "合证守护",
     "这条循环已经出现多次",
     "最近心怎么动",
     "哪个心贼常来",
@@ -122,18 +131,23 @@ test("P3 zhixing scroll merges oneThoughtEvent and tradeReview without new judge
   const zhixingService = await readFile(zhixingScrollServiceUrl, "utf8")
   const reviewRiskSignalDisplay = await readFile(reviewRiskSignalDisplayUrl, "utf8")
   const cycleMirrorService = await readFile(cycleMirrorServiceUrl, "utf8")
+  const ruleGuardInsightService = await readFile(ruleGuardInsightServiceUrl, "utf8")
   const types = await readFile(typesUrl, "utf8")
-  const source = `${zhixingPage}\n${zhixingService}\n${reviewRiskSignalDisplay}\n${cycleMirrorService}\n${types}`
+  const source = `${zhixingPage}\n${zhixingService}\n${reviewRiskSignalDisplay}\n${ruleGuardInsightService}\n${cycleMirrorService}\n${types}`
 
   ;[
     "getZhixingScrollItems",
     "listSealedOneThoughtEvents",
     "buildReviewArchive",
     "buildCycleMirror",
+    "buildRuleGuardInsights",
     "reviewArchiveItems",
     "reviewRiskSignals",
+    "cycleSignals",
+    "cycleSummary",
     "getZhixingScrollData",
     "ruleGuardSummary",
+    "ruleGuardInsightSummary",
     "cycleMirrorSummary",
     "same_behavior_repeated",
     "same_capital_damage_repeated",
@@ -174,6 +188,7 @@ test("P3 zhixing scroll merges oneThoughtEvent and tradeReview without new judge
     "照见之后，有没有做到？",
     "做了以后，钱有没有跟着心乱？",
     "守护提醒",
+    "合证守护",
     "循环提醒",
     "做了以后，是否又进入同一条循环？",
     "这类失守最近已出现",

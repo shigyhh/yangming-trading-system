@@ -58,6 +58,7 @@ export default function MindScrollPage() {
   const [scrollData, setScrollData] = useState<MindScrollData>({
     items: [],
     ruleGuardSummary: "暂无规则守护提醒。不是没有风险，而是还需要更多复盘样本。",
+    ruleGuardInsightSummary: "暂无规则守护提醒。不是没有风险，而是还需要更多复盘样本。",
     cycleMirrorSummary: {
       recurringHeartThieves: [],
       conclusionText: "你以为这是新行情，其实是旧心贼换了张脸。",
@@ -122,6 +123,7 @@ export default function MindScrollPage() {
           {scrollData.cycleMirrorSummary.recurringHeartThieves.length > 0 ? (
             <small>{scrollData.cycleMirrorSummary.recurringHeartThieves.join(" / ")}</small>
           ) : null}
+          <small>{scrollData.ruleGuardInsightSummary}</small>
         </section>
 
         <section className="scroll-list" aria-label="心念时间线">
@@ -254,6 +256,8 @@ export default function MindScrollPage() {
         }
 
         .guard-summary small {
+          display: block;
+          margin-top: 8px;
           color: rgba(244, 235, 221, 0.42);
           line-height: 1.8;
         }

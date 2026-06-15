@@ -283,3 +283,20 @@ test("P2.6-A service is deterministic and avoids recalculation, GPT and trading 
     assert.equal(source.includes(token), false, `cycleMirrorService must not include: ${token}`)
   })
 })
+
+test("P2.6-B exposes shared cycle sorting by severity, count and lastSeenAt", async () => {
+  const { getTopCycleItems, getCycleSeverityRank } = await importCycleMirrorService()
+
+  assert.equal(getCycleSeverityRank("low"), 1)
+  assert.equal(getCycleSeverityRank("medium"), 2)
+  assert.equal(getCycleSeverityRank("high"), 3)
+
+  const topItems = getTopCycleItems([
+    { id: "medium_new", severity: "medium", count: 9, lastSeenAt: "2026-06-14T10:00:00.000Z" },
+    { id: "high_old", severity: "high", count: 2, lastSeenAt: "2026-06-10T10:00:00.000Z" },
+    { id: "high_new", severity: "high", count: 2, lastSeenAt: "2026-06-14T10:00:00.000Z" },
+    { id: "high_count", severity: "high", count: 4, lastSeenAt: "2026-06-11T10:00:00.000Z" },
+  ], 3)
+
+  assert.deepEqual(topItems.map((item) => item.id), ["high_count", "high_new", "high_old"])
+})

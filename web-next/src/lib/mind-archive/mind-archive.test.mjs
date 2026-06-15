@@ -10,6 +10,7 @@ const eventRepoUrl = new URL("./oneThoughtEventRepository.ts", import.meta.url)
 const archiveStatsUrl = new URL("./archiveStatsService.ts", import.meta.url)
 const reviewArchiveServiceUrl = new URL("./reviewArchiveService.ts", import.meta.url)
 const cycleMirrorServiceUrl = new URL("./cycleMirrorService.ts", import.meta.url)
+const ruleGuardInsightServiceUrl = new URL("./ruleGuardInsightService.ts", import.meta.url)
 const tradeReviewRepoUrl = new URL("../trade-review/tradeReviewRepository.ts", import.meta.url)
 const ritualFlowUrl = new URL("../../features/assessment/ZhaoxinRitualFlow.tsx", import.meta.url)
 const ritualFacadeUrl = new URL("../../features/assessment/OneThoughtRitualFlow.tsx", import.meta.url)
@@ -43,6 +44,7 @@ async function importArchiveReviewModules() {
   const archiveStatsSource = await readFile(archiveStatsUrl, "utf8")
   const reviewArchiveServiceSource = await readFile(reviewArchiveServiceUrl, "utf8")
   const cycleMirrorServiceSource = await readFile(cycleMirrorServiceUrl, "utf8")
+  const ruleGuardInsightServiceSource = await readFile(ruleGuardInsightServiceUrl, "utf8")
 
   await writeFile(path.join(dir, "types.mjs"), transpileTs(typesSource), "utf8")
   await writeFile(
@@ -54,6 +56,13 @@ async function importArchiveReviewModules() {
     path.join(dir, "cycleMirrorService.mjs"),
     transpileTs(cycleMirrorServiceSource)
       .replaceAll('from "./types"', 'from "./types.mjs"')
+      .replaceAll('from "./reviewArchiveService"', 'from "./reviewArchiveService.mjs"'),
+    "utf8",
+  )
+  await writeFile(
+    path.join(dir, "ruleGuardInsightService.mjs"),
+    transpileTs(ruleGuardInsightServiceSource)
+      .replaceAll('from "./cycleMirrorService"', 'from "./cycleMirrorService.mjs"')
       .replaceAll('from "./reviewArchiveService"', 'from "./reviewArchiveService.mjs"'),
     "utf8",
   )
@@ -318,8 +327,9 @@ test("档案馆 page collects the private archive IA without lake or old reflect
   const archiveRuleGuardPanel = await readFile(archiveRuleGuardPanelUrl, "utf8")
   const cycleMirrorPanel = await readFile(cycleMirrorPanelUrl, "utf8")
   const reviewRiskSignalDisplay = await readFile(reviewRiskSignalDisplayUrl, "utf8")
+  const ruleGuardInsightService = await readFile(ruleGuardInsightServiceUrl, "utf8")
   const cycleMirrorService = await readFile(cycleMirrorServiceUrl, "utf8")
-  const archiveSource = `${mindArchivePage}\n${dangAnGuanArchive}\n${archiveRuleGuardPanel}\n${cycleMirrorPanel}\n${reviewRiskSignalDisplay}\n${cycleMirrorService}`
+  const archiveSource = `${mindArchivePage}\n${dangAnGuanArchive}\n${archiveRuleGuardPanel}\n${cycleMirrorPanel}\n${reviewRiskSignalDisplay}\n${ruleGuardInsightService}\n${cycleMirrorService}`
 
   ;[
     "DangAnGuanArchive",
@@ -328,9 +338,11 @@ test("档案馆 page collects the private archive IA without lake or old reflect
     "listRecentTradeReviews",
     "buildReviewArchive",
     "buildCycleMirror",
+    "buildRuleGuardInsights",
     "reviewArchiveItems",
     "reviewArchiveStats",
     "reviewRiskSignals",
+    "ruleGuardInsights",
     "cycleMirror",
     "getHeartThiefProfile",
     "todaySealedCount: stats?.todayTotal ?? 0",
@@ -347,6 +359,8 @@ test("档案馆 page collects the private archive IA without lake or old reflect
     "ArchiveRuleGuardPanel",
     "CycleMirrorPanel",
     "cycleMirror={cycleMirror}",
+    "ruleGuardInsights={ruleGuardInsights}",
+    "insights={safeRuleGuardInsights}",
     "reviewRiskSignals={reviewArchive?.reviewRiskSignals ?? []}",
     "onOpenMindArchive",
     "onOpenHeartMirrorScroll={() => router.push(\"/mind-scroll\")}",
@@ -409,9 +423,14 @@ test("档案馆 page collects the private archive IA without lake or old reflect
     "规则守护",
     "不强制拦截，只做提醒。",
     "看见这类循环，下一笔才有可能停住。",
-    "getTopReviewRiskSignals(reviewRiskSignals)",
-    "reviewRiskSignalTypeLabels",
-    "reviewRiskSignalLevelLabels",
+    "RuleGuardInsight",
+    "ruleGuardInsightTypeLabels",
+    "ruleGuardInsightLevelLabels",
+    "ruleGuardInsightSourceLabels",
+    "合证守护",
+    "循环守护",
+    "复盘守护",
+    "actionText",
     "反复破戒",
     "贼胜反复",
     "双输反复",
@@ -488,7 +507,8 @@ test("档案馆展示层空数据时也必须显示正文而不是挂轴空壳",
   const archiveRuleGuardPanel = await readFile(archiveRuleGuardPanelUrl, "utf8")
   const cycleMirrorPanel = await readFile(cycleMirrorPanelUrl, "utf8")
   const reviewRiskSignalDisplay = await readFile(reviewRiskSignalDisplayUrl, "utf8")
-  const archiveDisplaySource = `${dangAnGuanArchive}\n${archiveRuleGuardPanel}\n${cycleMirrorPanel}\n${reviewRiskSignalDisplay}`
+  const ruleGuardInsightService = await readFile(ruleGuardInsightServiceUrl, "utf8")
+  const archiveDisplaySource = `${dangAnGuanArchive}\n${archiveRuleGuardPanel}\n${cycleMirrorPanel}\n${reviewRiskSignalDisplay}\n${ruleGuardInsightService}`
 
   ;[
     "fallbackSummary",

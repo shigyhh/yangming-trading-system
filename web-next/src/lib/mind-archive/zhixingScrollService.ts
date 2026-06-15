@@ -1,7 +1,7 @@
 import { listSealedOneThoughtEvents } from "@/lib/mind-archive/oneThoughtEventRepository"
 import { buildCycleMirror } from "@/lib/mind-archive/cycleMirrorService"
 import { buildReviewArchive } from "@/lib/mind-archive/reviewArchiveService"
-import { formatTopReviewRiskSignalSummary } from "@/lib/mind-archive/reviewRiskSignalDisplay"
+import { buildRuleGuardInsights, formatTopRuleGuardInsightSummary } from "@/lib/mind-archive/ruleGuardInsightService"
 import {
   CAPITAL_STABILITY_MISSING_LABEL,
   DEFAULT_MIND_ARCHIVE_USER_ID,
@@ -50,6 +50,7 @@ export type ZhixingScrollItem = {
 export type ZhixingScrollData = {
   items: ZhixingScrollItem[]
   ruleGuardSummary: string
+  ruleGuardInsightSummary: string
   cycleMirrorSummary: {
     cycleReminderText: string
     conclusionText: string
@@ -83,6 +84,12 @@ export function getZhixingScrollData(
     reviewArchiveItems,
     reviewRiskSignals,
   })
+  const ruleGuardInsights = buildRuleGuardInsights({
+    reviewRiskSignals,
+    cycleSignals: cycleMirror.cycleSignals,
+    cycleSummary: cycleMirror.cycleSummary,
+  })
+  const ruleGuardInsightSummary = formatTopRuleGuardInsightSummary(ruleGuardInsights)
   const strongestCycleSignal = cycleMirror.cycleSignals.find((signal) => signal.type === "heart_thief_cycle") ||
     cycleMirror.cycleSignals.find((signal) => signal.type === "same_behavior_repeated") ||
     cycleMirror.cycleSignals.find((signal) => signal.type === "same_capital_damage_repeated")
@@ -130,7 +137,8 @@ export function getZhixingScrollData(
 
   return {
     items,
-    ruleGuardSummary: formatTopReviewRiskSignalSummary(reviewRiskSignals),
+    ruleGuardSummary: ruleGuardInsightSummary,
+    ruleGuardInsightSummary,
     cycleMirrorSummary: {
       cycleReminderText: strongestCycleSignal?.text || cycleMirror.cycleSummary.strongestCycleText || cycleMirror.cycleSummary.conclusionText,
       conclusionText: cycleMirror.cycleSummary.conclusionText,

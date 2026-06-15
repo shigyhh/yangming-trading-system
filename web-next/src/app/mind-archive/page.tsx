@@ -13,6 +13,7 @@ import {
 } from "@/lib/mind-archive/archiveStatsService"
 import { buildCycleMirror, type CycleMirrorResult } from "@/lib/mind-archive/cycleMirrorService"
 import { buildReviewArchive, type ReviewArchiveResult } from "@/lib/mind-archive/reviewArchiveService"
+import { buildRuleGuardInsights, type RuleGuardInsight } from "@/lib/mind-archive/ruleGuardInsightService"
 import { listRecentTradeReviews } from "@/lib/trade-review/tradeReviewRepository"
 import {
   DEFAULT_MIND_ARCHIVE_USER_ID,
@@ -38,6 +39,7 @@ export default function MindArchivePage() {
   const [recentSealedEvents, setRecentSealedEvents] = useState<OneThoughtEvent[]>([])
   const [reviewArchive, setReviewArchive] = useState<ReviewArchiveResult | null>(null)
   const [cycleMirror, setCycleMirror] = useState<CycleMirrorResult | null>(null)
+  const [ruleGuardInsights, setRuleGuardInsights] = useState<RuleGuardInsight[]>([])
   const [heartThiefProfile, setHeartThiefProfile] = useState<HeartThiefProfile | null>(null)
 
   useEffect(() => {
@@ -55,11 +57,17 @@ export default function MindArchivePage() {
         reviewRiskSignals: nextReviewArchive.reviewRiskSignals,
         recentDays: 30,
       })
+      const nextRuleGuardInsights = buildRuleGuardInsights({
+        reviewRiskSignals: nextReviewArchive.reviewRiskSignals,
+        cycleSignals: nextCycleMirror.cycleSignals,
+        cycleSummary: nextCycleMirror.cycleSummary,
+      })
 
       setStats(getMindArchiveStats(DEFAULT_MIND_ARCHIVE_USER_ID))
       setRecentSealedEvents(sealedEvents)
       setReviewArchive(nextReviewArchive)
       setCycleMirror(nextCycleMirror)
+      setRuleGuardInsights(nextRuleGuardInsights)
       setHeartThiefProfile(getHeartThiefProfile(DEFAULT_MIND_ARCHIVE_USER_ID))
     }, 0)
 
@@ -121,6 +129,7 @@ export default function MindArchivePage() {
         reviewArchiveItems={reviewArchiveItems}
         reviewArchiveStats={reviewArchive?.reviewArchiveStats}
         reviewRiskSignals={reviewArchive?.reviewRiskSignals ?? []}
+        ruleGuardInsights={ruleGuardInsights}
         cycleMirror={cycleMirror}
         onOpenMindArchive={openMindArchive}
         onOpenHeartMirrorScroll={() => router.push("/mind-scroll")}

@@ -14,6 +14,7 @@ import type {
   ReviewArchiveStats,
   ReviewRiskSignal,
 } from "@/lib/mind-archive/reviewArchiveService"
+import type { RuleGuardInsight } from "@/lib/mind-archive/ruleGuardInsightService"
 
 const GOLD = "#c8ab6f"
 const INK = "#ece9e1"
@@ -70,6 +71,7 @@ export type DangAnGuanArchiveProps = {
   reviewArchiveItems?: ReviewArchiveItem[]
   reviewArchiveStats?: Partial<ReviewArchiveStats>
   reviewRiskSignals?: ReviewRiskSignal[]
+  ruleGuardInsights?: RuleGuardInsight[]
   cycleMirror?: CycleMirrorResult | null
   reviewByEventId?: Record<
     string,
@@ -266,6 +268,7 @@ export default function DangAnGuanArchive({
   reviewArchiveItems = [],
   reviewArchiveStats,
   reviewRiskSignals = [],
+  ruleGuardInsights = [],
   cycleMirror,
   reviewByEventId = {},
   onOpenMindArchive,
@@ -317,6 +320,7 @@ export default function DangAnGuanArchive({
   const safeReviewArchiveItems = reviewArchiveItems
   const safeRecurringThoughts = recurringThoughts ?? []
   const safeReviewRiskSignals = reviewRiskSignals
+  const safeRuleGuardInsights = ruleGuardInsights
 
   const stats = useMemo(
     () => [
@@ -628,7 +632,7 @@ export default function DangAnGuanArchive({
                       </div>
                     ))}
                   </div>
-                  <p>复盘风险信号 {safeReviewRiskSignals.length} 条，先留给规则守护读取。</p>
+                  <p>复盘风险信号 {safeReviewRiskSignals.length} 条，循环守护 {safeRuleGuardInsights.length} 条。</p>
                 </section>
               </Reveal>
 
@@ -656,7 +660,7 @@ export default function DangAnGuanArchive({
               </Reveal>
 
               <Reveal disabled={reduced} delay={460}>
-                <ArchiveRuleGuardPanel reviewRiskSignals={safeReviewRiskSignals} />
+                <ArchiveRuleGuardPanel insights={safeRuleGuardInsights} />
               </Reveal>
             </aside>
           </div>

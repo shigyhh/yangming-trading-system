@@ -48,6 +48,7 @@ export default function ZhixingScrollPage() {
   const [scrollData, setScrollData] = useState<ZhixingScrollData>({
     items: [],
     ruleGuardSummary: "暂无规则守护提醒。不是没有风险，而是还需要更多复盘样本。",
+    ruleGuardInsightSummary: "暂无规则守护提醒。不是没有风险，而是还需要更多复盘样本。",
     cycleMirrorSummary: {
       cycleReminderText: "你以为这是新行情，其实是旧心贼换了张脸。",
       conclusionText: "你以为这是新行情，其实是旧心贼换了张脸。",
@@ -77,7 +78,8 @@ export default function ZhixingScrollPage() {
         <section className="guard-summary" aria-label="循环提醒">
           <span>循环提醒</span>
           <strong>做了以后，是否又进入同一条循环？</strong>
-          <p>{scrollData.cycleMirrorSummary.cycleReminderText}</p>
+          <p>{scrollData.ruleGuardInsightSummary}</p>
+          <small>循环提醒：{scrollData.cycleMirrorSummary.cycleReminderText}</small>
           <small>这说明：你不是没看见，是看见后还没有停住。</small>
         </section>
 
@@ -217,6 +219,8 @@ export default function ZhixingScrollPage() {
         }
 
         .guard-summary small {
+          display: block;
+          margin-top: 8px;
           color: rgba(244, 235, 221, 0.42);
           line-height: 1.8;
         }

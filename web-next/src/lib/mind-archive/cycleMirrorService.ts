@@ -212,6 +212,34 @@ function sortCycleSignals(items: CycleSignal[]) {
   })
 }
 
+export function getCycleSeverityRank(value: CycleMirrorSeverity | CycleSignalLevel | undefined) {
+  if (value === "high") return 3
+  if (value === "medium") return 2
+  if (value === "low") return 1
+  return 0
+}
+
+export function getTopCycleItems<T extends {
+  severity?: CycleMirrorSeverity
+  level?: CycleSignalLevel
+  count?: number
+  lastSeenAt?: string
+}>(items: T[] = [], limit = 1) {
+  return [...items]
+    .sort((left, right) => {
+      const severityDiff =
+        getCycleSeverityRank(right.severity ?? right.level) -
+        getCycleSeverityRank(left.severity ?? left.level)
+      if (severityDiff !== 0) return severityDiff
+
+      const countDiff = (right.count ?? 0) - (left.count ?? 0)
+      if (countDiff !== 0) return countDiff
+
+      return (getTime(right.lastSeenAt) ?? 0) - (getTime(left.lastSeenAt) ?? 0)
+    })
+    .slice(0, Math.max(0, limit))
+}
+
 function buildRecurringThoughts(
   events: CycleMirrorOneThoughtEvent[],
   reviewIdsByEventId: Map<string, string[]>,
