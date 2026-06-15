@@ -2,7 +2,7 @@ const {
   getKlineReviewReports,
   saveShareCard
 } = require("../../utils/store");
-const { syncKlineTrainingRecord } = require("../../utils/api");
+const { retryPendingKlineTrainingSync } = require("../../utils/api");
 
 function buildScoreRows(review) {
   const scores = (review || {}).scores || {};
@@ -45,9 +45,7 @@ Page({
       scoreRows: buildScoreRows(reviewView),
       statsRows: ((reviewView || {}).anonymousStats || {}).rows || []
     });
-    if (review && review.klineTrainingSyncStatus !== "synced") {
-      syncKlineTrainingRecord(review).catch(() => {});
-    }
+    retryPendingKlineTrainingSync().catch(() => {});
   },
 
   goSimulator() {

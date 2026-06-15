@@ -3,6 +3,7 @@ const {
   applyRemoteState,
   applyTrainingPrescriptionDispatch,
   getProfile,
+  getKlineReviewReports,
   saveKlineReviewSyncStatus,
   saveSyncStatus
 } = require("./store");
@@ -373,6 +374,43 @@ async function syncKlineTrainingRecord(record = null, options = {}) {
   }
 }
 
+async function retryPendingKlineTrainingSync(options = {}) {
+  const state = getKlineReviewReports();
+  const records = (state.records || []).filter((record) => {
+    const status = (record || {}).klineTrainingSyncStatus || "";
+    return status === "pending" || status === "failed";
+  });
+  const summary = {
+    ok: true,
+    attempted: 0,
+    synced: 0,
+    failed: 0,
+    skipped: 0,
+    errors: []
+  };
+
+  for (const record of records) {
+    summary.attempted += 1;
+    try {
+      const result = await syncKlineTrainingRecord(record, Object.assign({}, options, { force: true }));
+      if (result && result.skipped) {
+        summary.skipped += 1;
+      } else {
+        summary.synced += 1;
+      }
+    } catch (error) {
+      summary.ok = false;
+      summary.failed += 1;
+      summary.errors.push({
+        id: String((record || {}).id || ""),
+        message: getTechnicalMessage(error)
+      });
+    }
+  }
+
+  return summary;
+}
+
 async function syncTradeReviewRecord(review = null) {
   try {
     const auth = await ensureAuth();
@@ -608,6 +646,7 @@ module.exports = {
   syncAssessmentReport,
   syncTrainingProgress,
   syncKlineTrainingRecord,
+  retryPendingKlineTrainingSync,
   syncTradeReviewRecord,
   requestTradeReviewOcrDraft,
   pullTrainingPrescription,

@@ -13,7 +13,7 @@ const {
   saveTradeReviewRecord,
   saveInviteConversionEvent
 } = require("../../utils/store");
-const { fetchKlineTrainingSlice, syncLocalState, syncTrainingProgress } = require("../../utils/api");
+const { fetchKlineTrainingSlice, retryPendingKlineTrainingSync, syncLocalState, syncTrainingProgress } = require("../../utils/api");
 const { buildTraining7View } = require("../../modules/training7/index");
 const {
   buildKlineMindSession,
@@ -109,6 +109,7 @@ Page({
   },
 
   onShow() {
+    retryPendingKlineTrainingSync().catch(() => {});
     this.load();
   },
 
