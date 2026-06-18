@@ -641,6 +641,68 @@
       const paySheet = document.getElementById("paySheet");
       const payMessage = document.getElementById("payMessage");
       const payButtons = Array.from(document.querySelectorAll("[data-pay-choice]"));
+      const analyticsSessionKey = "ymty_analytics_session_id";
+      const scrollMilestones = new Set();
+      let maxScrollPercent = 0;
+      const pageStartedAt = Date.now();
+
+      function getAnalyticsSessionId(){
+        try {
+          let sessionId = sessionStorage.getItem(analyticsSessionKey);
+          if (!sessionId) {
+            sessionId = window.crypto && crypto.randomUUID
+              ? crypto.randomUUID()
+              : "sess_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 10);
+            sessionStorage.setItem(analyticsSessionKey, sessionId);
+          }
+          return sessionId;
+        } catch {
+          return "sess_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 10);
+        }
+      }
+
+      function createEventId(name){
+        if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+        return name + "_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 10);
+      }
+
+      function trackEvent(eventName, metadata = {}, options = {}){
+        const payload = {
+          event_id:createEventId(eventName),
+          event_name:eventName,
+          session_id:getAnalyticsSessionId(),
+          product_code:campaign.product_code || "YMXX_JY_TY",
+          path:location.pathname,
+          track:getTrackParams(),
+          metadata
+        };
+        const body = JSON.stringify(payload);
+        if (options.beacon && navigator.sendBeacon) {
+          try {
+            const blob = new Blob([body], { type:"application/json" });
+            if (navigator.sendBeacon("/api/track/ymty", blob)) return;
+          } catch {}
+        }
+        fetch("/api/track/ymty", {
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          credentials:"include",
+          body
+        }).catch(() => {});
+      }
+
+      function updateMaxScroll(){
+        const scrollable = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+        const percent = Math.max(0, Math.min(100, Math.round((window.scrollY / scrollable) * 100)));
+        maxScrollPercent = Math.max(maxScrollPercent, percent);
+        // analytics milestones: scroll_25, scroll_50, scroll_75
+        [25,50,75].forEach((mark) => {
+          if (percent >= mark && !scrollMilestones.has(mark)) {
+            scrollMilestones.add(mark);
+            trackEvent("scroll_" + mark, { max_scroll_percent:maxScrollPercent });
+          }
+        });
+      }
 
       function scrollToSection(id){
         const target = document.getElementById(id);
@@ -663,6 +725,7 @@
           const value = search.get(key);
           if (value) track[key] = value;
         });
+        track.session_id = getAnalyticsSessionId();
         track.landing_url = location.href;
         track.referrer = document.referrer || "";
         track.user_agent = navigator.userAgent || "";
@@ -709,6 +772,7 @@
 
       function openPaySheet(){
         if (campaign.status && campaign.status !== "online") return;
+        trackEvent("pay_sheet_open");
         paySheet.classList.add("show");
         paySheet.setAttribute("aria-hidden", "false");
       }
@@ -828,13 +892,22 @@
       }
 
       document.getElementById("fitBtn").addEventListener("click", () => scrollToSection("pain-method"));
-      document.getElementById("heroSignupBtn").addEventListener("click", () => scrollToSection("signup"));
-      document.getElementById("bottomSignupBtn").addEventListener("click", openPaySheet);
+      document.getElementById("heroSignupBtn").addEventListener("click", () => {
+        trackEvent("signup_click", { position:"hero" });
+        scrollToSection("signup");
+      });
+      document.getElementById("bottomSignupBtn").addEventListener("click", () => {
+        trackEvent("signup_click", { position:"signup" });
+        openPaySheet();
+      });
       document.querySelectorAll("[data-close-pay]").forEach((element) => {
         element.addEventListener("click", closePaySheet);
       });
       payButtons.forEach((button) => {
-        button.addEventListener("click", () => createOrder(button.dataset.payChoice));
+        button.addEventListener("click", () => {
+          trackEvent("pay_method_select", { method:button.dataset.payChoice || "" });
+          createOrder(button.dataset.payChoice);
+        });
       });
       paySheet.addEventListener("click", (event) => {
         if (event.target === paySheet) closePaySheet();
@@ -842,6 +915,28 @@
 
       renderCampaign();
       loadCampaign();
+      trackEvent("page_view");
+      window.addEventListener("scroll", updateMaxScroll, { passive:true });
+      updateMaxScroll();
+      if ("IntersectionObserver" in window) {
+        const signupObserver = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              trackEvent("signup_view");
+              signupObserver.disconnect();
+            }
+          });
+        }, { threshold:.35 });
+        const signup = document.getElementById("signup");
+        if (signup) signupObserver.observe(signup);
+      }
+      window.addEventListener("pagehide", () => {
+        updateMaxScroll();
+        trackEvent("page_leave", {
+          duration_ms:Date.now() - pageStartedAt,
+          max_scroll_percent:maxScrollPercent
+        }, { beacon:true });
+      });
     </script>
   </body>
 </html>

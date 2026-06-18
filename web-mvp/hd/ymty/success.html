@@ -212,6 +212,7 @@
       const params = new URLSearchParams(window.location.search);
       const order_id = params.get("order_id") || "";
       const token = params.get("token") || "";
+      const analyticsSessionKey = "ymty_analytics_session_id";
 
       const pageTitle = document.getElementById("pageTitle");
       const pageSubtitle = document.getElementById("pageSubtitle");
@@ -222,6 +223,45 @@
       const entranceText = document.getElementById("entranceText");
       const remarkText = document.getElementById("remarkText");
       const wecomButton = document.getElementById("wecomButton");
+
+      function getAnalyticsSessionId() {
+        try {
+          let sessionId = sessionStorage.getItem(analyticsSessionKey);
+          if (!sessionId) {
+            sessionId = window.crypto && crypto.randomUUID
+              ? crypto.randomUUID()
+              : "sess_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 10);
+            sessionStorage.setItem(analyticsSessionKey, sessionId);
+          }
+          return sessionId;
+        } catch {
+          return "sess_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 10);
+        }
+      }
+
+      function createEventId(name) {
+        if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+        return name + "_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 10);
+      }
+
+      function trackEvent(eventName, metadata = {}) {
+        const body = JSON.stringify({
+          event_id: createEventId(eventName),
+          event_name: eventName,
+          session_id: getAnalyticsSessionId(),
+          order_id,
+          product_code: "YMXX_JY_TY",
+          path: location.pathname,
+          track: {},
+          metadata
+        });
+        fetch("/api/track/ymty", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body
+        }).catch(() => {});
+      }
 
       function showLocked(message) {
         pageTitle.textContent = "入口未解锁";
@@ -288,6 +328,10 @@
             window.location.href = wecom_link;
           }, Math.max(0, redirect_delay_ms));
         }
+        trackEvent("qr_exposed", {
+          has_qr: Boolean(qr_image),
+          has_wecom_link: Boolean(wecom_link)
+        });
       }
 
       async function fetchJson(url) {
@@ -320,6 +364,10 @@
         }
       }
 
+      wecomButton.addEventListener("click", () => {
+        trackEvent("wecom_link_click");
+      });
+      trackEvent("success_page_view");
       boot();
     </script>
   </body>

@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { config } from "../config.js";
 import { readRuntimeRecords, replaceRuntimeRecords, updateRuntimeRecords } from "../lib/store.js";
+import { recordYmtyTrustedEvent, resetYmtyAnalyticsForTests } from "./ymtyAnalytics.js";
 
 const PRODUCT_FILE = "ymty-products.json";
 const LIVECODE_FILE = "ymty-livecodes.json";
@@ -75,7 +76,8 @@ export async function resetYmtyForTests() {
     replaceRuntimeRecords(PAYMENT_LOG_FILE, []),
     replaceRuntimeRecords(COURSE_USER_FILE, []),
     replaceRuntimeRecords(ADMIN_USER_FILE, []),
-    replaceRuntimeRecords(AUDIT_LOG_FILE, [])
+    replaceRuntimeRecords(AUDIT_LOG_FILE, []),
+    resetYmtyAnalyticsForTests()
   ]);
 }
 
@@ -103,7 +105,11 @@ export async function createYmtyOrder({
   payChannel = "mock",
   channel = "",
   campaign = "",
-  creative = ""
+  creative = "",
+  sessionId = "",
+  clickId = "",
+  landingUrl = "",
+  referrerHost = ""
 } = {}) {
   const product = await getProductByCode(productCode);
   if (!product || product.status !== "online") {
@@ -125,12 +131,31 @@ export async function createYmtyOrder({
     channel: cleanText(channel, 80),
     campaign: cleanText(campaign, 80),
     creative: cleanText(creative, 80),
+    session_id: cleanText(sessionId, 96),
+    click_id: cleanText(clickId, 120),
+    landing_url: cleanText(landingUrl, 240),
+    referrer_host: cleanText(referrerHost, 120),
     paid_at: null,
     created_at: now,
     updated_at: now
   };
 
   await updateRuntimeRecords(ORDER_FILE, (records) => records.concat(order));
+  await recordYmtyTrustedEvent("order_created", {
+    event_id: `order_created:${order.order_id}`,
+    session_id: order.session_id,
+    order_id: order.order_id,
+    product_code: order.product_code,
+    pay_channel: order.pay_channel,
+    channel: order.channel,
+    campaign: order.campaign,
+    creative: order.creative,
+    click_id: order.click_id,
+    amount_cents: order.amount_cents,
+    created_at: order.created_at
+  }).catch((error) => {
+    console.warn("ymty analytics order_created skipped", error.message);
+  });
 
   return {
     order: publicOrder(order, { includeToken: true }),
@@ -232,6 +257,24 @@ export async function markYmtyOrderPaid({
     verify_status: verifyStatus
   });
   const courseUser = await ensureCourseUser(paidOrder);
+  if (existingOrder.pay_status !== "paid") {
+    await recordYmtyTrustedEvent("payment_success", {
+      event_id: `payment_success:${paidOrder.order_id}`,
+      session_id: paidOrder.session_id,
+      order_id: paidOrder.order_id,
+      product_code: paidOrder.product_code,
+      pay_channel: paidOrder.pay_channel,
+      amount_cents: paidOrder.amount_cents,
+      channel: paidOrder.channel,
+      campaign: paidOrder.campaign,
+      creative: paidOrder.creative,
+      click_id: paidOrder.click_id,
+      paid_at: paidOrder.paid_at,
+      created_at: paidOrder.paid_at
+    }).catch((error) => {
+      console.warn("ymty analytics payment_success skipped", error.message);
+    });
+  }
 
   return {
     order: publicOrder(paidOrder),
@@ -674,6 +717,10 @@ function publicOrder(order, { includeToken = false } = {}) {
     channel: order.channel,
     campaign: order.campaign,
     creative: order.creative,
+    session_id: order.session_id || "",
+    click_id: order.click_id || "",
+    landing_url: order.landing_url || "",
+    referrer_host: order.referrer_host || "",
     paid_at: order.paid_at,
     created_at: order.created_at,
     updated_at: order.updated_at

@@ -21,6 +21,7 @@ import { getGlobalReflectionToday, listGlobalReflectionChoices, submitGlobalRefl
 import { buildHistoricalKlineSlice, downloadHistoricalKline, getHistoricalKlineRules, listHistoricalKlineCatalog, listHistoricalKlineInstruments, revealHistoricalKlineSlice } from "../services/historicalKline.js";
 import { buildTradeReviewOcrDraft } from "../services/tradeReviewOcr.js";
 import { createYmtyLivecode, createYmtyOrder, getYmtyAdminCampaign, getYmtyAfterpayEntrance, getYmtyAuditLogs, getYmtyOrderForPayment, getYmtyOrderStatus, getYmtyPublicCampaign, listYmtyCourseUsers, listYmtyLivecodeAssignments, listYmtyLivecodes, listYmtyOrders, markYmtyMockPaySuccess, markYmtyOrderPaid, toggleYmtyLivecodeFull, updateYmtyCampaign, updateYmtyLivecode, updateYmtyLivecodeByKey } from "../services/ymtyCampaign.js";
+import { getYmtyAnalyticsSummary, recordYmtyFrontendEvent } from "../services/ymtyAnalytics.js";
 import { authenticateYmtyAdmin, changeYmtyAdminPassword, getYmtyAdminMe, loginYmtyAdmin, logoutYmtyAdmin } from "../services/adminAuth.js";
 import { saveYmtyLivecodeUpload } from "../services/ymtyUpload.js";
 import { assertRealPayConfigReady, createH5Order, createJsapiOrder, createWapOrder, isPaymentConfigError, normalizePayChannel, parseAlipayNotify, parseWechatNotify, validateAlipayPayment, validateWechatPayment, verifyAlipayNotify, verifyWechatNotify } from "../services/payments/index.js";
@@ -105,6 +106,7 @@ export async function route(req, res) {
         global_reflection_today: "GET /api/v1/global-reflection/today",
         global_reflection_vote: "POST /api/v1/global-reflection/vote",
         ymty_pay_create: "POST /api/pay/create",
+        ymty_track: "POST /api/track/ymty",
         ymty_mock_pay_complete: "POST /api/pay/mock/complete",
         ymty_wechat_notify: "POST /api/pay/wechat/notify",
         ymty_alipay_notify: "POST /api/pay/alipay/notify",
@@ -131,6 +133,27 @@ export async function route(req, res) {
   if (req.method === "GET" && pathname === "/api/public/campaign/ymty") {
     const campaign = await getYmtyPublicCampaign();
     return sendJson(res, 200, { ok: true, ...campaign });
+  }
+
+  if (req.method === "POST" && pathname === "/api/track/ymty") {
+    const body = await readLimitedJson(req, 16 * 1024);
+    const orderId = body.order_id || body.orderId || "";
+    let isOrderPaid = false;
+    if (orderId) {
+      try {
+        const order = await getYmtyOrderForPayment(orderId);
+        isOrderPaid = order.pay_status === "paid";
+      } catch {
+        isOrderPaid = false;
+      }
+    }
+    const result = await recordYmtyFrontendEvent({
+      body,
+      ip: getIp(req),
+      userAgent: req.headers["user-agent"] || "",
+      isOrderPaid
+    });
+    return sendJson(res, 200, { ok: true, ...result });
   }
 
   if (req.method === "POST" && pathname === "/api/pay/create") {
@@ -168,7 +191,11 @@ export async function route(req, res) {
       payChannel,
       channel: body.channel || track.channel,
       campaign: body.campaign || track.campaign,
-      creative: body.creative || track.creative
+      creative: body.creative || track.creative,
+      sessionId: track.session_id || track.sessionId,
+      clickId: track.click_id || track.gdt_vid || track.bd_vid || track.douyin_click_id,
+      landingUrl: track.landing_url,
+      referrerHost: getReferrerHost(track.referrer || req.headers.referer || "")
     });
 
     if (payChannel !== "mock") {
@@ -484,6 +511,12 @@ export async function route(req, res) {
   if (req.method === "GET" && pathname === "/api/admin/audit-logs") {
     await assertYmtyAdminAccess(req);
     const result = await getYmtyAuditLogs();
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/analytics/summary") {
+    await assertYmtyAdminAccess(req);
+    const result = await getYmtyAnalyticsSummary(Object.fromEntries(url.searchParams.entries()));
     return sendJson(res, 200, { ok: true, ...result });
   }
 
@@ -1320,6 +1353,26 @@ function getPublicOrigin(req) {
   if (config.publicBaseUrl) return config.publicBaseUrl.replace(/\/$/, "");
   const proto = req.headers["x-forwarded-proto"] || "http";
   return `${proto}://${req.headers.host}`;
+}
+
+async function readLimitedJson(req, limitBytes) {
+  const raw = (await readRawBody(req, limitBytes)).toString("utf8").trim();
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw);
+  } catch {
+    const error = new Error("请求体不是合法 JSON");
+    error.statusCode = 400;
+    throw error;
+  }
+}
+
+function getReferrerHost(referrer = "") {
+  try {
+    return new URL(String(referrer || "")).hostname.slice(0, 120);
+  } catch {
+    return "";
+  }
 }
 
 function buildSuccessUrl(req, order, providedSuccessUrl = "") {

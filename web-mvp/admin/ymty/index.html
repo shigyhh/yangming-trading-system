@@ -219,6 +219,51 @@
         font-size: 14px;
       }
 
+      .analytics-card {
+        margin-bottom: 16px;
+      }
+
+      .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+
+      .metric {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #fffdfa;
+        padding: 12px;
+      }
+
+      .metric span {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      .metric b {
+        display: block;
+        margin-top: 4px;
+        color: var(--red);
+        font-size: 22px;
+        line-height: 1.2;
+      }
+
+      .analytics-tables {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .analytics-tables h3 {
+        margin: 0 0 8px;
+        color: #684433;
+        font-size: 15px;
+      }
+
       .auth-mask {
         position: fixed;
         inset: 0;
@@ -259,7 +304,8 @@
       [hidden] { display: none !important; }
 
       @media (max-width: 820px) {
-        .grid, .form-grid, .upload-row { grid-template-columns: 1fr; }
+        .grid, .form-grid, .upload-row, .analytics-tables { grid-template-columns: 1fr; }
+        .metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .topbar { align-items: flex-start; flex-direction: column; }
       }
     </style>
@@ -306,6 +352,82 @@
       </header>
 
       <p class="notice" id="pageNotice"></p>
+
+      <section class="card analytics-card">
+        <h2>数据概览</h2>
+        <p class="hint">按 Asia/Shanghai 统计，后台仅展示设备、系统、浏览器分类，不展示原始 IP 或完整 User-Agent。</p>
+        <div class="metrics-grid" id="metricsGrid"></div>
+        <div class="analytics-tables">
+          <div>
+            <h3>最近 7 天</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>日期</th>
+                    <th>访客</th>
+                    <th>报名</th>
+                    <th>订单</th>
+                    <th>支付</th>
+                    <th>金额</th>
+                  </tr>
+                </thead>
+                <tbody id="analyticsDailyBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <h3>渠道转化</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>渠道</th>
+                    <th>访客</th>
+                    <th>报名</th>
+                    <th>订单</th>
+                    <th>支付</th>
+                  </tr>
+                </thead>
+                <tbody id="analyticsChannelBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <h3>设备分布</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>设备</th>
+                    <th>系统</th>
+                    <th>浏览器</th>
+                    <th>访客</th>
+                    <th>浏览</th>
+                  </tr>
+                </thead>
+                <tbody id="analyticsDeviceBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <h3>支付方式</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>方式</th>
+                    <th>订单</th>
+                    <th>支付</th>
+                    <th>金额</th>
+                  </tr>
+                </thead>
+                <tbody id="analyticsPayBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <section class="grid">
         <form class="card" id="productForm">
@@ -468,6 +590,11 @@
       const qrImageInput = document.getElementById("qrImageInput");
       const qrPreview = document.getElementById("qrPreview");
       const uploadStatus = document.getElementById("uploadStatus");
+      const metricsGrid = document.getElementById("metricsGrid");
+      const analyticsDailyBody = document.getElementById("analyticsDailyBody");
+      const analyticsChannelBody = document.getElementById("analyticsChannelBody");
+      const analyticsDeviceBody = document.getElementById("analyticsDeviceBody");
+      const analyticsPayBody = document.getElementById("analyticsPayBody");
       const ordersBody = document.getElementById("ordersBody");
       const auditBody = document.getElementById("auditBody");
 
@@ -617,7 +744,7 @@
           fillLivecodeEditor(state.livecode);
         }
         showApp();
-        await Promise.all([loadOrders(), loadAuditLogs()]);
+        await Promise.all([loadAnalytics(), loadOrders(), loadAuditLogs()]);
       }
 
       function fillLivecodeEditor(livecode) {
@@ -661,6 +788,70 @@
             <td>${escapeHtml(order.pay_status)}</td>
             <td>${escapeHtml([order.channel, order.campaign, order.creative].filter(Boolean).join(" / "))}</td>
             <td>${escapeHtml(order.created_at || "")}</td>
+          </tr>
+        `).join("");
+      }
+
+      async function loadAnalytics() {
+        const todayKey = new Intl.DateTimeFormat("en-CA", {
+          timeZone: "Asia/Shanghai",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        }).format(new Date());
+        const [todayData, data] = await Promise.all([
+          adminFetch(`/api/admin/analytics/summary?date=${encodeURIComponent(todayKey)}`),
+          adminFetch("/api/admin/analytics/summary?days=7"),
+        ]);
+        const overview = todayData.overview || {};
+        const metrics = [
+          ["今日访客", overview.uv || 0],
+          ["今日浏览", overview.pv || 0],
+          ["报名点击", overview.signup_clicks || 0],
+          ["创建订单", overview.orders_created || 0],
+          ["支付成功", overview.paid_orders || 0],
+          ["支付金额", formatYuan(overview.revenue_cents || 0)],
+          ["成功页访问", overview.success_page_views || 0],
+          ["二维码曝光", overview.qr_exposures || 0],
+          ["获客链接点击", overview.wecom_link_clicks || 0],
+        ];
+        metricsGrid.innerHTML = metrics.map(([label, value]) => `
+          <div class="metric"><span>${escapeHtml(label)}</span><b>${escapeHtml(value)}</b></div>
+        `).join("");
+        analyticsDailyBody.innerHTML = (data.daily || []).slice(-7).map((row) => `
+          <tr>
+            <td>${escapeHtml(row.date || "")}</td>
+            <td>${Number(row.uv || 0)}</td>
+            <td>${Number(row.signup_clicks || 0)}</td>
+            <td>${Number(row.orders_created || 0)}</td>
+            <td>${Number(row.paid_orders || 0)}</td>
+            <td>${escapeHtml(formatYuan(row.revenue_cents || 0))}</td>
+          </tr>
+        `).join("");
+        analyticsChannelBody.innerHTML = (data.by_channel || []).map((row) => `
+          <tr>
+            <td>${escapeHtml(row.channel || "未标记")}</td>
+            <td>${Number(row.uv || 0)}</td>
+            <td>${Number(row.signup_clicks || 0)}</td>
+            <td>${Number(row.orders_created || 0)}</td>
+            <td>${Number(row.paid_orders || 0)}</td>
+          </tr>
+        `).join("");
+        analyticsDeviceBody.innerHTML = (data.by_device || []).map((row) => `
+          <tr>
+            <td>${escapeHtml(deviceText(row.device_type))}</td>
+            <td>${escapeHtml(osText(row.os))}</td>
+            <td>${escapeHtml(browserText(row.browser))}</td>
+            <td>${Number(row.uv || 0)}</td>
+            <td>${Number(row.pv || 0)}</td>
+          </tr>
+        `).join("");
+        analyticsPayBody.innerHTML = (data.by_pay_channel || []).map((row) => `
+          <tr>
+            <td>${escapeHtml(payChannelText(row.pay_channel))}</td>
+            <td>${Number(row.orders_created || 0)}</td>
+            <td>${Number(row.paid_orders || 0)}</td>
+            <td>${escapeHtml(formatYuan(row.revenue_cents || 0))}</td>
           </tr>
         `).join("");
       }
@@ -842,6 +1033,26 @@
           .replaceAll(">", "&gt;")
           .replaceAll('"', "&quot;")
           .replaceAll("'", "&#39;");
+      }
+
+      function formatYuan(cents) {
+        return `¥${(Number(cents || 0) / 100).toFixed(2)}`;
+      }
+
+      function deviceText(value) {
+        return ({ mobile:"手机", tablet:"平板", desktop:"桌面", unknown:"未知" })[value] || "未知";
+      }
+
+      function osText(value) {
+        return ({ ios:"iOS", android:"Android", windows:"Windows", macos:"macOS", linux:"Linux", unknown:"未知" })[value] || "未知";
+      }
+
+      function browserText(value) {
+        return ({ wechat:"微信", chrome:"Chrome", safari:"Safari", edge:"Edge", firefox:"Firefox", other:"其他", unknown:"未知" })[value] || "未知";
+      }
+
+      function payChannelText(value) {
+        return ({ mock:"Mock", wechat_jsapi:"微信 JSAPI", wechat_h5:"微信 H5", alipay_wap:"支付宝 WAP", unknown:"未知" })[value] || value || "未知";
       }
 
       loginForm.addEventListener("submit", (event) => {
