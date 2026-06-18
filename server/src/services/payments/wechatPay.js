@@ -176,14 +176,14 @@ async function requestWechatApi({ method, path, body = null }) {
   signer.update(`${method}\n${path}\n${timestamp}\n${nonce}\n${bodyText}\n`);
   signer.end();
   const signature = signer.sign(await readWechatPrivateKey(), "base64");
-  const authorization = [
-    "WECHATPAY2-SHA256-RSA2048",
+  const authorizationParams = [
     `mchid="${process.env.WECHAT_MCH_ID}"`,
     `nonce_str="${nonce}"`,
     `signature="${signature}"`,
     `timestamp="${timestamp}"`,
     `serial_no="${process.env.WECHAT_CERT_SERIAL_NO}"`
   ].join(",");
+  const authorization = `WECHATPAY2-SHA256-RSA2048 ${authorizationParams}`;
 
   const response = await fetch(`https://api.mch.weixin.qq.com${path}`, {
     method,
