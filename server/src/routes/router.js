@@ -20,7 +20,7 @@ import { dispatchTrainingPrescriptionBinding, generateShareCardBinding, getAdmin
 import { getGlobalReflectionToday, listGlobalReflectionChoices, submitGlobalReflectionVote } from "../services/globalReflection.js";
 import { buildHistoricalKlineSlice, downloadHistoricalKline, getHistoricalKlineRules, listHistoricalKlineCatalog, listHistoricalKlineInstruments, revealHistoricalKlineSlice } from "../services/historicalKline.js";
 import { buildTradeReviewOcrDraft } from "../services/tradeReviewOcr.js";
-import { createYmtyOrder, getYmtyAdminCampaign, getYmtyAfterpayEntrance, getYmtyAuditLogs, getYmtyOrderForPayment, getYmtyOrderStatus, getYmtyPublicCampaign, listYmtyOrders, markYmtyMockPaySuccess, markYmtyOrderPaid, updateYmtyCampaign, updateYmtyLivecode } from "../services/ymtyCampaign.js";
+import { createYmtyOrder, getYmtyAdminCampaign, getYmtyAfterpayEntrance, getYmtyAuditLogs, getYmtyOrderForPayment, getYmtyOrderStatus, getYmtyPublicCampaign, listYmtyCourseUsers, listYmtyOrders, markYmtyMockPaySuccess, markYmtyOrderPaid, updateYmtyCampaign, updateYmtyLivecode } from "../services/ymtyCampaign.js";
 import { authenticateYmtyAdmin, changeYmtyAdminPassword, getYmtyAdminMe, loginYmtyAdmin, logoutYmtyAdmin } from "../services/adminAuth.js";
 import { saveYmtyLivecodeUpload } from "../services/ymtyUpload.js";
 import { assertRealPayConfigReady, createH5Order, createJsapiOrder, createWapOrder, isPaymentConfigError, normalizePayChannel, parseAlipayNotify, parseWechatNotify, validateAlipayPayment, validateWechatPayment, verifyAlipayNotify, verifyWechatNotify } from "../services/payments/index.js";
@@ -103,7 +103,14 @@ export async function route(req, res) {
         i18n_bundle: "GET /api/v1/i18n/bundle?locale=zh-CN",
         global_reflection_options: "GET /api/v1/global-reflection/options",
         global_reflection_today: "GET /api/v1/global-reflection/today",
-        global_reflection_vote: "POST /api/v1/global-reflection/vote"
+        global_reflection_vote: "POST /api/v1/global-reflection/vote",
+        ymty_pay_create: "POST /api/pay/create",
+        ymty_mock_pay_complete: "POST /api/pay/mock/complete",
+        ymty_wechat_notify: "POST /api/pay/wechat/notify",
+        ymty_alipay_notify: "POST /api/pay/alipay/notify",
+        ymty_order_status: "GET /api/order/status?order_id=ymty_xxx",
+        ymty_afterpay_entrance: "GET /api/afterpay/entrance?order_id=ymty_xxx",
+        ymty_course_my: "GET /api/course/my?user_id=xxx"
       }
     });
   }
@@ -206,6 +213,36 @@ export async function route(req, res) {
       transactionId: body.transaction_id || body.transactionId || ""
     });
     return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "POST" && pathname === "/api/pay/mock/complete") {
+    const body = await readJson(req);
+    const result = await markYmtyMockPaySuccess({
+      orderId: body.order_id || body.orderId || url.searchParams.get("order_id") || "",
+      token: body.token || url.searchParams.get("token") || "",
+      transactionId: body.transaction_id || body.transactionId || ""
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/course/my") {
+    const query = Object.fromEntries(url.searchParams.entries());
+    const { course_users: courseUsers } = await listYmtyCourseUsers();
+    const courses = courseUsers.filter((item) => {
+      if (query.order_id || query.orderId) return item.order_id === (query.order_id || query.orderId);
+      if (query.user_id || query.userId) return item.user_id === (query.user_id || query.userId);
+      if (query.openid) return item.openid === query.openid;
+      if (query.unionid) return item.unionid === query.unionid;
+      return false;
+    }).map((item) => ({
+      course_id: item.product_code,
+      course_name: item.course_name,
+      status: item.status,
+      order_id: item.order_id,
+      unlocked_at: item.paid_at,
+      product_code: item.product_code
+    }));
+    return sendJson(res, 200, { ok: true, courses });
   }
 
   if (req.method === "GET" && pathname === "/api/wechat/oauth/start") {
