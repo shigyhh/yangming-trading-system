@@ -4,6 +4,7 @@ import { readRuntimeRecords, replaceRuntimeRecords, updateRuntimeRecords } from 
 
 const PRODUCT_FILE = "ymty-products.json";
 const LIVECODE_FILE = "ymty-livecodes.json";
+const LIVECODE_ASSIGNMENT_FILE = "ymty-livecode-assignments.json";
 const ORDER_FILE = "ymty-orders.json";
 const PAYMENT_LOG_FILE = "ymty-payment-logs.json";
 const COURSE_USER_FILE = "ymty-course-users.json";
@@ -28,8 +29,14 @@ const defaultProduct = {
 const defaultLivecode = {
   code_key: DEFAULT_LIVECODE_KEY,
   name: "阳明心学交易体验营默认活码",
+  contact_type: "personal_wechat",
   wecom_link: "https://work.weixin.qq.com/ca/mock",
   qr_image: "/assets/wecom-livecode-placeholder.svg",
+  channels: ["*"],
+  capacity_limit: 0,
+  manual_full: false,
+  priority: 100,
+  is_fallback: true,
   auto_redirect_after_paid: false,
   redirect_delay_ms: 600,
   remark: "知行 + 手机号后4位",
@@ -50,7 +57,7 @@ export async function seedYmtyDefaults() {
       ...defaultLivecode,
       created_at: now,
       updated_at: now
-    }))
+    }).map((item) => normalizeLivecodeRecord(item, now)))
   ]);
 
   return {
@@ -63,6 +70,7 @@ export async function resetYmtyForTests() {
   await Promise.all([
     replaceRuntimeRecords(PRODUCT_FILE, []),
     replaceRuntimeRecords(LIVECODE_FILE, []),
+    replaceRuntimeRecords(LIVECODE_ASSIGNMENT_FILE, []),
     replaceRuntimeRecords(ORDER_FILE, []),
     replaceRuntimeRecords(PAYMENT_LOG_FILE, []),
     replaceRuntimeRecords(COURSE_USER_FILE, []),
@@ -82,9 +90,11 @@ export async function getYmtyPublicCampaign() {
 
 export async function getYmtyAdminCampaign() {
   const { product, livecode } = await getActiveYmtyConfig();
+  const { livecodes } = await listYmtyLivecodes();
   return {
     product,
-    livecode
+    livecode,
+    livecodes
   };
 }
 
@@ -147,7 +157,7 @@ export async function getYmtyAfterpayEntrance({ orderId = "", token = "" } = {})
     throw error;
   }
 
-  const livecode = await getActiveLivecode();
+  const livecode = await assignLivecodeForPaidOrder(order);
   return {
     order: publicOrder(order),
     livecode: {
@@ -270,28 +280,79 @@ export async function updateYmtyCampaign({ adminId = "dev-admin", patch = {}, ip
 }
 
 export async function updateYmtyLivecode({ adminId = "dev-admin", patch = {}, ip = "" } = {}) {
+  return updateYmtyLivecodeByKey({
+    adminId,
+    codeKey: cleanText(patch.code_key || DEFAULT_LIVECODE_KEY, 80),
+    patch,
+    ip
+  });
+}
+
+export async function createYmtyLivecode({ adminId = "dev-admin", patch = {}, ip = "" } = {}) {
   await seedYmtyDefaults();
-  const codeKey = cleanText(patch.code_key || DEFAULT_LIVECODE_KEY, 80);
+  const codeKey = cleanText(patch.code_key, 80);
+  if (!codeKey) {
+    const error = new Error("活码编码不能为空");
+    error.statusCode = 400;
+    throw error;
+  }
+  const now = new Date().toISOString();
+  let created = null;
+
+  await updateRuntimeRecords(LIVECODE_FILE, (records) => {
+    const normalized = records.map((item) => normalizeLivecodeRecord(item, now));
+    if (normalized.some((item) => item.code_key === codeKey)) {
+      const error = new Error("活码编码已存在");
+      error.statusCode = 409;
+      throw error;
+    }
+    created = normalizeLivecodeRecord({
+      name: "新活码",
+      contact_type: "personal_wechat",
+      wecom_link: "",
+      qr_image: "",
+      channels: ["*"],
+      capacity_limit: 0,
+      manual_full: false,
+      priority: 50,
+      is_fallback: false,
+      auto_redirect_after_paid: false,
+      redirect_delay_ms: 600,
+      remark: "知行 + 手机号后4位",
+      button_text: "添加课程助教微信",
+      service_text: "客服方式：支付后添加课程助教微信",
+      status: "active",
+      ...patch,
+      code_key: codeKey,
+      created_at: now,
+      updated_at: now,
+      is_fallback: Boolean(patch.is_fallback)
+    }, now);
+    return normalized.concat(created);
+  });
+
+  await appendAuditLog({ adminId, action: "create_livecode", targetType: "livecodes", targetId: codeKey, before: null, after: created, ip });
+  return { livecode: created };
+}
+
+export async function updateYmtyLivecodeByKey({ adminId = "dev-admin", codeKey = "", patch = {}, ip = "" } = {}) {
+  await seedYmtyDefaults();
+  const normalizedCodeKey = cleanText(codeKey || patch.code_key || DEFAULT_LIVECODE_KEY, 80);
   let before = null;
   let after = null;
   const now = new Date().toISOString();
 
   await updateRuntimeRecords(LIVECODE_FILE, (records) => records.map((livecode) => {
-    if (livecode.code_key !== codeKey) return livecode;
-    before = livecode;
-    after = {
-      ...livecode,
-      name: cleanText(patch.name ?? livecode.name, 120),
-      wecom_link: cleanText(patch.wecom_link ?? livecode.wecom_link, 300),
-      qr_image: cleanText(patch.qr_image ?? livecode.qr_image, 300),
-      auto_redirect_after_paid: Boolean(patch.auto_redirect_after_paid ?? livecode.auto_redirect_after_paid),
-      redirect_delay_ms: normalizeDelayMs(patch.redirect_delay_ms ?? livecode.redirect_delay_ms),
-      remark: cleanText(patch.remark ?? livecode.remark, 160),
-      button_text: cleanText(patch.button_text ?? livecode.button_text, 80),
-      service_text: cleanText(patch.service_text ?? livecode.service_text, 160),
-      status: normalizeEnum(patch.status ?? livecode.status, "active", 32),
+    const normalized = normalizeLivecodeRecord(livecode, now);
+    if (normalized.code_key !== normalizedCodeKey) return normalized;
+    before = normalized;
+    after = normalizeLivecodeRecord({
+      ...normalized,
+      ...patch,
+      code_key: normalized.code_key,
+      created_at: normalized.created_at,
       updated_at: now
-    };
+    }, now);
     return after;
   }));
 
@@ -300,8 +361,44 @@ export async function updateYmtyLivecode({ adminId = "dev-admin", patch = {}, ip
     error.statusCode = 404;
     throw error;
   }
-  await appendAuditLog({ adminId, action: "update_livecode", targetType: "livecodes", targetId: codeKey, before, after, ip });
+  await appendAuditLog({ adminId, action: "update_livecode", targetType: "livecodes", targetId: normalizedCodeKey, before, after, ip });
   return { livecode: after };
+}
+
+export async function toggleYmtyLivecodeFull({ adminId = "dev-admin", codeKey = "", manualFull, ip = "" } = {}) {
+  return updateYmtyLivecodeByKey({
+    adminId,
+    codeKey,
+    patch: {
+      manual_full: manualFull
+    },
+    ip
+  });
+}
+
+export async function listYmtyLivecodes() {
+  await seedYmtyDefaults();
+  const [livecodes, assignments] = await Promise.all([
+    readRuntimeRecords(LIVECODE_FILE),
+    readRuntimeRecords(LIVECODE_ASSIGNMENT_FILE)
+  ]);
+  const counts = countAssignmentsByCode(assignments);
+  return {
+    livecodes: livecodes
+      .map((item) => normalizeLivecodeRecord(item))
+      .map((item) => ({
+        ...item,
+        assigned_count: counts.get(item.code_key) || 0
+      }))
+      .sort((a, b) => Number(a.priority) - Number(b.priority) || a.code_key.localeCompare(b.code_key))
+  };
+}
+
+export async function listYmtyLivecodeAssignments() {
+  const assignments = await readRuntimeRecords(LIVECODE_ASSIGNMENT_FILE);
+  return {
+    assignments: assignments.slice().sort((a, b) => new Date(b.assigned_at || 0).getTime() - new Date(a.assigned_at || 0).getTime())
+  };
 }
 
 export async function listYmtyOrders() {
@@ -345,14 +442,93 @@ async function getProductByCode(productCode) {
 async function getActiveLivecode() {
   await seedYmtyDefaults();
   const livecodes = await readRuntimeRecords(LIVECODE_FILE);
-  const livecode = livecodes.find((item) => item?.code_key === DEFAULT_LIVECODE_KEY && item?.status === "active")
-    || livecodes.find((item) => item?.status === "active");
+  const normalized = livecodes.map((item) => normalizeLivecodeRecord(item));
+  const livecode = normalized.find((item) => item?.code_key === DEFAULT_LIVECODE_KEY && item?.status === "active")
+    || normalized.find((item) => item?.is_fallback && item?.status === "active")
+    || normalized.find((item) => item?.status === "active");
   if (!livecode) {
     const error = new Error("课程助教入口未配置");
     error.statusCode = 503;
     throw error;
   }
   return livecode;
+}
+
+async function assignLivecodeForPaidOrder(order) {
+  const livecodes = (await readRuntimeRecords(LIVECODE_FILE)).map((item) => normalizeLivecodeRecord(item));
+  const livecodeMap = new Map(livecodes.map((item) => [item.code_key, item]));
+  let selectedCodeKey = "";
+
+  await updateRuntimeRecords(LIVECODE_ASSIGNMENT_FILE, (records) => {
+    const existing = records.find((item) => item?.order_id === order.order_id);
+    if (existing) {
+      selectedCodeKey = existing.code_key;
+      return records;
+    }
+
+    const counts = countAssignmentsByCode(records);
+    const selected = selectLivecodeForOrder({
+      livecodes,
+      counts,
+      channel: order.channel || ""
+    });
+    if (!selected) {
+      const error = new Error("课程助教入口正在分配中，请稍后重试");
+      error.statusCode = 503;
+      error.code = "NO_AVAILABLE_LIVECODE";
+      throw error;
+    }
+
+    selectedCodeKey = selected.code_key;
+    return records.concat({
+      order_id: order.order_id,
+      code_key: selected.code_key,
+      channel: cleanText(order.channel || "", 80),
+      assigned_at: new Date().toISOString()
+    });
+  });
+
+  const livecode = livecodeMap.get(selectedCodeKey);
+  if (!livecode) {
+    const error = new Error("课程助教入口配置已停用，请联系管理员");
+    error.statusCode = 503;
+    error.code = "NO_AVAILABLE_LIVECODE";
+    throw error;
+  }
+  return livecode;
+}
+
+function selectLivecodeForOrder({ livecodes, counts, channel }) {
+  const available = livecodes.filter((item) => isLivecodeAssignable(item, counts));
+  const exact = available.filter((item) => channel && item.channels.includes(channel));
+  const fallback = available.filter((item) => item.channels.length === 1 && item.channels[0] === "*");
+  return sortAssignableLivecodes(exact.length ? exact : fallback, counts)[0] || null;
+}
+
+function sortAssignableLivecodes(livecodes, counts) {
+  return livecodes.slice().sort((a, b) => (
+    Number(a.priority) - Number(b.priority)
+    || (counts.get(a.code_key) || 0) - (counts.get(b.code_key) || 0)
+    || a.code_key.localeCompare(b.code_key)
+  ));
+}
+
+function isLivecodeAssignable(livecode, counts) {
+  if (livecode.status !== "active") return false;
+  if (livecode.manual_full) return false;
+  const limit = Number(livecode.capacity_limit || 0);
+  if (limit > 0 && (counts.get(livecode.code_key) || 0) >= limit) return false;
+  return true;
+}
+
+function countAssignmentsByCode(assignments) {
+  const counts = new Map();
+  for (const item of assignments || []) {
+    const codeKey = item?.code_key;
+    if (!codeKey) continue;
+    counts.set(codeKey, (counts.get(codeKey) || 0) + 1);
+  }
+  return counts;
 }
 
 async function getOrderWithToken(orderId, token) {
@@ -460,6 +636,31 @@ function publicLivecodeSummary(livecode) {
   };
 }
 
+function normalizeLivecodeRecord(record, now = new Date().toISOString()) {
+  const codeKey = cleanText(record?.code_key || DEFAULT_LIVECODE_KEY, 80);
+  const createdAt = record?.created_at || now;
+  return {
+    code_key: codeKey,
+    name: cleanText(record?.name || defaultLivecode.name, 120),
+    contact_type: normalizeContactType(record?.contact_type),
+    wecom_link: cleanText(record?.wecom_link ?? "", 300),
+    qr_image: cleanText(record?.qr_image ?? "", 300),
+    channels: normalizeChannels(record?.channels),
+    capacity_limit: normalizeNonNegativeInteger(record?.capacity_limit, 0),
+    manual_full: Boolean(record?.manual_full ?? false),
+    priority: normalizeInteger(record?.priority, codeKey === DEFAULT_LIVECODE_KEY ? 100 : 50),
+    is_fallback: Boolean(record?.is_fallback ?? codeKey === DEFAULT_LIVECODE_KEY),
+    auto_redirect_after_paid: Boolean(record?.auto_redirect_after_paid ?? false),
+    redirect_delay_ms: normalizeDelayMs(record?.redirect_delay_ms ?? 600),
+    remark: cleanText(record?.remark ?? "", 160),
+    button_text: cleanText(record?.button_text ?? "添加课程助教微信", 80),
+    service_text: cleanText(record?.service_text ?? "客服方式：支付后添加课程助教微信", 160),
+    status: normalizeStatus(record?.status),
+    created_at: createdAt,
+    updated_at: record?.updated_at || createdAt
+  };
+}
+
 function publicOrder(order, { includeToken = false } = {}) {
   return {
     order_id: order.order_id,
@@ -525,6 +726,37 @@ function normalizeDelayMs(value) {
 
 function normalizeEnum(value, fallback, maxLength) {
   return cleanText(value || fallback, maxLength) || fallback;
+}
+
+function normalizeContactType(value) {
+  const text = cleanText(value || "personal_wechat", 32);
+  return ["personal_wechat", "wecom"].includes(text) ? text : "personal_wechat";
+}
+
+function normalizeStatus(value) {
+  const text = cleanText(value || "active", 32);
+  return ["active", "inactive"].includes(text) ? text : "active";
+}
+
+function normalizeChannels(value) {
+  const source = Array.isArray(value) ? value : String(value ?? "").split(",");
+  const channels = source
+    .map((item) => cleanText(item, 80))
+    .filter(Boolean);
+  if (!channels.length || channels.includes("*")) return ["*"];
+  return Array.from(new Set(channels));
+}
+
+function normalizeNonNegativeInteger(value, fallback = 0) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  return Math.max(0, Math.floor(number));
+}
+
+function normalizeInteger(value, fallback = 0) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  return Math.floor(number);
 }
 
 function cleanText(value, maxLength) {

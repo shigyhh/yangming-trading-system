@@ -171,6 +171,47 @@
         background: #fff;
       }
 
+      .pool-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .livecode-table {
+        margin-bottom: 14px;
+      }
+
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 3px 8px;
+        background: rgba(201, 154, 68, 0.13);
+        color: #6a452c;
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .row-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .btn-small {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 6px 8px;
+        background: #fff8e8;
+        color: #684433;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
       .notice {
         min-height: 22px;
         margin: 0 0 12px;
@@ -227,10 +268,10 @@
     <div class="auth-mask" id="loginMask">
       <form class="auth-box" id="loginForm">
         <h2>管理员登录</h2>
-        <p class="hint">请输入后台账号密码。登录 token 仅存入 sessionStorage，关闭标签页后失效。</p>
+        <p class="hint">请输入后台账号密码。登录令牌仅存入浏览器会话存储，关闭标签页后失效。</p>
         <p class="notice" id="loginError"></p>
-        <label>username<input id="usernameInput" name="username" autocomplete="username" placeholder="admin" /></label>
-        <label style="margin-top:12px">password<input id="passwordInput" name="password" type="password" autocomplete="current-password" /></label>
+        <label>用户名<input id="usernameInput" name="username" autocomplete="username" placeholder="admin" /></label>
+        <label style="margin-top:12px">密码<input id="passwordInput" name="password" type="password" autocomplete="current-password" /></label>
         <div class="actions">
           <button class="btn btn-primary" type="submit">登录后台</button>
         </div>
@@ -271,29 +312,55 @@
           <h2>产品与价格</h2>
           <p class="hint">前端展示价格只用于展示，真实支付金额以后端订单为准。价格修改只影响新订单，旧订单金额不会被覆盖。</p>
           <div class="form-grid">
-            <label>product_code<input name="product_code" /></label>
-            <label>status<select name="status"><option value="online">online</option><option value="offline">offline</option></select></label>
-            <label class="wide">product_name<input name="product_name" /></label>
-            <label>display_price_yuan<input name="display_price_yuan" type="number" min="0.01" step="0.01" /></label>
-            <label>amount_cents<input name="amount_cents" type="number" min="1" step="1" /></label>
-            <label>cycle<input name="cycle" /></label>
-            <label>start_time<input name="start_time" /></label>
-            <label>lecturer<input name="lecturer" /></label>
+            <label>产品编码<input name="product_code" readonly /></label>
+            <label>上架状态<select name="status"><option value="online">上架</option><option value="offline">下架</option></select></label>
+            <label class="wide">产品名称<input name="product_name" /></label>
+            <label>展示价格（元）<input name="display_price_yuan" type="number" min="0.01" step="0.01" /></label>
+            <label>实际支付金额（分）<input name="amount_cents" type="number" min="1" step="1" /></label>
+            <label>训练周期<input name="cycle" /></label>
+            <label>开课时间<input name="start_time" /></label>
+            <label>主讲人<input name="lecturer" /></label>
           </div>
           <div class="actions">
             <button class="btn btn-primary" type="submit">保存产品配置</button>
           </div>
         </form>
 
-        <form class="card" id="livecodeForm">
-          <h2>企业微信活码 / 获客助手</h2>
-          <p class="hint">获客助手链接和真实二维码只通过 paid 后的 /api/afterpay/entrance 返回，不放入公开配置。</p>
+        <section class="card" id="livecodeCard">
+          <div class="pool-toolbar">
+            <h2 style="margin:0">活码池管理</h2>
+            <button class="btn btn-ghost" id="newLivecodeButton" type="button">新增活码</button>
+          </div>
+          <p class="hint">获客助手链接和真实二维码只在支付完成后通过后端入口分配，不放入公开配置。历史活码请停用，不做物理删除，避免已分配订单失效。</p>
+          <div class="table-wrap livecode-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>活码编码</th>
+                  <th>活码名称</th>
+                  <th>承接类型</th>
+                  <th>适用渠道</th>
+                  <th>已分配数量 / 容量</th>
+                  <th>状态</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="livecodesBody"></tbody>
+            </table>
+          </div>
+          <form id="livecodeForm">
+            <h2 id="livecodeEditorTitle">编辑活码</h2>
+            <p class="hint">code_key 创建后不可修改。适用渠道用英文逗号分隔，空值或 * 表示全渠道兜底。</p>
           <div class="form-grid">
-            <label>code_key<input name="code_key" /></label>
-            <label>status<select name="status"><option value="active">active</option><option value="inactive">inactive</option></select></label>
-            <label class="wide">name<input name="name" /></label>
-            <label class="wide">wecom_link<input name="wecom_link" placeholder="企业微信获客助手链接" /></label>
-            <label class="wide">qr_image<input name="qr_image" id="qrImageInput" placeholder="/uploads/livecode/xxx.png" /></label>
+            <label>活码编码<input name="code_key" readonly /></label>
+            <label>活码状态<select name="status"><option value="active">启用</option><option value="inactive">停用</option></select></label>
+            <label class="wide">活码名称<input name="name" /></label>
+            <label>承接类型<select name="contact_type"><option value="personal_wechat">个人微信</option><option value="wecom">企业微信</option></select></label>
+            <label>适用渠道<input name="channels" placeholder="douyin,wechat_group" /></label>
+            <label>容量上限<input name="capacity_limit" type="number" min="0" step="1" /></label>
+            <label>分配优先级<input name="priority" type="number" step="1" /></label>
+            <label class="wide">获客助手链接<input name="wecom_link" placeholder="企业微信获客助手链接，可选" /></label>
+            <label class="wide">二维码图片<input name="qr_image" id="qrImageInput" placeholder="/uploads/livecode/xxx.png" /></label>
             <div class="wide upload-row">
               <label>上传二维码<input id="qrUploadInput" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" /></label>
               <button class="btn btn-ghost" id="uploadButton" type="button">上传二维码</button>
@@ -303,18 +370,27 @@
               <span id="uploadStatus">支持 jpg、jpeg、png、webp，单文件不超过 2MB。</span>
             </div>
             <label class="switch-row wide">
-              <input name="auto_redirect_after_paid" type="checkbox" />
-              auto_redirect_after_paid：支付后自动跳转获客助手
+              <input name="manual_full" type="checkbox" />
+              人工标记满员
             </label>
-            <label>redirect_delay_ms<input name="redirect_delay_ms" type="number" min="0" max="10000" step="100" /></label>
-            <label>remark<input name="remark" /></label>
-            <label>button_text<input name="button_text" /></label>
-            <label class="wide">service_text<textarea name="service_text"></textarea></label>
+            <label class="switch-row wide">
+              <input name="is_fallback" type="checkbox" />
+              默认兜底
+            </label>
+            <label class="switch-row wide">
+              <input name="auto_redirect_after_paid" type="checkbox" />
+              支付后自动跳转
+            </label>
+            <label>跳转延迟（毫秒）<input name="redirect_delay_ms" type="number" min="0" max="10000" step="100" /></label>
+            <label>加微备注<input name="remark" /></label>
+            <label>按钮文案<input name="button_text" /></label>
+            <label class="wide">客服说明文案<textarea name="service_text"></textarea></label>
           </div>
           <div class="actions">
-            <button class="btn btn-primary" type="submit">保存 livecode</button>
+            <button class="btn btn-primary" type="submit">保存活码配置</button>
           </div>
-        </form>
+          </form>
+        </section>
       </section>
 
       <section class="grid" style="margin-top:16px">
@@ -324,11 +400,11 @@
             <table>
               <thead>
                 <tr>
-                  <th>order_id</th>
+                  <th>订单号</th>
                   <th>金额</th>
                   <th>状态</th>
                   <th>来源</th>
-                  <th>created_at</th>
+                  <th>创建时间</th>
                 </tr>
               </thead>
               <tbody id="ordersBody"></tbody>
@@ -342,10 +418,10 @@
               <thead>
                 <tr>
                   <th>操作人</th>
-                  <th>action</th>
-                  <th>target</th>
-                  <th>after_json</th>
-                  <th>created_at</th>
+                  <th>操作类型</th>
+                  <th>操作对象</th>
+                  <th>变更后内容</th>
+                  <th>创建时间</th>
                 </tr>
               </thead>
               <tbody id="auditBody"></tbody>
@@ -362,6 +438,9 @@
         user: null,
         product: null,
         livecode: null,
+        livecodes: [],
+        editingLivecodeKey: "",
+        editingNewLivecode: false,
         passwordRequired: false,
       };
 
@@ -381,6 +460,9 @@
       const pageNotice = document.getElementById("pageNotice");
       const productForm = document.getElementById("productForm");
       const livecodeForm = document.getElementById("livecodeForm");
+      const livecodesBody = document.getElementById("livecodesBody");
+      const livecodeEditorTitle = document.getElementById("livecodeEditorTitle");
+      const newLivecodeButton = document.getElementById("newLivecodeButton");
       const uploadButton = document.getElementById("uploadButton");
       const qrUploadInput = document.getElementById("qrUploadInput");
       const qrImageInput = document.getElementById("qrImageInput");
@@ -463,7 +545,8 @@
             element.checked = Boolean(values[element.name]);
             return;
           }
-          element.value = values[element.name] ?? "";
+          const value = values[element.name] ?? "";
+          element.value = Array.isArray(value) ? value.join(",") : value;
         });
       }
 
@@ -484,6 +567,28 @@
         return payload;
       }
 
+      function defaultLivecodeDraft() {
+        const suffix = new Date().toISOString().replace(/\D/g, "").slice(0, 14);
+        return {
+          code_key: `YMTY_LIVECODE_${suffix}`,
+          name: "新活码",
+          contact_type: "personal_wechat",
+          wecom_link: "",
+          qr_image: "",
+          channels: "*",
+          capacity_limit: 0,
+          manual_full: false,
+          priority: 50,
+          is_fallback: false,
+          auto_redirect_after_paid: false,
+          redirect_delay_ms: 600,
+          remark: "知行 + 手机号后4位",
+          button_text: "添加课程助教微信",
+          service_text: "客服方式：支付后添加课程助教微信",
+          status: "active",
+        };
+      }
+
       function renderQrPreview(url) {
         if (!url) {
           qrPreview.hidden = true;
@@ -495,14 +600,56 @@
       }
 
       async function loadAll() {
-        const campaign = await adminFetch("/api/admin/campaign/ymty");
+        const [campaign, pool] = await Promise.all([
+          adminFetch("/api/admin/campaign/ymty"),
+          adminFetch("/api/admin/livecodes"),
+        ]);
         state.product = campaign.product;
-        state.livecode = campaign.livecode;
+        state.livecodes = pool.livecodes || campaign.livecodes || [];
+        state.livecode = state.livecodes.find((item) => item.code_key === state.editingLivecodeKey)
+          || state.livecodes[0]
+          || campaign.livecode;
+        state.editingLivecodeKey = state.livecode?.code_key || "";
+        state.editingNewLivecode = false;
         fillForm(productForm, campaign.product);
-        fillForm(livecodeForm, campaign.livecode);
-        renderQrPreview(campaign.livecode.qr_image);
+        renderLivecodePool();
+        if (state.livecode) {
+          fillLivecodeEditor(state.livecode);
+        }
         showApp();
         await Promise.all([loadOrders(), loadAuditLogs()]);
+      }
+
+      function fillLivecodeEditor(livecode) {
+        fillForm(livecodeForm, livecode);
+        renderQrPreview(livecode.qr_image);
+        livecodeEditorTitle.textContent = state.editingNewLivecode ? "新增活码" : "编辑活码";
+      }
+
+      function renderLivecodePool() {
+        livecodesBody.innerHTML = (state.livecodes || []).map((livecode) => {
+          const capacity = Number(livecode.capacity_limit || 0) > 0 ? Number(livecode.capacity_limit || 0) : "不限";
+          const channels = Array.isArray(livecode.channels) ? livecode.channels.join(",") : String(livecode.channels || "");
+          const fullText = livecode.manual_full ? "恢复分配" : "标记满员";
+          const statusText = livecode.status === "active" ? "启用" : "停用";
+          const typeText = livecode.contact_type === "wecom" ? "企业微信" : "个人微信";
+          return `
+            <tr>
+              <td><code>${escapeHtml(livecode.code_key)}</code></td>
+              <td>${escapeHtml(livecode.name)}</td>
+              <td>${escapeHtml(typeText)}</td>
+              <td>${escapeHtml(channels || "*")}</td>
+              <td>${Number(livecode.assigned_count || 0)} / ${escapeHtml(capacity)}</td>
+              <td><span class="status-pill">${escapeHtml(statusText)}${livecode.manual_full ? " · 满员" : ""}${livecode.is_fallback ? " · 兜底" : ""}</span></td>
+              <td>
+                <div class="row-actions">
+                  <button class="btn-small" type="button" data-edit-livecode="${escapeHtml(livecode.code_key)}">编辑</button>
+                  <button class="btn-small" type="button" data-toggle-full="${escapeHtml(livecode.code_key)}" data-full="${livecode.manual_full ? "false" : "true"}">${fullText}</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join("");
       }
 
       async function loadOrders() {
@@ -552,12 +699,45 @@
       async function saveLivecode(event) {
         event.preventDefault();
         const payload = collectForm(livecodeForm);
-        await adminFetch("/api/admin/livecode", {
+        const codeKey = state.editingLivecodeKey || payload.code_key;
+        const url = state.editingNewLivecode
+          ? "/api/admin/livecodes"
+          : `/api/admin/livecodes/${encodeURIComponent(codeKey)}`;
+        await adminFetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
         setNotice("已保存到服务器");
+        await loadAll();
+      }
+
+      function startNewLivecode() {
+        const draft = defaultLivecodeDraft();
+        state.livecode = draft;
+        state.editingLivecodeKey = draft.code_key;
+        state.editingNewLivecode = true;
+        fillLivecodeEditor(draft);
+        setNotice("正在新增活码，保存后写入服务器");
+      }
+
+      function editLivecode(codeKey) {
+        const livecode = state.livecodes.find((item) => item.code_key === codeKey);
+        if (!livecode) return;
+        state.livecode = livecode;
+        state.editingLivecodeKey = livecode.code_key;
+        state.editingNewLivecode = false;
+        fillLivecodeEditor(livecode);
+        setNotice(`正在编辑：${livecode.name}`);
+      }
+
+      async function toggleLivecodeFull(codeKey, manualFull) {
+        await adminFetch(`/api/admin/livecodes/${encodeURIComponent(codeKey)}/toggle-full`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ manual_full: manualFull }),
+        });
+        setNotice(manualFull ? "已标记满员" : "已恢复分配");
         await loadAll();
       }
 
@@ -679,6 +859,19 @@
       });
       livecodeForm.addEventListener("submit", (event) => {
         saveLivecode(event).catch((error) => setNotice(error.message));
+      });
+      newLivecodeButton.addEventListener("click", startNewLivecode);
+      livecodesBody.addEventListener("click", (event) => {
+        const editButton = event.target.closest("[data-edit-livecode]");
+        if (editButton) {
+          editLivecode(editButton.dataset.editLivecode);
+          return;
+        }
+        const toggleButton = event.target.closest("[data-toggle-full]");
+        if (toggleButton) {
+          toggleLivecodeFull(toggleButton.dataset.toggleFull, toggleButton.dataset.full === "true")
+            .catch((error) => setNotice(error.message));
+        }
       });
       uploadButton.addEventListener("click", () => {
         uploadQrImage().catch((error) => {

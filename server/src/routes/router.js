@@ -20,7 +20,7 @@ import { dispatchTrainingPrescriptionBinding, generateShareCardBinding, getAdmin
 import { getGlobalReflectionToday, listGlobalReflectionChoices, submitGlobalReflectionVote } from "../services/globalReflection.js";
 import { buildHistoricalKlineSlice, downloadHistoricalKline, getHistoricalKlineRules, listHistoricalKlineCatalog, listHistoricalKlineInstruments, revealHistoricalKlineSlice } from "../services/historicalKline.js";
 import { buildTradeReviewOcrDraft } from "../services/tradeReviewOcr.js";
-import { createYmtyOrder, getYmtyAdminCampaign, getYmtyAfterpayEntrance, getYmtyAuditLogs, getYmtyOrderForPayment, getYmtyOrderStatus, getYmtyPublicCampaign, listYmtyCourseUsers, listYmtyOrders, markYmtyMockPaySuccess, markYmtyOrderPaid, updateYmtyCampaign, updateYmtyLivecode } from "../services/ymtyCampaign.js";
+import { createYmtyLivecode, createYmtyOrder, getYmtyAdminCampaign, getYmtyAfterpayEntrance, getYmtyAuditLogs, getYmtyOrderForPayment, getYmtyOrderStatus, getYmtyPublicCampaign, listYmtyCourseUsers, listYmtyLivecodeAssignments, listYmtyLivecodes, listYmtyOrders, markYmtyMockPaySuccess, markYmtyOrderPaid, toggleYmtyLivecodeFull, updateYmtyCampaign, updateYmtyLivecode, updateYmtyLivecodeByKey } from "../services/ymtyCampaign.js";
 import { authenticateYmtyAdmin, changeYmtyAdminPassword, getYmtyAdminMe, loginYmtyAdmin, logoutYmtyAdmin } from "../services/adminAuth.js";
 import { saveYmtyLivecodeUpload } from "../services/ymtyUpload.js";
 import { assertRealPayConfigReady, createH5Order, createJsapiOrder, createWapOrder, isPaymentConfigError, normalizePayChannel, parseAlipayNotify, parseWechatNotify, validateAlipayPayment, validateWechatPayment, verifyAlipayNotify, verifyWechatNotify } from "../services/payments/index.js";
@@ -213,11 +213,22 @@ export async function route(req, res) {
   }
 
   if (req.method === "GET" && pathname === "/api/afterpay/entrance") {
-    const result = await getYmtyAfterpayEntrance({
-      orderId: url.searchParams.get("order_id") || url.searchParams.get("orderId") || "",
-      token: url.searchParams.get("token") || ""
-    });
-    return sendJson(res, 200, { ok: true, ...result });
+    try {
+      const result = await getYmtyAfterpayEntrance({
+        orderId: url.searchParams.get("order_id") || url.searchParams.get("orderId") || "",
+        token: url.searchParams.get("token") || ""
+      });
+      return sendJson(res, 200, { ok: true, ...result });
+    } catch (error) {
+      if (error.code === "NO_AVAILABLE_LIVECODE") {
+        return sendJson(res, error.statusCode || 503, {
+          ok: false,
+          code: error.code,
+          message: error.message
+        });
+      }
+      throw error;
+    }
   }
 
   if (req.method === "POST" && pathname === "/api/mock/pay-success") {
@@ -399,6 +410,55 @@ export async function route(req, res) {
       patch: body,
       ip: getIp(req)
     });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/livecodes") {
+    await assertYmtyAdminAccess(req);
+    const result = await listYmtyLivecodes();
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "POST" && pathname === "/api/admin/livecodes") {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await createYmtyLivecode({
+      adminId: admin.adminId,
+      patch: body,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const livecodeToggleFullMatch = pathname.match(/^\/api\/admin\/livecodes\/([^/]+)\/toggle-full$/);
+  if (req.method === "POST" && livecodeToggleFullMatch) {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await toggleYmtyLivecodeFull({
+      adminId: admin.adminId,
+      codeKey: decodeURIComponent(livecodeToggleFullMatch[1]),
+      manualFull: body.manual_full ?? body.manualFull,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const livecodeUpdateMatch = pathname.match(/^\/api\/admin\/livecodes\/([^/]+)$/);
+  if (req.method === "POST" && livecodeUpdateMatch) {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await updateYmtyLivecodeByKey({
+      adminId: admin.adminId,
+      codeKey: decodeURIComponent(livecodeUpdateMatch[1]),
+      patch: body,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/livecode-assignments") {
+    await assertYmtyAdminAccess(req);
+    const result = await listYmtyLivecodeAssignments();
     return sendJson(res, 200, { ok: true, ...result });
   }
 
