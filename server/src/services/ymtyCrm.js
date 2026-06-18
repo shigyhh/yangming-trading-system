@@ -121,6 +121,24 @@ export async function markYmtyCrmLeadAddedFromWecom({
   return { lead };
 }
 
+export async function markYmtyCrmLeadRefunded({ orderId = "", refundStatus = "refunded" } = {}) {
+  let lead = null;
+  const now = new Date().toISOString();
+  await updateRuntimeRecords(LEAD_FILE, (records) => records.map((record) => {
+    const current = normalizeLead(record);
+    if (current.order_id !== orderId && current.lead_id !== orderId) return current;
+    lead = normalizeLead({
+      ...current,
+      stage: "refunded",
+      refund_status: cleanText(refundStatus, 40) || "refunded",
+      updated_at: now
+    });
+    return lead;
+  }));
+  assertFound(lead, "CRM 线索不存在");
+  return { lead };
+}
+
 export async function listYmtyCrmLeads(query = {}) {
   const records = (await readRuntimeRecords(LEAD_FILE)).map((item) => normalizeLead(item));
   return {

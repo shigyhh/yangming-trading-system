@@ -584,6 +584,44 @@
         </div>
       </section>
 
+      <section class="card" id="refundCard">
+        <div class="pool-toolbar">
+          <div>
+            <h2 style="margin:0">退款申请</h2>
+            <p class="hint">本阶段只做退款申请、审核状态和审计记录，不调用微信或支付宝真实退款接口。退款成功后默认撤销课程权益。</p>
+          </div>
+          <button class="btn btn-ghost" id="refundReloadButton" type="button">刷新退款列表</button>
+        </div>
+        <form id="refundForm">
+          <div class="form-grid">
+            <label class="wide">订单号<input name="order_id" id="refundOrderInput" placeholder="YMTY..." /></label>
+            <label>申请金额（分）<input name="amount_cents" id="refundAmountInput" type="number" min="1" step="1" /></label>
+            <label class="wide">退款原因<textarea name="reason" id="refundReasonInput" placeholder="请记录退款原因"></textarea></label>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary" type="submit">提交退款申请</button>
+          </div>
+        </form>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>退款单号</th>
+                <th>订单号</th>
+                <th>申请金额</th>
+                <th>退款原因</th>
+                <th>审核状态</th>
+                <th>审核人</th>
+                <th>更新时间</th>
+                <th>审计记录</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="refundsBody"></tbody>
+          </table>
+        </div>
+      </section>
+
       <section class="grid">
         <form class="card" id="productForm">
           <h2>产品与价格</h2>
@@ -722,6 +760,7 @@
         wecomEvents: [],
         wecomSyncJobs: [],
         wecomSummary: null,
+        refunds: [],
         selectedCrmLeadId: "",
         selectedCrmDetail: null,
         editingLivecodeKey: "",
@@ -778,6 +817,9 @@
       const wecomEventsBody = document.getElementById("wecomEventsBody");
       const wecomSyncJobsBody = document.getElementById("wecomSyncJobsBody");
       const wecomReloadButton = document.getElementById("wecomReloadButton");
+      const refundForm = document.getElementById("refundForm");
+      const refundsBody = document.getElementById("refundsBody");
+      const refundReloadButton = document.getElementById("refundReloadButton");
       const ordersBody = document.getElementById("ordersBody");
       const auditBody = document.getElementById("auditBody");
 
@@ -928,7 +970,7 @@
           fillLivecodeEditor(state.livecode);
         }
         showApp();
-        await Promise.all([loadAnalytics(), loadOrders(), loadCrmLeads(), loadWecomSync(), loadAuditLogs()]);
+        await Promise.all([loadAnalytics(), loadOrders(), loadCrmLeads(), loadWecomSync(), loadRefunds(), loadAuditLogs()]);
       }
 
       function fillLivecodeEditor(livecode) {
@@ -1267,6 +1309,70 @@
         await loadWecomSync();
       }
 
+      async function loadRefunds() {
+        const data = await adminFetch("/api/admin/refunds");
+        state.refunds = data.refunds || [];
+        renderRefunds();
+      }
+
+      function renderRefunds() {
+        refundsBody.innerHTML = (state.refunds || []).map((refund) => {
+          const reviewer = refund.approved_by || refund.rejected_by || "";
+          return `
+            <tr>
+              <td><code>${escapeHtml(refund.refund_id)}</code></td>
+              <td>${escapeHtml(refund.order_id)}</td>
+              <td>${escapeHtml(formatYuan(refund.amount_cents || 0))}</td>
+              <td>${escapeHtml(refund.reason || "")}</td>
+              <td><span class="status-pill">${escapeHtml(refundStatusText(refund.status))}</span></td>
+              <td>${escapeHtml(reviewer || "待审核")}</td>
+              <td>${escapeHtml(formatDateTime(refund.updated_at))}</td>
+              <td>已写入审计日志</td>
+              <td>
+                <div class="row-actions">
+                  <button class="btn-small" type="button" data-refund-approve="${escapeHtml(refund.refund_id)}">审核通过</button>
+                  <button class="btn-small" type="button" data-refund-reject="${escapeHtml(refund.refund_id)}">驳回</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join("");
+      }
+
+      async function createRefund(event) {
+        event.preventDefault();
+        const payload = collectForm(refundForm);
+        await adminFetch("/api/admin/refunds", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        refundForm.reset();
+        setNotice("已提交退款申请，等待高权限管理员审核");
+        await Promise.all([loadRefunds(), loadAuditLogs()]);
+      }
+
+      async function approveRefund(refundId) {
+        await adminFetch(`/api/admin/refunds/${encodeURIComponent(refundId)}/approve`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+        });
+        setNotice("已审核通过，尚未调用支付平台退款");
+        await Promise.all([loadRefunds(), loadAuditLogs()]);
+      }
+
+      async function rejectRefund(refundId) {
+        const reason = window.prompt("请输入驳回原因") || "";
+        await adminFetch(`/api/admin/refunds/${encodeURIComponent(refundId)}/reject`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reason }),
+        });
+        setNotice("已驳回退款申请");
+        await Promise.all([loadRefunds(), loadAuditLogs()]);
+      }
+
       async function loadAuditLogs() {
         const data = await adminFetch("/api/admin/audit-logs");
         auditBody.innerHTML = (data.audit_logs || []).slice(0, 20).map((item) => `
@@ -1527,6 +1633,17 @@
         })[value] || value || "未知";
       }
 
+      function refundStatusText(value) {
+        return ({
+          requested: "待审核",
+          approved: "已审核通过",
+          rejected: "已驳回",
+          processing: "退款处理中",
+          refunded: "已退款",
+          failed: "退款失败",
+        })[value] || value || "未知";
+      }
+
       loginForm.addEventListener("submit", (event) => {
         login(event).catch((error) => {
           loginError.textContent = error.message;
@@ -1596,6 +1713,23 @@
         const button = event.target.closest("[data-wecom-retry]");
         if (button) {
           retryWecomSync(button.dataset.wecomRetry).catch((error) => setNotice(error.message));
+        }
+      });
+      refundForm.addEventListener("submit", (event) => {
+        createRefund(event).catch((error) => setNotice(error.message));
+      });
+      refundReloadButton.addEventListener("click", () => {
+        loadRefunds().catch((error) => setNotice(error.message));
+      });
+      refundsBody.addEventListener("click", (event) => {
+        const approveButton = event.target.closest("[data-refund-approve]");
+        if (approveButton) {
+          approveRefund(approveButton.dataset.refundApprove).catch((error) => setNotice(error.message));
+          return;
+        }
+        const rejectButton = event.target.closest("[data-refund-reject]");
+        if (rejectButton) {
+          rejectRefund(rejectButton.dataset.refundReject).catch((error) => setNotice(error.message));
         }
       });
       uploadButton.addEventListener("click", () => {

@@ -24,6 +24,7 @@ import { createYmtyLivecode, createYmtyOrder, getYmtyAdminCampaign, getYmtyAfter
 import { getYmtyAnalyticsSummary, recordYmtyFrontendEvent } from "../services/ymtyAnalytics.js";
 import { addYmtyCrmNote, exportYmtyCrmCsv, getYmtyCrmLead, listYmtyCrmLeads, updateYmtyCrmLead, updateYmtyCrmLeadStage } from "../services/ymtyCrm.js";
 import { getYmtyWecomSummary, linkYmtyWecomEventToLead, listYmtyWecomEvents, listYmtyWecomSyncJobs, receiveYmtyWecomCallback, retryYmtyWecomSyncJob, verifyYmtyWecomCallbackUrl } from "../services/wecomCustomer.js";
+import { approveYmtyRefund, createYmtyRefund, getYmtyRefund, listYmtyRefunds, rejectYmtyRefund } from "../services/ymtyRefunds.js";
 import { authenticateYmtyAdmin, changeYmtyAdminPassword, getYmtyAdminMe, loginYmtyAdmin, logoutYmtyAdmin } from "../services/adminAuth.js";
 import { saveYmtyLivecodeUpload } from "../services/ymtyUpload.js";
 import { assertRealPayConfigReady, createH5Order, createJsapiOrder, createWapOrder, isPaymentConfigError, normalizePayChannel, parseAlipayNotify, parseWechatNotify, validateAlipayPayment, validateWechatPayment, verifyAlipayNotify, verifyWechatNotify } from "../services/payments/index.js";
@@ -637,6 +638,56 @@ export async function route(req, res) {
       adminId: admin.adminId,
       ip: getIp(req)
     });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/refunds") {
+    await assertYmtyAdminAccess(req);
+    const result = await listYmtyRefunds(Object.fromEntries(url.searchParams.entries()));
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "POST" && pathname === "/api/admin/refunds") {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await createYmtyRefund({
+      orderId: body.order_id || body.orderId || "",
+      amountCents: body.amount_cents ?? body.amountCents,
+      reason: body.reason || "",
+      admin,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const refundApproveMatch = pathname.match(/^\/api\/admin\/refunds\/([^/]+)\/approve$/);
+  if (req.method === "POST" && refundApproveMatch) {
+    const admin = await assertYmtyAdminAccess(req);
+    const result = await approveYmtyRefund({
+      refundId: decodeURIComponent(refundApproveMatch[1]),
+      admin,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const refundRejectMatch = pathname.match(/^\/api\/admin\/refunds\/([^/]+)\/reject$/);
+  if (req.method === "POST" && refundRejectMatch) {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await rejectYmtyRefund({
+      refundId: decodeURIComponent(refundRejectMatch[1]),
+      reason: body.reason || body.note || "",
+      admin,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const refundDetailMatch = pathname.match(/^\/api\/admin\/refunds\/([^/]+)$/);
+  if (req.method === "GET" && refundDetailMatch) {
+    await assertYmtyAdminAccess(req);
+    const result = await getYmtyRefund(decodeURIComponent(refundDetailMatch[1]));
     return sendJson(res, 200, { ok: true, ...result });
   }
 
