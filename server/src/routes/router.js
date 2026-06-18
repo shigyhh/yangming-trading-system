@@ -154,7 +154,9 @@ export async function route(req, res) {
       if (!openid) {
         const oauthReturnUrl = body.oauth_return_url || body.oauthReturnUrl || req.headers.referer || "/hd/ymty/index.html";
         return sendJson(res, 428, {
-          code: 428,
+          ok: false,
+          provider: "wechat",
+          code: "OAUTH_REQUIRED",
           message: "微信 JSAPI 支付需要 openid，请先完成微信网页授权",
           oauth_url: buildWechatOAuthStartUrl(req, oauthReturnUrl)
         });
@@ -178,11 +180,24 @@ export async function route(req, res) {
         returnUrl: redirectUrl,
         openid: body.openid || body.openId || getCookie(req, "ymty_wechat_openid")
       };
-      const payment = payChannel === "wechat_jsapi"
-        ? await createJsapiOrder(created.order, context)
-        : payChannel === "wechat_h5"
-          ? await createH5Order(created.order, context)
-          : await createWapOrder(created.order, context);
+      let payment;
+      try {
+        payment = payChannel === "wechat_jsapi"
+          ? await createJsapiOrder(created.order, context)
+          : payChannel === "wechat_h5"
+            ? await createH5Order(created.order, context)
+            : await createWapOrder(created.order, context);
+      } catch (error) {
+        if (error.provider) {
+          return sendJson(res, error.statusCode || 502, {
+            ok: false,
+            provider: error.provider,
+            code: error.providerCode || "PAYMENT_PROVIDER_ERROR",
+            message: error.providerMessage || error.message
+          });
+        }
+        throw error;
+      }
       return sendJson(res, 200, { ok: true, order: created.order, payment });
     }
 

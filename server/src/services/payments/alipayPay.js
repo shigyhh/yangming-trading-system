@@ -1,32 +1,46 @@
-import crypto from "node:crypto";
 import fs from "node:fs/promises";
+import { AlipaySdk } from "alipay-sdk";
 import { assertAlipayConfig } from "../paymentConfig.js";
+import {
+  appIdLast4,
+  logPaymentDebug,
+  privateKeyPublicFingerprint,
+  sha256Hex
+} from "./debug.js";
 
 export async function createWapOrder(order, clientContext = {}) {
   assertAlipayConfig();
-  const params = {
-    app_id: process.env.ALIPAY_APP_ID,
-    method: "alipay.trade.wap.pay",
-    format: "JSON",
-    charset: "utf-8",
-    sign_type: "RSA2",
-    timestamp: formatAlipayTimestamp(new Date()),
-    version: "1.0",
-    notify_url: process.env.ALIPAY_NOTIFY_URL,
-    return_url: clientContext.returnUrl || process.env.ALIPAY_RETURN_URL,
-    biz_content: JSON.stringify({
-      out_trade_no: order.order_id,
-      total_amount: centsToYuan(order.amount_cents),
-      subject: order.product_name,
-      product_code: "QUICK_WAP_WAY"
-    })
+  const sdk = await createAlipaySdk();
+  const returnUrl = clientContext.returnUrl || process.env.ALIPAY_RETURN_URL;
+  const bizContent = {
+    outTradeNo: order.order_id,
+    totalAmount: centsToYuan(order.amount_cents),
+    subject: order.product_name,
+    productCode: "QUICK_WAP_WAY"
   };
-  const sign = await signAlipayParams(params);
-  const signedParams = { ...params, sign };
+  const formHtml = sdk.pageExec("alipay.trade.wap.pay", "POST", {
+    notifyUrl: process.env.ALIPAY_NOTIFY_URL,
+    returnUrl,
+    bizContent
+  });
+  logPaymentDebug("alipay", {
+    app_id_last4: appIdLast4(process.env.ALIPAY_APP_ID),
+    gateway_host: new URL(process.env.ALIPAY_GATEWAY_URL).host,
+    method: "alipay.trade.wap.pay",
+    charset: getAlipayCharset(),
+    sign_type: getAlipaySignType(),
+    out_trade_no: order.order_id,
+    canonical_sha256: sha256Hex(JSON.stringify({
+      method: "alipay.trade.wap.pay",
+      notifyUrl: process.env.ALIPAY_NOTIFY_URL,
+      returnUrl,
+      bizContent
+    })),
+    app_public_key_sha256: privateKeyPublicFingerprint(await readAlipayPrivateKey())
+  });
   return {
     channel: "alipay_wap",
-    form_html: buildAlipayForm(process.env.ALIPAY_GATEWAY_URL, signedParams),
-    pay_url: `${process.env.ALIPAY_GATEWAY_URL}?${new URLSearchParams(signedParams).toString()}`
+    form_html: formHtml
   };
 }
 
@@ -38,10 +52,8 @@ export async function verifyAlipayNotify(params = {}) {
     error.statusCode = 401;
     throw error;
   }
-  const verifier = crypto.createVerify("RSA-SHA256");
-  verifier.update(canonicalAlipayString(params));
-  verifier.end();
-  const ok = verifier.verify(await readAlipayPublicKey(), signature, "base64");
+  const sdk = await createAlipaySdk();
+  const ok = sdk.checkNotifySign(params, true);
   if (!ok) {
     const error = new Error("支付宝通知验签失败");
     error.statusCode = 401;
@@ -64,31 +76,12 @@ export async function parseAlipayNotify(params = {}) {
 
 export async function queryAlipayOrder(order) {
   assertAlipayConfig();
-  const params = {
-    app_id: process.env.ALIPAY_APP_ID,
-    method: "alipay.trade.query",
-    format: "JSON",
-    charset: "utf-8",
-    sign_type: "RSA2",
-    timestamp: formatAlipayTimestamp(new Date()),
-    version: "1.0",
-    biz_content: JSON.stringify({ out_trade_no: order.order_id })
-  };
-  const signedParams = { ...params, sign: await signAlipayParams(params) };
-  const response = await fetch(process.env.ALIPAY_GATEWAY_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded;charset=utf-8"
-    },
-    body: new URLSearchParams(signedParams).toString()
+  const sdk = await createAlipaySdk();
+  return sdk.exec("alipay.trade.query", {
+    bizContent: {
+      outTradeNo: order.order_id
+    }
   });
-  const data = await response.json();
-  if (!response.ok) {
-    const error = new Error("支付宝订单查询失败");
-    error.statusCode = response.status || 502;
-    throw error;
-  }
-  return data;
 }
 
 export function validateAlipayPayment(payload, order) {
@@ -99,13 +92,6 @@ export function validateAlipayPayment(payload, order) {
   return true;
 }
 
-async function signAlipayParams(params) {
-  const signer = crypto.createSign("RSA-SHA256");
-  signer.update(canonicalAlipayString(params));
-  signer.end();
-  return signer.sign(await readAlipayPrivateKey(), "base64");
-}
-
 async function readAlipayPrivateKey() {
   return fs.readFile(process.env.ALIPAY_PRIVATE_KEY_PATH, "utf8");
 }
@@ -114,36 +100,29 @@ async function readAlipayPublicKey() {
   return fs.readFile(process.env.ALIPAY_PUBLIC_KEY_PATH, "utf8");
 }
 
-function canonicalAlipayString(params) {
-  return Object.keys(params)
-    .filter((key) => key !== "sign" && key !== "sign_type" && params[key] !== undefined && params[key] !== "")
-    .sort()
-    .map((key) => `${key}=${params[key]}`)
-    .join("&");
-}
-
-function buildAlipayForm(gatewayUrl, params) {
-  const inputs = Object.entries(params)
-    .map(([key, value]) => `<input type="hidden" name="${escapeHtml(key)}" value="${escapeHtml(value)}" />`)
-    .join("");
-  return `<!doctype html><html><body><form id="alipaySubmit" method="post" action="${escapeHtml(gatewayUrl)}">${inputs}</form><script>document.getElementById("alipaySubmit").submit();</script></body></html>`;
+async function createAlipaySdk() {
+  return new AlipaySdk({
+    appId: process.env.ALIPAY_APP_ID,
+    privateKey: await readAlipayPrivateKey(),
+    alipayPublicKey: await readAlipayPublicKey(),
+    gateway: process.env.ALIPAY_GATEWAY_URL,
+    signType: getAlipaySignType(),
+    charset: getAlipayCharset(),
+    version: "1.0",
+    keyType: "PKCS8"
+  });
 }
 
 function centsToYuan(cents) {
   return (Number(cents) / 100).toFixed(2);
 }
 
-function formatAlipayTimestamp(date) {
-  const pad = (value) => String(value).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+function getAlipaySignType() {
+  return String(process.env.ALIPAY_SIGN_TYPE || "RSA2").trim() || "RSA2";
 }
 
-function escapeHtml(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
+function getAlipayCharset() {
+  return String(process.env.ALIPAY_CHARSET || "utf-8").trim() || "utf-8";
 }
 
 function paymentError(message, statusCode) {
