@@ -771,6 +771,10 @@
           const data = json.data || json.payment || json;
 
           if (!res.ok || json.ok === false || (json.code && json.code !== 0)) {
+            if (json.provider === "wechat" && json.code === "OAUTH_REQUIRED" && json.oauth_url) {
+              location.href = json.oauth_url;
+              return;
+            }
             throw new Error(json.message || json.error || "创建订单失败");
           }
 

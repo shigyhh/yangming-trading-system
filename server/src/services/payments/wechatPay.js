@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import { assertWechatConfig, getWechatVerifyMode } from "../paymentConfig.js";
+import { createPaymentProviderError, logPaymentDebug } from "./debug.js";
 
 export class NotImplementedError extends Error {
   constructor(message) {
@@ -14,8 +15,12 @@ export async function createJsapiOrder(order, userContext = {}) {
   assertWechatConfig();
   const openid = String(userContext.openid || "").trim();
   if (!openid) {
-    const error = new Error("微信 JSAPI 支付需要 openid");
-    error.statusCode = 428;
+    const error = createPaymentProviderError({
+      provider: "wechat",
+      code: "OAUTH_REQUIRED",
+      message: "微信 JSAPI 支付需要 openid",
+      statusCode: 428
+    });
     throw error;
   }
   const result = await requestWechatApi({
@@ -191,11 +196,28 @@ async function requestWechatApi({ method, path, body = null }) {
     ...(bodyText ? { body: bodyText } : {})
   });
   const text = await response.text();
-  const data = text ? JSON.parse(text) : {};
+  const data = parseWechatResponseText(text);
   if (!response.ok) {
-    const error = new Error(data.message || "微信支付网关请求失败");
-    error.statusCode = response.status || 502;
-    throw error;
+    const providerCode = data.code || "WECHAT_API_ERROR";
+    const providerMessage = data.message || "微信支付网关请求失败";
+    logPaymentDebug("wechat", {
+      http_status: response.status,
+      code: providerCode,
+      message: providerMessage,
+      method,
+      path,
+      out_trade_no: body?.out_trade_no || ""
+    });
+    throw createPaymentProviderError({
+      provider: "wechat",
+      code: providerCode,
+      message: providerMessage,
+      statusCode: response.status || 502,
+      debug: {
+        http_status: response.status,
+        code: providerCode
+      }
+    });
   }
   return data;
 }
@@ -219,19 +241,37 @@ async function readWechatNotifyPublicKey(serial) {
 
 function parseSceneInfo(clientContext = {}) {
   const raw = String(process.env.WECHAT_H5_SCENE_INFO || "").trim();
+  const fallbackIp = clientContext.ip || "127.0.0.1";
   if (raw) {
     try {
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      return {
+        ...parsed,
+        payer_client_ip: fallbackIp,
+        h5_info: {
+          type: "Wap",
+          ...(parsed.h5_info && typeof parsed.h5_info === "object" ? parsed.h5_info : {})
+        }
+      };
     } catch {
       // 使用保守兜底，避免配置格式错误时泄露原始配置内容。
     }
   }
   return {
-    payer_client_ip: clientContext.ip || "127.0.0.1",
+    payer_client_ip: fallbackIp,
     h5_info: {
       type: "Wap"
     }
   };
+}
+
+function parseWechatResponseText(text) {
+  if (!text) return {};
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { message: "微信支付网关返回非 JSON 响应" };
+  }
 }
 
 function getHeader(headers, key) {

@@ -172,7 +172,9 @@ test("wechat jsapi reports oauth requirement when config is ready but openid is 
       success_url: "https://xxjyxt.com/hd/ymty/success.html"
     });
     assert.equal(response.statusCode, 428);
-    assert.equal(response.body.code, 428);
+    assert.equal(response.body.ok, false);
+    assert.equal(response.body.provider, "wechat");
+    assert.equal(response.body.code, "OAUTH_REQUIRED");
     assert.match(response.body.message, /openid/);
     assert.match(response.body.oauth_url, /^\/api\/wechat\/oauth\/start/);
     assert.match(response.body.oauth_url, /return_url=%2Fhd%2Fymty%2Findex\.html/);
