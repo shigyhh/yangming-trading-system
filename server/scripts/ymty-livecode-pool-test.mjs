@@ -28,6 +28,8 @@ const {
   resetYmtyForTests,
   seedYmtyDefaults,
   toggleYmtyLivecodeFull,
+  toggleYmtyLivecodeStatus,
+  switchYmtyAfterpayLivecode,
   updateYmtyLivecodeByKey
 } = await import("../src/services/ymtyCampaign.js");
 
@@ -184,6 +186,8 @@ test("ymty livecode pool supports personal wechat, wecom, public privacy, legacy
     assert.equal(legacy.manual_full, false);
     assert.equal(legacy.priority, 100);
     assert.equal(legacy.is_fallback, true);
+    assert.equal(legacy.status, "active");
+    assert.ok(legacy.wecom_state);
 
     await createYmtyLivecode({
       adminId: "pool-test-admin",
@@ -226,6 +230,9 @@ test("ymty livecode pool supports personal wechat, wecom, public privacy, legacy
     const publicCampaign = await getYmtyPublicCampaign();
     assert.equal(JSON.stringify(publicCampaign).includes("wecom_link"), false);
     assert.equal(JSON.stringify(publicCampaign).includes("qr_image"), false);
+    assert.equal(JSON.stringify(publicCampaign).includes("wecom_state"), false);
+    assert.equal(JSON.stringify(publicCampaign).includes("capacity_limit"), false);
+    assert.equal(JSON.stringify(publicCampaign).includes("assigned_count"), false);
     assert.equal(JSON.stringify(publicCampaign).includes("livecodes"), false);
     assert.equal(JSON.stringify(publicCampaign).includes("assignments"), false);
 
@@ -239,6 +246,7 @@ test("ymty livecode pool supports personal wechat, wecom, public privacy, legacy
     assert.equal(adminRead.statusCode, 200);
     assert.ok(Array.isArray(adminRead.body.livecodes));
     assert.ok(adminRead.body.livecodes.some((item) => item.assigned_count >= 0));
+    assert.equal(adminRead.body.livecodes.some((item) => item.wecom_state), true);
 
     const adminAssignments = await request({ method: "GET", url: "/api/admin/livecode-assignments", headers: authHeaders(token) });
     assert.equal(adminAssignments.statusCode, 200);
@@ -256,6 +264,217 @@ test("ymty livecode pool supports personal wechat, wecom, public privacy, legacy
     const audit = await getYmtyAuditLogs();
     assert.ok(audit.audit_logs.some((item) => item.action === "create_livecode" && item.target_id === "YMTY_PERSONAL"));
     assert.ok(audit.audit_logs.some((item) => item.action === "update_livecode" && item.target_id === "YMTY_PERSONAL"));
+
+    const legacyUpdate = await jsonRequest("/api/admin/livecode", {
+      name: "默认活码旧接口更新",
+      qr_image: "/uploads/livecode/default-updated.png"
+    }, authHeaders(token));
+    assert.equal(legacyUpdate.statusCode, 200);
+    assert.equal(legacyUpdate.body.livecode.code_key, "YMXX_YMTY_DEFAULT");
+    assert.equal(legacyUpdate.body.livecode.name, "默认活码旧接口更新");
+  } finally {
+    await resetYmtyForTests();
+    await seedYmtyDefaults();
+    restoreEnv();
+  }
+});
+
+test("ymty livecode pool rotates fallback codes fairly and stores assignment schema", async () => {
+  await resetYmtyForTests();
+  await seedYmtyDefaults();
+
+  try {
+    await updateYmtyLivecodeByKey({
+      adminId: "pool-test-admin",
+      codeKey: "YMXX_YMTY_DEFAULT",
+      patch: { manual_full: true }
+    });
+    for (const code of ["A", "B", "C"]) {
+      await createYmtyLivecode({
+        adminId: "pool-test-admin",
+        patch: {
+          code_key: `YMTY_ROTATE_${code}`,
+          name: `轮询活码${code}`,
+          contact_type: "personal_wechat",
+          qr_image: `/uploads/livecode/${code}.png`,
+          channels: ["*"],
+          capacity_limit: 0,
+          priority: 10,
+          status: "active"
+        }
+      });
+    }
+
+    const assigned = [];
+    for (let index = 0; index < 4; index += 1) {
+      assigned.push((await paidEntrance("unknown")).livecode.code_key);
+    }
+    assert.deepEqual(assigned, ["YMTY_ROTATE_A", "YMTY_ROTATE_B", "YMTY_ROTATE_C", "YMTY_ROTATE_A"]);
+
+    const assignments = (await listYmtyLivecodeAssignments()).assignments;
+    assert.equal(assignments.filter((item) => item.status === "active").length, 4);
+    assert.ok(assignments.every((item) => item.assignment_id));
+    assert.ok(assignments.every((item) => item.campaign !== undefined && item.creative !== undefined));
+    assert.ok(assignments.every((item) => Number.isInteger(item.switch_count)));
+    const pool = await listYmtyLivecodes();
+    const rotateA = pool.livecodes.find((item) => item.code_key === "YMTY_ROTATE_A");
+    assert.equal(rotateA.assigned_count, 2);
+    assert.ok(rotateA.last_assigned_at);
+  } finally {
+    await resetYmtyForTests();
+    await seedYmtyDefaults();
+  }
+});
+
+test("ymty livecode pool supports paid user switch with limit and no alternative error", async () => {
+  await resetYmtyForTests();
+  await seedYmtyDefaults();
+
+  try {
+    await updateYmtyLivecodeByKey({
+      adminId: "pool-test-admin",
+      codeKey: "YMXX_YMTY_DEFAULT",
+      patch: { manual_full: true }
+    });
+    for (const code of ["A", "B", "C", "D"]) {
+      await createYmtyLivecode({
+        adminId: "pool-test-admin",
+        patch: {
+          code_key: `YMTY_SWITCH_${code}`,
+          name: `换码活码${code}`,
+          contact_type: "personal_wechat",
+          qr_image: `/uploads/livecode/switch-${code}.png`,
+          channels: ["switch"],
+          priority: 10,
+          status: "active"
+        }
+      });
+    }
+
+    const unpaid = await createYmtyOrder({ productCode: "YMXX_JY_TY", payChannel: "mock", channel: "switch" });
+    await assert.rejects(
+      () => switchYmtyAfterpayLivecode({ orderId: unpaid.order.order_id, token: unpaid.order.order_token, reason: "user_reported_failure" }),
+      /支付完成后才可查看课程助教入口/
+    );
+
+    const order = await paidOrder("switch");
+    const first = await getYmtyAfterpayEntrance({ orderId: order.order_id, token: order.order_token });
+    assert.equal(first.livecode.code_key, "YMTY_SWITCH_A");
+
+    const second = await switchYmtyAfterpayLivecode({ orderId: order.order_id, token: order.order_token, reason: "user_reported_failure" });
+    const third = await switchYmtyAfterpayLivecode({ orderId: order.order_id, token: order.order_token, reason: "user_reported_failure" });
+    const fourth = await switchYmtyAfterpayLivecode({ orderId: order.order_id, token: order.order_token, reason: "user_reported_failure" });
+    assert.deepEqual(
+      [second.livecode.code_key, third.livecode.code_key, fourth.livecode.code_key],
+      ["YMTY_SWITCH_B", "YMTY_SWITCH_C", "YMTY_SWITCH_D"]
+    );
+
+    await assert.rejects(
+      () => switchYmtyAfterpayLivecode({ orderId: order.order_id, token: order.order_token, reason: "user_reported_failure" }),
+      (error) => error.code === "SWITCH_LIMIT_EXCEEDED"
+    );
+
+    const fixed = await getYmtyAfterpayEntrance({ orderId: order.order_id, token: order.order_token });
+    assert.equal(fixed.livecode.code_key, "YMTY_SWITCH_D");
+
+    const assignments = (await listYmtyLivecodeAssignments()).assignments.filter((item) => item.order_id === order.order_id);
+    assert.equal(assignments.filter((item) => item.status === "active").length, 1);
+    assert.equal(assignments.filter((item) => item.status === "superseded").length, 3);
+    assert.equal(assignments.find((item) => item.status === "active").switch_count, 3);
+    assert.ok(assignments.some((item) => item.switch_reason === "user_reported_failure"));
+
+    const audit = await getYmtyAuditLogs();
+    assert.ok(audit.audit_logs.some((item) => item.action === "qr_switch_request" && item.target_id === order.order_id));
+  } finally {
+    await resetYmtyForTests();
+    await seedYmtyDefaults();
+  }
+});
+
+test("ymty livecode pool handles inactive fixed code, empty code exclusion, no alternative and toggle status route", async () => {
+  await resetYmtyForTests();
+  await seedYmtyDefaults();
+  setupAdminEnv();
+
+  try {
+    await updateYmtyLivecodeByKey({
+      adminId: "pool-test-admin",
+      codeKey: "YMXX_YMTY_DEFAULT",
+      patch: { manual_full: true }
+    });
+    await createYmtyLivecode({
+      adminId: "pool-test-admin",
+      patch: {
+        code_key: "YMTY_EMPTY",
+        name: "空配置活码",
+        channels: ["auto"],
+        priority: 1,
+        status: "active",
+        qr_image: "",
+        wecom_link: ""
+      }
+    });
+    await createYmtyLivecode({
+      adminId: "pool-test-admin",
+      patch: {
+        code_key: "YMTY_AUTO_A",
+        name: "自动活码A",
+        qr_image: "/uploads/livecode/auto-a.png",
+        channels: ["auto"],
+        priority: 10,
+        status: "active"
+      }
+    });
+    await createYmtyLivecode({
+      adminId: "pool-test-admin",
+      patch: {
+        code_key: "YMTY_AUTO_B",
+        name: "自动活码B",
+        qr_image: "/uploads/livecode/auto-b.png",
+        channels: ["auto"],
+        priority: 10,
+        status: "active"
+      }
+    });
+
+    const autoOrder = await paidOrder("auto");
+    const first = await getYmtyAfterpayEntrance({
+      orderId: autoOrder.order_id,
+      token: autoOrder.order_token
+    });
+    assert.equal(first.livecode.code_key, "YMTY_AUTO_A");
+    await toggleYmtyLivecodeStatus({
+      adminId: "pool-test-admin",
+      codeKey: "YMTY_AUTO_A",
+      status: "inactive"
+    });
+    const switched = await getYmtyAfterpayEntrance({
+      orderId: autoOrder.order_id,
+      token: autoOrder.order_token
+    });
+    assert.equal(switched.livecode.code_key, "YMTY_AUTO_B");
+
+    await toggleYmtyLivecodeStatus({
+      adminId: "pool-test-admin",
+      codeKey: "YMTY_AUTO_B",
+      status: "inactive"
+    });
+    const noAlternative = await paidOrder("auto");
+    await assert.rejects(
+      () => switchYmtyAfterpayLivecode({
+        orderId: noAlternative.order_id,
+        token: noAlternative.order_token,
+        reason: "user_reported_failure"
+      }),
+      (error) => error.code === "NO_ALTERNATIVE_LIVECODE"
+    );
+
+    const token = await loginAndChangePassword();
+    const routeToggle = await jsonRequest("/api/admin/livecodes/YMTY_AUTO_B/toggle-status", {
+      status: "active"
+    }, authHeaders(token));
+    assert.equal(routeToggle.statusCode, 200);
+    assert.equal(routeToggle.body.livecode.status, "active");
   } finally {
     await resetYmtyForTests();
     await seedYmtyDefaults();

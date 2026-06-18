@@ -2,6 +2,14 @@ import crypto from "node:crypto";
 import { config } from "../config.js";
 import { readRuntimeRecords, replaceRuntimeRecords, updateRuntimeRecords } from "../lib/store.js";
 import { recordYmtyTrustedEvent, resetYmtyAnalyticsForTests } from "./ymtyAnalytics.js";
+import {
+  canSwitchLivecode,
+  normalizeAssignmentRecord,
+  resolveLivecodeAssignment,
+  stableWecomState,
+  switchLivecodeAssignment,
+  withLivecodeStats
+} from "./ymtyLivecodePool.js";
 
 const PRODUCT_FILE = "ymty-products.json";
 const LIVECODE_FILE = "ymty-livecodes.json";
@@ -38,6 +46,7 @@ const defaultLivecode = {
   manual_full: false,
   priority: 100,
   is_fallback: true,
+  wecom_state: stableWecomState(DEFAULT_LIVECODE_KEY),
   auto_redirect_after_paid: false,
   redirect_delay_ms: 600,
   remark: "知行 + 手机号后4位",
@@ -182,7 +191,7 @@ export async function getYmtyAfterpayEntrance({ orderId = "", token = "" } = {})
     throw error;
   }
 
-  const livecode = await assignLivecodeForPaidOrder(order);
+  const { livecode, canSwitch } = await assignLivecodeForPaidOrder(order);
   return {
     order: publicOrder(order),
     livecode: {
@@ -196,7 +205,43 @@ export async function getYmtyAfterpayEntrance({ orderId = "", token = "" } = {})
       button_text: livecode.button_text,
       service_text: livecode.service_text
     },
+    can_switch: canSwitch,
     compliance: "课程助教仅做交易心理觉察、训练与复盘承接，不荐股、不喊单、不承诺收益、不代客理财、不组织实盘跟单。"
+  };
+}
+
+export async function switchYmtyAfterpayLivecode({ orderId = "", token = "", reason = "user_reported_failure", ip = "" } = {}) {
+  const order = await getOrderWithToken(orderId, token);
+  if (order.pay_status !== "paid") {
+    const error = new Error("支付完成后才可查看课程助教入口");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const { livecode, canSwitch } = await switchAssignedLivecodeForPaidOrder(order, reason);
+  await appendAuditLog({
+    adminId: "system",
+    action: "qr_switch_request",
+    targetType: "orders",
+    targetId: order.order_id,
+    before: { reason: cleanText(reason, 80) },
+    after: { code_key: livecode.code_key, can_switch: canSwitch },
+    ip
+  });
+  return {
+    order: publicOrder(order),
+    livecode: {
+      code_key: livecode.code_key,
+      name: livecode.name,
+      wecom_link: livecode.wecom_link,
+      qr_image: livecode.qr_image,
+      auto_redirect_after_paid: Boolean(livecode.auto_redirect_after_paid),
+      redirect_delay_ms: Number(livecode.redirect_delay_ms || 0),
+      remark: livecode.remark,
+      button_text: livecode.button_text,
+      service_text: livecode.service_text
+    },
+    can_switch: canSwitch
   };
 }
 
@@ -419,20 +464,25 @@ export async function toggleYmtyLivecodeFull({ adminId = "dev-admin", codeKey = 
   });
 }
 
+export async function toggleYmtyLivecodeStatus({ adminId = "dev-admin", codeKey = "", status = "active", ip = "" } = {}) {
+  return updateYmtyLivecodeByKey({
+    adminId,
+    codeKey,
+    patch: {
+      status
+    },
+    ip
+  });
+}
+
 export async function listYmtyLivecodes() {
   await seedYmtyDefaults();
   const [livecodes, assignments] = await Promise.all([
     readRuntimeRecords(LIVECODE_FILE),
     readRuntimeRecords(LIVECODE_ASSIGNMENT_FILE)
   ]);
-  const counts = countAssignmentsByCode(assignments);
   return {
-    livecodes: livecodes
-      .map((item) => normalizeLivecodeRecord(item))
-      .map((item) => ({
-        ...item,
-        assigned_count: counts.get(item.code_key) || 0
-      }))
+    livecodes: withLivecodeStats(livecodes.map((item) => normalizeLivecodeRecord(item)), assignments)
       .sort((a, b) => Number(a.priority) - Number(b.priority) || a.code_key.localeCompare(b.code_key))
   };
 }
@@ -440,7 +490,9 @@ export async function listYmtyLivecodes() {
 export async function listYmtyLivecodeAssignments() {
   const assignments = await readRuntimeRecords(LIVECODE_ASSIGNMENT_FILE);
   return {
-    assignments: assignments.slice().sort((a, b) => new Date(b.assigned_at || 0).getTime() - new Date(a.assigned_at || 0).getTime())
+    assignments: assignments
+      .map((item) => normalizeAssignmentRecord(item))
+      .sort((a, b) => new Date(b.assigned_at || 0).getTime() - new Date(a.assigned_at || 0).getTime())
   };
 }
 
@@ -498,37 +550,20 @@ async function getActiveLivecode() {
 }
 
 async function assignLivecodeForPaidOrder(order) {
-  const livecodes = (await readRuntimeRecords(LIVECODE_FILE)).map((item) => normalizeLivecodeRecord(item));
+  const livecodes = await readNormalizedLivecodes();
   const livecodeMap = new Map(livecodes.map((item) => [item.code_key, item]));
   let selectedCodeKey = "";
+  let assignmentRecords = [];
 
   await updateRuntimeRecords(LIVECODE_ASSIGNMENT_FILE, (records) => {
-    const existing = records.find((item) => item?.order_id === order.order_id);
-    if (existing) {
-      selectedCodeKey = existing.code_key;
-      return records;
-    }
-
-    const counts = countAssignmentsByCode(records);
-    const selected = selectLivecodeForOrder({
+    const result = resolveLivecodeAssignment({
+      records,
       livecodes,
-      counts,
-      channel: order.channel || ""
+      order
     });
-    if (!selected) {
-      const error = new Error("课程助教入口正在分配中，请稍后重试");
-      error.statusCode = 503;
-      error.code = "NO_AVAILABLE_LIVECODE";
-      throw error;
-    }
-
-    selectedCodeKey = selected.code_key;
-    return records.concat({
-      order_id: order.order_id,
-      code_key: selected.code_key,
-      channel: cleanText(order.channel || "", 80),
-      assigned_at: new Date().toISOString()
-    });
+    selectedCodeKey = result.codeKey;
+    assignmentRecords = result.records;
+    return result.records;
   });
 
   const livecode = livecodeMap.get(selectedCodeKey);
@@ -538,40 +573,55 @@ async function assignLivecodeForPaidOrder(order) {
     error.code = "NO_AVAILABLE_LIVECODE";
     throw error;
   }
-  return livecode;
+  return {
+    livecode,
+    canSwitch: canSwitchLivecode({
+      records: assignmentRecords,
+      livecodes,
+      order,
+      currentCodeKey: selectedCodeKey
+    })
+  };
 }
 
-function selectLivecodeForOrder({ livecodes, counts, channel }) {
-  const available = livecodes.filter((item) => isLivecodeAssignable(item, counts));
-  const exact = available.filter((item) => channel && item.channels.includes(channel));
-  const fallback = available.filter((item) => item.channels.length === 1 && item.channels[0] === "*");
-  return sortAssignableLivecodes(exact.length ? exact : fallback, counts)[0] || null;
-}
+async function switchAssignedLivecodeForPaidOrder(order, reason) {
+  const livecodes = await readNormalizedLivecodes();
+  const livecodeMap = new Map(livecodes.map((item) => [item.code_key, item]));
+  let selectedCodeKey = "";
+  let assignmentRecords = [];
 
-function sortAssignableLivecodes(livecodes, counts) {
-  return livecodes.slice().sort((a, b) => (
-    Number(a.priority) - Number(b.priority)
-    || (counts.get(a.code_key) || 0) - (counts.get(b.code_key) || 0)
-    || a.code_key.localeCompare(b.code_key)
-  ));
-}
+  await updateRuntimeRecords(LIVECODE_ASSIGNMENT_FILE, (records) => {
+    const result = switchLivecodeAssignment({
+      records,
+      livecodes,
+      order,
+      reason
+    });
+    selectedCodeKey = result.codeKey;
+    assignmentRecords = result.records;
+    return result.records;
+  });
 
-function isLivecodeAssignable(livecode, counts) {
-  if (livecode.status !== "active") return false;
-  if (livecode.manual_full) return false;
-  const limit = Number(livecode.capacity_limit || 0);
-  if (limit > 0 && (counts.get(livecode.code_key) || 0) >= limit) return false;
-  return true;
-}
-
-function countAssignmentsByCode(assignments) {
-  const counts = new Map();
-  for (const item of assignments || []) {
-    const codeKey = item?.code_key;
-    if (!codeKey) continue;
-    counts.set(codeKey, (counts.get(codeKey) || 0) + 1);
+  const livecode = livecodeMap.get(selectedCodeKey);
+  if (!livecode) {
+    const error = new Error("暂无其他助教，请稍后重试");
+    error.statusCode = 503;
+    error.code = "NO_ALTERNATIVE_LIVECODE";
+    throw error;
   }
-  return counts;
+  return {
+    livecode,
+    canSwitch: canSwitchLivecode({
+      records: assignmentRecords,
+      livecodes,
+      order,
+      currentCodeKey: selectedCodeKey
+    })
+  };
+}
+
+async function readNormalizedLivecodes() {
+  return (await readRuntimeRecords(LIVECODE_FILE)).map((item) => normalizeLivecodeRecord(item));
 }
 
 async function getOrderWithToken(orderId, token) {
@@ -693,6 +743,8 @@ function normalizeLivecodeRecord(record, now = new Date().toISOString()) {
     manual_full: Boolean(record?.manual_full ?? false),
     priority: normalizeInteger(record?.priority, codeKey === DEFAULT_LIVECODE_KEY ? 100 : 50),
     is_fallback: Boolean(record?.is_fallback ?? codeKey === DEFAULT_LIVECODE_KEY),
+    wecom_state: cleanText(record?.wecom_state || stableWecomState(codeKey), 80),
+    invalid: Boolean(record?.invalid ?? false),
     auto_redirect_after_paid: Boolean(record?.auto_redirect_after_paid ?? false),
     redirect_delay_ms: normalizeDelayMs(record?.redirect_delay_ms ?? 600),
     remark: cleanText(record?.remark ?? "", 160),

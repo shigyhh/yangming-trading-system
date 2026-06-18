@@ -463,6 +463,7 @@
                   <th>承接类型</th>
                   <th>适用渠道</th>
                   <th>已分配数量 / 容量</th>
+                  <th>换码次数</th>
                   <th>状态</th>
                   <th>操作</th>
                 </tr>
@@ -759,6 +760,8 @@
           const channels = Array.isArray(livecode.channels) ? livecode.channels.join(",") : String(livecode.channels || "");
           const fullText = livecode.manual_full ? "恢复分配" : "标记满员";
           const statusText = livecode.status === "active" ? "启用" : "停用";
+          const statusButtonText = livecode.status === "active" ? "停用" : "启用";
+          const nextStatus = livecode.status === "active" ? "inactive" : "active";
           const typeText = livecode.contact_type === "wecom" ? "企业微信" : "个人微信";
           return `
             <tr>
@@ -767,11 +770,13 @@
               <td>${escapeHtml(typeText)}</td>
               <td>${escapeHtml(channels || "*")}</td>
               <td>${Number(livecode.assigned_count || 0)} / ${escapeHtml(capacity)}</td>
+              <td>${Number(livecode.switch_count || 0)}</td>
               <td><span class="status-pill">${escapeHtml(statusText)}${livecode.manual_full ? " · 满员" : ""}${livecode.is_fallback ? " · 兜底" : ""}</span></td>
               <td>
                 <div class="row-actions">
                   <button class="btn-small" type="button" data-edit-livecode="${escapeHtml(livecode.code_key)}">编辑</button>
                   <button class="btn-small" type="button" data-toggle-full="${escapeHtml(livecode.code_key)}" data-full="${livecode.manual_full ? "false" : "true"}">${fullText}</button>
+                  <button class="btn-small" type="button" data-toggle-status="${escapeHtml(livecode.code_key)}" data-status="${nextStatus}">${statusButtonText}</button>
                 </div>
               </td>
             </tr>
@@ -932,6 +937,16 @@
         await loadAll();
       }
 
+      async function toggleLivecodeStatus(codeKey, status) {
+        await adminFetch(`/api/admin/livecodes/${encodeURIComponent(codeKey)}/toggle-status`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status }),
+        });
+        setNotice(status === "active" ? "已启用活码" : "已停用活码");
+        await loadAll();
+      }
+
       async function uploadQrImage() {
         const file = qrUploadInput.files && qrUploadInput.files[0];
         if (!file) {
@@ -1081,6 +1096,12 @@
         const toggleButton = event.target.closest("[data-toggle-full]");
         if (toggleButton) {
           toggleLivecodeFull(toggleButton.dataset.toggleFull, toggleButton.dataset.full === "true")
+            .catch((error) => setNotice(error.message));
+          return;
+        }
+        const statusButton = event.target.closest("[data-toggle-status]");
+        if (statusButton) {
+          toggleLivecodeStatus(statusButton.dataset.toggleStatus, statusButton.dataset.status)
             .catch((error) => setNotice(error.message));
         }
       });

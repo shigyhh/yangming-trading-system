@@ -20,7 +20,7 @@ import { dispatchTrainingPrescriptionBinding, generateShareCardBinding, getAdmin
 import { getGlobalReflectionToday, listGlobalReflectionChoices, submitGlobalReflectionVote } from "../services/globalReflection.js";
 import { buildHistoricalKlineSlice, downloadHistoricalKline, getHistoricalKlineRules, listHistoricalKlineCatalog, listHistoricalKlineInstruments, revealHistoricalKlineSlice } from "../services/historicalKline.js";
 import { buildTradeReviewOcrDraft } from "../services/tradeReviewOcr.js";
-import { createYmtyLivecode, createYmtyOrder, getYmtyAdminCampaign, getYmtyAfterpayEntrance, getYmtyAuditLogs, getYmtyOrderForPayment, getYmtyOrderStatus, getYmtyPublicCampaign, listYmtyCourseUsers, listYmtyLivecodeAssignments, listYmtyLivecodes, listYmtyOrders, markYmtyMockPaySuccess, markYmtyOrderPaid, toggleYmtyLivecodeFull, updateYmtyCampaign, updateYmtyLivecode, updateYmtyLivecodeByKey } from "../services/ymtyCampaign.js";
+import { createYmtyLivecode, createYmtyOrder, getYmtyAdminCampaign, getYmtyAfterpayEntrance, getYmtyAuditLogs, getYmtyOrderForPayment, getYmtyOrderStatus, getYmtyPublicCampaign, listYmtyCourseUsers, listYmtyLivecodeAssignments, listYmtyLivecodes, listYmtyOrders, markYmtyMockPaySuccess, markYmtyOrderPaid, switchYmtyAfterpayLivecode, toggleYmtyLivecodeFull, toggleYmtyLivecodeStatus, updateYmtyCampaign, updateYmtyLivecode, updateYmtyLivecodeByKey } from "../services/ymtyCampaign.js";
 import { getYmtyAnalyticsSummary, recordYmtyFrontendEvent } from "../services/ymtyAnalytics.js";
 import { authenticateYmtyAdmin, changeYmtyAdminPassword, getYmtyAdminMe, loginYmtyAdmin, logoutYmtyAdmin } from "../services/adminAuth.js";
 import { saveYmtyLivecodeUpload } from "../services/ymtyUpload.js";
@@ -258,6 +258,28 @@ export async function route(req, res) {
     }
   }
 
+  if (req.method === "POST" && pathname === "/api/afterpay/entrance/switch") {
+    const body = await readJson(req);
+    try {
+      const result = await switchYmtyAfterpayLivecode({
+        orderId: body.order_id || body.orderId || "",
+        token: body.token || "",
+        reason: body.reason || "user_reported_failure",
+        ip: getIp(req)
+      });
+      return sendJson(res, 200, { ok: true, ...result });
+    } catch (error) {
+      if (["NO_ALTERNATIVE_LIVECODE", "SWITCH_LIMIT_EXCEEDED", "NO_AVAILABLE_LIVECODE"].includes(error.code)) {
+        return sendJson(res, error.statusCode || 503, {
+          ok: false,
+          code: error.code,
+          message: error.message
+        });
+      }
+      throw error;
+    }
+  }
+
   if (req.method === "POST" && pathname === "/api/mock/pay-success") {
     const body = await readJson(req);
     const result = await markYmtyMockPaySuccess({
@@ -465,6 +487,19 @@ export async function route(req, res) {
       adminId: admin.adminId,
       codeKey: decodeURIComponent(livecodeToggleFullMatch[1]),
       manualFull: body.manual_full ?? body.manualFull,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const livecodeToggleStatusMatch = pathname.match(/^\/api\/admin\/livecodes\/([^/]+)\/toggle-status$/);
+  if (req.method === "POST" && livecodeToggleStatusMatch) {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await toggleYmtyLivecodeStatus({
+      adminId: admin.adminId,
+      codeKey: decodeURIComponent(livecodeToggleStatusMatch[1]),
+      status: body.status || "active",
       ip: getIp(req)
     });
     return sendJson(res, 200, { ok: true, ...result });

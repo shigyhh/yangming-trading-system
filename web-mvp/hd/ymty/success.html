@@ -173,6 +173,26 @@
         display: none !important;
       }
 
+      .switch-btn {
+        min-height: 44px;
+        margin-top: 10px;
+        border: 1px solid rgba(224, 196, 136, 0.32);
+        border-radius: 999px;
+        padding: 10px 16px;
+        color: var(--gold);
+        background: rgba(0, 0, 0, 0.1);
+        font: inherit;
+        font-size: 13px;
+      }
+
+      .switch-tip {
+        min-height: 20px;
+        margin: 8px 0 0;
+        color: var(--faint);
+        font-size: 12px;
+        line-height: 1.6;
+      }
+
       .risk {
         margin: 14px 0 0;
         color: var(--faint);
@@ -200,6 +220,8 @@
           <p class="subtitle" id="entranceText">长按识别二维码，添加课程助教</p>
           <p class="remark" id="remarkText"></p>
           <a class="btn" id="wecomButton" href="#" rel="noopener">如未自动跳转，点击添加课程助教</a>
+          <button class="switch-btn" id="switchLivecodeButton" type="button" hidden>二维码无法识别？换一个助教</button>
+          <p class="switch-tip" id="switchTip" aria-live="polite"></p>
         </div>
 
         <p class="risk">
@@ -223,6 +245,8 @@
       const entranceText = document.getElementById("entranceText");
       const remarkText = document.getElementById("remarkText");
       const wecomButton = document.getElementById("wecomButton");
+      const switchLivecodeButton = document.getElementById("switchLivecodeButton");
+      const switchTip = document.getElementById("switchTip");
 
       function getAnalyticsSessionId() {
         try {
@@ -271,6 +295,8 @@
         entrancePanel.hidden = true;
         qrImage.removeAttribute("src");
         wecomButton.hidden = true;
+        switchLivecodeButton.hidden = true;
+        switchTip.textContent = "";
       }
 
       function showEmptyEntrance() {
@@ -283,9 +309,11 @@
         entranceText.textContent = "助教入口配置中，请联系管理员";
         remarkText.textContent = "";
         wecomButton.hidden = true;
+        switchLivecodeButton.hidden = true;
+        switchTip.textContent = "";
       }
 
-      function renderEntrance(livecode) {
+      function renderEntrance(livecode, options = {}) {
         const wecom_link = livecode.wecom_link || "";
         const qr_image = livecode.qr_image || "";
         const autoRedirect = livecode.auto_redirect === true || livecode.auto_redirect_after_paid === true;
@@ -320,6 +348,9 @@
         } else {
           wecomButton.hidden = true;
         }
+
+        switchLivecodeButton.hidden = options.canSwitch !== true;
+        switchTip.textContent = "";
 
         if (autoRedirect && wecom_link) {
           entranceText.textContent = "正在跳转企业微信获客助手";
@@ -358,15 +389,44 @@
           }
 
           const entranceData = await fetchJson(`/api/afterpay/entrance?${query}`);
-          renderEntrance(entranceData.livecode || {});
+          renderEntrance(entranceData.livecode || {}, { canSwitch: entranceData.can_switch === true });
         } catch {
           showLocked("暂时无法核验订单，请稍后刷新重试。");
+        }
+      }
+
+      async function switchLivecode() {
+        if (!order_id || !token) return;
+        switchLivecodeButton.disabled = true;
+        switchTip.textContent = "正在为你更换助教入口...";
+        try {
+          const response = await fetch("/api/afterpay/entrance/switch", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Accept: "application/json" },
+            credentials: "include",
+            body: JSON.stringify({
+              order_id,
+              token,
+              reason: "user_reported_failure"
+            })
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok || !data.ok) {
+            throw new Error(data.message || "暂无其他助教，请稍后重试");
+          }
+          renderEntrance(data.livecode || {}, { canSwitch: data.can_switch === true });
+          switchTip.textContent = "已更换助教入口。";
+        } catch (error) {
+          switchTip.textContent = error.message || "暂无其他助教，请稍后重试";
+        } finally {
+          switchLivecodeButton.disabled = false;
         }
       }
 
       wecomButton.addEventListener("click", () => {
         trackEvent("wecom_link_click");
       });
+      switchLivecodeButton.addEventListener("click", switchLivecode);
       trackEvent("success_page_view");
       boot();
     </script>
