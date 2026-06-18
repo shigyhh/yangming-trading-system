@@ -588,7 +588,7 @@
         <div class="pool-toolbar">
           <div>
             <h2 style="margin:0">退款申请</h2>
-            <p class="hint">本阶段只做退款申请、审核状态和审计记录，不调用微信或支付宝真实退款接口。退款成功后默认撤销课程权益。</p>
+            <p class="hint">退款执行默认关闭；仅在服务端启用真实退款执行且审核通过后，才会调用微信或支付宝退款接口。退款成功后默认撤销课程权益。</p>
           </div>
           <button class="btn btn-ghost" id="refundReloadButton" type="button">刷新退款列表</button>
         </div>
@@ -1318,6 +1318,10 @@
       function renderRefunds() {
         refundsBody.innerHTML = (state.refunds || []).map((refund) => {
           const reviewer = refund.approved_by || refund.rejected_by || "";
+          const canApprove = refund.status === "requested";
+          const canReject = refund.status === "requested" || refund.status === "approved";
+          const canExecute = refund.status === "approved";
+          const canQuery = ["approved", "processing", "refunded", "failed"].includes(refund.status);
           return `
             <tr>
               <td><code>${escapeHtml(refund.refund_id)}</code></td>
@@ -1330,8 +1334,10 @@
               <td>已写入审计日志</td>
               <td>
                 <div class="row-actions">
-                  <button class="btn-small" type="button" data-refund-approve="${escapeHtml(refund.refund_id)}">审核通过</button>
-                  <button class="btn-small" type="button" data-refund-reject="${escapeHtml(refund.refund_id)}">驳回</button>
+                  ${canApprove ? `<button class="btn-small" type="button" data-refund-approve="${escapeHtml(refund.refund_id)}">审核通过</button>` : ""}
+                  ${canReject ? `<button class="btn-small" type="button" data-refund-reject="${escapeHtml(refund.refund_id)}">驳回</button>` : ""}
+                  ${canExecute ? `<button class="btn-small" type="button" data-refund-execute="${escapeHtml(refund.refund_id)}" data-order-id="${escapeHtml(refund.order_id)}">执行退款</button>` : ""}
+                  ${canQuery ? `<button class="btn-small" type="button" data-refund-query="${escapeHtml(refund.refund_id)}">查询状态</button>` : ""}
                 </div>
               </td>
             </tr>
@@ -1370,6 +1376,28 @@
           body: JSON.stringify({ reason }),
         });
         setNotice("已驳回退款申请");
+        await Promise.all([loadRefunds(), loadAuditLogs()]);
+      }
+
+      async function executeRefund(refundId, orderId) {
+        const expected = String(orderId || "").slice(-6);
+        const confirmed = window.prompt(`执行真实退款需要二次确认，请输入订单号后6位：${expected ? "******" : ""}`) || "";
+        await adminFetch(`/api/admin/refunds/${encodeURIComponent(refundId)}/execute`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ confirm_order_suffix: confirmed }),
+        });
+        setNotice("退款执行请求已提交，请通过查询状态确认平台结果");
+        await Promise.all([loadRefunds(), loadAuditLogs()]);
+      }
+
+      async function queryRefund(refundId) {
+        await adminFetch(`/api/admin/refunds/${encodeURIComponent(refundId)}/query`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+        });
+        setNotice("已查询退款平台状态");
         await Promise.all([loadRefunds(), loadAuditLogs()]);
       }
 
@@ -1730,6 +1758,16 @@
         const rejectButton = event.target.closest("[data-refund-reject]");
         if (rejectButton) {
           rejectRefund(rejectButton.dataset.refundReject).catch((error) => setNotice(error.message));
+          return;
+        }
+        const executeButton = event.target.closest("[data-refund-execute]");
+        if (executeButton) {
+          executeRefund(executeButton.dataset.refundExecute, executeButton.dataset.orderId).catch((error) => setNotice(error.message));
+          return;
+        }
+        const queryButton = event.target.closest("[data-refund-query]");
+        if (queryButton) {
+          queryRefund(queryButton.dataset.refundQuery).catch((error) => setNotice(error.message));
         }
       });
       uploadButton.addEventListener("click", () => {

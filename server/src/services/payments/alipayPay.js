@@ -84,6 +84,34 @@ export async function queryAlipayOrder(order) {
   });
 }
 
+export async function createAlipayRefund(refund, order) {
+  assertAlipayConfig();
+  const sdk = await createAlipaySdk();
+  const bizContent = {
+    outTradeNo: order.order_id,
+    refundAmount: centsToYuan(refund.amount_cents),
+    refundReason: trimAlipayReason(refund.reason),
+    outRequestNo: refund.refund_id
+  };
+  if (order.transaction_id) {
+    bizContent.tradeNo = order.transaction_id;
+  }
+  return sdk.exec("alipay.trade.refund", { bizContent }, { validateSign: true });
+}
+
+export async function queryAlipayRefund(refund, order) {
+  assertAlipayConfig();
+  const sdk = await createAlipaySdk();
+  const bizContent = {
+    outTradeNo: order.order_id,
+    outRequestNo: refund.refund_id
+  };
+  if (order.transaction_id) {
+    bizContent.tradeNo = order.transaction_id;
+  }
+  return sdk.exec("alipay.trade.fastpay.refund.query", { bizContent }, { validateSign: true });
+}
+
 export function validateAlipayPayment(payload, order) {
   if (payload.app_id !== process.env.ALIPAY_APP_ID) throw paymentError("支付宝 app_id 不一致", 400);
   if (payload.out_trade_no !== order.order_id) throw paymentError("支付宝订单号不一致", 400);
@@ -115,6 +143,13 @@ async function createAlipaySdk() {
 
 function centsToYuan(cents) {
   return (Number(cents) / 100).toFixed(2);
+}
+
+function trimAlipayReason(reason) {
+  return String(reason || "用户申请退款")
+    .replace(/[\u0000-\u001f\u007f]/g, "")
+    .trim()
+    .slice(0, 256) || "用户申请退款";
 }
 
 function getAlipaySignType() {

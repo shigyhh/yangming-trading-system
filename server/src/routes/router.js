@@ -24,7 +24,7 @@ import { createYmtyLivecode, createYmtyOrder, getYmtyAdminCampaign, getYmtyAfter
 import { getYmtyAnalyticsSummary, recordYmtyFrontendEvent } from "../services/ymtyAnalytics.js";
 import { addYmtyCrmNote, exportYmtyCrmCsv, getYmtyCrmLead, listYmtyCrmLeads, updateYmtyCrmLead, updateYmtyCrmLeadStage } from "../services/ymtyCrm.js";
 import { getYmtyWecomSummary, linkYmtyWecomEventToLead, listYmtyWecomEvents, listYmtyWecomSyncJobs, receiveYmtyWecomCallback, retryYmtyWecomSyncJob, verifyYmtyWecomCallbackUrl } from "../services/wecomCustomer.js";
-import { approveYmtyRefund, createYmtyRefund, getYmtyRefund, listYmtyRefunds, rejectYmtyRefund } from "../services/ymtyRefunds.js";
+import { approveYmtyRefund, createYmtyRefund, executeYmtyRefund, getYmtyRefund, handleWechatRefundNotify, listYmtyRefunds, queryYmtyRefundProvider, rejectYmtyRefund } from "../services/ymtyRefunds.js";
 import { authenticateYmtyAdmin, changeYmtyAdminPassword, getYmtyAdminMe, loginYmtyAdmin, logoutYmtyAdmin } from "../services/adminAuth.js";
 import { saveYmtyLivecodeUpload } from "../services/ymtyUpload.js";
 import { assertRealPayConfigReady, createH5Order, createJsapiOrder, createWapOrder, isPaymentConfigError, normalizePayChannel, parseAlipayNotify, parseWechatNotify, validateAlipayPayment, validateWechatPayment, verifyAlipayNotify, verifyWechatNotify } from "../services/payments/index.js";
@@ -400,6 +400,22 @@ export async function route(req, res) {
     }
   }
 
+  if (req.method === "POST" && pathname === "/api/pay/wechat/refund-notify") {
+    const rawBody = await readRawBody(req, 1024 * 1024);
+    try {
+      await handleWechatRefundNotify({
+        headers: req.headers,
+        body: rawBody
+      });
+      return sendJson(res, 200, { code: "SUCCESS", message: "成功" });
+    } catch (error) {
+      return sendJson(res, error.statusCode || 400, {
+        code: "FAIL",
+        message: error.message || "微信退款通知处理失败"
+      });
+    }
+  }
+
   if (req.method === "POST" && pathname === "/api/pay/alipay/notify") {
     const rawBody = await readRawBody(req, 1024 * 1024);
     const params = Object.fromEntries(new URLSearchParams(rawBody.toString("utf8")));
@@ -678,6 +694,30 @@ export async function route(req, res) {
     const result = await rejectYmtyRefund({
       refundId: decodeURIComponent(refundRejectMatch[1]),
       reason: body.reason || body.note || "",
+      admin,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const refundExecuteMatch = pathname.match(/^\/api\/admin\/refunds\/([^/]+)\/execute$/);
+  if (req.method === "POST" && refundExecuteMatch) {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await executeYmtyRefund({
+      refundId: decodeURIComponent(refundExecuteMatch[1]),
+      confirmOrderSuffix: body.confirm_order_suffix || body.confirmOrderSuffix || "",
+      admin,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const refundQueryMatch = pathname.match(/^\/api\/admin\/refunds\/([^/]+)\/query$/);
+  if (req.method === "POST" && refundQueryMatch) {
+    const admin = await assertYmtyAdminAccess(req);
+    const result = await queryYmtyRefundProvider({
+      refundId: decodeURIComponent(refundQueryMatch[1]),
       admin,
       ip: getIp(req)
     });

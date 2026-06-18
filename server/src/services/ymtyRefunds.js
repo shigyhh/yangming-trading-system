@@ -3,6 +3,14 @@ import { config } from "../config.js";
 import { readRuntimeRecords, replaceRuntimeRecords, updateRuntimeRecords } from "../lib/store.js";
 import { getYmtyOrderForPayment } from "./ymtyCampaign.js";
 import { markYmtyCrmLeadRefunded } from "./ymtyCrm.js";
+import {
+  createAlipayRefund,
+  createWechatRefund,
+  parseWechatRefundNotify,
+  queryAlipayRefund,
+  queryWechatRefund,
+  verifyWechatRefundNotify
+} from "./payments/index.js";
 
 const REFUND_FILE = "ymty-refunds.json";
 const AUDIT_LOG_FILE = "ymty-audit-logs.json";
@@ -106,6 +114,95 @@ export async function rejectYmtyRefund({ refundId = "", reason = "", admin = {},
   });
 }
 
+export async function executeYmtyRefund({ refundId = "", confirmOrderSuffix = "", admin = {}, ip = "" } = {}) {
+  assertRefundApprover(admin);
+  const refund = await findRefund(refundId);
+  const order = await getPaidOrder(refund.order_id);
+  assertRefundAmountStillValid(refund, order);
+
+  if (["processing", "refunded", "failed"].includes(refund.status)) {
+    return { refund };
+  }
+  assertRefundStatus(refund, ["approved"], "只有已审核退款可以执行");
+  assertRefundExecutionEnabled();
+  assertOrderSuffix(order, confirmOrderSuffix);
+
+  const result = await runProviderOperation({
+    refund,
+    order,
+    operation: "execute"
+  });
+  await appendAuditLog({
+    adminId: getAdminId(admin),
+    action: "refund_execute",
+    targetId: result.refund.refund_id,
+    before: refund,
+    after: result.refund,
+    ip
+  });
+  return result;
+}
+
+export async function queryYmtyRefundProvider({ refundId = "", admin = {}, ip = "" } = {}) {
+  assertRefundApprover(admin);
+  const refund = await findRefund(refundId);
+  const order = await getPaidOrder(refund.order_id);
+  if (!["approved", "processing", "refunded", "failed"].includes(refund.status)) {
+    const error = new Error("当前退款状态不能查询平台结果");
+    error.statusCode = 400;
+    throw error;
+  }
+  const result = await runProviderOperation({
+    refund,
+    order,
+    operation: "query"
+  });
+  await appendAuditLog({
+    adminId: getAdminId(admin),
+    action: "refund_query",
+    targetId: result.refund.refund_id,
+    before: refund,
+    after: result.refund,
+    ip
+  });
+  return result;
+}
+
+export async function handleWechatRefundNotify({ headers = {}, body = Buffer.alloc(0) } = {}) {
+  await verifyWechatRefundNotify(headers, body);
+  const payload = await parseWechatRefundNotify(body);
+  if (payload.mchid && payload.mchid !== process.env.WECHAT_MCH_ID) {
+    const error = new Error("微信退款通知商户号不一致");
+    error.statusCode = 400;
+    throw error;
+  }
+  const refund = await findRefund(payload.out_refund_no || "");
+  const order = await getPaidOrder(refund.order_id);
+  if (payload.out_trade_no && payload.out_trade_no !== order.order_id) {
+    const error = new Error("微信退款通知订单号不一致");
+    error.statusCode = 400;
+    throw error;
+  }
+  if (payload.amount?.refund !== undefined && Number(payload.amount.refund) !== Number(refund.amount_cents)) {
+    const error = new Error("微信退款通知金额不一致");
+    error.statusCode = 400;
+    throw error;
+  }
+  const result = await markYmtyRefundProviderResult({
+    refundId: refund.refund_id,
+    ...mapWechatRefundResult(payload)
+  });
+  await appendAuditLog({
+    adminId: "system",
+    action: "refund_wechat_notify",
+    targetId: result.refund.refund_id,
+    before: refund,
+    after: result.refund,
+    ip: ""
+  });
+  return result;
+}
+
 export async function markYmtyRefundProviderResult({
   refundId = "",
   status = "",
@@ -120,8 +217,12 @@ export async function markYmtyRefundProviderResult({
     throw error;
   }
 
+  const current = await findRefund(refundId);
+  if (current.status === normalizedStatus && ["refunded", "failed"].includes(current.status)) {
+    return { refund: current };
+  }
+
   if (normalizedStatus === "refunded") {
-    const current = await findRefund(refundId);
     const order = await getYmtyOrderForPayment(current.order_id);
     const remaining = await getRefundableCents(current.order_id, order.amount_cents, current.refund_id);
     if (current.amount_cents > remaining) {
@@ -137,6 +238,7 @@ export async function markYmtyRefundProviderResult({
     ip: "",
     action: "refund_provider_result",
     update: (refund, now) => {
+      if (refund.status === normalizedStatus && ["refunded", "failed"].includes(refund.status)) return refund;
       assertRefundStatus(refund, ["approved", "processing"], "只有已审核退款可以进入平台处理");
       return {
         ...refund,
@@ -160,6 +262,81 @@ export async function markYmtyRefundProviderResult({
     }
   }
   return result;
+}
+
+async function runProviderOperation({ refund, order, operation }) {
+  try {
+    if (refund.provider === "wechat") {
+      const payload = operation === "query" ? await queryWechatRefund(refund) : await createWechatRefund(refund, order);
+      return markYmtyRefundProviderResult({
+        refundId: refund.refund_id,
+        ...mapWechatRefundResult(payload)
+      });
+    }
+    if (refund.provider === "alipay") {
+      const payload = operation === "query" ? await queryAlipayRefund(refund, order) : await createAlipayRefund(refund, order);
+      return markYmtyRefundProviderResult({
+        refundId: refund.refund_id,
+        ...mapAlipayRefundResult(payload)
+      });
+    }
+    const error = new Error("当前订单不支持真实退款执行");
+    error.statusCode = 400;
+    throw error;
+  } catch (error) {
+    if (isTimeoutError(error)) {
+      return markYmtyRefundProviderResult({
+        refundId: refund.refund_id,
+        status: "processing",
+        providerErrorCode: "PROVIDER_TIMEOUT",
+        providerErrorMessage: "退款请求超时，等待平台结果查询"
+      });
+    }
+    throw error;
+  }
+}
+
+function mapWechatRefundResult(payload = {}) {
+  const providerStatus = cleanText(payload.status || payload.refund_status, 40).toUpperCase();
+  const statusMap = {
+    SUCCESS: "refunded",
+    PROCESSING: "processing",
+    ABNORMAL: "failed",
+    CLOSED: "failed"
+  };
+  return {
+    status: statusMap[providerStatus] || "processing",
+    providerRefundId: payload.refund_id || "",
+    providerErrorCode: providerStatus && !["SUCCESS", "PROCESSING"].includes(providerStatus) ? providerStatus : "",
+    providerErrorMessage: payload.status_message || payload.message || ""
+  };
+}
+
+function mapAlipayRefundResult(payload = {}) {
+  const code = cleanText(payload.code, 40);
+  const refundStatus = cleanText(payload.refundStatus || payload.refund_status, 40).toUpperCase();
+  if (code === "10000" && (!refundStatus || refundStatus === "REFUND_SUCCESS")) {
+    return {
+      status: "refunded",
+      providerRefundId: payload.tradeNo || payload.trade_no || payload.outRequestNo || payload.out_request_no || "",
+      providerErrorCode: "",
+      providerErrorMessage: ""
+    };
+  }
+  if (code === "10000") {
+    return {
+      status: "processing",
+      providerRefundId: payload.tradeNo || payload.trade_no || "",
+      providerErrorCode: refundStatus,
+      providerErrorMessage: payload.msg || ""
+    };
+  }
+  return {
+    status: "failed",
+    providerRefundId: payload.tradeNo || payload.trade_no || "",
+    providerErrorCode: code || payload.subCode || payload.sub_code || "ALIPAY_REFUND_FAILED",
+    providerErrorMessage: payload.subMsg || payload.sub_msg || payload.msg || "支付宝退款失败"
+  };
 }
 
 async function updateRefundWithAudit({ refundId, admin, ip, action, update }) {
@@ -255,6 +432,34 @@ function assertRefundStatus(refund, allowed, message) {
   const error = new Error(message);
   error.statusCode = 400;
   throw error;
+}
+
+function assertRefundExecutionEnabled() {
+  if (String(process.env.YMTY_REFUND_EXECUTION_ENABLED || "false").toLowerCase() === "true") return;
+  const error = new Error("真实退款执行未启用");
+  error.statusCode = 403;
+  throw error;
+}
+
+function assertOrderSuffix(order, confirmOrderSuffix) {
+  const expected = String(order.order_id || "").slice(-6);
+  if (expected && cleanText(confirmOrderSuffix, 20) === expected) return;
+  const error = new Error("请先输入订单号后6位确认退款执行");
+  error.statusCode = 400;
+  throw error;
+}
+
+function assertRefundAmountStillValid(refund, order) {
+  if (Number(refund.amount_cents || 0) <= Number(order.amount_cents || 0)) return;
+  const error = new Error("退款金额不能超过订单实付金额");
+  error.statusCode = 400;
+  throw error;
+}
+
+function isTimeoutError(error) {
+  const code = cleanText(error?.code, 40).toUpperCase();
+  const message = cleanText(error?.message, 300).toLowerCase();
+  return error?.name === "AbortError" || ["ETIMEDOUT", "ECONNRESET", "EAI_AGAIN"].includes(code) || message.includes("timeout") || message.includes("timed out") || message.includes("超时");
 }
 
 async function appendAuditLog({ adminId, action, targetId, before, after, ip }) {
