@@ -27,6 +27,7 @@
     "test:ymty-h5": "SKIP_LOCAL_ENV=true node --test scripts/ymty-h5-static-test.mjs",
     "test:ymty-upload": "SKIP_LOCAL_ENV=true node --test scripts/ymty-admin-upload-test.mjs",
     "test:ymty-livecode-pool": "SKIP_LOCAL_ENV=true node --test --test-concurrency=1 scripts/ymty-livecode-pool-test.mjs",
+    "test:ymty-crm": "SKIP_LOCAL_ENV=true node --test --test-concurrency=1 scripts/ymty-crm-test.mjs",
     "test:ymty-analytics": "SKIP_LOCAL_ENV=true node --test --test-concurrency=1 scripts/ymty-analytics-test.mjs",
     "test:ymty-admin-auth": "SKIP_LOCAL_ENV=true node --test scripts/ymty-admin-auth-test.mjs",
     "test:ymty-mock": "node --test scripts/ymty-mock-payment.test.mjs",

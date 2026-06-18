@@ -1,8 +1,10 @@
 import crypto from "node:crypto";
 import { config } from "../config.js";
 import { readRuntimeRecords, replaceRuntimeRecords, updateRuntimeRecords } from "../lib/store.js";
+import { summarizeCrmLeads } from "./ymtyCrm.js";
 
 const EVENT_FILE = "ymty-events.json";
+const CRM_LEAD_FILE = "ymty-crm-leads.json";
 const FRONTEND_EVENTS = new Set([
   "page_view",
   "scroll_25",
@@ -141,8 +143,16 @@ export async function getYmtyAnalyticsSummary(query = {}) {
     const dateKey = getShanghaiDateKey(event.created_at || event.paid_at);
     return dateKey >= range.from && dateKey <= range.to;
   });
+  const crmLeads = (await readRuntimeRecords(CRM_LEAD_FILE)).filter((lead) => {
+    const dateKey = getShanghaiDateKey(lead.created_at || lead.updated_at);
+    return dateKey >= range.from && dateKey <= range.to;
+  });
 
-  const overview = buildOverview(events);
+  const crmMetrics = summarizeCrmLeads(crmLeads);
+  const overview = {
+    ...buildOverview(events),
+    ...crmMetrics
+  };
   const funnel = {
     page_to_signup_rate: safeRate(overview.signup_clicks, overview.uv),
     signup_to_order_rate: safeRate(overview.orders_created, overview.signup_clicks),
@@ -154,7 +164,8 @@ export async function getYmtyAnalyticsSummary(query = {}) {
     range,
     overview,
     funnel,
-    daily: buildDaily(events, range),
+    crm_funnel: buildCrmFunnel(crmMetrics),
+    daily: buildDaily(events, range, crmLeads),
     by_channel: buildByChannel(events),
     by_device: buildByDevice(events),
     by_pay_channel: buildByPayChannel(events)
@@ -215,16 +226,19 @@ function buildOverview(events) {
   };
 }
 
-function buildDaily(events, range) {
+function buildDaily(events, range, crmLeads = []) {
   const rows = new Map();
   for (const date of enumerateDateKeys(range.from, range.to)) {
-    rows.set(date, { date, ...emptyOverview() });
+    rows.set(date, { date, ...emptyOverview(), ...emptyCrmMetrics() });
   }
   for (const event of events) {
     const date = getShanghaiDateKey(event.created_at || event.paid_at);
     if (!rows.has(date)) continue;
     const row = rows.get(date);
     applyOverviewEvent(row, event);
+  }
+  for (const date of rows.keys()) {
+    Object.assign(rows.get(date), summarizeCrmLeads(crmLeads.filter((lead) => getShanghaiDateKey(lead.created_at || lead.updated_at) === date)));
   }
   return Array.from(rows.values()).map((row) => finalizeUvRow(row));
 }
@@ -297,6 +311,32 @@ function emptyOverview() {
     qr_exposures: 0,
     wecom_link_clicks: 0,
     sessionSet: new Set()
+  };
+}
+
+function emptyCrmMetrics() {
+  return {
+    crm_paid_customers: 0,
+    crm_assigned_customers: 0,
+    crm_added_customers: 0,
+    crm_first_contact_customers: 0,
+    crm_group_joined_customers: 0,
+    crm_course_completed_customers: 0,
+    crm_converted_customers: 0,
+    crm_lost_customers: 0
+  };
+}
+
+function buildCrmFunnel(metrics) {
+  return {
+    source: "人工",
+    paid: metrics.crm_paid_customers || 0,
+    assigned: metrics.crm_assigned_customers || 0,
+    added: metrics.crm_added_customers || 0,
+    first_contact: metrics.crm_first_contact_customers || 0,
+    group_joined: metrics.crm_group_joined_customers || 0,
+    course_completed: metrics.crm_course_completed_customers || 0,
+    converted: metrics.crm_converted_customers || 0
   };
 }
 

@@ -264,6 +264,45 @@
         font-size: 15px;
       }
 
+      .crm-card {
+        margin: 16px 0;
+      }
+
+      .crm-detail {
+        margin-top: 14px;
+        border-top: 1px solid var(--line);
+        padding-top: 14px;
+      }
+
+      .crm-detail h3 {
+        margin: 0 0 12px;
+        color: #684433;
+        font-size: 16px;
+      }
+
+      .stage-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .note-list {
+        display: grid;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .note-item {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fffdfa;
+        padding: 9px 10px;
+        color: #60473a;
+        font-size: 13px;
+        line-height: 1.65;
+      }
+
       .auth-mask {
         position: fixed;
         inset: 0;
@@ -370,6 +409,10 @@
                     <th>订单</th>
                     <th>支付</th>
                     <th>金额</th>
+                    <th>已付客户</th>
+                    <th>已分配</th>
+                    <th>已添加</th>
+                    <th>已转化</th>
                   </tr>
                 </thead>
                 <tbody id="analyticsDailyBody"></tbody>
@@ -427,6 +470,67 @@
             </div>
           </div>
         </div>
+      </section>
+
+      <section class="card crm-card">
+        <div class="pool-toolbar">
+          <div>
+            <h2 style="margin:0">客户与跟进</h2>
+            <p class="hint" style="margin:6px 0 0">数据来源：人工。仅管理员可见，用于记录订单、渠道、二维码分配和助教跟进。</p>
+          </div>
+          <button class="btn btn-ghost" id="crmExportButton" type="button">导出 CSV</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>订单号</th>
+                <th>支付金额</th>
+                <th>支付方式</th>
+                <th>渠道</th>
+                <th>素材</th>
+                <th>分配助教</th>
+                <th>当前阶段</th>
+                <th>负责人</th>
+                <th>最近联系时间</th>
+                <th>下次跟进</th>
+                <th>标签</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="crmLeadsBody"></tbody>
+          </table>
+        </div>
+        <section class="crm-detail" id="crmDetail" hidden>
+          <h3 id="crmDetailTitle">客户详情</h3>
+          <p class="hint" id="crmLeadSummary"></p>
+          <form id="crmForm">
+            <div class="form-grid">
+              <label>负责人<input name="owner" id="crmOwnerInput" /></label>
+              <label>下次跟进<input name="next_follow_up_at" id="crmNextFollowInput" placeholder="2026-06-20 20:00" /></label>
+              <label>客户称呼<input name="contact_name" id="crmContactNameInput" /></label>
+              <label>手机号后 4 位<input name="phone_last4" id="crmPhoneLast4Input" maxlength="4" inputmode="numeric" /></label>
+              <label class="wide">标签<input name="tags" id="crmTagsInput" placeholder="高意向,需提醒" /></label>
+            </div>
+            <div class="actions">
+              <button class="btn btn-primary" type="submit">保存客户信息</button>
+            </div>
+          </form>
+          <div class="stage-actions" id="crmStageActions">
+            <button class="btn-small" type="button" data-crm-stage="added">标记已添加</button>
+            <button class="btn-small" type="button" data-crm-stage="first_contact">标记已首次沟通</button>
+            <button class="btn-small" type="button" data-crm-stage="group_joined">标记已进群</button>
+            <button class="btn-small" type="button" data-crm-stage="course_started">标记已开课</button>
+            <button class="btn-small" type="button" data-crm-stage="course_completed">标记已完课</button>
+            <button class="btn-small" type="button" data-crm-stage="converted">标记已转化</button>
+            <button class="btn-small" type="button" data-crm-stage="lost">标记流失</button>
+          </div>
+          <label class="wide" style="margin-top:14px">跟进备注<textarea id="crmNoteInput" placeholder="记录本次人工跟进情况，不填写聊天正文。"></textarea></label>
+          <div class="actions">
+            <button class="btn btn-ghost" id="crmNoteButton" type="button">添加备注</button>
+          </div>
+          <div class="note-list" id="crmNotesList"></div>
+        </section>
       </section>
 
       <section class="grid">
@@ -562,6 +666,9 @@
         product: null,
         livecode: null,
         livecodes: [],
+        crmLeads: [],
+        selectedCrmLeadId: "",
+        selectedCrmDetail: null,
         editingLivecodeKey: "",
         editingNewLivecode: false,
         passwordRequired: false,
@@ -596,6 +703,21 @@
       const analyticsChannelBody = document.getElementById("analyticsChannelBody");
       const analyticsDeviceBody = document.getElementById("analyticsDeviceBody");
       const analyticsPayBody = document.getElementById("analyticsPayBody");
+      const crmLeadsBody = document.getElementById("crmLeadsBody");
+      const crmDetail = document.getElementById("crmDetail");
+      const crmDetailTitle = document.getElementById("crmDetailTitle");
+      const crmLeadSummary = document.getElementById("crmLeadSummary");
+      const crmForm = document.getElementById("crmForm");
+      const crmOwnerInput = document.getElementById("crmOwnerInput");
+      const crmNextFollowInput = document.getElementById("crmNextFollowInput");
+      const crmContactNameInput = document.getElementById("crmContactNameInput");
+      const crmPhoneLast4Input = document.getElementById("crmPhoneLast4Input");
+      const crmTagsInput = document.getElementById("crmTagsInput");
+      const crmStageActions = document.getElementById("crmStageActions");
+      const crmNoteInput = document.getElementById("crmNoteInput");
+      const crmNoteButton = document.getElementById("crmNoteButton");
+      const crmNotesList = document.getElementById("crmNotesList");
+      const crmExportButton = document.getElementById("crmExportButton");
       const ordersBody = document.getElementById("ordersBody");
       const auditBody = document.getElementById("auditBody");
 
@@ -745,7 +867,7 @@
           fillLivecodeEditor(state.livecode);
         }
         showApp();
-        await Promise.all([loadAnalytics(), loadOrders(), loadAuditLogs()]);
+        await Promise.all([loadAnalytics(), loadOrders(), loadCrmLeads(), loadAuditLogs()]);
       }
 
       function fillLivecodeEditor(livecode) {
@@ -819,6 +941,15 @@
           ["成功页访问", overview.success_page_views || 0],
           ["二维码曝光", overview.qr_exposures || 0],
           ["获客链接点击", overview.wecom_link_clicks || 0],
+          ["已支付客户", overview.crm_paid_customers || 0],
+          ["已分配助教", overview.crm_assigned_customers || 0],
+          ["已添加", overview.crm_added_customers || 0],
+          ["已首次沟通", overview.crm_first_contact_customers || 0],
+          ["已进群", overview.crm_group_joined_customers || 0],
+          ["已完课", overview.crm_course_completed_customers || 0],
+          ["已转化", overview.crm_converted_customers || 0],
+          ["已流失", overview.crm_lost_customers || 0],
+          ["数据来源", "人工"],
         ];
         metricsGrid.innerHTML = metrics.map(([label, value]) => `
           <div class="metric"><span>${escapeHtml(label)}</span><b>${escapeHtml(value)}</b></div>
@@ -831,6 +962,10 @@
             <td>${Number(row.orders_created || 0)}</td>
             <td>${Number(row.paid_orders || 0)}</td>
             <td>${escapeHtml(formatYuan(row.revenue_cents || 0))}</td>
+            <td>${Number(row.crm_paid_customers || 0)}</td>
+            <td>${Number(row.crm_assigned_customers || 0)}</td>
+            <td>${Number(row.crm_added_customers || 0)}</td>
+            <td>${Number(row.crm_converted_customers || 0)}</td>
           </tr>
         `).join("");
         analyticsChannelBody.innerHTML = (data.by_channel || []).map((row) => `
@@ -859,6 +994,137 @@
             <td>${escapeHtml(formatYuan(row.revenue_cents || 0))}</td>
           </tr>
         `).join("");
+      }
+
+      async function loadCrmLeads() {
+        const data = await adminFetch("/api/admin/crm/leads");
+        state.crmLeads = data.leads || [];
+        if (!state.crmLeads.some((lead) => lead.lead_id === state.selectedCrmLeadId)) {
+          state.selectedCrmLeadId = state.crmLeads[0]?.lead_id || "";
+          state.selectedCrmDetail = null;
+        }
+        renderCrmLeads();
+        if (state.selectedCrmLeadId) {
+          await selectCrmLead(state.selectedCrmLeadId);
+        } else {
+          renderCrmDetail();
+        }
+      }
+
+      function renderCrmLeads() {
+        crmLeadsBody.innerHTML = (state.crmLeads || []).map((lead) => `
+          <tr>
+            <td>${escapeHtml(lead.order_id)}</td>
+            <td>${escapeHtml(formatYuan(lead.amount_cents || 0))}</td>
+            <td>${escapeHtml(payChannelText(lead.pay_channel))}</td>
+            <td>${escapeHtml(lead.channel || "未标记")}</td>
+            <td>${escapeHtml(lead.creative || "")}</td>
+            <td><code>${escapeHtml(lead.code_key || "未分配")}</code></td>
+            <td><span class="status-pill">${escapeHtml(stageText(lead.stage))}</span></td>
+            <td>${escapeHtml(lead.owner || "未分配")}</td>
+            <td>${escapeHtml(formatDateTime(lead.last_contact_at))}</td>
+            <td>${escapeHtml(formatDateTime(lead.next_follow_up_at))}</td>
+            <td>${escapeHtml((lead.tags || []).join("，"))}</td>
+            <td><button class="btn-small" type="button" data-crm-select="${escapeHtml(lead.lead_id)}">查看</button></td>
+          </tr>
+        `).join("");
+      }
+
+      async function selectCrmLead(leadId) {
+        const data = await adminFetch(`/api/admin/crm/leads/${encodeURIComponent(leadId)}`);
+        state.selectedCrmLeadId = data.lead?.lead_id || leadId;
+        state.selectedCrmDetail = data;
+        renderCrmLeads();
+        renderCrmDetail();
+      }
+
+      function renderCrmDetail() {
+        const lead = state.selectedCrmDetail?.lead;
+        const notes = state.selectedCrmDetail?.notes || [];
+        if (!lead) {
+          crmDetail.hidden = true;
+          return;
+        }
+        crmDetail.hidden = false;
+        crmDetailTitle.textContent = `客户详情：${lead.order_id}`;
+        crmLeadSummary.textContent = `当前阶段：${stageText(lead.stage)}；渠道：${lead.channel || "未标记"}；助教：${lead.code_key || "未分配"}。`;
+        crmOwnerInput.value = lead.owner || "";
+        crmNextFollowInput.value = lead.next_follow_up_at || "";
+        crmContactNameInput.value = lead.contact_name || "";
+        crmPhoneLast4Input.value = lead.phone_last4 || "";
+        crmTagsInput.value = (lead.tags || []).join(",");
+        crmNotesList.innerHTML = notes.length
+          ? notes.map((note) => `<div class="note-item">${escapeHtml(note.body)}<br><small>${escapeHtml(note.created_at || "")}</small></div>`).join("")
+          : `<div class="note-item">暂无备注</div>`;
+      }
+
+      async function saveCrmLead(event) {
+        event.preventDefault();
+        if (!state.selectedCrmLeadId) return;
+        await adminFetch(`/api/admin/crm/leads/${encodeURIComponent(state.selectedCrmLeadId)}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            owner: crmOwnerInput.value.trim(),
+            next_follow_up_at: crmNextFollowInput.value.trim(),
+            contact_name: crmContactNameInput.value.trim(),
+            phone_last4: crmPhoneLast4Input.value.trim(),
+            tags: crmTagsInput.value.split(",").map((item) => item.trim()).filter(Boolean),
+          }),
+        });
+        setNotice("已保存客户跟进信息");
+        await loadCrmLeads();
+      }
+
+      async function updateCrmStage(stage) {
+        if (!state.selectedCrmLeadId) return;
+        await adminFetch(`/api/admin/crm/leads/${encodeURIComponent(state.selectedCrmLeadId)}/stage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ stage }),
+        });
+        setNotice(`已更新阶段：${stageText(stage)}`);
+        await loadCrmLeads();
+      }
+
+      async function addCrmNote() {
+        if (!state.selectedCrmLeadId) return;
+        const body = crmNoteInput.value.trim();
+        if (!body) {
+          setNotice("请填写跟进备注");
+          return;
+        }
+        await adminFetch(`/api/admin/crm/leads/${encodeURIComponent(state.selectedCrmLeadId)}/note`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ body }),
+        });
+        crmNoteInput.value = "";
+        setNotice("已添加备注");
+        await selectCrmLead(state.selectedCrmLeadId);
+      }
+
+      async function exportCrmCsv() {
+        const response = await fetch("/api/admin/crm/export.csv", {
+          headers: adminHeaders({ Accept: "text/csv" }),
+        });
+        if (response.status === 401 || response.status === 403) {
+          showLogin("无权限或登录已失效");
+          return;
+        }
+        if (!response.ok) {
+          setNotice("导出失败");
+          return;
+        }
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "ymty-crm-leads.csv";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
       }
 
       async function loadAuditLogs() {
@@ -1070,6 +1336,26 @@
         return ({ mock:"Mock", wechat_jsapi:"微信 JSAPI", wechat_h5:"微信 H5", alipay_wap:"支付宝 WAP", unknown:"未知" })[value] || value || "未知";
       }
 
+      function stageText(value) {
+        return ({
+          paid: "已支付",
+          assigned: "已分配助教",
+          added: "已添加",
+          first_contact: "已首次沟通",
+          group_joined: "已进群",
+          course_started: "已开课",
+          course_completed: "已完课",
+          converted: "已转化",
+          lost: "已流失",
+          refund_requested: "已申请退款",
+          refunded: "已退款",
+        })[value] || value || "未知";
+      }
+
+      function formatDateTime(value) {
+        return value ? String(value).replace("T", " ").slice(0, 16) : "";
+      }
+
       loginForm.addEventListener("submit", (event) => {
         login(event).catch((error) => {
           loginError.textContent = error.message;
@@ -1104,6 +1390,27 @@
           toggleLivecodeStatus(statusButton.dataset.toggleStatus, statusButton.dataset.status)
             .catch((error) => setNotice(error.message));
         }
+      });
+      crmLeadsBody.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-crm-select]");
+        if (button) {
+          selectCrmLead(button.dataset.crmSelect).catch((error) => setNotice(error.message));
+        }
+      });
+      crmForm.addEventListener("submit", (event) => {
+        saveCrmLead(event).catch((error) => setNotice(error.message));
+      });
+      crmStageActions.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-crm-stage]");
+        if (button) {
+          updateCrmStage(button.dataset.crmStage).catch((error) => setNotice(error.message));
+        }
+      });
+      crmNoteButton.addEventListener("click", () => {
+        addCrmNote().catch((error) => setNotice(error.message));
+      });
+      crmExportButton.addEventListener("click", () => {
+        exportCrmCsv().catch((error) => setNotice(error.message));
       });
       uploadButton.addEventListener("click", () => {
         uploadQrImage().catch((error) => {

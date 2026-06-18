@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import { config } from "../config.js";
 import { readRuntimeRecords, replaceRuntimeRecords, updateRuntimeRecords } from "../lib/store.js";
 import { recordYmtyTrustedEvent, resetYmtyAnalyticsForTests } from "./ymtyAnalytics.js";
+import { ensureYmtyCrmLeadForPaidOrder, markYmtyCrmLeadAssigned, resetYmtyCrmForTests } from "./ymtyCrm.js";
 import {
   canSwitchLivecode,
   normalizeAssignmentRecord,
@@ -86,7 +87,8 @@ export async function resetYmtyForTests() {
     replaceRuntimeRecords(COURSE_USER_FILE, []),
     replaceRuntimeRecords(ADMIN_USER_FILE, []),
     replaceRuntimeRecords(AUDIT_LOG_FILE, []),
-    resetYmtyAnalyticsForTests()
+    resetYmtyAnalyticsForTests(),
+    resetYmtyCrmForTests()
   ]);
 }
 
@@ -302,6 +304,7 @@ export async function markYmtyOrderPaid({
     verify_status: verifyStatus
   });
   const courseUser = await ensureCourseUser(paidOrder);
+  await ensureYmtyCrmLeadForPaidOrder(paidOrder);
   if (existingOrder.pay_status !== "paid") {
     await recordYmtyTrustedEvent("payment_success", {
       event_id: `payment_success:${paidOrder.order_id}`,
@@ -573,6 +576,7 @@ async function assignLivecodeForPaidOrder(order) {
     error.code = "NO_AVAILABLE_LIVECODE";
     throw error;
   }
+  await markYmtyCrmLeadAssigned({ order, livecode });
   return {
     livecode,
     canSwitch: canSwitchLivecode({
@@ -609,6 +613,7 @@ async function switchAssignedLivecodeForPaidOrder(order, reason) {
     error.code = "NO_ALTERNATIVE_LIVECODE";
     throw error;
   }
+  await markYmtyCrmLeadAssigned({ order, livecode });
   return {
     livecode,
     canSwitch: canSwitchLivecode({

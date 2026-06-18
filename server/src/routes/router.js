@@ -22,6 +22,7 @@ import { buildHistoricalKlineSlice, downloadHistoricalKline, getHistoricalKlineR
 import { buildTradeReviewOcrDraft } from "../services/tradeReviewOcr.js";
 import { createYmtyLivecode, createYmtyOrder, getYmtyAdminCampaign, getYmtyAfterpayEntrance, getYmtyAuditLogs, getYmtyOrderForPayment, getYmtyOrderStatus, getYmtyPublicCampaign, listYmtyCourseUsers, listYmtyLivecodeAssignments, listYmtyLivecodes, listYmtyOrders, markYmtyMockPaySuccess, markYmtyOrderPaid, switchYmtyAfterpayLivecode, toggleYmtyLivecodeFull, toggleYmtyLivecodeStatus, updateYmtyCampaign, updateYmtyLivecode, updateYmtyLivecodeByKey } from "../services/ymtyCampaign.js";
 import { getYmtyAnalyticsSummary, recordYmtyFrontendEvent } from "../services/ymtyAnalytics.js";
+import { addYmtyCrmNote, exportYmtyCrmCsv, getYmtyCrmLead, listYmtyCrmLeads, updateYmtyCrmLead, updateYmtyCrmLeadStage } from "../services/ymtyCrm.js";
 import { authenticateYmtyAdmin, changeYmtyAdminPassword, getYmtyAdminMe, loginYmtyAdmin, logoutYmtyAdmin } from "../services/adminAuth.js";
 import { saveYmtyLivecodeUpload } from "../services/ymtyUpload.js";
 import { assertRealPayConfigReady, createH5Order, createJsapiOrder, createWapOrder, isPaymentConfigError, normalizePayChannel, parseAlipayNotify, parseWechatNotify, validateAlipayPayment, validateWechatPayment, verifyAlipayNotify, verifyWechatNotify } from "../services/payments/index.js";
@@ -546,6 +547,69 @@ export async function route(req, res) {
   if (req.method === "GET" && pathname === "/api/admin/audit-logs") {
     await assertYmtyAdminAccess(req);
     const result = await getYmtyAuditLogs();
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/crm/leads") {
+    await assertYmtyAdminAccess(req);
+    const result = await listYmtyCrmLeads(Object.fromEntries(url.searchParams.entries()));
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/crm/export.csv") {
+    await assertYmtyAdminAccess(req);
+    const csv = await exportYmtyCrmCsv(Object.fromEntries(url.searchParams.entries()));
+    res.writeHead(200, {
+      "Content-Type": "text/csv; charset=utf-8",
+      "Content-Disposition": "attachment; filename=\"ymty-crm-leads.csv\"",
+      "Cache-Control": "no-store"
+    });
+    return res.end(csv);
+  }
+
+  const crmLeadMatch = pathname.match(/^\/api\/admin\/crm\/leads\/([^/]+)$/);
+  if (req.method === "GET" && crmLeadMatch) {
+    await assertYmtyAdminAccess(req);
+    const result = await getYmtyCrmLead(decodeURIComponent(crmLeadMatch[1]));
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "POST" && crmLeadMatch) {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await updateYmtyCrmLead({
+      leadId: decodeURIComponent(crmLeadMatch[1]),
+      patch: body,
+      adminId: admin.adminId,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const crmStageMatch = pathname.match(/^\/api\/admin\/crm\/leads\/([^/]+)\/stage$/);
+  if (req.method === "POST" && crmStageMatch) {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await updateYmtyCrmLeadStage({
+      leadId: decodeURIComponent(crmStageMatch[1]),
+      stage: body.stage || "",
+      reason: body.reason || body.note || "",
+      adminId: admin.adminId,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const crmNoteMatch = pathname.match(/^\/api\/admin\/crm\/leads\/([^/]+)\/note$/);
+  if (req.method === "POST" && crmNoteMatch) {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await addYmtyCrmNote({
+      leadId: decodeURIComponent(crmNoteMatch[1]),
+      body: body.body || body.note || "",
+      adminId: admin.adminId,
+      ip: getIp(req)
+    });
     return sendJson(res, 200, { ok: true, ...result });
   }
 
