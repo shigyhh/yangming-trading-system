@@ -15,70 +15,154 @@ function readUtf8(path) {
 }
 
 function assertIncludes(source, text) {
-  assert.ok(source.includes(text), `Expected page to include: ${text}`);
+  assert.ok(source.includes(text), `Expected to include: ${text}`);
 }
 
 function assertNotIncludes(source, text) {
-  assert.ok(!source.includes(text), `Expected page not to include: ${text}`);
+  assert.ok(!source.includes(text), `Expected not to include: ${text}`);
 }
 
-function removeAllowedCompliancePhrases(source) {
+function removeRequiredCompliancePhrases(source) {
   return source
+    .replaceAll("不荐股，不喊单，不承诺收益", "")
     .replaceAll("不荐股、不喊单、不承诺收益", "")
     .replaceAll("不荐股", "")
     .replaceAll("不喊单", "")
     .replaceAll("不承诺收益", "")
     .replaceAll("不代客理财", "")
-    .replaceAll("不组织实盘跟单", "");
+    .replaceAll("不组织实盘跟单", "")
+    .replaceAll("想跟单赚钱的人", "")
+    .replaceAll("期待保证收益的人", "")
+    .replaceAll("历史案例、模拟盘演示不代表未来收益", "");
 }
 
-test("ymty information-flow landing page contains required conversion sections", () => {
+function extractCreateOrderPayload(html) {
+  const match = html.match(/const payload = \{[\s\S]*?\n\s*\};/);
+  assert.ok(match, "Expected createOrder payload object to exist");
+  return match[0];
+}
+
+test("ymty landing page is a simple continuous conversion page", () => {
   const html = readUtf8(indexPath);
+  const sectionCount = (html.match(/<section\b/g) || []).length;
+  const sectionIds = [...html.matchAll(/<section\b[^>]*\bid="([^"]+)"/g)].map((match) => match[1]);
+
+  assert.equal(sectionCount, 5, "Expected landing page to keep five compact core modules");
+  assert.deepEqual(sectionIds, ["hero", "pain-method", "training", "result-fit", "signup"]);
 
   [
-    "7天",
-    "阳明心学交易体验营",
-    "用照心训练建立交易纪律",
-    "交易纪律",
-    "模拟盘训练",
+    "class=\"page\"",
+    "class=\"hero\"",
+    "id=\"pain-method\"",
+    "id=\"training\"",
+    "id=\"result-fit\"",
+    "id=\"signup\"",
+    "class=\"pay-sheet\"",
+    "id=\"paySheet\"",
+    "data-pay-choice=\"wechat\"",
+    "data-pay-choice=\"alipay\"",
+    "/assets/ymty-zhao-logo.svg",
+    "你不是输给行情",
+    "你是输给了<b>下单那一念</b>",
+    "照心、停顿、取证、复盘",
+    "看看我是否适合",
+    "这些时刻，你可能太熟了",
+    "交易真正难的",
+    "不是知道，是做到",
+    "Day1",
+    "Day7",
+    "你将获得",
+    "7天直播训练",
+    "交易日志模板",
     "风控清单",
     "复盘模板",
-    "立即报名体验营",
-    "查看7天安排",
-    "为什么适合你",
-    "情绪容易失控",
-    "一涨就追，一跌就慌。",
-    "没有交易计划",
-    "下单靠感觉，复盘靠记忆。",
-    "仓位边界模糊",
-    "亏损后容易补仓、加仓、翻本。",
-    "复盘没有系统",
-    "只记得盈亏，不记录念头、规则和动作。",
-    "为什么选择阳明心学交易体验营",
-    "照心",
-    "取证",
-    "训练",
-    "复盘",
-    "7天课程安排",
-    "Day 1：照心：交易前先看见第一念",
-    "Day 7：戒律：形成个人交易清单",
-    "你将获得",
-    "报名流程",
-    "支付成功后才展示二维码或跳转企业微信获客助手",
-    "未支付用户不能看到入营二维码",
-    "适合与不适合",
-    "FAQ",
-    "风险提示",
+    "社群答疑",
+    "适合 / 不适合",
+    "想减少冲动交易的人",
+    "想建立交易计划的人",
+    "想训练风控和复盘的人",
+    "想要老师报代码的人",
+    "想跟单赚钱的人",
+    "期待保证收益的人",
+    "报名确认",
+    "湖南坤铘紫垣传媒有限公司",
+    "xxjyxt.com",
     "湘ICP备2026021493号-1",
   ].forEach((text) => assertIncludes(html, text));
-});
-
-test("ymty landing page uses live public campaign config and safe order payload", () => {
-  const html = readUtf8(indexPath);
 
   [
-    "/api/public/campaign/ymty",
-    "/api/pay/create",
+    "class=\"water-bg\"",
+    "class=\"stage\"",
+    "class=\"screen\"",
+    "class=\"reflect\"",
+    "class=\"mirror\"",
+    "class=\"waterline\"",
+    "class=\"chapter\"",
+    "class=\"chapter-dot\"",
+    "id=\"tapRipple\"",
+    "triggerRipple",
+    "id=\"pain\"",
+    "id=\"method\"",
+    "id=\"benefits\"",
+    "id=\"fit\"",
+  ].forEach((text) => assertNotIncludes(html, text));
+});
+
+test("ymty landing page avoids forbidden demo and high-risk content", () => {
+  const html = readUtf8(indexPath);
+  const normalized = removeRequiredCompliancePhrases(html);
+
+  [
+    "技术提示",
+    "客服电话：待补充",
+    "请填入 ICP",
+    "讲师/品牌主视觉占位",
+    "企业微信二维码占位",
+    "YMXX_JY_TY_168",
+    "固定底部双支付按钮",
+    "固定底部价格支付条",
+    "量化",
+    "自动交易",
+    "精准交易",
+    "收益稳健",
+    "捕捉信号",
+    "战胜市场",
+    "胜率",
+    "稳赚",
+    "牛股",
+    "荐股",
+    "跟单",
+    "带单",
+    "保证收益",
+    "不充值",
+    "不绑卡",
+    "TODO",
+    "?paid=1",
+    "your-link.example",
+    "将二维码图片放入此处",
+    "二维码 / 跳转位",
+    "企微 / 获客助手二维码",
+    "已有 3,200+",
+    "第一次照见，免费",
+    "爆仓",
+    "加到爆仓",
+    "从来不是钱",
+    "dock",
+    "scroll-snap-type",
+    "scroll-snap-align",
+    "scroll-snap-stop",
+    "overflow-y:scroll",
+    "overflow-y: scroll",
+  ].forEach((text) => assertNotIncludes(normalized, text));
+});
+
+test("ymty landing page uses public config and safe payment payload", () => {
+  const html = readUtf8(indexPath);
+  const payload = extractCreateOrderPayload(html);
+
+  [
+    "fetch(\"/api/public/campaign/ymty\"",
+    "fetch(\"/api/pay/create\"",
     "product_code",
     "pay_channel",
     "success_url",
@@ -86,110 +170,66 @@ test("ymty landing page uses live public campaign config and safe order payload"
     "wechat_jsapi",
     "wechat_h5",
     "alipay_wap",
-    "isWechatBrowser",
+    "data.form_html",
+    "data.pay_url || data.h5_url",
+    "data.jsapi_params",
+    "window.WeixinJSBridge.invoke",
     "status !== \"online\"",
-    "order_id",
-    "order_token",
-    "jsapi_params",
-    "WeixinJSBridge",
-    "pay_url",
-    "form_html",
-    "mock_payment",
+    "暂停报名",
   ].forEach((text) => assertIncludes(html, text));
 
   [
+    "amount",
     "amount_cents",
-    "amount_display",
-    "amount:",
-    "price:",
-    "fee:",
-  ].forEach((text) => assertNotIncludes(html, text));
+    "price",
+    "fee",
+  ].forEach((text) => assertNotIncludes(payload, text));
 });
 
-test("ymty landing page keeps information-flow visual constraints", () => {
-  const html = readUtf8(indexPath);
-
-  [
-    "--red",
-    "--gold",
-    "--paper",
-    "max-width: 760px",
-    "position: fixed",
-    "bottom: 0",
-    "overflow-x: hidden",
-    "coupon",
-    "floating-enroll",
-  ].forEach((text) => assertIncludes(html, text));
-});
-
-test("ymty landing page avoids high-risk advertising terms outside compliance disclaimers", () => {
-  const html = removeAllowedCompliancePhrases(readUtf8(indexPath));
-  const forbiddenTerms = [
-    "自动炒股",
-    "自动交易",
-    "胜率",
-    "稳赚",
-    "保证收益",
-    "牛股",
-    "推荐买入",
-    "推荐卖出",
-    "买卖点",
-    "跟单",
-    "带单",
-    "代客理财",
-    "24小时自动执行",
-    "精准交易",
-    "一买就涨",
-    "翻倍",
-    "技术提示",
-    "客服电话待补充",
-  ];
-
-  forbiddenTerms.forEach((term) => assertNotIncludes(html, term));
-});
-
-test("ymty success page unlocks after paid status only", () => {
+test("ymty success page only unlocks after paid status", () => {
   const html = readUtf8(successPath);
 
   [
     "/api/order/status",
     "/api/afterpay/entrance",
-    "order_id",
-    "token",
-    "paid",
+    "status !== \"paid\"",
     "入口未解锁",
-    "auto_redirect_after_paid",
-    "redirect_delay_ms",
+    "长按识别二维码，添加课程助教",
+    "auto_redirect",
     "wecom_link",
     "qr_image",
-    "长按识别二维码，添加课程助教",
-    "如未自动跳转，点击添加课程助教",
-    "<img",
   ].forEach((text) => assertIncludes(html, text));
 
-  assertNotIncludes(html, "技术提示");
-  assertNotIncludes(html, "客服电话待补充");
+  [
+    "企业微信二维码占位",
+    "上线前替换为真实助教二维码",
+    "客服电话：待补充",
+    "请填入 ICP",
+  ].forEach((text) => assertNotIncludes(html, text));
 });
 
-test("ymty admin page requires session token and supports livecode QR upload", () => {
+test("ymty admin page keeps account login and server-backed production save", () => {
   const html = readUtf8(adminPath);
 
   [
-    "Admin Token",
+    "/api/admin/login",
+    "/api/admin/change-password",
+    "/api/admin/me",
+    "/api/admin/logout",
     "sessionStorage",
     "Authorization",
-    "Bearer",
-    "无权限或登录已失效",
+    "已保存到服务器",
     "/api/admin/campaign/ymty",
     "/api/admin/livecode",
     "/api/admin/upload",
-    "上传二维码",
-    "qr_image",
-    "wecom_link",
-    "auto_redirect_after_paid",
-    "redirect_delay_ms",
-    "remark",
-    "button_text",
-    "service_text",
+    "/api/admin/orders",
+    "/api/admin/audit-logs",
   ].forEach((text) => assertIncludes(html, text));
+
+  [
+    "YMXX Admin Prototype",
+    "localStorage.setItem",
+    "原型已保存到本地浏览器",
+    "生产环境需要后端账号",
+  ].forEach((text) => assertNotIncludes(html, text));
 });

@@ -38,16 +38,9 @@ const defaultLivecode = {
   status: "active"
 };
 
-const defaultAdminUser = {
-  username: "local_ymty_admin",
-  password_hash: "local-dev-placeholder-not-for-production",
-  role: "admin",
-  status: "active"
-};
-
 export async function seedYmtyDefaults() {
   const now = new Date().toISOString();
-  const [products, livecodes, adminUsers] = await Promise.all([
+  const [products, livecodes] = await Promise.all([
     updateRuntimeRecords(PRODUCT_FILE, (records) => insertByKeyIfMissing(records, "product_code", {
       ...defaultProduct,
       created_at: now,
@@ -57,19 +50,12 @@ export async function seedYmtyDefaults() {
       ...defaultLivecode,
       created_at: now,
       updated_at: now
-    })),
-    updateRuntimeRecords(ADMIN_USER_FILE, (records) => insertByKeyIfMissing(records, "username", {
-      ...defaultAdminUser,
-      id: "admin-local-ymty",
-      created_at: now,
-      updated_at: now
     }))
   ]);
 
   return {
     products,
-    livecodes,
-    admin_users: adminUsers
+    livecodes
   };
 }
 

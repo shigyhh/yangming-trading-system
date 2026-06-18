@@ -21,6 +21,7 @@ import { getGlobalReflectionToday, listGlobalReflectionChoices, submitGlobalRefl
 import { buildHistoricalKlineSlice, downloadHistoricalKline, getHistoricalKlineRules, listHistoricalKlineCatalog, listHistoricalKlineInstruments, revealHistoricalKlineSlice } from "../services/historicalKline.js";
 import { buildTradeReviewOcrDraft } from "../services/tradeReviewOcr.js";
 import { createYmtyOrder, getYmtyAdminCampaign, getYmtyAfterpayEntrance, getYmtyAuditLogs, getYmtyOrderForPayment, getYmtyOrderStatus, getYmtyPublicCampaign, listYmtyOrders, markYmtyMockPaySuccess, markYmtyOrderPaid, updateYmtyCampaign, updateYmtyLivecode } from "../services/ymtyCampaign.js";
+import { authenticateYmtyAdmin, changeYmtyAdminPassword, getYmtyAdminMe, loginYmtyAdmin, logoutYmtyAdmin } from "../services/adminAuth.js";
 import { saveYmtyLivecodeUpload } from "../services/ymtyUpload.js";
 import { assertRealPayConfigReady, createH5Order, createJsapiOrder, createWapOrder, isPaymentConfigError, normalizePayChannel, parseAlipayNotify, parseWechatNotify, validateAlipayPayment, validateWechatPayment, verifyAlipayNotify, verifyWechatNotify } from "../services/payments/index.js";
 
@@ -293,14 +294,42 @@ export async function route(req, res) {
     }
   }
 
+  if (req.method === "POST" && pathname === "/api/admin/login") {
+    const body = await readJson(req);
+    const result = await loginYmtyAdmin({
+      username: body.username || "",
+      password: body.password || ""
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/me") {
+    const result = await getYmtyAdminMe(req);
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "POST" && pathname === "/api/admin/change-password") {
+    const body = await readJson(req);
+    const result = await changeYmtyAdminPassword(req, {
+      oldPassword: body.old_password || body.oldPassword || "",
+      newPassword: body.new_password || body.newPassword || ""
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "POST" && pathname === "/api/admin/logout") {
+    const result = await logoutYmtyAdmin(req);
+    return sendJson(res, 200, result);
+  }
+
   if (req.method === "GET" && pathname === "/api/admin/campaign/ymty") {
-    assertYmtyAdminAccess(req);
+    await assertYmtyAdminAccess(req);
     const result = await getYmtyAdminCampaign();
     return sendJson(res, 200, { ok: true, ...result });
   }
 
   if (req.method === "POST" && pathname === "/api/admin/campaign/ymty") {
-    const admin = assertYmtyAdminAccess(req);
+    const admin = await assertYmtyAdminAccess(req);
     const body = await readJson(req);
     const result = await updateYmtyCampaign({
       adminId: admin.adminId,
@@ -311,7 +340,7 @@ export async function route(req, res) {
   }
 
   if (req.method === "POST" && pathname === "/api/admin/livecode") {
-    const admin = assertYmtyAdminAccess(req);
+    const admin = await assertYmtyAdminAccess(req);
     const body = await readJson(req);
     const result = await updateYmtyLivecode({
       adminId: admin.adminId,
@@ -323,7 +352,7 @@ export async function route(req, res) {
 
   if (req.method === "POST" && pathname === "/api/admin/upload") {
     try {
-      assertYmtyAdminAccess(req);
+      await assertYmtyAdminAccess(req);
       const result = await saveYmtyLivecodeUpload(req);
       return sendJson(res, 200, { code: 0, data: result });
     } catch (error) {
@@ -335,13 +364,13 @@ export async function route(req, res) {
   }
 
   if (req.method === "GET" && pathname === "/api/admin/orders") {
-    assertYmtyAdminAccess(req);
+    await assertYmtyAdminAccess(req);
     const result = await listYmtyOrders();
     return sendJson(res, 200, { ok: true, ...result });
   }
 
   if (req.method === "GET" && pathname === "/api/admin/audit-logs") {
-    assertYmtyAdminAccess(req);
+    await assertYmtyAdminAccess(req);
     const result = await getYmtyAuditLogs();
     return sendJson(res, 200, { ok: true, ...result });
   }
@@ -1289,22 +1318,8 @@ function assertKlineDownloadAccess(req) {
   throw error;
 }
 
-function assertYmtyAdminAccess(req) {
-  const configuredToken = getYmtyAdminToken();
-  const providedToken = String(req.headers["x-admin-token"] || req.headers.authorization || "").replace(/^Bearer\s+/i, "").trim();
-  if (configuredToken && providedToken === configuredToken) {
-    return { adminId: String(req.headers["x-admin-id"] || "ymty-admin") };
-  }
-  const error = new Error("无权限或登录已失效");
-  error.statusCode = providedToken ? 403 : 401;
-  throw error;
-}
-
-function getYmtyAdminToken() {
-  const configuredToken = process.env.YMTY_ADMIN_TOKEN || "";
-  if (configuredToken) return configuredToken;
-  if (config.nodeEnv !== "production") return "local-dev-admin-token";
-  return "";
+async function assertYmtyAdminAccess(req) {
+  return authenticateYmtyAdmin(req);
 }
 
 function maskPhone(phone) {
