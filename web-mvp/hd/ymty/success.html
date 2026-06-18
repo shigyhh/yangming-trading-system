@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>阳明心学交易体验营｜报名结果</title>
+    <style>
+      :root {
+        --red: #a51f1a;
+        --gold: #d9aa52;
+        --paper: #fff5df;
+        --ink: #3f2016;
+        --muted: #745240;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        min-width: 320px;
+        margin: 0;
+        overflow-x: hidden;
+      }
+
+      body {
+        min-height: 100svh;
+        display: grid;
+        place-items: center;
+        padding: 16px;
+        background:
+          radial-gradient(circle at 50% 0%, rgba(255, 219, 132, 0.34), transparent 22rem),
+          linear-gradient(180deg, #9c1d18 0%, #c6412f 15rem, #fff3df 15rem, #fff9ee 100%);
+        color: var(--ink);
+        font-family:
+          "PingFang SC",
+          "Microsoft YaHei",
+          "Noto Sans CJK SC",
+          Arial,
+          sans-serif;
+      }
+
+      .page {
+        width: min(100%, 520px);
+      }
+
+      .panel {
+        border-radius: 22px;
+        padding: 22px 18px;
+        background: rgba(255, 249, 236, 0.97);
+        border: 1px solid rgba(165, 31, 26, 0.16);
+        box-shadow: 0 22px 58px rgba(82, 20, 13, 0.2);
+        text-align: center;
+      }
+
+      .seal {
+        width: 58px;
+        height: 58px;
+        display: grid;
+        place-items: center;
+        margin: 0 auto 12px;
+        border-radius: 15px;
+        border: 1px solid rgba(217, 170, 82, 0.7);
+        background: #8f1a15;
+        color: #ffe5a3;
+        font-family: "STKaiti", "Kaiti SC", serif;
+        font-size: 36px;
+        font-weight: 800;
+      }
+
+      h1 {
+        margin: 0;
+        color: var(--red);
+        font-size: 25px;
+        line-height: 1.25;
+      }
+
+      .subtitle {
+        margin: 10px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.7;
+      }
+
+      .locked {
+        margin-top: 18px;
+        border-radius: 16px;
+        padding: 18px 14px;
+        background: #fff1d8;
+        border: 1px solid rgba(165, 31, 26, 0.16);
+      }
+
+      .locked strong {
+        display: block;
+        margin-bottom: 6px;
+        color: var(--red);
+        font-size: 18px;
+      }
+
+      .entrance {
+        margin-top: 18px;
+      }
+
+      .qr-wrap {
+        display: none;
+        margin: 0 auto 12px;
+        width: min(76vw, 260px);
+        min-height: 160px;
+        border-radius: 18px;
+        padding: 12px;
+        background: #fff;
+        border: 1px solid rgba(165, 31, 26, 0.18);
+      }
+
+      .qr-wrap img {
+        display: block;
+        width: 100%;
+        height: auto;
+        border-radius: 10px;
+      }
+
+      .remark {
+        margin: 8px 0 0;
+        color: #6f4031;
+        font-size: 14px;
+      }
+
+      .btn {
+        min-height: 48px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        margin-top: 14px;
+        border: 0;
+        border-radius: 13px;
+        padding: 12px 16px;
+        color: #6c140f;
+        background: linear-gradient(180deg, #ffe48f, var(--gold));
+        font-weight: 900;
+        text-decoration: none;
+        box-shadow: 0 14px 28px rgba(86, 14, 12, 0.16);
+      }
+
+      .btn[hidden],
+      [hidden] {
+        display: none !important;
+      }
+
+      .risk {
+        margin: 14px 0 0;
+        color: #8b6251;
+        font-size: 12px;
+        line-height: 1.7;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="panel">
+        <div class="seal" aria-label="照字标识">照</div>
+        <h1 id="pageTitle">正在核验报名状态</h1>
+        <p class="subtitle" id="pageSubtitle">请稍候，系统会先确认订单是否已支付。</p>
+
+        <div class="locked" id="lockedPanel" hidden>
+          <strong>入口未解锁</strong>
+          <span>订单未完成支付，暂不展示课程助教二维码或获客助手链接。</span>
+        </div>
+
+        <div class="entrance" id="entrancePanel" hidden>
+          <div class="qr-wrap" id="qrWrap">
+            <img id="qrImage" alt="课程助教二维码" />
+          </div>
+          <p class="subtitle" id="entranceText">长按识别二维码，添加课程助教</p>
+          <p class="remark" id="remarkText"></p>
+          <a class="btn" id="wecomButton" href="#" rel="noopener">如未自动跳转，点击添加课程助教</a>
+        </div>
+
+        <p class="risk">
+          本课程仅用于投资教育、交易纪律训练、模拟盘训练和风险意识教育，不构成证券投资咨询、投资建议或买卖依据。
+        </p>
+      </section>
+    </main>
+
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const order_id = params.get("order_id") || "";
+      const token = params.get("token") || "";
+
+      const pageTitle = document.getElementById("pageTitle");
+      const pageSubtitle = document.getElementById("pageSubtitle");
+      const lockedPanel = document.getElementById("lockedPanel");
+      const entrancePanel = document.getElementById("entrancePanel");
+      const qrWrap = document.getElementById("qrWrap");
+      const qrImage = document.getElementById("qrImage");
+      const entranceText = document.getElementById("entranceText");
+      const remarkText = document.getElementById("remarkText");
+      const wecomButton = document.getElementById("wecomButton");
+
+      function showLocked(message) {
+        pageTitle.textContent = "入口未解锁";
+        pageSubtitle.textContent = message || "请先完成支付，再返回本页查看课程助教入口。";
+        lockedPanel.hidden = false;
+        entrancePanel.hidden = true;
+        qrImage.removeAttribute("src");
+        wecomButton.hidden = true;
+      }
+
+      function showEmptyEntrance() {
+        pageTitle.textContent = "助教入口配置中";
+        pageSubtitle.textContent = "助教入口配置中，请联系管理员";
+        lockedPanel.hidden = true;
+        entrancePanel.hidden = false;
+        qrWrap.style.display = "none";
+        entranceText.textContent = "助教入口配置中，请联系管理员";
+        remarkText.textContent = "";
+        wecomButton.hidden = true;
+      }
+
+      function renderEntrance(livecode) {
+        const wecom_link = livecode.wecom_link || "";
+        const qr_image = livecode.qr_image || "";
+        const autoRedirect = livecode.auto_redirect === true || livecode.auto_redirect_after_paid === true;
+        const redirect_delay_ms = Number(livecode.redirect_delay_ms || 0);
+
+        if (!wecom_link && !qr_image) {
+          showEmptyEntrance();
+          return;
+        }
+
+        pageTitle.textContent = "报名成功，入口已解锁";
+        pageSubtitle.textContent = livecode.service_text || "支付后添加课程助教微信";
+        lockedPanel.hidden = true;
+        entrancePanel.hidden = false;
+
+        if (qr_image) {
+          qrImage.src = qr_image;
+          qrWrap.style.display = "block";
+          entranceText.textContent = "长按识别二维码，添加课程助教";
+        } else {
+          qrImage.removeAttribute("src");
+          qrWrap.style.display = "none";
+          entranceText.textContent = "点击按钮添加课程助教";
+        }
+
+        remarkText.textContent = livecode.remark ? `加微备注：${livecode.remark}` : "";
+
+        if (wecom_link) {
+          wecomButton.href = wecom_link;
+          wecomButton.textContent = livecode.button_text || "如未自动跳转，点击添加课程助教";
+          wecomButton.hidden = false;
+        } else {
+          wecomButton.hidden = true;
+        }
+
+        if (autoRedirect && wecom_link) {
+          entranceText.textContent = "正在跳转企业微信获客助手";
+          wecomButton.textContent = "如未自动跳转，点击添加课程助教";
+          window.setTimeout(() => {
+            window.location.href = wecom_link;
+          }, Math.max(0, redirect_delay_ms));
+        }
+      }
+
+      async function fetchJson(url) {
+        const response = await fetch(url, {
+          headers: { Accept: "application/json" },
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.ok) throw new Error(data.error || "request failed");
+        return data;
+      }
+
+      async function boot() {
+        if (!order_id || !token) {
+          showLocked("缺少订单参数，无法核验报名状态。");
+          return;
+        }
+
+        try {
+          const query = new URLSearchParams({ order_id, token }).toString();
+          const statusData = await fetchJson(`/api/order/status?${query}`);
+          if (!statusData.order || statusData.order.pay_status !== "paid") {
+            showLocked("订单尚未完成支付，课程助教入口暂未解锁。");
+            return;
+          }
+
+          const entranceData = await fetchJson(`/api/afterpay/entrance?${query}`);
+          renderEntrance(entranceData.livecode || {});
+        } catch {
+          showLocked("暂时无法核验订单，请稍后刷新重试。");
+        }
+      }
+
+      boot();
+    </script>
+  </body>
+</html>

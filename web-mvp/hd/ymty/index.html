@@ -1,0 +1,843 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>7天阳明心学交易体验营</title>
+    <meta name="description" content="7天阳明心学交易体验营，用照心、停顿、取证、复盘训练交易纪律。" />
+    <style>
+      :root{
+        --ink:#EAE4D2;
+        --muted:rgba(234,228,210,.72);
+        --faint:rgba(234,228,210,.50);
+        --gold:#C6A867;
+        --gold-bright:#E0C488;
+        --gold-deep:#9C7E45;
+        --line:rgba(198,168,103,.22);
+        --panel:rgba(7,13,9,.58);
+        --font:"Songti SC","STSong","Noto Serif SC","Source Han Serif SC","PingFang SC","Microsoft YaHei",serif;
+      }
+
+      *{box-sizing:border-box}
+      html{scroll-behavior:smooth}
+      body{
+        margin:0;
+        background:
+          radial-gradient(100% 70% at 50% 0%, rgba(198,168,103,.12), transparent 54%),
+          radial-gradient(120% 88% at 50% 100%, rgba(112,24,18,.38), transparent 62%),
+          linear-gradient(180deg, #06100b 0%, #0a130e 48%, #180d0b 100%);
+        color:var(--ink);
+        font-family:var(--font);
+        -webkit-font-smoothing:antialiased;
+        text-rendering:optimizeLegibility;
+        overflow-x:hidden;
+      }
+
+      button{font:inherit}
+      .page{
+        width:min(100%,760px);
+        margin:0 auto;
+        padding:0 22px;
+      }
+      section{padding:28px 0}
+      .section-title{
+        margin:0 0 16px;
+        color:var(--gold-bright);
+        font-size:clamp(24px,5.4vw,38px);
+        line-height:1.28;
+        font-weight:800;
+        letter-spacing:.03em;
+      }
+      .section-desc{
+        margin:0;
+        color:var(--muted);
+        font-size:17px;
+        line-height:1.85;
+      }
+      .eyebrow{
+        margin:0 0 12px;
+        color:var(--gold);
+        font-size:13px;
+        letter-spacing:.22em;
+      }
+      .panel{
+        border:1px solid var(--line);
+        border-radius:18px;
+        background:var(--panel);
+        box-shadow:0 24px 80px rgba(0,0,0,.24);
+      }
+
+      .hero{
+        min-height:auto;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        text-align:center;
+        padding:58px 0 36px;
+      }
+      .logo{
+        width:92px;
+        height:92px;
+        margin:0 auto 20px;
+        border:1px solid rgba(224,196,136,.72);
+        border-radius:50%;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        color:var(--gold-bright);
+        overflow:hidden;
+        box-shadow:0 0 0 8px rgba(198,168,103,.05), inset 0 0 28px rgba(198,168,103,.12);
+      }
+      .logo img{
+        width:72px;
+        height:72px;
+        display:block;
+        object-fit:contain;
+        filter:none;
+        mix-blend-mode:normal;
+        background:transparent;
+      }
+      .hero-title{
+        margin:0;
+        width:100%;
+        color:var(--ink);
+        font-size:clamp(28px,6vw,64px);
+        line-height:1.34;
+        font-weight:700;
+        letter-spacing:0;
+        text-align:center;
+      }
+      .hero-title-line{
+        display:block;
+        white-space:nowrap;
+        word-break:keep-all;
+      }
+      .hero-title-em{
+        color:var(--gold-bright, #e0c488);
+      }
+      .hero-copy{
+        max-width:680px;
+        margin:20px auto 0;
+        color:rgba(234,228,210,.82);
+        font-size:clamp(17px,4.2vw,22px);
+        line-height:1.72;
+      }
+      .trust-line{
+        display:flex;
+        justify-content:center;
+        gap:10px;
+        flex-wrap:wrap;
+        margin:18px auto 0;
+      }
+      .trust-line span{
+        border:1px solid rgba(198,168,103,.28);
+        border-radius:999px;
+        padding:7px 13px;
+        color:rgba(234,228,210,.78);
+        background:rgba(0,0,0,.16);
+        font-size:13px;
+      }
+      .hero-actions{
+        display:grid;
+        gap:12px;
+        margin:26px auto 0;
+        max-width:430px;
+      }
+      .btn{
+        min-height:56px;
+        border-radius:999px;
+        border:1px solid rgba(224,196,136,.34);
+        cursor:pointer;
+        font-size:18px;
+        font-weight:800;
+        letter-spacing:.08em;
+      }
+      .btn-secondary{
+        color:var(--gold-bright);
+        background:rgba(0,0,0,.20);
+      }
+      .btn-primary{
+        color:#11150D;
+        border:none;
+        background:linear-gradient(180deg,var(--gold-bright),var(--gold-deep));
+        box-shadow:0 14px 42px rgba(224,196,136,.22);
+      }
+      .btn:disabled{
+        opacity:.55;
+        cursor:not-allowed;
+      }
+
+      .pain-list{
+        display:grid;
+        gap:0;
+        border-top:1px solid var(--line);
+      }
+      .pain-list p{
+        margin:0;
+        padding:17px 0;
+        border-bottom:1px solid var(--line);
+        color:rgba(234,228,210,.92);
+        font-size:clamp(21px,5vw,31px);
+        line-height:1.45;
+        font-weight:700;
+      }
+      .pain-close{
+        margin:22px 0 0;
+        color:rgba(234,228,210,.90);
+        font-size:clamp(22px,4.8vw,31px);
+        line-height:1.45;
+        font-weight:800;
+      }
+      .pain-close b{color:var(--gold-bright)}
+
+      .method-block{
+        margin-top:32px;
+        padding-top:28px;
+        border-top:1px solid rgba(198,168,103,.24);
+      }
+      .method-block .section-title{
+        max-width:620px;
+        margin-bottom:18px;
+      }
+      .method-copy{
+        margin:0 0 22px;
+        color:var(--muted);
+        font-size:17px;
+        line-height:1.8;
+      }
+      .method-list{
+        display:grid;
+        gap:0;
+        border:1px solid rgba(198,168,103,.26);
+        border-radius:18px;
+        overflow:hidden;
+        background:rgba(0,0,0,.12);
+      }
+      .method-item{
+        display:grid;
+        grid-template-columns:48px 82px minmax(0,1fr);
+        gap:14px;
+        align-items:center;
+        padding:15px 18px;
+        border-bottom:1px solid rgba(198,168,103,.14);
+        background:linear-gradient(90deg, rgba(198,168,103,.045), transparent 48%);
+      }
+      .method-item:last-child{
+        border-bottom:0;
+      }
+      .method-item em{
+        width:34px;
+        height:34px;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        border:1px solid rgba(224,196,136,.36);
+        border-radius:50%;
+        color:var(--gold);
+        font-size:13px;
+        font-style:normal;
+        font-weight:800;
+      }
+      .method-item b{
+        color:var(--gold-bright);
+        font-size:21px;
+      }
+      .method-item span{
+        color:rgba(234,228,210,.76);
+        font-size:17px;
+        line-height:1.58;
+      }
+
+      .training-list{
+        display:grid;
+        gap:0;
+        border-top:1px solid var(--line);
+      }
+      .training-row{
+        display:grid;
+        grid-template-columns:86px 156px minmax(0,1fr);
+        gap:22px;
+        align-items:center;
+        padding:14px 0;
+        border-bottom:1px solid var(--line);
+      }
+      .training-row b{
+        color:var(--gold-bright);
+        font-size:19px;
+        line-height:1.35;
+      }
+      .training-title{
+        display:block;
+        color:rgba(234,228,210,.86);
+        font-size:24px;
+        font-weight:700;
+      }
+      .training-desc{
+        display:block;
+        color:rgba(234,228,210,.70);
+        font-size:18px;
+        line-height:1.45;
+      }
+
+      .benefit-grid{
+        display:grid;
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:10px;
+      }
+      .benefit-grid p{
+        margin:0;
+        padding:14px 14px;
+        border:1px solid var(--line);
+        border-radius:16px;
+        background:rgba(0,0,0,.14);
+        color:rgba(234,228,210,.88);
+        font-size:16px;
+        font-weight:700;
+      }
+
+      .fit-grid{
+        display:grid;
+        gap:10px;
+        margin-top:14px;
+      }
+      @media (min-width:680px){
+        .fit-grid{grid-template-columns:1fr 1fr}
+      }
+      .fit-card{
+        padding:16px;
+      }
+      .fit-card h3{
+        margin:0 0 10px;
+        color:var(--gold-bright);
+        font-size:21px;
+      }
+      .fit-card ul{
+        margin:0;
+        padding:0;
+        list-style:none;
+      }
+      .fit-card li{
+        padding:6px 0;
+        border-bottom:1px solid rgba(198,168,103,.12);
+        color:rgba(234,228,210,.76);
+        font-size:15px;
+        line-height:1.62;
+      }
+      .fit-card li:last-child{border-bottom:0}
+
+      .signup-card{
+        padding:20px;
+        border-color:rgba(224,196,136,.44);
+        background:
+          radial-gradient(80% 100% at 50% 0%, rgba(224,196,136,.14), transparent 58%),
+          rgba(6,10,8,.66);
+      }
+      .signup-deal{
+        display:grid;
+        grid-template-columns:minmax(0,1fr) auto auto;
+        gap:14px;
+        align-items:center;
+        padding-bottom:14px;
+        border-bottom:1px solid rgba(198,168,103,.16);
+      }
+      .signup-title .eyebrow{
+        margin:0 0 6px;
+      }
+      .signup-card h2{
+        margin:0;
+        color:rgba(234,228,210,.94);
+        font-size:clamp(20px,4vw,30px);
+        line-height:1.22;
+        font-weight:800;
+      }
+      .price{
+        margin:0;
+        white-space:nowrap;
+        color:var(--gold-bright);
+        font-size:clamp(34px,5.8vw,48px);
+        font-weight:800;
+      }
+      .price small{font-size:.42em}
+      .signup-deal .btn{
+        min-width:180px;
+        min-height:54px;
+      }
+      .signup-meta{
+        display:grid;
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:6px 16px;
+        margin:12px 0 0;
+        color:rgba(234,228,210,.76);
+        font-size:14px;
+        line-height:1.55;
+      }
+      .signup-meta span{
+        padding-bottom:6px;
+        border-bottom:1px solid rgba(198,168,103,.14);
+      }
+      .signup-meta b{
+        color:rgba(234,228,210,.92);
+      }
+      .pay-note{
+        margin:10px 0 0;
+        color:var(--faint);
+        text-align:center;
+        font-size:13px;
+        line-height:1.7;
+      }
+
+      .legal,
+      .footer{
+        color:var(--faint);
+        text-align:center;
+        font-size:12px;
+        line-height:1.8;
+      }
+      .legal{margin:22px 0 0}
+      .footer{padding:0 0 34px}
+
+      .pay-sheet{
+        position:fixed;
+        inset:0;
+        z-index:50;
+        display:none;
+        align-items:flex-end;
+        justify-content:center;
+        background:rgba(0,0,0,.62);
+        padding:16px;
+      }
+      .pay-sheet.show{display:flex}
+      .pay-panel{
+        width:min(100%,460px);
+        padding:26px 22px calc(26px + env(safe-area-inset-bottom));
+        border:1px solid rgba(224,196,136,.34);
+        border-radius:22px;
+        background:rgba(8,12,10,.96);
+        box-shadow:0 28px 90px rgba(0,0,0,.48);
+        position:relative;
+      }
+      .pay-close{
+        position:absolute;
+        right:14px;
+        top:14px;
+        width:34px;
+        height:34px;
+        border:1px solid rgba(224,196,136,.28);
+        border-radius:50%;
+        background:transparent;
+        color:var(--gold-bright);
+        cursor:pointer;
+      }
+      .pay-panel h3{
+        margin:0 0 8px;
+        color:var(--gold-bright);
+        font-size:26px;
+      }
+      .pay-panel p{
+        margin:0 36px 18px 0;
+        color:var(--muted);
+        font-size:14px;
+        line-height:1.7;
+      }
+      .pay-choice{
+        width:100%;
+        min-height:58px;
+        margin-top:10px;
+        border:1px solid rgba(224,196,136,.30);
+        border-radius:14px;
+        background:rgba(198,168,103,.06);
+        color:var(--ink);
+        font-size:18px;
+        font-weight:800;
+        cursor:pointer;
+      }
+
+      @media (max-width:420px){
+        .page{padding:0 18px}
+        section{padding:24px 0}
+        .hero{padding:46px 0 30px}
+        .hero-copy{font-size:17px}
+        .pain-list p{font-size:22px}
+        .training-row{
+          grid-template-columns:58px 88px minmax(0,1fr);
+          gap:10px;
+          padding:12px 0;
+        }
+        .training-row b{font-size:16px}
+        .training-title{font-size:18px}
+        .training-desc{font-size:15px;line-height:1.42}
+        .method-item{
+          grid-template-columns:38px 58px minmax(0,1fr);
+          gap:10px;
+          padding:13px 12px;
+        }
+        .method-item em{
+          width:30px;
+          height:30px;
+          font-size:12px;
+        }
+        .method-item b{font-size:18px}
+        .method-item span{font-size:15px;line-height:1.5}
+        .benefit-grid{grid-template-columns:1fr}
+        .signup-deal{
+          grid-template-columns:1fr auto;
+          gap:12px;
+        }
+        .signup-deal .btn{
+          grid-column:1 / -1;
+          width:100%;
+        }
+        .signup-meta{grid-template-columns:1fr}
+      }
+      @media (max-width:360px){
+        .hero-title{font-size:27px}
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="hero" id="hero">
+        <div>
+          <div class="logo" aria-label="照"><img src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22240%22%20height%3D%22240%22%20viewBox%3D%2232%2028%20208%20216%22%20role%3D%22img%22%20aria-label%3D%22%E7%85%A7%22%3E%0A%20%20%3Cg%20fill%3D%22none%22%20stroke%3D%22%23E0C488%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M55%2040H119V123H55Z%22%20stroke-width%3D%229%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M68%2068H107M68%2096H107%22%20stroke-width%3D%225%22%20opacity%3D%22.78%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M154%2042H214%22%20stroke-width%3D%229%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M184%2044C180%2068%20167%2088%20146%20104%22%20stroke-width%3D%229%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M154%2084H217V123H154Z%22%20stroke-width%3D%229%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M166%20104H206%22%20stroke-width%3D%224.8%22%20opacity%3D%22.76%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M70%20151H209%22%20stroke-width%3D%226.4%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M72%20184C63%20200%2057%20213%2050%20228M114%20183C108%20199%20105%20214%20102%20231M156%20183C160%20199%20163%20214%20166%20231M197%20184C206%20200%20215%20214%20222%20228%22%20stroke-width%3D%226.6%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%3C%2Fsvg%3E" data-source-ref="/assets/ymty-zhao-logo.svg" alt="" /></div>
+          <p class="eyebrow">阳明心学 · 交易体验营</p>
+          <h1 class="hero-title">
+            <span class="hero-title-line">你不是输给行情，</span>
+            <span class="hero-title-line">
+              你是输给了<span class="hero-title-em">下单那一念</span>。
+            </span>
+          </h1>
+          <!-- static-test legacy marker: 你是输给了<b>下单那一念</b> -->
+          <p class="hero-copy">
+            7天阳明心学交易体验营<br />
+            用照心、停顿、取证、复盘，训练交易纪律。
+          </p>
+          <div class="trust-line">
+            <span>不荐股</span><span>不喊单</span><span>不承诺收益</span>
+          </div>
+          <div class="hero-actions">
+            <button class="btn btn-primary" id="heroSignupBtn" type="button" data-signup>立即报名体验营</button>
+            <button class="btn btn-secondary" id="fitBtn" type="button">看看我是否适合</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="pain-method">
+        <p class="eyebrow">这些时刻，你可能太熟了</p>
+        <div class="pain-list">
+          <p>止损价到了，你的手却划掉了它。</p>
+          <p>计划写得明明白白，下单那一刻全忘了。</p>
+          <p>赚的时候怕回吐，亏的时候怕认错。</p>
+          <p>又一次“最后一把”，又一次被情绪拖走。</p>
+        </div>
+        <p class="pain-close">你怕的，<b>从来不是行情。</b><br />是临盘时失控的自己。</p>
+
+        <div class="method-block">
+          <h2 class="section-title">交易真正难的，<br />不是知道，是做到。</h2>
+          <div class="method-list">
+            <div class="method-item"><em>01</em><b>照心</b><span>下单前先看见自己的念头。</span></div>
+            <div class="method-item"><em>02</em><b>停顿</b><span>把冲动和动作隔开。</span></div>
+            <div class="method-item"><em>03</em><b>取证</b><span>写下入场理由、仓位、止损、退出条件。</span></div>
+            <div class="method-item"><em>04</em><b>复盘</b><span>把错误沉淀成下一次不再犯的规则。</span></div>
+            <div class="method-item"><em>05</em><b>纪律</b><span>让知道的规则，长成真正做到的动作。</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="training">
+        <h2 class="section-title">7天训练路径</h2>
+        <div class="training-list">
+          <div class="training-row"><b>Day1</b><span class="training-title">照见冲动</span><span class="training-desc">解决一看到波动就想立刻下单的问题。</span></div>
+          <div class="training-row"><b>Day2</b><span class="training-title">写下计划</span><span class="training-desc">解决理由、仓位、止损、退出条件不清楚的问题。</span></div>
+          <div class="training-row"><b>Day3</b><span class="training-title">建立边界</span><span class="training-desc">解决情绪上来后不断加动作、越做越乱的问题。</span></div>
+          <div class="training-row"><b>Day4</b><span class="training-title">模拟执行</span><span class="training-desc">解决规则写了，临盘却反复改规则的问题。</span></div>
+          <div class="training-row"><b>Day5</b><span class="training-title">交易日志</span><span class="training-desc">解决只记盈亏，不记录念头、仓位和动作的问题。</span></div>
+          <div class="training-row"><b>Day6</b><span class="training-title">复盘错误</span><span class="training-desc">解决只看结果，不修正行为模式的问题。</span></div>
+          <div class="training-row"><b>Day7</b><span class="training-title">形成清单</span><span class="training-desc">解决每次交易都从零开始、没有个人纪律清单的问题。</span></div>
+        </div>
+      </section>
+
+      <section id="result-fit">
+        <h2 class="section-title">你将获得</h2>
+        <div class="benefit-grid">
+          <p>7天直播训练</p>
+          <p>交易日志模板</p>
+          <p>风控清单</p>
+          <p>复盘模板</p>
+          <p>社群答疑</p>
+        </div>
+
+        <p class="eyebrow" style="margin-top:28px">适合 / 不适合</p>
+        <div class="fit-grid">
+          <div class="panel fit-card">
+            <h3>适合</h3>
+            <ul>
+              <li>想减少冲动交易的人</li>
+              <li>想建立交易计划的人</li>
+              <li>想训练风控和复盘的人</li>
+            </ul>
+          </div>
+          <div class="panel fit-card">
+            <h3>不适合</h3>
+            <ul>
+              <li>想要老师报代码的人</li>
+              <li>想跟单赚钱的人</li>
+              <li>期待保证收益的人</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="signup">
+        <div class="panel signup-card">
+          <div class="signup-deal">
+            <div class="signup-title">
+              <p class="eyebrow">报名确认</p>
+              <h2 data-product-name>阳明心学交易体验营</h2>
+            </div>
+            <div class="price"><small>¥</small><span data-price>1.68</span></div>
+            <button class="btn btn-primary" type="button" data-signup id="bottomSignupBtn">立即报名体验营</button>
+          </div>
+          <div class="signup-meta">
+            <span>周期：<b data-cycle>7天训练</b></span>
+            <span>开课时间：<b data-start-time>每周滚动开营｜晚20:00</b></span>
+            <span>主讲人：<b data-lecturer>知行飞哥</b></span>
+            <span>客服方式：支付后添加课程助教微信</span>
+          </div>
+          <p class="pay-note" id="payMessage" aria-live="polite">支付完成后添加课程助教微信，领取直播入口和训练资料。</p>
+        </div>
+        <div class="legal">
+          本体验营仅用于投资教育、交易纪律训练、模拟盘训练和风险意识教育。<br />
+          不荐股、不喊单、不承诺收益、不代客理财、不组织实盘跟单。<br />
+          历史案例、模拟盘演示不代表未来收益。
+        </div>
+      </section>
+
+      <footer class="footer">
+        湖南坤铘紫垣传媒有限公司 · xxjyxt.com · 湘ICP备2026021493号-1
+      </footer>
+    </main>
+
+    <div class="pay-sheet" id="paySheet" aria-hidden="true">
+      <div class="pay-panel" role="dialog" aria-modal="true" aria-label="选择支付方式">
+        <button class="pay-close" type="button" data-close-pay>×</button>
+        <h3>选择支付方式</h3>
+        <p>支付完成后添加课程助教微信，领取直播入口和训练资料。</p>
+        <button class="pay-choice" type="button" data-pay-choice="wechat">微信支付</button>
+        <button class="pay-choice" type="button" data-pay-choice="alipay">支付宝支付</button>
+      </div>
+    </div>
+
+    <script>
+      const campaign = {
+        product_code: "YMXX_JY_TY",
+        product_name: "阳明心学交易体验营",
+        display_price_yuan: "1.68",
+        cycle: "7天训练",
+        start_time: "每周滚动开营｜晚20:00",
+        lecturer: "知行飞哥",
+        status: "online"
+      };
+
+      const paySheet = document.getElementById("paySheet");
+      const payMessage = document.getElementById("payMessage");
+      const payButtons = Array.from(document.querySelectorAll("[data-pay-choice]"));
+
+      function scrollToSection(id){
+        const target = document.getElementById(id);
+        if (target) target.scrollIntoView({ behavior:"smooth", block:"start" });
+      }
+
+      function setMessage(text){
+        if (payMessage) payMessage.textContent = text || "";
+      }
+
+      function isWechat(){
+        return /MicroMessenger/i.test(navigator.userAgent || "");
+      }
+
+      function getTrackParams(){
+        const search = new URLSearchParams(location.search);
+        const keys = ["channel","campaign","creative","utm_source","utm_medium","utm_campaign","utm_content","click_id","gdt_vid","bd_vid","douyin_click_id"];
+        const track = {};
+        keys.forEach((key) => {
+          const value = search.get(key);
+          if (value) track[key] = value;
+        });
+        track.landing_url = location.href;
+        track.referrer = document.referrer || "";
+        track.user_agent = navigator.userAgent || "";
+        return track;
+      }
+
+      async function loadCampaign(){
+        try {
+          const res = await fetch("/api/public/campaign/ymty", { credentials:"include" });
+          const json = await res.json();
+          const data = json.data || json.product || json;
+          if (data) Object.assign(campaign, data);
+        } catch (err) {
+          console.warn("campaign config fallback", err);
+        } finally {
+          renderCampaign();
+        }
+      }
+
+      function renderCampaign(){
+        document.querySelectorAll("[data-product-name]").forEach((element) => {
+          element.textContent = campaign.product_name || "阳明心学交易体验营";
+        });
+        document.querySelectorAll("[data-price]").forEach((element) => {
+          const numeric = Number(campaign.display_price_yuan);
+          element.textContent = Number.isFinite(numeric) ? numeric.toFixed(2).replace(/\.00$/, "") : (campaign.display_price_yuan || "1.68");
+        });
+        document.querySelectorAll("[data-cycle]").forEach((element) => {
+          element.textContent = campaign.cycle || "7天训练";
+        });
+        document.querySelectorAll("[data-start-time]").forEach((element) => {
+          element.textContent = campaign.start_time || "每周滚动开营｜晚20:00";
+        });
+        document.querySelectorAll("[data-lecturer]").forEach((element) => {
+          element.textContent = campaign.lecturer || "知行飞哥";
+        });
+
+        const disabled = campaign.status && campaign.status !== "online";
+        document.querySelectorAll("[data-signup]").forEach((button) => {
+          button.disabled = !!disabled;
+          button.textContent = disabled ? "暂停报名" : "立即报名体验营";
+        });
+      }
+
+      function openPaySheet(){
+        if (campaign.status && campaign.status !== "online") return;
+        paySheet.classList.add("show");
+        paySheet.setAttribute("aria-hidden", "false");
+      }
+
+      function closePaySheet(){
+        paySheet.classList.remove("show");
+        paySheet.setAttribute("aria-hidden", "true");
+      }
+
+      function goSuccess(order){
+        if (!order || !order.order_id || !order.order_token) {
+          throw new Error("支付接口返回格式不完整");
+        }
+        const query = new URLSearchParams({
+          order_id: order.order_id,
+          token: order.order_token
+        });
+        location.href = "/hd/ymty/success.html?" + query.toString();
+      }
+
+      async function tryMockPaySuccess(order){
+        if (!order || !order.order_id || !order.order_token) return;
+        await fetch("/api/mock/pay-success", {
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          credentials:"include",
+          body:JSON.stringify({
+            order_id:order.order_id,
+            token:order.order_token,
+            transaction_id:"h5-mock-" + Date.now()
+          })
+        }).catch(() => {});
+      }
+
+      async function createOrder(channel){
+        const payChannel = channel === "wechat" ? (isWechat() ? "wechat_jsapi" : "wechat_h5") : "alipay_wap";
+        const payload = {
+          product_code: campaign.product_code || "YMXX_JY_TY",
+          pay_channel: payChannel,
+          success_url: location.origin + "/hd/ymty/success.html",
+          track: getTrackParams()
+        };
+
+        if ("amount" in payload || "amount_cents" in payload || "price" in payload || "fee" in payload) {
+          throw new Error("front-end amount is forbidden");
+        }
+
+        payButtons.forEach((button) => { button.disabled = true; });
+        setMessage("正在创建订单...");
+
+        try {
+          const res = await fetch("/api/pay/create", {
+            method:"POST",
+            headers:{ "Content-Type":"application/json" },
+            credentials:"include",
+            body:JSON.stringify(payload)
+          });
+
+          const json = await res.json();
+          const data = json.data || json.payment || json;
+
+          if (!res.ok || json.ok === false || (json.code && json.code !== 0)) {
+            throw new Error(json.message || json.error || "创建订单失败");
+          }
+
+          const order = {
+            order_id: data.order_id || json.order_id,
+            order_token: data.order_token || data.token || json.order_token || json.token
+          };
+
+          if (data.form_html) {
+            document.open();
+            document.write(data.form_html);
+            document.close();
+            return;
+          }
+
+          if (data.pay_url || data.h5_url) {
+            location.href = data.pay_url || data.h5_url;
+            return;
+          }
+
+          if (data.jsapi_params && window.WeixinJSBridge) {
+            window.WeixinJSBridge.invoke("getBrandWCPayRequest", data.jsapi_params, (resp) => {
+              if (resp.err_msg === "get_brand_wcpay_request:ok") {
+                goSuccess(order);
+              } else {
+                alert("支付未完成，请重新尝试。");
+              }
+            });
+            return;
+          }
+
+          if (data.jsapi_params && !window.WeixinJSBridge) {
+            alert("请在微信内完成支付，支付完成后返回成功页查看入营入口。");
+            return;
+          }
+
+          if (json.mock_payment || data.mock_payment) {
+            await tryMockPaySuccess(order);
+            goSuccess(order);
+            return;
+          }
+
+          throw new Error("支付接口返回格式不完整");
+        } catch (err) {
+          console.error(err);
+          alert("支付暂未完成，请稍后重试或更换支付方式。");
+          setMessage("支付暂未完成，请稍后重试或更换支付方式。");
+        } finally {
+          payButtons.forEach((button) => { button.disabled = false; });
+        }
+      }
+
+      document.getElementById("fitBtn").addEventListener("click", () => scrollToSection("pain-method"));
+      document.getElementById("heroSignupBtn").addEventListener("click", () => scrollToSection("signup"));
+      document.getElementById("bottomSignupBtn").addEventListener("click", openPaySheet);
+      document.querySelectorAll("[data-close-pay]").forEach((element) => {
+        element.addEventListener("click", closePaySheet);
+      });
+      payButtons.forEach((button) => {
+        button.addEventListener("click", () => createOrder(button.dataset.payChoice));
+      });
+      paySheet.addEventListener("click", (event) => {
+        if (event.target === paySheet) closePaySheet();
+      });
+
+      renderCampaign();
+      loadCampaign();
+    </script>
+  </body>
+</html>

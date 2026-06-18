@@ -3,18 +3,7 @@ import path from "node:path";
 import { config } from "../config.js";
 
 export async function readJson(req) {
-  const chunks = [];
-  let totalBytes = 0;
-  for await (const chunk of req) {
-    totalBytes += chunk.length;
-    if (totalBytes > config.jsonBodyLimitBytes) {
-      const error = new Error(`请求体过大，最大允许 ${Math.round(config.jsonBodyLimitBytes / 1024)}KB`);
-      error.statusCode = 413;
-      throw error;
-    }
-    chunks.push(chunk);
-  }
-  const raw = Buffer.concat(chunks).toString("utf8").trim();
+  const raw = (await readRawBody(req, config.jsonBodyLimitBytes)).toString("utf8").trim();
   if (!raw) return {};
 
   try {
@@ -26,13 +15,28 @@ export async function readJson(req) {
   }
 }
 
+export async function readRawBody(req, limitBytes = config.jsonBodyLimitBytes) {
+  const chunks = [];
+  let totalBytes = 0;
+  for await (const chunk of req) {
+    totalBytes += chunk.length;
+    if (totalBytes > limitBytes) {
+      const error = new Error(`请求体过大，最大允许 ${Math.round(limitBytes / 1024)}KB`);
+      error.statusCode = 413;
+      throw error;
+    }
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks);
+}
+
 export function sendJson(res, statusCode, payload) {
   const body = JSON.stringify(payload, null, 2);
   res.writeHead(statusCode, {
     "Content-Type": "application/json; charset=utf-8",
     ...corsHeaders(res),
     "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, x-admin-token, x-admin-id",
     "Cache-Control": "no-store"
   });
   res.end(body);
@@ -42,7 +46,7 @@ export function sendOptions(res) {
   res.writeHead(204, {
     ...corsHeaders(res),
     "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization"
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, x-admin-token, x-admin-id"
   });
   res.end();
 }

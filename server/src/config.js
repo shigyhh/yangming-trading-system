@@ -7,6 +7,9 @@ const __dirname = path.dirname(__filename);
 const serverRoot = path.resolve(__dirname, "..");
 
 loadLocalEnv(path.resolve(serverRoot, ".env"));
+if (process.env.SKIP_LOCAL_ENV !== "true") {
+  loadLocalEnv(path.resolve(serverRoot, ".env.local"), { override: true });
+}
 
 export const config = {
   port: Number(process.env.PORT || 8787),
@@ -71,8 +74,8 @@ function parseList(value) {
     .filter(Boolean);
 }
 
-function loadLocalEnv(filePath) {
-  if (typeof process.loadEnvFile === "function") {
+function loadLocalEnv(filePath, { override = false } = {}) {
+  if (typeof process.loadEnvFile === "function" && !override) {
     try {
       process.loadEnvFile(filePath);
       return;
@@ -96,7 +99,7 @@ function loadLocalEnv(filePath) {
       if ((quote === "\"" || quote === "'") && value.endsWith(quote)) {
         value = value.slice(1, -1);
       }
-      if (process.env[key] === undefined) {
+      if (override || process.env[key] === undefined) {
         process.env[key] = value;
       }
     }

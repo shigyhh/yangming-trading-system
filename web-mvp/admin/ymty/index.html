@@ -1,0 +1,705 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>阳明心学交易体验营后台</title>
+    <style>
+      :root {
+        --bg: #f6efe4;
+        --panel: #fffaf0;
+        --ink: #2d211b;
+        --muted: #806657;
+        --red: #9d241d;
+        --gold: #c99a44;
+        --line: rgba(112, 65, 34, 0.18);
+        --shadow: 0 18px 40px rgba(81, 44, 25, 0.1);
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", Arial, sans-serif;
+      }
+
+      button, input, select, textarea { font: inherit; }
+
+      .shell {
+        width: min(100%, 1180px);
+        margin: 0 auto;
+        padding: 24px 16px 56px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 18px;
+      }
+
+      .brand h1 {
+        margin: 0;
+        color: var(--red);
+        font-size: 26px;
+        line-height: 1.2;
+      }
+
+      .brand p, .hint {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.7;
+      }
+
+      .brand p { margin: 6px 0 0; }
+      .hint { margin: 0 0 14px; }
+
+      .grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 16px;
+      }
+
+      .card, .auth-box {
+        min-width: 0;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+        padding: 18px;
+      }
+
+      .card h2, .auth-box h2 {
+        margin: 0 0 12px;
+        color: var(--red);
+        font-size: 20px;
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        color: #60473a;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      input, select, textarea {
+        width: 100%;
+        min-width: 0;
+        border: 1px solid rgba(121, 75, 44, 0.22);
+        border-radius: 10px;
+        padding: 10px 11px;
+        background: #fffdfa;
+        color: var(--ink);
+        outline: none;
+      }
+
+      textarea {
+        min-height: 74px;
+        resize: vertical;
+      }
+
+      .wide { grid-column: 1 / -1; }
+
+      .switch-row {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        min-height: 42px;
+      }
+
+      .switch-row input { width: auto; }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .btn {
+        border: 0;
+        border-radius: 10px;
+        padding: 10px 14px;
+        cursor: pointer;
+        font-weight: 800;
+      }
+
+      .btn-primary {
+        background: linear-gradient(180deg, #e8bd66, var(--gold));
+        color: #431b0e;
+      }
+
+      .btn-ghost {
+        border: 1px solid var(--line);
+        background: #fff8e8;
+        color: #684433;
+      }
+
+      .upload-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px;
+        align-items: end;
+      }
+
+      .preview {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .preview img {
+        width: 76px;
+        height: 76px;
+        object-fit: contain;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fff;
+      }
+
+      .notice {
+        min-height: 22px;
+        margin: 0 0 12px;
+        color: var(--red);
+        font-size: 14px;
+      }
+
+      .auth-mask {
+        position: fixed;
+        inset: 0;
+        z-index: 20;
+        display: grid;
+        place-items: center;
+        padding: 18px;
+        background: rgba(45, 33, 27, 0.45);
+      }
+
+      .auth-box {
+        width: min(100%, 440px);
+      }
+
+      .table-wrap { overflow-x: auto; }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+
+      th, td {
+        border-bottom: 1px solid var(--line);
+        padding: 9px 7px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      pre {
+        max-width: 320px;
+        margin: 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+        color: #60473a;
+      }
+
+      [hidden] { display: none !important; }
+
+      @media (max-width: 820px) {
+        .grid, .form-grid, .upload-row { grid-template-columns: 1fr; }
+        .topbar { align-items: flex-start; flex-direction: column; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="auth-mask" id="loginMask">
+      <form class="auth-box" id="loginForm">
+        <h2>管理员登录</h2>
+        <p class="hint">请输入后台账号密码。登录 token 仅存入 sessionStorage，关闭标签页后失效。</p>
+        <p class="notice" id="loginError"></p>
+        <label>username<input id="usernameInput" name="username" autocomplete="username" placeholder="admin" /></label>
+        <label style="margin-top:12px">password<input id="passwordInput" name="password" type="password" autocomplete="current-password" /></label>
+        <div class="actions">
+          <button class="btn btn-primary" type="submit">登录后台</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="auth-mask" id="passwordMask" hidden>
+      <form class="auth-box" id="changePasswordForm">
+        <h2>修改密码</h2>
+        <p class="hint" id="passwordHint">首次登录后必须修改初始密码。</p>
+        <p class="notice" id="passwordError"></p>
+        <label>原密码<input id="oldPasswordInput" name="old_password" type="password" autocomplete="current-password" /></label>
+        <label style="margin-top:12px">新密码<input id="newPasswordInput" name="new_password" type="password" autocomplete="new-password" /></label>
+        <label style="margin-top:12px">确认新密码<input id="confirmPasswordInput" name="confirm_password" type="password" autocomplete="new-password" /></label>
+        <div class="actions">
+          <button class="btn btn-primary" type="submit">确认修改密码</button>
+          <button class="btn btn-ghost" id="cancelPasswordButton" type="button">稍后再改</button>
+        </div>
+      </form>
+    </div>
+
+    <main class="shell" id="appShell" hidden>
+      <header class="topbar">
+        <div class="brand">
+          <h1>阳明心学交易体验营后台</h1>
+          <p>价格、企业微信活码、订单和审计日志配置。真实支付金额以后端订单为准。</p>
+        </div>
+        <div class="actions" style="margin-top:0">
+          <button class="btn btn-ghost" id="openPasswordButton" type="button">修改密码</button>
+          <button class="btn btn-ghost" id="logoutButton" type="button">退出登录</button>
+        </div>
+      </header>
+
+      <p class="notice" id="pageNotice"></p>
+
+      <section class="grid">
+        <form class="card" id="productForm">
+          <h2>产品与价格</h2>
+          <p class="hint">前端展示价格只用于展示，真实支付金额以后端订单为准。价格修改只影响新订单，旧订单金额不会被覆盖。</p>
+          <div class="form-grid">
+            <label>product_code<input name="product_code" /></label>
+            <label>status<select name="status"><option value="online">online</option><option value="offline">offline</option></select></label>
+            <label class="wide">product_name<input name="product_name" /></label>
+            <label>display_price_yuan<input name="display_price_yuan" type="number" min="0.01" step="0.01" /></label>
+            <label>amount_cents<input name="amount_cents" type="number" min="1" step="1" /></label>
+            <label>cycle<input name="cycle" /></label>
+            <label>start_time<input name="start_time" /></label>
+            <label>lecturer<input name="lecturer" /></label>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary" type="submit">保存产品配置</button>
+          </div>
+        </form>
+
+        <form class="card" id="livecodeForm">
+          <h2>企业微信活码 / 获客助手</h2>
+          <p class="hint">获客助手链接和真实二维码只通过 paid 后的 /api/afterpay/entrance 返回，不放入公开配置。</p>
+          <div class="form-grid">
+            <label>code_key<input name="code_key" /></label>
+            <label>status<select name="status"><option value="active">active</option><option value="inactive">inactive</option></select></label>
+            <label class="wide">name<input name="name" /></label>
+            <label class="wide">wecom_link<input name="wecom_link" placeholder="企业微信获客助手链接" /></label>
+            <label class="wide">qr_image<input name="qr_image" id="qrImageInput" placeholder="/uploads/livecode/xxx.png" /></label>
+            <div class="wide upload-row">
+              <label>上传二维码<input id="qrUploadInput" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" /></label>
+              <button class="btn btn-ghost" id="uploadButton" type="button">上传二维码</button>
+            </div>
+            <div class="wide preview">
+              <img id="qrPreview" alt="二维码预览" hidden />
+              <span id="uploadStatus">支持 jpg、jpeg、png、webp，单文件不超过 2MB。</span>
+            </div>
+            <label class="switch-row wide">
+              <input name="auto_redirect_after_paid" type="checkbox" />
+              auto_redirect_after_paid：支付后自动跳转获客助手
+            </label>
+            <label>redirect_delay_ms<input name="redirect_delay_ms" type="number" min="0" max="10000" step="100" /></label>
+            <label>remark<input name="remark" /></label>
+            <label>button_text<input name="button_text" /></label>
+            <label class="wide">service_text<textarea name="service_text"></textarea></label>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary" type="submit">保存 livecode</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="grid" style="margin-top:16px">
+        <section class="card">
+          <h2>订单</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>order_id</th>
+                  <th>金额</th>
+                  <th>状态</th>
+                  <th>来源</th>
+                  <th>created_at</th>
+                </tr>
+              </thead>
+              <tbody id="ordersBody"></tbody>
+            </table>
+          </div>
+        </section>
+        <section class="card">
+          <h2>操作日志</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>操作人</th>
+                  <th>action</th>
+                  <th>target</th>
+                  <th>after_json</th>
+                  <th>created_at</th>
+                </tr>
+              </thead>
+              <tbody id="auditBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script>
+      const TOKEN_KEY = "ymty_admin_token";
+      const state = {
+        token: sessionStorage.getItem(TOKEN_KEY) || "",
+        user: null,
+        product: null,
+        livecode: null,
+        passwordRequired: false,
+      };
+
+      const loginMask = document.getElementById("loginMask");
+      const loginForm = document.getElementById("loginForm");
+      const loginError = document.getElementById("loginError");
+      const usernameInput = document.getElementById("usernameInput");
+      const passwordInput = document.getElementById("passwordInput");
+      const passwordMask = document.getElementById("passwordMask");
+      const changePasswordForm = document.getElementById("changePasswordForm");
+      const passwordHint = document.getElementById("passwordHint");
+      const passwordError = document.getElementById("passwordError");
+      const oldPasswordInput = document.getElementById("oldPasswordInput");
+      const newPasswordInput = document.getElementById("newPasswordInput");
+      const confirmPasswordInput = document.getElementById("confirmPasswordInput");
+      const appShell = document.getElementById("appShell");
+      const pageNotice = document.getElementById("pageNotice");
+      const productForm = document.getElementById("productForm");
+      const livecodeForm = document.getElementById("livecodeForm");
+      const uploadButton = document.getElementById("uploadButton");
+      const qrUploadInput = document.getElementById("qrUploadInput");
+      const qrImageInput = document.getElementById("qrImageInput");
+      const qrPreview = document.getElementById("qrPreview");
+      const uploadStatus = document.getElementById("uploadStatus");
+      const ordersBody = document.getElementById("ordersBody");
+      const auditBody = document.getElementById("auditBody");
+
+      function adminHeaders(extra = {}) {
+        return {
+          ...extra,
+          Authorization: `Bearer ${state.token}`,
+          "x-admin-id": state.user?.username || "ymty-admin-page",
+        };
+      }
+
+      async function adminFetch(url, options = {}) {
+        const response = await fetch(url, { ...options, headers: adminHeaders(options.headers || {}) });
+        const data = await response.json().catch(() => ({}));
+        if (response.status === 403 && /修改初始密码/.test(data.error || data.message || "")) {
+          showPasswordChange(true);
+          throw new Error("请先修改初始密码");
+        }
+        if (response.status === 401 || response.status === 403) {
+          showLogin("无权限或登录已失效");
+          throw new Error("无权限或登录已失效");
+        }
+        if (!response.ok || data.ok === false || data.code >= 400) {
+          throw new Error(data.message || data.error || "请求失败");
+        }
+        return data;
+      }
+
+      function saveSession(token, user) {
+        state.token = token || "";
+        state.user = user || null;
+        state.passwordRequired = Boolean(user?.must_change_password);
+        if (state.token) sessionStorage.setItem(TOKEN_KEY, state.token);
+      }
+
+      function clearSession() {
+        sessionStorage.removeItem(TOKEN_KEY);
+        state.token = "";
+        state.user = null;
+        state.passwordRequired = false;
+      }
+
+      function showLogin(message = "") {
+        clearSession();
+        loginError.textContent = message;
+        loginMask.hidden = false;
+        passwordMask.hidden = true;
+        appShell.hidden = true;
+      }
+
+      function showPasswordChange(required = false) {
+        state.passwordRequired = required;
+        passwordHint.textContent = required ? "首次登录后必须修改初始密码。" : "请输入原密码和新密码。";
+        passwordError.textContent = "";
+        loginMask.hidden = true;
+        passwordMask.hidden = false;
+        appShell.hidden = required;
+        document.getElementById("cancelPasswordButton").hidden = required;
+      }
+
+      function showApp() {
+        loginMask.hidden = true;
+        passwordMask.hidden = true;
+        appShell.hidden = false;
+      }
+
+      function setNotice(message = "") {
+        pageNotice.textContent = message;
+      }
+
+      function fillForm(form, values) {
+        Array.from(form.elements).forEach((element) => {
+          if (!element.name) return;
+          if (element.type === "checkbox") {
+            element.checked = Boolean(values[element.name]);
+            return;
+          }
+          element.value = values[element.name] ?? "";
+        });
+      }
+
+      function collectForm(form) {
+        const payload = {};
+        Array.from(form.elements).forEach((element) => {
+          if (!element.name) return;
+          if (element.type === "checkbox") {
+            payload[element.name] = element.checked;
+            return;
+          }
+          if (element.type === "number") {
+            payload[element.name] = Number(element.value);
+            return;
+          }
+          payload[element.name] = element.value.trim();
+        });
+        return payload;
+      }
+
+      function renderQrPreview(url) {
+        if (!url) {
+          qrPreview.hidden = true;
+          qrPreview.removeAttribute("src");
+          return;
+        }
+        qrPreview.src = url;
+        qrPreview.hidden = false;
+      }
+
+      async function loadAll() {
+        const campaign = await adminFetch("/api/admin/campaign/ymty");
+        state.product = campaign.product;
+        state.livecode = campaign.livecode;
+        fillForm(productForm, campaign.product);
+        fillForm(livecodeForm, campaign.livecode);
+        renderQrPreview(campaign.livecode.qr_image);
+        showApp();
+        await Promise.all([loadOrders(), loadAuditLogs()]);
+      }
+
+      async function loadOrders() {
+        const data = await adminFetch("/api/admin/orders");
+        ordersBody.innerHTML = (data.orders || []).slice(0, 20).map((order) => `
+          <tr>
+            <td>${escapeHtml(order.order_id)}</td>
+            <td>${Number(order.amount_cents || 0)} 分</td>
+            <td>${escapeHtml(order.pay_status)}</td>
+            <td>${escapeHtml([order.channel, order.campaign, order.creative].filter(Boolean).join(" / "))}</td>
+            <td>${escapeHtml(order.created_at || "")}</td>
+          </tr>
+        `).join("");
+      }
+
+      async function loadAuditLogs() {
+        const data = await adminFetch("/api/admin/audit-logs");
+        auditBody.innerHTML = (data.audit_logs || []).slice(0, 20).map((item) => `
+          <tr>
+            <td>${escapeHtml(item.admin_id)}</td>
+            <td>${escapeHtml(item.action)}</td>
+            <td>${escapeHtml(`${item.target_type}:${item.target_id}`)}</td>
+            <td><pre>${escapeHtml(JSON.stringify(item.after_json || {}, null, 2))}</pre></td>
+            <td>${escapeHtml(item.created_at || "")}</td>
+          </tr>
+        `).join("");
+      }
+
+      async function saveProduct(event) {
+        event.preventDefault();
+        const payload = collectForm(productForm);
+        const priceChanged = state.product && (
+          Number(payload.display_price_yuan) !== Number(state.product.display_price_yuan) ||
+          Number(payload.amount_cents) !== Number(state.product.amount_cents)
+        );
+        if (priceChanged && !window.confirm("确认修改价格？改价只影响新订单，旧订单金额不会被覆盖。")) return;
+
+        await adminFetch("/api/admin/campaign/ymty", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        setNotice("已保存到服务器");
+        await loadAll();
+      }
+
+      async function saveLivecode(event) {
+        event.preventDefault();
+        const payload = collectForm(livecodeForm);
+        await adminFetch("/api/admin/livecode", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        setNotice("已保存到服务器");
+        await loadAll();
+      }
+
+      async function uploadQrImage() {
+        const file = qrUploadInput.files && qrUploadInput.files[0];
+        if (!file) {
+          uploadStatus.textContent = "请选择二维码图片";
+          return;
+        }
+        uploadStatus.textContent = "正在上传二维码...";
+        const body = new FormData();
+        body.append("file", file);
+        const data = await adminFetch("/api/admin/upload", {
+          method: "POST",
+          body,
+        });
+        qrImageInput.value = data.data.url;
+        renderQrPreview(data.data.url);
+        uploadStatus.textContent = `上传成功：${data.data.url}`;
+      }
+
+      async function login(event) {
+        event.preventDefault();
+        loginError.textContent = "";
+        const response = await fetch("/api/admin/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({
+            username: usernameInput.value.trim(),
+            password: passwordInput.value,
+          }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.ok) {
+          loginError.textContent = data.error || data.message || "登录失败";
+          return;
+        }
+        saveSession(data.token, data.user);
+        passwordInput.value = "";
+        if (data.user?.must_change_password) {
+          showPasswordChange(true);
+          return;
+        }
+        await loadAll();
+      }
+
+      async function changePassword(event) {
+        event.preventDefault();
+        passwordError.textContent = "";
+        if (newPasswordInput.value !== confirmPasswordInput.value) {
+          passwordError.textContent = "两次输入的新密码不一致";
+          return;
+        }
+        const data = await adminFetch("/api/admin/change-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            old_password: oldPasswordInput.value,
+            new_password: newPasswordInput.value,
+          }),
+        });
+        saveSession(data.token, data.user);
+        oldPasswordInput.value = "";
+        newPasswordInput.value = "";
+        confirmPasswordInput.value = "";
+        setNotice("已保存到服务器");
+        await loadAll();
+      }
+
+      async function logout() {
+        if (state.token) {
+          await fetch("/api/admin/logout", {
+            method: "POST",
+            headers: adminHeaders({ Accept: "application/json" }),
+          }).catch(() => {});
+        }
+        showLogin("");
+      }
+
+      async function boot() {
+        if (!state.token) {
+          showLogin("");
+          return;
+        }
+        try {
+          const me = await adminFetch("/api/admin/me");
+          state.user = me.user;
+          if (me.user?.must_change_password) {
+            showPasswordChange(true);
+            return;
+          }
+          await loadAll();
+        } catch {
+          // adminFetch 已处理登录态。
+        }
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+      }
+
+      loginForm.addEventListener("submit", (event) => {
+        login(event).catch((error) => {
+          loginError.textContent = error.message;
+        });
+      });
+      changePasswordForm.addEventListener("submit", (event) => {
+        changePassword(event).catch((error) => {
+          passwordError.textContent = error.message;
+        });
+      });
+      productForm.addEventListener("submit", (event) => {
+        saveProduct(event).catch((error) => setNotice(error.message));
+      });
+      livecodeForm.addEventListener("submit", (event) => {
+        saveLivecode(event).catch((error) => setNotice(error.message));
+      });
+      uploadButton.addEventListener("click", () => {
+        uploadQrImage().catch((error) => {
+          uploadStatus.textContent = error.message;
+        });
+      });
+      qrImageInput.addEventListener("input", () => renderQrPreview(qrImageInput.value.trim()));
+      document.getElementById("logoutButton").addEventListener("click", () => {
+        logout().catch(() => showLogin(""));
+      });
+      document.getElementById("openPasswordButton").addEventListener("click", () => showPasswordChange(false));
+      document.getElementById("cancelPasswordButton").addEventListener("click", () => {
+        passwordMask.hidden = true;
+        if (state.user?.must_change_password) {
+          showPasswordChange(true);
+          return;
+        }
+        showApp();
+      });
+
+      boot();
+    </script>
+  </body>
+</html>
