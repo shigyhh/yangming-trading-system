@@ -48,6 +48,7 @@ const defaultLivecode = {
   priority: 100,
   is_fallback: true,
   wecom_state: stableWecomState(DEFAULT_LIVECODE_KEY),
+  wecom_tag_ids: [],
   auto_redirect_after_paid: false,
   redirect_delay_ms: 600,
   remark: "知行 + 手机号后4位",
@@ -749,6 +750,7 @@ function normalizeLivecodeRecord(record, now = new Date().toISOString()) {
     priority: normalizeInteger(record?.priority, codeKey === DEFAULT_LIVECODE_KEY ? 100 : 50),
     is_fallback: Boolean(record?.is_fallback ?? codeKey === DEFAULT_LIVECODE_KEY),
     wecom_state: cleanText(record?.wecom_state || stableWecomState(codeKey), 80),
+    wecom_tag_ids: normalizeTags(record?.wecom_tag_ids),
     invalid: Boolean(record?.invalid ?? false),
     auto_redirect_after_paid: Boolean(record?.auto_redirect_after_paid ?? false),
     redirect_delay_ms: normalizeDelayMs(record?.redirect_delay_ms ?? 600),
@@ -849,6 +851,14 @@ function normalizeChannels(value) {
     .filter(Boolean);
   if (!channels.length || channels.includes("*")) return ["*"];
   return Array.from(new Set(channels));
+}
+
+function normalizeTags(value) {
+  const source = Array.isArray(value) ? value : String(value ?? "").split(",");
+  return Array.from(new Set(source
+    .map((item) => cleanText(item, 80))
+    .filter(Boolean)))
+    .slice(0, 20);
 }
 
 function normalizeNonNegativeInteger(value, fallback = 0) {

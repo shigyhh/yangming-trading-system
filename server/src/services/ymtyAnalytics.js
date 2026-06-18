@@ -222,7 +222,8 @@ function buildOverview(events) {
     revenue_cents: paidEvents.reduce((sum, event) => sum + normalizeNonNegativeInteger(event.amount_cents, 0), 0),
     success_page_views: countEvents(events, "success_page_view"),
     qr_exposures: countEvents(events, "qr_exposed"),
-    wecom_link_clicks: countEvents(events, "wecom_link_click")
+    wecom_link_clicks: countEvents(events, "wecom_link_click"),
+    wecom_added: countEvents(events, "wecom_added")
   };
 }
 
@@ -310,6 +311,7 @@ function emptyOverview() {
     success_page_views: 0,
     qr_exposures: 0,
     wecom_link_clicks: 0,
+    wecom_added: 0,
     sessionSet: new Set()
   };
 }
@@ -354,6 +356,7 @@ function applyOverviewEvent(row, event) {
   if (event.event_name === "success_page_view") row.success_page_views += 1;
   if (event.event_name === "qr_exposed") row.qr_exposures += 1;
   if (event.event_name === "wecom_link_click") row.wecom_link_clicks += 1;
+  if (event.event_name === "wecom_added") row.wecom_added += 1;
 }
 
 function finalizeUvRow(row) {

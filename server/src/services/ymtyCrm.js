@@ -88,6 +88,39 @@ export async function markYmtyCrmLeadAssigned({ order = {}, livecode = {} } = {}
   return { lead };
 }
 
+export async function markYmtyCrmLeadAddedFromWecom({
+  leadId = "",
+  externalUserid = "",
+  followUserUserid = "",
+  eventTime = "",
+  tagSyncStatus = "",
+  tagSyncError = ""
+} = {}) {
+  let lead = null;
+  const now = new Date().toISOString();
+  const addedAt = cleanText(eventTime, 40) || now;
+  await updateRuntimeRecords(LEAD_FILE, (records) => records.map((record) => {
+    const current = normalizeLead(record);
+    if (current.lead_id !== leadId && current.order_id !== leadId) return current;
+    lead = normalizeLead({
+      ...current,
+      stage: isStageAtLeast(current.stage, "added") ? current.stage : "added",
+      added_at: current.added_at || addedAt,
+      last_contact_at: addedAt,
+      external_userid: externalUserid || current.external_userid,
+      follow_user_userid: followUserUserid || current.follow_user_userid,
+      data_source: "wecom_callback",
+      tag_sync_status: tagSyncStatus || current.tag_sync_status,
+      tag_sync_last_at: tagSyncStatus ? now : current.tag_sync_last_at,
+      tag_sync_error: tagSyncError || "",
+      updated_at: now
+    });
+    return lead;
+  }));
+  assertFound(lead, "CRM 线索不存在");
+  return { lead };
+}
+
 export async function listYmtyCrmLeads(query = {}) {
   const records = (await readRuntimeRecords(LEAD_FILE)).map((item) => normalizeLead(item));
   return {
@@ -265,6 +298,12 @@ function normalizeLead(record = {}) {
     tags: normalizeTags(record.tags),
     contact_name: cleanText(record.contact_name, 80),
     phone_last4: normalizePhoneLast4(record.phone_last4),
+    external_userid: cleanText(record.external_userid, 120),
+    follow_user_userid: cleanText(record.follow_user_userid, 120),
+    data_source: cleanText(record.data_source, 40),
+    tag_sync_status: normalizeTagSyncStatus(record.tag_sync_status),
+    tag_sync_last_at: cleanText(record.tag_sync_last_at, 40),
+    tag_sync_error: cleanText(record.tag_sync_error, 200),
     next_follow_up_at: cleanText(record.next_follow_up_at, 40),
     last_contact_at: cleanText(record.last_contact_at, 40),
     added_at: cleanText(record.added_at, 40),
@@ -278,6 +317,11 @@ function normalizeLead(record = {}) {
     created_at: createdAt,
     updated_at: cleanText(record.updated_at || createdAt, 40)
   };
+}
+
+function normalizeTagSyncStatus(value) {
+  const text = cleanToken(value || "", 32);
+  return ["pending", "success", "failed", "skipped"].includes(text) ? text : "";
 }
 
 function normalizeNote(record = {}) {

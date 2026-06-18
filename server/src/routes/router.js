@@ -23,6 +23,7 @@ import { buildTradeReviewOcrDraft } from "../services/tradeReviewOcr.js";
 import { createYmtyLivecode, createYmtyOrder, getYmtyAdminCampaign, getYmtyAfterpayEntrance, getYmtyAuditLogs, getYmtyOrderForPayment, getYmtyOrderStatus, getYmtyPublicCampaign, listYmtyCourseUsers, listYmtyLivecodeAssignments, listYmtyLivecodes, listYmtyOrders, markYmtyMockPaySuccess, markYmtyOrderPaid, switchYmtyAfterpayLivecode, toggleYmtyLivecodeFull, toggleYmtyLivecodeStatus, updateYmtyCampaign, updateYmtyLivecode, updateYmtyLivecodeByKey } from "../services/ymtyCampaign.js";
 import { getYmtyAnalyticsSummary, recordYmtyFrontendEvent } from "../services/ymtyAnalytics.js";
 import { addYmtyCrmNote, exportYmtyCrmCsv, getYmtyCrmLead, listYmtyCrmLeads, updateYmtyCrmLead, updateYmtyCrmLeadStage } from "../services/ymtyCrm.js";
+import { getYmtyWecomSummary, linkYmtyWecomEventToLead, listYmtyWecomEvents, listYmtyWecomSyncJobs, receiveYmtyWecomCallback, retryYmtyWecomSyncJob, verifyYmtyWecomCallbackUrl } from "../services/wecomCustomer.js";
 import { authenticateYmtyAdmin, changeYmtyAdminPassword, getYmtyAdminMe, loginYmtyAdmin, logoutYmtyAdmin } from "../services/adminAuth.js";
 import { saveYmtyLivecodeUpload } from "../services/ymtyUpload.js";
 import { assertRealPayConfigReady, createH5Order, createJsapiOrder, createWapOrder, isPaymentConfigError, normalizePayChannel, parseAlipayNotify, parseWechatNotify, validateAlipayPayment, validateWechatPayment, verifyAlipayNotify, verifyWechatNotify } from "../services/payments/index.js";
@@ -134,6 +135,32 @@ export async function route(req, res) {
   if (req.method === "GET" && pathname === "/api/public/campaign/ymty") {
     const campaign = await getYmtyPublicCampaign();
     return sendJson(res, 200, { ok: true, ...campaign });
+  }
+
+  if (req.method === "GET" && pathname === "/api/wecom/customer/callback") {
+    try {
+      const result = verifyYmtyWecomCallbackUrl(Object.fromEntries(url.searchParams.entries()));
+      res.writeHead(200, {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-store"
+      });
+      return res.end(result.echostr);
+    } catch (error) {
+      return sendWecomRouteError(res, error);
+    }
+  }
+
+  if (req.method === "POST" && pathname === "/api/wecom/customer/callback") {
+    const rawBody = await readRawBody(req, 256 * 1024);
+    try {
+      const result = await receiveYmtyWecomCallback({
+        query: Object.fromEntries(url.searchParams.entries()),
+        rawBody: rawBody.toString("utf8")
+      });
+      return sendJson(res, 200, { ok: true, ...result });
+    } catch (error) {
+      return sendWecomRouteError(res, error);
+    }
   }
 
   if (req.method === "POST" && pathname === "/api/track/ymty") {
@@ -610,6 +637,42 @@ export async function route(req, res) {
       adminId: admin.adminId,
       ip: getIp(req)
     });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/wecom/customer/summary") {
+    await assertYmtyAdminAccess(req);
+    const result = await getYmtyWecomSummary();
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/wecom/customer/events") {
+    await assertYmtyAdminAccess(req);
+    const result = await listYmtyWecomEvents(Object.fromEntries(url.searchParams.entries()));
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/wecom/customer/sync-jobs") {
+    await assertYmtyAdminAccess(req);
+    const result = await listYmtyWecomSyncJobs(Object.fromEntries(url.searchParams.entries()));
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const wecomEventLinkMatch = pathname.match(/^\/api\/admin\/wecom\/customer\/events\/([^/]+)\/link$/);
+  if (req.method === "POST" && wecomEventLinkMatch) {
+    await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await linkYmtyWecomEventToLead({
+      eventId: decodeURIComponent(wecomEventLinkMatch[1]),
+      leadId: body.lead_id || body.leadId || ""
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const wecomSyncRetryMatch = pathname.match(/^\/api\/admin\/wecom\/customer\/sync-jobs\/([^/]+)\/retry$/);
+  if (req.method === "POST" && wecomSyncRetryMatch) {
+    await assertYmtyAdminAccess(req);
+    const result = await retryYmtyWecomSyncJob(decodeURIComponent(wecomSyncRetryMatch[1]));
     return sendJson(res, 200, { ok: true, ...result });
   }
 
@@ -1446,6 +1509,14 @@ function getIp(req) {
   const forwarded = req.headers["x-forwarded-for"];
   if (typeof forwarded === "string" && forwarded.length) return forwarded.split(",")[0].trim();
   return req.socket.remoteAddress || "";
+}
+
+function sendWecomRouteError(res, error) {
+  return sendJson(res, error.statusCode || 400, {
+    ok: false,
+    code: error.code || "WECOM_CALLBACK_ERROR",
+    message: error.message || "企业微信回调处理失败"
+  });
 }
 
 function getPublicOrigin(req) {
