@@ -825,48 +825,5 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_admin_id ON audit_logs(admin_id);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_target ON audit_logs(target_type, target_id);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at DESC);
 
-INSERT INTO products (
-  product_code,
-  product_name,
-  display_price_yuan,
-  amount_cents,
-  currency,
-  cycle,
-  start_time,
-  lecturer,
-  status
-) VALUES (
-  'YMXX_JY_TY',
-  '阳明心学交易体验营',
-  1.68,
-  168,
-  'CNY',
-  '7天训练',
-  '每周滚动开营｜晚20:00',
-  '知行飞哥',
-  'online'
-) ON CONFLICT (product_code) DO NOTHING;
-
-INSERT INTO livecodes (
-  code_key,
-  name,
-  wecom_link,
-  qr_image,
-  auto_redirect_after_paid,
-  redirect_delay_ms,
-  remark,
-  button_text,
-  service_text,
-  status
-) VALUES (
-  'YMXX_YMTY_DEFAULT',
-  '阳明心学交易体验营默认活码',
-  'https://work.weixin.qq.com/ca/mock',
-  '/assets/wecom-livecode-placeholder.svg',
-  false,
-  600,
-  '知行 + 手机号后4位',
-  '添加课程助教微信',
-  '客服方式：支付后添加课程助教微信',
-  'active'
-) ON CONFLICT (code_key) DO NOTHING;
+-- production does not seed live data
+-- all runtime data must be created via admin panel
