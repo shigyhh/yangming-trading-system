@@ -212,6 +212,11 @@
         font-weight: 800;
       }
 
+      .btn-small:disabled {
+        cursor: not-allowed;
+        opacity: 0.58;
+      }
+
       .notice {
         min-height: 22px;
         margin: 0 0 12px;
@@ -250,6 +255,28 @@
         color: var(--red);
         font-size: 22px;
         line-height: 1.2;
+      }
+
+      .warning-box {
+        border: 1px solid rgba(157, 36, 29, 0.22);
+        border-radius: 12px;
+        background: rgba(157, 36, 29, 0.06);
+        color: var(--red);
+        padding: 12px;
+        font-weight: 800;
+        line-height: 1.7;
+        margin-bottom: 14px;
+      }
+
+      .result-box {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #fffdfa;
+        padding: 12px;
+        color: #60473a;
+        font-size: 13px;
+        line-height: 1.7;
+        margin-top: 12px;
       }
 
       .analytics-tables {
@@ -584,6 +611,62 @@
         </div>
       </section>
 
+      <section class="card" id="refundConsoleCard">
+        <div class="pool-toolbar">
+          <div>
+            <h2 style="margin:0">退款控制台</h2>
+            <p class="hint">Dry Run，不会真实退款。保存规则草稿不代表真实退款已开启，真实执行开关只能由服务器环境变量控制。</p>
+          </div>
+          <button class="btn btn-ghost" id="refundConsoleReloadButton" type="button">刷新控制台</button>
+        </div>
+        <div class="warning-box" id="refundConsoleWarning">当前仅可申请、审批和演练，不会真实退款。</div>
+        <div class="metrics-grid" id="refundStatusGrid"></div>
+
+        <div class="analytics-tables">
+          <form id="refundPolicyForm">
+            <h3>自动退款规则草稿</h3>
+            <p class="hint">规则已保存，但真实退款开关仍由服务器环境变量控制。</p>
+            <div class="form-grid">
+              <label>运行模式<select name="mode"><option value="disabled">关闭</option><option value="manual_only">仅人工</option><option value="auto_rule">自动规则草稿</option></select></label>
+              <label>触发条件<input name="trigger_types" placeholder="test_order,duplicate_payment" /></label>
+              <label>延迟秒数<input name="delay_seconds" type="number" min="0" max="86400" step="1" /></label>
+              <label>自动退款金额上限（分）<input name="max_amount_cents" type="number" min="1" max="1000000" step="1" /></label>
+              <label>适用产品<input name="product_codes" placeholder="YMXX_JY_TY" /></label>
+              <label>适用支付方式<input name="pay_channels" placeholder="wechat_jsapi,wechat_h5,alipay_wap" /></label>
+              <label class="switch-row"><input name="revoke_course_access" type="checkbox" />退款成功是否撤销课程权益</label>
+              <label class="switch-row"><input name="promotional_keep_access" type="checkbox" />推广活动自动退款是否保留课程权益</label>
+            </div>
+            <div class="actions">
+              <button class="btn btn-primary" type="submit">保存规则草稿</button>
+            </div>
+          </form>
+
+          <form id="refundPreviewForm">
+            <h3>退款演练</h3>
+            <p class="hint">Dry Run，不会真实退款，不会创建退款申请，不会调用微信或支付宝接口。</p>
+            <div class="form-grid">
+              <label class="wide">订单号<input name="order_id" placeholder="YMTY..." /></label>
+              <label>演练金额（分）<input name="amount_cents" type="number" min="1" step="1" /></label>
+              <label>触发原因<select name="trigger_type"><option value="test_order">测试订单</option><option value="duplicate_payment">重复支付</option><option value="fulfillment_failure">履约失败</option><option value="product_offline_after_payment">支付后产品下架</option><option value="promotional_auto_refund">推广活动自动退款</option></select></label>
+            </div>
+            <div class="actions">
+              <button class="btn btn-primary" type="submit">模拟执行退款</button>
+            </div>
+            <div class="result-box" id="refundPreviewResult">请输入订单后进行 Dry Run 演练。</div>
+          </form>
+        </div>
+
+        <div class="result-box">
+          <b>退款状态说明</b><br />
+          requested：已提交申请<br />
+          approved：财务已批准，尚未退款<br />
+          processing：平台处理中<br />
+          refunded：平台明确确认成功<br />
+          failed：平台明确失败<br />
+          approved 不等于退款成功；processing 不等于退款成功；只有 refunded 才表示退款完成。
+        </div>
+      </section>
+
       <section class="card" id="refundCard">
         <div class="pool-toolbar">
           <div>
@@ -761,6 +844,8 @@
         wecomSyncJobs: [],
         wecomSummary: null,
         refunds: [],
+        refundConfig: null,
+        refundPolicy: null,
         selectedCrmLeadId: "",
         selectedCrmDetail: null,
         editingLivecodeKey: "",
@@ -820,6 +905,12 @@
       const refundForm = document.getElementById("refundForm");
       const refundsBody = document.getElementById("refundsBody");
       const refundReloadButton = document.getElementById("refundReloadButton");
+      const refundConsoleReloadButton = document.getElementById("refundConsoleReloadButton");
+      const refundConsoleWarning = document.getElementById("refundConsoleWarning");
+      const refundStatusGrid = document.getElementById("refundStatusGrid");
+      const refundPolicyForm = document.getElementById("refundPolicyForm");
+      const refundPreviewForm = document.getElementById("refundPreviewForm");
+      const refundPreviewResult = document.getElementById("refundPreviewResult");
       const ordersBody = document.getElementById("ordersBody");
       const auditBody = document.getElementById("auditBody");
 
@@ -970,7 +1061,7 @@
           fillLivecodeEditor(state.livecode);
         }
         showApp();
-        await Promise.all([loadAnalytics(), loadOrders(), loadCrmLeads(), loadWecomSync(), loadRefunds(), loadAuditLogs()]);
+        await Promise.all([loadAnalytics(), loadOrders(), loadCrmLeads(), loadWecomSync(), loadRefundConsole(), loadRefunds(), loadAuditLogs()]);
       }
 
       function fillLivecodeEditor(livecode) {
@@ -1309,6 +1400,81 @@
         await loadWecomSync();
       }
 
+      async function loadRefundConsole() {
+        const data = await adminFetch("/api/admin/refunds/config");
+        state.refundConfig = data;
+        state.refundPolicy = data.policy || {};
+        renderRefundConsole();
+      }
+
+      function renderRefundConsole() {
+        const config = state.refundConfig || {};
+        const policy = state.refundPolicy || {};
+        const wechat = config.providers?.wechat || {};
+        const alipay = config.providers?.alipay || {};
+        const metrics = [
+          ["真实退款执行", config.execution_enabled ? "开启" : "关闭"],
+          ["自动退款执行", config.auto_refund_enabled ? "开启" : "关闭"],
+          ["微信退款配置", wechat.refund_ready ? "就绪" : "未就绪"],
+          ["支付宝退款配置", alipay.refund_ready ? "就绪" : "未就绪"],
+          ["微信退款回调", wechat.notify_url_configured ? "已配置" : "未配置"],
+          ["退款成功撤销权益", config.revoke_course_access_on_refund ? "开启" : "关闭"],
+        ];
+        refundStatusGrid.innerHTML = metrics.map(([label, value]) => `
+          <div class="metric"><span>${escapeHtml(label)}</span><b>${escapeHtml(value)}</b></div>
+        `).join("");
+        refundConsoleWarning.textContent = (config.warnings || []).join(" ") || "真实退款与自动退款均已开启，请谨慎操作。";
+        fillForm(refundPolicyForm, {
+          ...policy,
+          product_codes: (policy.product_codes || []).join(","),
+          pay_channels: (policy.pay_channels || []).join(","),
+          trigger_types: (policy.trigger_types || []).join(","),
+        });
+        if (state.refunds?.length) renderRefunds();
+      }
+
+      async function saveRefundPolicy(event) {
+        event.preventDefault();
+        const payload = collectForm(refundPolicyForm);
+        payload.product_codes = splitCsv(payload.product_codes);
+        payload.pay_channels = splitCsv(payload.pay_channels);
+        payload.trigger_types = splitCsv(payload.trigger_types);
+        await adminFetch("/api/admin/refund-policy", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        setNotice("规则已保存，但真实退款开关仍由服务器环境变量控制。");
+        await Promise.all([loadRefundConsole(), loadAuditLogs()]);
+      }
+
+      async function previewRefund(event) {
+        event.preventDefault();
+        const payload = collectForm(refundPreviewForm);
+        const data = await adminFetch("/api/admin/refunds/preview", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        renderRefundPreview(data);
+      }
+
+      function renderRefundPreview(data) {
+        const blockers = data.blockers || [];
+        const resultRows = [
+          ["是否满足退款条件", data.eligible ? "满足" : "不满足"],
+          ["是否会真实执行", data.would_execute ? "会执行" : "不会执行"],
+          ["支付渠道", data.provider || ""],
+          ["可退金额", formatYuan(data.order?.refundable_cents || 0)],
+          ["命中的规则", data.policy_result?.trigger_matched ? "触发条件命中" : "触发条件未命中"],
+          ["未通过原因", blockers.length ? blockers.join("；") : "无"],
+          ["是否会撤销课程权益", data.effects?.would_revoke_course_access ? "会" : "不会"],
+          ["是否会更新 CRM", data.effects?.would_update_crm ? "会" : "不会"],
+          ["预计状态时间线", (data.timeline || []).join(" → ")],
+        ];
+        refundPreviewResult.innerHTML = `<b>Dry Run，不会真实退款</b><br />${resultRows.map(([label, value]) => `${escapeHtml(label)}：${escapeHtml(value)}`).join("<br />")}`;
+      }
+
       async function loadRefunds() {
         const data = await adminFetch("/api/admin/refunds");
         state.refunds = data.refunds || [];
@@ -1322,6 +1488,7 @@
           const canReject = refund.status === "requested" || refund.status === "approved";
           const canExecute = refund.status === "approved";
           const canQuery = ["approved", "processing", "refunded", "failed"].includes(refund.status);
+          const executionEnabled = Boolean(state.refundConfig?.execution_enabled);
           return `
             <tr>
               <td><code>${escapeHtml(refund.refund_id)}</code></td>
@@ -1336,7 +1503,7 @@
                 <div class="row-actions">
                   ${canApprove ? `<button class="btn-small" type="button" data-refund-approve="${escapeHtml(refund.refund_id)}">审核通过</button>` : ""}
                   ${canReject ? `<button class="btn-small" type="button" data-refund-reject="${escapeHtml(refund.refund_id)}">驳回</button>` : ""}
-                  ${canExecute ? `<button class="btn-small" type="button" data-refund-execute="${escapeHtml(refund.refund_id)}" data-order-id="${escapeHtml(refund.order_id)}">执行退款</button>` : ""}
+                  ${canExecute ? `<button class="btn-small" type="button" data-refund-execute="${escapeHtml(refund.refund_id)}" data-order-id="${escapeHtml(refund.order_id)}" ${executionEnabled ? "" : "disabled"}>${executionEnabled ? "执行退款" : "开关关闭，仅允许 Dry Run"}</button>` : ""}
                   ${canQuery ? `<button class="btn-small" type="button" data-refund-query="${escapeHtml(refund.refund_id)}">查询状态</button>` : ""}
                 </div>
               </td>
@@ -1590,6 +1757,13 @@
           .replaceAll("'", "&#39;");
       }
 
+      function splitCsv(value) {
+        return String(value || "")
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean);
+      }
+
       function formatYuan(cents) {
         return `¥${(Number(cents || 0) / 100).toFixed(2)}`;
       }
@@ -1748,6 +1922,15 @@
       });
       refundReloadButton.addEventListener("click", () => {
         loadRefunds().catch((error) => setNotice(error.message));
+      });
+      refundConsoleReloadButton.addEventListener("click", () => {
+        loadRefundConsole().catch((error) => setNotice(error.message));
+      });
+      refundPolicyForm.addEventListener("submit", (event) => {
+        saveRefundPolicy(event).catch((error) => setNotice(error.message));
+      });
+      refundPreviewForm.addEventListener("submit", (event) => {
+        previewRefund(event).catch((error) => setNotice(error.message));
       });
       refundsBody.addEventListener("click", (event) => {
         const approveButton = event.target.closest("[data-refund-approve]");

@@ -24,6 +24,7 @@ import { createYmtyLivecode, createYmtyOrder, getYmtyAdminCampaign, getYmtyAfter
 import { getYmtyAnalyticsSummary, recordYmtyFrontendEvent } from "../services/ymtyAnalytics.js";
 import { addYmtyCrmNote, exportYmtyCrmCsv, getYmtyCrmLead, listYmtyCrmLeads, updateYmtyCrmLead, updateYmtyCrmLeadStage } from "../services/ymtyCrm.js";
 import { getYmtyWecomSummary, linkYmtyWecomEventToLead, listYmtyWecomEvents, listYmtyWecomSyncJobs, receiveYmtyWecomCallback, retryYmtyWecomSyncJob, verifyYmtyWecomCallbackUrl } from "../services/wecomCustomer.js";
+import { getYmtyRefundConfigStatus, getYmtyRefundPolicy, previewYmtyRefund, updateYmtyRefundPolicy } from "../services/ymtyRefundPolicy.js";
 import { approveYmtyRefund, createYmtyRefund, executeYmtyRefund, getYmtyRefund, handleWechatRefundNotify, listYmtyRefunds, queryYmtyRefundProvider, rejectYmtyRefund } from "../services/ymtyRefunds.js";
 import { authenticateYmtyAdmin, changeYmtyAdminPassword, getYmtyAdminMe, loginYmtyAdmin, logoutYmtyAdmin } from "../services/adminAuth.js";
 import { saveYmtyLivecodeUpload } from "../services/ymtyUpload.js";
@@ -653,6 +654,40 @@ export async function route(req, res) {
       body: body.body || body.note || "",
       adminId: admin.adminId,
       ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/refunds/config") {
+    await assertYmtyAdminAccess(req);
+    const result = await getYmtyRefundConfigStatus();
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/refund-policy") {
+    await assertYmtyAdminAccess(req);
+    const policy = await getYmtyRefundPolicy();
+    return sendJson(res, 200, { ok: true, policy });
+  }
+
+  if (req.method === "POST" && pathname === "/api/admin/refund-policy") {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await updateYmtyRefundPolicy({
+      patch: body,
+      admin,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "POST" && pathname === "/api/admin/refunds/preview") {
+    await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await previewYmtyRefund({
+      orderId: body.order_id || body.orderId || "",
+      amountCents: body.amount_cents ?? body.amountCents,
+      triggerType: body.trigger_type || body.triggerType || ""
     });
     return sendJson(res, 200, { ok: true, ...result });
   }
