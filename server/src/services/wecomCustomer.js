@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import { readRuntimeRecords, replaceRuntimeRecords, updateRuntimeRecords } from "../lib/store.js";
 import { listYmtyLivecodeAssignments, listYmtyLivecodes } from "./ymtyCampaign.js";
-import { getYmtyCrmLead, listYmtyCrmLeads, markYmtyCrmLeadAddedFromWecom } from "./ymtyCrm.js";
+import { getYmtyCrmLead, listYmtyCrmLeads, markYmtyCrmLeadAddedFromWecom, maskYmtyExternalUserid, publicYmtyCrmLead } from "./ymtyCrm.js";
 import { recordYmtyTrustedEvent } from "./ymtyAnalytics.js";
 import { decryptWecomMessage, verifyWecomSignature } from "./wecomCallbackCrypto.js";
 
@@ -23,7 +23,7 @@ export async function resetYmtyWecomForTests() {
 }
 
 export function getYmtyWecomStatus() {
-  const enabled = String(process.env.WECOM_ENABLED || "").toLowerCase() === "true";
+  const enabled = process.env.WECOM_ENABLED === "true";
   return {
     enabled,
     message: enabled ? "企业微信自动同步已启用" : "企业微信自动同步未启用"
@@ -87,6 +87,24 @@ export async function listYmtyWecomEvents(query = {}) {
   return { events };
 }
 
+export function publicYmtyWecomEvent(event = {}) {
+  const normalized = normalizeWecomEvent(event);
+  const { external_userid: externalUserid, ...publicEvent } = normalized;
+  return {
+    ...publicEvent,
+    external_userid_masked: maskYmtyExternalUserid(externalUserid)
+  };
+}
+
+export function publicYmtyWecomSyncJob(job = {}) {
+  const normalized = normalizeSyncJob(job);
+  const { external_userid: externalUserid, ...publicJob } = normalized;
+  return {
+    ...publicJob,
+    external_userid_masked: maskYmtyExternalUserid(externalUserid)
+  };
+}
+
 export async function listYmtyWecomSyncJobs(query = {}) {
   const jobs = (await readRuntimeRecords(SYNC_JOB_FILE))
     .map((item) => normalizeSyncJob(item))
@@ -136,7 +154,10 @@ export async function linkYmtyWecomEventToLead({ eventId = "", leadId = "" } = {
     tagSyncStatus: sync.status,
     tagSyncError: sync.error
   });
-  return { event, lead: updated.lead };
+  return {
+    event: publicYmtyWecomEvent(event),
+    lead: publicYmtyCrmLead(updated.lead)
+  };
 }
 
 export async function retryYmtyWecomSyncJob(jobId = "") {
@@ -166,7 +187,7 @@ export async function retryYmtyWecomSyncJob(jobId = "") {
       tagSyncError: job.error
     });
   }
-  return { job };
+  return { job: publicYmtyWecomSyncJob(job) };
 }
 
 async function linkWecomEvent(event) {

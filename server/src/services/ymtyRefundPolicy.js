@@ -281,7 +281,7 @@ function providerFromPayChannel(payChannel = "") {
 }
 
 function isEnvTrue(value) {
-  return String(value || "false").trim().toLowerCase() === "true";
+  return value === "true";
 }
 
 function cleanText(value = "", maxLength = 120) {

@@ -6,10 +6,14 @@ const authEnvKeys = [
   "YMTY_ADMIN_BOOTSTRAP_USERNAME",
   "YMTY_ADMIN_BOOTSTRAP_PASSWORD",
   "ADMIN_JWT_SECRET",
-  "YMTY_ADMIN_TOKEN"
+  "YMTY_ADMIN_TOKEN",
+  "NODE_ENV",
+  "YMTY_ALLOW_MOCK_PAYMENT"
 ];
 
 const originalEnv = Object.fromEntries(authEnvKeys.map((key) => [key, process.env[key]]));
+process.env.NODE_ENV = "test";
+process.env.YMTY_ALLOW_MOCK_PAYMENT = "true";
 
 const { handleError } = await import("../src/lib/http.js");
 const { route } = await import("../src/routes/router.js");
@@ -62,16 +66,28 @@ test("ymty crm creates one paid lead and updates assigned after livecode allocat
     assert.equal(leads[0].amount_cents, 168);
     assert.equal(leads[0].phone, undefined);
 
+    await createYmtyLivecode({
+      adminId: "crm-test-admin",
+      patch: {
+        code_key: "YMTY_CRM_ASSIGN",
+        name: "CRM 分配测试码",
+        qr_image: "/uploads/livecode/crm-assign.png",
+        channels: ["douyin"],
+        priority: 1,
+        status: "active"
+      }
+    });
+
     const entrance = await getYmtyAfterpayEntrance({
       orderId: created.order.order_id,
       token: created.order.order_token
     });
-    assert.equal(entrance.livecode.code_key, "YMXX_YMTY_DEFAULT");
+    assert.equal(entrance.livecode.code_key, "YMTY_CRM_ASSIGN");
 
     ({ leads } = await listYmtyCrmLeads({}));
     assert.equal(leads.length, 1);
     assert.equal(leads[0].stage, "assigned");
-    assert.equal(leads[0].code_key, "YMXX_YMTY_DEFAULT");
+    assert.equal(leads[0].code_key, "YMTY_CRM_ASSIGN");
     assert.equal(leads[0].contact_type, "personal_wechat");
     assert.ok(leads[0].updated_at);
 
@@ -89,6 +105,17 @@ test("ymty crm admin endpoints protect leads, update fields, stages, notes and a
   setupAdminEnv();
 
   try {
+    await createYmtyLivecode({
+      adminId: "crm-test-admin",
+      patch: {
+        code_key: "YMTY_CRM_GROUP",
+        name: "CRM 社群测试码",
+        qr_image: "/uploads/livecode/crm-group.png",
+        channels: ["wechat_group"],
+        priority: 1,
+        status: "active"
+      }
+    });
     const created = await paidOrder({ channel: "wechat_group", campaign: "camp-a", creative: "poster-a" });
     await getYmtyAfterpayEntrance({ orderId: created.order_id, token: created.order_token });
     const lead = (await listYmtyCrmLeads({})).leads[0];
@@ -175,6 +202,18 @@ test("ymty crm filters, exports safe csv, stays private and feeds analytics manu
         qr_image: "/uploads/livecode/crm-douyin.png",
         channels: ["douyin"],
         priority: 1,
+        status: "active"
+      }
+    });
+    await createYmtyLivecode({
+      adminId: "crm-test-admin",
+      patch: {
+        code_key: "YMTY_CRM_FALLBACK",
+        name: "CRM 兜底码",
+        contact_type: "personal_wechat",
+        qr_image: "/uploads/livecode/crm-fallback.png",
+        channels: ["*"],
+        priority: 100,
         status: "active"
       }
     });
@@ -265,6 +304,8 @@ test("ymty admin crm page exposes Chinese CRM controls without changing payment 
 });
 
 async function resetAll() {
+  process.env.NODE_ENV = "test";
+  process.env.YMTY_ALLOW_MOCK_PAYMENT = "true";
   await resetYmtyForTests();
   await resetYmtyCrmForTests();
   await seedYmtyDefaults();

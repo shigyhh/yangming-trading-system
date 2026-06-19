@@ -19,6 +19,29 @@ export const CRM_STAGES = [
   "refunded"
 ];
 
+export function maskYmtyExternalUserid(value = "") {
+  const text = cleanText(value, 120);
+  if (!text) return "";
+  if (text.length <= 8) return `${text.slice(0, 2)}****${text.slice(-2)}`;
+  return `${text.slice(0, 4)}****${text.slice(-4)}`;
+}
+
+export function publicYmtyCrmLead(lead = {}) {
+  const normalized = normalizeLead(lead);
+  const { external_userid: externalUserid, ...publicLead } = normalized;
+  return {
+    ...publicLead,
+    external_userid_masked: maskYmtyExternalUserid(externalUserid)
+  };
+}
+
+export function publicYmtyCrmLeadDetail({ lead = {}, notes = [] } = {}) {
+  return {
+    lead: publicYmtyCrmLead(lead),
+    notes
+  };
+}
+
 const MANUAL_STAGES = new Set(CRM_STAGES.filter((stage) => stage !== "paid" && stage !== "assigned" && stage !== "refunded"));
 const STAGE_TIME_FIELD = {
   added: "added_at",

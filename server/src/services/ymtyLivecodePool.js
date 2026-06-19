@@ -83,7 +83,7 @@ export function resolveLivecodeAssignment({ records = [], livecodes = [], order 
     excludeCodeKeys: usedCodeKeys
   });
   if (!selected) {
-    throwPoolError("NO_AVAILABLE_LIVECODE", "课程助教入口正在分配中，请稍后重试", 503);
+    throwPoolError("NO_AVAILABLE_LIVECODE", "课程助教入口正在配置中，请稍后重试", 503);
   }
 
   const now = new Date().toISOString();

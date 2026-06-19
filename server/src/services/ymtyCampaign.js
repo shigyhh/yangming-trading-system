@@ -1,5 +1,4 @@
 import crypto from "node:crypto";
-import { config } from "../config.js";
 import { readRuntimeRecords, replaceRuntimeRecords, updateRuntimeRecords } from "../lib/store.js";
 import { recordYmtyTrustedEvent, resetYmtyAnalyticsForTests } from "./ymtyAnalytics.js";
 import { ensureYmtyCrmLeadForPaidOrder, markYmtyCrmLeadAssigned, resetYmtyCrmForTests } from "./ymtyCrm.js";
@@ -23,6 +22,12 @@ const AUDIT_LOG_FILE = "ymty-audit-logs.json";
 
 const DEFAULT_PRODUCT_CODE = "YMXX_JY_TY";
 const DEFAULT_LIVECODE_KEY = "YMXX_YMTY_DEFAULT";
+const LEGACY_MOCK_WECOM_LINK = ["https://work.weixin.qq.com/ca", "mock"].join("/");
+const LEGACY_MOCK_QR_IMAGE = [
+  "",
+  "assets",
+  ["wecom", "livecode", "placeholder"].join("-") + ".svg"
+].join("/");
 
 const defaultProduct = {
   product_code: DEFAULT_PRODUCT_CODE,
@@ -40,8 +45,8 @@ const defaultLivecode = {
   code_key: DEFAULT_LIVECODE_KEY,
   name: "阳明心学交易体验营默认活码",
   contact_type: "personal_wechat",
-  wecom_link: "https://work.weixin.qq.com/ca/mock",
-  qr_image: "/assets/wecom-livecode-placeholder.svg",
+  wecom_link: "",
+  qr_image: "",
   channels: ["*"],
   capacity_limit: 0,
   manual_full: false,
@@ -54,7 +59,7 @@ const defaultLivecode = {
   remark: "知行 + 手机号后4位",
   button_text: "添加课程助教微信",
   service_text: "客服方式：支付后添加课程助教微信",
-  status: "active"
+  status: "inactive"
 };
 
 export async function seedYmtyDefaults() {
@@ -94,7 +99,7 @@ export async function resetYmtyForTests() {
 }
 
 export async function getYmtyPublicCampaign() {
-  const { product, livecode } = await getActiveYmtyConfig();
+  const { product, livecode } = await getYmtyCampaignConfig();
   return {
     product: publicProduct(product),
     livecode: publicLivecodeSummary(livecode),
@@ -103,7 +108,7 @@ export async function getYmtyPublicCampaign() {
 }
 
 export async function getYmtyAdminCampaign() {
-  const { product, livecode } = await getActiveYmtyConfig();
+  const { product, livecode } = await getYmtyCampaignConfig();
   const { livecodes } = await listYmtyLivecodes();
   return {
     product,
@@ -526,9 +531,9 @@ export async function listYmtyCourseUsers() {
   };
 }
 
-async function getActiveYmtyConfig() {
+async function getYmtyCampaignConfig() {
   await seedYmtyDefaults();
-  const [product, livecode] = await Promise.all([getProductByCode(DEFAULT_PRODUCT_CODE), getActiveLivecode()]);
+  const [product, livecode] = await Promise.all([getProductByCode(DEFAULT_PRODUCT_CODE), getCampaignLivecode()]);
   return { product, livecode };
 }
 
@@ -538,19 +543,14 @@ async function getProductByCode(productCode) {
   return products.find((item) => item?.product_code === productCode) || null;
 }
 
-async function getActiveLivecode() {
+async function getCampaignLivecode() {
   await seedYmtyDefaults();
   const livecodes = await readRuntimeRecords(LIVECODE_FILE);
   const normalized = livecodes.map((item) => normalizeLivecodeRecord(item));
-  const livecode = normalized.find((item) => item?.code_key === DEFAULT_LIVECODE_KEY && item?.status === "active")
-    || normalized.find((item) => item?.is_fallback && item?.status === "active")
-    || normalized.find((item) => item?.status === "active");
-  if (!livecode) {
-    const error = new Error("课程助教入口未配置");
-    error.statusCode = 503;
-    throw error;
-  }
-  return livecode;
+  return normalized.find((item) => item?.code_key === DEFAULT_LIVECODE_KEY)
+    || normalized.find((item) => item?.is_fallback)
+    || normalized[0]
+    || normalizeLivecodeRecord(defaultLivecode);
 }
 
 async function assignLivecodeForPaidOrder(order) {
@@ -736,30 +736,31 @@ function publicLivecodeSummary(livecode) {
 }
 
 function normalizeLivecodeRecord(record, now = new Date().toISOString()) {
-  const codeKey = cleanText(record?.code_key || DEFAULT_LIVECODE_KEY, 80);
-  const createdAt = record?.created_at || now;
+  const source = migrateLegacyMockLivecode(record);
+  const codeKey = cleanText(source?.code_key || DEFAULT_LIVECODE_KEY, 80);
+  const createdAt = source?.created_at || now;
   return {
     code_key: codeKey,
-    name: cleanText(record?.name || defaultLivecode.name, 120),
-    contact_type: normalizeContactType(record?.contact_type),
-    wecom_link: cleanText(record?.wecom_link ?? "", 300),
-    qr_image: cleanText(record?.qr_image ?? "", 300),
-    channels: normalizeChannels(record?.channels),
-    capacity_limit: normalizeNonNegativeInteger(record?.capacity_limit, 0),
-    manual_full: Boolean(record?.manual_full ?? false),
-    priority: normalizeInteger(record?.priority, codeKey === DEFAULT_LIVECODE_KEY ? 100 : 50),
-    is_fallback: Boolean(record?.is_fallback ?? codeKey === DEFAULT_LIVECODE_KEY),
-    wecom_state: cleanText(record?.wecom_state || stableWecomState(codeKey), 80),
-    wecom_tag_ids: normalizeTags(record?.wecom_tag_ids),
-    invalid: Boolean(record?.invalid ?? false),
-    auto_redirect_after_paid: Boolean(record?.auto_redirect_after_paid ?? false),
-    redirect_delay_ms: normalizeDelayMs(record?.redirect_delay_ms ?? 600),
-    remark: cleanText(record?.remark ?? "", 160),
-    button_text: cleanText(record?.button_text ?? "添加课程助教微信", 80),
-    service_text: cleanText(record?.service_text ?? "客服方式：支付后添加课程助教微信", 160),
-    status: normalizeStatus(record?.status),
+    name: cleanText(source?.name || defaultLivecode.name, 120),
+    contact_type: normalizeContactType(source?.contact_type),
+    wecom_link: cleanText(source?.wecom_link ?? "", 300),
+    qr_image: cleanText(source?.qr_image ?? "", 300),
+    channels: normalizeChannels(source?.channels),
+    capacity_limit: normalizeNonNegativeInteger(source?.capacity_limit, 0),
+    manual_full: Boolean(source?.manual_full ?? false),
+    priority: normalizeInteger(source?.priority, codeKey === DEFAULT_LIVECODE_KEY ? 100 : 50),
+    is_fallback: Boolean(source?.is_fallback ?? codeKey === DEFAULT_LIVECODE_KEY),
+    wecom_state: cleanText(source?.wecom_state || stableWecomState(codeKey), 80),
+    wecom_tag_ids: normalizeTags(source?.wecom_tag_ids),
+    invalid: Boolean(source?.invalid ?? false),
+    auto_redirect_after_paid: Boolean(source?.auto_redirect_after_paid ?? false),
+    redirect_delay_ms: normalizeDelayMs(source?.redirect_delay_ms ?? 600),
+    remark: cleanText(source?.remark ?? "", 160),
+    button_text: cleanText(source?.button_text ?? "添加课程助教微信", 80),
+    service_text: cleanText(source?.service_text ?? "客服方式：支付后添加课程助教微信", 160),
+    status: normalizeStatus(source?.status ?? (codeKey === DEFAULT_LIVECODE_KEY ? defaultLivecode.status : "active")),
     created_at: createdAt,
-    updated_at: record?.updated_at || createdAt
+    updated_at: source?.updated_at || createdAt
   };
 }
 
@@ -797,11 +798,14 @@ function createOrderId() {
 }
 
 function assertMockPayAllowed() {
-  if (config.nodeEnv !== "production") return;
-  if (process.env.YMTY_ENABLE_MOCK_PAY === "true") return;
+  if (isYmtyMockPaymentAllowed()) return;
   const error = new Error("生产环境不允许使用 mock 支付");
   error.statusCode = 403;
   throw error;
+}
+
+export function isYmtyMockPaymentAllowed() {
+  return process.env.NODE_ENV !== "production" && process.env.YMTY_ALLOW_MOCK_PAYMENT === "true";
 }
 
 function normalizeAmountCents(value) {
@@ -842,6 +846,22 @@ function normalizeContactType(value) {
 function normalizeStatus(value) {
   const text = cleanText(value || "active", 32);
   return ["active", "inactive"].includes(text) ? text : "active";
+}
+
+function migrateLegacyMockLivecode(record = {}) {
+  if (
+    record?.code_key === DEFAULT_LIVECODE_KEY
+    && record?.wecom_link === LEGACY_MOCK_WECOM_LINK
+    && record?.qr_image === LEGACY_MOCK_QR_IMAGE
+  ) {
+    return {
+      ...record,
+      wecom_link: "",
+      qr_image: "",
+      status: "inactive"
+    };
+  }
+  return record;
 }
 
 function normalizeChannels(value) {

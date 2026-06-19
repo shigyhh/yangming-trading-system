@@ -1351,7 +1351,7 @@
           <tr>
             <td>${escapeHtml(eventText(event.event_type || event.change_type))}</td>
             <td><span class="status-pill">${escapeHtml(wecomStatusText(event.status))}</span></td>
-            <td><code>${escapeHtml(event.external_userid || "")}</code></td>
+            <td><code>${escapeHtml(event.external_userid_masked || "")}</code></td>
             <td>${escapeHtml(event.follow_user_userid || "")}</td>
             <td><code>${escapeHtml(event.state || "")}</code></td>
             <td>${escapeHtml(event.linked_order_id || "未关联")}</td>

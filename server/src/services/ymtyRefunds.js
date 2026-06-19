@@ -435,7 +435,7 @@ function assertRefundStatus(refund, allowed, message) {
 }
 
 function assertRefundExecutionEnabled() {
-  if (String(process.env.YMTY_REFUND_EXECUTION_ENABLED || "false").toLowerCase() === "true") return;
+  if (process.env.YMTY_REFUND_EXECUTION_ENABLED === "true") return;
   const error = new Error("真实退款执行未启用");
   error.statusCode = 403;
   throw error;

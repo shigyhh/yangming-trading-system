@@ -9,10 +9,14 @@ const authEnvKeys = [
   "YMTY_ADMIN_BOOTSTRAP_USERNAME",
   "YMTY_ADMIN_BOOTSTRAP_PASSWORD",
   "ADMIN_JWT_SECRET",
-  "YMTY_ADMIN_TOKEN"
+  "YMTY_ADMIN_TOKEN",
+  "NODE_ENV",
+  "YMTY_ALLOW_MOCK_PAYMENT"
 ];
 
 const originalEnv = Object.fromEntries(authEnvKeys.map((key) => [key, process.env[key]]));
+process.env.NODE_ENV = "test";
+process.env.YMTY_ALLOW_MOCK_PAYMENT = "true";
 
 const { handleError } = await import("../src/lib/http.js");
 const { route } = await import("../src/routes/router.js");
@@ -82,6 +86,11 @@ test("ymty livecode pool selects channel match, fallback, capacity switch, manua
   await seedYmtyDefaults();
 
   try {
+    await updateYmtyLivecodeByKey({
+      adminId: "pool-test-admin",
+      codeKey: "YMXX_YMTY_DEFAULT",
+      patch: { qr_image: "/uploads/livecode/default-fallback.png", status: "active" }
+    });
     await createYmtyLivecode({
       adminId: "pool-test-admin",
       patch: {
@@ -186,7 +195,9 @@ test("ymty livecode pool supports personal wechat, wecom, public privacy, legacy
     assert.equal(legacy.manual_full, false);
     assert.equal(legacy.priority, 100);
     assert.equal(legacy.is_fallback, true);
-    assert.equal(legacy.status, "active");
+    assert.equal(legacy.wecom_link, "");
+    assert.equal(legacy.qr_image, "");
+    assert.equal(legacy.status, "inactive");
     assert.ok(legacy.wecom_state);
 
     await createYmtyLivecode({
@@ -275,7 +286,6 @@ test("ymty livecode pool supports personal wechat, wecom, public privacy, legacy
   } finally {
     await resetYmtyForTests();
     await seedYmtyDefaults();
-    restoreEnv();
   }
 });
 
@@ -478,7 +488,6 @@ test("ymty livecode pool handles inactive fixed code, empty code exclusion, no a
   } finally {
     await resetYmtyForTests();
     await seedYmtyDefaults();
-    restoreEnv();
   }
 });
 

@@ -793,20 +793,6 @@
         location.href = "/hd/ymty/success.html?" + query.toString();
       }
 
-      async function tryMockPaySuccess(order){
-        if (!order || !order.order_id || !order.order_token) return;
-        await fetch("/api/mock/pay-success", {
-          method:"POST",
-          headers:{ "Content-Type":"application/json" },
-          credentials:"include",
-          body:JSON.stringify({
-            order_id:order.order_id,
-            token:order.order_token,
-            transaction_id:"h5-mock-" + Date.now()
-          })
-        }).catch(() => {});
-      }
-
       async function createOrder(channel){
         const payChannel = channel === "wechat" ? (isWechat() ? "wechat_jsapi" : "wechat_h5") : "alipay_wap";
         const payload = {
@@ -872,12 +858,6 @@
 
           if (data.jsapi_params && !window.WeixinJSBridge) {
             alert("请在微信内完成支付，支付完成后返回成功页查看入营入口。");
-            return;
-          }
-
-          if (json.mock_payment || data.mock_payment) {
-            await tryMockPaySuccess(order);
-            goSuccess(order);
             return;
           }
 

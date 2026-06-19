@@ -20,10 +20,10 @@ import { dispatchTrainingPrescriptionBinding, generateShareCardBinding, getAdmin
 import { getGlobalReflectionToday, listGlobalReflectionChoices, submitGlobalReflectionVote } from "../services/globalReflection.js";
 import { buildHistoricalKlineSlice, downloadHistoricalKline, getHistoricalKlineRules, listHistoricalKlineCatalog, listHistoricalKlineInstruments, revealHistoricalKlineSlice } from "../services/historicalKline.js";
 import { buildTradeReviewOcrDraft } from "../services/tradeReviewOcr.js";
-import { createYmtyLivecode, createYmtyOrder, getYmtyAdminCampaign, getYmtyAfterpayEntrance, getYmtyAuditLogs, getYmtyOrderForPayment, getYmtyOrderStatus, getYmtyPublicCampaign, listYmtyCourseUsers, listYmtyLivecodeAssignments, listYmtyLivecodes, listYmtyOrders, markYmtyMockPaySuccess, markYmtyOrderPaid, switchYmtyAfterpayLivecode, toggleYmtyLivecodeFull, toggleYmtyLivecodeStatus, updateYmtyCampaign, updateYmtyLivecode, updateYmtyLivecodeByKey } from "../services/ymtyCampaign.js";
+import { createYmtyLivecode, createYmtyOrder, getYmtyAdminCampaign, getYmtyAfterpayEntrance, getYmtyAuditLogs, getYmtyOrderForPayment, getYmtyOrderStatus, getYmtyPublicCampaign, isYmtyMockPaymentAllowed, listYmtyCourseUsers, listYmtyLivecodeAssignments, listYmtyLivecodes, listYmtyOrders, markYmtyMockPaySuccess, markYmtyOrderPaid, switchYmtyAfterpayLivecode, toggleYmtyLivecodeFull, toggleYmtyLivecodeStatus, updateYmtyCampaign, updateYmtyLivecode, updateYmtyLivecodeByKey } from "../services/ymtyCampaign.js";
 import { getYmtyAnalyticsSummary, recordYmtyFrontendEvent } from "../services/ymtyAnalytics.js";
-import { addYmtyCrmNote, exportYmtyCrmCsv, getYmtyCrmLead, listYmtyCrmLeads, updateYmtyCrmLead, updateYmtyCrmLeadStage } from "../services/ymtyCrm.js";
-import { getYmtyWecomSummary, linkYmtyWecomEventToLead, listYmtyWecomEvents, listYmtyWecomSyncJobs, receiveYmtyWecomCallback, retryYmtyWecomSyncJob, verifyYmtyWecomCallbackUrl } from "../services/wecomCustomer.js";
+import { addYmtyCrmNote, exportYmtyCrmCsv, getYmtyCrmLead, listYmtyCrmLeads, publicYmtyCrmLead, publicYmtyCrmLeadDetail, updateYmtyCrmLead, updateYmtyCrmLeadStage } from "../services/ymtyCrm.js";
+import { getYmtyWecomSummary, linkYmtyWecomEventToLead, listYmtyWecomEvents, listYmtyWecomSyncJobs, publicYmtyWecomEvent, publicYmtyWecomSyncJob, receiveYmtyWecomCallback, retryYmtyWecomSyncJob, verifyYmtyWecomCallbackUrl } from "../services/wecomCustomer.js";
 import { getYmtyRefundConfigStatus, getYmtyRefundPolicy, previewYmtyRefund, updateYmtyRefundPolicy } from "../services/ymtyRefundPolicy.js";
 import { approveYmtyRefund, createYmtyRefund, executeYmtyRefund, getYmtyRefund, handleWechatRefundNotify, listYmtyRefunds, queryYmtyRefundProvider, rejectYmtyRefund } from "../services/ymtyRefunds.js";
 import { authenticateYmtyAdmin, changeYmtyAdminPassword, getYmtyAdminMe, loginYmtyAdmin, logoutYmtyAdmin } from "../services/adminAuth.js";
@@ -111,7 +111,6 @@ export async function route(req, res) {
         global_reflection_vote: "POST /api/v1/global-reflection/vote",
         ymty_pay_create: "POST /api/pay/create",
         ymty_track: "POST /api/track/ymty",
-        ymty_mock_pay_complete: "POST /api/pay/mock/complete",
         ymty_wechat_notify: "POST /api/pay/wechat/notify",
         ymty_alipay_notify: "POST /api/pay/alipay/notify",
         ymty_order_status: "GET /api/order/status?order_id=ymty_xxx",
@@ -311,6 +310,7 @@ export async function route(req, res) {
   }
 
   if (req.method === "POST" && pathname === "/api/mock/pay-success") {
+    if (!isYmtyMockPaymentAllowed()) return notFound(res);
     const body = await readJson(req);
     const result = await markYmtyMockPaySuccess({
       orderId: body.order_id || body.orderId || url.searchParams.get("order_id") || "",
@@ -321,6 +321,7 @@ export async function route(req, res) {
   }
 
   if (req.method === "POST" && pathname === "/api/pay/mock/complete") {
+    if (!isYmtyMockPaymentAllowed()) return notFound(res);
     const body = await readJson(req);
     const result = await markYmtyMockPaySuccess({
       orderId: body.order_id || body.orderId || url.searchParams.get("order_id") || "",
@@ -598,7 +599,7 @@ export async function route(req, res) {
   if (req.method === "GET" && pathname === "/api/admin/crm/leads") {
     await assertYmtyAdminAccess(req);
     const result = await listYmtyCrmLeads(Object.fromEntries(url.searchParams.entries()));
-    return sendJson(res, 200, { ok: true, ...result });
+    return sendJson(res, 200, { ok: true, leads: result.leads.map((lead) => publicYmtyCrmLead(lead)) });
   }
 
   if (req.method === "GET" && pathname === "/api/admin/crm/export.csv") {
@@ -616,7 +617,7 @@ export async function route(req, res) {
   if (req.method === "GET" && crmLeadMatch) {
     await assertYmtyAdminAccess(req);
     const result = await getYmtyCrmLead(decodeURIComponent(crmLeadMatch[1]));
-    return sendJson(res, 200, { ok: true, ...result });
+    return sendJson(res, 200, { ok: true, ...publicYmtyCrmLeadDetail(result) });
   }
 
   if (req.method === "POST" && crmLeadMatch) {
@@ -628,7 +629,7 @@ export async function route(req, res) {
       adminId: admin.adminId,
       ip: getIp(req)
     });
-    return sendJson(res, 200, { ok: true, ...result });
+    return sendJson(res, 200, { ok: true, lead: publicYmtyCrmLead(result.lead) });
   }
 
   const crmStageMatch = pathname.match(/^\/api\/admin\/crm\/leads\/([^/]+)\/stage$/);
@@ -642,7 +643,7 @@ export async function route(req, res) {
       adminId: admin.adminId,
       ip: getIp(req)
     });
-    return sendJson(res, 200, { ok: true, ...result });
+    return sendJson(res, 200, { ok: true, lead: publicYmtyCrmLead(result.lead) });
   }
 
   const crmNoteMatch = pathname.match(/^\/api\/admin\/crm\/leads\/([^/]+)\/note$/);
@@ -775,13 +776,13 @@ export async function route(req, res) {
   if (req.method === "GET" && pathname === "/api/admin/wecom/customer/events") {
     await assertYmtyAdminAccess(req);
     const result = await listYmtyWecomEvents(Object.fromEntries(url.searchParams.entries()));
-    return sendJson(res, 200, { ok: true, ...result });
+    return sendJson(res, 200, { ok: true, events: result.events.map((event) => publicYmtyWecomEvent(event)) });
   }
 
   if (req.method === "GET" && pathname === "/api/admin/wecom/customer/sync-jobs") {
     await assertYmtyAdminAccess(req);
     const result = await listYmtyWecomSyncJobs(Object.fromEntries(url.searchParams.entries()));
-    return sendJson(res, 200, { ok: true, ...result });
+    return sendJson(res, 200, { ok: true, jobs: result.jobs.map((job) => publicYmtyWecomSyncJob(job)) });
   }
 
   const wecomEventLinkMatch = pathname.match(/^\/api\/admin\/wecom\/customer\/events\/([^/]+)\/link$/);

@@ -12,8 +12,22 @@ import {
   resetYmtyForTests,
   seedYmtyDefaults,
   updateYmtyCampaign,
+  createYmtyLivecode,
   updateYmtyLivecode
 } from "../src/services/ymtyCampaign.js";
+
+const originalNodeEnv = process.env.NODE_ENV;
+const originalAllowMock = process.env.YMTY_ALLOW_MOCK_PAYMENT;
+
+test.before(() => {
+  process.env.NODE_ENV = "test";
+  process.env.YMTY_ALLOW_MOCK_PAYMENT = "true";
+});
+
+test.after(() => {
+  restoreEnvValue("NODE_ENV", originalNodeEnv);
+  restoreEnvValue("YMTY_ALLOW_MOCK_PAYMENT", originalAllowMock);
+});
 
 test("ymty mock payment flow uses backend price and unlocks livecode only after paid", async () => {
   await resetYmtyForTests();
@@ -24,6 +38,7 @@ test("ymty mock payment flow uses backend price and unlocks livecode only after 
     assert.equal(publicCampaign.product.product_code, "YMXX_JY_TY");
     assert.equal(publicCampaign.product.amount_cents, 168);
     assert.equal(JSON.stringify(publicCampaign).includes("work.weixin.qq.com/ca/mock"), false);
+    assert.equal(JSON.stringify(publicCampaign).includes("wecom-livecode-placeholder"), false);
 
     const order = await createYmtyOrder({
       productCode: "YMXX_JY_TY",
@@ -74,13 +89,26 @@ test("ymty mock payment flow uses backend price and unlocks livecode only after 
     });
     assert.equal(paidStatus.order.pay_status, "paid");
 
+    await createYmtyLivecode({
+      adminId: "contract-test-admin",
+      patch: {
+        code_key: "YMTY_CONTRACT_ACTIVE",
+        name: "合同测试活码",
+        qr_image: "/uploads/livecode/contract-active.png",
+        wecom_link: "https://work.weixin.qq.com/ca/ymty_contract",
+        channels: ["wechat_h5"],
+        priority: 1,
+        status: "active"
+      }
+    });
+
     const entrance = await getYmtyAfterpayEntrance({
       orderId: order.order.order_id,
       token: order.order.order_token
     });
-    assert.equal(entrance.livecode.code_key, "YMXX_YMTY_DEFAULT");
-    assert.equal(entrance.livecode.wecom_link, "https://work.weixin.qq.com/ca/mock");
-    assert.equal(entrance.livecode.qr_image, "/assets/wecom-livecode-placeholder.svg");
+    assert.equal(entrance.livecode.code_key, "YMTY_CONTRACT_ACTIVE");
+    assert.equal(entrance.livecode.wecom_link, "https://work.weixin.qq.com/ca/ymty_contract");
+    assert.equal(entrance.livecode.qr_image, "/uploads/livecode/contract-active.png");
 
     await updateYmtyCampaign({
       adminId: "contract-test-admin",
@@ -120,3 +148,11 @@ test("ymty mock payment flow uses backend price and unlocks livecode only after 
     await seedYmtyDefaults();
   }
 });
+
+function restoreEnvValue(key, value) {
+  if (value === undefined) {
+    delete process.env[key];
+  } else {
+    process.env[key] = value;
+  }
+}

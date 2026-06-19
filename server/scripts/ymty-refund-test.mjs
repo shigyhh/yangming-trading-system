@@ -13,6 +13,8 @@ const envKeys = [
   "YMTY_ADMIN_TOKEN",
   "YMTY_REFUND_REVOKE_COURSE_ON_SUCCESS",
   "YMTY_REFUND_EXECUTION_ENABLED",
+  "NODE_ENV",
+  "YMTY_ALLOW_MOCK_PAYMENT",
   "WECHAT_PAY_MODE",
   "WECHAT_MCH_ID",
   "WECHAT_SERVICE_APP_ID",
@@ -35,6 +37,8 @@ const envKeys = [
   "ALIPAY_RETURN_URL"
 ];
 const originalEnv = Object.fromEntries(envKeys.map((key) => [key, process.env[key]]));
+process.env.NODE_ENV = "test";
+process.env.YMTY_ALLOW_MOCK_PAYMENT = "true";
 const originalFetch = globalThis.fetch;
 const { AlipaySdk } = await import("alipay-sdk");
 const originalAlipayExec = AlipaySdk.prototype.exec;
@@ -417,6 +421,8 @@ test("ymty executes alipay refund through SDK with response validation and idemp
 async function resetAll() {
   cachedAdminToken = "";
   restoreEnv();
+  process.env.NODE_ENV = "test";
+  process.env.YMTY_ALLOW_MOCK_PAYMENT = "true";
   await resetYmtyForTests();
   await resetYmtyRefundsForTests();
   await seedYmtyDefaults();
@@ -446,6 +452,11 @@ function restoreEnv() {
     if (originalEnv[key] === undefined) delete process.env[key];
     else process.env[key] = originalEnv[key];
   }
+}
+
+function enableMockPaymentForTest() {
+  process.env.NODE_ENV = "test";
+  process.env.YMTY_ALLOW_MOCK_PAYMENT = "true";
 }
 
 async function loginAndChangePassword() {
@@ -503,6 +514,7 @@ async function approvedRefund({ payChannel = "mock", transactionId = "", amountC
 
 async function setupPaymentEnv() {
   restoreEnv();
+  enableMockPaymentForTest();
   const tempDir = await mkdtemp(join(tmpdir(), "ymty-refund-pay-test-"));
   const wechatMerchantKeys = crypto.generateKeyPairSync("rsa", { modulusLength: 2048 });
   const wechatPlatformKeys = crypto.generateKeyPairSync("rsa", { modulusLength: 2048 });

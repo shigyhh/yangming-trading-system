@@ -11,6 +11,8 @@ const envKeys = [
   "YMTY_REFUND_EXECUTION_ENABLED",
   "YMTY_AUTO_REFUND_ENABLED",
   "YMTY_REFUND_REVOKE_COURSE_ON_SUCCESS",
+  "NODE_ENV",
+  "YMTY_ALLOW_MOCK_PAYMENT",
   "WECHAT_PAY_MODE",
   "WECHAT_MCH_ID",
   "WECHAT_SERVICE_APP_ID",
@@ -34,6 +36,8 @@ const envKeys = [
 ];
 
 const originalEnv = Object.fromEntries(envKeys.map((key) => [key, process.env[key]]));
+process.env.NODE_ENV = "test";
+process.env.YMTY_ALLOW_MOCK_PAYMENT = "true";
 
 const { handleError } = await import("../src/lib/http.js");
 const { readRuntimeRecords, replaceRuntimeRecords } = await import("../src/lib/store.js");
@@ -60,6 +64,8 @@ test.after(() => restoreEnv());
 test("ymty refund config is admin-only, default closed, and never leaks secrets", async () => {
   await resetAll();
   setupAdminEnv();
+  process.env.YMTY_REFUND_EXECUTION_ENABLED = "TRUE";
+  process.env.YMTY_AUTO_REFUND_ENABLED = " true";
 
   try {
     const noAuth = await request({ method: "GET", url: "/api/admin/refunds/config" });
@@ -320,6 +326,8 @@ test("ymty refund console page exposes dry run, policy draft, switch status and 
 
 async function resetAll() {
   restoreEnv();
+  process.env.NODE_ENV = "test";
+  process.env.YMTY_ALLOW_MOCK_PAYMENT = "true";
   await resetYmtyForTests();
   await resetYmtyRefundsForTests();
   await replaceRuntimeRecords("ymty-refund-policy.json", []);

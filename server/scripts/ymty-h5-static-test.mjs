@@ -153,6 +153,10 @@ test("ymty landing page avoids forbidden demo and high-risk content", () => {
     "scroll-snap-stop",
     "overflow-y:scroll",
     "overflow-y: scroll",
+    "tryMockPaySuccess",
+    "/api/mock/pay-success",
+    "/api/pay/mock/complete",
+    "mock_payment",
   ].forEach((text) => assertNotIncludes(normalized, text));
 });
 

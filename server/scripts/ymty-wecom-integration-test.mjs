@@ -12,9 +12,13 @@ const envKeys = [
   "YMTY_ADMIN_BOOTSTRAP_USERNAME",
   "YMTY_ADMIN_BOOTSTRAP_PASSWORD",
   "ADMIN_JWT_SECRET",
-  "YMTY_ADMIN_TOKEN"
+  "YMTY_ADMIN_TOKEN",
+  "NODE_ENV",
+  "YMTY_ALLOW_MOCK_PAYMENT"
 ];
 const originalEnv = Object.fromEntries(envKeys.map((key) => [key, process.env[key]]));
+process.env.NODE_ENV = "test";
+process.env.YMTY_ALLOW_MOCK_PAYMENT = "true";
 
 const { handleError } = await import("../src/lib/http.js");
 const { route } = await import("../src/routes/router.js");
@@ -39,16 +43,27 @@ test.after(() => restoreEnv());
 
 test("ymty wecom callback stays disabled without config and does not affect paid afterpay", async () => {
   await resetAll();
-  process.env.WECOM_ENABLED = "false";
+  process.env.WECOM_ENABLED = "TRUE";
 
   try {
     const verify = await request({ method: "GET", url: "/api/wecom/customer/callback?msg_signature=x&timestamp=1&nonce=n&echostr=e" });
     assert.equal(verify.statusCode, 503);
     assert.equal(verify.body.code, "WECOM_DISABLED");
 
+    await createYmtyLivecode({
+      adminId: "wecom-disabled-test",
+      patch: {
+        code_key: "YMTY_DISABLED_FALLBACK",
+        name: "企微关闭测试活码",
+        qr_image: "/uploads/livecode/wecom-disabled.png",
+        channels: ["douyin"],
+        priority: 1,
+        status: "active"
+      }
+    });
     const order = await paidOrder({ channel: "douyin" });
     const entrance = await getYmtyAfterpayEntrance({ orderId: order.order_id, token: order.order_token });
-    assert.equal(entrance.livecode.code_key, "YMXX_YMTY_DEFAULT");
+    assert.equal(entrance.livecode.code_key, "YMTY_DISABLED_FALLBACK");
   } finally {
     await resetAll();
   }
@@ -185,7 +200,9 @@ test("ymty wecom unlinked events are retained and admin endpoints are protected"
       headers: authHeaders(token)
     });
     assert.equal(adminEvents.statusCode, 200);
-    assert.equal(adminEvents.body.events[0].external_userid, "wm_external_unlinked");
+    assert.equal(adminEvents.body.events[0].external_userid, undefined);
+    assert.equal(adminEvents.body.events[0].external_userid_masked, "wm_e****nked");
+    assert.equal(JSON.stringify(adminEvents.body).includes("wm_external_unlinked"), false);
 
     const linked = await jsonRequest("/api/admin/wecom/customer/events/evt-unlinked/link", {
       lead_id: "manual-lead-id"
@@ -225,6 +242,8 @@ test("ymty admin page exposes wecom sync module without secret values", async ()
 
 async function resetAll() {
   restoreEnv();
+  process.env.NODE_ENV = "test";
+  process.env.YMTY_ALLOW_MOCK_PAYMENT = "true";
   await resetYmtyForTests();
   await resetYmtyWecomForTests();
   await seedYmtyDefaults();

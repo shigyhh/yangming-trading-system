@@ -7,10 +7,14 @@ const authEnvKeys = [
   "YMTY_ADMIN_BOOTSTRAP_PASSWORD",
   "ADMIN_JWT_SECRET",
   "YMTY_ADMIN_TOKEN",
-  "YMTY_ANALYTICS_SALT"
+  "YMTY_ANALYTICS_SALT",
+  "NODE_ENV",
+  "YMTY_ALLOW_MOCK_PAYMENT"
 ];
 
 const originalEnv = Object.fromEntries(authEnvKeys.map((key) => [key, process.env[key]]));
+process.env.NODE_ENV = "test";
+process.env.YMTY_ALLOW_MOCK_PAYMENT = "true";
 
 const { handleError } = await import("../src/lib/http.js");
 const { readRuntimeRecords } = await import("../src/lib/store.js");
