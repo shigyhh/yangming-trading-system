@@ -141,6 +141,38 @@ export async function queryWechatOrder(order) {
   });
 }
 
+export async function createWechatRefund(refund, order) {
+  assertWechatConfig();
+  const body = {
+    out_refund_no: refund.refund_id,
+    reason: trimRefundReason(refund.reason),
+    notify_url: getWechatRefundNotifyUrl(),
+    amount: {
+      refund: Number(refund.amount_cents),
+      total: Number(order.amount_cents),
+      currency: "CNY"
+    }
+  };
+  if (order.transaction_id) {
+    body.transaction_id = order.transaction_id;
+  } else {
+    body.out_trade_no = order.order_id;
+  }
+  return requestWechatApi({
+    method: "POST",
+    path: "/v3/refund/domestic/refunds",
+    body
+  });
+}
+
+export async function queryWechatRefund(refund) {
+  assertWechatConfig();
+  return requestWechatApi({
+    method: "GET",
+    path: `/v3/refund/domestic/refunds/${encodeURIComponent(refund.refund_id)}`
+  });
+}
+
 export function validateWechatPayment(payload, order) {
   if (payload.out_trade_no !== order.order_id) throw paymentError("微信订单号不一致", 400);
   if (payload.mchid !== process.env.WECHAT_MCH_ID) throw paymentError("微信商户号不一致", 400);
@@ -149,6 +181,9 @@ export function validateWechatPayment(payload, order) {
   if (Number(payload.amount?.total) !== Number(order.amount_cents)) throw paymentError("微信支付金额不一致", 400);
   return true;
 }
+
+export const verifyWechatRefundNotify = verifyWechatNotify;
+export const parseWechatRefundNotify = parseWechatNotify;
 
 async function createJsapiParams(prepayId) {
   const appId = process.env.WECHAT_SERVICE_APP_ID;
@@ -176,14 +211,14 @@ async function requestWechatApi({ method, path, body = null }) {
   signer.update(`${method}\n${path}\n${timestamp}\n${nonce}\n${bodyText}\n`);
   signer.end();
   const signature = signer.sign(await readWechatPrivateKey(), "base64");
-  const authorization = [
-    "WECHATPAY2-SHA256-RSA2048",
+  const authorizationParams = [
     `mchid="${process.env.WECHAT_MCH_ID}"`,
     `nonce_str="${nonce}"`,
     `signature="${signature}"`,
     `timestamp="${timestamp}"`,
     `serial_no="${process.env.WECHAT_CERT_SERIAL_NO}"`
   ].join(",");
+  const authorization = `WECHATPAY2-SHA256-RSA2048 ${authorizationParams}`;
 
   const response = await fetch(`https://api.mch.weixin.qq.com${path}`, {
     method,
@@ -272,6 +307,23 @@ function parseWechatResponseText(text) {
   } catch {
     return { message: "微信支付网关返回非 JSON 响应" };
   }
+}
+
+function getWechatRefundNotifyUrl() {
+  const paymentNotifyUrl = String(process.env.WECHAT_NOTIFY_URL || "").trim();
+  if (!paymentNotifyUrl) return "";
+  if (paymentNotifyUrl.includes("/api/pay/wechat/notify")) {
+    return paymentNotifyUrl.replace("/api/pay/wechat/notify", "/api/pay/wechat/refund-notify");
+  }
+  try {
+    return new URL("/api/pay/wechat/refund-notify", paymentNotifyUrl).toString();
+  } catch {
+    return paymentNotifyUrl;
+  }
+}
+
+function trimRefundReason(reason = "") {
+  return String(reason || "").replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 80);
 }
 
 function getHeader(headers, key) {

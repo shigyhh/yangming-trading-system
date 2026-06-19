@@ -385,6 +385,26 @@
         font-size:13px;
         line-height:1.7;
       }
+      .agreement-note{
+        margin:8px 0 0;
+        color:rgba(234,228,210,.62);
+        text-align:center;
+        font-size:12px;
+        line-height:1.75;
+      }
+      .agreement-links{
+        display:flex;
+        justify-content:center;
+        gap:12px;
+        flex-wrap:wrap;
+        margin-top:10px;
+      }
+      .agreement-links a,
+      .agreement-note a{
+        color:var(--gold-bright);
+        text-decoration:none;
+        border-bottom:1px solid rgba(224,196,136,.34);
+      }
 
       .legal,
       .footer{
@@ -604,6 +624,14 @@
             <span>客服方式：支付后添加课程助教微信</span>
           </div>
           <p class="pay-note" id="payMessage" aria-live="polite">支付完成后添加课程助教微信，领取直播入口和训练资料。</p>
+          <p class="agreement-note">
+            提交支付即表示您已阅读并同意
+            <a href="/agreement/service.html" target="_blank" rel="noopener">《课程服务协议》</a>，
+            并已知悉
+            <a href="/agreement/privacy.html" target="_blank" rel="noopener">《隐私政策》</a>
+            和
+            <a href="/agreement/refund.html" target="_blank" rel="noopener">《退款规则》</a>。
+          </p>
         </div>
         <div class="legal">
           本体验营仅用于投资教育、交易纪律训练、模拟盘训练和风险意识教育。<br />
@@ -614,6 +642,11 @@
 
       <footer class="footer">
         湖南坤铘紫垣传媒有限公司 · xxjyxt.com · 湘ICP备2026021493号-1
+        <nav class="agreement-links" aria-label="体验营协议">
+          <a href="/agreement/service.html" target="_blank" rel="noopener">课程服务协议</a>
+          <a href="/agreement/privacy.html" target="_blank" rel="noopener">隐私政策</a>
+          <a href="/agreement/refund.html" target="_blank" rel="noopener">退款规则</a>
+        </nav>
       </footer>
     </main>
 
@@ -641,6 +674,68 @@
       const paySheet = document.getElementById("paySheet");
       const payMessage = document.getElementById("payMessage");
       const payButtons = Array.from(document.querySelectorAll("[data-pay-choice]"));
+      const analyticsSessionKey = "ymty_analytics_session_id";
+      const scrollMilestones = new Set();
+      let maxScrollPercent = 0;
+      const pageStartedAt = Date.now();
+
+      function getAnalyticsSessionId(){
+        try {
+          let sessionId = sessionStorage.getItem(analyticsSessionKey);
+          if (!sessionId) {
+            sessionId = window.crypto && crypto.randomUUID
+              ? crypto.randomUUID()
+              : "sess_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 10);
+            sessionStorage.setItem(analyticsSessionKey, sessionId);
+          }
+          return sessionId;
+        } catch {
+          return "sess_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 10);
+        }
+      }
+
+      function createEventId(name){
+        if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+        return name + "_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 10);
+      }
+
+      function trackEvent(eventName, metadata = {}, options = {}){
+        const payload = {
+          event_id:createEventId(eventName),
+          event_name:eventName,
+          session_id:getAnalyticsSessionId(),
+          product_code:campaign.product_code || "YMXX_JY_TY",
+          path:location.pathname,
+          track:getTrackParams(),
+          metadata
+        };
+        const body = JSON.stringify(payload);
+        if (options.beacon && navigator.sendBeacon) {
+          try {
+            const blob = new Blob([body], { type:"application/json" });
+            if (navigator.sendBeacon("/api/track/ymty", blob)) return;
+          } catch {}
+        }
+        fetch("/api/track/ymty", {
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          credentials:"include",
+          body
+        }).catch(() => {});
+      }
+
+      function updateMaxScroll(){
+        const scrollable = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+        const percent = Math.max(0, Math.min(100, Math.round((window.scrollY / scrollable) * 100)));
+        maxScrollPercent = Math.max(maxScrollPercent, percent);
+        // analytics milestones: scroll_25, scroll_50, scroll_75
+        [25,50,75].forEach((mark) => {
+          if (percent >= mark && !scrollMilestones.has(mark)) {
+            scrollMilestones.add(mark);
+            trackEvent("scroll_" + mark, { max_scroll_percent:maxScrollPercent });
+          }
+        });
+      }
 
       function scrollToSection(id){
         const target = document.getElementById(id);
@@ -663,6 +758,7 @@
           const value = search.get(key);
           if (value) track[key] = value;
         });
+        track.session_id = getAnalyticsSessionId();
         track.landing_url = location.href;
         track.referrer = document.referrer || "";
         track.user_agent = navigator.userAgent || "";
@@ -709,6 +805,7 @@
 
       function openPaySheet(){
         if (campaign.status && campaign.status !== "online") return;
+        trackEvent("pay_sheet_open");
         paySheet.classList.add("show");
         paySheet.setAttribute("aria-hidden", "false");
       }
@@ -727,20 +824,6 @@
           token: order.order_token
         });
         location.href = "/hd/ymty/success.html?" + query.toString();
-      }
-
-      async function tryMockPaySuccess(order){
-        if (!order || !order.order_id || !order.order_token) return;
-        await fetch("/api/mock/pay-success", {
-          method:"POST",
-          headers:{ "Content-Type":"application/json" },
-          credentials:"include",
-          body:JSON.stringify({
-            order_id:order.order_id,
-            token:order.order_token,
-            transaction_id:"h5-mock-" + Date.now()
-          })
-        }).catch(() => {});
       }
 
       async function createOrder(channel){
@@ -811,12 +894,6 @@
             return;
           }
 
-          if (json.mock_payment || data.mock_payment) {
-            await tryMockPaySuccess(order);
-            goSuccess(order);
-            return;
-          }
-
           throw new Error("支付接口返回格式不完整");
         } catch (err) {
           console.error(err);
@@ -828,13 +905,22 @@
       }
 
       document.getElementById("fitBtn").addEventListener("click", () => scrollToSection("pain-method"));
-      document.getElementById("heroSignupBtn").addEventListener("click", () => scrollToSection("signup"));
-      document.getElementById("bottomSignupBtn").addEventListener("click", openPaySheet);
+      document.getElementById("heroSignupBtn").addEventListener("click", () => {
+        trackEvent("signup_click", { position:"hero" });
+        scrollToSection("signup");
+      });
+      document.getElementById("bottomSignupBtn").addEventListener("click", () => {
+        trackEvent("signup_click", { position:"signup" });
+        openPaySheet();
+      });
       document.querySelectorAll("[data-close-pay]").forEach((element) => {
         element.addEventListener("click", closePaySheet);
       });
       payButtons.forEach((button) => {
-        button.addEventListener("click", () => createOrder(button.dataset.payChoice));
+        button.addEventListener("click", () => {
+          trackEvent("pay_method_select", { method:button.dataset.payChoice || "" });
+          createOrder(button.dataset.payChoice);
+        });
       });
       paySheet.addEventListener("click", (event) => {
         if (event.target === paySheet) closePaySheet();
@@ -842,6 +928,28 @@
 
       renderCampaign();
       loadCampaign();
+      trackEvent("page_view");
+      window.addEventListener("scroll", updateMaxScroll, { passive:true });
+      updateMaxScroll();
+      if ("IntersectionObserver" in window) {
+        const signupObserver = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              trackEvent("signup_view");
+              signupObserver.disconnect();
+            }
+          });
+        }, { threshold:.35 });
+        const signup = document.getElementById("signup");
+        if (signup) signupObserver.observe(signup);
+      }
+      window.addEventListener("pagehide", () => {
+        updateMaxScroll();
+        trackEvent("page_leave", {
+          duration_ms:Date.now() - pageStartedAt,
+          max_scroll_percent:maxScrollPercent
+        }, { beacon:true });
+      });
     </script>
   </body>
 </html>

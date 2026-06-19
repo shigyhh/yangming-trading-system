@@ -9,6 +9,11 @@ const repoRoot = resolve(__dirname, "../..");
 const indexPath = resolve(repoRoot, "web-mvp/hd/ymty/index.html");
 const successPath = resolve(repoRoot, "web-mvp/hd/ymty/success.html");
 const adminPath = resolve(repoRoot, "web-mvp/admin/ymty/index.html");
+const agreementPaths = [
+  resolve(repoRoot, "web-mvp/agreement/privacy.html"),
+  resolve(repoRoot, "web-mvp/agreement/service.html"),
+  resolve(repoRoot, "web-mvp/agreement/refund.html")
+];
 
 function readUtf8(path) {
   return readFileSync(path, "utf8");
@@ -153,6 +158,10 @@ test("ymty landing page avoids forbidden demo and high-risk content", () => {
     "scroll-snap-stop",
     "overflow-y:scroll",
     "overflow-y: scroll",
+    "tryMockPaySuccess",
+    "/api/mock/pay-success",
+    "/api/pay/mock/complete",
+    "mock_payment",
   ].forEach((text) => assertNotIncludes(normalized, text));
 });
 
@@ -186,8 +195,47 @@ test("ymty landing page uses public config and safe payment payload", () => {
   ].forEach((text) => assertNotIncludes(payload, text));
 });
 
+test("ymty public agreement pages exist and are linked from h5 pages", () => {
+  const indexHtml = readUtf8(indexPath);
+  const successHtml = readUtf8(successPath);
+  const agreementLinks = [
+    "/agreement/service.html",
+    "/agreement/privacy.html",
+    "/agreement/refund.html"
+  ];
+
+  agreementLinks.forEach((href) => {
+    assertIncludes(indexHtml, href);
+    assertIncludes(successHtml, href);
+  });
+
+  agreementPaths.forEach((agreementPath) => {
+    const html = readUtf8(agreementPath);
+    [
+      "<title>",
+      "发布日期",
+      "最近更新时间",
+      "湖南坤铘紫垣传媒有限公司",
+      "xxjyxt.com",
+      "湘ICP备2026021493号-1",
+      "/hd/ymty/index.html"
+    ].forEach((text) => assertIncludes(html, text));
+
+    [
+      "TODO",
+      "待补充",
+      "your-link.example",
+      "external_userid",
+      "BEGIN PRIVATE KEY",
+      "API_V3_KEY"
+    ].forEach((text) => assertNotIncludes(html, text));
+  });
+});
+
 test("ymty success page only unlocks after paid status", () => {
   const html = readUtf8(successPath);
+  const statusIndex = html.indexOf("/api/order/status");
+  const entranceIndex = html.indexOf("/api/afterpay/entrance");
 
   [
     "/api/order/status",
@@ -200,11 +248,14 @@ test("ymty success page only unlocks after paid status", () => {
     "qr_image",
   ].forEach((text) => assertIncludes(html, text));
 
+  assert.ok(statusIndex >= 0 && entranceIndex > statusIndex, "success page must check order status before afterpay entrance");
+
   [
     "企业微信二维码占位",
     "上线前替换为真实助教二维码",
     "客服电话：待补充",
     "请填入 ICP",
+    "?paid=1",
   ].forEach((text) => assertNotIncludes(html, text));
 });
 

@@ -1,9 +1,19 @@
 import crypto from "node:crypto";
-import { config } from "../config.js";
 import { readRuntimeRecords, replaceRuntimeRecords, updateRuntimeRecords } from "../lib/store.js";
+import { recordYmtyTrustedEvent, resetYmtyAnalyticsForTests } from "./ymtyAnalytics.js";
+import { ensureYmtyCrmLeadForPaidOrder, markYmtyCrmLeadAssigned, resetYmtyCrmForTests } from "./ymtyCrm.js";
+import {
+  canSwitchLivecode,
+  normalizeAssignmentRecord,
+  resolveLivecodeAssignment,
+  stableWecomState,
+  switchLivecodeAssignment,
+  withLivecodeStats
+} from "./ymtyLivecodePool.js";
 
 const PRODUCT_FILE = "ymty-products.json";
 const LIVECODE_FILE = "ymty-livecodes.json";
+const LIVECODE_ASSIGNMENT_FILE = "ymty-livecode-assignments.json";
 const ORDER_FILE = "ymty-orders.json";
 const PAYMENT_LOG_FILE = "ymty-payment-logs.json";
 const COURSE_USER_FILE = "ymty-course-users.json";
@@ -12,6 +22,12 @@ const AUDIT_LOG_FILE = "ymty-audit-logs.json";
 
 const DEFAULT_PRODUCT_CODE = "YMXX_JY_TY";
 const DEFAULT_LIVECODE_KEY = "YMXX_YMTY_DEFAULT";
+const LEGACY_MOCK_WECOM_LINK = ["https://work.weixin.qq.com/ca", "mock"].join("/");
+const LEGACY_MOCK_QR_IMAGE = [
+  "",
+  "assets",
+  ["wecom", "livecode", "placeholder"].join("-") + ".svg"
+].join("/");
 
 const defaultProduct = {
   product_code: DEFAULT_PRODUCT_CODE,
@@ -28,14 +44,22 @@ const defaultProduct = {
 const defaultLivecode = {
   code_key: DEFAULT_LIVECODE_KEY,
   name: "阳明心学交易体验营默认活码",
-  wecom_link: "https://work.weixin.qq.com/ca/mock",
-  qr_image: "/assets/wecom-livecode-placeholder.svg",
+  contact_type: "personal_wechat",
+  wecom_link: "",
+  qr_image: "",
+  channels: ["*"],
+  capacity_limit: 0,
+  manual_full: false,
+  priority: 100,
+  is_fallback: true,
+  wecom_state: stableWecomState(DEFAULT_LIVECODE_KEY),
+  wecom_tag_ids: [],
   auto_redirect_after_paid: false,
   redirect_delay_ms: 600,
   remark: "知行 + 手机号后4位",
   button_text: "添加课程助教微信",
   service_text: "客服方式：支付后添加课程助教微信",
-  status: "active"
+  status: "inactive"
 };
 
 export async function seedYmtyDefaults() {
@@ -50,7 +74,7 @@ export async function seedYmtyDefaults() {
       ...defaultLivecode,
       created_at: now,
       updated_at: now
-    }))
+    }).map((item) => normalizeLivecodeRecord(item, now)))
   ]);
 
   return {
@@ -63,16 +87,19 @@ export async function resetYmtyForTests() {
   await Promise.all([
     replaceRuntimeRecords(PRODUCT_FILE, []),
     replaceRuntimeRecords(LIVECODE_FILE, []),
+    replaceRuntimeRecords(LIVECODE_ASSIGNMENT_FILE, []),
     replaceRuntimeRecords(ORDER_FILE, []),
     replaceRuntimeRecords(PAYMENT_LOG_FILE, []),
     replaceRuntimeRecords(COURSE_USER_FILE, []),
     replaceRuntimeRecords(ADMIN_USER_FILE, []),
-    replaceRuntimeRecords(AUDIT_LOG_FILE, [])
+    replaceRuntimeRecords(AUDIT_LOG_FILE, []),
+    resetYmtyAnalyticsForTests(),
+    resetYmtyCrmForTests()
   ]);
 }
 
 export async function getYmtyPublicCampaign() {
-  const { product, livecode } = await getActiveYmtyConfig();
+  const { product, livecode } = await getYmtyCampaignConfig();
   return {
     product: publicProduct(product),
     livecode: publicLivecodeSummary(livecode),
@@ -81,10 +108,12 @@ export async function getYmtyPublicCampaign() {
 }
 
 export async function getYmtyAdminCampaign() {
-  const { product, livecode } = await getActiveYmtyConfig();
+  const { product, livecode } = await getYmtyCampaignConfig();
+  const { livecodes } = await listYmtyLivecodes();
   return {
     product,
-    livecode
+    livecode,
+    livecodes
   };
 }
 
@@ -93,7 +122,11 @@ export async function createYmtyOrder({
   payChannel = "mock",
   channel = "",
   campaign = "",
-  creative = ""
+  creative = "",
+  sessionId = "",
+  clickId = "",
+  landingUrl = "",
+  referrerHost = ""
 } = {}) {
   const product = await getProductByCode(productCode);
   if (!product || product.status !== "online") {
@@ -115,12 +148,31 @@ export async function createYmtyOrder({
     channel: cleanText(channel, 80),
     campaign: cleanText(campaign, 80),
     creative: cleanText(creative, 80),
+    session_id: cleanText(sessionId, 96),
+    click_id: cleanText(clickId, 120),
+    landing_url: cleanText(landingUrl, 240),
+    referrer_host: cleanText(referrerHost, 120),
     paid_at: null,
     created_at: now,
     updated_at: now
   };
 
   await updateRuntimeRecords(ORDER_FILE, (records) => records.concat(order));
+  await recordYmtyTrustedEvent("order_created", {
+    event_id: `order_created:${order.order_id}`,
+    session_id: order.session_id,
+    order_id: order.order_id,
+    product_code: order.product_code,
+    pay_channel: order.pay_channel,
+    channel: order.channel,
+    campaign: order.campaign,
+    creative: order.creative,
+    click_id: order.click_id,
+    amount_cents: order.amount_cents,
+    created_at: order.created_at
+  }).catch((error) => {
+    console.warn("ymty analytics order_created skipped", error.message);
+  });
 
   return {
     order: publicOrder(order, { includeToken: true }),
@@ -147,7 +199,7 @@ export async function getYmtyAfterpayEntrance({ orderId = "", token = "" } = {})
     throw error;
   }
 
-  const livecode = await getActiveLivecode();
+  const { livecode, canSwitch } = await assignLivecodeForPaidOrder(order);
   return {
     order: publicOrder(order),
     livecode: {
@@ -161,7 +213,43 @@ export async function getYmtyAfterpayEntrance({ orderId = "", token = "" } = {})
       button_text: livecode.button_text,
       service_text: livecode.service_text
     },
+    can_switch: canSwitch,
     compliance: "课程助教仅做交易心理觉察、训练与复盘承接，不荐股、不喊单、不承诺收益、不代客理财、不组织实盘跟单。"
+  };
+}
+
+export async function switchYmtyAfterpayLivecode({ orderId = "", token = "", reason = "user_reported_failure", ip = "" } = {}) {
+  const order = await getOrderWithToken(orderId, token);
+  if (order.pay_status !== "paid") {
+    const error = new Error("支付完成后才可查看课程助教入口");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const { livecode, canSwitch } = await switchAssignedLivecodeForPaidOrder(order, reason);
+  await appendAuditLog({
+    adminId: "system",
+    action: "qr_switch_request",
+    targetType: "orders",
+    targetId: order.order_id,
+    before: { reason: cleanText(reason, 80) },
+    after: { code_key: livecode.code_key, can_switch: canSwitch },
+    ip
+  });
+  return {
+    order: publicOrder(order),
+    livecode: {
+      code_key: livecode.code_key,
+      name: livecode.name,
+      wecom_link: livecode.wecom_link,
+      qr_image: livecode.qr_image,
+      auto_redirect_after_paid: Boolean(livecode.auto_redirect_after_paid),
+      redirect_delay_ms: Number(livecode.redirect_delay_ms || 0),
+      remark: livecode.remark,
+      button_text: livecode.button_text,
+      service_text: livecode.service_text
+    },
+    can_switch: canSwitch
   };
 }
 
@@ -222,6 +310,25 @@ export async function markYmtyOrderPaid({
     verify_status: verifyStatus
   });
   const courseUser = await ensureCourseUser(paidOrder);
+  await ensureYmtyCrmLeadForPaidOrder(paidOrder);
+  if (existingOrder.pay_status !== "paid") {
+    await recordYmtyTrustedEvent("payment_success", {
+      event_id: `payment_success:${paidOrder.order_id}`,
+      session_id: paidOrder.session_id,
+      order_id: paidOrder.order_id,
+      product_code: paidOrder.product_code,
+      pay_channel: paidOrder.pay_channel,
+      amount_cents: paidOrder.amount_cents,
+      channel: paidOrder.channel,
+      campaign: paidOrder.campaign,
+      creative: paidOrder.creative,
+      click_id: paidOrder.click_id,
+      paid_at: paidOrder.paid_at,
+      created_at: paidOrder.paid_at
+    }).catch((error) => {
+      console.warn("ymty analytics payment_success skipped", error.message);
+    });
+  }
 
   return {
     order: publicOrder(paidOrder),
@@ -270,28 +377,79 @@ export async function updateYmtyCampaign({ adminId = "dev-admin", patch = {}, ip
 }
 
 export async function updateYmtyLivecode({ adminId = "dev-admin", patch = {}, ip = "" } = {}) {
+  return updateYmtyLivecodeByKey({
+    adminId,
+    codeKey: cleanText(patch.code_key || DEFAULT_LIVECODE_KEY, 80),
+    patch,
+    ip
+  });
+}
+
+export async function createYmtyLivecode({ adminId = "dev-admin", patch = {}, ip = "" } = {}) {
   await seedYmtyDefaults();
-  const codeKey = cleanText(patch.code_key || DEFAULT_LIVECODE_KEY, 80);
+  const codeKey = cleanText(patch.code_key, 80);
+  if (!codeKey) {
+    const error = new Error("活码编码不能为空");
+    error.statusCode = 400;
+    throw error;
+  }
+  const now = new Date().toISOString();
+  let created = null;
+
+  await updateRuntimeRecords(LIVECODE_FILE, (records) => {
+    const normalized = records.map((item) => normalizeLivecodeRecord(item, now));
+    if (normalized.some((item) => item.code_key === codeKey)) {
+      const error = new Error("活码编码已存在");
+      error.statusCode = 409;
+      throw error;
+    }
+    created = normalizeLivecodeRecord({
+      name: "新活码",
+      contact_type: "personal_wechat",
+      wecom_link: "",
+      qr_image: "",
+      channels: ["*"],
+      capacity_limit: 0,
+      manual_full: false,
+      priority: 50,
+      is_fallback: false,
+      auto_redirect_after_paid: false,
+      redirect_delay_ms: 600,
+      remark: "知行 + 手机号后4位",
+      button_text: "添加课程助教微信",
+      service_text: "客服方式：支付后添加课程助教微信",
+      status: "active",
+      ...patch,
+      code_key: codeKey,
+      created_at: now,
+      updated_at: now,
+      is_fallback: Boolean(patch.is_fallback)
+    }, now);
+    return normalized.concat(created);
+  });
+
+  await appendAuditLog({ adminId, action: "create_livecode", targetType: "livecodes", targetId: codeKey, before: null, after: created, ip });
+  return { livecode: created };
+}
+
+export async function updateYmtyLivecodeByKey({ adminId = "dev-admin", codeKey = "", patch = {}, ip = "" } = {}) {
+  await seedYmtyDefaults();
+  const normalizedCodeKey = cleanText(codeKey || patch.code_key || DEFAULT_LIVECODE_KEY, 80);
   let before = null;
   let after = null;
   const now = new Date().toISOString();
 
   await updateRuntimeRecords(LIVECODE_FILE, (records) => records.map((livecode) => {
-    if (livecode.code_key !== codeKey) return livecode;
-    before = livecode;
-    after = {
-      ...livecode,
-      name: cleanText(patch.name ?? livecode.name, 120),
-      wecom_link: cleanText(patch.wecom_link ?? livecode.wecom_link, 300),
-      qr_image: cleanText(patch.qr_image ?? livecode.qr_image, 300),
-      auto_redirect_after_paid: Boolean(patch.auto_redirect_after_paid ?? livecode.auto_redirect_after_paid),
-      redirect_delay_ms: normalizeDelayMs(patch.redirect_delay_ms ?? livecode.redirect_delay_ms),
-      remark: cleanText(patch.remark ?? livecode.remark, 160),
-      button_text: cleanText(patch.button_text ?? livecode.button_text, 80),
-      service_text: cleanText(patch.service_text ?? livecode.service_text, 160),
-      status: normalizeEnum(patch.status ?? livecode.status, "active", 32),
+    const normalized = normalizeLivecodeRecord(livecode, now);
+    if (normalized.code_key !== normalizedCodeKey) return normalized;
+    before = normalized;
+    after = normalizeLivecodeRecord({
+      ...normalized,
+      ...patch,
+      code_key: normalized.code_key,
+      created_at: normalized.created_at,
       updated_at: now
-    };
+    }, now);
     return after;
   }));
 
@@ -300,8 +458,51 @@ export async function updateYmtyLivecode({ adminId = "dev-admin", patch = {}, ip
     error.statusCode = 404;
     throw error;
   }
-  await appendAuditLog({ adminId, action: "update_livecode", targetType: "livecodes", targetId: codeKey, before, after, ip });
+  await appendAuditLog({ adminId, action: "update_livecode", targetType: "livecodes", targetId: normalizedCodeKey, before, after, ip });
   return { livecode: after };
+}
+
+export async function toggleYmtyLivecodeFull({ adminId = "dev-admin", codeKey = "", manualFull, ip = "" } = {}) {
+  return updateYmtyLivecodeByKey({
+    adminId,
+    codeKey,
+    patch: {
+      manual_full: manualFull
+    },
+    ip
+  });
+}
+
+export async function toggleYmtyLivecodeStatus({ adminId = "dev-admin", codeKey = "", status = "active", ip = "" } = {}) {
+  return updateYmtyLivecodeByKey({
+    adminId,
+    codeKey,
+    patch: {
+      status
+    },
+    ip
+  });
+}
+
+export async function listYmtyLivecodes() {
+  await seedYmtyDefaults();
+  const [livecodes, assignments] = await Promise.all([
+    readRuntimeRecords(LIVECODE_FILE),
+    readRuntimeRecords(LIVECODE_ASSIGNMENT_FILE)
+  ]);
+  return {
+    livecodes: withLivecodeStats(livecodes.map((item) => normalizeLivecodeRecord(item)), assignments)
+      .sort((a, b) => Number(a.priority) - Number(b.priority) || a.code_key.localeCompare(b.code_key))
+  };
+}
+
+export async function listYmtyLivecodeAssignments() {
+  const assignments = await readRuntimeRecords(LIVECODE_ASSIGNMENT_FILE);
+  return {
+    assignments: assignments
+      .map((item) => normalizeAssignmentRecord(item))
+      .sort((a, b) => new Date(b.assigned_at || 0).getTime() - new Date(a.assigned_at || 0).getTime())
+  };
 }
 
 export async function listYmtyOrders() {
@@ -330,9 +531,9 @@ export async function listYmtyCourseUsers() {
   };
 }
 
-async function getActiveYmtyConfig() {
+async function getYmtyCampaignConfig() {
   await seedYmtyDefaults();
-  const [product, livecode] = await Promise.all([getProductByCode(DEFAULT_PRODUCT_CODE), getActiveLivecode()]);
+  const [product, livecode] = await Promise.all([getProductByCode(DEFAULT_PRODUCT_CODE), getCampaignLivecode()]);
   return { product, livecode };
 }
 
@@ -342,17 +543,91 @@ async function getProductByCode(productCode) {
   return products.find((item) => item?.product_code === productCode) || null;
 }
 
-async function getActiveLivecode() {
+async function getCampaignLivecode() {
   await seedYmtyDefaults();
   const livecodes = await readRuntimeRecords(LIVECODE_FILE);
-  const livecode = livecodes.find((item) => item?.code_key === DEFAULT_LIVECODE_KEY && item?.status === "active")
-    || livecodes.find((item) => item?.status === "active");
+  const normalized = livecodes.map((item) => normalizeLivecodeRecord(item));
+  return normalized.find((item) => item?.code_key === DEFAULT_LIVECODE_KEY)
+    || normalized.find((item) => item?.is_fallback)
+    || normalized[0]
+    || normalizeLivecodeRecord(defaultLivecode);
+}
+
+async function assignLivecodeForPaidOrder(order) {
+  const livecodes = await readNormalizedLivecodes();
+  const livecodeMap = new Map(livecodes.map((item) => [item.code_key, item]));
+  let selectedCodeKey = "";
+  let assignmentRecords = [];
+
+  await updateRuntimeRecords(LIVECODE_ASSIGNMENT_FILE, (records) => {
+    const result = resolveLivecodeAssignment({
+      records,
+      livecodes,
+      order
+    });
+    selectedCodeKey = result.codeKey;
+    assignmentRecords = result.records;
+    return result.records;
+  });
+
+  const livecode = livecodeMap.get(selectedCodeKey);
   if (!livecode) {
-    const error = new Error("课程助教入口未配置");
+    const error = new Error("课程助教入口配置已停用，请联系管理员");
     error.statusCode = 503;
+    error.code = "NO_AVAILABLE_LIVECODE";
     throw error;
   }
-  return livecode;
+  await markYmtyCrmLeadAssigned({ order, livecode });
+  return {
+    livecode,
+    canSwitch: canSwitchLivecode({
+      records: assignmentRecords,
+      livecodes,
+      order,
+      currentCodeKey: selectedCodeKey
+    })
+  };
+}
+
+async function switchAssignedLivecodeForPaidOrder(order, reason) {
+  const livecodes = await readNormalizedLivecodes();
+  const livecodeMap = new Map(livecodes.map((item) => [item.code_key, item]));
+  let selectedCodeKey = "";
+  let assignmentRecords = [];
+
+  await updateRuntimeRecords(LIVECODE_ASSIGNMENT_FILE, (records) => {
+    const result = switchLivecodeAssignment({
+      records,
+      livecodes,
+      order,
+      reason
+    });
+    selectedCodeKey = result.codeKey;
+    assignmentRecords = result.records;
+    return result.records;
+  });
+
+  const livecode = livecodeMap.get(selectedCodeKey);
+  if (!livecode) {
+    const error = new Error("暂无其他助教，请稍后重试");
+    error.statusCode = 503;
+    error.code = "NO_ALTERNATIVE_LIVECODE";
+    throw error;
+  }
+  await markYmtyCrmLeadAssigned({ order, livecode });
+  return {
+    livecode,
+    canSwitch: canSwitchLivecode({
+      records: assignmentRecords,
+      livecodes,
+      order,
+      currentCodeKey: selectedCodeKey
+    })
+  };
+}
+
+async function readNormalizedLivecodes() {
+  return (await readRuntimeRecords(LIVECODE_FILE)).map((item) => normalizeLivecodeRecord(item));
 }
 
 async function getOrderWithToken(orderId, token) {
@@ -460,6 +735,35 @@ function publicLivecodeSummary(livecode) {
   };
 }
 
+function normalizeLivecodeRecord(record, now = new Date().toISOString()) {
+  const source = migrateLegacyMockLivecode(record);
+  const codeKey = cleanText(source?.code_key || DEFAULT_LIVECODE_KEY, 80);
+  const createdAt = source?.created_at || now;
+  return {
+    code_key: codeKey,
+    name: cleanText(source?.name || defaultLivecode.name, 120),
+    contact_type: normalizeContactType(source?.contact_type),
+    wecom_link: cleanText(source?.wecom_link ?? "", 300),
+    qr_image: cleanText(source?.qr_image ?? "", 300),
+    channels: normalizeChannels(source?.channels),
+    capacity_limit: normalizeNonNegativeInteger(source?.capacity_limit, 0),
+    manual_full: Boolean(source?.manual_full ?? false),
+    priority: normalizeInteger(source?.priority, codeKey === DEFAULT_LIVECODE_KEY ? 100 : 50),
+    is_fallback: Boolean(source?.is_fallback ?? codeKey === DEFAULT_LIVECODE_KEY),
+    wecom_state: cleanText(source?.wecom_state || stableWecomState(codeKey), 80),
+    wecom_tag_ids: normalizeTags(source?.wecom_tag_ids),
+    invalid: Boolean(source?.invalid ?? false),
+    auto_redirect_after_paid: Boolean(source?.auto_redirect_after_paid ?? false),
+    redirect_delay_ms: normalizeDelayMs(source?.redirect_delay_ms ?? 600),
+    remark: cleanText(source?.remark ?? "", 160),
+    button_text: cleanText(source?.button_text ?? "添加课程助教微信", 80),
+    service_text: cleanText(source?.service_text ?? "客服方式：支付后添加课程助教微信", 160),
+    status: normalizeStatus(source?.status ?? (codeKey === DEFAULT_LIVECODE_KEY ? defaultLivecode.status : "active")),
+    created_at: createdAt,
+    updated_at: source?.updated_at || createdAt
+  };
+}
+
 function publicOrder(order, { includeToken = false } = {}) {
   return {
     order_id: order.order_id,
@@ -473,6 +777,10 @@ function publicOrder(order, { includeToken = false } = {}) {
     channel: order.channel,
     campaign: order.campaign,
     creative: order.creative,
+    session_id: order.session_id || "",
+    click_id: order.click_id || "",
+    landing_url: order.landing_url || "",
+    referrer_host: order.referrer_host || "",
     paid_at: order.paid_at,
     created_at: order.created_at,
     updated_at: order.updated_at
@@ -490,11 +798,14 @@ function createOrderId() {
 }
 
 function assertMockPayAllowed() {
-  if (config.nodeEnv !== "production") return;
-  if (process.env.YMTY_ENABLE_MOCK_PAY === "true") return;
+  if (isYmtyMockPaymentAllowed()) return;
   const error = new Error("生产环境不允许使用 mock 支付");
   error.statusCode = 403;
   throw error;
+}
+
+export function isYmtyMockPaymentAllowed() {
+  return process.env.NODE_ENV !== "production" && process.env.YMTY_ALLOW_MOCK_PAYMENT === "true";
 }
 
 function normalizeAmountCents(value) {
@@ -525,6 +836,61 @@ function normalizeDelayMs(value) {
 
 function normalizeEnum(value, fallback, maxLength) {
   return cleanText(value || fallback, maxLength) || fallback;
+}
+
+function normalizeContactType(value) {
+  const text = cleanText(value || "personal_wechat", 32);
+  return ["personal_wechat", "wecom"].includes(text) ? text : "personal_wechat";
+}
+
+function normalizeStatus(value) {
+  const text = cleanText(value || "active", 32);
+  return ["active", "inactive"].includes(text) ? text : "active";
+}
+
+function migrateLegacyMockLivecode(record = {}) {
+  if (
+    record?.code_key === DEFAULT_LIVECODE_KEY
+    && record?.wecom_link === LEGACY_MOCK_WECOM_LINK
+    && record?.qr_image === LEGACY_MOCK_QR_IMAGE
+  ) {
+    return {
+      ...record,
+      wecom_link: "",
+      qr_image: "",
+      status: "inactive"
+    };
+  }
+  return record;
+}
+
+function normalizeChannels(value) {
+  const source = Array.isArray(value) ? value : String(value ?? "").split(",");
+  const channels = source
+    .map((item) => cleanText(item, 80))
+    .filter(Boolean);
+  if (!channels.length || channels.includes("*")) return ["*"];
+  return Array.from(new Set(channels));
+}
+
+function normalizeTags(value) {
+  const source = Array.isArray(value) ? value : String(value ?? "").split(",");
+  return Array.from(new Set(source
+    .map((item) => cleanText(item, 80))
+    .filter(Boolean)))
+    .slice(0, 20);
+}
+
+function normalizeNonNegativeInteger(value, fallback = 0) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  return Math.max(0, Math.floor(number));
+}
+
+function normalizeInteger(value, fallback = 0) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  return Math.floor(number);
 }
 
 function cleanText(value, maxLength) {

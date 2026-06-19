@@ -27,11 +27,16 @@ const paymentEnvKeys = [
   "ALIPAY_PUBLIC_KEY_PATH",
   "ALIPAY_GATEWAY_URL",
   "ALIPAY_NOTIFY_URL",
-  "ALIPAY_RETURN_URL"
+  "ALIPAY_RETURN_URL",
+  "NODE_ENV",
+  "YMTY_ALLOW_MOCK_PAYMENT",
+  "YMTY_ENABLE_MOCK_PAY"
 ];
 
 const originalEnv = Object.fromEntries(paymentEnvKeys.map((key) => [key, process.env[key]]));
 paymentEnvKeys.forEach((key) => delete process.env[key]);
+process.env.NODE_ENV = "test";
+process.env.YMTY_ALLOW_MOCK_PAYMENT = "true";
 
 const { handleError } = await import("../src/lib/http.js");
 const { route } = await import("../src/routes/router.js");
@@ -102,7 +107,7 @@ test("real payment config precheck reports missing keys without leaking secret v
   });
 });
 
-test("pay create keeps mock enabled but blocks real channels when configs are missing", async () => {
+test("pay create keeps order mock channel but blocks real channels when configs are missing", async () => {
   await resetYmtyForTests();
   await seedYmtyDefaults();
 
@@ -155,16 +160,68 @@ test("pay create keeps mock enabled but blocks real channels when configs are mi
       token: order.order.order_token,
       transactionId: "precheck-paid"
     });
-    const entrance = await getYmtyAfterpayEntrance({
-      orderId: order.order.order_id,
-      token: order.order.order_token
-    });
-    assert.equal(entrance.livecode.qr_image, "/assets/wecom-livecode-placeholder.svg");
+    await assert.rejects(
+      () => getYmtyAfterpayEntrance({
+        orderId: order.order.order_id,
+        token: order.order.order_token
+      }),
+      (error) => error.code === "NO_AVAILABLE_LIVECODE"
+        && error.message === "课程助教入口正在配置中，请稍后重试"
+    );
   } finally {
     await resetYmtyForTests();
     await seedYmtyDefaults();
   }
 });
+
+test("ymty mock payment routes require non-production and exact explicit switch", async () => {
+  await resetYmtyForTests();
+  await seedYmtyDefaults();
+
+  const originalNodeEnv = process.env.NODE_ENV;
+  const originalAllow = process.env.YMTY_ALLOW_MOCK_PAYMENT;
+
+  try {
+    const created = await createYmtyOrder({ productCode: "YMXX_JY_TY", payChannel: "mock" });
+
+    process.env.NODE_ENV = "production";
+    process.env.YMTY_ALLOW_MOCK_PAYMENT = "true";
+    const production = await jsonRequest("/api/mock/pay-success", {
+      order_id: created.order.order_id,
+      token: created.order.order_token
+    });
+    assert.equal(production.statusCode, 404);
+
+    process.env.NODE_ENV = "test";
+    process.env.YMTY_ALLOW_MOCK_PAYMENT = "TRUE";
+    const uppercase = await jsonRequest("/api/pay/mock/complete", {
+      order_id: created.order.order_id,
+      token: created.order.order_token
+    });
+    assert.equal(uppercase.statusCode, 404);
+
+    process.env.YMTY_ALLOW_MOCK_PAYMENT = "true";
+    const allowed = await jsonRequest("/api/pay/mock/complete", {
+      order_id: created.order.order_id,
+      token: created.order.order_token
+    });
+    assert.equal(allowed.statusCode, 200);
+    assert.equal(allowed.body.order.pay_status, "paid");
+  } finally {
+    restoreEnvValue("NODE_ENV", originalNodeEnv);
+    restoreEnvValue("YMTY_ALLOW_MOCK_PAYMENT", originalAllow);
+    await resetYmtyForTests();
+    await seedYmtyDefaults();
+  }
+});
+
+function restoreEnvValue(key, value) {
+  if (value === undefined) {
+    delete process.env[key];
+  } else {
+    process.env[key] = value;
+  }
+}
 
 async function jsonRequest(url, payload) {
   const body = Buffer.from(JSON.stringify(payload));

@@ -7,6 +7,8 @@ import { fileURLToPath } from "node:url";
 import test from "node:test";
 
 process.env.YMTY_ADMIN_TOKEN = "test-admin-token";
+process.env.NODE_ENV = "test";
+process.env.YMTY_ALLOW_MOCK_PAYMENT = "true";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, "../..");
@@ -87,7 +89,8 @@ test("ymty admin upload requires token and accepts only safe livecode images", a
       redirect_delay_ms: 600,
       remark: "知行 + 手机号后4位",
       button_text: "添加课程助教微信",
-      service_text: "客服方式：支付后添加课程助教微信"
+      service_text: "客服方式：支付后添加课程助教微信",
+      status: "active"
     }, adminHeaders);
     assert.equal(saveLivecode.statusCode, 200);
     assert.equal(saveLivecode.body.livecode.qr_image, png.body.data.url);

@@ -171,11 +171,163 @@
         background: #fff;
       }
 
+      .pool-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .livecode-table {
+        margin-bottom: 14px;
+      }
+
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 3px 8px;
+        background: rgba(201, 154, 68, 0.13);
+        color: #6a452c;
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .row-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .btn-small {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 6px 8px;
+        background: #fff8e8;
+        color: #684433;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .btn-small:disabled {
+        cursor: not-allowed;
+        opacity: 0.58;
+      }
+
       .notice {
         min-height: 22px;
         margin: 0 0 12px;
         color: var(--red);
         font-size: 14px;
+      }
+
+      .analytics-card {
+        margin-bottom: 16px;
+      }
+
+      .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+
+      .metric {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #fffdfa;
+        padding: 12px;
+      }
+
+      .metric span {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      .metric b {
+        display: block;
+        margin-top: 4px;
+        color: var(--red);
+        font-size: 22px;
+        line-height: 1.2;
+      }
+
+      .warning-box {
+        border: 1px solid rgba(157, 36, 29, 0.22);
+        border-radius: 12px;
+        background: rgba(157, 36, 29, 0.06);
+        color: var(--red);
+        padding: 12px;
+        font-weight: 800;
+        line-height: 1.7;
+        margin-bottom: 14px;
+      }
+
+      .result-box {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #fffdfa;
+        padding: 12px;
+        color: #60473a;
+        font-size: 13px;
+        line-height: 1.7;
+        margin-top: 12px;
+      }
+
+      .analytics-tables {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .analytics-tables h3 {
+        margin: 0 0 8px;
+        color: #684433;
+        font-size: 15px;
+      }
+
+      .crm-card {
+        margin: 16px 0;
+      }
+
+      .crm-detail {
+        margin-top: 14px;
+        border-top: 1px solid var(--line);
+        padding-top: 14px;
+      }
+
+      .crm-detail h3 {
+        margin: 0 0 12px;
+        color: #684433;
+        font-size: 16px;
+      }
+
+      .stage-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .note-list {
+        display: grid;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .note-item {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fffdfa;
+        padding: 9px 10px;
+        color: #60473a;
+        font-size: 13px;
+        line-height: 1.65;
       }
 
       .auth-mask {
@@ -218,7 +370,8 @@
       [hidden] { display: none !important; }
 
       @media (max-width: 820px) {
-        .grid, .form-grid, .upload-row { grid-template-columns: 1fr; }
+        .grid, .form-grid, .upload-row, .analytics-tables { grid-template-columns: 1fr; }
+        .metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .topbar { align-items: flex-start; flex-direction: column; }
       }
     </style>
@@ -227,10 +380,10 @@
     <div class="auth-mask" id="loginMask">
       <form class="auth-box" id="loginForm">
         <h2>管理员登录</h2>
-        <p class="hint">请输入后台账号密码。登录 token 仅存入 sessionStorage，关闭标签页后失效。</p>
+        <p class="hint">请输入后台账号密码。登录令牌仅存入浏览器会话存储，关闭标签页后失效。</p>
         <p class="notice" id="loginError"></p>
-        <label>username<input id="usernameInput" name="username" autocomplete="username" placeholder="admin" /></label>
-        <label style="margin-top:12px">password<input id="passwordInput" name="password" type="password" autocomplete="current-password" /></label>
+        <label>用户名<input id="usernameInput" name="username" autocomplete="username" placeholder="admin" /></label>
+        <label style="margin-top:12px">密码<input id="passwordInput" name="password" type="password" autocomplete="current-password" /></label>
         <div class="actions">
           <button class="btn btn-primary" type="submit">登录后台</button>
         </div>
@@ -266,34 +419,348 @@
 
       <p class="notice" id="pageNotice"></p>
 
+      <section class="card analytics-card">
+        <h2>数据概览</h2>
+        <p class="hint">按 Asia/Shanghai 统计，后台仅展示设备、系统、浏览器分类，不展示原始 IP 或完整 User-Agent。</p>
+        <div class="metrics-grid" id="metricsGrid"></div>
+        <div class="analytics-tables">
+          <div>
+            <h3>最近 7 天</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>日期</th>
+                    <th>访客</th>
+                    <th>报名</th>
+                    <th>订单</th>
+                    <th>支付</th>
+                    <th>金额</th>
+                    <th>已付客户</th>
+                    <th>已分配</th>
+                    <th>已添加</th>
+                    <th>已转化</th>
+                  </tr>
+                </thead>
+                <tbody id="analyticsDailyBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <h3>渠道转化</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>渠道</th>
+                    <th>访客</th>
+                    <th>报名</th>
+                    <th>订单</th>
+                    <th>支付</th>
+                  </tr>
+                </thead>
+                <tbody id="analyticsChannelBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <h3>设备分布</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>设备</th>
+                    <th>系统</th>
+                    <th>浏览器</th>
+                    <th>访客</th>
+                    <th>浏览</th>
+                  </tr>
+                </thead>
+                <tbody id="analyticsDeviceBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <h3>支付方式</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>方式</th>
+                    <th>订单</th>
+                    <th>支付</th>
+                    <th>金额</th>
+                  </tr>
+                </thead>
+                <tbody id="analyticsPayBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card crm-card">
+        <div class="pool-toolbar">
+          <div>
+            <h2 style="margin:0">客户与跟进</h2>
+            <p class="hint" style="margin:6px 0 0">数据来源：人工。仅管理员可见，用于记录订单、渠道、二维码分配和助教跟进。</p>
+          </div>
+          <button class="btn btn-ghost" id="crmExportButton" type="button">导出 CSV</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>订单号</th>
+                <th>支付金额</th>
+                <th>支付方式</th>
+                <th>渠道</th>
+                <th>素材</th>
+                <th>分配助教</th>
+                <th>当前阶段</th>
+                <th>负责人</th>
+                <th>最近联系时间</th>
+                <th>下次跟进</th>
+                <th>标签</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="crmLeadsBody"></tbody>
+          </table>
+        </div>
+        <section class="crm-detail" id="crmDetail" hidden>
+          <h3 id="crmDetailTitle">客户详情</h3>
+          <p class="hint" id="crmLeadSummary"></p>
+          <form id="crmForm">
+            <div class="form-grid">
+              <label>负责人<input name="owner" id="crmOwnerInput" /></label>
+              <label>下次跟进<input name="next_follow_up_at" id="crmNextFollowInput" placeholder="2026-06-20 20:00" /></label>
+              <label>客户称呼<input name="contact_name" id="crmContactNameInput" /></label>
+              <label>手机号后 4 位<input name="phone_last4" id="crmPhoneLast4Input" maxlength="4" inputmode="numeric" /></label>
+              <label class="wide">标签<input name="tags" id="crmTagsInput" placeholder="高意向,需提醒" /></label>
+            </div>
+            <div class="actions">
+              <button class="btn btn-primary" type="submit">保存客户信息</button>
+            </div>
+          </form>
+          <div class="stage-actions" id="crmStageActions">
+            <button class="btn-small" type="button" data-crm-stage="added">标记已添加</button>
+            <button class="btn-small" type="button" data-crm-stage="first_contact">标记已首次沟通</button>
+            <button class="btn-small" type="button" data-crm-stage="group_joined">标记已进群</button>
+            <button class="btn-small" type="button" data-crm-stage="course_started">标记已开课</button>
+            <button class="btn-small" type="button" data-crm-stage="course_completed">标记已完课</button>
+            <button class="btn-small" type="button" data-crm-stage="converted">标记已转化</button>
+            <button class="btn-small" type="button" data-crm-stage="lost">标记流失</button>
+          </div>
+          <label class="wide" style="margin-top:14px">跟进备注<textarea id="crmNoteInput" placeholder="记录本次人工跟进情况，不填写聊天正文。"></textarea></label>
+          <div class="actions">
+            <button class="btn btn-ghost" id="crmNoteButton" type="button">添加备注</button>
+          </div>
+          <div class="note-list" id="crmNotesList"></div>
+        </section>
+      </section>
+
+      <section class="card" id="wecomSyncCard">
+        <div class="pool-toolbar">
+          <div>
+            <h2 style="margin:0">企业微信同步</h2>
+            <p class="hint" id="wecomSyncMessage">企业微信自动同步未启用</p>
+          </div>
+          <button class="btn btn-ghost" id="wecomReloadButton" type="button">刷新同步状态</button>
+        </div>
+        <div class="metrics-grid" id="wecomMetricsGrid"></div>
+        <div class="analytics-tables">
+          <div>
+            <h3>客户联系事件</h3>
+            <p class="hint">仅管理员可见。未关联事件可通过 lead_id 手工关联客户。</p>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>事件</th>
+                    <th>状态</th>
+                    <th>客户 ID</th>
+                    <th>助教成员</th>
+                    <th>来源 state</th>
+                    <th>关联订单</th>
+                    <th>手工关联</th>
+                  </tr>
+                </thead>
+                <tbody id="wecomEventsBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <h3>标签同步任务</h3>
+            <p class="hint">标签同步失败不会影响回调处理，可在此重试同步。</p>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>订单</th>
+                    <th>状态</th>
+                    <th>标签</th>
+                    <th>错误</th>
+                    <th>重试同步</th>
+                  </tr>
+                </thead>
+                <tbody id="wecomSyncJobsBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" id="refundConsoleCard">
+        <div class="pool-toolbar">
+          <div>
+            <h2 style="margin:0">退款控制台</h2>
+            <p class="hint">Dry Run，不会真实退款。保存规则草稿不代表真实退款已开启，真实执行开关只能由服务器环境变量控制。</p>
+          </div>
+          <button class="btn btn-ghost" id="refundConsoleReloadButton" type="button">刷新控制台</button>
+        </div>
+        <div class="warning-box" id="refundConsoleWarning">当前仅可申请、审批和演练，不会真实退款。</div>
+        <div class="metrics-grid" id="refundStatusGrid"></div>
+
+        <div class="analytics-tables">
+          <form id="refundPolicyForm">
+            <h3>自动退款规则草稿</h3>
+            <p class="hint">规则已保存，但真实退款开关仍由服务器环境变量控制。</p>
+            <div class="form-grid">
+              <label>运行模式<select name="mode"><option value="disabled">关闭</option><option value="manual_only">仅人工</option><option value="auto_rule">自动规则草稿</option></select></label>
+              <label>触发条件<input name="trigger_types" placeholder="test_order,duplicate_payment" /></label>
+              <label>延迟秒数<input name="delay_seconds" type="number" min="0" max="86400" step="1" /></label>
+              <label>自动退款金额上限（分）<input name="max_amount_cents" type="number" min="1" max="1000000" step="1" /></label>
+              <label>适用产品<input name="product_codes" placeholder="YMXX_JY_TY" /></label>
+              <label>适用支付方式<input name="pay_channels" placeholder="wechat_jsapi,wechat_h5,alipay_wap" /></label>
+              <label class="switch-row"><input name="revoke_course_access" type="checkbox" />退款成功是否撤销课程权益</label>
+              <label class="switch-row"><input name="promotional_keep_access" type="checkbox" />推广活动自动退款是否保留课程权益</label>
+            </div>
+            <div class="actions">
+              <button class="btn btn-primary" type="submit">保存规则草稿</button>
+            </div>
+          </form>
+
+          <form id="refundPreviewForm">
+            <h3>退款演练</h3>
+            <p class="hint">Dry Run，不会真实退款，不会创建退款申请，不会调用微信或支付宝接口。</p>
+            <div class="form-grid">
+              <label class="wide">订单号<input name="order_id" placeholder="YMTY..." /></label>
+              <label>演练金额（分）<input name="amount_cents" type="number" min="1" step="1" /></label>
+              <label>触发原因<select name="trigger_type"><option value="test_order">测试订单</option><option value="duplicate_payment">重复支付</option><option value="fulfillment_failure">履约失败</option><option value="product_offline_after_payment">支付后产品下架</option><option value="promotional_auto_refund">推广活动自动退款</option></select></label>
+            </div>
+            <div class="actions">
+              <button class="btn btn-primary" type="submit">模拟执行退款</button>
+            </div>
+            <div class="result-box" id="refundPreviewResult">请输入订单后进行 Dry Run 演练。</div>
+          </form>
+        </div>
+
+        <div class="result-box">
+          <b>退款状态说明</b><br />
+          requested：已提交申请<br />
+          approved：财务已批准，尚未退款<br />
+          processing：平台处理中<br />
+          refunded：平台明确确认成功<br />
+          failed：平台明确失败<br />
+          approved 不等于退款成功；processing 不等于退款成功；只有 refunded 才表示退款完成。
+        </div>
+      </section>
+
+      <section class="card" id="refundCard">
+        <div class="pool-toolbar">
+          <div>
+            <h2 style="margin:0">退款申请</h2>
+            <p class="hint">退款执行默认关闭；仅在服务端启用真实退款执行且审核通过后，才会调用微信或支付宝退款接口。退款成功后默认撤销课程权益。</p>
+          </div>
+          <button class="btn btn-ghost" id="refundReloadButton" type="button">刷新退款列表</button>
+        </div>
+        <form id="refundForm">
+          <div class="form-grid">
+            <label class="wide">订单号<input name="order_id" id="refundOrderInput" placeholder="YMTY..." /></label>
+            <label>申请金额（分）<input name="amount_cents" id="refundAmountInput" type="number" min="1" step="1" /></label>
+            <label class="wide">退款原因<textarea name="reason" id="refundReasonInput" placeholder="请记录退款原因"></textarea></label>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary" type="submit">提交退款申请</button>
+          </div>
+        </form>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>退款单号</th>
+                <th>订单号</th>
+                <th>申请金额</th>
+                <th>退款原因</th>
+                <th>审核状态</th>
+                <th>审核人</th>
+                <th>更新时间</th>
+                <th>审计记录</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="refundsBody"></tbody>
+          </table>
+        </div>
+      </section>
+
       <section class="grid">
         <form class="card" id="productForm">
           <h2>产品与价格</h2>
           <p class="hint">前端展示价格只用于展示，真实支付金额以后端订单为准。价格修改只影响新订单，旧订单金额不会被覆盖。</p>
           <div class="form-grid">
-            <label>product_code<input name="product_code" /></label>
-            <label>status<select name="status"><option value="online">online</option><option value="offline">offline</option></select></label>
-            <label class="wide">product_name<input name="product_name" /></label>
-            <label>display_price_yuan<input name="display_price_yuan" type="number" min="0.01" step="0.01" /></label>
-            <label>amount_cents<input name="amount_cents" type="number" min="1" step="1" /></label>
-            <label>cycle<input name="cycle" /></label>
-            <label>start_time<input name="start_time" /></label>
-            <label>lecturer<input name="lecturer" /></label>
+            <label>产品编码<input name="product_code" readonly /></label>
+            <label>上架状态<select name="status"><option value="online">上架</option><option value="offline">下架</option></select></label>
+            <label class="wide">产品名称<input name="product_name" /></label>
+            <label>展示价格（元）<input name="display_price_yuan" type="number" min="0.01" step="0.01" /></label>
+            <label>实际支付金额（分）<input name="amount_cents" type="number" min="1" step="1" /></label>
+            <label>训练周期<input name="cycle" /></label>
+            <label>开课时间<input name="start_time" /></label>
+            <label>主讲人<input name="lecturer" /></label>
           </div>
           <div class="actions">
             <button class="btn btn-primary" type="submit">保存产品配置</button>
           </div>
         </form>
 
-        <form class="card" id="livecodeForm">
-          <h2>企业微信活码 / 获客助手</h2>
-          <p class="hint">获客助手链接和真实二维码只通过 paid 后的 /api/afterpay/entrance 返回，不放入公开配置。</p>
+        <section class="card" id="livecodeCard">
+          <div class="pool-toolbar">
+            <h2 style="margin:0">活码池管理</h2>
+            <button class="btn btn-ghost" id="newLivecodeButton" type="button">新增活码</button>
+          </div>
+          <p class="hint">获客助手链接和真实二维码只在支付完成后通过后端入口分配，不放入公开配置。历史活码请停用，不做物理删除，避免已分配订单失效。</p>
+          <div class="table-wrap livecode-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>活码编码</th>
+                  <th>活码名称</th>
+                  <th>承接类型</th>
+                  <th>适用渠道</th>
+                  <th>已分配数量 / 容量</th>
+                  <th>换码次数</th>
+                  <th>状态</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="livecodesBody"></tbody>
+            </table>
+          </div>
+          <form id="livecodeForm">
+            <h2 id="livecodeEditorTitle">编辑活码</h2>
+            <p class="hint">code_key 创建后不可修改。适用渠道用英文逗号分隔，空值或 * 表示全渠道兜底。</p>
           <div class="form-grid">
-            <label>code_key<input name="code_key" /></label>
-            <label>status<select name="status"><option value="active">active</option><option value="inactive">inactive</option></select></label>
-            <label class="wide">name<input name="name" /></label>
-            <label class="wide">wecom_link<input name="wecom_link" placeholder="企业微信获客助手链接" /></label>
-            <label class="wide">qr_image<input name="qr_image" id="qrImageInput" placeholder="/uploads/livecode/xxx.png" /></label>
+            <label>活码编码<input name="code_key" readonly /></label>
+            <label>活码状态<select name="status"><option value="active">启用</option><option value="inactive">停用</option></select></label>
+            <label class="wide">活码名称<input name="name" /></label>
+            <label>承接类型<select name="contact_type"><option value="personal_wechat">个人微信</option><option value="wecom">企业微信</option></select></label>
+            <label>适用渠道<input name="channels" placeholder="douyin,wechat_group" /></label>
+            <label>容量上限<input name="capacity_limit" type="number" min="0" step="1" /></label>
+            <label>分配优先级<input name="priority" type="number" step="1" /></label>
+            <label class="wide">企业微信标签 ID<input name="wecom_tag_ids" placeholder="tag_product,tag_paid" /></label>
+            <label class="wide">获客助手链接<input name="wecom_link" placeholder="企业微信获客助手链接，可选" /></label>
+            <label class="wide">二维码图片<input name="qr_image" id="qrImageInput" placeholder="/uploads/livecode/xxx.png" /></label>
             <div class="wide upload-row">
               <label>上传二维码<input id="qrUploadInput" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" /></label>
               <button class="btn btn-ghost" id="uploadButton" type="button">上传二维码</button>
@@ -303,18 +770,27 @@
               <span id="uploadStatus">支持 jpg、jpeg、png、webp，单文件不超过 2MB。</span>
             </div>
             <label class="switch-row wide">
-              <input name="auto_redirect_after_paid" type="checkbox" />
-              auto_redirect_after_paid：支付后自动跳转获客助手
+              <input name="manual_full" type="checkbox" />
+              人工标记满员
             </label>
-            <label>redirect_delay_ms<input name="redirect_delay_ms" type="number" min="0" max="10000" step="100" /></label>
-            <label>remark<input name="remark" /></label>
-            <label>button_text<input name="button_text" /></label>
-            <label class="wide">service_text<textarea name="service_text"></textarea></label>
+            <label class="switch-row wide">
+              <input name="is_fallback" type="checkbox" />
+              默认兜底
+            </label>
+            <label class="switch-row wide">
+              <input name="auto_redirect_after_paid" type="checkbox" />
+              支付后自动跳转
+            </label>
+            <label>跳转延迟（毫秒）<input name="redirect_delay_ms" type="number" min="0" max="10000" step="100" /></label>
+            <label>加微备注<input name="remark" /></label>
+            <label>按钮文案<input name="button_text" /></label>
+            <label class="wide">客服说明文案<textarea name="service_text"></textarea></label>
           </div>
           <div class="actions">
-            <button class="btn btn-primary" type="submit">保存 livecode</button>
+            <button class="btn btn-primary" type="submit">保存活码配置</button>
           </div>
-        </form>
+          </form>
+        </section>
       </section>
 
       <section class="grid" style="margin-top:16px">
@@ -324,11 +800,11 @@
             <table>
               <thead>
                 <tr>
-                  <th>order_id</th>
+                  <th>订单号</th>
                   <th>金额</th>
                   <th>状态</th>
                   <th>来源</th>
-                  <th>created_at</th>
+                  <th>创建时间</th>
                 </tr>
               </thead>
               <tbody id="ordersBody"></tbody>
@@ -342,10 +818,10 @@
               <thead>
                 <tr>
                   <th>操作人</th>
-                  <th>action</th>
-                  <th>target</th>
-                  <th>after_json</th>
-                  <th>created_at</th>
+                  <th>操作类型</th>
+                  <th>操作对象</th>
+                  <th>变更后内容</th>
+                  <th>创建时间</th>
                 </tr>
               </thead>
               <tbody id="auditBody"></tbody>
@@ -362,6 +838,18 @@
         user: null,
         product: null,
         livecode: null,
+        livecodes: [],
+        crmLeads: [],
+        wecomEvents: [],
+        wecomSyncJobs: [],
+        wecomSummary: null,
+        refunds: [],
+        refundConfig: null,
+        refundPolicy: null,
+        selectedCrmLeadId: "",
+        selectedCrmDetail: null,
+        editingLivecodeKey: "",
+        editingNewLivecode: false,
         passwordRequired: false,
       };
 
@@ -381,11 +869,48 @@
       const pageNotice = document.getElementById("pageNotice");
       const productForm = document.getElementById("productForm");
       const livecodeForm = document.getElementById("livecodeForm");
+      const livecodesBody = document.getElementById("livecodesBody");
+      const livecodeEditorTitle = document.getElementById("livecodeEditorTitle");
+      const newLivecodeButton = document.getElementById("newLivecodeButton");
       const uploadButton = document.getElementById("uploadButton");
       const qrUploadInput = document.getElementById("qrUploadInput");
       const qrImageInput = document.getElementById("qrImageInput");
       const qrPreview = document.getElementById("qrPreview");
       const uploadStatus = document.getElementById("uploadStatus");
+      const metricsGrid = document.getElementById("metricsGrid");
+      const analyticsDailyBody = document.getElementById("analyticsDailyBody");
+      const analyticsChannelBody = document.getElementById("analyticsChannelBody");
+      const analyticsDeviceBody = document.getElementById("analyticsDeviceBody");
+      const analyticsPayBody = document.getElementById("analyticsPayBody");
+      const crmLeadsBody = document.getElementById("crmLeadsBody");
+      const crmDetail = document.getElementById("crmDetail");
+      const crmDetailTitle = document.getElementById("crmDetailTitle");
+      const crmLeadSummary = document.getElementById("crmLeadSummary");
+      const crmForm = document.getElementById("crmForm");
+      const crmOwnerInput = document.getElementById("crmOwnerInput");
+      const crmNextFollowInput = document.getElementById("crmNextFollowInput");
+      const crmContactNameInput = document.getElementById("crmContactNameInput");
+      const crmPhoneLast4Input = document.getElementById("crmPhoneLast4Input");
+      const crmTagsInput = document.getElementById("crmTagsInput");
+      const crmStageActions = document.getElementById("crmStageActions");
+      const crmNoteInput = document.getElementById("crmNoteInput");
+      const crmNoteButton = document.getElementById("crmNoteButton");
+      const crmNotesList = document.getElementById("crmNotesList");
+      const crmExportButton = document.getElementById("crmExportButton");
+      const wecomSyncMessage = document.getElementById("wecomSyncMessage");
+      const wecomMetricsGrid = document.getElementById("wecomMetricsGrid");
+      const wecomEventsBody = document.getElementById("wecomEventsBody");
+      const wecomSyncJobsBody = document.getElementById("wecomSyncJobsBody");
+      const wecomReloadButton = document.getElementById("wecomReloadButton");
+      const refundForm = document.getElementById("refundForm");
+      const refundsBody = document.getElementById("refundsBody");
+      const refundReloadButton = document.getElementById("refundReloadButton");
+      const refundConsoleReloadButton = document.getElementById("refundConsoleReloadButton");
+      const refundConsoleWarning = document.getElementById("refundConsoleWarning");
+      const refundStatusGrid = document.getElementById("refundStatusGrid");
+      const refundPolicyForm = document.getElementById("refundPolicyForm");
+      const refundPreviewForm = document.getElementById("refundPreviewForm");
+      const refundPreviewResult = document.getElementById("refundPreviewResult");
       const ordersBody = document.getElementById("ordersBody");
       const auditBody = document.getElementById("auditBody");
 
@@ -463,7 +988,8 @@
             element.checked = Boolean(values[element.name]);
             return;
           }
-          element.value = values[element.name] ?? "";
+          const value = values[element.name] ?? "";
+          element.value = Array.isArray(value) ? value.join(",") : value;
         });
       }
 
@@ -484,6 +1010,29 @@
         return payload;
       }
 
+      function defaultLivecodeDraft() {
+        const suffix = new Date().toISOString().replace(/\D/g, "").slice(0, 14);
+        return {
+          code_key: `YMTY_LIVECODE_${suffix}`,
+          name: "新活码",
+          contact_type: "personal_wechat",
+          wecom_link: "",
+          qr_image: "",
+          channels: "*",
+          capacity_limit: 0,
+          manual_full: false,
+          priority: 50,
+          is_fallback: false,
+          wecom_tag_ids: "",
+          auto_redirect_after_paid: false,
+          redirect_delay_ms: 600,
+          remark: "知行 + 手机号后4位",
+          button_text: "添加课程助教微信",
+          service_text: "客服方式：支付后添加课程助教微信",
+          status: "active",
+        };
+      }
+
       function renderQrPreview(url) {
         if (!url) {
           qrPreview.hidden = true;
@@ -495,14 +1044,60 @@
       }
 
       async function loadAll() {
-        const campaign = await adminFetch("/api/admin/campaign/ymty");
+        const [campaign, pool] = await Promise.all([
+          adminFetch("/api/admin/campaign/ymty"),
+          adminFetch("/api/admin/livecodes"),
+        ]);
         state.product = campaign.product;
-        state.livecode = campaign.livecode;
+        state.livecodes = pool.livecodes || campaign.livecodes || [];
+        state.livecode = state.livecodes.find((item) => item.code_key === state.editingLivecodeKey)
+          || state.livecodes[0]
+          || campaign.livecode;
+        state.editingLivecodeKey = state.livecode?.code_key || "";
+        state.editingNewLivecode = false;
         fillForm(productForm, campaign.product);
-        fillForm(livecodeForm, campaign.livecode);
-        renderQrPreview(campaign.livecode.qr_image);
+        renderLivecodePool();
+        if (state.livecode) {
+          fillLivecodeEditor(state.livecode);
+        }
         showApp();
-        await Promise.all([loadOrders(), loadAuditLogs()]);
+        await Promise.all([loadAnalytics(), loadOrders(), loadCrmLeads(), loadWecomSync(), loadRefundConsole(), loadRefunds(), loadAuditLogs()]);
+      }
+
+      function fillLivecodeEditor(livecode) {
+        fillForm(livecodeForm, livecode);
+        renderQrPreview(livecode.qr_image);
+        livecodeEditorTitle.textContent = state.editingNewLivecode ? "新增活码" : "编辑活码";
+      }
+
+      function renderLivecodePool() {
+        livecodesBody.innerHTML = (state.livecodes || []).map((livecode) => {
+          const capacity = Number(livecode.capacity_limit || 0) > 0 ? Number(livecode.capacity_limit || 0) : "不限";
+          const channels = Array.isArray(livecode.channels) ? livecode.channels.join(",") : String(livecode.channels || "");
+          const fullText = livecode.manual_full ? "恢复分配" : "标记满员";
+          const statusText = livecode.status === "active" ? "启用" : "停用";
+          const statusButtonText = livecode.status === "active" ? "停用" : "启用";
+          const nextStatus = livecode.status === "active" ? "inactive" : "active";
+          const typeText = livecode.contact_type === "wecom" ? "企业微信" : "个人微信";
+          return `
+            <tr>
+              <td><code>${escapeHtml(livecode.code_key)}</code></td>
+              <td>${escapeHtml(livecode.name)}</td>
+              <td>${escapeHtml(typeText)}</td>
+              <td>${escapeHtml(channels || "*")}</td>
+              <td>${Number(livecode.assigned_count || 0)} / ${escapeHtml(capacity)}</td>
+              <td>${Number(livecode.switch_count || 0)}</td>
+              <td><span class="status-pill">${escapeHtml(statusText)}${livecode.manual_full ? " · 满员" : ""}${livecode.is_fallback ? " · 兜底" : ""}</span></td>
+              <td>
+                <div class="row-actions">
+                  <button class="btn-small" type="button" data-edit-livecode="${escapeHtml(livecode.code_key)}">编辑</button>
+                  <button class="btn-small" type="button" data-toggle-full="${escapeHtml(livecode.code_key)}" data-full="${livecode.manual_full ? "false" : "true"}">${fullText}</button>
+                  <button class="btn-small" type="button" data-toggle-status="${escapeHtml(livecode.code_key)}" data-status="${nextStatus}">${statusButtonText}</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join("");
       }
 
       async function loadOrders() {
@@ -516,6 +1111,461 @@
             <td>${escapeHtml(order.created_at || "")}</td>
           </tr>
         `).join("");
+      }
+
+      async function loadAnalytics() {
+        const todayKey = new Intl.DateTimeFormat("en-CA", {
+          timeZone: "Asia/Shanghai",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        }).format(new Date());
+        const [todayData, data] = await Promise.all([
+          adminFetch(`/api/admin/analytics/summary?date=${encodeURIComponent(todayKey)}`),
+          adminFetch("/api/admin/analytics/summary?days=7"),
+        ]);
+        const overview = todayData.overview || {};
+        const metrics = [
+          ["今日访客", overview.uv || 0],
+          ["今日浏览", overview.pv || 0],
+          ["报名点击", overview.signup_clicks || 0],
+          ["创建订单", overview.orders_created || 0],
+          ["支付成功", overview.paid_orders || 0],
+          ["支付金额", formatYuan(overview.revenue_cents || 0)],
+          ["成功页访问", overview.success_page_views || 0],
+          ["二维码曝光", overview.qr_exposures || 0],
+          ["获客链接点击", overview.wecom_link_clicks || 0],
+          ["已支付客户", overview.crm_paid_customers || 0],
+          ["已分配助教", overview.crm_assigned_customers || 0],
+          ["已添加", overview.crm_added_customers || 0],
+          ["已首次沟通", overview.crm_first_contact_customers || 0],
+          ["已进群", overview.crm_group_joined_customers || 0],
+          ["已完课", overview.crm_course_completed_customers || 0],
+          ["已转化", overview.crm_converted_customers || 0],
+          ["已流失", overview.crm_lost_customers || 0],
+          ["数据来源", "人工"],
+        ];
+        metricsGrid.innerHTML = metrics.map(([label, value]) => `
+          <div class="metric"><span>${escapeHtml(label)}</span><b>${escapeHtml(value)}</b></div>
+        `).join("");
+        analyticsDailyBody.innerHTML = (data.daily || []).slice(-7).map((row) => `
+          <tr>
+            <td>${escapeHtml(row.date || "")}</td>
+            <td>${Number(row.uv || 0)}</td>
+            <td>${Number(row.signup_clicks || 0)}</td>
+            <td>${Number(row.orders_created || 0)}</td>
+            <td>${Number(row.paid_orders || 0)}</td>
+            <td>${escapeHtml(formatYuan(row.revenue_cents || 0))}</td>
+            <td>${Number(row.crm_paid_customers || 0)}</td>
+            <td>${Number(row.crm_assigned_customers || 0)}</td>
+            <td>${Number(row.crm_added_customers || 0)}</td>
+            <td>${Number(row.crm_converted_customers || 0)}</td>
+          </tr>
+        `).join("");
+        analyticsChannelBody.innerHTML = (data.by_channel || []).map((row) => `
+          <tr>
+            <td>${escapeHtml(row.channel || "未标记")}</td>
+            <td>${Number(row.uv || 0)}</td>
+            <td>${Number(row.signup_clicks || 0)}</td>
+            <td>${Number(row.orders_created || 0)}</td>
+            <td>${Number(row.paid_orders || 0)}</td>
+          </tr>
+        `).join("");
+        analyticsDeviceBody.innerHTML = (data.by_device || []).map((row) => `
+          <tr>
+            <td>${escapeHtml(deviceText(row.device_type))}</td>
+            <td>${escapeHtml(osText(row.os))}</td>
+            <td>${escapeHtml(browserText(row.browser))}</td>
+            <td>${Number(row.uv || 0)}</td>
+            <td>${Number(row.pv || 0)}</td>
+          </tr>
+        `).join("");
+        analyticsPayBody.innerHTML = (data.by_pay_channel || []).map((row) => `
+          <tr>
+            <td>${escapeHtml(payChannelText(row.pay_channel))}</td>
+            <td>${Number(row.orders_created || 0)}</td>
+            <td>${Number(row.paid_orders || 0)}</td>
+            <td>${escapeHtml(formatYuan(row.revenue_cents || 0))}</td>
+          </tr>
+        `).join("");
+      }
+
+      async function loadCrmLeads() {
+        const data = await adminFetch("/api/admin/crm/leads");
+        state.crmLeads = data.leads || [];
+        if (!state.crmLeads.some((lead) => lead.lead_id === state.selectedCrmLeadId)) {
+          state.selectedCrmLeadId = state.crmLeads[0]?.lead_id || "";
+          state.selectedCrmDetail = null;
+        }
+        renderCrmLeads();
+        if (state.selectedCrmLeadId) {
+          await selectCrmLead(state.selectedCrmLeadId);
+        } else {
+          renderCrmDetail();
+        }
+      }
+
+      function renderCrmLeads() {
+        crmLeadsBody.innerHTML = (state.crmLeads || []).map((lead) => `
+          <tr>
+            <td>${escapeHtml(lead.order_id)}</td>
+            <td>${escapeHtml(formatYuan(lead.amount_cents || 0))}</td>
+            <td>${escapeHtml(payChannelText(lead.pay_channel))}</td>
+            <td>${escapeHtml(lead.channel || "未标记")}</td>
+            <td>${escapeHtml(lead.creative || "")}</td>
+            <td><code>${escapeHtml(lead.code_key || "未分配")}</code></td>
+            <td><span class="status-pill">${escapeHtml(stageText(lead.stage))}</span></td>
+            <td>${escapeHtml(lead.owner || "未分配")}</td>
+            <td>${escapeHtml(formatDateTime(lead.last_contact_at))}</td>
+            <td>${escapeHtml(formatDateTime(lead.next_follow_up_at))}</td>
+            <td>${escapeHtml((lead.tags || []).join("，"))}</td>
+            <td><button class="btn-small" type="button" data-crm-select="${escapeHtml(lead.lead_id)}">查看</button></td>
+          </tr>
+        `).join("");
+      }
+
+      async function selectCrmLead(leadId) {
+        const data = await adminFetch(`/api/admin/crm/leads/${encodeURIComponent(leadId)}`);
+        state.selectedCrmLeadId = data.lead?.lead_id || leadId;
+        state.selectedCrmDetail = data;
+        renderCrmLeads();
+        renderCrmDetail();
+      }
+
+      function renderCrmDetail() {
+        const lead = state.selectedCrmDetail?.lead;
+        const notes = state.selectedCrmDetail?.notes || [];
+        if (!lead) {
+          crmDetail.hidden = true;
+          return;
+        }
+        crmDetail.hidden = false;
+        crmDetailTitle.textContent = `客户详情：${lead.order_id}`;
+        crmLeadSummary.textContent = `当前阶段：${stageText(lead.stage)}；渠道：${lead.channel || "未标记"}；助教：${lead.code_key || "未分配"}。`;
+        crmOwnerInput.value = lead.owner || "";
+        crmNextFollowInput.value = lead.next_follow_up_at || "";
+        crmContactNameInput.value = lead.contact_name || "";
+        crmPhoneLast4Input.value = lead.phone_last4 || "";
+        crmTagsInput.value = (lead.tags || []).join(",");
+        crmNotesList.innerHTML = notes.length
+          ? notes.map((note) => `<div class="note-item">${escapeHtml(note.body)}<br><small>${escapeHtml(note.created_at || "")}</small></div>`).join("")
+          : `<div class="note-item">暂无备注</div>`;
+      }
+
+      async function saveCrmLead(event) {
+        event.preventDefault();
+        if (!state.selectedCrmLeadId) return;
+        await adminFetch(`/api/admin/crm/leads/${encodeURIComponent(state.selectedCrmLeadId)}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            owner: crmOwnerInput.value.trim(),
+            next_follow_up_at: crmNextFollowInput.value.trim(),
+            contact_name: crmContactNameInput.value.trim(),
+            phone_last4: crmPhoneLast4Input.value.trim(),
+            tags: crmTagsInput.value.split(",").map((item) => item.trim()).filter(Boolean),
+          }),
+        });
+        setNotice("已保存客户跟进信息");
+        await loadCrmLeads();
+      }
+
+      async function updateCrmStage(stage) {
+        if (!state.selectedCrmLeadId) return;
+        await adminFetch(`/api/admin/crm/leads/${encodeURIComponent(state.selectedCrmLeadId)}/stage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ stage }),
+        });
+        setNotice(`已更新阶段：${stageText(stage)}`);
+        await loadCrmLeads();
+      }
+
+      async function addCrmNote() {
+        if (!state.selectedCrmLeadId) return;
+        const body = crmNoteInput.value.trim();
+        if (!body) {
+          setNotice("请填写跟进备注");
+          return;
+        }
+        await adminFetch(`/api/admin/crm/leads/${encodeURIComponent(state.selectedCrmLeadId)}/note`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ body }),
+        });
+        crmNoteInput.value = "";
+        setNotice("已添加备注");
+        await selectCrmLead(state.selectedCrmLeadId);
+      }
+
+      async function exportCrmCsv() {
+        const response = await fetch("/api/admin/crm/export.csv", {
+          headers: adminHeaders({ Accept: "text/csv" }),
+        });
+        if (response.status === 401 || response.status === 403) {
+          showLogin("无权限或登录已失效");
+          return;
+        }
+        if (!response.ok) {
+          setNotice("导出失败");
+          return;
+        }
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "ymty-crm-leads.csv";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      async function loadWecomSync() {
+        const [summary, events, jobs] = await Promise.all([
+          adminFetch("/api/admin/wecom/customer/summary"),
+          adminFetch("/api/admin/wecom/customer/events"),
+          adminFetch("/api/admin/wecom/customer/sync-jobs"),
+        ]);
+        state.wecomSummary = summary;
+        state.wecomEvents = events.events || [];
+        state.wecomSyncJobs = jobs.jobs || [];
+        renderWecomSync();
+      }
+
+      function renderWecomSync() {
+        const summary = state.wecomSummary || {};
+        wecomSyncMessage.textContent = summary.message || "企业微信自动同步未启用";
+        const metrics = [
+          ["启用状态", summary.enabled ? "已启用" : "未启用"],
+          ["最近回调时间", formatDateTime(summary.recent_callback_at) || "暂无"],
+          ["添加成功数量", summary.added_count || 0],
+          ["未关联事件数量", summary.unlinked_count || 0],
+          ["标签同步成功数", summary.tag_sync_success || 0],
+          ["标签同步失败数", summary.tag_sync_failed || 0],
+        ];
+        wecomMetricsGrid.innerHTML = metrics.map(([label, value]) => `
+          <div class="metric"><span>${escapeHtml(label)}</span><b>${escapeHtml(value)}</b></div>
+        `).join("");
+        wecomEventsBody.innerHTML = (state.wecomEvents || []).map((event) => `
+          <tr>
+            <td>${escapeHtml(eventText(event.event_type || event.change_type))}</td>
+            <td><span class="status-pill">${escapeHtml(wecomStatusText(event.status))}</span></td>
+            <td><code>${escapeHtml(event.external_userid_masked || "")}</code></td>
+            <td>${escapeHtml(event.follow_user_userid || "")}</td>
+            <td><code>${escapeHtml(event.state || "")}</code></td>
+            <td>${escapeHtml(event.linked_order_id || "未关联")}</td>
+            <td>
+              <div class="row-actions">
+                <input aria-label="手工关联 lead_id" placeholder="lead_id" data-wecom-link-input="${escapeHtml(event.event_id)}" />
+                <button class="btn-small" type="button" data-wecom-link="${escapeHtml(event.event_id)}">手工关联</button>
+              </div>
+            </td>
+          </tr>
+        `).join("");
+        wecomSyncJobsBody.innerHTML = (state.wecomSyncJobs || []).map((job) => `
+          <tr>
+            <td>${escapeHtml(job.order_id || "")}</td>
+            <td><span class="status-pill">${escapeHtml(syncStatusText(job.status))}</span></td>
+            <td>${escapeHtml((job.tag_ids || []).join("，"))}</td>
+            <td>${escapeHtml(job.error || "")}</td>
+            <td><button class="btn-small" type="button" data-wecom-retry="${escapeHtml(job.job_id)}">重试同步</button></td>
+          </tr>
+        `).join("");
+      }
+
+      async function linkWecomEvent(eventId) {
+        const input = Array.from(document.querySelectorAll("[data-wecom-link-input]"))
+          .find((item) => item.dataset.wecomLinkInput === eventId);
+        const leadId = input?.value.trim() || "";
+        if (!leadId) {
+          setNotice("请填写要关联的 lead_id");
+          return;
+        }
+        await adminFetch(`/api/admin/wecom/customer/events/${encodeURIComponent(eventId)}/link`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ lead_id: leadId }),
+        });
+        setNotice("已手工关联企业微信客户");
+        await loadWecomSync();
+        await loadCrmLeads();
+      }
+
+      async function retryWecomSync(jobId) {
+        await adminFetch(`/api/admin/wecom/customer/sync-jobs/${encodeURIComponent(jobId)}/retry`, {
+          method: "POST",
+        });
+        setNotice("已重试企业微信标签同步");
+        await loadWecomSync();
+      }
+
+      async function loadRefundConsole() {
+        const data = await adminFetch("/api/admin/refunds/config");
+        state.refundConfig = data;
+        state.refundPolicy = data.policy || {};
+        renderRefundConsole();
+      }
+
+      function renderRefundConsole() {
+        const config = state.refundConfig || {};
+        const policy = state.refundPolicy || {};
+        const wechat = config.providers?.wechat || {};
+        const alipay = config.providers?.alipay || {};
+        const metrics = [
+          ["真实退款执行", config.execution_enabled ? "开启" : "关闭"],
+          ["自动退款执行", config.auto_refund_enabled ? "开启" : "关闭"],
+          ["微信退款配置", wechat.refund_ready ? "就绪" : "未就绪"],
+          ["支付宝退款配置", alipay.refund_ready ? "就绪" : "未就绪"],
+          ["微信退款回调", wechat.notify_url_configured ? "已配置" : "未配置"],
+          ["退款成功撤销权益", config.revoke_course_access_on_refund ? "开启" : "关闭"],
+        ];
+        refundStatusGrid.innerHTML = metrics.map(([label, value]) => `
+          <div class="metric"><span>${escapeHtml(label)}</span><b>${escapeHtml(value)}</b></div>
+        `).join("");
+        refundConsoleWarning.textContent = (config.warnings || []).join(" ") || "真实退款与自动退款均已开启，请谨慎操作。";
+        fillForm(refundPolicyForm, {
+          ...policy,
+          product_codes: (policy.product_codes || []).join(","),
+          pay_channels: (policy.pay_channels || []).join(","),
+          trigger_types: (policy.trigger_types || []).join(","),
+        });
+        if (state.refunds?.length) renderRefunds();
+      }
+
+      async function saveRefundPolicy(event) {
+        event.preventDefault();
+        const payload = collectForm(refundPolicyForm);
+        payload.product_codes = splitCsv(payload.product_codes);
+        payload.pay_channels = splitCsv(payload.pay_channels);
+        payload.trigger_types = splitCsv(payload.trigger_types);
+        await adminFetch("/api/admin/refund-policy", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        setNotice("规则已保存，但真实退款开关仍由服务器环境变量控制。");
+        await Promise.all([loadRefundConsole(), loadAuditLogs()]);
+      }
+
+      async function previewRefund(event) {
+        event.preventDefault();
+        const payload = collectForm(refundPreviewForm);
+        const data = await adminFetch("/api/admin/refunds/preview", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        renderRefundPreview(data);
+      }
+
+      function renderRefundPreview(data) {
+        const blockers = data.blockers || [];
+        const resultRows = [
+          ["是否满足退款条件", data.eligible ? "满足" : "不满足"],
+          ["是否会真实执行", data.would_execute ? "会执行" : "不会执行"],
+          ["支付渠道", data.provider || ""],
+          ["可退金额", formatYuan(data.order?.refundable_cents || 0)],
+          ["命中的规则", data.policy_result?.trigger_matched ? "触发条件命中" : "触发条件未命中"],
+          ["未通过原因", blockers.length ? blockers.join("；") : "无"],
+          ["是否会撤销课程权益", data.effects?.would_revoke_course_access ? "会" : "不会"],
+          ["是否会更新 CRM", data.effects?.would_update_crm ? "会" : "不会"],
+          ["预计状态时间线", (data.timeline || []).join(" → ")],
+        ];
+        refundPreviewResult.innerHTML = `<b>Dry Run，不会真实退款</b><br />${resultRows.map(([label, value]) => `${escapeHtml(label)}：${escapeHtml(value)}`).join("<br />")}`;
+      }
+
+      async function loadRefunds() {
+        const data = await adminFetch("/api/admin/refunds");
+        state.refunds = data.refunds || [];
+        renderRefunds();
+      }
+
+      function renderRefunds() {
+        refundsBody.innerHTML = (state.refunds || []).map((refund) => {
+          const reviewer = refund.approved_by || refund.rejected_by || "";
+          const canApprove = refund.status === "requested";
+          const canReject = refund.status === "requested" || refund.status === "approved";
+          const canExecute = refund.status === "approved";
+          const canQuery = ["approved", "processing", "refunded", "failed"].includes(refund.status);
+          const executionEnabled = Boolean(state.refundConfig?.execution_enabled);
+          return `
+            <tr>
+              <td><code>${escapeHtml(refund.refund_id)}</code></td>
+              <td>${escapeHtml(refund.order_id)}</td>
+              <td>${escapeHtml(formatYuan(refund.amount_cents || 0))}</td>
+              <td>${escapeHtml(refund.reason || "")}</td>
+              <td><span class="status-pill">${escapeHtml(refundStatusText(refund.status))}</span></td>
+              <td>${escapeHtml(reviewer || "待审核")}</td>
+              <td>${escapeHtml(formatDateTime(refund.updated_at))}</td>
+              <td>已写入审计日志</td>
+              <td>
+                <div class="row-actions">
+                  ${canApprove ? `<button class="btn-small" type="button" data-refund-approve="${escapeHtml(refund.refund_id)}">审核通过</button>` : ""}
+                  ${canReject ? `<button class="btn-small" type="button" data-refund-reject="${escapeHtml(refund.refund_id)}">驳回</button>` : ""}
+                  ${canExecute ? `<button class="btn-small" type="button" data-refund-execute="${escapeHtml(refund.refund_id)}" data-order-id="${escapeHtml(refund.order_id)}" ${executionEnabled ? "" : "disabled"}>${executionEnabled ? "执行退款" : "开关关闭，仅允许 Dry Run"}</button>` : ""}
+                  ${canQuery ? `<button class="btn-small" type="button" data-refund-query="${escapeHtml(refund.refund_id)}">查询状态</button>` : ""}
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join("");
+      }
+
+      async function createRefund(event) {
+        event.preventDefault();
+        const payload = collectForm(refundForm);
+        await adminFetch("/api/admin/refunds", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        refundForm.reset();
+        setNotice("已提交退款申请，等待高权限管理员审核");
+        await Promise.all([loadRefunds(), loadAuditLogs()]);
+      }
+
+      async function approveRefund(refundId) {
+        await adminFetch(`/api/admin/refunds/${encodeURIComponent(refundId)}/approve`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+        });
+        setNotice("已审核通过，尚未调用支付平台退款");
+        await Promise.all([loadRefunds(), loadAuditLogs()]);
+      }
+
+      async function rejectRefund(refundId) {
+        const reason = window.prompt("请输入驳回原因") || "";
+        await adminFetch(`/api/admin/refunds/${encodeURIComponent(refundId)}/reject`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reason }),
+        });
+        setNotice("已驳回退款申请");
+        await Promise.all([loadRefunds(), loadAuditLogs()]);
+      }
+
+      async function executeRefund(refundId, orderId) {
+        const expected = String(orderId || "").slice(-6);
+        const confirmed = window.prompt(`执行真实退款需要二次确认，请输入订单号后6位：${expected ? "******" : ""}`) || "";
+        await adminFetch(`/api/admin/refunds/${encodeURIComponent(refundId)}/execute`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ confirm_order_suffix: confirmed }),
+        });
+        setNotice("退款执行请求已提交，请通过查询状态确认平台结果");
+        await Promise.all([loadRefunds(), loadAuditLogs()]);
+      }
+
+      async function queryRefund(refundId) {
+        await adminFetch(`/api/admin/refunds/${encodeURIComponent(refundId)}/query`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+        });
+        setNotice("已查询退款平台状态");
+        await Promise.all([loadRefunds(), loadAuditLogs()]);
       }
 
       async function loadAuditLogs() {
@@ -552,12 +1602,55 @@
       async function saveLivecode(event) {
         event.preventDefault();
         const payload = collectForm(livecodeForm);
-        await adminFetch("/api/admin/livecode", {
+        const codeKey = state.editingLivecodeKey || payload.code_key;
+        const url = state.editingNewLivecode
+          ? "/api/admin/livecodes"
+          : `/api/admin/livecodes/${encodeURIComponent(codeKey)}`;
+        await adminFetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
         setNotice("已保存到服务器");
+        await loadAll();
+      }
+
+      function startNewLivecode() {
+        const draft = defaultLivecodeDraft();
+        state.livecode = draft;
+        state.editingLivecodeKey = draft.code_key;
+        state.editingNewLivecode = true;
+        fillLivecodeEditor(draft);
+        setNotice("正在新增活码，保存后写入服务器");
+      }
+
+      function editLivecode(codeKey) {
+        const livecode = state.livecodes.find((item) => item.code_key === codeKey);
+        if (!livecode) return;
+        state.livecode = livecode;
+        state.editingLivecodeKey = livecode.code_key;
+        state.editingNewLivecode = false;
+        fillLivecodeEditor(livecode);
+        setNotice(`正在编辑：${livecode.name}`);
+      }
+
+      async function toggleLivecodeFull(codeKey, manualFull) {
+        await adminFetch(`/api/admin/livecodes/${encodeURIComponent(codeKey)}/toggle-full`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ manual_full: manualFull }),
+        });
+        setNotice(manualFull ? "已标记满员" : "已恢复分配");
+        await loadAll();
+      }
+
+      async function toggleLivecodeStatus(codeKey, status) {
+        await adminFetch(`/api/admin/livecodes/${encodeURIComponent(codeKey)}/toggle-status`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status }),
+        });
+        setNotice(status === "active" ? "已启用活码" : "已停用活码");
         await loadAll();
       }
 
@@ -664,6 +1757,95 @@
           .replaceAll("'", "&#39;");
       }
 
+      function splitCsv(value) {
+        return String(value || "")
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean);
+      }
+
+      function formatYuan(cents) {
+        return `¥${(Number(cents || 0) / 100).toFixed(2)}`;
+      }
+
+      function deviceText(value) {
+        return ({ mobile:"手机", tablet:"平板", desktop:"桌面", unknown:"未知" })[value] || "未知";
+      }
+
+      function osText(value) {
+        return ({ ios:"iOS", android:"Android", windows:"Windows", macos:"macOS", linux:"Linux", unknown:"未知" })[value] || "未知";
+      }
+
+      function browserText(value) {
+        return ({ wechat:"微信", chrome:"Chrome", safari:"Safari", edge:"Edge", firefox:"Firefox", other:"其他", unknown:"未知" })[value] || "未知";
+      }
+
+      function payChannelText(value) {
+        return ({ mock:"Mock", wechat_jsapi:"微信 JSAPI", wechat_h5:"微信 H5", alipay_wap:"支付宝 WAP", unknown:"未知" })[value] || value || "未知";
+      }
+
+      function stageText(value) {
+        return ({
+          paid: "已支付",
+          assigned: "已分配助教",
+          added: "已添加",
+          first_contact: "已首次沟通",
+          group_joined: "已进群",
+          course_started: "已开课",
+          course_completed: "已完课",
+          converted: "已转化",
+          lost: "已流失",
+          refund_requested: "已申请退款",
+          refunded: "已退款",
+        })[value] || value || "未知";
+      }
+
+      function formatDateTime(value) {
+        return value ? String(value).replace("T", " ").slice(0, 16) : "";
+      }
+
+      function eventText(value) {
+        return ({
+          customer_added: "客户添加成功",
+          customer_deleted: "客户删除",
+          follow_user_deleted: "成员被客户删除",
+          customer_changed: "客户信息变化",
+          add_external_contact: "客户添加成功",
+          del_external_contact: "客户删除",
+          del_follow_user: "成员被客户删除",
+          edit_external_contact: "客户信息变化",
+        })[value] || value || "未知事件";
+      }
+
+      function wecomStatusText(value) {
+        return ({
+          linked: "已关联",
+          unlinked: "未关联",
+          ignored: "已忽略",
+          received: "已接收",
+        })[value] || value || "未知";
+      }
+
+      function syncStatusText(value) {
+        return ({
+          pending: "待同步",
+          success: "成功",
+          failed: "失败",
+          skipped: "已跳过",
+        })[value] || value || "未知";
+      }
+
+      function refundStatusText(value) {
+        return ({
+          requested: "待审核",
+          approved: "已审核通过",
+          rejected: "已驳回",
+          processing: "退款处理中",
+          refunded: "已退款",
+          failed: "退款失败",
+        })[value] || value || "未知";
+      }
+
       loginForm.addEventListener("submit", (event) => {
         login(event).catch((error) => {
           loginError.textContent = error.message;
@@ -679,6 +1861,97 @@
       });
       livecodeForm.addEventListener("submit", (event) => {
         saveLivecode(event).catch((error) => setNotice(error.message));
+      });
+      newLivecodeButton.addEventListener("click", startNewLivecode);
+      livecodesBody.addEventListener("click", (event) => {
+        const editButton = event.target.closest("[data-edit-livecode]");
+        if (editButton) {
+          editLivecode(editButton.dataset.editLivecode);
+          return;
+        }
+        const toggleButton = event.target.closest("[data-toggle-full]");
+        if (toggleButton) {
+          toggleLivecodeFull(toggleButton.dataset.toggleFull, toggleButton.dataset.full === "true")
+            .catch((error) => setNotice(error.message));
+          return;
+        }
+        const statusButton = event.target.closest("[data-toggle-status]");
+        if (statusButton) {
+          toggleLivecodeStatus(statusButton.dataset.toggleStatus, statusButton.dataset.status)
+            .catch((error) => setNotice(error.message));
+        }
+      });
+      crmLeadsBody.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-crm-select]");
+        if (button) {
+          selectCrmLead(button.dataset.crmSelect).catch((error) => setNotice(error.message));
+        }
+      });
+      crmForm.addEventListener("submit", (event) => {
+        saveCrmLead(event).catch((error) => setNotice(error.message));
+      });
+      crmStageActions.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-crm-stage]");
+        if (button) {
+          updateCrmStage(button.dataset.crmStage).catch((error) => setNotice(error.message));
+        }
+      });
+      crmNoteButton.addEventListener("click", () => {
+        addCrmNote().catch((error) => setNotice(error.message));
+      });
+      crmExportButton.addEventListener("click", () => {
+        exportCrmCsv().catch((error) => setNotice(error.message));
+      });
+      wecomReloadButton.addEventListener("click", () => {
+        loadWecomSync().catch((error) => setNotice(error.message));
+      });
+      wecomEventsBody.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-wecom-link]");
+        if (button) {
+          linkWecomEvent(button.dataset.wecomLink).catch((error) => setNotice(error.message));
+        }
+      });
+      wecomSyncJobsBody.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-wecom-retry]");
+        if (button) {
+          retryWecomSync(button.dataset.wecomRetry).catch((error) => setNotice(error.message));
+        }
+      });
+      refundForm.addEventListener("submit", (event) => {
+        createRefund(event).catch((error) => setNotice(error.message));
+      });
+      refundReloadButton.addEventListener("click", () => {
+        loadRefunds().catch((error) => setNotice(error.message));
+      });
+      refundConsoleReloadButton.addEventListener("click", () => {
+        loadRefundConsole().catch((error) => setNotice(error.message));
+      });
+      refundPolicyForm.addEventListener("submit", (event) => {
+        saveRefundPolicy(event).catch((error) => setNotice(error.message));
+      });
+      refundPreviewForm.addEventListener("submit", (event) => {
+        previewRefund(event).catch((error) => setNotice(error.message));
+      });
+      refundsBody.addEventListener("click", (event) => {
+        const approveButton = event.target.closest("[data-refund-approve]");
+        if (approveButton) {
+          approveRefund(approveButton.dataset.refundApprove).catch((error) => setNotice(error.message));
+          return;
+        }
+        const rejectButton = event.target.closest("[data-refund-reject]");
+        if (rejectButton) {
+          rejectRefund(rejectButton.dataset.refundReject).catch((error) => setNotice(error.message));
+          return;
+        }
+        const executeButton = event.target.closest("[data-refund-execute]");
+        if (executeButton) {
+          executeRefund(executeButton.dataset.refundExecute, executeButton.dataset.orderId).catch((error) => setNotice(error.message));
+          return;
+        }
+        const queryButton = event.target.closest("[data-refund-query]");
+        if (queryButton) {
+          queryRefund(queryButton.dataset.refundQuery).catch((error) => setNotice(error.message));
+        }
       });
       uploadButton.addEventListener("click", () => {
         uploadQrImage().catch((error) => {

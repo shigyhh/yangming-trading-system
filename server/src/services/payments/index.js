@@ -2,14 +2,20 @@ import { assertAlipayConfig, assertWechatConfig, PaymentConfigError } from "../p
 import {
   createH5Order,
   createJsapiOrder,
+  createWechatRefund,
+  parseWechatRefundNotify,
   parseWechatNotify,
+  queryWechatRefund,
   queryWechatOrder,
   validateWechatPayment,
+  verifyWechatRefundNotify,
   verifyWechatNotify
 } from "./wechatPay.js";
 import {
+  createAlipayRefund,
   createWapOrder,
   parseAlipayNotify,
+  queryAlipayRefund,
   queryAlipayOrder,
   validateAlipayPayment,
   verifyAlipayNotify
@@ -18,14 +24,20 @@ import {
 export {
   createH5Order,
   createJsapiOrder,
+  createAlipayRefund,
+  createWechatRefund,
   createWapOrder,
   parseAlipayNotify,
+  parseWechatRefundNotify,
   parseWechatNotify,
+  queryAlipayRefund,
   queryAlipayOrder,
+  queryWechatRefund,
   queryWechatOrder,
   validateAlipayPayment,
   validateWechatPayment,
   verifyAlipayNotify,
+  verifyWechatRefundNotify,
   verifyWechatNotify
 };
 

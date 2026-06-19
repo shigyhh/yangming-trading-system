@@ -20,7 +20,12 @@ import { dispatchTrainingPrescriptionBinding, generateShareCardBinding, getAdmin
 import { getGlobalReflectionToday, listGlobalReflectionChoices, submitGlobalReflectionVote } from "../services/globalReflection.js";
 import { buildHistoricalKlineSlice, downloadHistoricalKline, getHistoricalKlineRules, listHistoricalKlineCatalog, listHistoricalKlineInstruments, revealHistoricalKlineSlice } from "../services/historicalKline.js";
 import { buildTradeReviewOcrDraft } from "../services/tradeReviewOcr.js";
-import { createYmtyOrder, getYmtyAdminCampaign, getYmtyAfterpayEntrance, getYmtyAuditLogs, getYmtyOrderForPayment, getYmtyOrderStatus, getYmtyPublicCampaign, listYmtyCourseUsers, listYmtyOrders, markYmtyMockPaySuccess, markYmtyOrderPaid, updateYmtyCampaign, updateYmtyLivecode } from "../services/ymtyCampaign.js";
+import { createYmtyLivecode, createYmtyOrder, getYmtyAdminCampaign, getYmtyAfterpayEntrance, getYmtyAuditLogs, getYmtyOrderForPayment, getYmtyOrderStatus, getYmtyPublicCampaign, isYmtyMockPaymentAllowed, listYmtyCourseUsers, listYmtyLivecodeAssignments, listYmtyLivecodes, listYmtyOrders, markYmtyMockPaySuccess, markYmtyOrderPaid, switchYmtyAfterpayLivecode, toggleYmtyLivecodeFull, toggleYmtyLivecodeStatus, updateYmtyCampaign, updateYmtyLivecode, updateYmtyLivecodeByKey } from "../services/ymtyCampaign.js";
+import { getYmtyAnalyticsSummary, recordYmtyFrontendEvent } from "../services/ymtyAnalytics.js";
+import { addYmtyCrmNote, exportYmtyCrmCsv, getYmtyCrmLead, listYmtyCrmLeads, publicYmtyCrmLead, publicYmtyCrmLeadDetail, updateYmtyCrmLead, updateYmtyCrmLeadStage } from "../services/ymtyCrm.js";
+import { getYmtyWecomSummary, linkYmtyWecomEventToLead, listYmtyWecomEvents, listYmtyWecomSyncJobs, publicYmtyWecomEvent, publicYmtyWecomSyncJob, receiveYmtyWecomCallback, retryYmtyWecomSyncJob, verifyYmtyWecomCallbackUrl } from "../services/wecomCustomer.js";
+import { getYmtyRefundConfigStatus, getYmtyRefundPolicy, previewYmtyRefund, updateYmtyRefundPolicy } from "../services/ymtyRefundPolicy.js";
+import { approveYmtyRefund, createYmtyRefund, executeYmtyRefund, getYmtyRefund, handleWechatRefundNotify, listYmtyRefunds, queryYmtyRefundProvider, rejectYmtyRefund } from "../services/ymtyRefunds.js";
 import { authenticateYmtyAdmin, changeYmtyAdminPassword, getYmtyAdminMe, loginYmtyAdmin, logoutYmtyAdmin } from "../services/adminAuth.js";
 import { saveYmtyLivecodeUpload } from "../services/ymtyUpload.js";
 import { assertRealPayConfigReady, createH5Order, createJsapiOrder, createWapOrder, isPaymentConfigError, normalizePayChannel, parseAlipayNotify, parseWechatNotify, validateAlipayPayment, validateWechatPayment, verifyAlipayNotify, verifyWechatNotify } from "../services/payments/index.js";
@@ -105,7 +110,7 @@ export async function route(req, res) {
         global_reflection_today: "GET /api/v1/global-reflection/today",
         global_reflection_vote: "POST /api/v1/global-reflection/vote",
         ymty_pay_create: "POST /api/pay/create",
-        ymty_mock_pay_complete: "POST /api/pay/mock/complete",
+        ymty_track: "POST /api/track/ymty",
         ymty_wechat_notify: "POST /api/pay/wechat/notify",
         ymty_alipay_notify: "POST /api/pay/alipay/notify",
         ymty_order_status: "GET /api/order/status?order_id=ymty_xxx",
@@ -131,6 +136,53 @@ export async function route(req, res) {
   if (req.method === "GET" && pathname === "/api/public/campaign/ymty") {
     const campaign = await getYmtyPublicCampaign();
     return sendJson(res, 200, { ok: true, ...campaign });
+  }
+
+  if (req.method === "GET" && pathname === "/api/wecom/customer/callback") {
+    try {
+      const result = verifyYmtyWecomCallbackUrl(Object.fromEntries(url.searchParams.entries()));
+      res.writeHead(200, {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-store"
+      });
+      return res.end(result.echostr);
+    } catch (error) {
+      return sendWecomRouteError(res, error);
+    }
+  }
+
+  if (req.method === "POST" && pathname === "/api/wecom/customer/callback") {
+    const rawBody = await readRawBody(req, 256 * 1024);
+    try {
+      const result = await receiveYmtyWecomCallback({
+        query: Object.fromEntries(url.searchParams.entries()),
+        rawBody: rawBody.toString("utf8")
+      });
+      return sendJson(res, 200, { ok: true, ...result });
+    } catch (error) {
+      return sendWecomRouteError(res, error);
+    }
+  }
+
+  if (req.method === "POST" && pathname === "/api/track/ymty") {
+    const body = await readLimitedJson(req, 16 * 1024);
+    const orderId = body.order_id || body.orderId || "";
+    let isOrderPaid = false;
+    if (orderId) {
+      try {
+        const order = await getYmtyOrderForPayment(orderId);
+        isOrderPaid = order.pay_status === "paid";
+      } catch {
+        isOrderPaid = false;
+      }
+    }
+    const result = await recordYmtyFrontendEvent({
+      body,
+      ip: getIp(req),
+      userAgent: req.headers["user-agent"] || "",
+      isOrderPaid
+    });
+    return sendJson(res, 200, { ok: true, ...result });
   }
 
   if (req.method === "POST" && pathname === "/api/pay/create") {
@@ -168,7 +220,11 @@ export async function route(req, res) {
       payChannel,
       channel: body.channel || track.channel,
       campaign: body.campaign || track.campaign,
-      creative: body.creative || track.creative
+      creative: body.creative || track.creative,
+      sessionId: track.session_id || track.sessionId,
+      clickId: track.click_id || track.gdt_vid || track.bd_vid || track.douyin_click_id,
+      landingUrl: track.landing_url,
+      referrerHost: getReferrerHost(track.referrer || req.headers.referer || "")
     });
 
     if (payChannel !== "mock") {
@@ -213,14 +269,48 @@ export async function route(req, res) {
   }
 
   if (req.method === "GET" && pathname === "/api/afterpay/entrance") {
-    const result = await getYmtyAfterpayEntrance({
-      orderId: url.searchParams.get("order_id") || url.searchParams.get("orderId") || "",
-      token: url.searchParams.get("token") || ""
-    });
-    return sendJson(res, 200, { ok: true, ...result });
+    try {
+      const result = await getYmtyAfterpayEntrance({
+        orderId: url.searchParams.get("order_id") || url.searchParams.get("orderId") || "",
+        token: url.searchParams.get("token") || ""
+      });
+      return sendJson(res, 200, { ok: true, ...result });
+    } catch (error) {
+      if (error.code === "NO_AVAILABLE_LIVECODE") {
+        return sendJson(res, error.statusCode || 503, {
+          ok: false,
+          code: error.code,
+          message: error.message
+        });
+      }
+      throw error;
+    }
+  }
+
+  if (req.method === "POST" && pathname === "/api/afterpay/entrance/switch") {
+    const body = await readJson(req);
+    try {
+      const result = await switchYmtyAfterpayLivecode({
+        orderId: body.order_id || body.orderId || "",
+        token: body.token || "",
+        reason: body.reason || "user_reported_failure",
+        ip: getIp(req)
+      });
+      return sendJson(res, 200, { ok: true, ...result });
+    } catch (error) {
+      if (["NO_ALTERNATIVE_LIVECODE", "SWITCH_LIMIT_EXCEEDED", "NO_AVAILABLE_LIVECODE"].includes(error.code)) {
+        return sendJson(res, error.statusCode || 503, {
+          ok: false,
+          code: error.code,
+          message: error.message
+        });
+      }
+      throw error;
+    }
   }
 
   if (req.method === "POST" && pathname === "/api/mock/pay-success") {
+    if (!isYmtyMockPaymentAllowed()) return notFound(res);
     const body = await readJson(req);
     const result = await markYmtyMockPaySuccess({
       orderId: body.order_id || body.orderId || url.searchParams.get("order_id") || "",
@@ -231,6 +321,7 @@ export async function route(req, res) {
   }
 
   if (req.method === "POST" && pathname === "/api/pay/mock/complete") {
+    if (!isYmtyMockPaymentAllowed()) return notFound(res);
     const body = await readJson(req);
     const result = await markYmtyMockPaySuccess({
       orderId: body.order_id || body.orderId || url.searchParams.get("order_id") || "",
@@ -307,6 +398,22 @@ export async function route(req, res) {
       return sendJson(res, error.statusCode || 400, {
         code: "FAIL",
         message: error.message || "微信支付通知处理失败"
+      });
+    }
+  }
+
+  if (req.method === "POST" && pathname === "/api/pay/wechat/refund-notify") {
+    const rawBody = await readRawBody(req, 1024 * 1024);
+    try {
+      await handleWechatRefundNotify({
+        headers: req.headers,
+        body: rawBody
+      });
+      return sendJson(res, 200, { code: "SUCCESS", message: "成功" });
+    } catch (error) {
+      return sendJson(res, error.statusCode || 400, {
+        code: "FAIL",
+        message: error.message || "微信退款通知处理失败"
       });
     }
   }
@@ -402,6 +509,68 @@ export async function route(req, res) {
     return sendJson(res, 200, { ok: true, ...result });
   }
 
+  if (req.method === "GET" && pathname === "/api/admin/livecodes") {
+    await assertYmtyAdminAccess(req);
+    const result = await listYmtyLivecodes();
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "POST" && pathname === "/api/admin/livecodes") {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await createYmtyLivecode({
+      adminId: admin.adminId,
+      patch: body,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const livecodeToggleFullMatch = pathname.match(/^\/api\/admin\/livecodes\/([^/]+)\/toggle-full$/);
+  if (req.method === "POST" && livecodeToggleFullMatch) {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await toggleYmtyLivecodeFull({
+      adminId: admin.adminId,
+      codeKey: decodeURIComponent(livecodeToggleFullMatch[1]),
+      manualFull: body.manual_full ?? body.manualFull,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const livecodeToggleStatusMatch = pathname.match(/^\/api\/admin\/livecodes\/([^/]+)\/toggle-status$/);
+  if (req.method === "POST" && livecodeToggleStatusMatch) {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await toggleYmtyLivecodeStatus({
+      adminId: admin.adminId,
+      codeKey: decodeURIComponent(livecodeToggleStatusMatch[1]),
+      status: body.status || "active",
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const livecodeUpdateMatch = pathname.match(/^\/api\/admin\/livecodes\/([^/]+)$/);
+  if (req.method === "POST" && livecodeUpdateMatch) {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await updateYmtyLivecodeByKey({
+      adminId: admin.adminId,
+      codeKey: decodeURIComponent(livecodeUpdateMatch[1]),
+      patch: body,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/livecode-assignments") {
+    await assertYmtyAdminAccess(req);
+    const result = await listYmtyLivecodeAssignments();
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
   if (req.method === "POST" && pathname === "/api/admin/upload") {
     try {
       await assertYmtyAdminAccess(req);
@@ -424,6 +593,219 @@ export async function route(req, res) {
   if (req.method === "GET" && pathname === "/api/admin/audit-logs") {
     await assertYmtyAdminAccess(req);
     const result = await getYmtyAuditLogs();
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/crm/leads") {
+    await assertYmtyAdminAccess(req);
+    const result = await listYmtyCrmLeads(Object.fromEntries(url.searchParams.entries()));
+    return sendJson(res, 200, { ok: true, leads: result.leads.map((lead) => publicYmtyCrmLead(lead)) });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/crm/export.csv") {
+    await assertYmtyAdminAccess(req);
+    const csv = await exportYmtyCrmCsv(Object.fromEntries(url.searchParams.entries()));
+    res.writeHead(200, {
+      "Content-Type": "text/csv; charset=utf-8",
+      "Content-Disposition": "attachment; filename=\"ymty-crm-leads.csv\"",
+      "Cache-Control": "no-store"
+    });
+    return res.end(csv);
+  }
+
+  const crmLeadMatch = pathname.match(/^\/api\/admin\/crm\/leads\/([^/]+)$/);
+  if (req.method === "GET" && crmLeadMatch) {
+    await assertYmtyAdminAccess(req);
+    const result = await getYmtyCrmLead(decodeURIComponent(crmLeadMatch[1]));
+    return sendJson(res, 200, { ok: true, ...publicYmtyCrmLeadDetail(result) });
+  }
+
+  if (req.method === "POST" && crmLeadMatch) {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await updateYmtyCrmLead({
+      leadId: decodeURIComponent(crmLeadMatch[1]),
+      patch: body,
+      adminId: admin.adminId,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, lead: publicYmtyCrmLead(result.lead) });
+  }
+
+  const crmStageMatch = pathname.match(/^\/api\/admin\/crm\/leads\/([^/]+)\/stage$/);
+  if (req.method === "POST" && crmStageMatch) {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await updateYmtyCrmLeadStage({
+      leadId: decodeURIComponent(crmStageMatch[1]),
+      stage: body.stage || "",
+      reason: body.reason || body.note || "",
+      adminId: admin.adminId,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, lead: publicYmtyCrmLead(result.lead) });
+  }
+
+  const crmNoteMatch = pathname.match(/^\/api\/admin\/crm\/leads\/([^/]+)\/note$/);
+  if (req.method === "POST" && crmNoteMatch) {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await addYmtyCrmNote({
+      leadId: decodeURIComponent(crmNoteMatch[1]),
+      body: body.body || body.note || "",
+      adminId: admin.adminId,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/refunds/config") {
+    await assertYmtyAdminAccess(req);
+    const result = await getYmtyRefundConfigStatus();
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/refund-policy") {
+    await assertYmtyAdminAccess(req);
+    const policy = await getYmtyRefundPolicy();
+    return sendJson(res, 200, { ok: true, policy });
+  }
+
+  if (req.method === "POST" && pathname === "/api/admin/refund-policy") {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await updateYmtyRefundPolicy({
+      patch: body,
+      admin,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "POST" && pathname === "/api/admin/refunds/preview") {
+    await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await previewYmtyRefund({
+      orderId: body.order_id || body.orderId || "",
+      amountCents: body.amount_cents ?? body.amountCents,
+      triggerType: body.trigger_type || body.triggerType || ""
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/refunds") {
+    await assertYmtyAdminAccess(req);
+    const result = await listYmtyRefunds(Object.fromEntries(url.searchParams.entries()));
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "POST" && pathname === "/api/admin/refunds") {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await createYmtyRefund({
+      orderId: body.order_id || body.orderId || "",
+      amountCents: body.amount_cents ?? body.amountCents,
+      reason: body.reason || "",
+      admin,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const refundApproveMatch = pathname.match(/^\/api\/admin\/refunds\/([^/]+)\/approve$/);
+  if (req.method === "POST" && refundApproveMatch) {
+    const admin = await assertYmtyAdminAccess(req);
+    const result = await approveYmtyRefund({
+      refundId: decodeURIComponent(refundApproveMatch[1]),
+      admin,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const refundRejectMatch = pathname.match(/^\/api\/admin\/refunds\/([^/]+)\/reject$/);
+  if (req.method === "POST" && refundRejectMatch) {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await rejectYmtyRefund({
+      refundId: decodeURIComponent(refundRejectMatch[1]),
+      reason: body.reason || body.note || "",
+      admin,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const refundExecuteMatch = pathname.match(/^\/api\/admin\/refunds\/([^/]+)\/execute$/);
+  if (req.method === "POST" && refundExecuteMatch) {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await executeYmtyRefund({
+      refundId: decodeURIComponent(refundExecuteMatch[1]),
+      confirmOrderSuffix: body.confirm_order_suffix || body.confirmOrderSuffix || "",
+      admin,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const refundQueryMatch = pathname.match(/^\/api\/admin\/refunds\/([^/]+)\/query$/);
+  if (req.method === "POST" && refundQueryMatch) {
+    const admin = await assertYmtyAdminAccess(req);
+    const result = await queryYmtyRefundProvider({
+      refundId: decodeURIComponent(refundQueryMatch[1]),
+      admin,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const refundDetailMatch = pathname.match(/^\/api\/admin\/refunds\/([^/]+)$/);
+  if (req.method === "GET" && refundDetailMatch) {
+    await assertYmtyAdminAccess(req);
+    const result = await getYmtyRefund(decodeURIComponent(refundDetailMatch[1]));
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/wecom/customer/summary") {
+    await assertYmtyAdminAccess(req);
+    const result = await getYmtyWecomSummary();
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/wecom/customer/events") {
+    await assertYmtyAdminAccess(req);
+    const result = await listYmtyWecomEvents(Object.fromEntries(url.searchParams.entries()));
+    return sendJson(res, 200, { ok: true, events: result.events.map((event) => publicYmtyWecomEvent(event)) });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/wecom/customer/sync-jobs") {
+    await assertYmtyAdminAccess(req);
+    const result = await listYmtyWecomSyncJobs(Object.fromEntries(url.searchParams.entries()));
+    return sendJson(res, 200, { ok: true, jobs: result.jobs.map((job) => publicYmtyWecomSyncJob(job)) });
+  }
+
+  const wecomEventLinkMatch = pathname.match(/^\/api\/admin\/wecom\/customer\/events\/([^/]+)\/link$/);
+  if (req.method === "POST" && wecomEventLinkMatch) {
+    await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await linkYmtyWecomEventToLead({
+      eventId: decodeURIComponent(wecomEventLinkMatch[1]),
+      leadId: body.lead_id || body.leadId || ""
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const wecomSyncRetryMatch = pathname.match(/^\/api\/admin\/wecom\/customer\/sync-jobs\/([^/]+)\/retry$/);
+  if (req.method === "POST" && wecomSyncRetryMatch) {
+    await assertYmtyAdminAccess(req);
+    const result = await retryYmtyWecomSyncJob(decodeURIComponent(wecomSyncRetryMatch[1]));
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/analytics/summary") {
+    await assertYmtyAdminAccess(req);
+    const result = await getYmtyAnalyticsSummary(Object.fromEntries(url.searchParams.entries()));
     return sendJson(res, 200, { ok: true, ...result });
   }
 
@@ -1256,10 +1638,38 @@ function getIp(req) {
   return req.socket.remoteAddress || "";
 }
 
+function sendWecomRouteError(res, error) {
+  return sendJson(res, error.statusCode || 400, {
+    ok: false,
+    code: error.code || "WECOM_CALLBACK_ERROR",
+    message: error.message || "企业微信回调处理失败"
+  });
+}
+
 function getPublicOrigin(req) {
   if (config.publicBaseUrl) return config.publicBaseUrl.replace(/\/$/, "");
   const proto = req.headers["x-forwarded-proto"] || "http";
   return `${proto}://${req.headers.host}`;
+}
+
+async function readLimitedJson(req, limitBytes) {
+  const raw = (await readRawBody(req, limitBytes)).toString("utf8").trim();
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw);
+  } catch {
+    const error = new Error("请求体不是合法 JSON");
+    error.statusCode = 400;
+    throw error;
+  }
+}
+
+function getReferrerHost(referrer = "") {
+  try {
+    return new URL(String(referrer || "")).hostname.slice(0, 120);
+  } catch {
+    return "";
+  }
 }
 
 function buildSuccessUrl(req, order, providedSuccessUrl = "") {

@@ -7,6 +7,7 @@ import { HeroSection } from "@/components/home/hero-section"
 import { HomeWaterStage } from "@/components/home/HomeWaterStage"
 import { StorySections } from "@/components/home/story-sections"
 import { TopNav } from "@/components/home/top-nav"
+import { YmtyEntryCard } from "@/components/home/ymty-entry-card"
 import { HomeEntryGate } from "@/components/user-flow/HomeEntryGate"
 
 export function CinematicHome() {
@@ -19,6 +20,7 @@ export function CinematicHome() {
       <HomeWaterStage />
       <TopNav />
       <HeroSection />
+      <YmtyEntryCard />
       <StorySections />
       <footer
         id="compliance"

@@ -34,6 +34,7 @@ const originalEnv = Object.fromEntries(paymentEnvKeys.map((key) => [key, process
 const { handleError } = await import("../src/lib/http.js");
 const { route } = await import("../src/routes/router.js");
 const {
+  createYmtyLivecode,
   createYmtyOrder,
   getYmtyAfterpayEntrance,
   getYmtyOrderStatus,
@@ -52,6 +53,7 @@ test("wechat notify verifies signature, checks amount, and grants paid rights id
 
   try {
     const order = await createYmtyOrder({ productCode: "YMXX_JY_TY", payChannel: "wechat_h5" });
+    await createNotifyLivecode("wechat");
 
     const badSignature = await wechatNotify({
       payload: buildWechatPayload(order.order, { total: order.order.amount_cents }),
@@ -117,6 +119,7 @@ test("alipay notify verifies signature, checks amount, and grants paid rights id
 
   try {
     const order = await createYmtyOrder({ productCode: "YMXX_JY_TY", payChannel: "alipay_wap" });
+    await createNotifyLivecode("alipay");
 
     const badSignature = await alipayNotify(buildAlipayParams(order.order, {
       total_amount: centsToYuan(order.order.amount_cents),
@@ -159,6 +162,20 @@ test("alipay notify verifies signature, checks amount, and grants paid rights id
     restoreEnv();
   }
 });
+
+async function createNotifyLivecode(suffix) {
+  await createYmtyLivecode({
+    adminId: "notify-test-admin",
+    patch: {
+      code_key: `YMTY_NOTIFY_${suffix.toUpperCase()}`,
+      name: `通知测试活码${suffix}`,
+      qr_image: `/uploads/livecode/notify-${suffix}.png`,
+      channels: ["*"],
+      priority: 1,
+      status: "active"
+    }
+  });
+}
 
 test("wechat jsapi reports oauth requirement when config is ready but openid is missing", async () => {
   const tempDir = await setupPaymentEnv();
