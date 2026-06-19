@@ -47,7 +47,6 @@ export function HomeMobileScrollGuide() {
     let rafId: number | null = null
     let expectedScrollTop = window.scrollY
     let lastProgrammaticFrame = 0
-    const initialScrollTop = window.scrollY
 
     function cleanup() {
       if (delayTimer !== null) window.clearTimeout(delayTimer)
@@ -74,10 +73,7 @@ export function HomeMobileScrollGuide() {
     function handleManualScroll() {
       if (stopped) return
 
-      if (!started) {
-        if (Math.abs(window.scrollY - initialScrollTop) > 4) stopGuide()
-        return
-      }
+      if (!started) return
 
       const isNearProgrammaticScroll = Math.abs(window.scrollY - expectedScrollTop) <= SCROLL_CANCEL_THRESHOLD
       const isSameFrameScroll = performance.now() - lastProgrammaticFrame < 120

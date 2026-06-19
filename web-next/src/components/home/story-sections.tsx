@@ -123,6 +123,15 @@ export function StorySections() {
   }, [])
 
   useEffect(() => {
+    if (window.matchMedia("(max-width: 768px)").matches) {
+      document.documentElement.setAttribute("data-home-story-gsap", "ready")
+      window.dispatchEvent(new Event(HOME_STORY_READY_EVENT))
+
+      return () => {
+        document.documentElement.removeAttribute("data-home-story-gsap")
+      }
+    }
+
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
 
     let revertGsap: (() => void) | undefined
@@ -137,7 +146,6 @@ export function StorySections() {
       gsap.registerPlugin(ScrollTrigger)
 
       const context = gsap.context(() => {
-        const isMobileStory = window.matchMedia("(max-width: 768px)").matches
         const secondBreath = gsap.utils.toArray<HTMLElement>("[data-breath-panel='second']")
         const thirdBreath = gsap.utils.toArray<HTMLElement>("[data-breath-panel='third']")
         const secondLines = gsap.utils.toArray<HTMLElement>("[data-breath-line]")
@@ -203,7 +211,7 @@ export function StorySections() {
             trigger: rootRef.current,
             start: "top top",
             end: "bottom bottom",
-            scrub: isMobileStory ? true : 1.05,
+            scrub: 1.05,
             pin: "[data-three-breath-stage]",
             anticipatePin: 1,
           },
@@ -311,10 +319,64 @@ export function StorySections() {
       data-home-roll="three-breaths"
       data-home-scene="2"
       aria-label="三息入照"
-      className="relative z-20 min-h-[230svh] overflow-x-clip overflow-y-visible px-5 md:px-8"
+      className="relative z-20 overflow-x-clip overflow-y-visible px-5 md:min-h-[230svh] md:px-8"
     >
-      <span data-home-scene="3" className="pointer-events-none absolute left-0 top-[62svh] h-px w-px" aria-hidden="true" />
-      <div data-three-breath-stage className="relative flex min-h-[100svh] items-start justify-center pt-[14svh] pb-24 md:pt-[12svh] md:pb-28">
+      <div className="relative min-h-[210svh] md:hidden">
+        <div data-home-mobile-story="second" className="flex min-h-[100svh] flex-col items-center justify-center gap-6 text-center">
+          <p className="font-worldview m-0 text-[clamp(2rem,9.2vw,3.1rem)] font-normal leading-[1.22] tracking-[.06em] text-[rgba(238,243,238,.94)] [text-shadow:0_0_44px_rgba(0,0,0,.58)]">
+            你以为你输给了行情。
+          </p>
+          <p className="font-worldview m-0 text-[clamp(1.72rem,7.4vw,2.45rem)] font-normal leading-[1.28] tracking-[.06em] text-[rgba(238,243,238,.82)]">
+            其实很多时候，
+          </p>
+          <p className="font-worldview m-0 text-[clamp(1.72rem,7.4vw,2.45rem)] font-normal leading-[1.28] tracking-[.06em] text-[rgba(255,239,188,.92)]">
+            是下单前那一念，
+          </p>
+          <p className="font-worldview m-0 text-[clamp(1.72rem,7.4vw,2.45rem)] font-normal leading-[1.28] tracking-[.06em] text-[rgba(238,243,238,.88)]">
+            先替你做了主。
+          </p>
+        </div>
+
+        <span data-home-scene="3" className="pointer-events-none absolute left-0 top-[104svh] h-px w-px" aria-hidden="true" />
+
+        <div data-home-mobile-story="third" className="flex min-h-[110svh] flex-col items-center justify-center gap-5 pb-20 text-center">
+          <p className="font-worldview m-0 text-[clamp(1.72rem,7.2vw,2.38rem)] font-normal leading-[1.26] tracking-[.08em] text-[rgba(238,243,238,.9)]">
+            照见不是预测。
+          </p>
+          <p className="font-worldview m-0 text-[clamp(1.6rem,6.8vw,2.22rem)] font-normal leading-[1.3] tracking-[.06em] text-[rgba(238,243,238,.86)]">
+            是把下单前那一念
+            <br />
+            照出来。
+          </p>
+          <div className="mt-4 flex flex-col items-center gap-3">
+            <span className="font-story text-[13px] font-light tracking-[.18em] text-[rgba(216,183,111,.48)]">比如：</span>
+            <p className="font-worldview m-0 text-[clamp(2.25rem,10vw,3.2rem)] font-normal leading-none tracking-[.08em] text-[rgba(238,243,238,.96)]">
+              「再等等。」
+            </p>
+          </div>
+          <div className="mt-4 flex flex-col items-center gap-3">
+            <span className="font-story text-[13px] font-light tracking-[.14em] text-[rgba(216,183,111,.52)]">照回：</span>
+            <p className="font-story m-0 text-[clamp(1.8rem,7.4vw,2.42rem)] font-light leading-[1.32] tracking-[.06em] text-[rgba(244,235,221,.9)]">
+              你等的不是机会。
+            </p>
+            <p className="font-story m-0 text-[clamp(2rem,8vw,2.72rem)] font-light leading-[1.22] tracking-[.06em] text-[rgba(238,203,128,.96)]">
+              是一个不用认错的台阶。
+            </p>
+          </div>
+          <a
+            href={REFLECT_ENTRY_HREF}
+            className={heroStyles.door}
+            data-story-door="mobile"
+            onClick={enterReflectThroughWater}
+          >
+            <span className={heroStyles.doorMain}>照见一念　→</span>
+            <span className={heroStyles.doorLine} aria-hidden="true" />
+          </a>
+        </div>
+      </div>
+
+      <span data-home-scene="3" className="pointer-events-none absolute left-0 top-[62svh] hidden h-px w-px md:block" aria-hidden="true" />
+      <div data-three-breath-stage className="relative hidden min-h-[100svh] items-start justify-center pt-[14svh] pb-24 md:flex md:pt-[12svh] md:pb-28">
         <div data-breath-panel="second" className="absolute -top-[12svh] inset-x-0 mx-auto flex min-h-[100svh] max-w-[1080px] flex-col items-center justify-center text-center md:-top-[10svh]">
           <div className="relative flex min-h-[24rem] w-full flex-col items-center justify-center gap-6 md:min-h-[30rem] md:gap-7">
             {[
