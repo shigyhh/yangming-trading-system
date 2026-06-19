@@ -6,6 +6,7 @@ const SESSION_KEY = "home_mobile_scroll_guide_seen"
 const MOBILE_QUERY = "(max-width: 768px)"
 const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)"
 const SCENE_TARGET_SELECTOR = "[data-home-scene=\"3\"]"
+const HOME_STORY_READY_EVENT = "home-three-breaths-ready"
 const GUIDE_DELAY_MS = 1400
 const GUIDE_DURATION_MS = 8000
 const SCROLL_CANCEL_THRESHOLD = 18
@@ -42,6 +43,7 @@ export function HomeMobileScrollGuide() {
     let stopped = false
     let started = false
     let delayTimer: number | null = null
+    let readyTimer: number | null = null
     let rafId: number | null = null
     let expectedScrollTop = window.scrollY
     let lastProgrammaticFrame = 0
@@ -49,11 +51,13 @@ export function HomeMobileScrollGuide() {
 
     function cleanup() {
       if (delayTimer !== null) window.clearTimeout(delayTimer)
+      if (readyTimer !== null) window.clearTimeout(readyTimer)
       if (rafId !== null) window.cancelAnimationFrame(rafId)
       USER_INTENT_EVENTS.forEach((eventName) => {
         window.removeEventListener(eventName, handleUserIntent, true)
       })
       window.removeEventListener("scroll", handleManualScroll)
+      window.removeEventListener(HOME_STORY_READY_EVENT, startGuide)
     }
 
     function stopGuide() {
@@ -86,8 +90,13 @@ export function HomeMobileScrollGuide() {
     })
     window.addEventListener("scroll", handleManualScroll, { passive: true })
 
-    delayTimer = window.setTimeout(() => {
+    function startGuide() {
       if (stopped) return
+      if (readyTimer !== null) {
+        window.clearTimeout(readyTimer)
+        readyTimer = null
+      }
+      window.removeEventListener(HOME_STORY_READY_EVENT, startGuide)
 
       const target = document.querySelector<HTMLElement>(SCENE_TARGET_SELECTOR)
       if (!target) {
@@ -129,7 +138,24 @@ export function HomeMobileScrollGuide() {
       }
 
       rafId = window.requestAnimationFrame(tick)
-    }, GUIDE_DELAY_MS)
+    }
+
+    function startWhenStoryIsReady() {
+      if (stopped) return
+
+      if (document.documentElement.getAttribute("data-home-story-gsap") === "ready") {
+        startGuide()
+        return
+      }
+
+      window.addEventListener(HOME_STORY_READY_EVENT, startGuide, { once: true })
+      readyTimer = window.setTimeout(() => {
+        window.removeEventListener(HOME_STORY_READY_EVENT, startGuide)
+        stopGuide()
+      }, 4600)
+    }
+
+    delayTimer = window.setTimeout(startWhenStoryIsReady, GUIDE_DELAY_MS)
 
     return () => {
       stopped = true
