@@ -436,6 +436,29 @@ test("home mobile scroll guide is scoped, interruptible, and session-gated", asy
   })
 })
 
+test("home story keeps a no-overlap fallback contract", async () => {
+  const storySections = await readFile(storySectionsUrl, "utf8")
+  const mobileBypassIndex = storySections.indexOf('window.matchMedia("(max-width: 768px)").matches')
+  const gsapImportIndex = storySections.indexOf('await import("gsap")')
+
+  assert.ok(mobileBypassIndex >= 0, "mobile story should have an explicit layout branch")
+  assert.ok(gsapImportIndex >= 0, "desktop story should still load GSAP for the cinematic branch")
+  assert.ok(mobileBypassIndex < gsapImportIndex, "mobile must exit before GSAP or ScrollTrigger can pin stacked panels")
+  assert.ok(storySections.includes('className="relative min-h-[210svh] md:hidden"'), "mobile story should be normal document flow")
+  assert.ok(storySections.includes('data-home-mobile-story="second"'), "mobile story should expose the second scene without absolute stacking")
+  assert.ok(storySections.includes('data-home-mobile-story="third"'), "mobile story should expose the third scene without absolute stacking")
+  assert.ok(storySections.includes('data-three-breath-stage className="relative hidden min-h-[100svh]'), "desktop pinned stage should stay hidden on mobile")
+  assert.ok(storySections.includes('data-breath-panel="third" style={THIRD_BREATH_INITIAL_STYLE}'), "desktop third breath must be hidden during SSR before GSAP arrives")
+  assert.ok(storySections.includes('style={index === 0 ? FIRST_SECOND_LINE_INITIAL_STYLE : SECOND_DEPTH_LINE_INITIAL_STYLE}'), "desktop second breath should reveal only the first line before GSAP arrives")
+
+  ;["law", "thought", "reflection", "closure"].forEach((phase) => {
+    assert.ok(
+      storySections.includes(`data-third-phase="${phase}" style={THIRD_PHASE_INITIAL_STYLE}`),
+      `desktop ${phase} phase must be hidden during SSR before GSAP arrives`,
+    )
+  })
+})
+
 test("site footer shows compliance copy and ICP on public pages only", async () => {
   const layout = await readFile(layoutUrl, "utf8")
   const footer = await readFile(siteFooterUrl, "utf8")
