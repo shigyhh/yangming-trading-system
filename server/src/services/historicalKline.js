@@ -77,7 +77,7 @@ const ASHARE_KLT_BY_TIMEFRAME = {
 const MARKETS = {
   cn_equity: {
     key: "cn_equity",
-    aliases: ["a", "ashare", "a_share", "cn", "A股", "沪深"],
+    aliases: ["a", "ashare", "a_share", "cn", "cn_stock", "A股", "沪深"],
     label: "A股",
     dataDir: "ashare",
     defaultTimeframe: "1d",
@@ -332,12 +332,7 @@ export function listHistoricalKlineCatalog() {
     providers: listKlineProviders(),
     gates: Object.values(GATE_PRACTICES),
     personality_prescriptions: Object.values(PERSONALITY_PRACTICES),
-    storage_contract: {
-      root: "server/data/market",
-      instrument_file: "server/data/market/{market}/instruments.json",
-      kline_file: "server/data/market/{market}/{timeframe}/{symbol}.json",
-      ashare_legacy_file: "server/data/market/ashare/{klt}/{code}.json"
-    },
+    storage_contract: buildStorageContract(),
     compliance: COMPLIANCE_TEXT
   };
 }
@@ -384,6 +379,15 @@ export function getHistoricalKlineRules({ marketKey = DEFAULT_MARKET } = {}) {
   };
 }
 
+export async function getHistoricalKlineStatus({
+  marketKey = DEFAULT_MARKET,
+  timeframeKey = ""
+} = {}) {
+  const market = getMarket(marketKey);
+  const timeframe = getTimeframe(timeframeKey || market.defaultTimeframe);
+  return getManifestStatus({ market, timeframeKey: timeframe.key });
+}
+
 export async function buildHistoricalKlineSlice({
   marketKey = DEFAULT_MARKET,
   symbol = "",
@@ -408,6 +412,7 @@ export async function buildHistoricalKlineSlice({
   const instruments = await loadInstrumentList(market);
   const instrument = await resolveInstrument({ market, symbol, instruments, timeframeKey: timeframe.key, seed });
   const dataset = await loadKlineDataset({ market, symbol: instrument.symbol, timeframeKey: timeframe.key, adjustmentMode: adjustment.key });
+  const manifestStatus = await getManifestStatus({ market, timeframeKey: timeframe.key });
   const candles = filterCandlesByDate(dataset.candles, { startDate, endDate });
   const safeWindowSize = clamp(Number(windowSize || DEFAULT_WINDOW_SIZE), MIN_WINDOW_SIZE, MAX_WINDOW_SIZE);
 
@@ -466,6 +471,8 @@ export async function buildHistoricalKlineSlice({
     slice: {
       id: sliceId,
       blind: Boolean(blind),
+      symbol: Boolean(blind) ? "" : instrument.symbol,
+      symbol_masked: Boolean(blind),
       market: toPublicMarket(market),
       timeframe,
       adjustment: {
@@ -501,6 +508,7 @@ export async function buildHistoricalKlineSlice({
             masked: false
           },
       source: dataset.source,
+      manifestStatus,
       rules: MARKET_RULES[market.ruleKey],
       training: buildTrainingBrief({
         trainingMode,
@@ -511,6 +519,92 @@ export async function buildHistoricalKlineSlice({
       }),
       reveal_token: Boolean(blind) ? encodeSliceToken(descriptor) : "",
       reveal: Boolean(blind) ? null : descriptor,
+      compliance: COMPLIANCE_TEXT
+    }
+  };
+}
+
+export async function buildEmptyHistoricalKlineSlice({
+  marketKey = DEFAULT_MARKET,
+  symbol = "",
+  timeframeKey = DEFAULT_TIMEFRAME,
+  adjustmentMode = "none",
+  windowSize = DEFAULT_WINDOW_SIZE,
+  mode = "step_replay",
+  personalityType = "",
+  gateKey = "",
+  blind = true,
+  reason = ""
+} = {}) {
+  const market = getMarket(marketKey);
+  const timeframe = getTimeframe(timeframeKey || market.defaultTimeframe);
+  const adjustment = getAdjustmentMode(adjustmentMode);
+  const trainingMode = getTrainingMode(mode);
+  const gate = getGatePractice(gateKey);
+  const personality = getPersonalityPractice(personalityType);
+  const manifestStatus = await getManifestStatus({ market, timeframeKey: timeframe.key });
+  const safeSymbol = String(symbol || "").trim();
+  const safeWindowSize = clamp(Number(windowSize || DEFAULT_WINDOW_SIZE), MIN_WINDOW_SIZE, MAX_WINDOW_SIZE);
+  const sliceId = buildSliceId({
+    marketKey: market.key,
+    symbol: safeSymbol,
+    timeframeKey: timeframe.key,
+    adjustmentMode: adjustment.key,
+    windowSize: safeWindowSize,
+    mode: trainingMode.key,
+    status: "empty"
+  });
+
+  return {
+    slice: {
+      id: sliceId,
+      blind: Boolean(blind),
+      symbol: Boolean(blind) ? "" : safeSymbol,
+      symbol_masked: Boolean(blind),
+      market: toPublicMarket(market),
+      timeframe,
+      adjustment: {
+        ...adjustment,
+        applied: false
+      },
+      instrument: Boolean(blind)
+        ? {
+            label: "历史片段",
+            masked: true
+          }
+        : {
+            symbol: safeSymbol,
+            name: "",
+            label: safeSymbol || "未命中标的",
+            masked: false
+          },
+      price_mode: Boolean(blind) ? "relative_blind" : "raw",
+      candles: [],
+      visible_count: 0,
+      data_range: Boolean(blind)
+        ? {
+            masked: true,
+            label: "完成练习后再揭晓"
+          }
+        : {
+            start: "",
+            end: "",
+            masked: false
+          },
+      source: "",
+      manifestStatus,
+      data_status: manifestStatus.status,
+      error: String(reason || ""),
+      rules: MARKET_RULES[market.ruleKey],
+      training: buildTrainingBrief({
+        trainingMode,
+        personality,
+        gate,
+        market,
+        timeframe
+      }),
+      reveal_token: "",
+      reveal: null,
       compliance: COMPLIANCE_TEXT
     }
   };
@@ -632,6 +726,157 @@ export function revealHistoricalKlineSlice(token = "") {
     reveal: descriptor,
     compliance: COMPLIANCE_TEXT
   };
+}
+
+function buildStorageContract() {
+  const rootDescriptor = process.env.KLINE_CACHE_ROOT ? "KLINE_CACHE_ROOT" : "server-default-market-data-root";
+  return {
+    root: rootDescriptor,
+    runtime_root_config: "KLINE_CACHE_ROOT",
+    root_descriptor: process.env.KLINE_CACHE_ROOT ? "env:KLINE_CACHE_ROOT" : "default:server/data/market",
+    instrument_file: "{runtime_root}/{market}/instruments.json",
+    kline_file: "{runtime_root}/{market}/{timeframe}/{symbol}.json",
+    ashare_legacy_file: "{runtime_root}/ashare/{klt}/{code}.json"
+  };
+}
+
+async function getManifestStatus({ market, timeframeKey }) {
+  const timeframe = getTimeframe(timeframeKey || market.defaultTimeframe);
+  for (const candidate of buildManifestFileCandidates({ market, timeframeKey: timeframe.key })) {
+    let payload;
+    try {
+      payload = await readJsonFile(candidate.filePath, null);
+    } catch (error) {
+      return buildManifestStatus({
+        market,
+        timeframe,
+        status: "error",
+        source: candidate.source,
+        manifestPath: candidate.relative,
+        error: error.message
+      });
+    }
+
+    if (!payload) continue;
+    return normalizeManifestStatus(payload, { market, timeframe, candidate });
+  }
+
+  return buildManifestStatus({
+    market,
+    timeframe,
+    status: "missing"
+  });
+}
+
+function normalizeManifestStatus(payload, { market, timeframe, candidate }) {
+  const manifestStatus = String(payload.status || "").trim().toLowerCase();
+  const symbolsCount = positiveInteger(payload.symbols_count ?? payload.symbolsCount ?? payload.symbol_count ?? payload.symbolCount);
+  const candlesCount = positiveInteger(payload.candles_count ?? payload.candlesCount ?? payload.candle_count ?? payload.candleCount);
+  const errors = Array.isArray(payload.errors) ? payload.errors : [];
+  const lastTradeDate = String(payload.last_trade_date || payload.lastTradeDate || "").trim();
+  const updatedAt = String(payload.updated_at || payload.updatedAt || "").trim();
+  let status = "ready";
+
+  if (manifestStatus === "error" || errors.length) {
+    status = "error";
+  } else if (manifestStatus === "missing") {
+    status = "missing";
+  } else if (symbolsCount <= 0 && candlesCount <= 0) {
+    status = "empty";
+  } else if (isManifestStale(lastTradeDate)) {
+    status = "stale";
+  }
+
+  return buildManifestStatus({
+    market,
+    timeframe,
+    status,
+    symbolsCount,
+    candlesCount,
+    lastTradeDate,
+    updatedAt,
+    source: payload.source || candidate.source,
+    manifestPath: candidate.relative,
+    error: status === "error" && errors.length ? errors.join("; ") : ""
+  });
+}
+
+function buildManifestStatus({
+  market,
+  timeframe,
+  status,
+  symbolsCount = 0,
+  candlesCount = 0,
+  lastTradeDate = "",
+  updatedAt = "",
+  source = "",
+  manifestPath = "",
+  error = ""
+}) {
+  return {
+    market: market.key,
+    market_label: market.label,
+    timeframe: timeframe.key,
+    timeframe_label: timeframe.label,
+    status,
+    symbols_count: symbolsCount,
+    candles_count: candlesCount,
+    last_trade_date: lastTradeDate,
+    updated_at: updatedAt,
+    source,
+    manifest_path: manifestPath,
+    storage_contract: buildStorageContract(),
+    error,
+    compliance: COMPLIANCE_TEXT
+  };
+}
+
+function buildManifestFileCandidates({ market, timeframeKey }) {
+  const candidates = [];
+  const generic = path.join(config.marketDataDir, market.dataDir, timeframeKey, "manifest.json");
+  candidates.push({
+    filePath: generic,
+    relative: path.relative(config.marketDataDir, generic),
+    source: "historical_market_manifest"
+  });
+
+  if (market.key === "cn_equity") {
+    const klt = ASHARE_KLT_BY_TIMEFRAME[timeframeKey];
+    if (klt) {
+      const legacy = path.join(config.marketDataDir, "ashare", klt, "manifest.json");
+      candidates.push({
+        filePath: legacy,
+        relative: path.relative(config.marketDataDir, legacy),
+        source: "historical_market_manifest"
+      });
+    }
+  }
+
+  return candidates;
+}
+
+function positiveInteger(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number) || number <= 0) return 0;
+  return Math.floor(number);
+}
+
+function isManifestStale(value = "") {
+  const key = normalizeDateKey(value);
+  if (!key) return false;
+  return key < getPreviousTradingDateKey();
+}
+
+function getPreviousTradingDateKey(now = new Date()) {
+  const date = new Date(now);
+  do {
+    date.setDate(date.getDate() - 1);
+  } while ([0, 6].includes(date.getDay()));
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0")
+  ].join("");
 }
 
 function getMarket(value = DEFAULT_MARKET) {

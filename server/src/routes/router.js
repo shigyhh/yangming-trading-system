@@ -18,7 +18,7 @@ import { consumeWechatAuthCode, createWechatAuthUrl } from "../services/wechatAu
 import { advanceZhixingReplaySession, finishZhixingReplaySession, getZhixingReplaySession, listZhixingReplayResults, startZhixingReplaySession, submitZhixingReplayDecision } from "../services/zhixingReplay.js";
 import { dispatchTrainingPrescriptionBinding, generateShareCardBinding, getAdminUserFromBindings, getDataBindingUserSummary, getInviteSourceStatsBinding, getRetestComparisonBinding, getShareCardBinding, getTrainingPrescriptionBinding, getUserReportBinding, listAdminUsersFromBindings, listTradeReviewBindings, saveAssessmentReportBinding, saveKLineRecordBinding, saveRetestResultBinding, saveTradeReviewBinding, saveTrainingRecordBinding, syncAssistantSummaryToFeishuBinding, updateAssistantHandoffBinding } from "../services/dataBinding.js";
 import { getGlobalReflectionToday, listGlobalReflectionChoices, submitGlobalReflectionVote } from "../services/globalReflection.js";
-import { buildHistoricalKlineSlice, downloadHistoricalKline, getHistoricalKlineRules, listHistoricalKlineCatalog, listHistoricalKlineInstruments, revealHistoricalKlineSlice } from "../services/historicalKline.js";
+import { buildEmptyHistoricalKlineSlice, buildHistoricalKlineSlice, downloadHistoricalKline, getHistoricalKlineRules, getHistoricalKlineStatus, listHistoricalKlineCatalog, listHistoricalKlineInstruments, revealHistoricalKlineSlice } from "../services/historicalKline.js";
 import { buildTradeReviewOcrDraft } from "../services/tradeReviewOcr.js";
 
 export async function route(req, res) {
@@ -64,6 +64,7 @@ export async function route(req, res) {
         kline_practice_leaderboard: "GET /api/v1/kline-practice/leaderboard?period=week|month|all",
         kline_history_catalog: "GET /api/v1/kline-history/catalog",
         kline_history_instruments: "GET /api/v1/kline-history/instruments?market=cn_equity&timeframe=1d",
+        kline_history_status: "GET /api/v1/kline-history/status?market=cn_equity&timeframe=1d",
         kline_history_rules: "GET /api/v1/kline-history/rules?market=cn_equity",
         kline_history_slice: "GET /api/v1/kline-history/slice?market=cn_equity&symbol=600519&timeframe=1d&blind=1",
         kline_history_reveal: "GET /api/v1/kline-history/reveal?token=xxx",
@@ -708,6 +709,14 @@ export async function route(req, res) {
     return sendJson(res, 200, { ok: true, ...result });
   }
 
+  if (req.method === "GET" && pathname === "/api/v1/kline-history/status") {
+    const result = await getHistoricalKlineStatus({
+      marketKey: url.searchParams.get("market") || url.searchParams.get("market_key") || "",
+      timeframeKey: url.searchParams.get("timeframe") || url.searchParams.get("timeframe_key") || url.searchParams.get("klt") || ""
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
   if (req.method === "GET" && pathname === "/api/v1/kline-history/rules") {
     const result = getHistoricalKlineRules({
       marketKey: url.searchParams.get("market") || url.searchParams.get("market_key") || ""
@@ -716,7 +725,7 @@ export async function route(req, res) {
   }
 
   if (req.method === "GET" && pathname === "/api/v1/kline-history/slice") {
-    const result = await buildHistoricalKlineSlice({
+    const sliceParams = {
       marketKey: url.searchParams.get("market") || url.searchParams.get("market_key") || "",
       symbol: url.searchParams.get("symbol") || url.searchParams.get("code") || url.searchParams.get("instrument") || "",
       timeframeKey: url.searchParams.get("timeframe") || url.searchParams.get("timeframe_key") || url.searchParams.get("klt") || "",
@@ -728,8 +737,18 @@ export async function route(req, res) {
       blind: getBooleanParam(url, "blind", true),
       seed: url.searchParams.get("seed") || "",
       startDate: url.searchParams.get("start_date") || url.searchParams.get("start") || "",
-      endDate: url.searchParams.get("end_date") || url.searchParams.get("end") || ""
-    });
+      endDate: url.searchParams.get("end_date") || url.searchParams.get("entryTime") || url.searchParams.get("entry_time") || url.searchParams.get("end") || ""
+    };
+    let result;
+    try {
+      result = await buildHistoricalKlineSlice(sliceParams);
+    } catch (error) {
+      if (error.statusCode !== 404) throw error;
+      result = await buildEmptyHistoricalKlineSlice({
+        ...sliceParams,
+        reason: error.message
+      });
+    }
     return sendJson(res, 200, { ok: true, ...result });
   }
 
