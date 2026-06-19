@@ -1,8 +1,8 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { usePathname, useRouter } from "next/navigation"
-import { useCallback, useEffect, useRef, useState, type FormEvent, type MouseEvent } from "react"
+import { usePathname } from "next/navigation"
+import { useEffect, useState, type FormEvent } from "react"
 
 import { YangmingA1Mark } from "@/components/brand/yangming-mark"
 import {
@@ -24,15 +24,8 @@ const publicNavLinks = [
   { label: "众念心湖", href: "/lake" },
 ] as const
 
-const HOME_DIVE_DURATION_MS = 2400
-const HOME_ROUTE_DELAY_MS = 2200
-
 export function TopNav() {
   const pathname = usePathname()
-  const router = useRouter()
-  const routeTimerRef = useRef<number | null>(null)
-  const diveRafRef = useRef<number | null>(null)
-  const isRoutingRef = useRef(false)
   const [scrollFade, setScrollFade] = useState(1)
   const [accountTail, setAccountTail] = useState("")
   const [accountName, setAccountName] = useState("")
@@ -70,15 +63,6 @@ export function TopNav() {
   }, [])
 
   useEffect(() => {
-    return () => {
-      if (routeTimerRef.current) window.clearTimeout(routeTimerRef.current)
-      if (diveRafRef.current) window.cancelAnimationFrame(diveRafRef.current)
-      document.documentElement.removeAttribute("data-home-route-transition")
-      window.dispatchEvent(new CustomEvent("home-water-dive", { detail: { dive: 0 } }))
-    }
-  }, [])
-
-  useEffect(() => {
     const timer = window.setTimeout(() => {
       const savedName = getSavedNickname()
       setAccountTail(getSavedPhoneTail())
@@ -99,64 +83,9 @@ export function TopNav() {
     return pathname === href
   }
 
-  const tweenHomeDive = useCallback((to: number, duration: number) => {
-    if (diveRafRef.current) window.cancelAnimationFrame(diveRafRef.current)
-
-    const start = performance.now()
-
-    function tick(now: number) {
-      const raw = Math.min((now - start) / duration, 1)
-      const eased = raw < 0.5 ? 2 * raw * raw : 1 - Math.pow(-2 * raw + 2, 2) / 2
-      const dive = to * eased
-
-      window.dispatchEvent(new CustomEvent("home-water-dive", { detail: { dive } }))
-
-      if (raw < 1) {
-        diveRafRef.current = window.requestAnimationFrame(tick)
-      }
-    }
-
-    diveRafRef.current = window.requestAnimationFrame(tick)
-  }, [])
-
-  const enterRouteThroughWater = useCallback(
-    (event: MouseEvent<HTMLAnchorElement>, href: string) => {
-      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return
-      if (isRoutingRef.current) return
-
-      event.preventDefault()
-
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        router.push(href)
-        return
-      }
-
-      isRoutingRef.current = true
-      document.documentElement.setAttribute("data-home-route-transition", "active")
-
-      window.dispatchEvent(
-        new CustomEvent("home-water-ripple", {
-          detail: {
-            life: 5600,
-            max: Math.max(window.innerWidth, window.innerHeight) * 0.82,
-            strength: 0.34,
-            x: 0.24,
-            y: 0.78,
-          },
-        }),
-      )
-
-      tweenHomeDive(1, HOME_DIVE_DURATION_MS)
-
-      routeTimerRef.current = window.setTimeout(() => {
-        router.push(href)
-      }, HOME_ROUTE_DELAY_MS)
-    },
-    [router, tweenHomeDive],
-  )
-
   const hasAccount = Boolean(accountTail || accountName)
   const accountLabel = accountName || (accountTail ? `尾号 ${accountTail}` : "")
+  const navOpacity = Math.max(0.22, scrollFade * 0.82)
 
   const saveAccountName = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -190,10 +119,10 @@ export function TopNav() {
     <motion.header
       className="home-top-nav-shell font-function fixed inset-x-0 top-0 z-40 border-b border-[rgba(217,189,122,.01)] bg-[#080807]/3 backdrop-blur-2xl"
       initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: scrollFade * 0.82, y: -(1 - scrollFade) * 22 }}
-      whileHover={scrollFade > 0.08 ? { opacity: Math.min(0.9, scrollFade * 0.9) } : undefined}
+      animate={{ opacity: navOpacity, y: -(1 - scrollFade) * 12 }}
+      whileHover={{ opacity: Math.max(0.62, navOpacity) }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      style={{ pointerEvents: scrollFade > 0.08 ? "auto" : "none" }}
+      style={{ pointerEvents: "auto" }}
     >
       <nav className="mx-auto flex min-h-16 w-full max-w-[1360px] items-center justify-between gap-6 px-5 md:min-h-[72px] md:px-8">
         <a href="#hero" className="group flex items-center gap-3 opacity-100 no-underline transition duration-700 hover:opacity-[.96]">
@@ -211,7 +140,6 @@ export function TopNav() {
               <a
                 key={item.href}
                 href={item.href}
-                onClick={(event) => enterRouteThroughWater(event, item.href)}
                 className={`relative rounded-full px-2.5 py-2 font-function text-[0.64rem] font-semibold tracking-[.18em] no-underline transition duration-500 hover:bg-[rgba(217,189,122,.04)] hover:text-[rgba(244,235,221,.86)] ${
                   isActive(item.href)
                     ? "text-[rgba(216,183,111,.86)] after:absolute after:left-1/2 after:top-full after:size-1 after:-translate-x-1/2 after:rounded-full after:bg-[rgba(216,183,111,.62)]"
@@ -226,7 +154,6 @@ export function TopNav() {
               <a
                 key={item.href}
                 href={item.href}
-                onClick={(event) => enterRouteThroughWater(event, item.href)}
                 className={`relative rounded-full px-2.5 py-2 font-function text-[0.64rem] font-semibold tracking-[.18em] no-underline transition duration-500 hover:bg-[rgba(217,189,122,.035)] hover:text-[rgba(244,235,221,.82)] ${
                   isActive(item.href)
                     ? "text-[rgba(216,183,111,.86)] after:absolute after:left-1/2 after:top-full after:size-1 after:-translate-x-1/2 after:rounded-full after:bg-[rgba(216,183,111,.54)]"
@@ -497,14 +424,6 @@ export function TopNav() {
           box-shadow:
             inset 0 0 0 1px rgba(206, 228, 222, 0.055),
             0 0 24px rgba(206, 228, 222, 0.065);
-        }
-
-        :global(html[data-home-route-transition="active"] .home-top-nav-shell) {
-          opacity: 0.2 !important;
-          filter: blur(2px);
-          transition:
-            opacity 900ms ease,
-            filter 900ms ease;
         }
 
         @media (min-width: 768px) {

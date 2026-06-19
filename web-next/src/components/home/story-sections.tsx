@@ -291,6 +291,7 @@ export function StorySections() {
                 data-breath-line
                 className={[
                   "font-worldview m-0 mx-auto max-w-[1280px] text-[clamp(1.7rem,5.2vw,3.75rem)] font-normal leading-[1.18] tracking-[.06em] text-[rgba(238,243,238,.94)] md:whitespace-nowrap",
+                  index === 0 ? "opacity-100 blur-0 translate-y-0" : "opacity-0 blur-[6px] translate-y-[22px]",
                   index === 2 ? "[text-shadow:0_0_34px_rgba(216,183,111,.18),0_0_68px_rgba(0,0,0,.54)]" : "",
                   index === 3 ? "text-[rgba(238,243,238,.96)] [text-shadow:0_0_58px_rgba(0,0,0,.62)]" : "",
                   index < 2 ? "[text-shadow:0_0_54px_rgba(0,0,0,.62)]" : "",
@@ -310,17 +311,17 @@ export function StorySections() {
 
         </div>
 
-        <div data-breath-panel="third" className="absolute inset-x-0 top-0 mx-auto min-h-[100svh] max-w-[1100px] text-center">
-          <div data-third-phase="law" className="absolute inset-x-0 top-[17svh] mx-auto flex max-w-[820px] flex-col items-center px-2 md:top-[18svh]">
+        <div data-breath-panel="third" className="pointer-events-none absolute inset-x-0 top-0 mx-auto min-h-[100svh] max-w-[1100px] translate-y-[70px] scale-[.96] text-center opacity-0 blur-[18px]">
+          <div data-third-phase="law" className="pointer-events-none absolute inset-x-0 top-[17svh] mx-auto flex max-w-[820px] translate-y-7 scale-[.98] flex-col items-center px-2 opacity-0 blur-[8px] md:top-[18svh]">
             <div className="font-worldview flex flex-col gap-3 text-[clamp(1.48rem,4.4vw,2.85rem)] font-normal leading-[1.18] tracking-[.1em] text-[rgba(238,243,238,.94)] [text-shadow:0_0_42px_rgba(0,0,0,.58)] md:gap-4">
-              <p data-third-opening className="m-0">照见不是预测。</p>
-              <p data-third-opening className="m-0 hidden md:block">
+              <p data-third-opening className="m-0 translate-y-[18px] scale-[.985] opacity-0 blur-[8px]">照见不是预测。</p>
+              <p data-third-opening className="m-0 hidden translate-y-[18px] scale-[.985] opacity-0 blur-[8px] md:block">
                 是把
                 <span className="text-[rgba(242,209,132,.88)]">下单前那一念</span>，
                 <br />
                 照出来。
               </p>
-              <p data-third-opening className="m-0 md:hidden">
+              <p data-third-opening className="m-0 translate-y-[18px] scale-[.985] opacity-0 blur-[8px] md:hidden">
                 是把下单前那一念
                 <br />
                 照出来。
@@ -328,8 +329,8 @@ export function StorySections() {
             </div>
           </div>
 
-          <div data-third-phase="thought" className="absolute inset-0 flex items-center justify-center px-2">
-            <div data-sample-thought className="relative flex flex-col items-center gap-3">
+          <div data-third-phase="thought" className="pointer-events-none absolute inset-0 flex translate-y-7 scale-[.98] items-center justify-center px-2 opacity-0 blur-[8px]">
+            <div data-sample-thought className="relative flex translate-y-[18px] scale-[.985] flex-col items-center gap-3 opacity-0 blur-[8px]">
               <span aria-hidden="true" className="absolute left-1/2 top-1/2 h-36 w-72 -translate-x-1/2 -translate-y-1/2 border border-[rgba(216,183,111,.035)] opacity-90 blur-[2px]" style={{ borderRadius: "999px" }} />
               <span aria-hidden="true" className="absolute left-1/2 top-1/2 h-px w-64 -translate-x-1/2 translate-y-16 bg-[linear-gradient(90deg,transparent,rgba(216,183,111,.06),transparent)]" />
               <span className="font-story relative text-[13px] font-light tracking-[.18em] text-[rgba(216,183,111,.42)] md:text-[15px]">比如：</span>
@@ -339,13 +340,13 @@ export function StorySections() {
             </div>
           </div>
 
-          <div data-third-phase="reflection" className="absolute inset-0 flex items-center justify-center px-2">
+          <div data-third-phase="reflection" className="pointer-events-none absolute inset-0 flex translate-y-7 scale-[.98] items-center justify-center px-2 opacity-0 blur-[8px]">
             <div className="font-story flex flex-col items-center gap-4 md:gap-5">
-              <span data-sample-reflection-label className="text-[13px] font-light tracking-[.12em] text-[rgba(216,183,111,.5)] md:text-[15px]">照回：</span>
-              <p data-sample-reflection="first" className="m-0 text-[clamp(34px,3.8vw,52px)] font-light leading-[1.28] tracking-[.06em] text-[rgba(244,235,221,.9)]">
+              <span data-sample-reflection-label className="translate-y-[18px] scale-[.985] text-[13px] font-light tracking-[.12em] text-[rgba(216,183,111,.5)] opacity-0 blur-[8px] md:text-[15px]">照回：</span>
+              <p data-sample-reflection="first" className="m-0 translate-y-[18px] scale-[.985] text-[clamp(34px,3.8vw,52px)] font-light leading-[1.28] tracking-[.06em] text-[rgba(244,235,221,.9)] opacity-0 blur-[8px]">
                 你等的不是机会。
               </p>
-              <p data-sample-reflection="pain" className="m-0 font-light leading-[1.28] tracking-[.06em] text-[rgba(238,243,238,.94)]">
+              <p data-sample-reflection="pain" className="m-0 translate-y-[18px] scale-[.985] font-light leading-[1.28] tracking-[.06em] text-[rgba(238,243,238,.94)] opacity-0 blur-[8px]">
                 <span className="block text-[clamp(34px,3.9vw,54px)] text-[rgba(244,235,221,.92)]">你等的是，</span>
                 <br />
                 <span className="block text-[clamp(42px,4.8vw,68px)] text-[rgba(238,203,128,.98)] [text-shadow:0_0_24px_rgba(216,183,111,.1),0_0_62px_rgba(0,0,0,.62)]">一个不用认错的台阶。</span>
@@ -353,8 +354,8 @@ export function StorySections() {
             </div>
           </div>
 
-          <div data-third-phase="closure" className="absolute inset-0 flex flex-col items-center justify-center px-2 pt-[12svh] pb-0 md:pt-[14svh] md:pb-0">
-            <div data-breath-final className="flex flex-col items-center gap-3 md:gap-4">
+          <div data-third-phase="closure" className="pointer-events-none absolute inset-0 flex translate-y-7 scale-[.98] flex-col items-center justify-center px-2 pt-[12svh] pb-0 opacity-0 blur-[8px] md:pt-[14svh] md:pb-0">
+            <div data-breath-final className="flex translate-y-[18px] scale-[.985] flex-col items-center gap-3 opacity-0 blur-[8px] md:gap-4">
               <p className="font-worldview m-0 text-[clamp(36px,4vw,58px)] font-normal leading-[1.18] tracking-[.1em] text-[rgba(244,235,221,.96)]">
                 今天，
                 <br />
