@@ -22,3 +22,5 @@ coverage/
 *.pkg
 *.exe
 outputs/
+
+/server/.venv/
