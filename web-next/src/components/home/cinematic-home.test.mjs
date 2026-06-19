@@ -4,6 +4,7 @@ import test from "node:test"
 
 const homeShellUrl = new URL("./cinematic-home.tsx", import.meta.url)
 const heroUrl = new URL("./hero-section.tsx", import.meta.url)
+const ymtyEntryCardUrl = new URL("./ymty-entry-card.tsx", import.meta.url)
 const storySectionsUrl = new URL("./story-sections.tsx", import.meta.url)
 const stillHeroUrl = new URL("./HomeStillWaterHero.tsx", import.meta.url)
 const stillHeroCssUrl = new URL("./HomeStillWaterHero.module.css", import.meta.url)
@@ -28,6 +29,7 @@ const meArchiveAliasUrl = new URL("../../app/me/archive/page.tsx", import.meta.u
 test("home first viewport is a still-water seeing entrance", async () => {
   const homeShell = await readFile(homeShellUrl, "utf8")
   const hero = await readFile(heroUrl, "utf8")
+  const ymtyEntryCard = await readFile(ymtyEntryCardUrl, "utf8").catch(() => "")
   const storySections = await readFile(storySectionsUrl, "utf8")
   const stillHero = await readFile(stillHeroUrl, "utf8")
   const stillHeroCss = await readFile(stillHeroCssUrl, "utf8")
@@ -72,7 +74,13 @@ test("home first viewport is a still-water seeing entrance", async () => {
   assert.equal(homeShell.includes("HomePerspectiveField"), false, "home should not add a second fixed atmosphere layer over the shared water")
   assert.equal(homeShell.includes("WaterRippleField"), false, "old global hero ripple layer should not compete with the canvas water")
   assert.ok(homeShell.includes("<HeroSection />"), "home should render the still-water first screen")
+  assert.ok(homeShell.includes("YmtyEntryCard"), "home should expose the public YMTY entry after the hero")
   assert.ok(homeShell.includes("<StorySections />"), "home should render the second and third breaths after the first screen")
+  assert.ok(
+    homeShell.indexOf("<HeroSection />") < homeShell.indexOf("<YmtyEntryCard />") &&
+      homeShell.indexOf("<YmtyEntryCard />") < homeShell.indexOf("<StorySections />"),
+    "YMTY entry should sit between HeroSection and StorySections",
+  )
   assert.equal(homeShell.includes("HomeGatesSection"), false, "home should not render the five-gate directory as the second screen")
   assert.equal(homeShell.includes("顺这片水，往下走"), false, "home should stay a single world-view entrance, not a directory scroll")
   assert.equal(homeShell.includes("PersonalityGrid"), false, "home should not turn the second breath into a product grid")
@@ -177,6 +185,24 @@ test("home first viewport is a still-water seeing entrance", async () => {
   assert.equal(stillHero.includes("市场未动，心已先动"), false, "home threshold should not pause on the lake writing prompt")
   assert.equal(stillHero.includes("落入水中"), false, "home threshold should route through water instead of opening a second input step")
   assert.equal(stillHero.includes("typedThought"), false, "home threshold should not own one-thought input state")
+
+  assert.ok(ymtyEntryCard.includes("7天阳明心学交易体验营"), "YMTY entry should publish the course title")
+  assert.ok(ymtyEntryCard.includes("用照心、停顿、取证、复盘，训练交易纪律"), "YMTY entry should describe the training method")
+  assert.ok(ymtyEntryCard.includes("7天直播训练"), "YMTY entry should publish the training format")
+  assert.ok(ymtyEntryCard.includes("体验价 ¥1.68"), "YMTY entry should publish the trial price")
+  assert.ok(ymtyEntryCard.includes("不荐股、不喊单、不承诺收益"), "YMTY entry should keep the compliance boundary")
+  assert.ok(ymtyEntryCard.includes("查看课程与报名"), "YMTY entry should expose the requested CTA")
+  assert.ok(
+    ymtyEntryCard.includes('YMTY_ENTRY_HREF = "/hd/ymty/index.html"') && ymtyEntryCard.includes("href={YMTY_ENTRY_HREF}"),
+    "YMTY entry should link to the existing landing page",
+  )
+  ;["fetch(", "/api/", "createOrder", "checkout", "payment"].forEach((paymentToken) => {
+    assert.equal(
+      `${homeShell}\n${ymtyEntryCard}`.includes(paymentToken),
+      false,
+      `home YMTY entry must not add payment interface calls: ${paymentToken}`,
+    )
+  })
 
   ;[
     "你以为你输给了行情。",
