@@ -22,16 +22,8 @@
       <view class="edict-bg edict-bg-grain"></view>
 
       <view class="edict-header">
-        <view class="brand-seal brand-zhao-mini" aria-label="阳明照见 C16 小标">
-          <view class="zhao-eyes">
-            <view class="zhao-eye"></view>
-            <view class="zhao-eye"></view>
-          </view>
-          <view class="zhao-mirror"></view>
-          <view class="zhao-fire">
-            <view class="zhao-fire-dot"></view>
-            <view class="zhao-fire-dot"></view>
-          </view>
+        <view class="brand-seal-frame" aria-label="阳明照见艺术标">
+          <image class="brand-seal-art" src="/assets/brand/ymty-zhao-logo.svg" mode="aspectFit"></image>
         </view>
         <view class="brand-copy">
           <view class="brand-title">阳明心学交易系统</view>
@@ -178,6 +170,39 @@
               class="{{item.primary ? 'primary' : ''}}"
               bindtap="handleCompletionAction"
             >{{item.text}}</button>
+          </view>
+        </view>
+
+        <view wx:if="{{closureEvidenceChain.steps.length}}" class="home-continuity-panel">
+          <view class="home-continuity-head">
+            <view>
+              <view class="home-continuity-kicker">今日闭环</view>
+              <text>{{closureEvidenceChain.title}}</text>
+              <view>{{closureEvidenceChain.subtitle}}</view>
+            </view>
+            <text>{{closureEvidenceChain.progressText}}</text>
+          </view>
+          <view class="home-continuity-meter">
+            <view style="width: {{closureEvidenceChain.progressPercent}}%;"></view>
+          </view>
+          <view class="home-continuity-steps">
+            <block wx:for="{{closureEvidenceChain.steps}}" wx:key="key">
+              <view
+                wx:if="{{index < 3 || item.current}}"
+                class="home-continuity-step {{item.done ? 'done' : ''}} {{item.current ? 'current' : ''}}"
+              >
+                <text>{{item.numberText}}</text>
+                <view>
+                  <text>{{item.title}}</text>
+                  <view>{{item.detail}}</view>
+                </view>
+                <text>{{item.statusText}}</text>
+              </view>
+            </block>
+          </view>
+          <view class="home-continuity-next">
+            <text>下一步</text>
+            <view>{{closureEvidenceChain.nextActionText}}</view>
           </view>
         </view>
 

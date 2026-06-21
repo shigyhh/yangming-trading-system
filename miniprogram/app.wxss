@@ -1,11 +1,3 @@
-@font-face {
-  font-family: "ZX-LXGW";
-  src: url("./assets/fonts/LXGWWenKai-Zhixing.woff2") format("woff2");
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-
 page {
   min-height: 100%;
   color: #f7efdf;

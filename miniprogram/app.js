@@ -1,20 +1,41 @@
 const { ensureProfile } = require("./utils/store");
 
-function loadFontFace(family, source, weight) {
-  if (!wx.loadFontFace) return;
-  wx.loadFontFace({
-    family,
-    source,
-    global: true,
-    weight,
-    fail() {}
+function getEnvVersion() {
+  try {
+    return ((wx.getAccountInfoSync() || {}).miniProgram || {}).envVersion || "develop";
+  } catch (error) {
+    return "develop";
+  }
+}
+
+function setupUpdateManager() {
+  if (!wx.getUpdateManager) return;
+  if (getEnvVersion() === "develop") return;
+  const updateManager = wx.getUpdateManager();
+  updateManager.onCheckForUpdate(() => {});
+  updateManager.onUpdateReady(() => {
+    wx.showModal({
+      title: "新版本已就绪",
+      content: "重启小程序后即可使用最新体验版。",
+      confirmText: "立即重启",
+      cancelText: "稍后",
+      success(res) {
+        if (res.confirm) updateManager.applyUpdate();
+      }
+    });
+  });
+  updateManager.onUpdateFailed(() => {
+    wx.showToast({
+      title: "新版本下载失败，请稍后重试",
+      icon: "none"
+    });
   });
 }
 
 App({
   onLaunch() {
     ensureProfile();
-    loadFontFace("ZX-LXGW", 'url("assets/fonts/LXGWWenKai-Zhixing.woff2")', "500");
+    setupUpdateManager();
   },
   globalData: {
     productName: "阳明心学交易系统",
