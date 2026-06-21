@@ -6,6 +6,9 @@
     "./data-binding": {
       "types": "./data-binding.d.ts"
     },
+    "./event-projections": {
+      "types": "./event-projections.d.ts"
+    },
     "./global-reflection": {
       "types": "./global-reflection.d.ts"
     },

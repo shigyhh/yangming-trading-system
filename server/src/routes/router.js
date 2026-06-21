@@ -20,6 +20,7 @@ import { dispatchTrainingPrescriptionBinding, generateShareCardBinding, getAdmin
 import { getGlobalReflectionToday, listGlobalReflectionChoices, submitGlobalReflectionVote } from "../services/globalReflection.js";
 import { buildEmptyHistoricalKlineSlice, buildHistoricalKlineSlice, downloadHistoricalKline, getHistoricalKlineRules, getHistoricalKlineStatus, listHistoricalKlineCatalog, listHistoricalKlineInstruments, revealHistoricalKlineSlice } from "../services/historicalKline.js";
 import { buildTradeReviewOcrDraft } from "../services/tradeReviewOcr.js";
+import { getLivingMirrorProfile, getRiskPatternSummary, getTodayState } from "../services/eventAggregator.js";
 
 export async function route(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
@@ -89,6 +90,9 @@ export async function route(req, res) {
         data_binding_retest: "POST /api/v1/data-binding/users/:user_id/retests",
         data_binding_retest_comparison: "GET /api/v1/data-binding/users/:user_id/retest-comparison",
         data_binding_user_summary: "GET /api/v1/data-binding/users/:user_id/summary",
+        living_mirror_profile: "GET /api/v1/users/:user_id/living-mirror/profile",
+        risk_patterns_summary: "GET /api/v1/users/:user_id/risk-patterns/summary",
+        today_state: "GET /api/v1/users/:user_id/today/state",
         data_binding_training_prescription: "GET|POST /api/v1/data-binding/users/:user_id/training-prescription",
         admin_users: "GET /api/v1/admin/users",
         admin_user_detail: "GET /api/v1/admin/users/:user_id",
@@ -308,6 +312,24 @@ export async function route(req, res) {
     const summary = await getDataBindingUserSummary(dataBindingSummaryMatch[1]);
     if (!summary) return sendJson(res, 404, { ok: false, error: "用户不存在" });
     return sendJson(res, 200, { ok: true, ...summary });
+  }
+
+  const livingMirrorProfileMatch = pathname.match(/^\/api\/v1\/users\/([^/]+)\/living-mirror\/profile$/);
+  if (req.method === "GET" && livingMirrorProfileMatch) {
+    const profile = await getLivingMirrorProfile(livingMirrorProfileMatch[1]);
+    return sendJson(res, 200, { ok: true, profile });
+  }
+
+  const riskPatternSummaryMatch = pathname.match(/^\/api\/v1\/users\/([^/]+)\/risk-patterns\/summary$/);
+  if (req.method === "GET" && riskPatternSummaryMatch) {
+    const summary = await getRiskPatternSummary(riskPatternSummaryMatch[1]);
+    return sendJson(res, 200, { ok: true, summary });
+  }
+
+  const todayStateMatch = pathname.match(/^\/api\/v1\/users\/([^/]+)\/today\/state$/);
+  if (req.method === "GET" && todayStateMatch) {
+    const state = await getTodayState(todayStateMatch[1]);
+    return sendJson(res, 200, { ok: true, state });
   }
 
   const dataBindingPrescriptionMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/training-prescription$/);

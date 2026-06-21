@@ -129,8 +129,16 @@ export async function saveKLineRecordBinding({ user = {}, record = {}, source = 
     process_scores: normalizeProcessScores(record.processScores || record.process_scores),
     process_insight: cleanText(record.processInsight || record.process_insight || "", 180),
     training_suggestion: cleanText(record.trainingSuggestion || record.training_suggestion || "", 160),
+    market: cleanText(record.market || record.market_key || record.marketKey || "", 40),
+    timeframe: cleanText(record.timeframe || record.timeframe_key || record.timeframeKey || "", 20),
+    symbol: cleanText(record.symbol || "", 40),
+    data_source: cleanText(record.dataSource || record.data_source || record.klineSource || record.kline_source || "", 40),
+    server_slice_status: cleanText(record.serverSliceStatus || record.server_slice_status || "", 40),
+    server_slice_error: cleanText(record.serverSliceError || record.server_slice_error || "", 120),
     source
   };
+  const oneThoughtEvent = normalizeOneThoughtEventSnapshot(record.oneThoughtEvent || record.one_thought_event);
+  if (oneThoughtEvent) klineRecord.one_thought_event = oneThoughtEvent;
 
   userRecord.kline_records.push(klineRecord);
   refreshLivingMirrorState(userRecord);
@@ -243,6 +251,27 @@ export async function getDataBindingUserSummary(userId) {
     share_card: record.share_card || null,
     admin_user: toAdminUser(record),
     mirror_archive: buildMirrorArchive(record)
+  };
+}
+
+export async function getEventAggregationSource(userId) {
+  await ensureDataBindingLoaded();
+  const id = String(userId || "");
+  const record = findUserRecord(id);
+  if (!record) {
+    return {
+      userId: id,
+      kline_records: [],
+      training_records: [],
+      trade_reviews: []
+    };
+  }
+
+  return {
+    userId: record.id,
+    kline_records: (record.kline_records || []).map((item) => ({ ...item })),
+    training_records: (record.training_records || []).map((item) => ({ ...item })),
+    trade_reviews: (record.trade_reviews || []).map((item) => ({ ...item }))
   };
 }
 
@@ -1778,6 +1807,19 @@ function normalizeReactionTimeMs(value) {
   const time = Number(value || 0);
   if (!Number.isFinite(time) || time < 0) return 0;
   return Math.min(Math.round(time), 600000);
+}
+
+function normalizeOneThoughtEventSnapshot(event) {
+  if (!event || typeof event !== "object") return null;
+  return {
+    id: cleanText(event.id || event.eventId || event.event_id || "", 80),
+    thought: cleanText(event.thought || event.firstThought || event.first_thought || event.reaction || "", 120),
+    reaction: cleanText(event.reaction || event.userReaction || event.user_reaction || "", 80),
+    boundary_state: cleanText(event.boundaryState || event.boundary_state || event.boundaryStateLabel || "", 80),
+    mirror_type: cleanText(event.mirrorType || event.mirror_type || event.detectedMirror || "", 80),
+    source: cleanText(event.source || "", 40),
+    created_at: event.createdAt || event.created_at || event.updatedAt || event.updated_at || ""
+  };
 }
 
 function normalizeProcessScores(scores = {}) {
