@@ -26,6 +26,8 @@
         font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", Arial, sans-serif;
       }
 
+      body.is-guide-open { overflow: hidden; }
+
       button, input, select, textarea { font: inherit; }
 
       .shell {
@@ -77,6 +79,10 @@
         margin: 0 0 12px;
         color: var(--red);
         font-size: 20px;
+      }
+
+      .card, form[id] {
+        scroll-margin-top: 120px;
       }
 
       .form-grid {
@@ -183,6 +189,485 @@
         margin-bottom: 14px;
       }
 
+      .livecode-board {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+        margin: 14px 0 16px;
+      }
+
+      .livecode-card {
+        min-width: 0;
+        display: grid;
+        grid-template-columns: minmax(280px, 1.2fr) minmax(250px, 0.9fr) minmax(190px, 0.7fr) minmax(156px, 0.45fr);
+        align-items: center;
+        gap: 12px;
+        border: 1px solid rgba(112, 65, 34, 0.16);
+        border-radius: 20px;
+        background:
+          linear-gradient(180deg, rgba(255, 253, 250, 0.98), rgba(255, 248, 232, 0.82)),
+          #fffdfa;
+        box-shadow: 0 18px 34px rgba(81, 44, 25, 0.08);
+        padding: 14px;
+      }
+
+      .livecode-card.is-ready {
+        border-color: rgba(201, 154, 68, 0.34);
+        box-shadow: 0 20px 42px rgba(201, 154, 68, 0.13);
+      }
+
+      .livecode-card > .muted-text {
+        grid-column: 1 / -1;
+      }
+
+      .livecode-card-main {
+        display: grid;
+        grid-template-columns: 88px minmax(0, 1fr);
+        gap: 12px;
+        align-items: center;
+      }
+
+      .livecode-card-qr {
+        width: 88px;
+        height: 88px;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: #fff;
+      }
+
+      .livecode-card-qr img {
+        width: 82px;
+        height: 82px;
+        object-fit: contain;
+      }
+
+      .livecode-card-empty {
+        padding: 0 10px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+        line-height: 1.45;
+        text-align: center;
+      }
+
+      .livecode-card-title {
+        min-width: 0;
+        display: grid;
+        gap: 5px;
+      }
+
+      .livecode-card-title b {
+        overflow: hidden;
+        color: var(--ink);
+        font-size: 18px;
+        line-height: 1.35;
+        text-overflow: ellipsis;
+      }
+
+      .livecode-card-title code {
+        overflow: hidden;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.35;
+        text-overflow: ellipsis;
+      }
+
+      .livecode-card-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+      }
+
+      .livecode-chip {
+        display: inline-flex;
+        align-items: center;
+        max-width: 100%;
+        border: 1px solid rgba(112, 65, 34, 0.13);
+        border-radius: 999px;
+        background: rgba(255, 250, 240, 0.76);
+        color: #684433;
+        font-size: 12px;
+        font-weight: 800;
+        line-height: 1;
+        padding: 7px 9px;
+      }
+
+      .livecode-state {
+        border: 0;
+        background: rgba(201, 154, 68, 0.16);
+        color: #68410f;
+      }
+
+      .livecode-state.is-paused {
+        background: rgba(157, 36, 29, 0.1);
+        color: var(--red);
+      }
+
+      .livecode-state.is-muted {
+        background: rgba(128, 102, 87, 0.12);
+        color: var(--muted);
+      }
+
+      .livecode-card-data {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .livecode-card-data div {
+        min-width: 0;
+        border-radius: 14px;
+        background: rgba(246, 239, 228, 0.64);
+        padding: 9px;
+      }
+
+      .livecode-card-data span {
+        display: block;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.35;
+      }
+
+      .livecode-card-data b {
+        display: block;
+        margin-top: 3px;
+        color: var(--ink);
+        font-size: 17px;
+        line-height: 1.2;
+      }
+
+      .livecode-card-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .livecode-card-actions .btn-small {
+        min-height: 38px;
+        border-radius: 12px;
+        background: #fff8e8;
+      }
+
+      .livecode-detail {
+        margin-bottom: 16px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: rgba(255, 253, 250, 0.58);
+        padding: 0 12px;
+      }
+
+      .livecode-detail summary {
+        cursor: pointer;
+        padding: 12px 0;
+        color: #684433;
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .livecode-editor {
+        margin-top: 18px;
+        border-top: 1px solid var(--line);
+        padding-top: 18px;
+      }
+
+      .livecode-editor-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .livecode-editor-head h2 {
+        margin-bottom: 6px;
+      }
+
+      .wizard-steps {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .wizard-step {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 10px;
+        align-items: center;
+        border: 1px solid rgba(112, 65, 34, 0.14);
+        border-radius: 16px;
+        background: rgba(255, 253, 250, 0.72);
+        padding: 12px;
+      }
+
+      .wizard-step-num {
+        width: 30px;
+        height: 30px;
+        display: grid;
+        place-items: center;
+        border-radius: 999px;
+        background: linear-gradient(180deg, #efd083, var(--gold));
+        color: #421b0f;
+        font-weight: 900;
+      }
+
+      .wizard-step b {
+        display: block;
+        color: var(--ink);
+        font-size: 14px;
+        line-height: 1.35;
+      }
+
+      .wizard-step span:last-child {
+        display: block;
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      .wizard-panel {
+        margin-bottom: 12px;
+        border: 1px solid rgba(112, 65, 34, 0.14);
+        border-radius: 18px;
+        background: rgba(255, 253, 250, 0.62);
+        padding: 14px;
+      }
+
+      .wizard-panel-head {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        margin-bottom: 12px;
+      }
+
+      .wizard-panel-head h3 {
+        margin: 0;
+        color: var(--red);
+        font-size: 17px;
+      }
+
+      .wizard-panel-head p {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.6;
+      }
+
+      .wizard-panel .form-grid {
+        gap: 10px;
+      }
+
+      .advanced-settings {
+        margin-top: 12px;
+        border: 1px solid rgba(112, 65, 34, 0.13);
+        border-radius: 16px;
+        background: rgba(255, 248, 232, 0.5);
+        padding: 0 12px;
+      }
+
+      .advanced-settings summary {
+        cursor: pointer;
+        padding: 12px 0;
+        color: #684433;
+        font-size: 13px;
+        font-weight: 900;
+      }
+
+      .advanced-settings .form-grid {
+        padding-bottom: 12px;
+      }
+
+      .save-note {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.7;
+      }
+
+      .livecode-overview {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        margin: 10px 0 14px;
+      }
+
+      .livecode-stat small {
+        display: block;
+        margin-top: 5px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .batch-livecode-panel {
+        margin: 16px 0;
+        border: 1px solid rgba(201, 154, 68, 0.3);
+        border-radius: 18px;
+        background:
+          linear-gradient(180deg, rgba(201, 154, 68, 0.1), rgba(255, 253, 250, 0.78)),
+          #fffdfa;
+        padding: 16px;
+      }
+
+      .batch-preview {
+        display: grid;
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .batch-preview-empty {
+        border: 1px dashed rgba(112, 65, 34, 0.24);
+        border-radius: 14px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.7;
+        padding: 16px;
+      }
+
+      .batch-livecode-row {
+        display: grid;
+        grid-template-columns: 76px minmax(0, 1fr) minmax(130px, 0.55fr) auto;
+        gap: 10px;
+        align-items: center;
+        border: 1px solid rgba(112, 65, 34, 0.14);
+        border-radius: 16px;
+        background: rgba(255, 253, 250, 0.88);
+        padding: 10px;
+      }
+
+      .batch-livecode-row img {
+        width: 70px;
+        height: 70px;
+        object-fit: contain;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #fff;
+      }
+
+      .batch-livecode-row input {
+        min-height: 40px;
+        border-radius: 10px;
+        font-size: 13px;
+        padding: 9px 10px;
+      }
+
+      .batch-livecode-row code {
+        display: block;
+        overflow: hidden;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.5;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .batch-row-status {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .livecode-stat {
+        min-width: 0;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #fffdfa;
+        padding: 12px;
+      }
+
+      .livecode-stat span {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .livecode-stat b {
+        display: block;
+        margin-top: 4px;
+        color: var(--ink);
+        font-size: 18px;
+        line-height: 1.25;
+      }
+
+      .livecode-qr {
+        width: 52px;
+        height: 52px;
+        object-fit: contain;
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        background: #fff;
+      }
+
+      .muted-text {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .table-note {
+        margin: 0 0 10px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.6;
+      }
+
+      .livecode-filterbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 12px 0 8px;
+      }
+
+      .livecode-filterbar button {
+        min-height: 36px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(255, 253, 250, 0.74);
+        color: #684433;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 900;
+        padding: 8px 12px;
+      }
+
+      .livecode-filterbar button.is-active {
+        border-color: rgba(201, 154, 68, 0.44);
+        background: linear-gradient(180deg, rgba(201, 154, 68, 0.2), rgba(255, 253, 250, 0.92));
+        color: var(--red);
+      }
+
+      .operator-guide {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        margin: 12px 0 14px;
+      }
+
+      .operator-guide-item {
+        border: 1px solid rgba(112, 65, 34, 0.14);
+        border-radius: 14px;
+        background: rgba(255, 253, 250, 0.7);
+        padding: 12px;
+      }
+
+      .operator-guide-item b {
+        display: block;
+        color: #684433;
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .operator-guide-item span {
+        display: block;
+        margin-top: 5px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.55;
+      }
+
       .status-pill {
         display: inline-flex;
         align-items: center;
@@ -224,13 +709,401 @@
         font-size: 14px;
       }
 
+      .ops-nav {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 16px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: rgba(255, 250, 240, 0.92);
+        box-shadow: var(--shadow);
+        padding: 10px;
+        backdrop-filter: blur(10px);
+      }
+
+      .workspace-tab {
+        min-width: 0;
+        display: grid;
+        gap: 4px;
+        border: 1px solid transparent;
+        border-radius: 14px;
+        background: rgba(255, 253, 250, 0.66);
+        color: #684433;
+        padding: 12px;
+        text-decoration: none;
+        transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+      }
+
+      .workspace-tab:hover,
+      .workspace-tab.is-active {
+        border-color: rgba(201, 154, 68, 0.38);
+        background: linear-gradient(180deg, rgba(201, 154, 68, 0.14), rgba(255, 253, 250, 0.92));
+        transform: translateY(-1px);
+      }
+
+      .workspace-tab b {
+        color: var(--red);
+        font-size: 14px;
+        line-height: 1.3;
+      }
+
+      .workspace-tab span {
+        overflow: hidden;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.45;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .guide-mask {
+        position: fixed;
+        inset: 0;
+        z-index: 30;
+        display: flex;
+        justify-content: flex-end;
+        padding: 18px;
+        background: rgba(45, 33, 27, 0.36);
+        backdrop-filter: blur(6px);
+      }
+
+      .guide-panel {
+        width: min(100%, 760px);
+        max-height: calc(100svh - 36px);
+        overflow: auto;
+        border: 1px solid rgba(112, 65, 34, 0.22);
+        border-radius: 22px;
+        background:
+          radial-gradient(circle at 20% 0%, rgba(201, 154, 68, 0.12), transparent 32%),
+          #fffaf0;
+        box-shadow: 0 24px 80px rgba(45, 33, 27, 0.28);
+        padding: 22px;
+      }
+
+      .guide-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 16px;
+      }
+
+      .guide-head h2 {
+        margin: 0;
+        color: var(--red);
+        font-size: 24px;
+        line-height: 1.25;
+      }
+
+      .guide-head p {
+        margin: 7px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.7;
+      }
+
+      .guide-close {
+        flex: 0 0 auto;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: #fff8e8;
+        color: #684433;
+        cursor: pointer;
+        font-size: 18px;
+        font-weight: 900;
+        line-height: 1;
+        padding: 9px 12px;
+      }
+
+      .guide-quick {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 0 0 18px;
+      }
+
+      .guide-quick button {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(255, 253, 250, 0.72);
+        color: #684433;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 800;
+        padding: 8px 11px;
+      }
+
+      .guide-section {
+        border-top: 1px solid var(--line);
+        padding: 18px 0 0;
+        margin-top: 18px;
+      }
+
+      .guide-section h3 {
+        margin: 0 0 10px;
+        color: var(--red);
+        font-size: 18px;
+      }
+
+      .guide-section p,
+      .guide-section li {
+        color: #684433;
+        font-size: 13px;
+        line-height: 1.75;
+      }
+
+      .guide-section ul {
+        margin: 8px 0 0;
+        padding-left: 19px;
+      }
+
+      .guide-shot-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .guide-shot {
+        min-width: 0;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: linear-gradient(180deg, #fffdfa, #fff6e6);
+        padding: 12px;
+      }
+
+      .guide-shot b {
+        display: block;
+        color: var(--red);
+        font-size: 14px;
+        margin-bottom: 8px;
+      }
+
+      .guide-screen {
+        border: 1px solid rgba(112, 65, 34, 0.14);
+        border-radius: 12px;
+        background: #fffaf0;
+        padding: 10px;
+      }
+
+      .guide-shot-bar {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+        margin-bottom: 9px;
+      }
+
+      .guide-shot-bar span,
+      .guide-shot-card,
+      .guide-flow span {
+        border-radius: 10px;
+        background: rgba(201, 154, 68, 0.13);
+        color: #684433;
+        font-size: 11px;
+        font-weight: 800;
+        padding: 8px;
+      }
+
+      .guide-shot-stack {
+        display: grid;
+        gap: 7px;
+      }
+
+      .guide-shot-card strong {
+        display: block;
+        color: var(--ink);
+        font-size: 16px;
+        margin-top: 4px;
+      }
+
+      .guide-flow {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 7px;
+      }
+
+      .guide-checklist {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .guide-check {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: rgba(255, 253, 250, 0.72);
+        padding: 12px;
+      }
+
+      .guide-check strong {
+        display: block;
+        color: var(--ink);
+        margin-bottom: 6px;
+      }
+
+      .ops-nav-group {
+        min-width: 0;
+        display: grid;
+        gap: 6px;
+        border-radius: 12px;
+        padding: 9px;
+        background: rgba(255, 253, 250, 0.66);
+      }
+
+      .ops-nav-group b {
+        color: var(--red);
+        font-size: 13px;
+      }
+
+      .ops-nav-group a {
+        color: #684433;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.45;
+        text-decoration: none;
+      }
+
+      .ops-nav-group a:hover { color: var(--red); }
+
+      .ops-health {
+        margin-bottom: 16px;
+      }
+
+      .command-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+        gap: 16px;
+        align-items: stretch;
+        margin-bottom: 16px;
+      }
+
+      .command-grid .card {
+        margin-bottom: 0;
+      }
+
+      #configGrid > .card:not([hidden]),
+      #ordersSystemGrid > .card:not([hidden]) {
+        grid-column: 1 / -1;
+      }
+
+      .health-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .health-item {
+        min-width: 0;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #fffdfa;
+        padding: 12px;
+      }
+
+      .health-item span {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .health-item b {
+        display: block;
+        margin-top: 4px;
+        color: var(--ink);
+        font-size: 18px;
+        line-height: 1.25;
+      }
+
+      .health-item small {
+        display: block;
+        margin-top: 5px;
+        color: #8c7161;
+        font-size: 11px;
+        line-height: 1.4;
+      }
+
+      .health-ok { border-color: rgba(60, 128, 92, 0.34); }
+      .health-ok b { color: #2f7151; }
+      .health-warn { border-color: rgba(201, 154, 68, 0.42); }
+      .health-warn b { color: #9a6a20; }
+      .health-danger { border-color: rgba(157, 36, 29, 0.34); }
+      .health-danger b { color: var(--red); }
+
+      .action-queue {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .action-item {
+        min-width: 0;
+        display: block;
+        border: 1px solid rgba(112, 65, 34, 0.16);
+        border-radius: 14px;
+        background: #fffdfa;
+        padding: 13px;
+        color: inherit;
+        text-decoration: none;
+        transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+      }
+
+      .action-item:hover {
+        border-color: rgba(201, 154, 68, 0.42);
+        box-shadow: 0 12px 28px rgba(81, 44, 25, 0.08);
+        transform: translateY(-1px);
+      }
+
+      .action-item.is-urgent {
+        border-color: rgba(157, 36, 29, 0.3);
+        background: rgba(157, 36, 29, 0.055);
+      }
+
+      .action-item.is-ok {
+        border-color: rgba(60, 128, 92, 0.28);
+      }
+
+      .action-item span,
+      .stage-card span,
+      .summary-tile span,
+      .queue-row span {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .action-item b,
+      .stage-card b,
+      .summary-tile b {
+        display: block;
+        margin-top: 4px;
+        color: var(--ink);
+        font-size: 18px;
+        line-height: 1.25;
+      }
+
+      .action-item small,
+      .stage-card small,
+      .summary-tile small {
+        display: block;
+        margin-top: 6px;
+        color: #8c7161;
+        font-size: 11px;
+        line-height: 1.45;
+      }
+
       .analytics-card {
         margin-bottom: 16px;
       }
 
       .metrics-grid {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 10px;
         margin-bottom: 16px;
       }
@@ -255,6 +1128,79 @@
         color: var(--red);
         font-size: 22px;
         line-height: 1.2;
+      }
+
+      .metric.is-primary {
+        border-color: rgba(201, 154, 68, 0.34);
+        background: linear-gradient(180deg, rgba(201, 154, 68, 0.11), #fffdfa);
+      }
+
+      .metric.is-primary b {
+        font-size: 26px;
+      }
+
+      .funnel-panel {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: linear-gradient(180deg, rgba(201, 154, 68, 0.08), rgba(255, 253, 250, 0.82));
+        padding: 14px;
+        margin-bottom: 16px;
+      }
+
+      .funnel-panel h3 {
+        margin: 0 0 6px;
+        color: #684433;
+        font-size: 16px;
+      }
+
+      .funnel {
+        display: grid;
+        gap: 9px;
+        margin-top: 12px;
+      }
+
+      .funnel-step {
+        display: grid;
+        grid-template-columns: 94px minmax(0, 1fr) 76px;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .funnel-label {
+        color: #60473a;
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .funnel-bar {
+        min-width: 0;
+        height: 16px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(121, 75, 44, 0.1);
+      }
+
+      .funnel-fill {
+        height: 100%;
+        min-width: 6px;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #9d241d, #e8bd66);
+      }
+
+      .funnel-step.is-drop .funnel-fill {
+        background: linear-gradient(90deg, #9d241d, #c99a44);
+      }
+
+      .funnel-step.is-drop .funnel-value {
+        color: var(--red);
+        font-weight: 900;
+      }
+
+      .funnel-value {
+        color: var(--muted);
+        font-size: 12px;
+        text-align: right;
+        white-space: nowrap;
       }
 
       .warning-box {
@@ -293,6 +1239,101 @@
 
       .crm-card {
         margin: 16px 0;
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        margin: 12px 0 16px;
+      }
+
+      .summary-tile,
+      .stage-card {
+        min-width: 0;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: #fffdfa;
+        padding: 12px;
+      }
+
+      .summary-tile.is-alert,
+      .stage-card.is-active {
+        border-color: rgba(201, 154, 68, 0.34);
+        background: linear-gradient(180deg, rgba(201, 154, 68, 0.1), rgba(255, 253, 250, 0.96));
+      }
+
+      .summary-tile.is-danger {
+        border-color: rgba(157, 36, 29, 0.28);
+        background: rgba(157, 36, 29, 0.055);
+      }
+
+      .stage-board {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        margin: 12px 0 16px;
+      }
+
+      .follow-panel {
+        border: 1px solid rgba(112, 65, 34, 0.14);
+        border-radius: 16px;
+        background: rgba(255, 253, 250, 0.68);
+        padding: 14px;
+        margin-bottom: 14px;
+      }
+
+      .follow-panel h3 {
+        margin: 0 0 10px;
+        color: #684433;
+        font-size: 16px;
+      }
+
+      .queue-list {
+        display: grid;
+        gap: 8px;
+      }
+
+      .queue-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto;
+        gap: 10px;
+        align-items: center;
+        border: 1px solid rgba(112, 65, 34, 0.12);
+        border-radius: 12px;
+        background: #fffdfa;
+        padding: 10px;
+      }
+
+      .queue-row b {
+        display: block;
+        overflow: hidden;
+        color: var(--ink);
+        font-size: 13px;
+        line-height: 1.4;
+        text-overflow: ellipsis;
+      }
+
+      .operation-detail {
+        margin-top: 12px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: rgba(255, 253, 250, 0.58);
+        padding: 0 12px;
+      }
+
+      .operation-detail summary {
+        cursor: pointer;
+        padding: 12px 0;
+        color: #684433;
+        font-size: 13px;
+        font-weight: 900;
+      }
+
+      .operation-detail .table-wrap,
+      .operation-detail .form-grid,
+      .operation-detail .actions {
+        margin-bottom: 12px;
       }
 
       .crm-detail {
@@ -370,9 +1411,24 @@
       [hidden] { display: none !important; }
 
       @media (max-width: 820px) {
-        .grid, .form-grid, .upload-row, .analytics-tables { grid-template-columns: 1fr; }
-        .metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .grid, .form-grid, .upload-row, .analytics-tables, .ops-nav, .wizard-steps, .action-queue, .queue-row, .command-grid { grid-template-columns: 1fr; }
+        .metrics-grid, .health-grid, .livecode-overview, .summary-grid, .stage-board, .operator-guide { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .guide-mask { padding: 0; }
+        .guide-panel { width: 100%; max-height: 100svh; min-height: 100svh; border-radius: 0; }
+        .guide-shot-grid, .guide-checklist, .guide-flow { grid-template-columns: 1fr; }
+        .livecode-card { grid-template-columns: 1fr; }
+        .livecode-card-main { grid-template-columns: 78px minmax(0, 1fr); }
+        .livecode-card-qr { width: 78px; height: 78px; border-radius: 16px; }
+        .livecode-card-qr img { width: 72px; height: 72px; }
+        .livecode-card-data, .livecode-card-actions { grid-template-columns: 1fr; }
+        .batch-livecode-row { grid-template-columns: 72px minmax(0, 1fr); }
+        .batch-livecode-row .batch-row-status,
+        .batch-livecode-row button { grid-column: 1 / -1; }
+        .livecode-editor-head { flex-direction: column; }
         .topbar { align-items: flex-start; flex-direction: column; }
+        .ops-nav { position: static; }
+        .funnel-step { grid-template-columns: 78px minmax(0, 1fr); }
+        .funnel-value { grid-column: 2; text-align: left; }
       }
     </style>
   </head>
@@ -405,6 +1461,113 @@
       </form>
     </div>
 
+    <div class="guide-mask" id="guideMask" hidden>
+      <section class="guide-panel" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
+        <div class="guide-head">
+          <div>
+            <h2 id="guideTitle">后台使用说明</h2>
+            <p>按运营顺序看：先判断状态，再处理活码、客户跟进和售后。说明里的截图为后台操作示意，不会请求外部图片。</p>
+          </div>
+          <button class="guide-close" id="closeGuideButton" type="button" aria-label="关闭使用说明">×</button>
+        </div>
+
+        <nav class="guide-quick" id="guideQuickNav" aria-label="使用说明目录">
+          <button type="button" data-guide-jump="guide-daily">每日顺序</button>
+          <button type="button" data-guide-jump="guide-livecode">活码池</button>
+          <button type="button" data-guide-jump="guide-handoff">私域承接</button>
+          <button type="button" data-guide-jump="guide-crm">客户跟进</button>
+          <button type="button" data-guide-jump="guide-orders">订单售后</button>
+          <button type="button" data-guide-jump="guide-safe">安全边界</button>
+        </nav>
+
+        <div class="guide-shot-grid" aria-label="后台界面截图式示意">
+          <article class="guide-shot">
+            <b>运营首页：先看状态和待办</b>
+            <div class="guide-screen">
+              <div class="guide-shot-bar"><span>课程上架</span><span>助教入口</span><span>今日支付</span></div>
+              <div class="guide-shot-stack">
+                <div class="guide-shot-card">今日待办<strong>无可用活码</strong></div>
+                <div class="guide-shot-card">转化漏斗<strong>访问 → 支付 → 加微</strong></div>
+              </div>
+            </div>
+          </article>
+          <article class="guide-shot">
+            <b>活码池：卡片墙看二维码状态</b>
+            <div class="guide-screen">
+              <div class="guide-shot-card">二维码卡片<strong>可分配 / 满员 / 停用</strong></div>
+              <div class="guide-flow" style="margin-top:8px"><span>编辑</span><span>标满</span><span>停用</span><span>启用</span></div>
+            </div>
+          </article>
+          <article class="guide-shot">
+            <b>批量添加：一次保存多张</b>
+            <div class="guide-screen">
+              <div class="guide-flow"><span>上传二维码</span><span>预览列表</span><span>填基础信息</span><span>一键保存</span></div>
+            </div>
+          </article>
+          <article class="guide-shot">
+            <b>支付后承接：只在 paid 后展示</b>
+            <div class="guide-screen">
+              <div class="guide-flow"><span>订单核验</span><span>paid</span><span>分配活码</span><span>加微入口</span></div>
+            </div>
+          </article>
+        </div>
+
+        <section class="guide-section" id="guide-daily">
+          <h3>1. 每日运营顺序</h3>
+          <div class="guide-checklist">
+            <div class="guide-check"><strong>第一眼看运营首页</strong>确认课程是否上架、收款是否可用、是否有可分配助教入口。</div>
+            <div class="guide-check"><strong>第二步看今日待办</strong>优先处理无活码、待跟进客户、退款待审和企业微信同步异常。</div>
+            <div class="guide-check"><strong>第三步看转化漏斗</strong>判断流量掉在报名、支付，还是支付后加微承接。</div>
+            <div class="guide-check"><strong>最后看系统记录</strong>只有追溯谁改了配置、谁审核了退款时再看日志。</div>
+          </div>
+        </section>
+
+        <section class="guide-section" id="guide-livecode">
+          <h3>2. 活码池怎么用</h3>
+          <ul>
+            <li>“批量添加活码”是主入口，选 1 张也可以，选多张会生成预览列表后一次保存。</li>
+            <li>获客助手链接和二维码是两条承接路径：有链接可点击直达，二维码用于长按识别兜底。</li>
+            <li>适用渠道填空或 <code>*</code> 表示全渠道兜底；例如 <code>douyin,wechat_group</code> 表示只给这些渠道优先使用。</li>
+            <li>分配优先级数字越小越先用；同优先级按已分配数量少的优先轮询。</li>
+            <li>“标记满员”或“停用”只影响新订单，已经绑定的订单刷新成功页仍显示原来的活码。</li>
+          </ul>
+        </section>
+
+        <section class="guide-section" id="guide-handoff">
+          <h3>3. 私域承接路径</h3>
+          <p>客户付款后，成功页先核验订单状态，只有 <code>paid</code> 才会请求助教入口。后台建议同时配置获客助手链接和二维码：链接用于一键进入企业微信，二维码用于长按识别备选。</p>
+        </section>
+
+        <section class="guide-section" id="guide-crm">
+          <h3>4. 客户与跟进</h3>
+          <ul>
+            <li>CRM 阶段看板用于看已支付、已分配、已添加、已沟通、已进群、已完课、已转化或流失。</li>
+            <li>运营只需要维护负责人、备注、标签和下次跟进时间，不要写完整手机号、身份证或聊天正文。</li>
+            <li>企业微信自动同步没启用时，不影响个人微信二维码承接。</li>
+          </ul>
+        </section>
+
+        <section class="guide-section" id="guide-orders">
+          <h3>5. 订单与售后</h3>
+          <ul>
+            <li>订单列表用于查支付状态、来源渠道和订单号；成功页能否解锁以后端订单状态为准。</li>
+            <li>退款申请、审核和执行是分开的；审核通过不等于支付平台已退款。</li>
+            <li>真实退款执行默认关闭，只有服务器环境明确开启后，才允许执行真实退款。</li>
+          </ul>
+        </section>
+
+        <section class="guide-section" id="guide-safe">
+          <h3>6. 安全边界</h3>
+          <ul>
+            <li>不要在后台填写或截图传播密钥、Token、证书、私钥、完整支付报文。</li>
+            <li>不要把未确认的二维码设为启用；没有二维码或获客助手链接的活码不会参与新分配。</li>
+            <li>修改价格只影响新订单，真实支付金额以后端订单为准。</li>
+            <li>涉及退款、停用活码、下架课程时，先确认当前是否有进行中的投流和已支付订单。</li>
+          </ul>
+        </section>
+      </section>
+    </div>
+
     <main class="shell" id="appShell" hidden>
       <header class="topbar">
         <div class="brand">
@@ -412,6 +1575,7 @@
           <p>价格、企业微信活码、订单和审计日志配置。真实支付金额以后端订单为准。</p>
         </div>
         <div class="actions" style="margin-top:0">
+          <button class="btn btn-ghost" id="openGuideButton" type="button">使用说明</button>
           <button class="btn btn-ghost" id="openPasswordButton" type="button">修改密码</button>
           <button class="btn btn-ghost" id="logoutButton" type="button">退出登录</button>
         </div>
@@ -419,11 +1583,66 @@
 
       <p class="notice" id="pageNotice"></p>
 
-      <section class="card analytics-card">
+      <nav class="ops-nav" aria-label="后台工作区">
+        <a class="workspace-tab" href="#overview" data-workspace-target="overview">
+          <b>运营首页</b>
+          <span>总览 / 产品 / 漏斗</span>
+        </a>
+        <a class="workspace-tab" href="#livecodes" data-workspace-target="livecodes">
+          <b>活码池</b>
+          <span>二维码 / 轮询 / 容量</span>
+        </a>
+        <a class="workspace-tab" href="#handoff" data-workspace-target="handoff">
+          <b>私域承接</b>
+          <span>获客助手 / 二维码</span>
+        </a>
+        <a class="workspace-tab" href="#crm" data-workspace-target="crm">
+          <b>客户跟进</b>
+          <span>CRM / 企微同步</span>
+        </a>
+        <a class="workspace-tab" href="#orders" data-workspace-target="orders">
+          <b>订单售后</b>
+          <span>订单 / 退款 / Dry Run</span>
+        </a>
+        <a class="workspace-tab" href="#system" data-workspace-target="system">
+          <b>系统记录</b>
+          <span>日志 / 账号安全</span>
+        </a>
+      </nav>
+
+      <div class="command-grid" id="commandGrid" aria-label="运营驾驶舱首屏">
+        <section class="card ops-health" id="opsHealthCard">
+          <div class="pool-toolbar">
+            <div>
+              <h2 style="margin:0">运营健康状态</h2>
+              <p class="hint" style="margin:6px 0 0">先判断今天能不能收款、能不能分配助教、售后是否安全。</p>
+            </div>
+            <button class="btn btn-ghost" id="refreshAllButton" type="button">刷新全部</button>
+          </div>
+          <div class="health-grid" id="opsHealthGrid"></div>
+        </section>
+
+        <section class="card" id="actionQueueCard">
+          <div class="pool-toolbar">
+            <div>
+              <h2 style="margin:0">今日待办</h2>
+              <p class="hint" style="margin:6px 0 0">点卡片直接去处理：活码、客户跟进、退款审核和同步异常。</p>
+            </div>
+          </div>
+          <div class="action-queue" id="actionQueueGrid"></div>
+        </section>
+      </div>
+
+      <section class="card analytics-card" id="analyticsCard">
         <h2>数据概览</h2>
         <p class="hint">按 Asia/Shanghai 统计，后台仅展示设备、系统、浏览器分类，不展示原始 IP 或完整 User-Agent。</p>
         <div class="metrics-grid" id="metricsGrid"></div>
-        <div class="analytics-tables">
+        <div class="funnel-panel" id="funnelCard">
+          <h3>转化漏斗</h3>
+          <p class="hint">从访问到报名、下单、支付和二维码曝光，便于快速定位掉点。</p>
+          <div class="funnel" id="conversionFunnel"></div>
+        </div>
+        <div class="analytics-tables" id="analyticsTables">
           <div>
             <h3>最近 7 天</h3>
             <div class="table-wrap">
@@ -499,7 +1718,35 @@
         </div>
       </section>
 
-      <section class="card crm-card">
+      <section class="card" id="privateHandoffCard">
+        <div class="pool-toolbar">
+          <div>
+            <h2 style="margin:0">私域承接</h2>
+            <p class="hint" style="margin:6px 0 0">这里只看链路和数据。承接入口统一在活码池维护，客户 paid 后才会拿到绑定的单条活码。</p>
+          </div>
+        </div>
+        <div class="summary-grid" id="privateHandoffSummary"></div>
+        <div class="operator-guide" aria-label="私域承接链路">
+          <div class="operator-guide-item">
+            <b>1. 支付核验</b>
+            <span>先确认订单 paid，再进入承接分配。</span>
+          </div>
+          <div class="operator-guide-item">
+            <b>2. 分配助教</b>
+            <span>后端按渠道、容量和状态绑定一条活码。</span>
+          </div>
+          <div class="operator-guide-item">
+            <b>3. 客户添加</b>
+            <span>优先点击获客助手链接，也可长按二维码添加。</span>
+          </div>
+          <div class="operator-guide-item">
+            <b>4. 后续回传</b>
+            <span>企微回调开启后，可把添加成功同步到 CRM 和漏斗。</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="card crm-card" id="crmCard">
         <div class="pool-toolbar">
           <div>
             <h2 style="margin:0">客户与跟进</h2>
@@ -507,27 +1754,35 @@
           </div>
           <button class="btn btn-ghost" id="crmExportButton" type="button">导出 CSV</button>
         </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>订单号</th>
-                <th>支付金额</th>
-                <th>支付方式</th>
-                <th>渠道</th>
-                <th>素材</th>
-                <th>分配助教</th>
-                <th>当前阶段</th>
-                <th>负责人</th>
-                <th>最近联系时间</th>
-                <th>下次跟进</th>
-                <th>标签</th>
-                <th>操作</th>
-              </tr>
-            </thead>
-            <tbody id="crmLeadsBody"></tbody>
-          </table>
+        <div class="stage-board" id="crmStageBoard"></div>
+        <div class="follow-panel">
+          <h3>待跟进客户</h3>
+          <div class="queue-list" id="crmFollowQueue"></div>
         </div>
+        <details class="operation-detail">
+          <summary>查看客户明细列表</summary>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>订单号</th>
+                  <th>支付金额</th>
+                  <th>支付方式</th>
+                  <th>渠道</th>
+                  <th>素材</th>
+                  <th>分配助教</th>
+                  <th>当前阶段</th>
+                  <th>负责人</th>
+                  <th>最近联系时间</th>
+                  <th>下次跟进</th>
+                  <th>标签</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="crmLeadsBody"></tbody>
+            </table>
+          </div>
+        </details>
         <section class="crm-detail" id="crmDetail" hidden>
           <h3 id="crmDetailTitle">客户详情</h3>
           <p class="hint" id="crmLeadSummary"></p>
@@ -681,152 +1936,274 @@
             <label>申请金额（分）<input name="amount_cents" id="refundAmountInput" type="number" min="1" step="1" /></label>
             <label class="wide">退款原因<textarea name="reason" id="refundReasonInput" placeholder="请记录退款原因"></textarea></label>
           </div>
-          <div class="actions">
-            <button class="btn btn-primary" type="submit">提交退款申请</button>
-          </div>
-        </form>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>退款单号</th>
-                <th>订单号</th>
-                <th>申请金额</th>
-                <th>退款原因</th>
-                <th>审核状态</th>
-                <th>审核人</th>
-                <th>更新时间</th>
-                <th>审计记录</th>
-                <th>操作</th>
-              </tr>
-            </thead>
-            <tbody id="refundsBody"></tbody>
-          </table>
+        <div class="actions">
+          <button class="btn btn-primary" type="submit">提交退款申请</button>
         </div>
+        </form>
+        <div class="summary-grid" id="refundBoard"></div>
+        <details class="operation-detail">
+          <summary>查看退款明细</summary>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>退款单号</th>
+                  <th>订单号</th>
+                  <th>申请金额</th>
+                  <th>退款原因</th>
+                  <th>审核状态</th>
+                  <th>审核人</th>
+                  <th>更新时间</th>
+                  <th>审计记录</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="refundsBody"></tbody>
+            </table>
+          </div>
+        </details>
       </section>
 
-      <section class="grid">
+      <section class="grid" id="configGrid">
         <form class="card" id="productForm">
           <h2>产品与价格</h2>
           <p class="hint">前端展示价格只用于展示，真实支付金额以后端订单为准。价格修改只影响新订单，旧订单金额不会被覆盖。</p>
-          <div class="form-grid">
-            <label>产品编码<input name="product_code" readonly /></label>
-            <label>上架状态<select name="status"><option value="online">上架</option><option value="offline">下架</option></select></label>
-            <label class="wide">产品名称<input name="product_name" /></label>
-            <label>展示价格（元）<input name="display_price_yuan" type="number" min="0.01" step="0.01" /></label>
-            <label>实际支付金额（分）<input name="amount_cents" type="number" min="1" step="1" /></label>
-            <label>训练周期<input name="cycle" /></label>
-            <label>开课时间<input name="start_time" /></label>
-            <label>主讲人<input name="lecturer" /></label>
-          </div>
-          <div class="actions">
-            <button class="btn btn-primary" type="submit">保存产品配置</button>
-          </div>
+          <div class="summary-grid" id="productSummary"></div>
+          <details class="operation-detail">
+            <summary>修改产品配置</summary>
+            <div class="form-grid">
+              <label>产品编码<input name="product_code" readonly /></label>
+              <label>上架状态<select name="status"><option value="online">上架</option><option value="offline">下架</option></select></label>
+              <label class="wide">产品名称<input name="product_name" /></label>
+              <label>展示价格（元）<input name="display_price_yuan" type="number" min="0.01" step="0.01" /></label>
+              <label>实际支付金额（分）<input name="amount_cents" type="number" min="1" step="1" /></label>
+              <label>训练周期<input name="cycle" /></label>
+              <label>开课时间<input name="start_time" /></label>
+              <label>主讲人<input name="lecturer" /></label>
+            </div>
+            <div class="actions">
+              <button class="btn btn-primary" type="submit">保存产品配置</button>
+            </div>
+          </details>
         </form>
 
         <section class="card" id="livecodeCard">
           <div class="pool-toolbar">
-            <h2 style="margin:0">活码池管理</h2>
-            <button class="btn btn-ghost" id="newLivecodeButton" type="button">新增活码</button>
+            <div>
+              <h2 style="margin:0">活码池管理</h2>
+              <p class="hint" style="margin:6px 0 0">新增统一用批量添加；选 1 张图也会保存为 1 条活码。</p>
+            </div>
           </div>
           <p class="hint">获客助手链接和真实二维码只在支付完成后通过后端入口分配，不放入公开配置。历史活码请停用，不做物理删除，避免已分配订单失效。</p>
-          <div class="table-wrap livecode-table">
-            <table>
-              <thead>
-                <tr>
-                  <th>活码编码</th>
-                  <th>活码名称</th>
-                  <th>承接类型</th>
-                  <th>适用渠道</th>
-                  <th>已分配数量 / 容量</th>
-                  <th>换码次数</th>
-                  <th>状态</th>
-                  <th>操作</th>
-                </tr>
-              </thead>
-              <tbody id="livecodesBody"></tbody>
-            </table>
-          </div>
-          <form id="livecodeForm">
-            <h2 id="livecodeEditorTitle">编辑活码</h2>
-            <p class="hint">code_key 创建后不可修改。适用渠道用英文逗号分隔，空值或 * 表示全渠道兜底。</p>
-          <div class="form-grid">
-            <label>活码编码<input name="code_key" readonly /></label>
-            <label>活码状态<select name="status"><option value="active">启用</option><option value="inactive">停用</option></select></label>
-            <label class="wide">活码名称<input name="name" /></label>
-            <label>承接类型<select name="contact_type"><option value="personal_wechat">个人微信</option><option value="wecom">企业微信</option></select></label>
-            <label>适用渠道<input name="channels" placeholder="douyin,wechat_group" /></label>
-            <label>容量上限<input name="capacity_limit" type="number" min="0" step="1" /></label>
-            <label>分配优先级<input name="priority" type="number" step="1" /></label>
-            <label class="wide">企业微信标签 ID<input name="wecom_tag_ids" placeholder="tag_product,tag_paid" /></label>
-            <label class="wide">获客助手链接<input name="wecom_link" placeholder="企业微信获客助手链接，可选" /></label>
-            <label class="wide">二维码图片<input name="qr_image" id="qrImageInput" placeholder="/uploads/livecode/xxx.png" /></label>
-            <div class="wide upload-row">
-              <label>上传二维码<input id="qrUploadInput" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" /></label>
-              <button class="btn btn-ghost" id="uploadButton" type="button">上传二维码</button>
+          <div class="livecode-overview" id="livecodeOverview"></div>
+          <section class="batch-livecode-panel" id="batchLivecodePanel">
+            <div class="pool-toolbar">
+              <div>
+                <h3 style="margin:0">批量添加活码</h3>
+                <p class="hint" style="margin:6px 0 0">选择 1 张或多张二维码，先预览，再一键保存为活码。保存前不会写入服务器。</p>
+              </div>
+              <button class="btn btn-ghost" id="batchClearButton" type="button">清空队列</button>
             </div>
-            <div class="wide preview">
-              <img id="qrPreview" alt="二维码预览" hidden />
-              <span id="uploadStatus">支持 jpg、jpeg、png、webp，单文件不超过 2MB。</span>
+            <div class="form-grid">
+              <label class="wide">选择二维码<input id="batchQrInput" type="file" multiple accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" /></label>
+              <label>承接类型<select id="batchContactType"><option value="personal_wechat">个人微信</option><option value="wecom">企业微信</option></select></label>
+              <label>适用渠道<input id="batchChannels" value="*" placeholder="douyin,wechat_group" /></label>
+              <label class="wide">获客助手链接<input id="batchWecomLink" placeholder="同一批统一使用的获客助手链接，可选" /></label>
+              <label>加微备注<input id="batchRemark" value="知行 + 手机号后4位" /></label>
+              <label>按钮文案<input id="batchButtonText" value="添加课程助教微信" /></label>
+              <label class="wide">客服说明文案<textarea id="batchServiceText">客服方式：支付后添加课程助教微信</textarea></label>
+              <details class="advanced-settings wide">
+                <summary>高级分配设置：容量、优先级、兜底</summary>
+                <div class="form-grid">
+                  <label>容量上限<input id="batchCapacityLimit" type="number" min="0" step="1" value="0" /></label>
+                  <label>分配优先级<input id="batchPriority" type="number" step="1" value="50" /></label>
+                  <label class="switch-row">
+                    <input id="batchFallback" type="checkbox" />
+                    默认兜底
+                  </label>
+                </div>
+              </details>
             </div>
-            <label class="switch-row wide">
-              <input name="manual_full" type="checkbox" />
-              人工标记满员
-            </label>
-            <label class="switch-row wide">
-              <input name="is_fallback" type="checkbox" />
-              默认兜底
-            </label>
-            <label class="switch-row wide">
-              <input name="auto_redirect_after_paid" type="checkbox" />
-              支付后自动跳转
-            </label>
-            <label>跳转延迟（毫秒）<input name="redirect_delay_ms" type="number" min="0" max="10000" step="100" /></label>
-            <label>加微备注<input name="remark" /></label>
-            <label>按钮文案<input name="button_text" /></label>
-            <label class="wide">客服说明文案<textarea name="service_text"></textarea></label>
+            <div class="batch-preview" id="batchPreview"></div>
+            <div class="actions">
+              <button class="btn btn-primary" id="batchSaveButton" type="button" disabled>一键保存多条活码</button>
+              <span class="save-note" id="batchStatus">请选择二维码生成预览列表。</span>
+            </div>
+          </section>
+          <p class="table-note">先看筛选结果：可分配直接参与新订单；待处理优先补二维码或链接；满员、停用不影响已分配订单。</p>
+          <div class="livecode-filterbar" id="livecodeFilterbar" aria-label="活码筛选">
+            <button type="button" data-livecode-filter="all">全部</button>
+            <button type="button" data-livecode-filter="assignable">可分配</button>
+            <button type="button" data-livecode-filter="needs_action">待处理</button>
+            <button type="button" data-livecode-filter="full">满员</button>
+            <button type="button" data-livecode-filter="inactive">停用</button>
           </div>
-          <div class="actions">
-            <button class="btn btn-primary" type="submit">保存活码配置</button>
-          </div>
+          <div class="livecode-board" id="livecodeBoard" aria-label="二维码卡片池"></div>
+          <details class="livecode-detail">
+            <summary>查看精细列表</summary>
+            <div class="table-wrap livecode-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>活码编码</th>
+                    <th>活码名称</th>
+                    <th>二维码</th>
+                    <th>承接类型</th>
+                    <th>适用渠道</th>
+                    <th>已分配数量 / 容量</th>
+                    <th>换码次数</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="livecodesBody"></tbody>
+              </table>
+            </div>
+          </details>
+          <form class="livecode-editor" id="livecodeForm" hidden>
+            <div class="livecode-editor-head">
+              <div>
+                <h2 id="livecodeEditorTitle">编辑活码</h2>
+                <p class="hint">这里只编辑已有活码。新增请使用上方“批量添加活码”，选 1 张图也可以新增 1 条。</p>
+              </div>
+            </div>
+            <div class="wizard-steps" aria-label="编辑活码步骤">
+              <div class="wizard-step">
+                <span class="wizard-step-num">1</span>
+                <span><b>承接入口</b><span>二维码或获客助手链接</span></span>
+              </div>
+              <div class="wizard-step">
+                <span class="wizard-step-num">2</span>
+                <span><b>核心设置</b><span>名称、渠道、展示文案</span></span>
+              </div>
+              <div class="wizard-step">
+                <span class="wizard-step-num">3</span>
+                <span><b>保存</b><span>写入服务器后生效</span></span>
+              </div>
+            </div>
+
+            <section class="wizard-panel">
+              <div class="wizard-panel-head">
+                <span class="wizard-step-num">1</span>
+                <div>
+                  <h3>承接入口</h3>
+                  <p>客户支付后可以直接打开企业微信获客助手链接，也可以长按二维码添加。两条路径可同时配置，至少保留一种。</p>
+                </div>
+              </div>
+              <div class="form-grid">
+                <label class="wide">获客助手链接<input name="wecom_link" placeholder="企业微信获客助手链接，可选" /></label>
+                <label class="wide">二维码图片<input name="qr_image" id="qrImageInput" placeholder="/uploads/livecode/xxx.png" /></label>
+                <div class="wide upload-row">
+                  <label>上传二维码<input id="qrUploadInput" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" /></label>
+                  <button class="btn btn-ghost" id="uploadButton" type="button">上传二维码</button>
+                </div>
+                <div class="wide preview">
+                  <img id="qrPreview" alt="二维码预览" hidden />
+                  <span id="uploadStatus">支持 jpg、jpeg、png、webp，单文件不超过 2MB。上传成功后还要保存活码配置。</span>
+                </div>
+              </div>
+            </section>
+
+            <section class="wizard-panel">
+              <div class="wizard-panel-head">
+                  <span class="wizard-step-num">2</span>
+                <div>
+                  <h3>核心设置</h3>
+                  <p>运营日常只需要维护这些字段。适用渠道用英文逗号分隔，空值或 * 表示全渠道可用。</p>
+                </div>
+              </div>
+              <div class="form-grid">
+                <label>活码编码<input name="code_key" readonly /></label>
+                <label>活码状态<select name="status"><option value="active">启用</option><option value="inactive">停用</option></select></label>
+                <label class="wide">活码名称<input name="name" /></label>
+                <label>承接类型<select name="contact_type"><option value="personal_wechat">个人微信</option><option value="wecom">企业微信</option></select></label>
+                <label>适用渠道<input name="channels" placeholder="douyin,wechat_group" /></label>
+                <label class="switch-row">
+                  <input name="manual_full" type="checkbox" />
+                  人工标记满员
+                </label>
+                <label class="switch-row">
+                  <input name="auto_redirect_after_paid" type="checkbox" />
+                  支付后自动跳转
+                </label>
+                <label>跳转延迟（毫秒）<input name="redirect_delay_ms" type="number" min="0" max="10000" step="100" /></label>
+                <label>加微备注<input name="remark" /></label>
+                <label>按钮文案<input name="button_text" /></label>
+                <label class="wide">客服说明文案<textarea name="service_text"></textarea></label>
+                <details class="advanced-settings wide">
+                  <summary>高级分配设置：企业微信标签、容量、优先级、兜底</summary>
+                  <div class="form-grid">
+                    <label class="wide">企业微信标签 ID<input name="wecom_tag_ids" placeholder="tag_product,tag_paid" /></label>
+                    <label>容量上限<input name="capacity_limit" type="number" min="0" step="1" /></label>
+                    <label>分配优先级<input name="priority" type="number" step="1" /></label>
+                    <label class="switch-row">
+                      <input name="is_fallback" type="checkbox" />
+                      默认兜底
+                    </label>
+                  </div>
+                </details>
+              </div>
+            </section>
+
+            <section class="wizard-panel">
+              <div class="wizard-panel-head">
+                <span class="wizard-step-num">3</span>
+                <div>
+                  <h3>保存</h3>
+                  <p>状态为启用且有二维码或获客助手链接时，才会参与新订单分配。</p>
+                </div>
+              </div>
+              <div class="actions">
+                <button class="btn btn-primary" type="submit">保存活码配置</button>
+                <span class="save-note">如需暂停分配，可在卡片上点“停用”或“标记满员”。</span>
+              </div>
+            </section>
           </form>
         </section>
       </section>
 
-      <section class="grid" style="margin-top:16px">
-        <section class="card">
+      <section class="grid" id="ordersSystemGrid" style="margin-top:16px">
+        <section class="card" id="ordersCard">
           <h2>订单</h2>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>订单号</th>
-                  <th>金额</th>
-                  <th>状态</th>
-                  <th>来源</th>
-                  <th>创建时间</th>
-                </tr>
-              </thead>
-              <tbody id="ordersBody"></tbody>
-            </table>
-          </div>
+          <div class="summary-grid" id="ordersOverview"></div>
+          <details class="operation-detail">
+            <summary>查看最近订单</summary>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>订单号</th>
+                    <th>金额</th>
+                    <th>状态</th>
+                    <th>来源</th>
+                    <th>创建时间</th>
+                  </tr>
+                </thead>
+                <tbody id="ordersBody"></tbody>
+              </table>
+            </div>
+          </details>
         </section>
-        <section class="card">
+        <section class="card" id="auditCard">
           <h2>操作日志</h2>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>操作人</th>
-                  <th>操作类型</th>
-                  <th>操作对象</th>
-                  <th>变更后内容</th>
-                  <th>创建时间</th>
-                </tr>
-              </thead>
-              <tbody id="auditBody"></tbody>
-            </table>
-          </div>
+          <p class="hint">日常运营不用先看日志；配置有争议时再展开追溯。</p>
+          <details class="operation-detail">
+            <summary>查看操作日志明细</summary>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>操作人</th>
+                    <th>操作类型</th>
+                    <th>操作对象</th>
+                    <th>变更后内容</th>
+                    <th>创建时间</th>
+                  </tr>
+                </thead>
+                <tbody id="auditBody"></tbody>
+              </table>
+            </div>
+          </details>
         </section>
       </section>
     </main>
@@ -844,12 +2221,17 @@
         wecomSyncJobs: [],
         wecomSummary: null,
         refunds: [],
+        orders: [],
         refundConfig: null,
         refundPolicy: null,
+        analyticsOverview: null,
         selectedCrmLeadId: "",
         selectedCrmDetail: null,
         editingLivecodeKey: "",
         editingNewLivecode: false,
+        livecodeFilter: "all",
+        batchLivecodes: [],
+        batchSaving: false,
         passwordRequired: false,
       };
 
@@ -865,23 +2247,53 @@
       const oldPasswordInput = document.getElementById("oldPasswordInput");
       const newPasswordInput = document.getElementById("newPasswordInput");
       const confirmPasswordInput = document.getElementById("confirmPasswordInput");
+      const guideMask = document.getElementById("guideMask");
+      const guidePanel = document.querySelector(".guide-panel");
+      const guideQuickNav = document.getElementById("guideQuickNav");
+      const openGuideButton = document.getElementById("openGuideButton");
+      const closeGuideButton = document.getElementById("closeGuideButton");
       const appShell = document.getElementById("appShell");
       const pageNotice = document.getElementById("pageNotice");
+      const refreshAllButton = document.getElementById("refreshAllButton");
       const productForm = document.getElementById("productForm");
       const livecodeForm = document.getElementById("livecodeForm");
       const livecodesBody = document.getElementById("livecodesBody");
+      const livecodeBoard = document.getElementById("livecodeBoard");
+      const livecodeFilterbar = document.getElementById("livecodeFilterbar");
       const livecodeEditorTitle = document.getElementById("livecodeEditorTitle");
-      const newLivecodeButton = document.getElementById("newLivecodeButton");
       const uploadButton = document.getElementById("uploadButton");
       const qrUploadInput = document.getElementById("qrUploadInput");
       const qrImageInput = document.getElementById("qrImageInput");
       const qrPreview = document.getElementById("qrPreview");
       const uploadStatus = document.getElementById("uploadStatus");
+      const batchQrInput = document.getElementById("batchQrInput");
+      const batchLivecodePanel = document.getElementById("batchLivecodePanel");
+      const batchPreview = document.getElementById("batchPreview");
+      const batchSaveButton = document.getElementById("batchSaveButton");
+      const batchClearButton = document.getElementById("batchClearButton");
+      const batchStatus = document.getElementById("batchStatus");
+      const batchContactType = document.getElementById("batchContactType");
+      const batchChannels = document.getElementById("batchChannels");
+      const batchCapacityLimit = document.getElementById("batchCapacityLimit");
+      const batchPriority = document.getElementById("batchPriority");
+      const batchFallback = document.getElementById("batchFallback");
+      const batchWecomLink = document.getElementById("batchWecomLink");
+      const batchRemark = document.getElementById("batchRemark");
+      const batchButtonText = document.getElementById("batchButtonText");
+      const batchServiceText = document.getElementById("batchServiceText");
+      const opsHealthGrid = document.getElementById("opsHealthGrid");
+      const actionQueueGrid = document.getElementById("actionQueueGrid");
+      const conversionFunnel = document.getElementById("conversionFunnel");
+      const livecodeOverview = document.getElementById("livecodeOverview");
+      const privateHandoffSummary = document.getElementById("privateHandoffSummary");
+      const productSummary = document.getElementById("productSummary");
       const metricsGrid = document.getElementById("metricsGrid");
       const analyticsDailyBody = document.getElementById("analyticsDailyBody");
       const analyticsChannelBody = document.getElementById("analyticsChannelBody");
       const analyticsDeviceBody = document.getElementById("analyticsDeviceBody");
       const analyticsPayBody = document.getElementById("analyticsPayBody");
+      const crmStageBoard = document.getElementById("crmStageBoard");
+      const crmFollowQueue = document.getElementById("crmFollowQueue");
       const crmLeadsBody = document.getElementById("crmLeadsBody");
       const crmDetail = document.getElementById("crmDetail");
       const crmDetailTitle = document.getElementById("crmDetailTitle");
@@ -911,8 +2323,97 @@
       const refundPolicyForm = document.getElementById("refundPolicyForm");
       const refundPreviewForm = document.getElementById("refundPreviewForm");
       const refundPreviewResult = document.getElementById("refundPreviewResult");
+      const refundBoard = document.getElementById("refundBoard");
+      const ordersOverview = document.getElementById("ordersOverview");
       const ordersBody = document.getElementById("ordersBody");
       const auditBody = document.getElementById("auditBody");
+      const workspaceTabs = Array.from(document.querySelectorAll("[data-workspace-target]"));
+      const workspaceGroups = {
+        overview: ["commandGrid", "productForm", "analyticsCard"],
+        livecodes: ["livecodeCard"],
+        handoff: ["privateHandoffCard"],
+        crm: ["crmCard", "wecomSyncCard"],
+        orders: ["ordersCard", "refundConsoleCard", "refundCard"],
+        system: ["auditCard"],
+      };
+      const workspaceAliases = {
+        overview: "overview",
+        commandGrid: "overview",
+        opsHealthCard: "overview",
+        actionQueueCard: "overview",
+        productForm: "overview",
+        analyticsCard: "overview",
+        funnelCard: "overview",
+        analyticsTables: "overview",
+        livecodes: "livecodes",
+        livecodeCard: "livecodes",
+        livecodeEditorTitle: "livecodes",
+        livecodeBoard: "livecodes",
+        handoff: "handoff",
+        privateHandoffCard: "handoff",
+        crm: "crm",
+        crmCard: "crm",
+        wecomSyncCard: "crm",
+        orders: "orders",
+        ordersCard: "orders",
+        refundConsoleCard: "orders",
+        refundCard: "orders",
+        system: "system",
+        auditCard: "system",
+        openPasswordButton: "system",
+      };
+      const workspaceContainers = ["configGrid", "ordersSystemGrid"];
+
+      function allWorkspaceSectionIds() {
+        return Array.from(new Set(Object.values(workspaceGroups).flat()));
+      }
+
+      function workspaceFromHash(hash) {
+        const id = String(hash || "#overview").replace(/^#/, "") || "overview";
+        return workspaceAliases[id] || "overview";
+      }
+
+      function syncWorkspaceContainers() {
+        workspaceContainers.forEach((id) => {
+          const container = document.getElementById(id);
+          if (!container) return;
+          const visibleChildren = Array.from(container.children).filter((child) => !child.hidden);
+          container.hidden = visibleChildren.length === 0;
+        });
+      }
+
+      function activateWorkspace(workspace, options = {}) {
+        const current = workspaceGroups[workspace] ? workspace : "overview";
+        const visibleIds = new Set(workspaceGroups[current]);
+        allWorkspaceSectionIds().forEach((id) => {
+          const element = document.getElementById(id);
+          if (element) element.hidden = !visibleIds.has(id);
+        });
+        workspaceTabs.forEach((tab) => {
+          const active = tab.dataset.workspaceTarget === current;
+          tab.classList.toggle("is-active", active);
+          if (active) {
+            tab.setAttribute("aria-current", "page");
+          } else {
+            tab.removeAttribute("aria-current");
+          }
+        });
+        syncWorkspaceContainers();
+        const targetId = options.targetId;
+        const target = targetId ? document.getElementById(targetId) : null;
+        if (target && !target.hidden && !target.closest("[hidden]")) {
+          target.scrollIntoView({ behavior: options.smooth ? "smooth" : "auto", block: "start" });
+        } else if (options.scrollTop) {
+          window.scrollTo({ top: 0, behavior: options.smooth ? "smooth" : "auto" });
+        }
+      }
+
+      function activateWorkspaceFromLocation(options = {}) {
+        const rawId = String(location.hash || "#overview").replace(/^#/, "") || "overview";
+        const workspace = workspaceFromHash(location.hash);
+        const targetId = workspaceGroups[rawId] ? "" : rawId;
+        activateWorkspace(workspace, { ...options, targetId });
+      }
 
       function adminHeaders(extra = {}) {
         return {
@@ -956,6 +2457,7 @@
       function showLogin(message = "") {
         clearSession();
         loginError.textContent = message;
+        closeGuide({ restoreFocus: false });
         loginMask.hidden = false;
         passwordMask.hidden = true;
         appShell.hidden = true;
@@ -965,6 +2467,7 @@
         state.passwordRequired = required;
         passwordHint.textContent = required ? "首次登录后必须修改初始密码。" : "请输入原密码和新密码。";
         passwordError.textContent = "";
+        closeGuide({ restoreFocus: false });
         loginMask.hidden = true;
         passwordMask.hidden = false;
         appShell.hidden = required;
@@ -975,6 +2478,22 @@
         loginMask.hidden = true;
         passwordMask.hidden = true;
         appShell.hidden = false;
+        activateWorkspaceFromLocation();
+      }
+
+      function openGuide() {
+        guideMask.hidden = false;
+        guidePanel?.scrollTo({ top: 0 });
+        document.body.classList.add("is-guide-open");
+        closeGuideButton.focus();
+      }
+
+      function closeGuide(options = {}) {
+        if (!guideMask) return;
+        const wasOpen = !guideMask.hidden;
+        guideMask.hidden = true;
+        document.body.classList.remove("is-guide-open");
+        if (wasOpen && options.restoreFocus !== false) openGuideButton?.focus();
       }
 
       function setNotice(message = "") {
@@ -1056,9 +2575,17 @@
         state.editingLivecodeKey = state.livecode?.code_key || "";
         state.editingNewLivecode = false;
         fillForm(productForm, campaign.product);
+        renderProductSummary();
         renderLivecodePool();
+        renderLivecodeOverview();
+        renderPrivateHandoffSummary();
+        renderOpsHealth();
+        renderActionQueue();
         if (state.livecode) {
           fillLivecodeEditor(state.livecode);
+        }
+        if (!state.editingLivecodeKey) {
+          livecodeForm.hidden = true;
         }
         showApp();
         await Promise.all([loadAnalytics(), loadOrders(), loadCrmLeads(), loadWecomSync(), loadRefundConsole(), loadRefunds(), loadAuditLogs()]);
@@ -1067,11 +2594,17 @@
       function fillLivecodeEditor(livecode) {
         fillForm(livecodeForm, livecode);
         renderQrPreview(livecode.qr_image);
-        livecodeEditorTitle.textContent = state.editingNewLivecode ? "新增活码" : "编辑活码";
+        livecodeEditorTitle.textContent = "编辑活码";
       }
 
       function renderLivecodePool() {
-        livecodesBody.innerHTML = (state.livecodes || []).map((livecode) => {
+        const livecodes = state.livecodes || [];
+        const filteredLivecodes = livecodes.filter((livecode) => livecodeMatchesFilter(livecode, state.livecodeFilter));
+        renderLivecodeFilterbar(livecodes);
+        livecodeBoard.innerHTML = filteredLivecodes.length
+          ? filteredLivecodes.map(renderLivecodeCard).join("")
+          : `<div class="livecode-card"><div class="muted-text">${livecodes.length ? "当前筛选下没有活码。" : "还没有活码。请使用上方“批量添加活码”，选择 1 张或多张二维码后保存。"}</div></div>`;
+        livecodesBody.innerHTML = livecodes.map((livecode) => {
           const capacity = Number(livecode.capacity_limit || 0) > 0 ? Number(livecode.capacity_limit || 0) : "不限";
           const channels = Array.isArray(livecode.channels) ? livecode.channels.join(",") : String(livecode.channels || "");
           const fullText = livecode.manual_full ? "恢复分配" : "标记满员";
@@ -1079,10 +2612,14 @@
           const statusButtonText = livecode.status === "active" ? "停用" : "启用";
           const nextStatus = livecode.status === "active" ? "inactive" : "active";
           const typeText = livecode.contact_type === "wecom" ? "企业微信" : "个人微信";
+          const qrHtml = livecode.qr_image
+            ? `<img class="livecode-qr" src="${escapeHtml(livecode.qr_image)}" alt="${escapeHtml(livecode.name)}二维码" />`
+            : `<span class="muted-text">未上传</span>`;
           return `
             <tr>
               <td><code>${escapeHtml(livecode.code_key)}</code></td>
               <td>${escapeHtml(livecode.name)}</td>
+              <td>${qrHtml}</td>
               <td>${escapeHtml(typeText)}</td>
               <td>${escapeHtml(channels || "*")}</td>
               <td>${Number(livecode.assigned_count || 0)} / ${escapeHtml(capacity)}</td>
@@ -1100,9 +2637,300 @@
         }).join("");
       }
 
+      function renderLivecodeFilterbar(livecodes) {
+        if (!livecodeFilterbar) return;
+        const counts = {
+          all: livecodes.length,
+          assignable: livecodes.filter(isLivecodeAssignable).length,
+          needs_action: livecodes.filter((item) => livecodeMatchesFilter(item, "needs_action")).length,
+          full: livecodes.filter((item) => livecodeMatchesFilter(item, "full")).length,
+          inactive: livecodes.filter((item) => livecodeMatchesFilter(item, "inactive")).length,
+        };
+        livecodeFilterbar.querySelectorAll("[data-livecode-filter]").forEach((button) => {
+          const filter = button.dataset.livecodeFilter || "all";
+          const label = button.textContent.replace(/\s+\d+$/, "");
+          button.textContent = `${label} ${counts[filter] || 0}`;
+          button.classList.toggle("is-active", state.livecodeFilter === filter);
+        });
+      }
+
+      function livecodeMatchesFilter(livecode, filter) {
+        if (filter === "assignable") return isLivecodeAssignable(livecode);
+        if (filter === "needs_action") {
+          return Boolean(livecode)
+            && livecode.status === "active"
+            && !livecode.manual_full
+            && !livecode.qr_image
+            && !livecode.wecom_link;
+        }
+        if (filter === "full") return Boolean(livecode?.manual_full);
+        if (filter === "inactive") return Boolean(livecode) && livecode.status !== "active";
+        return true;
+      }
+
+      function renderLivecodeCard(livecode) {
+        const capacity = Number(livecode.capacity_limit || 0) > 0 ? Number(livecode.capacity_limit || 0) : "不限";
+        const assigned = Number(livecode.assigned_count || 0);
+        const switches = Number(livecode.switch_count || 0);
+        const priority = Number(livecode.priority || 0);
+        const channels = Array.isArray(livecode.channels) ? livecode.channels.join(",") : String(livecode.channels || "");
+        const typeText = livecode.contact_type === "wecom" ? "企业微信" : "个人微信";
+        const statusMeta = getLivecodeStatusMeta(livecode);
+        const qrHtml = livecode.qr_image
+          ? `<img src="${escapeHtml(livecode.qr_image)}" alt="${escapeHtml(livecode.name)}二维码" />`
+          : `<span class="livecode-card-empty">未上传<br>二维码</span>`;
+        const fullText = livecode.manual_full ? "恢复分配" : "标记满员";
+        const statusButtonText = livecode.status === "active" ? "停用" : "启用";
+        const nextStatus = livecode.status === "active" ? "inactive" : "active";
+        return `
+          <article class="livecode-card ${isLivecodeAssignable(livecode) ? "is-ready" : ""}">
+            <div class="livecode-card-main">
+              <div class="livecode-card-qr">${qrHtml}</div>
+              <div class="livecode-card-title">
+                <b>${escapeHtml(livecode.name || "未命名活码")}</b>
+                <code>${escapeHtml(livecode.code_key || "")}</code>
+                <div class="livecode-card-meta">
+                  <span class="livecode-chip livecode-state ${statusMeta.className}">${escapeHtml(statusMeta.text)}</span>
+                  <span class="livecode-chip">${escapeHtml(typeText)}</span>
+                  ${livecode.is_fallback ? `<span class="livecode-chip">兜底</span>` : ""}
+                </div>
+              </div>
+            </div>
+            <div class="livecode-card-data">
+              <div><span>分配</span><b>${assigned} / ${escapeHtml(capacity)}</b></div>
+              <div><span>渠道</span><b>${escapeHtml(channels || "*")}</b></div>
+              <div><span>优先级</span><b>${priority}</b></div>
+            </div>
+            <div class="livecode-card-meta">
+              <span class="livecode-chip">换码 ${switches}</span>
+              <span class="livecode-chip">${livecode.wecom_link ? "有获客链接" : "无获客链接"}</span>
+              <span class="livecode-chip">${livecode.qr_image ? "已上传二维码" : "待上传二维码"}</span>
+            </div>
+            <div class="livecode-card-actions">
+              <button class="btn-small" type="button" data-edit-livecode="${escapeHtml(livecode.code_key)}">编辑</button>
+              <button class="btn-small" type="button" data-toggle-full="${escapeHtml(livecode.code_key)}" data-full="${livecode.manual_full ? "false" : "true"}">${fullText}</button>
+              <button class="btn-small" type="button" data-toggle-status="${escapeHtml(livecode.code_key)}" data-status="${nextStatus}">${statusButtonText}</button>
+            </div>
+          </article>
+        `;
+      }
+
+      function getLivecodeStatusMeta(livecode) {
+        if (!livecode || livecode.status !== "active") return { text: "已停用", className: "is-muted" };
+        if (livecode.manual_full) return { text: "人工满员", className: "is-paused" };
+        if (!livecode.qr_image && !livecode.wecom_link) return { text: "待上传", className: "is-paused" };
+        const capacity = Number(livecode.capacity_limit || 0);
+        const assigned = Number(livecode.assigned_count || 0);
+        if (capacity > 0 && assigned >= capacity) return { text: "容量已满", className: "is-paused" };
+        return { text: "可分配", className: "" };
+      }
+
+      function renderLivecodeOverview() {
+        const livecodes = state.livecodes || [];
+        const total = livecodes.length;
+        const active = livecodes.filter((item) => item.status === "active").length;
+        const withQr = livecodes.filter((item) => Boolean(item.qr_image)).length;
+        const withEntrance = livecodes.filter((item) => Boolean(item.qr_image || item.wecom_link)).length;
+        const assignable = livecodes.filter(isLivecodeAssignable).length;
+        const full = livecodes.filter((item) => Boolean(item.manual_full)).length;
+        const inactive = livecodes.filter((item) => item.status !== "active").length;
+        const fallback = livecodes.filter((item) => Boolean(item.is_fallback)).length;
+        const stats = [
+          ["可分配活码", `${assignable} 张`, `${active} 张启用 / ${total} 张总计`],
+          ["承接入口", `${withEntrance} 条`, `${withQr} 张二维码，获客助手可选`],
+          ["满员 / 停用", `${full + inactive} 张`, `${full} 张满员，${inactive} 张停用`],
+          ["分配规则", "优先级 + 最少分配", `${fallback} 张兜底`],
+        ];
+        livecodeOverview.innerHTML = stats.map(([label, value, note]) => `
+          <div class="livecode-stat"><span>${escapeHtml(label)}</span><b>${escapeHtml(value)}</b><small>${escapeHtml(note)}</small></div>
+        `).join("");
+      }
+
+      function renderPrivateHandoffSummary() {
+        const livecodes = state.livecodes || [];
+        const assignable = livecodes.filter(isLivecodeAssignable);
+        const withLink = assignable.filter((item) => Boolean(item.wecom_link)).length;
+        const withQr = assignable.filter((item) => Boolean(item.qr_image)).length;
+        const both = assignable.filter((item) => Boolean(item.wecom_link) && Boolean(item.qr_image)).length;
+        const linkOnly = assignable.filter((item) => Boolean(item.wecom_link) && !item.qr_image).length;
+        const qrOnly = assignable.filter((item) => !item.wecom_link && Boolean(item.qr_image)).length;
+        const items = [
+          ["可承接活码", `${assignable.length} 张`, "启用、未满员且有入口"],
+          ["获客助手直达", `${withLink} 条`, linkOnly ? `${linkOnly} 条仅链接` : "可作为主路径"],
+          ["二维码兜底", `${withQr} 张`, qrOnly ? `${qrOnly} 张仅二维码` : "长按识别备用"],
+          ["双路径配置", `${both} 张`, "链接 + 二维码最稳"],
+        ];
+        privateHandoffSummary.innerHTML = items.map(([label, value, note]) => `
+          <div class="summary-tile ${label === "双路径配置" && both ? "is-alert" : ""}">
+            <span>${escapeHtml(label)}</span>
+            <b>${escapeHtml(value)}</b>
+            <small>${escapeHtml(note)}</small>
+          </div>
+        `).join("");
+      }
+
+      function isLivecodeAssignable(livecode) {
+        if (!livecode || livecode.status !== "active") return false;
+        if (livecode.manual_full) return false;
+        if (!livecode.qr_image && !livecode.wecom_link) return false;
+        const capacity = Number(livecode.capacity_limit || 0);
+        const assigned = Number(livecode.assigned_count || 0);
+        return capacity <= 0 || assigned < capacity;
+      }
+
+      function renderOpsHealth() {
+        const product = state.product || {};
+        const livecodes = state.livecodes || [];
+        const overview = state.analyticsOverview || {};
+        const readyLivecodes = livecodes.filter(isLivecodeAssignable).length;
+        const wecomSummary = state.wecomSummary || {};
+        const refundConfig = state.refundConfig || {};
+        const items = [
+          {
+            label: "课程上架",
+            value: product.status === "online" ? "上架中" : "已下架",
+            note: product.product_name || "阳明心学交易体验营",
+            level: product.status === "online" ? "ok" : "warn",
+          },
+          {
+            label: "助教入口",
+            value: readyLivecodes ? `${readyLivecodes} 张可分配` : "无可分配活码",
+            note: `总计 ${livecodes.length} 张，停用/满员不参与新分配`,
+            level: readyLivecodes ? "ok" : "danger",
+          },
+          {
+            label: "今日支付",
+            value: `${Number(overview.paid_orders || 0)} 单`,
+            note: `收入 ${formatYuan(overview.revenue_cents || 0)}`,
+            level: Number(overview.paid_orders || 0) ? "ok" : "warn",
+          },
+          {
+            label: "企微同步",
+            value: wecomSummary.enabled ? "已启用" : "未启用",
+            note: wecomSummary.message || "个人微信承接不受影响",
+            level: wecomSummary.enabled ? "ok" : "warn",
+          },
+          {
+            label: "真实退款",
+            value: refundConfig.execution_enabled ? "已开启" : "关闭",
+            note: refundConfig.execution_enabled ? "执行退款需二次确认" : "当前仅申请/审核/Dry Run",
+            level: refundConfig.execution_enabled ? "warn" : "ok",
+          },
+          {
+            label: "自动退款",
+            value: refundConfig.auto_refund_enabled ? "已开启" : "关闭",
+            note: "默认关闭更安全",
+            level: refundConfig.auto_refund_enabled ? "warn" : "ok",
+          },
+          {
+            label: "二维码曝光",
+            value: `${Number(overview.qr_exposures || 0)} 次`,
+            note: "paid 后成功渲染入口才计入",
+            level: Number(overview.qr_exposures || 0) ? "ok" : "warn",
+          },
+          {
+            label: "跟进数据",
+            value: `${Number(overview.crm_added_customers || 0)} 已添加`,
+            note: "数据来源：人工 / 企微回调",
+            level: Number(overview.crm_added_customers || 0) ? "ok" : "warn",
+          },
+        ];
+        opsHealthGrid.innerHTML = items.map((item) => `
+          <div class="health-item health-${escapeHtml(item.level)}">
+            <span>${escapeHtml(item.label)}</span>
+            <b>${escapeHtml(item.value)}</b>
+            <small>${escapeHtml(item.note)}</small>
+          </div>
+        `).join("");
+      }
+
+      function renderActionQueue() {
+        const product = state.product || {};
+        const livecodes = state.livecodes || [];
+        const refunds = state.refunds || [];
+        const leads = state.crmLeads || [];
+        const readyLivecodes = livecodes.filter(isLivecodeAssignable).length;
+        const pendingQr = livecodes.filter((item) => item.status === "active" && !item.qr_image && !item.wecom_link).length;
+        const fullOrInactive = livecodes.filter((item) => item.manual_full || item.status !== "active").length;
+        const refundRequests = refunds.filter((item) => item.status === "requested").length;
+        const waitingAdd = leads.filter((lead) => ["paid", "assigned"].includes(lead.stage)).length;
+        const followDue = leads.filter(isFollowDue).length;
+        const syncFailed = (state.wecomSyncJobs || []).filter((job) => job.status === "failed").length;
+        const items = [
+          {
+            label: "收款开关",
+            value: product.status === "online" ? "可报名" : "暂停报名",
+            note: product.status === "online" ? "落地页报名按钮可用" : "请先上架产品",
+            urgent: product.status !== "online",
+            href: "#productForm",
+          },
+          {
+            label: "助教入口",
+            value: readyLivecodes ? `${readyLivecodes} 张可用` : "无可用活码",
+            note: pendingQr ? `${pendingQr} 张待上传二维码` : `${fullOrInactive} 张停用或满员`,
+            urgent: readyLivecodes === 0,
+            href: "#livecodeCard",
+          },
+          {
+            label: "客户跟进",
+            value: `${waitingAdd} 个待加微`,
+            note: followDue ? `${followDue} 个已到跟进时间` : "暂无到期待办",
+            urgent: waitingAdd > 0 || followDue > 0,
+            href: "#crmCard",
+          },
+          {
+            label: "退款审核",
+            value: `${refundRequests} 单待审`,
+            note: "approved 不等于退款成功",
+            urgent: refundRequests > 0,
+            href: "#refundCard",
+          },
+          {
+            label: "企微同步",
+            value: syncFailed ? `${syncFailed} 个失败` : "无失败任务",
+            note: state.wecomSummary?.enabled ? "可在同步模块重试" : "未启用不影响个人微信承接",
+            urgent: syncFailed > 0,
+            href: "#wecomSyncCard",
+          },
+          {
+            label: "今日漏斗",
+            value: `${Number(state.analyticsOverview?.paid_orders || 0)} 单支付`,
+            note: `${Number(state.analyticsOverview?.signup_clicks || 0)} 次报名点击`,
+            urgent: false,
+            href: "#funnelCard",
+          },
+        ];
+        actionQueueGrid.innerHTML = items.map((item) => `
+          <a class="action-item ${item.urgent ? "is-urgent" : "is-ok"}" href="${escapeHtml(item.href)}">
+            <span>${escapeHtml(item.label)}</span>
+            <b>${escapeHtml(item.value)}</b>
+            <small>${escapeHtml(item.note)}</small>
+          </a>
+        `).join("");
+      }
+
+      function renderProductSummary() {
+        const product = state.product || {};
+        const items = [
+          ["产品状态", product.status === "online" ? "上架" : "下架", product.product_code || "YMXX_JY_TY"],
+          ["展示价格", product.display_price_yuan ? `¥${product.display_price_yuan}` : "未配置", `真实支付 ${formatYuan(product.amount_cents || 0)}`],
+          ["训练周期", product.cycle || "未配置", product.start_time || "开课时间未配置"],
+          ["主讲人", product.lecturer || "未配置", product.product_name || "阳明心学交易体验营"],
+        ];
+        productSummary.innerHTML = items.map(([label, value, note]) => `
+          <div class="summary-tile">
+            <span>${escapeHtml(label)}</span>
+            <b>${escapeHtml(value)}</b>
+            <small>${escapeHtml(note)}</small>
+          </div>
+        `).join("");
+      }
+
       async function loadOrders() {
         const data = await adminFetch("/api/admin/orders");
-        ordersBody.innerHTML = (data.orders || []).slice(0, 20).map((order) => `
+        state.orders = data.orders || [];
+        renderOrdersOverview();
+        ordersBody.innerHTML = state.orders.slice(0, 20).map((order) => `
           <tr>
             <td>${escapeHtml(order.order_id)}</td>
             <td>${Number(order.amount_cents || 0)} 分</td>
@@ -1110,6 +2938,28 @@
             <td>${escapeHtml([order.channel, order.campaign, order.creative].filter(Boolean).join(" / "))}</td>
             <td>${escapeHtml(order.created_at || "")}</td>
           </tr>
+        `).join("");
+        renderActionQueue();
+      }
+
+      function renderOrdersOverview() {
+        const orders = state.orders || [];
+        const paid = orders.filter((order) => order.pay_status === "paid");
+        const pending = orders.filter((order) => order.pay_status !== "paid");
+        const revenue = paid.reduce((sum, order) => sum + Number(order.amount_cents || 0), 0);
+        const latest = orders[0]?.created_at || "";
+        const items = [
+          ["最近订单", `${orders.length} 单`, latest ? `最新 ${formatDateTime(latest)}` : "暂无订单"],
+          ["已支付", `${paid.length} 单`, formatYuan(revenue)],
+          ["待支付/未完成", `${pending.length} 单`, "未支付不解锁助教入口"],
+          ["订单来源", orderSourceSummary(orders), "渠道 / 活动 / 素材"],
+        ];
+        ordersOverview.innerHTML = items.map(([label, value, note]) => `
+          <div class="summary-tile ${label === "待支付/未完成" && pending.length ? "is-alert" : ""}">
+            <span>${escapeHtml(label)}</span>
+            <b>${escapeHtml(value)}</b>
+            <small>${escapeHtml(note)}</small>
+          </div>
         `).join("");
       }
 
@@ -1125,29 +2975,23 @@
           adminFetch("/api/admin/analytics/summary?days=7"),
         ]);
         const overview = todayData.overview || {};
+        state.analyticsOverview = overview;
         const metrics = [
-          ["今日访客", overview.uv || 0],
-          ["今日浏览", overview.pv || 0],
-          ["报名点击", overview.signup_clicks || 0],
-          ["创建订单", overview.orders_created || 0],
-          ["支付成功", overview.paid_orders || 0],
-          ["支付金额", formatYuan(overview.revenue_cents || 0)],
-          ["成功页访问", overview.success_page_views || 0],
-          ["二维码曝光", overview.qr_exposures || 0],
-          ["获客链接点击", overview.wecom_link_clicks || 0],
-          ["已支付客户", overview.crm_paid_customers || 0],
-          ["已分配助教", overview.crm_assigned_customers || 0],
-          ["已添加", overview.crm_added_customers || 0],
-          ["已首次沟通", overview.crm_first_contact_customers || 0],
-          ["已进群", overview.crm_group_joined_customers || 0],
-          ["已完课", overview.crm_course_completed_customers || 0],
-          ["已转化", overview.crm_converted_customers || 0],
-          ["已流失", overview.crm_lost_customers || 0],
-          ["数据来源", "人工"],
+          ["今日访客", overview.uv || 0, true],
+          ["报名点击", overview.signup_clicks || 0, true],
+          ["创建订单", overview.orders_created || 0, true],
+          ["支付成功", overview.paid_orders || 0, true],
+          ["支付金额", formatYuan(overview.revenue_cents || 0), true],
+          ["二维码曝光", overview.qr_exposures || 0, false],
+          ["获客链接点击", overview.wecom_link_clicks || 0, false],
+          ["今日浏览", overview.pv || 0, false],
         ];
-        metricsGrid.innerHTML = metrics.map(([label, value]) => `
-          <div class="metric"><span>${escapeHtml(label)}</span><b>${escapeHtml(value)}</b></div>
+        metricsGrid.innerHTML = metrics.map(([label, value, primary]) => `
+          <div class="metric ${primary ? "is-primary" : ""}"><span>${escapeHtml(label)}</span><b>${escapeHtml(value)}</b></div>
         `).join("");
+        renderConversionFunnel(overview, todayData.funnel || {});
+        renderOpsHealth();
+        renderActionQueue();
         analyticsDailyBody.innerHTML = (data.daily || []).slice(-7).map((row) => `
           <tr>
             <td>${escapeHtml(row.date || "")}</td>
@@ -1190,14 +3034,41 @@
         `).join("");
       }
 
+      function renderConversionFunnel(overview, funnel) {
+        const uv = Number(overview.uv || 0);
+        const steps = [
+          { label: "访客", value: uv, rate: 1 },
+          { label: "报名点击", value: Number(overview.signup_clicks || 0), rate: funnel.page_to_signup_rate },
+          { label: "创建订单", value: Number(overview.orders_created || 0), rate: funnel.signup_to_order_rate },
+          { label: "支付成功", value: Number(overview.paid_orders || 0), rate: funnel.order_to_paid_rate },
+          { label: "二维码曝光", value: Number(overview.qr_exposures || 0), rate: funnel.paid_to_qr_rate },
+        ];
+        const base = Math.max(uv, ...steps.map((item) => item.value), 1);
+        conversionFunnel.innerHTML = steps.map((item) => {
+          const width = Math.max(4, Math.min(100, Math.round((item.value / base) * 100)));
+          const isDrop = item.label !== "访客" && Number(item.rate || 0) > 0 && Number(item.rate || 0) < 0.35;
+          return `
+            <div class="funnel-step ${isDrop ? "is-drop" : ""}">
+              <div class="funnel-label">${escapeHtml(item.label)}</div>
+              <div class="funnel-bar" aria-label="${escapeHtml(item.label)} ${item.value}">
+                <div class="funnel-fill" style="width:${width}%"></div>
+              </div>
+              <div class="funnel-value">${Number(item.value || 0)} · ${escapeHtml(formatRate(item.rate))}</div>
+            </div>
+          `;
+        }).join("");
+      }
+
       async function loadCrmLeads() {
         const data = await adminFetch("/api/admin/crm/leads");
         state.crmLeads = data.leads || [];
         if (!state.crmLeads.some((lead) => lead.lead_id === state.selectedCrmLeadId)) {
-          state.selectedCrmLeadId = state.crmLeads[0]?.lead_id || "";
+          state.selectedCrmLeadId = "";
           state.selectedCrmDetail = null;
         }
         renderCrmLeads();
+        renderCrmBoard();
+        renderActionQueue();
         if (state.selectedCrmLeadId) {
           await selectCrmLead(state.selectedCrmLeadId);
         } else {
@@ -1222,6 +3093,48 @@
             <td><button class="btn-small" type="button" data-crm-select="${escapeHtml(lead.lead_id)}">查看</button></td>
           </tr>
         `).join("");
+      }
+
+      function renderCrmBoard() {
+        const leads = state.crmLeads || [];
+        const board = [
+          ["已支付", "paid"],
+          ["已分配", "assigned"],
+          ["已添加", "added"],
+          ["已沟通", "first_contact"],
+          ["已进群", "group_joined"],
+          ["已完课", "course_completed"],
+          ["已转化", "converted"],
+          ["已流失", "lost"],
+        ];
+        crmStageBoard.innerHTML = board.map(([label, stage]) => {
+          const count = leads.filter((lead) => lead.stage === stage).length;
+          return `
+            <div class="stage-card ${count ? "is-active" : ""}">
+              <span>${escapeHtml(label)}</span>
+              <b>${count}</b>
+              <small>数据来源：人工</small>
+            </div>
+          `;
+        }).join("");
+        const queue = leads
+          .filter((lead) => isFollowDue(lead) || ["paid", "assigned"].includes(lead.stage))
+          .slice(0, 6);
+        crmFollowQueue.innerHTML = queue.length
+          ? queue.map((lead) => `
+            <div class="queue-row">
+              <div>
+                <span>订单</span>
+                <b>${escapeHtml(lead.order_id || lead.lead_id || "")}</b>
+              </div>
+              <div>
+                <span>${escapeHtml(stageText(lead.stage))}</span>
+                <b>${escapeHtml(lead.owner || "未分配负责人")}</b>
+              </div>
+              <button class="btn-small" type="button" data-crm-select="${escapeHtml(lead.lead_id)}">跟进</button>
+            </div>
+          `).join("")
+          : `<div class="note-item">暂无待跟进客户</div>`;
       }
 
       async function selectCrmLead(leadId) {
@@ -1331,6 +3244,8 @@
         state.wecomEvents = events.events || [];
         state.wecomSyncJobs = jobs.jobs || [];
         renderWecomSync();
+        renderOpsHealth();
+        renderActionQueue();
       }
 
       function renderWecomSync() {
@@ -1431,6 +3346,9 @@
           trigger_types: (policy.trigger_types || []).join(","),
         });
         if (state.refunds?.length) renderRefunds();
+        renderOpsHealth();
+        renderRefundBoard();
+        renderActionQueue();
       }
 
       async function saveRefundPolicy(event) {
@@ -1479,6 +3397,8 @@
         const data = await adminFetch("/api/admin/refunds");
         state.refunds = data.refunds || [];
         renderRefunds();
+        renderRefundBoard();
+        renderActionQueue();
       }
 
       function renderRefunds() {
@@ -1510,6 +3430,31 @@
             </tr>
           `;
         }).join("");
+      }
+
+      function renderRefundBoard() {
+        const refunds = state.refunds || [];
+        const total = refunds.length;
+        const requested = refunds.filter((item) => item.status === "requested").length;
+        const approved = refunds.filter((item) => item.status === "approved").length;
+        const processing = refunds.filter((item) => item.status === "processing").length;
+        const refunded = refunds.filter((item) => item.status === "refunded");
+        const refundedAmount = refunded.reduce((sum, item) => sum + Number(item.amount_cents || 0), 0);
+        const items = [
+          ["退款总数", `${total} 单`, "申请、审核、执行分离"],
+          ["待审核", `${requested} 单`, "需要高权限管理员处理"],
+          ["已批准待执行", `${approved} 单`, state.refundConfig?.execution_enabled ? "可二次确认后执行" : "真实退款开关关闭"],
+          ["平台处理中", `${processing} 单`, "需要查单确认"],
+          ["已退款", `${refunded.length} 单`, formatYuan(refundedAmount)],
+          ["执行开关", state.refundConfig?.execution_enabled ? "已开启" : "关闭", "关闭时不会调用支付平台"],
+        ];
+        refundBoard.innerHTML = items.map(([label, value, note]) => `
+          <div class="summary-tile ${["待审核", "已批准待执行", "平台处理中"].includes(label) && value !== "0 单" ? "is-danger" : ""}">
+            <span>${escapeHtml(label)}</span>
+            <b>${escapeHtml(value)}</b>
+            <small>${escapeHtml(note)}</small>
+          </div>
+        `).join("");
       }
 
       async function createRefund(event) {
@@ -1615,15 +3560,6 @@
         await loadAll();
       }
 
-      function startNewLivecode() {
-        const draft = defaultLivecodeDraft();
-        state.livecode = draft;
-        state.editingLivecodeKey = draft.code_key;
-        state.editingNewLivecode = true;
-        fillLivecodeEditor(draft);
-        setNotice("正在新增活码，保存后写入服务器");
-      }
-
       function editLivecode(codeKey) {
         const livecode = state.livecodes.find((item) => item.code_key === codeKey);
         if (!livecode) return;
@@ -1631,6 +3567,8 @@
         state.editingLivecodeKey = livecode.code_key;
         state.editingNewLivecode = false;
         fillLivecodeEditor(livecode);
+        livecodeForm.hidden = false;
+        livecodeForm.scrollIntoView({ behavior: "smooth", block: "start" });
         setNotice(`正在编辑：${livecode.name}`);
       }
 
@@ -1654,6 +3592,25 @@
         await loadAll();
       }
 
+      function handleLivecodeAction(event) {
+        const editButton = event.target.closest("[data-edit-livecode]");
+        if (editButton) {
+          editLivecode(editButton.dataset.editLivecode);
+          return;
+        }
+        const toggleButton = event.target.closest("[data-toggle-full]");
+        if (toggleButton) {
+          toggleLivecodeFull(toggleButton.dataset.toggleFull, toggleButton.dataset.full === "true")
+            .catch((error) => setNotice(error.message));
+          return;
+        }
+        const statusButton = event.target.closest("[data-toggle-status]");
+        if (statusButton) {
+          toggleLivecodeStatus(statusButton.dataset.toggleStatus, statusButton.dataset.status)
+            .catch((error) => setNotice(error.message));
+        }
+      }
+
       async function uploadQrImage() {
         const file = qrUploadInput.files && qrUploadInput.files[0];
         if (!file) {
@@ -1669,7 +3626,157 @@
         });
         qrImageInput.value = data.data.url;
         renderQrPreview(data.data.url);
-        uploadStatus.textContent = `上传成功：${data.data.url}`;
+        uploadStatus.textContent = `上传成功：${data.data.url}。请继续点击“保存活码配置”后生效。`;
+      }
+
+      function makeBatchCodeKey(index) {
+        return `YMTY_LIVECODE_${Date.now()}_${String(index + 1).padStart(2, "0")}`;
+      }
+
+      function cleanBatchName(file) {
+        return String(file?.name || "新活码")
+          .replace(/\.[^.]+$/, "")
+          .replace(/[<>]/g, "")
+          .trim()
+          .slice(0, 32) || "新活码";
+      }
+
+      function renderBatchPreview() {
+        const list = state.batchLivecodes || [];
+        batchSaveButton.disabled = state.batchSaving || list.length === 0;
+        batchClearButton.disabled = state.batchSaving || list.length === 0;
+        if (!state.batchSaving) {
+          batchStatus.textContent = list.length
+            ? `已选择 ${list.length} 张二维码，保存后会创建 ${list.length} 条活码。`
+            : "请选择二维码生成预览列表。";
+        }
+        batchPreview.innerHTML = list.length
+          ? list.map((item) => `
+            <div class="batch-livecode-row" data-batch-id="${escapeHtml(item.id)}">
+              <img src="${escapeHtml(item.preview_url)}" alt="${escapeHtml(item.file?.name || "二维码预览")}" />
+              <div>
+                <input data-batch-name="${escapeHtml(item.id)}" value="${escapeHtml(item.name)}" aria-label="活码名称" />
+                <code>${escapeHtml(item.code_key)}</code>
+              </div>
+              <span class="batch-row-status">${escapeHtml(item.status || "待保存")}</span>
+              <button class="btn-small" type="button" data-batch-remove="${escapeHtml(item.id)}" ${state.batchSaving ? "disabled" : ""}>移除</button>
+            </div>
+          `).join("")
+          : `<div class="batch-preview-empty">还没有待保存二维码。点击“选择二维码”后，会在这里看到预览列表。</div>`;
+      }
+
+      function clearBatchQueue() {
+        (state.batchLivecodes || []).forEach((item) => {
+          if (item.preview_url) URL.revokeObjectURL(item.preview_url);
+        });
+        state.batchLivecodes = [];
+        if (batchQrInput) batchQrInput.value = "";
+        renderBatchPreview();
+      }
+
+      function handleBatchFiles() {
+        const files = Array.from(batchQrInput.files || []);
+        if (!files.length) return;
+        const startIndex = state.batchLivecodes.length;
+        files.forEach((file, index) => {
+          const itemIndex = startIndex + index;
+          const id = `${Date.now()}_${itemIndex}_${Math.random().toString(16).slice(2, 8)}`;
+          state.batchLivecodes.push({
+            id,
+            code_key: makeBatchCodeKey(itemIndex),
+            name: cleanBatchName(file),
+            file,
+            preview_url: URL.createObjectURL(file),
+            qr_image: "",
+            status: "待保存",
+          });
+        });
+        batchQrInput.value = "";
+        renderBatchPreview();
+      }
+
+      function updateBatchName(id, value) {
+        const item = state.batchLivecodes.find((row) => row.id === id);
+        if (!item) return;
+        item.name = String(value || "").trim().slice(0, 48) || "新活码";
+      }
+
+      function removeBatchItem(id) {
+        const item = state.batchLivecodes.find((row) => row.id === id);
+        if (item?.preview_url) URL.revokeObjectURL(item.preview_url);
+        state.batchLivecodes = state.batchLivecodes.filter((row) => row.id !== id);
+        renderBatchPreview();
+      }
+
+      function batchCommonPayload() {
+        return {
+          contact_type: batchContactType.value || "personal_wechat",
+          channels: batchChannels.value.trim() || "*",
+          capacity_limit: Number(batchCapacityLimit.value || 0),
+          manual_full: false,
+          priority: Number(batchPriority.value || 50),
+          is_fallback: Boolean(batchFallback.checked),
+          wecom_link: batchWecomLink.value.trim(),
+          wecom_tag_ids: "",
+          auto_redirect_after_paid: false,
+          redirect_delay_ms: 600,
+          remark: batchRemark.value.trim() || "知行 + 手机号后4位",
+          button_text: batchButtonText.value.trim() || "添加课程助教微信",
+          service_text: batchServiceText.value.trim() || "客服方式：支付后添加课程助教微信",
+          status: "active",
+        };
+      }
+
+      async function uploadLivecodeQrFile(file) {
+        const body = new FormData();
+        body.append("file", file);
+        const data = await adminFetch("/api/admin/upload", {
+          method: "POST",
+          body,
+        });
+        return data.data?.url || data.url || "";
+      }
+
+      async function saveBatchLivecodes() {
+        const list = state.batchLivecodes || [];
+        if (!list.length) {
+          setNotice("请先选择二维码");
+          return;
+        }
+        state.batchSaving = true;
+        renderBatchPreview();
+        const common = batchCommonPayload();
+        try {
+          for (let index = 0; index < list.length; index += 1) {
+            const item = list[index];
+            item.status = "上传中";
+            batchStatus.textContent = `正在上传 ${index + 1} / ${list.length}`;
+            renderBatchPreview();
+            const qrImage = await uploadLivecodeQrFile(item.file);
+            item.qr_image = qrImage;
+            item.status = "保存中";
+            batchStatus.textContent = `正在保存 ${index + 1} / ${list.length}`;
+            renderBatchPreview();
+            await adminFetch("/api/admin/livecodes", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                ...common,
+                code_key: item.code_key,
+                name: item.name || `新活码 ${index + 1}`,
+                qr_image: qrImage,
+              }),
+            });
+            item.status = "已保存";
+          }
+          setNotice(`已批量保存 ${list.length} 条活码`);
+          batchStatus.textContent = `已批量保存 ${list.length} 条活码`;
+          clearBatchQueue();
+          await loadAll();
+        } finally {
+          state.batchSaving = false;
+          renderBatchPreview();
+        }
       }
 
       async function login(event) {
@@ -1768,6 +3875,12 @@
         return `¥${(Number(cents || 0) / 100).toFixed(2)}`;
       }
 
+      function formatRate(value) {
+        const number = Number(value || 0);
+        if (!Number.isFinite(number) || number <= 0) return "0%";
+        return `${(number * 100).toFixed(1).replace(/\.0$/, "")}%`;
+      }
+
       function deviceText(value) {
         return ({ mobile:"手机", tablet:"平板", desktop:"桌面", unknown:"未知" })[value] || "未知";
       }
@@ -1802,6 +3915,19 @@
 
       function formatDateTime(value) {
         return value ? String(value).replace("T", " ").slice(0, 16) : "";
+      }
+
+      function isFollowDue(lead) {
+        if (!lead?.next_follow_up_at) return false;
+        const time = new Date(lead.next_follow_up_at).getTime();
+        return Number.isFinite(time) && time <= Date.now();
+      }
+
+      function orderSourceSummary(orders) {
+        const source = (orders || [])
+          .map((order) => order.channel || order.campaign || order.creative || "")
+          .filter(Boolean)[0];
+        return source || "未标记";
       }
 
       function eventText(value) {
@@ -1862,26 +3988,21 @@
       livecodeForm.addEventListener("submit", (event) => {
         saveLivecode(event).catch((error) => setNotice(error.message));
       });
-      newLivecodeButton.addEventListener("click", startNewLivecode);
-      livecodesBody.addEventListener("click", (event) => {
-        const editButton = event.target.closest("[data-edit-livecode]");
-        if (editButton) {
-          editLivecode(editButton.dataset.editLivecode);
-          return;
-        }
-        const toggleButton = event.target.closest("[data-toggle-full]");
-        if (toggleButton) {
-          toggleLivecodeFull(toggleButton.dataset.toggleFull, toggleButton.dataset.full === "true")
-            .catch((error) => setNotice(error.message));
-          return;
-        }
-        const statusButton = event.target.closest("[data-toggle-status]");
-        if (statusButton) {
-          toggleLivecodeStatus(statusButton.dataset.toggleStatus, statusButton.dataset.status)
-            .catch((error) => setNotice(error.message));
+      livecodeFilterbar.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-livecode-filter]");
+        if (!button) return;
+        state.livecodeFilter = button.dataset.livecodeFilter || "all";
+        renderLivecodePool();
+      });
+      livecodeBoard.addEventListener("click", handleLivecodeAction);
+      livecodesBody.addEventListener("click", handleLivecodeAction);
+      crmLeadsBody.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-crm-select]");
+        if (button) {
+          selectCrmLead(button.dataset.crmSelect).catch((error) => setNotice(error.message));
         }
       });
-      crmLeadsBody.addEventListener("click", (event) => {
+      crmFollowQueue.addEventListener("click", (event) => {
         const button = event.target.closest("[data-crm-select]");
         if (button) {
           selectCrmLead(button.dataset.crmSelect).catch((error) => setNotice(error.message));
@@ -1932,6 +4053,9 @@
       refundPreviewForm.addEventListener("submit", (event) => {
         previewRefund(event).catch((error) => setNotice(error.message));
       });
+      refreshAllButton.addEventListener("click", () => {
+        loadAll().catch((error) => setNotice(error.message));
+      });
       refundsBody.addEventListener("click", (event) => {
         const approveButton = event.target.closest("[data-refund-approve]");
         if (approveButton) {
@@ -1959,8 +4083,59 @@
         });
       });
       qrImageInput.addEventListener("input", () => renderQrPreview(qrImageInput.value.trim()));
+      batchQrInput.addEventListener("change", handleBatchFiles);
+      batchClearButton.addEventListener("click", () => {
+        if (state.batchSaving) return;
+        clearBatchQueue();
+      });
+      batchSaveButton.addEventListener("click", () => {
+        saveBatchLivecodes().catch((error) => {
+          batchStatus.textContent = error.message;
+          setNotice(error.message);
+          state.batchSaving = false;
+          renderBatchPreview();
+        });
+      });
+      batchPreview.addEventListener("input", (event) => {
+        const input = event.target.closest("[data-batch-name]");
+        if (!input || state.batchSaving) return;
+        updateBatchName(input.dataset.batchName, input.value);
+      });
+      batchPreview.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-batch-remove]");
+        if (!button || state.batchSaving) return;
+        removeBatchItem(button.dataset.batchRemove);
+      });
+      workspaceTabs.forEach((tab) => {
+        tab.addEventListener("click", (event) => {
+          const workspace = tab.dataset.workspaceTarget || "overview";
+          if (location.hash === `#${workspace}`) {
+            event.preventDefault();
+            activateWorkspace(workspace, { scrollTop: true, smooth: true });
+          }
+        });
+      });
+      window.addEventListener("hashchange", () => activateWorkspaceFromLocation({ smooth: true }));
       document.getElementById("logoutButton").addEventListener("click", () => {
         logout().catch(() => showLogin(""));
+      });
+      openGuideButton.addEventListener("click", openGuide);
+      closeGuideButton.addEventListener("click", () => closeGuide());
+      guideQuickNav.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-guide-jump]");
+        if (!button || !guidePanel) return;
+        const target = document.getElementById(button.dataset.guideJump);
+        if (!target) return;
+        guidePanel.scrollTo({
+          top: target.offsetTop - guidePanel.offsetTop - 12,
+          behavior: "smooth",
+        });
+      });
+      guideMask.addEventListener("click", (event) => {
+        if (event.target === guideMask) closeGuide();
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") closeGuide();
       });
       document.getElementById("openPasswordButton").addEventListener("click", () => showPasswordChange(false));
       document.getElementById("cancelPasswordButton").addEventListener("click", () => {
@@ -1972,6 +4147,8 @@
         showApp();
       });
 
+      renderBatchPreview();
+      activateWorkspaceFromLocation();
       boot();
     </script>
   </body>
