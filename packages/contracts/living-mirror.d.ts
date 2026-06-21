@@ -409,6 +409,71 @@ export type LivingMirrorProfile = {
   complianceNotice: "本画像仅用于交易心理觉察、复盘训练与行为管理，不构成投资建议。" | string
 }
 
+export type RiskPatternSummaryItem = {
+  key: string
+  label: string
+  summaryText?: string
+  summary_text?: string
+  riskLevelText?: string
+  risk_level_text?: string
+  evidenceCount?: number
+  evidence_count?: number
+  nextAction?: string
+  next_action?: string
+  updatedAt?: string
+  updated_at?: string
+}
+
+export type RiskPatternSummary = {
+  schemaVersion: "risk_pattern_summary_v1" | string
+  userId: string
+  title?: string
+  summaryText?: string
+  summary_text?: string
+  primaryPattern?: string
+  primary_pattern?: string
+  riskLevelText?: string
+  risk_level_text?: string
+  items?: RiskPatternSummaryItem[]
+  patterns?: RiskPatternSummaryItem[]
+  riskPatterns?: RiskPatternSummaryItem[]
+  risk_patterns?: RiskPatternSummaryItem[]
+  nextAction?: string
+  next_action?: string
+  updatedAt?: string
+  updated_at?: string
+  complianceNotice?: "本摘要仅用于交易行为复盘与风险教育，不构成投资建议。" | string
+}
+
+export type TodayState = {
+  schemaVersion: "today_state_v1" | string
+  userId: string
+  dateKey?: string
+  date_key?: string
+  title?: string
+  stateText?: string
+  state_text?: string
+  statusText?: string
+  status_text?: string
+  summaryText?: string
+  summary_text?: string
+  todayHeartWitness?: string
+  today_heart_witness?: string
+  mainMirror?: MirrorName | string
+  main_mirror?: MirrorName | string
+  focusText?: string
+  focus_text?: string
+  nextAction?: string
+  next_action?: string
+  actionText?: string
+  action_text?: string
+  trainingAction?: string
+  training_action?: string
+  updatedAt?: string
+  updated_at?: string
+  complianceNotice?: "本状态仅用于交易认知、行为训练与风险教育，不构成投资建议。" | string
+}
+
 export type ZhixingStabilityDimensionKey =
   | "planClarity"
   | "boundaryExecution"

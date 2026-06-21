@@ -20,6 +20,9 @@ import type {
 
 import type {
   LivingMirrorGrowthProjection,
+  LivingMirrorProfile,
+  RiskPatternSummary,
+  TodayState,
   TradeReview,
 } from "@yangming/contracts/living-mirror"
 
@@ -176,6 +179,33 @@ export async function fetchLivingMirrorGrowthProjection(userId: string) {
     userId,
     "/living-mirror/growth",
     ["projection", "growthProjection", "livingMirrorGrowthProjection"],
+  )
+  return result
+}
+
+export async function fetchLivingMirrorProfile(userId: string) {
+  const result = await requestUserProjection<LivingMirrorProfile>(
+    userId,
+    "living-mirror/profile",
+    ["profile", "living_mirror_profile", "livingMirrorProfile"],
+  )
+  return result
+}
+
+export async function fetchRiskPatternSummary(userId: string) {
+  const result = await requestUserProjection<RiskPatternSummary>(
+    userId,
+    "risk-patterns/summary",
+    ["summary", "risk_pattern_summary", "riskPatternSummary"],
+  )
+  return result
+}
+
+export async function fetchTodayState(userId: string) {
+  const result = await requestUserProjection<TodayState>(
+    userId,
+    "today/state",
+    ["state", "today_state", "todayState"],
   )
   return result
 }
