@@ -578,6 +578,17 @@
       <view class="entry-note">数据仅用于本页状态记录</view>
     </view>
 
+    <view class="home-bottom-echo">
+      <view>
+        <text>今日收束</text>
+        <view>{{closureEvidenceChain.nextActionText}}</view>
+      </view>
+      <view>
+        <text>{{training7Summary.statusText}}</text>
+        <view>{{training7Summary.todayTitle}}</view>
+      </view>
+    </view>
+
     <compliance-notice compact="{{true}}" />
   </view>
 
