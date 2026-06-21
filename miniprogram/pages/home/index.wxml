@@ -90,14 +90,6 @@
         <view wx:if="{{miniHomeView.primaryHint}}" class="mini-primary-hint">{{miniHomeView.primaryHint}}</view>
       </view>
 
-      <view class="kline-mind-entry" bindtap="goKlineMind" data-noripple="1">
-        <view>
-          <text>今日 K 线观心</text>
-          <view>用历史 K 线片段，看见第一反应。</view>
-        </view>
-        <text>{{heroTasks.klineDone ? '已练' : '去练'}}</text>
-      </view>
-
       <view class="edict-scroll" bindlongpress="openPosterMode">
         <view class="practice-detail-head">
           <view class="edict-label">当前状态</view>
@@ -276,6 +268,14 @@
             <button data-noripple="1" bindtap="goTradeReview">去复盘</button>
             <button data-noripple="1" bindtap="goLivingMirror">看活镜</button>
           </view>
+        </view>
+
+        <view class="kline-mind-entry" bindtap="goKlineMind" data-noripple="1">
+          <view>
+            <text>今日 K 线观心</text>
+            <view>用历史 K 线片段，看见第一反应。</view>
+          </view>
+          <text>{{heroTasks.klineDone ? '已练' : '去练'}}</text>
         </view>
 
         <view wx:if="{{false}}" class="contemplation-block compact">
