@@ -165,7 +165,7 @@
           </view>
         </view>
 
-        <view wx:if="{{closureEvidenceChain.steps.length}}" class="home-continuity-panel">
+        <view wx:if="{{homeContinuitySteps.length}}" class="home-continuity-panel">
           <view class="home-continuity-head">
             <view>
               <view class="home-continuity-kicker">今日闭环</view>
@@ -178,9 +178,8 @@
             <view style="width: {{closureEvidenceChain.progressPercent}}%;"></view>
           </view>
           <view class="home-continuity-steps">
-            <block wx:for="{{closureEvidenceChain.steps}}" wx:key="key">
+            <block wx:for="{{homeContinuitySteps}}" wx:key="key">
               <view
-                wx:if="{{index < 3 || item.current}}"
                 class="home-continuity-step {{item.done ? 'done' : ''}} {{item.current ? 'current' : ''}}"
               >
                 <text>{{item.numberText}}</text>

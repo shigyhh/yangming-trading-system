@@ -7,8 +7,10 @@ const homeWxml = readFileSync(join(root, "miniprogram", "pages", "home", "index.
 const homeWxss = readFileSync(join(root, "miniprogram", "pages", "home", "index.wxss"), "utf8")
 
 assert.ok(homeWxml.includes('class="home-continuity-panel"'), "home should render a below-fold continuity panel")
-assert.ok(homeWxml.includes("closureEvidenceChain.steps"), "continuity panel should use the shared closure evidence chain")
-assert.ok(homeWxml.includes("closureEvidenceChain.progressPercent"), "continuity panel should expose real progress")
+assert.ok(homeWxml.includes("homeContinuitySteps.length"), "continuity panel should render only the compact home continuity slice")
+assert.ok(homeWxml.includes('wx:for="{{homeContinuitySteps}}"'), "continuity panel should loop over at most three home continuity steps")
+assert.equal(homeWxml.includes("index < 3 || item.current"), false, "continuity panel should not leak extra steps when the current step is late")
+assert.ok(homeWxml.includes("closureEvidenceChain.progressPercent"), "continuity panel should still use the shared closure evidence chain progress")
 assert.ok(homeWxml.includes("closureEvidenceChain.nextActionText"), "continuity panel should carry the next action")
 assert.ok(homeWxml.indexOf('class="mini-mirror-card"') < homeWxml.indexOf('class="edict-scroll"'), "daily proof and primary action should lead the home flow")
 assert.ok(homeWxml.indexOf('class="home-focus-card"') < homeWxml.indexOf('class="home-continuity-panel"'), "current action should come before the continuity panel")

@@ -283,6 +283,16 @@ function buildVows(checkedMap) {
   });
 }
 
+function buildHomeContinuitySteps(chain = {}) {
+  const steps = Array.isArray(chain.steps) ? chain.steps : [];
+  if (steps.length <= 3) return steps;
+
+  const currentIndex = steps.findIndex((step) => step && step.current);
+  if (currentIndex <= 1) return steps.slice(0, 3);
+  if (currentIndex >= steps.length - 2) return steps.slice(-3);
+  return steps.slice(currentIndex - 1, currentIndex + 2);
+}
+
 function buildRitualProgress(checkedCount, ritualState = {}) {
   const ready = checkedCount >= VOWS.length;
   return {
@@ -1123,6 +1133,7 @@ Page({
     }),
     evidenceSummary: getEvidenceSummary({ limit: 4 }),
     closureEvidenceChain: getClosureEvidenceChain(),
+    homeContinuitySteps: buildHomeContinuitySteps(getClosureEvidenceChain()),
     cardGenerating: false,
     userBinding: getUserBinding(),
     entryRitualVisible: false
@@ -1411,6 +1422,7 @@ Page({
       completionView,
       evidenceSummary,
       closureEvidenceChain,
+      homeContinuitySteps: buildHomeContinuitySteps(closureEvidenceChain),
       userBinding: getUserBinding(),
       dailyContent,
       hasAssessment: !!assessment
