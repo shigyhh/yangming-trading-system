@@ -8,9 +8,17 @@ const DATA_GAP_DEFINITIONS = [
 
 export function buildLivingMirrorGrowthProjection(userId, records = {}, options = {}) {
   const now = options.now || new Date().toISOString();
-  const klineRecords = Array.isArray(records.kline_records) ? records.kline_records : [];
-  const tradeReviews = Array.isArray(records.trade_reviews) ? records.trade_reviews : [];
-  const events = normalizeGrowthEvents(klineRecords);
+  const klineRecords = firstArray(records.kline_records, records.klineRecords);
+  const tradeReviews = firstArray(records.trade_reviews, records.tradeReviews);
+  const mirrorReports = firstArray(records.mirror_reports, records.mirrorReports);
+  const retests = firstArray(records.retests, records.retestReports);
+  const mirrorReport = records.mirror_report || records.mirrorReport || mirrorReports[0] || null;
+  const sourceFlags = {
+    heartProof: hasSource(records.heartProof, records.heart_proof, records.heartProofs, records.heart_proofs),
+    dailyGrowth: hasSource(records.dailyGrowth, records.daily_growth, records.dailyGrowths, records.daily_growths, records.daily_heart_witnesses),
+    retest: retests.length > 0 || hasSource(records.retest, records.retest_change, records.retestChanges)
+  };
+  const events = normalizeGrowthEvents(klineRecords, tradeReviews);
   const highFrequencyThoughts = topCountedValues(events.map((event) => event.thought), "text");
   const repeatedBehaviors = topCountedValues(events.map((event) => event.behavior), "label");
   const topBehaviorLoops = repeatedBehaviors.map((behavior) => ({
@@ -31,26 +39,35 @@ export function buildLivingMirrorGrowthProjection(userId, records = {}, options 
     trainingContinuity,
     mirrorLifeStage: resolveMirrorLifeStage(events.length),
     nextCycleFocus: buildNextCycleFocus(events, topBehaviorLoops),
-    dataGaps: buildDataGaps(records),
+    dataGaps: buildDataGaps(sourceFlags),
     topBehaviorLoops,
     zhixingStability: buildZhixingStability(events, now),
     sourceSummary: {
       klineRecords: klineRecords.length,
       tradeReviews: tradeReviews.length,
       oneThoughtEvents: events.filter((event) => event.hasOneThoughtEvent).length,
-      mirrorReport: Boolean(records.mirror_report)
+      mirrorReport: Boolean(mirrorReport),
+      retests: retests.length,
+      heartProof: sourceFlags.heartProof,
+      dailyGrowth: sourceFlags.dailyGrowth
     },
     updatedAt,
     complianceNotice: COMPLIANCE_NOTICE
   };
 }
 
-function normalizeGrowthEvents(records) {
-  return records
+function normalizeGrowthEvents(klineRecords, tradeReviews) {
+  const klineEvents = klineRecords
     .map((record) => {
       const event = record?.one_thought_event || record?.oneThoughtEvent || {};
-      const thought = sanitizeText(event.thought || event.firstThought || event.reaction || record?.reaction, "");
-      const behavior = sanitizeText(event.reaction || event.reactionChoice || record?.reaction || record?.reaction_key, "");
+      const thought = sanitizeText(
+        event.firstThought || event.first_thought || event.thought || event.reactionChoice || event.reaction_choice || event.mirrorType || event.mirror_type || record?.reaction,
+        ""
+      );
+      const behavior = sanitizeText(
+        event.reactionChoice || event.reaction_choice || event.reaction || record?.reaction || record?.reaction_key || record?.reactionKey,
+        ""
+      );
       if (!thought && !behavior) return null;
 
       return {
@@ -62,10 +79,38 @@ function normalizeGrowthEvents(records) {
         ),
         mirrorType: sanitizeText(event.mirror_type || event.mirrorType || record?.mirror_type || record?.mirrorType, "待观察之镜"),
         recordedAt: record?.recorded_at || record?.recordedAt || event.created_at || event.createdAt || "",
-        hasOneThoughtEvent: Boolean(record?.one_thought_event || record?.oneThoughtEvent)
+        hasOneThoughtEvent: Boolean(record?.one_thought_event || record?.oneThoughtEvent),
+        sourceType: "kline_record"
       };
     })
-    .filter(Boolean)
+    .filter(Boolean);
+  const reviewEvents = tradeReviews
+    .map((review) => {
+      const thought = sanitizeText(review?.strongestThought || review?.strongest_thought || review?.reviewText || review?.review_text, "");
+      const behavior = sanitizeText(
+        firstText(review?.behaviorTags, review?.behavior_tags) ||
+          review?.behaviorEvidence?.reactionChoice ||
+          review?.behaviorEvidence?.repeatedBehavior ||
+          review?.reactionChoice ||
+          review?.detectedMirror ||
+          review?.detected_mirror,
+        ""
+      );
+      if (!thought && !behavior) return null;
+
+      return {
+        thought: thought || behavior,
+        behavior: behavior || thought,
+        boundaryState: sanitizeText(review?.nextAction || review?.next_action || "真实复盘", "真实复盘"),
+        mirrorType: sanitizeText(review?.detectedMirror || review?.detected_mirror, "待观察之镜"),
+        recordedAt: review?.createdAt || review?.created_at || review?.tradeDate || review?.trade_date || "",
+        hasOneThoughtEvent: false,
+        sourceType: "trade_review"
+      };
+    })
+    .filter(Boolean);
+
+  return [...klineEvents, ...reviewEvents]
     .sort((a, b) => new Date(a.recordedAt || 0).getTime() - new Date(b.recordedAt || 0).getTime());
 }
 
@@ -73,7 +118,7 @@ function buildAffectedDimensions(events) {
   const dimensions = [
     ["boundary", "边界稳定", events.filter((event) => event.boundaryState && event.boundaryState !== "待记录边界").length],
     ["emotion", "情绪反应", events.filter((event) => /急|怕|慌|冲动|犹豫/.test(`${event.thought} ${event.behavior}`)).length],
-    ["review", "复盘完成", 0],
+    ["review", "复盘完成", events.filter((event) => event.sourceType === "trade_review").length],
     ["discipline", "纪律动作", events.filter((event) => /停|记录|复盘|边界/.test(event.boundaryState)).length]
   ];
 
@@ -110,9 +155,9 @@ function buildNextCycleFocus(events, loops) {
   };
 }
 
-function buildDataGaps(records) {
+function buildDataGaps(sourceFlags) {
   return DATA_GAP_DEFINITIONS
-    .filter(([key]) => !records[key])
+    .filter(([key]) => !sourceFlags[key])
     .map(([key, label]) => ({ key, label }));
 }
 
@@ -165,6 +210,29 @@ function sanitizeId(value) {
     .replace(/1[3-9]\d{9}/g, "hidden")
     .replace(/[^\w-]/g, "_")
     .slice(0, 64);
+}
+
+function firstArray(...values) {
+  return values.find((value) => Array.isArray(value)) || [];
+}
+
+function firstText(...values) {
+  for (const value of values) {
+    if (Array.isArray(value)) {
+      const found = value.find((item) => sanitizeText(item, ""));
+      if (found) return found;
+    } else if (sanitizeText(value, "")) {
+      return value;
+    }
+  }
+  return "";
+}
+
+function hasSource(...values) {
+  return values.some((value) => {
+    if (Array.isArray(value)) return value.length > 0;
+    return Boolean(value);
+  });
 }
 
 function sanitizeText(value, fallback, maxLength = 120) {

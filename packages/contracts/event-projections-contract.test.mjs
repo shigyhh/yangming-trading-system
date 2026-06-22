@@ -41,6 +41,9 @@ test("event projection contract exposes minimal safe server projections", async 
     "topBehaviorLoops",
     "zhixingStability",
     "sourceSummary",
+    "retests",
+    "heartProof",
+    "dailyGrowth",
     "complianceNotice",
     "updatedAt"
   ]) {

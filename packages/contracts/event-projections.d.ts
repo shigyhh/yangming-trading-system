@@ -93,6 +93,9 @@ export type LivingMirrorGrowthProjection = {
     tradeReviews: number
     oneThoughtEvents: number
     mirrorReport: boolean
+    retests: number
+    heartProof: boolean
+    dailyGrowth: boolean
   }
   updatedAt: string
   complianceNotice: string

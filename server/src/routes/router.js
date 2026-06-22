@@ -21,7 +21,7 @@ import { getGlobalReflectionToday, listGlobalReflectionChoices, submitGlobalRefl
 import { buildEmptyHistoricalKlineSlice, buildHistoricalKlineSlice, downloadHistoricalKline, getHistoricalKlineRules, getHistoricalKlineStatus, listHistoricalKlineCatalog, listHistoricalKlineInstruments, revealHistoricalKlineSlice } from "../services/historicalKline.js";
 import { buildTradeReviewOcrDraft } from "../services/tradeReviewOcr.js";
 import { completeMockYmtyPayment, createYmtyOrder, getYmtyAfterpayEntrance, getYmtyOrderStatus, listYmtyCourses, recordYmtyPaymentNotification } from "../services/ymty.js";
-import { getLivingMirrorProfile, getRiskPatternSummary, getTodayState } from "../services/eventAggregator.js";
+import { getLivingMirrorGrowthProjection, getLivingMirrorProfile, getRiskPatternSummary, getTodayState } from "../services/eventAggregator.js";
 
 export async function route(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
@@ -92,6 +92,7 @@ export async function route(req, res) {
         data_binding_retest_comparison: "GET /api/v1/data-binding/users/:user_id/retest-comparison",
         data_binding_user_summary: "GET /api/v1/data-binding/users/:user_id/summary",
         living_mirror_profile: "GET /api/v1/users/:user_id/living-mirror/profile",
+        living_mirror_growth: "GET /api/v1/users/:user_id/living-mirror/growth",
         risk_patterns_summary: "GET /api/v1/users/:user_id/risk-patterns/summary",
         today_state: "GET /api/v1/users/:user_id/today/state",
         data_binding_training_prescription: "GET|POST /api/v1/data-binding/users/:user_id/training-prescription",
@@ -365,6 +366,12 @@ export async function route(req, res) {
   if (req.method === "GET" && livingMirrorProfileMatch) {
     const profile = await getLivingMirrorProfile(livingMirrorProfileMatch[1]);
     return sendJson(res, 200, { ok: true, profile });
+  }
+
+  const livingMirrorGrowthMatch = pathname.match(/^\/api\/v1\/users\/([^/]+)\/living-mirror\/growth$/);
+  if (req.method === "GET" && livingMirrorGrowthMatch) {
+    const projection = await getLivingMirrorGrowthProjection(livingMirrorGrowthMatch[1]);
+    return sendJson(res, 200, { ok: true, projection });
   }
 
   const riskPatternSummaryMatch = pathname.match(/^\/api\/v1\/users\/([^/]+)\/risk-patterns\/summary$/);

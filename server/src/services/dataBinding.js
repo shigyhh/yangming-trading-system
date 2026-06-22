@@ -271,7 +271,9 @@ export async function getEventAggregationSource(userId) {
     userId: record.id,
     kline_records: (record.kline_records || []).map((item) => ({ ...item })),
     training_records: (record.training_records || []).map((item) => ({ ...item })),
-    trade_reviews: (record.trade_reviews || []).map((item) => ({ ...item }))
+    trade_reviews: (record.trade_reviews || []).map((item) => ({ ...item })),
+    mirror_report: record.mirror_report ? { ...record.mirror_report } : null,
+    retests: (record.retests || []).map((item) => ({ ...item }))
   };
 }
 
