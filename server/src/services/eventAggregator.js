@@ -1,4 +1,5 @@
 import { getEventAggregationSource } from "./dataBinding.js";
+import { buildLivingMirrorGrowthProjection } from "./livingMirrorEvolution.js";
 
 const EMPTY_REACTION = "暂无明显模式";
 const EMPTY_BOUNDARY = "暂无";
@@ -53,6 +54,11 @@ export async function getTodayState(userId) {
     },
     updatedAt: latestUpdatedAt(source, normalizeKLineEvents(source.kline_records))
   };
+}
+
+export async function getLivingMirrorGrowthProjection(userId, options = {}) {
+  const source = await getEventAggregationSource(userId);
+  return buildLivingMirrorGrowthProjection(source.userId || String(userId || ""), source, options);
 }
 
 function normalizeKLineEvents(records = []) {

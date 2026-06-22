@@ -10,7 +10,8 @@ test("event projection contract exposes minimal safe server projections", async 
   for (const typeName of [
     "LivingMirrorProfile",
     "RiskPatternSummary",
-    "TodayState"
+    "TodayState",
+    "LivingMirrorGrowthProjection"
   ]) {
     assert.match(source, new RegExp(`export type ${typeName}\\b`));
   }
@@ -28,6 +29,19 @@ test("event projection contract exposes minimal safe server projections", async 
     "status",
     "nextAction",
     "progress",
+    "schemaVersion",
+    "growthProfileId",
+    "highFrequencyThoughts",
+    "repeatedBehaviors",
+    "affectedDimensions",
+    "trainingContinuity",
+    "mirrorLifeStage",
+    "nextCycleFocus",
+    "dataGaps",
+    "topBehaviorLoops",
+    "zhixingStability",
+    "sourceSummary",
+    "complianceNotice",
     "updatedAt"
   ]) {
     assert.match(source, new RegExp(`\\b${field}\\b`));
@@ -35,5 +49,18 @@ test("event projection contract exposes minimal safe server projections", async 
 
   for (const forbidden of ["phone", "openId", "unionId", "token", "code"]) {
     assert.doesNotMatch(source, new RegExp(`\\b${forbidden}\\b`, "i"));
+  }
+
+  for (const forbiddenPhrase of [
+    "推荐买入",
+    "推荐卖出",
+    "必赚",
+    "稳赚",
+    "收益保证",
+    "喊单",
+    "抄底",
+    "逃顶"
+  ]) {
+    assert.equal(source.includes(forbiddenPhrase), false, `${forbiddenPhrase} must not appear in contract`);
   }
 });
