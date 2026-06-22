@@ -11,6 +11,8 @@ const behaviorLoopEngineUrl = new URL("./behaviorLoopEngine.ts", import.meta.url
 const behaviorLoopStorageUrl = new URL("./behaviorLoopStorage.ts", import.meta.url)
 const retestChangeStorageUrl = new URL("./retestChangeStorage.ts", import.meta.url)
 const pageUrl = new URL("../../app/living-mirror-growth/page.tsx", import.meta.url)
+const apiClientUrl = new URL("../data-binding/api-client.ts", import.meta.url)
+const contractUrl = new URL("../../../../packages/contracts/living-mirror.d.ts", import.meta.url)
 const practiceChangePageUrl = new URL("../../app/practice-change/page.tsx", import.meta.url)
 const tradeReviewPageUrl = new URL("../../app/trade-review/page.tsx", import.meta.url)
 const assessmentGeneratingPageUrl = new URL("../../app/assessment-generating/page.tsx", import.meta.url)
@@ -328,6 +330,8 @@ test("living mirror growth detail page reads GrowthProfile and renders Sprint 6 
   ;[
     "LivingMirrorGrowthPage",
     "GrowthProfile",
+    "fetchLivingMirrorGrowthProjection",
+    "getCurrentDataBindingUserId",
     "recomputeAndSaveGrowthProfile",
     "活镜成长谱",
     "把每天的一念、复盘和心证，连成可见的变化。",
@@ -367,6 +371,59 @@ test("living mirror growth detail page reads GrowthProfile and renders Sprint 6 
 
   forbiddenPhrases.forEach((phrase) => {
     assert.equal(source.includes(phrase), false, `growth detail page contains forbidden phrase ${phrase}`)
+  })
+})
+
+test("living mirror growth page prefers server projection while keeping local fallback", async () => {
+  const [pageSource, apiClientSource, contractSource] = await Promise.all([
+    readFile(pageUrl, "utf8"),
+    readFile(apiClientUrl, "utf8"),
+    readFile(contractUrl, "utf8"),
+  ])
+
+  ;[
+    "fetchLivingMirrorGrowthProjection",
+    "getCurrentDataBindingUserId",
+    "recomputeAndSaveGrowthProfile().growthProfile",
+    "toGrowthProfileFromProjection",
+  ].forEach((marker) => {
+    assert.equal(pageSource.includes(marker), true, `growth page missing server projection fallback marker ${marker}`)
+  })
+
+  ;[
+    "fetchLivingMirrorGrowthProjection",
+    "/living-mirror/growth",
+    "projection",
+    "growthProjection",
+    "livingMirrorGrowthProjection",
+  ].forEach((marker) => {
+    assert.equal(apiClientSource.includes(marker), true, `api client missing growth projection marker ${marker}`)
+  })
+
+  ;[
+    "LivingMirrorGrowthProjection",
+    "schemaVersion",
+    "growthProfileId",
+    "highFrequencyThoughts",
+    "repeatedBehaviors",
+    "affectedDimensions",
+    "trainingContinuity",
+    "mirrorLifeStage",
+    "nextCycleFocus",
+    "dataGaps",
+    "topBehaviorLoops",
+    "zhixingStability",
+    "sourceSummary",
+    "updatedAt",
+    "complianceNotice",
+  ].forEach((marker) => {
+    assert.equal(contractSource.includes(marker), true, `contract missing growth projection marker ${marker}`)
+  })
+
+  forbiddenPhrases.forEach((phrase) => {
+    assert.equal(pageSource.includes(phrase), false, `growth page contains forbidden phrase ${phrase}`)
+    assert.equal(apiClientSource.includes(phrase), false, `api client contains forbidden phrase ${phrase}`)
+    assert.equal(contractSource.includes(phrase), false, `contract contains forbidden phrase ${phrase}`)
   })
 })
 

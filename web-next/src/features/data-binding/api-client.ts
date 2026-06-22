@@ -18,7 +18,10 @@ import type {
   DataBindingUserSummaryResponse,
 } from "@yangming/contracts/data-binding"
 
-import type { TradeReview } from "@yangming/contracts/living-mirror"
+import type {
+  LivingMirrorGrowthProjection,
+  TradeReview,
+} from "@yangming/contracts/living-mirror"
 
 import type { PracticeChangeState } from "@/features/assessment/practice-change"
 import type { AssessmentAnswer, AssessmentReport } from "@/features/assessment/report"
@@ -46,6 +49,10 @@ export function getDataBindingUserProfile(): DataBindingUserProfile {
     inviteSource: "web-next 本地测评",
     sourceChannel: "web-next",
   }
+}
+
+export function getCurrentDataBindingUserId() {
+  return getStorage<string>(assessmentStorageKeys.dataBindingUserId, "").trim()
 }
 
 export async function syncAssessmentReportBinding({
@@ -164,6 +171,15 @@ export async function fetchDataBindingSummary() {
   return requestGetJson<DataBindingSummaryResponse>(`/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/summary`)
 }
 
+export async function fetchLivingMirrorGrowthProjection(userId: string) {
+  const result = await requestUserProjection<LivingMirrorGrowthProjection>(
+    userId,
+    "/living-mirror/growth",
+    ["projection", "growthProjection", "livingMirrorGrowthProjection"],
+  )
+  return result
+}
+
 export async function dispatchTrainingPrescriptionBinding() {
   const user = getDataBindingUserProfile()
   return requestJson<{ source: string }, DataBindingTrainingPrescriptionResponse>(
@@ -187,6 +203,41 @@ export async function generateShareCardBinding() {
 export async function fetchShareCardBinding() {
   const user = getDataBindingUserProfile()
   return requestGetJson<DataBindingShareCardResponse>(`/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/share-card`)
+}
+
+async function requestUserProjection<TResponse>(
+  userId: string,
+  suffix: string,
+  projectionKeys: string[],
+): Promise<BindingClientResult<TResponse>> {
+  const normalizedUserId = userId.trim()
+  if (!normalizedUserId) return { ok: false, error: "暂未找到本次照见记录" }
+  const normalizedSuffix = suffix.replace(/^\/+/, "")
+
+  const result = await requestGetJson<TResponse | Record<string, unknown>>(
+    `/api/v1/users/${encodeURIComponent(normalizedUserId)}/${normalizedSuffix}`,
+  )
+  if (!result.ok) return result
+
+  return {
+    ok: true,
+    data: unwrapProjectionPayload<TResponse>(result.data, projectionKeys),
+  }
+}
+
+function unwrapProjectionPayload<TResponse>(payload: TResponse | Record<string, unknown>, projectionKeys: string[]): TResponse {
+  if (!payload || typeof payload !== "object") return payload as TResponse
+
+  const record = payload as Record<string, unknown>
+  for (const key of projectionKeys) {
+    const value = record[key]
+    if (value && typeof value === "object") return value as TResponse
+  }
+
+  const data = record.data
+  if (data && typeof data === "object") return data as TResponse
+
+  return payload as TResponse
 }
 
 async function requestJson<TPayload, TResponse = unknown>(
