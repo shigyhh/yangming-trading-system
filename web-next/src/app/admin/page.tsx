@@ -12,6 +12,7 @@ import {
   getAdminUsersForPage,
   normalizeAdminFilters,
 } from "@/features/admin/admin-data"
+import { buildAssistantCandidateDryRun } from "@/features/admin/assistant-candidate-dry-run"
 
 export const dynamic = "force-dynamic"
 
@@ -49,6 +50,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   const filteredUsers = filterAdminUsers(users, filters)
   const summary = getAdminSummary(users)
   const filteredSummary = getAdminSummary(filteredUsers)
+  const candidateDryRun = buildAssistantCandidateDryRun(users)
 
   return (
     <main className="min-h-svh bg-[#080807] px-4 py-6 text-[#F4EBDD] md:px-8 md:py-8">
@@ -79,6 +81,53 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           <SummaryCard icon={<UserRoundCheck />} label="待承接" value={summary.pendingHandoff} />
           <SummaryCard icon={<ClipboardList />} label="有训练记录" value={summary.inTraining} />
           <SummaryCard icon={<Handshake />} label="待复盘" value={summary.pendingReview} />
+        </section>
+
+        <section className="rounded-lg border border-[rgba(217,189,122,.16)] bg-[#11100D]/76 p-5 shadow-[0_24px_70px_rgba(0,0,0,.26)]">
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="font-story text-xl tracking-[.04em]">助教承接候选 dry-run</h2>
+              <p className="mt-1 font-function text-xs leading-5 text-[rgba(244,235,221,.48)]">
+                只读演练，不发送提醒。候选只用于人工查看训练、复盘与重复念头，不做自动触达。
+              </p>
+            </div>
+            <span className="w-fit rounded-full border border-[rgba(216,183,111,.22)] bg-[rgba(216,183,111,.1)] px-3 py-1 font-function text-xs text-[rgba(216,183,111,.86)]">
+              Dry-run {candidateDryRun.totalCandidates}
+            </span>
+          </div>
+
+          <div className="mt-5 grid gap-3 md:grid-cols-3">
+            {candidateDryRun.candidates.length ? (
+              candidateDryRun.candidates.slice(0, 3).map((candidate) => (
+                <article
+                  key={candidate.candidateId}
+                  className="rounded-lg border border-[rgba(217,189,122,.12)] bg-black/20 p-4"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-mono text-sm text-[rgba(244,235,221,.82)]">{candidate.phoneMasked}</p>
+                      <p className="mt-1 font-function text-xs text-[rgba(244,235,221,.42)]">{candidate.assistantStatus}</p>
+                    </div>
+                    <AssistantPriorityBadge priority={candidate.priority} />
+                  </div>
+                  <p className="mt-4 font-function text-sm text-[#F4EBDD]">{candidate.focus}</p>
+                  <p className="mt-2 font-function text-xs leading-5 text-[rgba(244,235,221,.5)]">{candidate.reasonText}</p>
+                  <p className="mt-3 font-function text-xs leading-5 text-[rgba(216,183,111,.72)]">{candidate.suggestedNextStep}</p>
+                  <p className="mt-3 font-mono text-[11px] text-[rgba(244,235,221,.32)]">
+                    {candidate.candidateReasonCodes.join(" / ")}
+                  </p>
+                </article>
+              ))
+            ) : (
+              <div className="rounded-lg border border-[rgba(217,189,122,.1)] bg-black/20 p-4 font-function text-sm text-[rgba(244,235,221,.54)] md:col-span-3">
+                暂无需要人工承接的候选。继续观察今日修行、训练记录与真实复盘即可。
+              </div>
+            )}
+          </div>
+
+          <p className="mt-4 font-function text-xs leading-5 text-[rgba(244,235,221,.42)]">
+            {candidateDryRun.complianceText}
+          </p>
         </section>
 
         <section className="rounded-lg border border-[rgba(217,189,122,.16)] bg-[#11100D]/78 p-5 shadow-[0_24px_70px_rgba(0,0,0,.26)]">
@@ -320,6 +369,21 @@ function AssistantStatusBadge({ status }: { status: string }) {
   return (
     <span className={`rounded-full border px-2.5 py-1 font-function text-xs ${className}`}>
       {status}
+    </span>
+  )
+}
+
+function AssistantPriorityBadge({ priority }: { priority: string }) {
+  const label = priority === "high" ? "高" : priority === "medium" ? "中" : "低"
+  const className = priority === "high"
+    ? "border-[rgba(120,60,45,.3)] bg-[rgba(120,60,45,.18)] text-[rgba(231,188,171,.9)]"
+    : priority === "medium"
+      ? "border-[rgba(216,183,111,.24)] bg-[rgba(216,183,111,.1)] text-[rgba(216,183,111,.88)]"
+      : "border-[rgba(95,132,117,.26)] bg-[rgba(95,132,117,.12)] text-[rgba(174,205,191,.88)]"
+
+  return (
+    <span className={`rounded-full border px-2.5 py-1 font-function text-xs ${className}`}>
+      {label}优先
     </span>
   )
 }
