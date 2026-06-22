@@ -13,6 +13,8 @@ import {
   normalizeAdminFilters,
 } from "@/features/admin/admin-data"
 import { buildAssistantCandidateDryRun } from "@/features/admin/assistant-candidate-dry-run"
+import { AssistantCandidateExportActions } from "@/features/admin/assistant-candidate-export-actions"
+import { exportAssistantCandidatesAsCsv, exportAssistantCandidatesAsJson } from "@/features/admin/assistant-candidate-export"
 
 export const dynamic = "force-dynamic"
 
@@ -51,6 +53,8 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   const summary = getAdminSummary(users)
   const filteredSummary = getAdminSummary(filteredUsers)
   const candidateDryRun = buildAssistantCandidateDryRun(users)
+  const candidateDryRunJson = exportAssistantCandidatesAsJson(candidateDryRun)
+  const candidateDryRunCsv = exportAssistantCandidatesAsCsv(candidateDryRun)
 
   return (
     <main className="min-h-svh bg-[#080807] px-4 py-6 text-[#F4EBDD] md:px-8 md:py-8">
@@ -65,7 +69,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               运营照见台
             </h1>
             <p className="mt-4 max-w-2xl font-function text-sm leading-7 text-[rgba(244,235,221,.62)]">
-              查看测评用户、人格报告、训练状态与助教承接信息。优先读取 server 数据绑定 API，未启动时回退本地 mock；不包含投资建议、行情预测或买卖指令。
+              查看测评用户、人格报告、训练状态与助教承接信息。优先读取 server 数据绑定 API，未启动时回退本地 mock；不包含投资建议、盘面判断或操作指令。
             </p>
           </div>
           <Link
@@ -84,16 +88,19 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         </section>
 
         <section className="rounded-lg border border-[rgba(217,189,122,.16)] bg-[#11100D]/76 p-5 shadow-[0_24px_70px_rgba(0,0,0,.26)]">
-          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <h2 className="font-story text-xl tracking-[.04em]">助教承接候选 dry-run</h2>
               <p className="mt-1 font-function text-xs leading-5 text-[rgba(244,235,221,.48)]">
                 只读演练，不发送提醒。候选只用于人工查看训练、复盘与重复念头，不做自动触达。
               </p>
             </div>
-            <span className="w-fit rounded-full border border-[rgba(216,183,111,.22)] bg-[rgba(216,183,111,.1)] px-3 py-1 font-function text-xs text-[rgba(216,183,111,.86)]">
-              Dry-run {candidateDryRun.totalCandidates}
-            </span>
+            <div className="flex flex-col gap-3 md:items-end">
+              <span className="w-fit rounded-full border border-[rgba(216,183,111,.22)] bg-[rgba(216,183,111,.1)] px-3 py-1 font-function text-xs text-[rgba(216,183,111,.86)]">
+                Dry-run {candidateDryRun.totalCandidates}
+              </span>
+              <AssistantCandidateExportActions jsonText={candidateDryRunJson} csvText={candidateDryRunCsv} />
+            </div>
           </div>
 
           <div className="mt-5 grid gap-3 md:grid-cols-3">
@@ -135,7 +142,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             <div>
               <h2 className="font-story text-xl tracking-[.04em]">邀请码渠道统计</h2>
               <p className="mt-1 font-function text-xs leading-5 text-[rgba(244,235,221,.48)]">
-                只看来源、测评、训练与承接，不做收益归因或裂变排行。
+                只看来源、测评、训练与承接，不做结果归因或裂变排行。
               </p>
             </div>
             <span className="w-fit rounded-full border border-[rgba(95,132,117,.28)] bg-[rgba(95,132,117,.12)] px-3 py-1 font-function text-xs text-[rgba(174,205,191,.84)]">
@@ -315,7 +322,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         </section>
 
         <p className="rounded-lg border border-[rgba(217,189,122,.14)] bg-black/20 px-4 py-3 text-center font-function text-xs leading-6 text-[rgba(244,235,221,.46)]">
-          本后台仅用于交易认知、行为训练与风险教育的运营承接；不荐股、不喊单、不承诺收益。
+          本后台仅用于交易认知、行为训练与风险教育的运营承接；不提供具体操作指令，不承诺结果。
         </p>
       </div>
     </main>
