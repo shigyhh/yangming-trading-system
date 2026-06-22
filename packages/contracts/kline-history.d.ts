@@ -8,6 +8,8 @@ export type KlineHistoryTrainingModeKey = "step_replay" | "firecracker" | "bound
 
 export type KlineHistoryProviderKey = "tushare" | "futu" | "okx"
 
+export type KlineHistoryManifestStatusKey = "missing" | "empty" | "stale" | "ready" | "error"
+
 export type KlineHistoryMarket = {
   key: KlineHistoryMarketKey
   label: string
@@ -117,9 +119,37 @@ export type KlineHistoryReveal = {
   generated_at: string
 }
 
+export type KlineHistoryStorageContract = {
+  root: string
+  runtime_root_config?: "KLINE_CACHE_ROOT"
+  root_descriptor?: string
+  instrument_file: string
+  kline_file: string
+  ashare_legacy_file: string
+}
+
+export type KlineHistoryManifestStatus = {
+  market: KlineHistoryMarketKey
+  market_label: string
+  timeframe: KlineHistoryTimeframeKey
+  timeframe_label: string
+  status: KlineHistoryManifestStatusKey
+  symbols_count: number
+  candles_count: number
+  last_trade_date: string
+  updated_at: string
+  source: string
+  manifest_path: string
+  storage_contract: KlineHistoryStorageContract
+  error?: string
+  compliance: string
+}
+
 export type KlineHistorySlice = {
   id: string
   blind: boolean
+  symbol?: string
+  symbol_masked?: boolean
   market: KlineHistoryMarket
   timeframe: KlineHistoryTimeframe
   adjustment: KlineHistoryAdjustmentMode
@@ -133,6 +163,9 @@ export type KlineHistorySlice = {
     | { masked: true; label: string }
     | { masked: false; start: string; end: string }
   source: string
+  manifestStatus?: KlineHistoryManifestStatus
+  data_status?: KlineHistoryManifestStatusKey
+  error?: string
   rules: KlineHistoryRules
   training: KlineHistoryTrainingBrief
   reveal_token: string
@@ -149,12 +182,7 @@ export type KlineHistoryCatalogResponse = {
   providers: KlineHistoryProvider[]
   gates: KlineHistoryGatePractice[]
   personality_prescriptions: KlineHistoryPersonalityPractice[]
-  storage_contract: {
-    root: string
-    instrument_file: string
-    kline_file: string
-    ashare_legacy_file: string
-  }
+  storage_contract: KlineHistoryStorageContract
   compliance: string
 }
 
@@ -206,6 +234,10 @@ export type KlineHistoryInstrumentsResponse = {
   instruments: KlineHistoryInstrument[]
   compliance: string
 }
+
+export type KlineHistoryStatusResponse = {
+  ok: true
+} & KlineHistoryManifestStatus
 
 export type KlineHistoryRulesResponse = {
   ok: true

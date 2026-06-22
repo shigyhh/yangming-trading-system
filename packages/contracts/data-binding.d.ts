@@ -119,6 +119,16 @@ export type DataBindingTrainingRecord = {
   cultivationText?: string
 }
 
+export type DataBindingOneThoughtEventSnapshot = {
+  id?: string
+  thought?: string
+  reaction?: string
+  boundaryState?: string
+  mirrorType?: string
+  source?: string
+  createdAt?: string
+}
+
 export type DataBindingKLineRecord = {
   day?: number
   recordedAt?: string
@@ -127,6 +137,14 @@ export type DataBindingKLineRecord = {
   scene: string
   reaction: string
   disciplineAction: string
+  market?: string
+  timeframe?: string
+  symbol?: string
+  dataSource?: "server_cache" | "local_demo" | "network_error" | string
+  klineSource?: "server_cache" | "local_demo" | "network_error" | string
+  serverSliceStatus?: string
+  serverSliceError?: string
+  oneThoughtEvent?: DataBindingOneThoughtEventSnapshot
   feedback?: string
   reactionTimeMs?: number
   processScores?: {

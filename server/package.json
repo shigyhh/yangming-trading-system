@@ -20,6 +20,7 @@
     "test:smoke": "node scripts/smoke-test.mjs",
     "test:data-binding": "node --test scripts/data-binding-contract-test.mjs",
     "test:global-reflection": "node --test scripts/global-reflection-test.mjs",
+    "test:event-aggregation": "node --test scripts/event-aggregation-test.mjs",
     "test:i18n": "node --test scripts/i18n-contract-test.mjs",
     "test:kline-history": "node --test scripts/historical-kline-contract-test.mjs",
     "test:ymty": "node --test scripts/ymty-mock-payment.test.mjs",

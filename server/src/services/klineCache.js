@@ -477,6 +477,7 @@ function normalizeCandles(candles = []) {
 function validateCandles(candles, label, errors, fallback = {}) {
   const seen = new Set();
   let previous = "";
+  let nonPositiveOhlcCount = 0;
 
   candles.forEach((item, index) => {
     const key = normalizeDateKey(item.date || item.time || item.datetime);
@@ -494,10 +495,15 @@ function validateCandles(candles, label, errors, fallback = {}) {
     const close = Number(item.close);
     if (hasOhlc && (high < open || high < close || high < low)) errors.push(`${label} 第 ${index + 1} 根 high 不合法。`);
     if (hasOhlc && (low > open || low > close || low > high)) errors.push(`${label} 第 ${index + 1} 根 low 不合法。`);
+    if (hasOhlc && [open, high, low, close].some((value) => value <= 0)) nonPositiveOhlcCount += 1;
     if (item.volume !== undefined && Number(item.volume) < 0) errors.push(`${label} 第 ${index + 1} 根 volume 不能为负。`);
     if (!item.source && !fallback.source) errors.push(`${label} 第 ${index + 1} 根缺少 source。`);
     if (!item.adjust && !fallback.adjust) errors.push(`${label} 第 ${index + 1} 根缺少 adjust。`);
   });
+
+  if (nonPositiveOhlcCount > 0) {
+    errors.push(`${label} 存在 ${nonPositiveOhlcCount} 根 open/high/low/close 小于等于 0。`);
+  }
 }
 
 function buildManifest({

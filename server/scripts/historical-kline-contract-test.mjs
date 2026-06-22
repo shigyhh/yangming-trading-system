@@ -1,14 +1,24 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 
 import {
+  buildEmptyHistoricalKlineSlice,
   buildHistoricalKlineSlice,
   downloadHistoricalKline,
+  getHistoricalKlineStatus,
   getHistoricalKlineRules,
   listHistoricalKlineCatalog,
   listHistoricalKlineInstruments,
   revealHistoricalKlineSlice
 } from "../src/services/historicalKline.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const serverRoot = path.resolve(__dirname, "..");
 
 test("historical kline catalog exposes markets, cycles and rules", () => {
   const catalog = listHistoricalKlineCatalog();
@@ -140,3 +150,187 @@ test("historical kline download normalizes provider data without exposing tokens
   assert.equal(result.job.dry_run, true);
   assert.ok(!JSON.stringify(result).includes("test-token"));
 });
+
+test("config.marketDataDir honors KLINE_CACHE_ROOT and keeps default fallback", async () => {
+  const root = await createTempMarketRoot();
+  const defaultConfig = runServerModule(`
+    import path from "node:path";
+    import { config } from "./src/config.js";
+    console.log(JSON.stringify({
+      marketDataDir: config.marketDataDir,
+      expected: path.resolve(config.serverRoot, "data", "market")
+    }));
+  `, { KLINE_CACHE_ROOT: undefined });
+  const envConfig = runServerModule(`
+    import { config } from "./src/config.js";
+    console.log(JSON.stringify({ marketDataDir: config.marketDataDir }));
+  `, { KLINE_CACHE_ROOT: root });
+
+  assert.equal(defaultConfig.marketDataDir, defaultConfig.expected);
+  assert.equal(envConfig.marketDataDir, path.resolve(root));
+});
+
+test("historical kline server contract uses runtime marketDataDir for catalog, instruments, status and slice", async () => {
+  const root = await createTempMarketRoot();
+  const beforeFiles = await listFiles(root);
+  const result = runServerModule(`
+    import {
+      buildEmptyHistoricalKlineSlice,
+      buildHistoricalKlineSlice,
+      getHistoricalKlineStatus,
+      listHistoricalKlineCatalog,
+      listHistoricalKlineInstruments
+    } from "./src/services/historicalKline.js";
+
+    const catalog = listHistoricalKlineCatalog();
+    const instruments = await listHistoricalKlineInstruments({
+      marketKey: "cn_stock",
+      timeframeKey: "101",
+      limit: 20
+    });
+    const readyStatus = await getHistoricalKlineStatus({
+      marketKey: "cn_stock",
+      timeframeKey: "101"
+    });
+    const missingStatus = await getHistoricalKlineStatus({
+      marketKey: "cn_stock",
+      timeframeKey: "30m"
+    });
+    const slice = await buildHistoricalKlineSlice({
+      marketKey: "cn_stock",
+      symbol: "600519",
+      timeframeKey: "101",
+      windowSize: 12,
+      mode: "review",
+      blind: false,
+      endDate: "2024-01-20",
+      seed: "runtime-root-test"
+    });
+    const emptySlice = await buildEmptyHistoricalKlineSlice({
+      marketKey: "cn_stock",
+      symbol: "000001",
+      timeframeKey: "30m",
+      windowSize: 120,
+      mode: "review",
+      blind: false,
+      reason: "missing-symbol-fixture"
+    });
+
+    console.log(JSON.stringify({ catalog, instruments, readyStatus, missingStatus, slice, emptySlice }));
+  `, { KLINE_CACHE_ROOT: root });
+  const afterFiles = await listFiles(root);
+
+  assert.notEqual(result.catalog.storage_contract.root, "server/data/market");
+  assert.equal(result.catalog.storage_contract.runtime_root_config, "KLINE_CACHE_ROOT");
+  assert.equal(result.instruments.market.key, "cn_equity");
+  assert.equal(result.instruments.timeframe.key, "1d");
+  assert.equal(result.instruments.instruments.find((item) => item.symbol === "600519")?.data_ready, true);
+  assert.equal(result.readyStatus.market, "cn_equity");
+  assert.equal(result.readyStatus.timeframe, "1d");
+  assert.equal(result.readyStatus.status, "ready");
+  assert.equal(result.readyStatus.symbols_count, 1);
+  assert.equal(result.readyStatus.candles_count, 30);
+  assert.equal(result.readyStatus.last_trade_date, "29991231");
+  assert.equal(result.readyStatus.updated_at, "2026-06-13T00:00:00.000Z");
+  assert.equal(result.missingStatus.status, "missing");
+  assert.equal(result.missingStatus.symbols_count, 0);
+  assert.equal(result.slice.slice.symbol, "600519");
+  assert.equal(result.slice.slice.symbol_masked, false);
+  assert.equal(result.slice.slice.candles.length, 12);
+  assert.equal(result.slice.slice.source, "fixture-cache");
+  assert.equal(result.slice.slice.manifestStatus.status, "ready");
+  assert.equal(result.emptySlice.slice.symbol, "000001");
+  assert.equal(result.emptySlice.slice.candles.length, 0);
+  assert.equal(result.emptySlice.slice.manifestStatus.status, "missing");
+  assert.deepEqual(afterFiles, beforeFiles);
+});
+
+test("historical kline status reports missing manifest without throwing", async () => {
+  const status = await getHistoricalKlineStatus({
+    marketKey: "cn_equity",
+    timeframeKey: "5m"
+  });
+
+  assert.equal(status.market, "cn_equity");
+  assert.equal(status.timeframe, "5m");
+  assert.ok(["missing", "empty", "ready", "stale", "error"].includes(status.status));
+  assert.equal(typeof status.symbols_count, "number");
+  assert.equal(typeof status.candles_count, "number");
+});
+
+function runServerModule(source, envPatch = {}) {
+  const env = { ...process.env };
+  for (const [key, value] of Object.entries(envPatch)) {
+    if (value === undefined) delete env[key];
+    else env[key] = value;
+  }
+  const child = spawnSync(process.execPath, ["--input-type=module", "--eval", source], {
+    cwd: serverRoot,
+    env,
+    encoding: "utf8"
+  });
+  if (child.status !== 0) {
+    throw new Error([child.stderr, child.stdout].filter(Boolean).join("\n"));
+  }
+  return JSON.parse(child.stdout);
+}
+
+async function createTempMarketRoot() {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "kline-history-contract-"));
+  const ashareRoot = path.join(root, "ashare", "101");
+  await fs.mkdir(ashareRoot, { recursive: true });
+  await fs.writeFile(path.join(root, "stock-pool.json"), JSON.stringify({
+    stocks: [
+      { code: "600519", name: "贵州茅台", secid: "1.600519" }
+    ]
+  }, null, 2));
+  await fs.writeFile(path.join(ashareRoot, "manifest.json"), JSON.stringify({
+    market: "ashare",
+    timeframe: "101",
+    source: "fixture-cache",
+    status: "ok",
+    symbols_count: 1,
+    candles_count: 30,
+    last_trade_date: "29991231",
+    updated_at: "2026-06-13T00:00:00.000Z",
+    errors: []
+  }, null, 2));
+  await fs.writeFile(path.join(ashareRoot, "600519.json"), JSON.stringify({
+    version: "kline_cache_v2",
+    source: "fixture-cache",
+    market_key: "cn_equity",
+    symbol: "600519",
+    timeframe_key: "1d",
+    candle_count: 30,
+    data_start: "2024-01-01",
+    data_end: "2024-01-30",
+    candles: Array.from({ length: 30 }, (_, index) => ({
+      date: `2024-01-${String(index + 1).padStart(2, "0")}`,
+      open: 100 + index,
+      high: 105 + index,
+      low: 95 + index,
+      close: 102 + index,
+      volume: 1000 + index,
+      amount: 100000 + index
+    }))
+  }, null, 2));
+  return root;
+}
+
+async function listFiles(root) {
+  const rows = [];
+  await walk(root, rows, root);
+  return rows.sort();
+}
+
+async function walk(current, rows, root) {
+  const entries = await fs.readdir(current, { withFileTypes: true });
+  for (const entry of entries) {
+    const fullPath = path.join(current, entry.name);
+    if (entry.isDirectory()) {
+      await walk(fullPath, rows, root);
+    } else if (entry.isFile()) {
+      rows.push(path.relative(root, fullPath));
+    }
+  }
+}
