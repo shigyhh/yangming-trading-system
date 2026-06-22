@@ -831,7 +831,8 @@ test("verifyKlineCache detects empty cache, duplicate candles and missing OHLC",
     timeframe: "101",
     candles: [
       { date: "2024-01-03", open: 10, high: 11, low: 9, close: 10 },
-      { date: "2024-01-03", open: 10, high: 11, low: 9 }
+      { date: "2024-01-03", open: 10, high: 11, low: 9 },
+      { date: "2024-01-04", open: -10, high: 11, low: -12, close: 10 }
     ]
   });
 
@@ -844,6 +845,7 @@ test("verifyKlineCache detects empty cache, duplicate candles and missing OHLC",
   assert.equal(badResult.status, "error");
   assert.ok(badResult.errors.some((item) => item.includes("重复")));
   assert.ok(badResult.errors.some((item) => item.includes("open/high/low/close")));
+  assert.ok(badResult.errors.some((item) => item.includes("小于等于 0")));
 });
 
 test("verifyKlineCache validates multi-timeframe cache and KLINE_CACHE_ROOT style roots", async () => {
