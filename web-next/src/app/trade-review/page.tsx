@@ -310,7 +310,7 @@ function EventReviewProjectionReport({
             </div>
             <div>
               <dt>成长状态</dt>
-              <dd>{profile?.growthStage || "暂未显影"}</dd>
+              <dd>{profile?.currentStage || "暂未显影"}</dd>
             </div>
           </dl>
         </article>
