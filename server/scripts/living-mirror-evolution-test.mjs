@@ -11,6 +11,24 @@ import { buildLivingMirrorGrowthProjection } from "../src/services/livingMirrorE
 
 const forbiddenPhrases = ["买入", "卖出", "荐股", "喊单", "预测", "收益保证", "必赚", "稳赚", "信号", "抄底", "逃顶"];
 
+test("living mirror growth projection returns a safe empty state without records", () => {
+  const projection = buildLivingMirrorGrowthProjection("empty-growth-user", {}, {
+    now: "2026-06-22T08:00:00.000Z"
+  });
+
+  assert.equal(projection.schemaVersion, "living_mirror_growth_projection_v1");
+  assert.equal(projection.userId, "empty-growth-user");
+  assert.deepEqual(projection.highFrequencyThoughts, []);
+  assert.deepEqual(projection.repeatedBehaviors, []);
+  assert.equal(projection.trainingContinuity.totalEvents, 0);
+  assert.equal(projection.trainingContinuity.level, "none");
+  assert.equal(projection.mirrorLifeStage, "seed");
+  assert.ok(projection.dataGaps.some((gap) => gap.key === "heartProof"));
+  assert.ok(projection.dataGaps.some((gap) => gap.key === "dailyGrowth"));
+  assert.ok(projection.dataGaps.some((gap) => gap.key === "retest"));
+  assert.ok(projection.complianceNotice.includes("交易心理训练"));
+});
+
 test("living mirror growth projection summarizes thoughts, behaviors and data gaps", () => {
   const projection = buildLivingMirrorGrowthProjection("user-growth-001", {
     kline_records: [
