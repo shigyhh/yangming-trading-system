@@ -100,6 +100,12 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                 Dry-run {candidateDryRun.totalCandidates}
               </span>
               <AssistantCandidateExportActions jsonText={candidateDryRunJson} csvText={candidateDryRunCsv} />
+              <Link
+                href="/admin/assistant-candidates"
+                className="font-function text-xs text-[rgba(216,183,111,.72)] underline-offset-4 transition hover:text-[#F4EBDD] hover:underline"
+              >
+                查看完整候选列表
+              </Link>
             </div>
           </div>
 
