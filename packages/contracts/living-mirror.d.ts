@@ -576,6 +576,7 @@ export type LivingMirrorGrowthProfile = {
 
 export type LivingMirrorGrowthProjectionThought = {
   thoughtType?: string
+  text?: string
   label: string
   count: number
   weight?: number
@@ -598,6 +599,10 @@ export type LivingMirrorGrowthProjectionDimension = {
 }
 
 export type LivingMirrorGrowthProjectionContinuity = {
+  totalEvents?: number
+  activeDays?: number
+  latestRecordedAt?: string
+  level?: string
   completedGrowthDays?: number
   completedDays?: number
   currentStreak?: number
@@ -616,11 +621,12 @@ export type LivingMirrorGrowthProjectionLifeStage = {
   label?: string
   title?: string
   description?: string
-}
+} | "seed" | "sprout" | "rooted" | "growing" | "stable" | "mature" | string
 
 export type LivingMirrorGrowthProjectionNextFocus = {
   title?: string
   reason?: string
+  action?: string
   nextActionText?: string
   nextAction?: string
   actionText?: string
@@ -630,8 +636,10 @@ export type LivingMirrorGrowthProjectionNextFocus = {
 }
 
 export type LivingMirrorGrowthProjectionDataGap = {
-  type: string
-  message: string
+  type?: string
+  key?: string
+  message?: string
+  label?: string
 }
 
 export type LivingMirrorGrowthProjectionBehaviorLoop = {
@@ -644,6 +652,13 @@ export type LivingMirrorGrowthProjectionBehaviorLoop = {
 }
 
 export type LivingMirrorGrowthProjectionSourceSummary = {
+  klineRecords?: number
+  tradeReviews?: number
+  oneThoughtEvents?: number
+  mirrorReport?: boolean
+  retests?: number
+  heartProof?: boolean
+  dailyGrowth?: boolean
   mirrorReportCount?: number
   dailyGrowthCount?: number
   heartProofCount?: number

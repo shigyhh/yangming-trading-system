@@ -293,15 +293,19 @@ export default function LivingMirrorGrowthPage() {
 
 function hasGrowthProjectionData(projection: LivingMirrorGrowthProjection | null | undefined) {
   if (!projection) return false
+  const lifeStage = projection.mirrorLifeStage
+  const hasLifeStage = typeof lifeStage === "string"
+    ? Boolean(lifeStage.trim())
+    : Boolean(lifeStage?.label || lifeStage?.title || lifeStage?.stage || lifeStage?.key)
 
   return Boolean(
     projection.growthProfileId ||
-    projection.mirrorLifeStage?.label ||
-    projection.mirrorLifeStage?.title ||
+    hasLifeStage ||
     projection.highFrequencyThoughts?.length ||
     projection.repeatedBehaviors?.length ||
     projection.trainingContinuity ||
-    projection.nextCycleFocus?.title,
+    projection.nextCycleFocus?.title ||
+    projection.nextCycleFocus?.action,
   )
 }
 
@@ -346,7 +350,7 @@ function normalizeProjectionThoughts(
 
   return thoughts.map((thought, index) => {
     const record = thought as Record<string, unknown>
-    const label = stringValue(record.label) || stringValue(record.thoughtType) || `一念 ${index + 1}`
+    const label = stringValue(record.label) || stringValue(record.text) || stringValue(record.thoughtType) || `一念 ${index + 1}`
     return {
       thoughtType: stringValue(record.thoughtType) || stringValue(record.key) || `server_thought_${index + 1}`,
       label,
@@ -402,14 +406,14 @@ function normalizeProjectionTrainingContinuity(
 
   return {
     completedGrowthDays: numberValue(
-      record.completedGrowthDays ?? record.completedDays,
+      record.completedGrowthDays ?? record.completedDays ?? record.activeDays,
       fallbackContinuity.completedGrowthDays,
     ),
-    currentStreak: numberValue(record.currentStreak, fallbackContinuity.currentStreak),
-    longestStreak: numberValue(record.longestStreak, fallbackContinuity.longestStreak),
+    currentStreak: numberValue(record.currentStreak ?? record.activeDays, fallbackContinuity.currentStreak),
+    longestStreak: numberValue(record.longestStreak ?? record.activeDays, fallbackContinuity.longestStreak),
     missedDays: numberValue(record.missedDays, fallbackContinuity.missedDays),
     trainingConsistencyScore: numberValue(
-      record.trainingConsistencyScore ?? record.consistencyScore,
+      record.trainingConsistencyScore ?? record.consistencyScore ?? getContinuityScoreFromEvents(record),
       fallbackContinuity.trainingConsistencyScore,
     ),
   }
@@ -420,6 +424,9 @@ function normalizeProjectionLifeStage(
   fallbackStage: GrowthProfile["mirrorLifeStage"],
 ): GrowthProfile["mirrorLifeStage"] {
   if (!lifeStage) return fallbackStage
+  if (typeof lifeStage === "string") {
+    return getProjectionLifeStage(lifeStage, fallbackStage)
+  }
   const record = lifeStage as Record<string, unknown>
 
   return {
@@ -440,7 +447,7 @@ function normalizeProjectionNextCycleFocus(
   return {
     title: stringValue(record.title) || stringValue(record.label) || fallbackFocus.title,
     reason: stringValue(record.reason) || stringValue(record.summary) || fallbackFocus.reason,
-    nextActionText: stringValue(record.nextActionText) || stringValue(record.nextAction) || stringValue(record.actionText) || fallbackFocus.nextActionText,
+    nextActionText: stringValue(record.nextActionText) || stringValue(record.nextAction) || stringValue(record.actionText) || stringValue(record.action) || fallbackFocus.nextActionText,
     relatedDimensions: relatedDimensions.length ? relatedDimensions : fallbackFocus.relatedDimensions,
     sourceType: (stringValue(record.sourceType) || fallbackFocus.sourceType) as GrowthProfileNextCycleFocus["sourceType"],
     sourceId: stringValue(record.sourceId) || fallbackFocus.sourceId,
@@ -456,8 +463,8 @@ function normalizeProjectionDataGaps(
   return gaps.map((gap) => {
     const record = gap as Record<string, unknown>
     return {
-      type: (stringValue(record.type) || "missing_trade_review") as GrowthProfileDataGap["type"],
-      message: stringValue(record.message) || "当前成长谱数据仍在累积。",
+      type: (stringValue(record.type) || stringValue(record.key) || "missing_trade_review") as GrowthProfileDataGap["type"],
+      message: stringValue(record.message) || stringValue(record.label) || "当前成长谱数据仍在累积。",
     }
   })
 }
@@ -484,13 +491,58 @@ function normalizeProjectionSourceSummary(
   const record = sourceSummary as Record<string, unknown>
 
   return {
-    mirrorReportCount: numberValue(record.mirrorReportCount, fallbackSummary.mirrorReportCount),
+    mirrorReportCount: numberValue(record.mirrorReportCount, typeof record.mirrorReport === "boolean" ? Number(record.mirrorReport) : fallbackSummary.mirrorReportCount),
     dailyGrowthCount: numberValue(record.dailyGrowthCount, fallbackSummary.dailyGrowthCount),
-    heartProofCount: numberValue(record.heartProofCount, fallbackSummary.heartProofCount),
-    tradeReviewCount: numberValue(record.tradeReviewCount, fallbackSummary.tradeReviewCount),
+    heartProofCount: numberValue(record.heartProofCount ?? record.oneThoughtEvents, fallbackSummary.heartProofCount),
+    tradeReviewCount: numberValue(record.tradeReviewCount ?? record.tradeReviews, fallbackSummary.tradeReviewCount),
     behaviorLoopCount: numberValue(record.behaviorLoopCount, fallbackSummary.behaviorLoopCount),
-    retestChangeCount: numberValue(record.retestChangeCount, fallbackSummary.retestChangeCount),
+    retestChangeCount: numberValue(record.retestChangeCount ?? record.retests, fallbackSummary.retestChangeCount),
   }
+}
+
+function getContinuityScoreFromEvents(record: Record<string, unknown>) {
+  const totalEvents = numberValue(record.totalEvents, 0)
+  const activeDays = numberValue(record.activeDays, 0)
+  if (!totalEvents || !activeDays) return undefined
+  return Math.max(0, Math.min(100, Math.round((activeDays / totalEvents) * 100)))
+}
+
+function getProjectionLifeStage(stageKey: string, fallbackStage: GrowthProfile["mirrorLifeStage"]): GrowthProfile["mirrorLifeStage"] {
+  const key = stageKey.trim()
+  const stageMap: Record<string, GrowthProfile["mirrorLifeStage"]> = {
+    seed: {
+      stage: "initial_reflection",
+      label: "初照",
+      description: "成长事实源刚开始累积，先稳稳记录每一次照见。",
+    },
+    sprout: {
+      stage: "seeing_thought",
+      label: "初萌",
+      description: "一念和行为开始显影，下一步是把看见的反应带回训练。",
+    },
+    rooted: {
+      stage: "guarding_action",
+      label: "扎根",
+      description: "重复模式已经较清楚，重点是守住边界和复盘动作。",
+    },
+    growing: {
+      stage: "guarding_action",
+      label: "渐明",
+      description: "行为线索逐渐清晰，继续在事上练中校准知行。",
+    },
+    stable: {
+      stage: "proven",
+      label: "稳定",
+      description: "训练连续性正在形成，继续用复盘验证变化。",
+    },
+    mature: {
+      stage: "retested",
+      label: "成形",
+      description: "成长模式已经成形，适合进入复照与复测校准。",
+    },
+  }
+
+  return stageMap[key] || fallbackStage
 }
 
 function mergeComputedHistory(updatedAt: string | undefined, history: string[]) {

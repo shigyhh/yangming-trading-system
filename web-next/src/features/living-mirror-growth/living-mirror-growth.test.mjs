@@ -427,6 +427,162 @@ test("living mirror growth page prefers server projection while keeping local fa
   })
 })
 
+test("living mirror growth adapter maps server projection field names into the page profile", async () => {
+  const { toGrowthProfileFromProjection } = await loadGrowthProjectionAdapter()
+  const fallbackProfile = makeGrowthProfileFallback()
+  const profile = toGrowthProfileFromProjection({
+    schemaVersion: "living_mirror_growth_projection_v1",
+    userId: "server-user-001",
+    growthProfileId: "lmg_server_user_001",
+    highFrequencyThoughts: [{ text: "追", count: 3 }],
+    repeatedBehaviors: [],
+    affectedDimensions: [],
+    trainingContinuity: { totalEvents: 7, activeDays: 3, level: "warming" },
+    mirrorLifeStage: "sprout",
+    nextCycleFocus: { action: "继续照见追涨前的一念" },
+    dataGaps: [{ key: "dailyGrowth", label: "今日成长记录不足" }],
+    topBehaviorLoops: [],
+    zhixingStability: null,
+    sourceSummary: {},
+    updatedAt: "2026-06-22T08:00:00.000Z",
+    complianceNotice: "本成长谱仅用于交易心理觉察、复盘训练与行为管理，不构成投资建议。",
+  }, fallbackProfile)
+
+  assert.equal(profile.highFrequencyThoughts[0].label, "追")
+  assert.equal(profile.highFrequencyThoughts[0].count, 3)
+  assert.equal(profile.mirrorLifeStage.label, "初萌")
+  assert.notEqual(profile.mirrorLifeStage.label, "sprout")
+  assert.equal(profile.trainingContinuity.completedGrowthDays, 3)
+  assert.equal(profile.trainingContinuity.trainingConsistencyScore, 43)
+  assert.equal(profile.nextCycleFocus.nextActionText, "继续照见追涨前的一念")
+  assert.deepEqual(profile.nextCycleFocus.relatedDimensions, fallbackProfile.nextCycleFocus.relatedDimensions)
+  assert.equal(profile.dataGaps[0].type, "dailyGrowth")
+  assert.equal(profile.dataGaps[0].message, "今日成长记录不足")
+
+  const fallbackOnly = toGrowthProfileFromProjection({
+    schemaVersion: "living_mirror_growth_projection_v1",
+    userId: "server-user-001",
+    growthProfileId: "lmg_server_user_001",
+    highFrequencyThoughts: [],
+    repeatedBehaviors: [],
+    affectedDimensions: [],
+    trainingContinuity: {},
+    mirrorLifeStage: "",
+    nextCycleFocus: {},
+    dataGaps: [],
+    topBehaviorLoops: [],
+    sourceSummary: {},
+    updatedAt: "",
+  }, fallbackProfile)
+
+  assert.equal(fallbackOnly.highFrequencyThoughts[0].label, fallbackProfile.highFrequencyThoughts[0].label)
+  assert.equal(fallbackOnly.mirrorLifeStage.label, fallbackProfile.mirrorLifeStage.label)
+  assert.equal(fallbackOnly.nextCycleFocus.nextActionText, fallbackProfile.nextCycleFocus.nextActionText)
+})
+
+async function loadGrowthProjectionAdapter() {
+  const source = await readFile(pageUrl, "utf8")
+  const start = source.indexOf("function hasGrowthProjectionData")
+  const end = source.indexOf("function SummaryMetric")
+
+  assert.ok(start >= 0, "page should expose growth projection adapter helpers")
+  assert.ok(end > start, "page should keep adapter helpers before SummaryMetric")
+
+  const adapterSource = `${source.slice(start, end)}\nmodule.exports = { toGrowthProfileFromProjection, hasGrowthProjectionData }`
+  const compiled = ts.transpileModule(adapterSource, {
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2022,
+      esModuleInterop: true,
+    },
+  }).outputText
+  const cjsModule = { exports: {} }
+  const exports = cjsModule.exports
+  const module = cjsModule
+
+  new Function("module", "exports", compiled)(module, exports)
+  return cjsModule.exports
+}
+
+function makeGrowthProfileFallback() {
+  return {
+    schemaVersion: "growth_profile_v1",
+    growth_profile_id: "growth_profile_fallback",
+    growthProfileId: "growth_profile_fallback",
+    status: "active",
+    userId: "fallback-user",
+    anonymousId: "fallback-anon",
+    primaryPersona: "待照见",
+    secondaryPersona: "待照见",
+    sevenDayPrescription: [],
+    recommendedCamp: "",
+    highFrequencyThoughts: [{ thoughtType: "fallback", label: "本地一念", count: 1, weight: 1, evidenceIds: [] }],
+    trainingContinuity: {
+      completedGrowthDays: 1,
+      currentStreak: 1,
+      longestStreak: 1,
+      missedDays: 0,
+      trainingConsistencyScore: 14,
+    },
+    affectedDimensions: [],
+    repeatedBehaviors: [],
+    topBehaviorLoopIds: [],
+    mirrorLifeStage: {
+      stage: "initial_reflection",
+      label: "本地阶段",
+      description: "本地 fallback 阶段",
+    },
+    nextCycleFocus: {
+      title: "本地重点",
+      reason: "本地原因",
+      nextActionText: "本地下一步",
+      relatedDimensions: ["本地维度"],
+    },
+    dataGaps: [{ type: "missing_trade_review", message: "本地缺口" }],
+    retestTrend: {
+      retestCount: 0,
+      improvedDimensions: [],
+      declinedDimensions: [],
+    },
+    retestSummary: {
+      retestCount: 0,
+      baselineScores: {},
+      currentScores: {},
+      deltaScores: {},
+      improvedDimensions: [],
+      declinedDimensions: [],
+      stableDimensions: [],
+      trainingEvidenceSummary: "",
+      highFrequencyThoughtChange: "",
+      repeatedBehaviorChange: "",
+      nextCycleFocus: {
+        title: "本地重点",
+        reason: "本地原因",
+        nextActionText: "本地下一步",
+        relatedDimensions: ["本地维度"],
+      },
+      conclusionText: "",
+    },
+    sourceSummary: {
+      mirrorReportCount: 0,
+      dailyGrowthCount: 0,
+      heartProofCount: 0,
+      tradeReviewCount: 0,
+      behaviorLoopCount: 0,
+      retestChangeCount: 0,
+    },
+    dailyGrowthCount: 0,
+    heartProofCount: 0,
+    tradeReviewCount: 0,
+    behaviorLoopCount: 0,
+    retestChangeCount: 0,
+    complianceText: "本成长谱仅用于交易心理觉察、复盘训练与行为管理，不构成投资建议。",
+    computedAt: "2026-06-21T08:00:00.000Z",
+    computedAtHistory: ["2026-06-21T08:00:00.000Z"],
+    updatedAt: "2026-06-21T08:00:00.000Z",
+  }
+}
+
 async function loadBehaviorLoopEngine() {
   const source = await readFile(behaviorLoopEngineUrl, "utf8")
   const compiled = ts.transpileModule(source, {
