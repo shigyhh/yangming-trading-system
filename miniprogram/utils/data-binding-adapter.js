@@ -145,7 +145,7 @@ function normalizeKLineRecordForBinding(sourceRecord = {}, context = {}) {
   const trainingRecord = context.trainingRecord || {};
   const practiceState = context.practiceState || {};
   const user = context.user || {};
-  const localId = pickText(sourceRecord.id, sourceRecord.reviewId, sourceRecord.recordId, sourceRecord.sceneKey, "");
+  const localId = pickText(sourceRecord.id, sourceRecord.localRecordId, sourceRecord.reviewId, sourceRecord.recordId, sourceRecord.sceneKey, "");
   const userActions = Array.isArray(sourceRecord.userActions)
     ? sourceRecord.userActions
     : Array.isArray(sourceRecord.reactions) ? sourceRecord.reactions : [];
@@ -184,6 +184,7 @@ function normalizeKLineRecordForBinding(sourceRecord = {}, context = {}) {
     reviewText: pickText(sourceRecord.reviewText, sourceRecord.processInsight, sourceRecord.insight, sourceRecord.verdict, sourceRecord.reviewNote),
     linkedTradeReviewId: pickText(sourceRecord.linkedTradeReviewId, sourceRecord.tradeReviewId),
     linkedOneThoughtEventId: pickText(sourceRecord.linkedOneThoughtEventId, sourceRecord.oneThoughtEventId),
+    oneThoughtEvent: normalizeOneThoughtEventForBinding(sourceRecord.oneThoughtEvent),
     source: pickText(sourceRecord.source, SOURCE),
     createdAt: toIso(sourceRecord.createdAt || sourceRecord.completedAt || Date.now()),
     sceneKey: pickText(sourceRecord.sceneKey, sourceRecord.sceneId, localId),
@@ -205,6 +206,37 @@ function buildKLineMistakes(sourceRecord = {}) {
     sourceRecord.changedPlan ? "训练中曾临时改计划" : "",
     sourceRecord.boundaryState && sourceRecord.boundaryState !== "kept" ? (sourceRecord.boundaryStateLabel || "边界未完全守住") : ""
   ].filter(Boolean);
+}
+
+function normalizeOneThoughtEventForBinding(event = null) {
+  if (!event || typeof event !== "object") return null;
+  const eventId = pickText(event.eventId);
+  if (!eventId) return null;
+  return {
+    eventId,
+    localRecordId: pickText(event.localRecordId),
+    eventType: pickText(event.eventType, "kline_training"),
+    userId: redactSensitiveText(event.userId),
+    anonymousId: redactSensitiveText(event.anonymousId),
+    openid: redactSensitiveText(event.openid),
+    unionid: redactSensitiveText(event.unionid),
+    market: pickText(event.market),
+    symbol: pickText(event.symbol),
+    timeframe: pickText(event.timeframe),
+    mode: pickText(event.mode),
+    klineSource: pickText(event.klineSource),
+    serverSliceStatus: pickText(event.serverSliceStatus),
+    serverSliceError: redactSensitiveText(event.serverSliceError),
+    firstThought: pickText(event.firstThought),
+    reactionChoice: pickText(event.reactionChoice),
+    boundaryState: pickText(event.boundaryState),
+    mirrorType: pickText(event.mirrorType),
+    relatedMirror: pickText(event.relatedMirror),
+    clientSyncStatus: pickText(event.clientSyncStatus),
+    createdAt: event.createdAt || "",
+    completedAt: event.completedAt || "",
+    updatedAt: event.updatedAt || ""
+  };
 }
 
 function buildTradeReviewBindingPayload({ auth = {}, state = {}, review = null } = {}) {
@@ -581,6 +613,14 @@ function pickText() {
     if (value) return String(value);
   }
   return "";
+}
+
+function redactSensitiveText(value) {
+  const text = pickText(value).slice(0, 280);
+  if (!text) return "";
+  return text
+    .replace(/(^|[^\d])1[3-9]\d{9}(?=\D|$)/g, "$1[redacted_phone]")
+    .replace(/(token|access_token|authorization|验证码|code)[=:：]\s*[\w.-]+/gi, "$1=[redacted]");
 }
 
 function getPhoneTail(rawPhone, maskedPhone) {

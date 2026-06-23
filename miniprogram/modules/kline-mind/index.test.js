@@ -4,6 +4,7 @@ const {
   PERSONALITY_KLINE_PRESCRIPTIONS,
   buildKlineMindSession,
   buildKlineMindRecord,
+  buildOneThoughtEvent,
   calculateKlineMindScore,
   MARKET_CATALOG,
   TIMEFRAME_CATALOG,
@@ -98,6 +99,38 @@ assert.strictEqual(demoRecord.klineSource, "local_demo");
 assert.strictEqual(demoRecord.sliceSource, "local_demo");
 assert.strictEqual(demoRecord.serverSliceStatus, "network_error");
 assert.strictEqual(demoRecord.serverSliceError, "K线服务暂不可用");
+
+const oneThoughtEvent = buildOneThoughtEvent(Object.assign({}, demoRecord, {
+  localRecordId: "kline-mind-local-001",
+  userId: "",
+  insightLine: "手机号 13800138000 不应进入事件明文。",
+  relatedMirror: "冲动型"
+}), {
+  identity: {
+    anonymousId: "anon-open-loop-001"
+  }
+});
+const rebuiltOneThoughtEvent = buildOneThoughtEvent(Object.assign({}, demoRecord, {
+  localRecordId: "kline-mind-local-001"
+}), {
+  existingEvent: oneThoughtEvent
+});
+assert.strictEqual(oneThoughtEvent.eventId, rebuiltOneThoughtEvent.eventId);
+assert.strictEqual(oneThoughtEvent.localRecordId, "kline-mind-local-001");
+assert.strictEqual(oneThoughtEvent.eventType, "kline_training");
+assert.strictEqual(oneThoughtEvent.anonymousId, "anon-open-loop-001");
+assert.strictEqual(oneThoughtEvent.klineSource, "local_demo");
+assert.strictEqual(oneThoughtEvent.serverSliceStatus, "network_error");
+assert.strictEqual(oneThoughtEvent.serverSliceError, "K线服务暂不可用");
+assert.strictEqual(oneThoughtEvent.market, "cn_equity");
+assert.strictEqual(oneThoughtEvent.symbol, "local-demo");
+assert.strictEqual(oneThoughtEvent.timeframe, "30m");
+assert.strictEqual(oneThoughtEvent.mode, "step_replay");
+assert.strictEqual(oneThoughtEvent.reactionChoice, "急躁");
+assert.strictEqual(oneThoughtEvent.boundaryState, "停十秒");
+assert.strictEqual(oneThoughtEvent.relatedMirror, "冲动型");
+assert.strictEqual(oneThoughtEvent.clientSyncStatus, "local_saved");
+assert.ok(!JSON.stringify(oneThoughtEvent).includes("13800138000"));
 
 const fallback = buildKlineMindSession({
   assessment: { primary: "未知型" },

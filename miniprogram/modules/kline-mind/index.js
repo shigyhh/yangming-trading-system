@@ -493,6 +493,77 @@ function calculateKlineMindScore(record = {}) {
   return Math.max(0, Math.min(100, 28 + filledCount * 10 + boundaryBonus + insightBonus));
 }
 
+function cleanEventText(value, limit = 280) {
+  const text = String(value || "").trim().slice(0, limit);
+  if (!text) return "";
+  return text
+    .replace(/(^|[^\d])1[3-9]\d{9}(?=\D|$)/g, "$1[redacted_phone]")
+    .replace(/(token|access_token|authorization|验证码|code)[=:：]\s*[\w.-]+/gi, "$1=[redacted]");
+}
+
+function normalizeEventIdPart(value) {
+  return cleanEventText(value, 120)
+    .replace(/[^a-zA-Z0-9_-]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "local";
+}
+
+function getKlineLocalRecordId(record = {}) {
+  const explicitId = record.localRecordId || record.id || record.recordId || record.reviewId;
+  if (explicitId) return String(explicitId);
+  return [
+    record.day || "day",
+    record.marketKey || record.market || "market",
+    record.timeframeKey || record.timeframe || "timeframe",
+    record.selectedCandleKey || "candle",
+    record.updatedAt || record.completedAt || record.createdAt || "local"
+  ].map(normalizeEventIdPart).join("-");
+}
+
+function buildOneThoughtEvent(record = {}, options = {}) {
+  const identity = options.identity || {};
+  const existingEvent = record.oneThoughtEvent || options.existingEvent || {};
+  const localRecordId = String(options.localRecordId || record.localRecordId || existingEvent.localRecordId || getKlineLocalRecordId(record));
+  const userId = cleanEventText(identity.userId || record.userId || existingEvent.userId, 96);
+  const anonymousId = cleanEventText(
+    identity.anonymousId || record.anonymousId || existingEvent.anonymousId || (!userId ? `anon_${normalizeEventIdPart(localRecordId)}` : ""),
+    96
+  );
+  const updatedAt = options.updatedAt || record.updatedAt || existingEvent.updatedAt || Date.now();
+  const completedAt = options.completedAt || record.completedAt || existingEvent.completedAt || updatedAt;
+
+  return {
+    eventId: cleanEventText(
+      options.eventId || record.eventId || existingEvent.eventId || `one-thought-kline-${normalizeEventIdPart(localRecordId)}`,
+      160
+    ),
+    localRecordId,
+    eventType: "kline_training",
+    userId,
+    anonymousId,
+    openid: cleanEventText(identity.openid || record.openid || existingEvent.openid, 96),
+    unionid: cleanEventText(identity.unionid || record.unionid || existingEvent.unionid, 96),
+    market: cleanEventText(record.marketKey || record.market || existingEvent.market, 48),
+    symbol: cleanEventText(record.symbol || existingEvent.symbol, 48),
+    timeframe: cleanEventText(record.timeframeKey || record.timeframe || existingEvent.timeframe, 24),
+    mode: cleanEventText(options.mode || record.mode || existingEvent.mode || "kline_mind", 48),
+    klineSource: cleanEventText(record.klineSource || record.sliceSource || record.dataSource || existingEvent.klineSource, 80),
+    serverSliceStatus: cleanEventText(record.serverSliceStatus || existingEvent.serverSliceStatus, 80),
+    serverSliceError: cleanEventText(record.serverSliceError || existingEvent.serverSliceError, 280),
+    firstThought: cleanEventText(record.firstThought || record.insightLine || existingEvent.firstThought, 280),
+    reactionChoice: cleanEventText(record.reactionChoice || record.firstReaction || existingEvent.reactionChoice, 80),
+    boundaryState: cleanEventText(record.boundaryState || record.boundaryChoice || existingEvent.boundaryState, 80),
+    mirrorType: cleanEventText(record.mirrorType || record.personalityType || existingEvent.mirrorType, 80),
+    relatedMirror: cleanEventText(
+      record.relatedMirror || record.relatedHeartMirror || record.primaryMirror || record.personalityType || existingEvent.relatedMirror,
+      80
+    ),
+    clientSyncStatus: cleanEventText(options.clientSyncStatus || record.clientSyncStatus || existingEvent.clientSyncStatus || "local_saved", 32),
+    createdAt: options.createdAt || record.createdAt || existingEvent.createdAt || completedAt,
+    completedAt,
+    updatedAt
+  };
+}
+
 function buildKlineMindRecord(input = {}, session = {}) {
   const selectedCandleKey = input.selectedCandleKey || session.selectedCandleKey || "";
   const selectedCandle = (session.candles || []).find((item) => item.key === selectedCandleKey) || {};
@@ -507,6 +578,7 @@ function buildKlineMindRecord(input = {}, session = {}) {
     marketKey: ((session.market || {}).key) || input.marketKey || "cn_equity",
     marketName: ((session.market || {}).name) || input.marketName || "A股",
     timeframeKey: session.timeframeKey || input.timeframeKey || "1d",
+    mode: ((session.historySlice || {}).mode) || input.mode || "step_replay",
     dataSource: ((session.historySlice || {}).source) || input.dataSource || "",
     klineSource: ((session.historySlice || {}).klineSource) || ((session.historySlice || {}).source) || input.klineSource || "",
     source: "miniprogram",
@@ -554,5 +626,6 @@ module.exports = {
   normalizeHistoryCandles,
   buildKlineMindSession,
   buildKlineMindRecord,
+  buildOneThoughtEvent,
   calculateKlineMindScore
 };

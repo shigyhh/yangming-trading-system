@@ -5,6 +5,8 @@ const {
   getProfile,
   getKlineReviewReports,
   saveKlineReviewSyncStatus,
+  saveKlineMindOneThoughtEventSyncStatus,
+  getPendingKlineMindOneThoughtRecords,
   saveSyncStatus
 } = require("./store");
 const {
@@ -312,8 +314,10 @@ function isRecentKlineSyncPending(record = {}) {
 }
 
 async function syncKlineTrainingRecord(record = null, options = {}) {
-  const reviewId = String((record || {}).id || "");
-  if ((record || {}).klineTrainingSyncStatus === "synced") {
+  const reviewId = String((record || {}).id || (record || {}).localRecordId || "");
+  const oneThoughtEventId = String(((record || {}).oneThoughtEvent || {}).eventId || (record || {}).linkedOneThoughtEventId || "");
+  const eventSyncStatus = ((record || {}).oneThoughtEvent || {}).clientSyncStatus || (record || {}).clientSyncStatus || "";
+  if ((record || {}).klineTrainingSyncStatus === "synced" && (!oneThoughtEventId || eventSyncStatus === "synced")) {
     return { ok: true, skipped: true, reason: "K线训练已同步" };
   }
   if (!options.force && isRecentKlineSyncPending(record || {})) {
@@ -333,6 +337,11 @@ async function syncKlineTrainingRecord(record = null, options = {}) {
       klineTrainingSyncStartedAt: new Date().toISOString(),
       klineTrainingSyncError: ""
     });
+    saveKlineMindOneThoughtEventSyncStatus(oneThoughtEventId, {
+      clientSyncStatus: "syncing",
+      clientSyncStartedAt: new Date().toISOString(),
+      clientSyncError: ""
+    });
 
     const result = await request({
       path: `/api/v1/data-binding/users/${encodeURIComponent(payload.user.userId)}/kline-records`,
@@ -346,6 +355,12 @@ async function syncKlineTrainingRecord(record = null, options = {}) {
       klineTrainingLastSyncedAt: syncedAt,
       klineTrainingSyncStartedAt: "",
       klineTrainingSyncError: ""
+    });
+    saveKlineMindOneThoughtEventSyncStatus(oneThoughtEventId, {
+      clientSyncStatus: "synced",
+      clientSyncStartedAt: "",
+      clientSyncLastSyncedAt: syncedAt,
+      clientSyncError: ""
     });
     saveSyncStatus({
       ok: true,
@@ -362,6 +377,11 @@ async function syncKlineTrainingRecord(record = null, options = {}) {
       klineTrainingSyncStatus: "failed",
       klineTrainingSyncError: getTechnicalMessage(error)
     });
+    saveKlineMindOneThoughtEventSyncStatus(oneThoughtEventId, {
+      clientSyncStatus: "pending_retry",
+      clientSyncStartedAt: "",
+      clientSyncError: getTechnicalMessage(error)
+    });
     saveSyncStatus({
       ok: false,
       syncing: false,
@@ -376,9 +396,17 @@ async function syncKlineTrainingRecord(record = null, options = {}) {
 
 async function retryPendingKlineTrainingSync(options = {}) {
   const state = getKlineReviewReports();
-  const records = (state.records || []).filter((record) => {
+  const reviewRecords = (state.records || []).filter((record) => {
     const status = (record || {}).klineTrainingSyncStatus || "";
     return status === "pending" || status === "failed";
+  });
+  const pendingEventRecords = getPendingKlineMindOneThoughtRecords();
+  const seen = new Set();
+  const records = reviewRecords.concat(pendingEventRecords).filter((record) => {
+    const key = String(((record || {}).oneThoughtEvent || {}).eventId || (record || {}).id || (record || {}).localRecordId || "");
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
   });
   const summary = {
     ok: true,

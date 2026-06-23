@@ -11,13 +11,16 @@ const {
   getTodayKlineMindRecord,
   saveTodayKlineMindRecord,
   saveTradeReviewRecord,
-  saveInviteConversionEvent
+  saveInviteConversionEvent,
+  getMiniProgramBinding,
+  todayKey
 } = require("../../utils/store");
-const { fetchKlineTrainingSlice, retryPendingKlineTrainingSync, syncLocalState, syncTrainingProgress } = require("../../utils/api");
+const { fetchKlineTrainingSlice, retryPendingKlineTrainingSync, syncKlineTrainingRecord, syncLocalState, syncTrainingProgress } = require("../../utils/api");
 const { buildTraining7View } = require("../../modules/training7/index");
 const {
   buildKlineMindSession,
-  buildKlineMindRecord
+  buildKlineMindRecord,
+  buildOneThoughtEvent
 } = require("../../modules/kline-mind/index");
 const {
   buildKlineTradeReviewRecord: buildKlineMirrorRecord,
@@ -295,7 +298,25 @@ Page({
     }
 
     this.setData({ saving: true });
-    const record = buildKlineMindRecord(form, this.data.session);
+    const now = Date.now();
+    const existingRecord = getTodayKlineMindRecord();
+    const existingEvent = existingRecord.oneThoughtEvent || {};
+    const localRecordId = existingRecord.localRecordId || `kline-mind-${todayKey()}`;
+    const baseRecord = Object.assign({}, buildKlineMindRecord(form, this.data.session), {
+      localRecordId,
+      relatedMirror: ((this.data.assessment || {}).primaryMirror) || ((this.data.assessment || {}).primary) || ""
+    });
+    const oneThoughtEvent = buildOneThoughtEvent(baseRecord, {
+      identity: getMiniProgramBinding(),
+      existingEvent,
+      createdAt: existingEvent.createdAt || now,
+      completedAt: now,
+      updatedAt: now
+    });
+    const record = Object.assign({}, baseRecord, {
+      linkedOneThoughtEventId: oneThoughtEvent.eventId,
+      oneThoughtEvent
+    });
     const saved = saveTodayKlineMindRecord(record);
     const mirrorRecord = buildMirrorReviewFromKline(saved, this.data.session, this.data.assessment || {});
     const mirrorState = saveTradeReviewRecord(mirrorRecord);
@@ -317,6 +338,9 @@ Page({
       shareCardType: "kline_insight",
       trainingDay: record.day || 1,
       relatedMirror: ((mirrorState || {}).latest || {}).relatedMirror || ""
+    });
+    syncKlineTrainingRecord(saved, { force: true }).catch(() => {
+      wx.showToast({ title: "已本地保存，网络恢复后自动归档", icon: "none" });
     });
     syncLocalState({ silent: true }).catch(() => {});
     syncTrainingProgress().catch(() => {});

@@ -163,6 +163,36 @@ function makeKlineRecord(id, status = "pending") {
   };
 }
 
+function withOneThoughtEvent(record, status = "local_saved") {
+  return Object.assign({}, record, {
+    localRecordId: record.localRecordId || record.id,
+    linkedOneThoughtEventId: `one-thought-${record.id}`,
+    oneThoughtEvent: {
+      eventId: `one-thought-${record.id}`,
+      localRecordId: record.localRecordId || record.id,
+      eventType: "kline_training",
+      userId: "",
+      anonymousId: "anon-open-loop-001",
+      market: "cn_equity",
+      symbol: "local-demo",
+      timeframe: "30m",
+      mode: "step_replay",
+      klineSource: "local_demo",
+      serverSliceStatus: "network_error",
+      serverSliceError: "K线服务暂不可用",
+      firstThought: "当前为本地练习样本，我只记录第一念。",
+      reactionChoice: "急躁",
+      boundaryState: "停十秒",
+      mirrorType: "冲动型",
+      relatedMirror: "冲动型",
+      clientSyncStatus: status,
+      createdAt: 1764547300000,
+      completedAt: 1764547300000,
+      updatedAt: 1764547300000
+    }
+  });
+}
+
 async function runKlineSyncTests() {
   resetStorage();
   const postedKlineIds = [];
@@ -200,6 +230,42 @@ async function runKlineSyncTests() {
   assert.strictEqual(storage.ym_kline_review_reports.latest.klineTrainingSyncError, "");
 
   resetStorage();
+  const eventPosts = [];
+  global.wx.request = (options) => {
+    if (options.url.endsWith("/api/v1/auth/demo-login")) {
+      options.success({
+        statusCode: 200,
+        data: {
+          ok: true,
+          user: { id: "demo-login", display_name: "测试同修" },
+          access_token: "token-001a",
+          expires_at: "2099-01-01T00:00:00.000Z"
+        }
+      });
+      return;
+    }
+    if (options.url.endsWith("/kline-records")) {
+      eventPosts.push(options.data.record.oneThoughtEvent);
+      options.success({ statusCode: 200, data: { ok: true, record: options.data.record } });
+      return;
+    }
+    options.fail({ errMsg: "unexpected request" });
+  };
+  const eventRecord = withOneThoughtEvent(makeKlineRecord("kr-event-sync-001"));
+  storage.ym_kline_mind_records = {
+    "2026-06-21": eventRecord
+  };
+  await syncKlineTrainingRecord(eventRecord, { force: true });
+  assert.strictEqual(eventPosts.length, 1);
+  assert.strictEqual(eventPosts[0].eventId, "one-thought-kr-event-sync-001");
+  assert.strictEqual(eventPosts[0].eventType, "kline_training");
+  assert.strictEqual(eventPosts[0].klineSource, "local_demo");
+  assert.strictEqual(eventPosts[0].serverSliceStatus, "network_error");
+  assert.strictEqual(JSON.stringify(eventPosts[0]).includes("13800138000"), false);
+  assert.strictEqual(storage.ym_kline_mind_records["2026-06-21"].oneThoughtEvent.clientSyncStatus, "synced");
+  assert.strictEqual(storage.ym_kline_mind_records["2026-06-21"].oneThoughtEvent.eventId, "one-thought-kr-event-sync-001");
+
+  resetStorage();
   global.wx.request = (options) => {
     if (options.url.endsWith("/api/v1/auth/demo-login")) {
       options.success({
@@ -228,6 +294,34 @@ async function runKlineSyncTests() {
   assert.strictEqual(storage.ym_kline_review_reports.latest.klineTrainingSyncStatus, "failed");
   assert.ok(storage.ym_kline_review_reports.latest.klineTrainingSyncError.includes("network down"));
   assert.strictEqual(storage.ym_kline_review_reports.records.length, 1);
+
+  resetStorage();
+  global.wx.request = (options) => {
+    if (options.url.endsWith("/api/v1/auth/demo-login")) {
+      options.success({
+        statusCode: 200,
+        data: {
+          ok: true,
+          user: { id: "demo-login", display_name: "测试同修" },
+          access_token: "token-002a",
+          expires_at: "2099-01-01T00:00:00.000Z"
+        }
+      });
+      return;
+    }
+    if (options.url.endsWith("/kline-records")) {
+      options.fail({ errMsg: "network down" });
+      return;
+    }
+    options.fail({ errMsg: "unexpected request" });
+  };
+  const eventFailRecord = withOneThoughtEvent(makeKlineRecord("kr-event-fail-001"));
+  storage.ym_kline_mind_records = {
+    "2026-06-21": eventFailRecord
+  };
+  await assert.rejects(() => syncKlineTrainingRecord(eventFailRecord, { force: true }), /network down/);
+  assert.strictEqual(storage.ym_kline_mind_records["2026-06-21"].oneThoughtEvent.clientSyncStatus, "pending_retry");
+  assert.strictEqual(storage.ym_kline_mind_records["2026-06-21"].oneThoughtEvent.eventId, "one-thought-kr-event-fail-001");
 
   resetStorage();
   const retryPosts = [];
@@ -259,15 +353,20 @@ async function runKlineSyncTests() {
       makeKlineRecord("kr-synced-001", "synced")
     ]
   };
+  storage.ym_kline_mind_records = {
+    "2026-06-22": withOneThoughtEvent(makeKlineRecord("kr-event-pending-001"), "pending_retry")
+  };
   const retryResult = await retryPendingKlineTrainingSync();
-  assert.deepStrictEqual(retryPosts, ["kr-pending-001", "kr-failed-001"]);
-  assert.strictEqual(retryResult.synced, 2);
+  assert.deepStrictEqual(retryPosts, ["kr-pending-001", "kr-failed-001", "kr-event-pending-001"]);
+  assert.strictEqual(retryResult.synced, 3);
   assert.strictEqual(retryResult.failed, 0);
   assert.strictEqual(storage.ym_kline_review_reports.records.length, 3);
   assert.strictEqual(
     storage.ym_kline_review_reports.records.find((item) => item.id === "kr-synced-001").klineTrainingSyncStatus,
     "synced"
   );
+  assert.strictEqual(storage.ym_kline_mind_records["2026-06-22"].oneThoughtEvent.clientSyncStatus, "synced");
+  assert.strictEqual(storage.ym_kline_mind_records["2026-06-22"].oneThoughtEvent.eventId, "one-thought-kr-event-pending-001");
 }
 
 runKlineSliceTests()
