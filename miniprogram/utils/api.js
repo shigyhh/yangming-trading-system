@@ -47,6 +47,29 @@ function getApiBase() {
   return wx.getStorageSync(API_BASE_KEY) || DEFAULT_API_BASE;
 }
 
+function pickProjectionText(...values) {
+  for (const value of values) {
+    const candidates = Array.isArray(value) ? value : [value];
+    for (const item of candidates) {
+      if (typeof item === "string" && item.trim()) return item.trim();
+      if (item && typeof item === "object") {
+        const text = item.text || item.thought || item.title || item.action || item.label || item.name || "";
+        if (typeof text === "string" && text.trim()) return text.trim();
+      }
+    }
+  }
+  return "";
+}
+
+function pickProjectionNumber(...values) {
+  for (const value of values) {
+    if (value === "" || value === null || value === undefined) continue;
+    const number = Number(value);
+    if (Number.isFinite(number)) return number;
+  }
+  return 0;
+}
+
 function buildTradeReviewUrl({ userId = "", eventId = "" } = {}) {
   const safeUserId = String(userId || "").trim();
   const safeEventId = String(eventId || "").trim();
@@ -107,6 +130,64 @@ async function fetchLivingMirrorProfile(userId = "") {
   } catch (error) {
     saveConnectionFallback(error, "活镜成长连接未完成");
     return buildLivingMirrorProfileFallback("network_error", getTechnicalMessage(error) || "活镜成长暂未连接");
+  }
+}
+
+function normalizeLivingMirrorGrowthProjectionResult(result = {}) {
+  const data = result.data || {};
+  const projection = result.projection ||
+    result.growthProjection ||
+    result.livingMirrorGrowthProjection ||
+    data.projection ||
+    data.growthProjection ||
+    data.livingMirrorGrowthProjection ||
+    null;
+  if (!projection || typeof projection !== "object") return null;
+  const trainingContinuity = projection.trainingContinuity || projection.training_continuity || {};
+  const nextCycleFocus = projection.nextCycleFocus || projection.next_cycle_focus || {};
+  const zhixingStability = projection.zhixingStability || projection.zhixing_stability || {};
+  const totalEvents = pickProjectionNumber(
+    projection.totalEvents,
+    projection.total_events,
+    trainingContinuity.totalEvents,
+    trainingContinuity.total_events
+  );
+  const activeDays = pickProjectionNumber(
+    projection.activeDays,
+    projection.active_days,
+    trainingContinuity.activeDays,
+    trainingContinuity.active_days
+  );
+  return {
+    ok: result.ok !== false,
+    source: "server_growth_projection",
+    projection,
+    totalEvents,
+    activeDays,
+    stage: pickProjectionText(projection.stage, projection.stageText, projection.currentStage, projection.current_stage, projection.mirrorLifeStage, projection.mirror_life_stage),
+    stageText: pickProjectionText(projection.stageText, projection.stage, projection.currentStage, projection.current_stage, projection.mirrorLifeStage, projection.mirror_life_stage),
+    topThought: pickProjectionText(projection.topThought, projection.topThoughtText, projection.highFrequencyThought, projection.high_frequency_thought, projection.highFrequencyThoughts, projection.high_frequency_thoughts),
+    topThoughtText: pickProjectionText(projection.topThoughtText, projection.topThought, projection.highFrequencyThought, projection.high_frequency_thought, projection.highFrequencyThoughts, projection.high_frequency_thoughts),
+    completedDays: pickProjectionNumber(projection.completedDays, projection.completed_days, projection.practiceDays, projection.practice_days, activeDays),
+    nextAction: pickProjectionText(projection.nextAction, projection.next_action, projection.nextActionText, nextCycleFocus.action, nextCycleFocus.title),
+    nextActionText: pickProjectionText(projection.nextActionText, projection.nextAction, projection.next_action, nextCycleFocus.action, nextCycleFocus.title),
+    zhixing: projection.zhixing || projection.zhixingScore || projection.zhixing_score || "",
+    zhixingText: pickProjectionText(projection.zhixingText, projection.zhixingScoreText, projection.zhixing_score_text, zhixingStability.totalText, zhixingStability.total_text, zhixingStability.summary),
+    updatedAt: projection.updatedAt || projection.updated_at || trainingContinuity.latestRecordedAt || trainingContinuity.latest_recorded_at || ""
+  };
+}
+
+async function fetchLivingMirrorGrowthProjection(userId = "") {
+  const safeUserId = String(userId || "").trim();
+  if (!safeUserId) return null;
+  try {
+    const result = await request({
+      path: `/api/v1/users/${encodeURIComponent(safeUserId)}/living-mirror/growth`
+    });
+    return normalizeLivingMirrorGrowthProjectionResult(result);
+  } catch (error) {
+    saveConnectionFallback(error, "活镜成长投影连接未完成");
+    return null;
   }
 }
 
@@ -780,6 +861,7 @@ module.exports = {
   KLINE_MIN_CANDLES,
   buildTradeReviewUrl,
   fetchLivingMirrorProfile,
+  fetchLivingMirrorGrowthProjection,
   fetchTodayState,
   getApiBase,
   setApiBase,

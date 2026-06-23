@@ -127,6 +127,73 @@
   line-height: 1.5;
 }
 
+.growth-summary-mini {
+  margin-top: 18rpx;
+  padding: 20rpx;
+  border-radius: 20rpx;
+  border: 1rpx solid rgba(216, 183, 111, 0.12);
+  background: rgba(8, 8, 7, 0.28);
+}
+
+.growth-summary-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.growth-summary-head text,
+.growth-summary-grid text,
+.growth-summary-next text {
+  display: block;
+  color: rgba(216, 183, 111, 0.72);
+  font-size: 20rpx;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.growth-summary-head view {
+  color: #fff6e6;
+  font-size: 25rpx;
+  line-height: 1.35;
+  font-weight: 900;
+  text-align: right;
+}
+
+.growth-summary-grid {
+  margin-top: 16rpx;
+  display: grid;
+  gap: 12rpx;
+}
+
+.growth-summary-grid > view,
+.growth-summary-next {
+  padding: 16rpx;
+  border-radius: 16rpx;
+  border: 1rpx solid rgba(241, 210, 125, 0.08);
+  background: rgba(255, 255, 255, 0.028);
+}
+
+.growth-summary-grid view view,
+.growth-summary-next view {
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.84);
+  font-size: 24rpx;
+  line-height: 1.45;
+  font-weight: 800;
+}
+
+.growth-summary-next {
+  margin-top: 12rpx;
+}
+
+.growth-summary-foot {
+  margin-top: 12rpx;
+  color: rgba(247, 239, 223, 0.42);
+  font-size: 20rpx;
+  line-height: 1.4;
+}
+
 .mirror-bridge {
   padding: 24rpx;
   overflow: hidden;

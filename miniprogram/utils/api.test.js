@@ -19,6 +19,7 @@ const {
   PRODUCTION_API_BASE,
   buildTradeReviewUrl,
   getApiBase,
+  fetchLivingMirrorGrowthProjection,
   fetchLivingMirrorProfile,
   fetchTodayState,
   fetchKlineTrainingSlice,
@@ -201,6 +202,101 @@ async function runLivingMirrorProfileTests() {
   assert.strictEqual(emptyFallback.ok, false);
   assert.strictEqual(emptyFallback.status, "empty");
   assert.strictEqual(emptyFallback.totalEvents, 0);
+}
+
+async function runLivingMirrorGrowthProjectionTests() {
+  resetStorage();
+  envVersion = "release";
+  let requestedUrl = "";
+  global.wx.request = (options) => {
+    requestedUrl = options.url;
+    options.success({
+      statusCode: 200,
+      data: {
+        ok: true,
+        projection: {
+          stageText: "显影",
+          topThoughtText: "想改计划",
+          completedDays: 7,
+          nextActionText: "下一次交易前，先照见这一念",
+          zhixingText: "逐步稳定",
+          updatedAt: "2026-06-22T10:00:00.000Z"
+        }
+      }
+    });
+  };
+  const growth = await fetchLivingMirrorGrowthProjection("user 001");
+  assert.ok(requestedUrl.endsWith("/api/v1/users/user%20001/living-mirror/growth"));
+  assert.strictEqual(growth.ok, true);
+  assert.strictEqual(growth.source, "server_growth_projection");
+  assert.strictEqual(growth.stageText, "显影");
+  assert.strictEqual(growth.topThoughtText, "想改计划");
+  assert.strictEqual(growth.completedDays, 7);
+  assert.strictEqual(growth.nextActionText, "下一次交易前，先照见这一念");
+  assert.strictEqual(growth.zhixingText, "逐步稳定");
+  assert.strictEqual(growth.updatedAt, "2026-06-22T10:00:00.000Z");
+
+  global.wx.request = (options) => {
+    options.success({
+      statusCode: 200,
+      data: {
+        ok: true,
+        projection: {
+          schemaVersion: "living_mirror_growth_projection_v1",
+          highFrequencyThoughts: [{ thought: "想追这一段" }],
+          trainingContinuity: {
+            totalEvents: 3,
+            activeDays: 2,
+            latestRecordedAt: "2026-06-23T08:00:00.000Z"
+          },
+          mirrorLifeStage: "seed",
+          nextCycleFocus: {
+            title: "先照见一念",
+            action: "记录下一次训练中的第一念"
+          },
+          zhixingStability: {
+            totalText: "暂无训练事实"
+          }
+        }
+      }
+    });
+  };
+  const serverProjection = await fetchLivingMirrorGrowthProjection("user-001");
+  assert.strictEqual(serverProjection.stageText, "seed");
+  assert.strictEqual(serverProjection.topThoughtText, "想追这一段");
+  assert.strictEqual(serverProjection.totalEvents, 3);
+  assert.strictEqual(serverProjection.completedDays, 2);
+  assert.strictEqual(serverProjection.nextActionText, "记录下一次训练中的第一念");
+  assert.strictEqual(serverProjection.zhixingText, "暂无训练事实");
+  assert.strictEqual(serverProjection.updatedAt, "2026-06-23T08:00:00.000Z");
+
+  global.wx.request = (options) => {
+    options.success({
+      statusCode: 200,
+      data: {
+        ok: true,
+        projection: {}
+      }
+    });
+  };
+  const emptyProjection = await fetchLivingMirrorGrowthProjection("user-001");
+  assert.strictEqual(emptyProjection.ok, true);
+  assert.strictEqual(emptyProjection.totalEvents, 0);
+  assert.strictEqual(emptyProjection.stageText, "");
+
+  let missingUserRequested = false;
+  global.wx.request = () => {
+    missingUserRequested = true;
+  };
+  const missingUser = await fetchLivingMirrorGrowthProjection("");
+  assert.strictEqual(missingUserRequested, false);
+  assert.strictEqual(missingUser, null);
+
+  global.wx.request = (options) => {
+    options.fail({ errMsg: "network down" });
+  };
+  const networkFallback = await fetchLivingMirrorGrowthProjection("user-001");
+  assert.strictEqual(networkFallback, null);
 }
 
 async function runTodayStateTests() {
@@ -510,6 +606,7 @@ async function runKlineSyncTests() {
 
 runKlineSliceTests()
   .then(runLivingMirrorProfileTests)
+  .then(runLivingMirrorGrowthProjectionTests)
   .then(runTodayStateTests)
   .then(runKlineSyncTests)
   .then(() => console.log("miniprogram api tests passed"))

@@ -72,6 +72,35 @@
         <text>最近高频心贼</text>
         <view>{{stats.topThievesText || '待照见'}}</view>
       </view>
+      <view wx:if="{{growthSummary}}" class="growth-summary-mini">
+        <view class="growth-summary-head">
+          <text>成长摘要</text>
+          <view>{{growthSummary.stageText}}</view>
+        </view>
+        <view class="growth-summary-grid">
+          <view>
+            <text>照见事实</text>
+            <view>{{growthSummary.totalEventsText}}</view>
+          </view>
+          <view>
+            <text>高频一念</text>
+            <view>{{growthSummary.topThoughtText}}</view>
+          </view>
+          <view>
+            <text>已照见天数</text>
+            <view>{{growthSummary.completedDaysText}}</view>
+          </view>
+          <view>
+            <text>知行稳定度</text>
+            <view>{{growthSummary.zhixingText}}</view>
+          </view>
+        </view>
+        <view class="growth-summary-next">
+          <text>下一步修行</text>
+          <view>{{growthSummary.nextActionText}}</view>
+        </view>
+        <view class="growth-summary-foot">更新于 {{growthSummary.updatedAtText}}</view>
+      </view>
     </view>
 
     <view class="stability-card card">
