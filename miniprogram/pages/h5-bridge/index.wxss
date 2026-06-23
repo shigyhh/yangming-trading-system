@@ -1,0 +1,25 @@
+.h5-bridge-page {
+  min-height: 100vh;
+  background: #07100e;
+}
+
+.bridge-empty {
+  min-height: 100vh;
+  padding: 120rpx 48rpx;
+  display: grid;
+  align-content: center;
+  gap: 18rpx;
+  color: rgba(244, 235, 221, 0.64);
+  text-align: center;
+}
+
+.bridge-empty text {
+  color: rgba(244, 235, 221, 0.9);
+  font-size: 32rpx;
+  font-weight: 900;
+}
+
+.bridge-empty view {
+  font-size: 24rpx;
+  line-height: 1.55;
+}

@@ -47,6 +47,13 @@ function getApiBase() {
   return wx.getStorageSync(API_BASE_KEY) || DEFAULT_API_BASE;
 }
 
+function buildTradeReviewUrl({ userId = "", eventId = "" } = {}) {
+  const safeUserId = String(userId || "").trim();
+  const safeEventId = String(eventId || "").trim();
+  if (!safeUserId || !safeEventId) return null;
+  return `${PRODUCTION_API_BASE}/trade-review?userId=${encodeURIComponent(safeUserId)}&eventId=${encodeURIComponent(safeEventId)}`;
+}
+
 function hasConfiguredApiBase() {
   if (isReleaseEnv()) return true;
   return !!wx.getStorageSync(API_BASE_ENABLED_KEY);
@@ -668,6 +675,7 @@ module.exports = {
   PRODUCTION_API_BASE,
   DEFAULT_API_BASE,
   KLINE_MIN_CANDLES,
+  buildTradeReviewUrl,
   getApiBase,
   setApiBase,
   getAuthSession,

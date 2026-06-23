@@ -322,4 +322,14 @@ assert.ok(klineMindSource.includes("buildLocalDemoHistorySlice"));
 assert.ok(klineMindSource.includes("local_demo"));
 assert.ok(klineMindSource.includes("K线服务暂不可用"));
 
+const appConfig = JSON.parse(fs.readFileSync(path.join(__dirname, "../app.json"), "utf8"));
+const klineMindWxmlSource = fs.readFileSync(path.join(__dirname, "../pages/kline-mind/index.wxml"), "utf8");
+const h5BridgeWxmlSource = fs.readFileSync(path.join(__dirname, "../pages/h5-bridge/index.wxml"), "utf8");
+assert.ok(klineMindSource.includes("buildTradeReviewUrl"));
+assert.ok(klineMindSource.includes("goTradeReviewH5"));
+assert.ok(klineMindWxmlSource.includes("查看本次复盘"));
+assert.ok(klineMindWxmlSource.includes('wx:if="{{tradeReviewUrl}}"'));
+assert.ok(appConfig.pages.includes("pages/h5-bridge/index"));
+assert.ok(h5BridgeWxmlSource.includes("<web-view"));
+
 console.log("miniprogram data-binding adapter tests passed");

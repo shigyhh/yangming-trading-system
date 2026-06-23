@@ -1,0 +1,7 @@
+<view class="h5-bridge-page">
+  <web-view wx:if="{{url}}" src="{{url}}" />
+  <view wx:else class="bridge-empty">
+    <text>复盘入口待生成</text>
+    <view>请先完成本次观心落印。</view>
+  </view>
+</view>

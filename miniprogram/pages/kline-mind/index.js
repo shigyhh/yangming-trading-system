@@ -12,10 +12,18 @@ const {
   saveTodayKlineMindRecord,
   saveTradeReviewRecord,
   saveInviteConversionEvent,
+  getUserBinding,
   getMiniProgramBinding,
   todayKey
 } = require("../../utils/store");
-const { fetchKlineTrainingSlice, retryPendingKlineTrainingSync, syncKlineTrainingRecord, syncLocalState, syncTrainingProgress } = require("../../utils/api");
+const {
+  buildTradeReviewUrl,
+  fetchKlineTrainingSlice,
+  retryPendingKlineTrainingSync,
+  syncKlineTrainingRecord,
+  syncLocalState,
+  syncTrainingProgress
+} = require("../../utils/api");
 const { buildTraining7View } = require("../../modules/training7/index");
 const {
   buildKlineMindSession,
@@ -108,6 +116,12 @@ function buildLocalDemoHistorySlice(record = {}, result = {}) {
   };
 }
 
+function resolveTradeReviewUrl(record = {}) {
+  const userId = (getUserBinding() || {}).userId || "";
+  const eventId = ((record.oneThoughtEvent || {}).eventId) || record.linkedOneThoughtEventId || "";
+  return buildTradeReviewUrl({ userId, eventId });
+}
+
 function buildMindHistorySlice(result, record = {}) {
   if (!result || !result.ok) return buildLocalDemoHistorySlice(record, result);
   return Object.assign({}, result.slice || {}, {
@@ -135,7 +149,8 @@ Page({
     historyError: "",
     showSelectors: false,
     showGuide: false,
-    showBodySignal: false
+    showBodySignal: false,
+    tradeReviewUrl: ""
   },
 
   onShow() {
@@ -162,6 +177,7 @@ Page({
       record: klineMindRecord
     });
     const form = buildForm(klineMindRecord, session);
+    const tradeReviewUrl = resolveTradeReviewUrl(klineMindRecord);
 
     this.setData({
       assessment,
@@ -172,7 +188,8 @@ Page({
       savedRecord: klineMindRecord && klineMindRecord.updatedAt ? klineMindRecord : null,
       historyLoading: true,
       historyError: "",
-      showBodySignal: !!form.bodySignal
+      showBodySignal: !!form.bodySignal,
+      tradeReviewUrl
     });
     this.loadServerHistorySlice(form);
   },
@@ -345,8 +362,17 @@ Page({
     syncLocalState({ silent: true }).catch(() => {});
     syncTrainingProgress().catch(() => {});
     wx.showToast({ title: "已写入活镜", icon: "success" });
-    this.setData({ savedRecord: saved, saving: false });
+    this.setData({ savedRecord: saved, saving: false, tradeReviewUrl: resolveTradeReviewUrl(saved) });
     this.load();
+  },
+
+  goTradeReviewH5() {
+    const tradeReviewUrl = this.data.tradeReviewUrl || "";
+    if (!tradeReviewUrl) {
+      wx.showToast({ title: "复盘入口待生成", icon: "none" });
+      return;
+    }
+    wx.navigateTo({ url: `/pages/h5-bridge/index?url=${encodeURIComponent(tradeReviewUrl)}` });
   },
 
   goTraining() {

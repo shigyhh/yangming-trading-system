@@ -260,6 +260,7 @@
       <view class="completion-actions">
         <button class="ghost-btn" bindtap="goHome">回今日</button>
         <button class="primary-btn" bindtap="goLivingMirror">看活镜</button>
+        <button wx:if="{{tradeReviewUrl}}" class="ghost-btn completion-review-btn" bindtap="goTradeReviewH5">查看本次复盘</button>
       </view>
     </view>
 

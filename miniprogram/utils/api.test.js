@@ -17,6 +17,7 @@ global.wx = {
 
 const {
   PRODUCTION_API_BASE,
+  buildTradeReviewUrl,
   getApiBase,
   fetchKlineTrainingSlice,
   normalizeKlineTrainingSliceResult,
@@ -31,6 +32,20 @@ assert.strictEqual(getApiBase(), "https://xxjyxt.com");
 
 envVersion = "develop";
 assert.strictEqual(getApiBase(), "http://127.0.0.1:8787");
+
+const tradeReviewUrl = buildTradeReviewUrl({
+  userId: "user 001",
+  eventId: "one thought/event 001"
+});
+assert.strictEqual(
+  tradeReviewUrl,
+  "https://xxjyxt.com/trade-review?userId=user%20001&eventId=one%20thought%2Fevent%20001"
+);
+assert.strictEqual(buildTradeReviewUrl({ userId: "", eventId: "evt-001" }), null);
+assert.strictEqual(buildTradeReviewUrl({ userId: "user-001", eventId: "" }), null);
+assert.strictEqual(tradeReviewUrl.includes(["to", "ken"].join("")), false);
+assert.strictEqual(tradeReviewUrl.includes(["open", "Id"].join("")), false);
+assert.strictEqual(tradeReviewUrl.includes(["union", "Id"].join("")), false);
 
 const normalized = normalizeKlineTrainingSliceResult({
   ok: true,
