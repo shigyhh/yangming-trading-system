@@ -110,6 +110,53 @@ async function fetchLivingMirrorProfile(userId = "") {
   }
 }
 
+const TODAY_STATE_STATUSES = ["not_seen", "not_trained", "not_reviewed", "completed"];
+
+function buildTodayStateFallback(reason = "empty", errorMessage = "") {
+  return {
+    ok: false,
+    status: "unknown",
+    reason,
+    nextAction: "先照见这一念",
+    progress: 0,
+    updatedAt: "",
+    empty: true,
+    errorMessage
+  };
+}
+
+function normalizeTodayStateResult(result = {}) {
+  const state = result.state || result.todayState || result.today_state || result.data || {};
+  const hasPayload = !!(state.status || state.nextAction || state.next_action || state.updatedAt || state.updated_at || Number(state.progress || 0));
+  if (!hasPayload) return buildTodayStateFallback("empty");
+  const rawStatus = String(state.status || "");
+  const status = TODAY_STATE_STATUSES.includes(rawStatus) ? rawStatus : "unknown";
+  return {
+    ok: result.ok !== false,
+    status,
+    reason: "",
+    nextAction: state.nextAction || state.next_action || "先照见这一念",
+    progress: Math.max(0, Math.min(100, Number(state.progress || 0))),
+    updatedAt: state.updatedAt || state.updated_at || "",
+    empty: false,
+    errorMessage: ""
+  };
+}
+
+async function fetchTodayState(userId = "") {
+  const safeUserId = String(userId || "").trim();
+  if (!safeUserId) return buildTodayStateFallback("missing_user");
+  try {
+    const result = await request({
+      path: `/api/v1/users/${encodeURIComponent(safeUserId)}/today/state`
+    });
+    return normalizeTodayStateResult(result);
+  } catch (error) {
+    saveConnectionFallback(error, "今日状态连接未完成");
+    return buildTodayStateFallback("network_error", getTechnicalMessage(error) || "今日状态暂未连接");
+  }
+}
+
 function hasConfiguredApiBase() {
   if (isReleaseEnv()) return true;
   return !!wx.getStorageSync(API_BASE_ENABLED_KEY);
@@ -733,6 +780,7 @@ module.exports = {
   KLINE_MIN_CANDLES,
   buildTradeReviewUrl,
   fetchLivingMirrorProfile,
+  fetchTodayState,
   getApiBase,
   setApiBase,
   getAuthSession,

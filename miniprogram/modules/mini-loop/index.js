@@ -20,6 +20,23 @@ const THOUGHT_OPTIONS = [
   { key: "abandon_plan", label: "想改计划", pattern: /改计划|重新解释|临时|证明|翻本|不甘/ }
 ];
 
+const HOME_TODAY_STATE_STATUS = {
+  not_seen: "待照见",
+  not_trained: "待训练",
+  not_reviewed: "待复盘",
+  completed: "今日已完成",
+  unknown: "活镜仍在显影"
+};
+
+const HOME_TODAY_ACTIONS = ["照见一念", "K线训练", "轻复盘", "查看活镜"];
+
+const HOME_TODAY_ACTION_ROUTES = {
+  "照见一念": { actionKey: "mind", route: "/pages/mind/index" },
+  "K线训练": { actionKey: "kline", route: "/pages/kline-mind/index" },
+  "轻复盘": { actionKey: "trade-review", route: "/pages/trade-review/index" },
+  "查看活镜": { actionKey: "living-mirror", route: "/pages/living-mirror/index" }
+};
+
 function buildMiniProgramBinding({ userBinding = {}, profile = {}, linkToken = "", reportId = "" } = {}) {
   const anonymousId = userBinding.userId || profile.anonymousId || `anon_${userBinding.inviteCode || "pending"}`;
   return {
@@ -120,6 +137,26 @@ function buildMiniHomeView(context = {}) {
     growthText: `已修行 ${loopProgress.completedDays || 0}/7 日 · 已生成 ${loopProgress.heartProofCount || 0} 枚心证 · 真实复盘 ${loopProgress.tradeReviewCount || 0} 次`,
     retestText: loopProgress.retestUnlocked ? "七日已满，可以复测变化" : `复测还差 ${retestRemaining} 日`
   };
+}
+
+function buildHomeTodayStateView(todayState = {}) {
+  const rawStatus = String(todayState.status || "");
+  const status = HOME_TODAY_STATE_STATUS[rawStatus] ? rawStatus : "unknown";
+  const rawAction = String(todayState.nextAction || todayState.nextActionText || "");
+  const nextActionText = HOME_TODAY_ACTIONS.includes(rawAction) ? rawAction : "先照见这一念";
+  return {
+    title: "今日所照",
+    status,
+    statusText: HOME_TODAY_STATE_STATUS[status],
+    nextActionText,
+    progress: Math.max(0, Math.min(100, Number(todayState.progress || 0))),
+    updatedAt: todayState.updatedAt || "",
+    fallbackText: status === "unknown" ? "今日状态暂未同步，本地修行仍可继续。" : ""
+  };
+}
+
+function resolveHomeTodayStateAction(nextAction = "") {
+  return HOME_TODAY_ACTION_ROUTES[String(nextAction || "")] || { actionKey: "", route: "" };
 }
 
 function buildMiniDailyPractice(context = {}) {
@@ -266,6 +303,8 @@ module.exports = {
   buildMiniProgramBinding,
   buildMiniLoopProgress,
   buildMiniHomeView,
+  buildHomeTodayStateView,
+  resolveHomeTodayStateAction,
   buildMiniDailyPractice,
   buildMiniHeartProof,
   buildBehaviorLoop,

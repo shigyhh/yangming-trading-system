@@ -20,6 +20,7 @@ const {
   buildTradeReviewUrl,
   getApiBase,
   fetchLivingMirrorProfile,
+  fetchTodayState,
   fetchKlineTrainingSlice,
   normalizeKlineTrainingSliceResult,
   syncKlineTrainingRecord,
@@ -200,6 +201,71 @@ async function runLivingMirrorProfileTests() {
   assert.strictEqual(emptyFallback.ok, false);
   assert.strictEqual(emptyFallback.status, "empty");
   assert.strictEqual(emptyFallback.totalEvents, 0);
+}
+
+async function runTodayStateTests() {
+  resetStorage();
+  envVersion = "release";
+  let requestedUrl = "";
+  global.wx.request = (options) => {
+    requestedUrl = options.url;
+    options.success({
+      statusCode: 200,
+      data: {
+        ok: true,
+        state: {
+          status: "not_trained",
+          nextAction: "K线训练",
+          progress: 35,
+          updatedAt: "2026-06-21T10:00:00.000Z"
+        }
+      }
+    });
+  };
+  const todayState = await fetchTodayState("user 001");
+  assert.ok(requestedUrl.endsWith("/api/v1/users/user%20001/today/state"));
+  assert.strictEqual(todayState.ok, true);
+  assert.strictEqual(todayState.status, "not_trained");
+  assert.strictEqual(todayState.nextAction, "K线训练");
+  assert.strictEqual(todayState.progress, 35);
+  assert.strictEqual(todayState.updatedAt, "2026-06-21T10:00:00.000Z");
+
+  let missingUserRequested = false;
+  global.wx.request = () => {
+    missingUserRequested = true;
+  };
+  const missingUser = await fetchTodayState("");
+  assert.strictEqual(missingUserRequested, false);
+  assert.strictEqual(missingUser.ok, false);
+  assert.strictEqual(missingUser.status, "unknown");
+  assert.strictEqual(missingUser.reason, "missing_user");
+
+  global.wx.request = (options) => {
+    options.fail({ errMsg: "network down" });
+  };
+  const networkFallback = await fetchTodayState("user-001");
+  assert.strictEqual(networkFallback.ok, false);
+  assert.strictEqual(networkFallback.status, "unknown");
+  assert.strictEqual(networkFallback.reason, "network_error");
+  assert.strictEqual(networkFallback.progress, 0);
+  assert.ok(networkFallback.errorMessage.includes("network down"));
+
+  global.wx.request = (options) => {
+    options.success({ statusCode: 200, data: { ok: true, state: { status: "surprise", nextAction: "未知动作", progress: 20 } } });
+  };
+  const unknownStatus = await fetchTodayState("user-001");
+  assert.strictEqual(unknownStatus.ok, true);
+  assert.strictEqual(unknownStatus.status, "unknown");
+  assert.strictEqual(unknownStatus.nextAction, "未知动作");
+  assert.strictEqual(unknownStatus.progress, 20);
+
+  global.wx.request = (options) => {
+    options.success({ statusCode: 200, data: { ok: true } });
+  };
+  const emptyState = await fetchTodayState("user-001");
+  assert.strictEqual(emptyState.ok, false);
+  assert.strictEqual(emptyState.status, "unknown");
+  assert.strictEqual(emptyState.reason, "empty");
 }
 
 function resetStorage() {
@@ -444,6 +510,7 @@ async function runKlineSyncTests() {
 
 runKlineSliceTests()
   .then(runLivingMirrorProfileTests)
+  .then(runTodayStateTests)
   .then(runKlineSyncTests)
   .then(() => console.log("miniprogram api tests passed"))
   .catch((error) => {

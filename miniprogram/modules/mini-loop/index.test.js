@@ -1,11 +1,13 @@
 const assert = require("assert");
 const {
   buildBehaviorLoop,
+  buildHomeTodayStateView,
   buildLivingMirrorTree,
   buildMiniHomeView,
   buildMiniLoopProgress,
   buildMiniProgramBinding,
-  normalizeThoughtType
+  normalizeThoughtType,
+  resolveHomeTodayStateAction
 } = require("./index");
 
 const binding = buildMiniProgramBinding({
@@ -73,6 +75,51 @@ assert.strictEqual(home.stateLabel, "已归卷");
 assert.strictEqual(home.klineText, "今日 K 线观心");
 assert.ok(home.livingMirrorFeedback.includes("写入活镜"));
 assert.strictEqual(home.practiceSteps.filter((item) => item.done).length, 3);
+
+const todayStateView = buildHomeTodayStateView({
+  status: "not_trained",
+  nextAction: "K线训练",
+  progress: 35,
+  updatedAt: "2026-06-21T10:00:00.000Z",
+  rawPayloadShouldNotLeak: true
+});
+assert.strictEqual(todayStateView.title, "今日所照");
+assert.strictEqual(todayStateView.status, "not_trained");
+assert.strictEqual(todayStateView.statusText, "待训练");
+assert.strictEqual(todayStateView.nextActionText, "K线训练");
+assert.strictEqual(todayStateView.progress, 35);
+assert.strictEqual(todayStateView.updatedAt, "2026-06-21T10:00:00.000Z");
+assert.strictEqual(Object.prototype.hasOwnProperty.call(todayStateView, "rawPayloadShouldNotLeak"), false);
+
+const fallbackTodayStateView = buildHomeTodayStateView({
+  status: "server_surprise",
+  nextAction: "陌生动作",
+  progress: -1
+});
+assert.strictEqual(fallbackTodayStateView.status, "unknown");
+assert.strictEqual(fallbackTodayStateView.statusText, "活镜仍在显影");
+assert.strictEqual(fallbackTodayStateView.nextActionText, "先照见这一念");
+assert.strictEqual(fallbackTodayStateView.progress, 0);
+assert.deepStrictEqual(resolveHomeTodayStateAction("照见一念"), {
+  actionKey: "mind",
+  route: "/pages/mind/index"
+});
+assert.deepStrictEqual(resolveHomeTodayStateAction("K线训练"), {
+  actionKey: "kline",
+  route: "/pages/kline-mind/index"
+});
+assert.deepStrictEqual(resolveHomeTodayStateAction("轻复盘"), {
+  actionKey: "trade-review",
+  route: "/pages/trade-review/index"
+});
+assert.deepStrictEqual(resolveHomeTodayStateAction("查看活镜"), {
+  actionKey: "living-mirror",
+  route: "/pages/living-mirror/index"
+});
+assert.deepStrictEqual(resolveHomeTodayStateAction("陌生动作"), {
+  actionKey: "",
+  route: ""
+});
 
 const tree = buildLivingMirrorTree({
   assessment: { primary: "冲动型" },

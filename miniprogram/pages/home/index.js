@@ -42,7 +42,7 @@ const {
   resolveJourneyPagePath,
   todayKey
 } = require("../../utils/store");
-const { syncLocalState, syncTrainingProgress, syncShareAttribution } = require("../../utils/api");
+const { fetchTodayState, syncLocalState, syncTrainingProgress, syncShareAttribution } = require("../../utils/api");
 const { promptShareMoment } = require("../../utils/share-moments");
 const { buildCompanionSystem } = require("../../modules/companion/index");
 const { buildDailyLoopState } = require("../../modules/daily-loop/index");
@@ -54,7 +54,7 @@ const { buildRetentionState } = require("../../modules/retention/index");
 const { buildTraining7View } = require("../../modules/training7/index");
 const { buildClassroomView } = require("../../modules/classroom/index");
 const { buildLiveMirrorReminder } = require("../../modules/trade-review/index");
-const { buildMiniHomeView } = require("../../modules/mini-loop/index");
+const { buildHomeTodayStateView, buildMiniHomeView, resolveHomeTodayStateAction } = require("../../modules/mini-loop/index");
 
 const ENTRY_STATE_KEY = "zhixing_ritual_entry";
 const REACTION_TAGS = ["恐惧", "贪念", "证明", "后悔", "急躁", "逃避"];
@@ -1134,6 +1134,8 @@ Page({
     evidenceSummary: getEvidenceSummary({ limit: 4 }),
     closureEvidenceChain: getClosureEvidenceChain(),
     homeContinuitySteps: buildHomeContinuitySteps(getClosureEvidenceChain()),
+    serverTodayStateView: buildHomeTodayStateView(),
+    serverTodayStateAction: resolveHomeTodayStateAction(buildHomeTodayStateView().nextActionText),
     cardGenerating: false,
     userBinding: getUserBinding(),
     entryRitualVisible: false
@@ -1160,6 +1162,7 @@ Page({
 
   onShow() {
     this.loadEntryState();
+    this.loadServerTodayState();
     this.maybeShowEntryRitual();
   },
 
@@ -1427,6 +1430,25 @@ Page({
       dailyContent,
       hasAssessment: !!assessment
     });
+  },
+
+  loadServerTodayState() {
+    const userId = (getUserBinding() || {}).userId || "";
+    fetchTodayState(userId)
+      .then((todayState) => {
+        const serverTodayStateView = buildHomeTodayStateView(todayState);
+        this.setData({
+          serverTodayStateView,
+          serverTodayStateAction: resolveHomeTodayStateAction(serverTodayStateView.nextActionText)
+        });
+      })
+      .catch(() => {
+        const serverTodayStateView = buildHomeTodayStateView({ status: "unknown" });
+        this.setData({
+          serverTodayStateView,
+          serverTodayStateAction: resolveHomeTodayStateAction(serverTodayStateView.nextActionText)
+        });
+      });
   },
 
   saveEntryState(patch) {
@@ -1886,6 +1908,23 @@ Page({
     if (action === "profile") {
       this.goProfile();
     }
+  },
+
+  goServerTodayAction() {
+    const action = this.data.serverTodayStateAction || {};
+    if (!action.route) {
+      wx.showToast({ title: "先照见这一念", icon: "none" });
+      return;
+    }
+    if (action.actionKey === "trade-review") {
+      this.goTradeReview();
+      return;
+    }
+    if (action.actionKey === "living-mirror") {
+      this.goLivingMirror();
+      return;
+    }
+    wx.redirectTo({ url: action.route });
   },
 
   goMiniPrimary(e) {
