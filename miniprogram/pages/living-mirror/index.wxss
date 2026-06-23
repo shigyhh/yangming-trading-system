@@ -1,4 +1,5 @@
 .mirror-bridge,
+.server-profile-card,
 .mirror-hero,
 .stability-card,
 .triple-card,
@@ -19,6 +20,8 @@
 
 .mirror-bridge text,
 .mirror-bridge view,
+.server-profile-card text,
+.server-profile-card view,
 .mirror-hero text,
 .mirror-hero view,
 .stability-card text,
@@ -54,6 +57,74 @@
 .assistant-card button {
   position: relative;
   z-index: 1;
+}
+
+.server-profile-card {
+  overflow: hidden;
+  border-color: rgba(216, 183, 111, 0.16);
+  background:
+    radial-gradient(circle at 92% 0%, rgba(216, 183, 111, 0.12), transparent 40%),
+    rgba(255, 255, 255, 0.034);
+}
+
+.server-profile-grid {
+  margin-top: 22rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12rpx;
+}
+
+.server-profile-grid > view,
+.server-thought-card {
+  padding: 18rpx;
+  border-radius: 18rpx;
+  border: 1rpx solid rgba(241, 210, 125, 0.1);
+  background: rgba(255, 255, 255, 0.034);
+}
+
+.server-profile-grid text,
+.server-thought-card > text {
+  display: block;
+  color: rgba(216, 183, 111, 0.72);
+  font-size: 20rpx;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.server-profile-grid view view {
+  margin-top: 10rpx;
+  color: #fff6e6;
+  font-size: 32rpx;
+  line-height: 1.25;
+  font-weight: 900;
+}
+
+.server-thought-card {
+  margin-top: 12rpx;
+}
+
+.server-thought-card view {
+  margin-top: 12rpx;
+  color: rgba(247, 239, 223, 0.82);
+  font-size: 25rpx;
+  line-height: 1.5;
+  font-weight: 800;
+}
+
+.server-boundary-line {
+  margin-top: 16rpx;
+  color: rgba(247, 239, 223, 0.9);
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", serif;
+  font-size: 30rpx;
+  line-height: 1.45;
+  font-weight: 900;
+}
+
+.server-profile-foot {
+  margin-top: 12rpx;
+  color: rgba(247, 239, 223, 0.46);
+  font-size: 21rpx;
+  line-height: 1.5;
 }
 
 .mirror-bridge {

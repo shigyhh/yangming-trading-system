@@ -40,6 +40,29 @@
       </view>
     </view>
 
+    <view class="server-profile-card card">
+      <view class="card-head">
+        <text>活镜成长摘要</text>
+        <view>{{serverLivingMirrorProfile.statusText}}</view>
+      </view>
+      <view class="server-profile-grid">
+        <view>
+          <text>已照见次数</text>
+          <view>{{serverLivingMirrorProfile.totalEvents}}</view>
+        </view>
+        <view>
+          <text>主要反应</text>
+          <view>{{serverLivingMirrorProfile.dominantReaction}}</view>
+        </view>
+      </view>
+      <view class="server-thought-card">
+        <text>你最近反复出现的念头</text>
+        <view wx:for="{{serverLivingMirrorProfile.repeatedThoughts}}" wx:key="*this">{{item}}</view>
+      </view>
+      <view class="server-boundary-line">{{serverLivingMirrorProfile.latestBoundaryState}}</view>
+      <view class="server-profile-foot">{{serverLivingMirrorProfile.updatedAt}} · {{serverLivingMirrorProfile.fallbackText}}</view>
+    </view>
+
     <view class="mirror-hero card">
       <view class="lake-glow"></view>
       <view class="mirror-label">复盘生成主镜</view>

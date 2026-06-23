@@ -332,4 +332,16 @@ assert.ok(klineMindWxmlSource.includes('wx:if="{{tradeReviewUrl}}"'));
 assert.ok(appConfig.pages.includes("pages/h5-bridge/index"));
 assert.ok(h5BridgeWxmlSource.includes("<web-view"));
 
+const livingMirrorPageSource = fs.readFileSync(path.join(__dirname, "../pages/living-mirror/index.js"), "utf8");
+const livingMirrorWxmlSource = fs.readFileSync(path.join(__dirname, "../pages/living-mirror/index.wxml"), "utf8");
+assert.ok(apiSource.includes("fetchLivingMirrorProfile"));
+assert.ok(apiSource.includes("/living-mirror/profile"));
+assert.ok(livingMirrorPageSource.includes("fetchLivingMirrorProfile"));
+assert.ok(livingMirrorPageSource.includes("getUserBinding"));
+assert.ok(livingMirrorWxmlSource.includes("活镜成长摘要"));
+assert.ok(livingMirrorWxmlSource.includes("serverLivingMirrorProfile.totalEvents"));
+assert.ok(livingMirrorWxmlSource.includes("serverLivingMirrorProfile.dominantReaction"));
+assert.ok(livingMirrorWxmlSource.includes("serverLivingMirrorProfile.repeatedThoughts"));
+assert.ok(livingMirrorWxmlSource.includes("serverLivingMirrorProfile.latestBoundaryState"));
+
 console.log("miniprogram data-binding adapter tests passed");

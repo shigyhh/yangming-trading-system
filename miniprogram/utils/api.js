@@ -54,6 +54,62 @@ function buildTradeReviewUrl({ userId = "", eventId = "" } = {}) {
   return `${PRODUCTION_API_BASE}/trade-review?userId=${encodeURIComponent(safeUserId)}&eventId=${encodeURIComponent(safeEventId)}`;
 }
 
+function buildLivingMirrorProfileFallback(status = "empty", errorMessage = "") {
+  return {
+    ok: false,
+    status,
+    source: "fallback",
+    profile: null,
+    totalEvents: 0,
+    dominantReaction: "",
+    repeatedThoughts: [],
+    latestBoundaryState: "",
+    updatedAt: "",
+    empty: true,
+    errorMessage
+  };
+}
+
+function normalizeLivingMirrorProfileResult(result = {}) {
+  const profile = result.profile || result.livingMirrorProfile || result.living_mirror_profile || result.data || {};
+  const repeatedThoughts = Array.isArray(profile.repeatedThoughts)
+    ? profile.repeatedThoughts
+    : Array.isArray(profile.repeated_thoughts) ? profile.repeated_thoughts : [];
+  const totalEvents = Number(profile.totalEvents || profile.total_events || profile.eventCount || profile.event_count || 0);
+  const normalized = {
+    ok: true,
+    status: "ready",
+    source: "server_profile",
+    profile,
+    totalEvents,
+    dominantReaction: profile.dominantReaction || profile.dominant_reaction || "",
+    repeatedThoughts,
+    latestBoundaryState: profile.latestBoundaryState || profile.latest_boundary_state || "",
+    updatedAt: profile.updatedAt || profile.updated_at || "",
+    empty: false,
+    errorMessage: ""
+  };
+  const empty = !normalized.totalEvents &&
+    !normalized.dominantReaction &&
+    !normalized.repeatedThoughts.length &&
+    !normalized.latestBoundaryState;
+  return empty ? buildLivingMirrorProfileFallback("empty") : normalized;
+}
+
+async function fetchLivingMirrorProfile(userId = "") {
+  const safeUserId = String(userId || "").trim();
+  if (!safeUserId) return buildLivingMirrorProfileFallback("missing_user");
+  try {
+    const result = await request({
+      path: `/api/v1/users/${encodeURIComponent(safeUserId)}/living-mirror/profile`
+    });
+    return normalizeLivingMirrorProfileResult(result);
+  } catch (error) {
+    saveConnectionFallback(error, "活镜成长连接未完成");
+    return buildLivingMirrorProfileFallback("network_error", getTechnicalMessage(error) || "活镜成长暂未连接");
+  }
+}
+
 function hasConfiguredApiBase() {
   if (isReleaseEnv()) return true;
   return !!wx.getStorageSync(API_BASE_ENABLED_KEY);
@@ -676,6 +732,7 @@ module.exports = {
   DEFAULT_API_BASE,
   KLINE_MIN_CANDLES,
   buildTradeReviewUrl,
+  fetchLivingMirrorProfile,
   getApiBase,
   setApiBase,
   getAuthSession,

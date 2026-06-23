@@ -19,6 +19,7 @@ const {
   PRODUCTION_API_BASE,
   buildTradeReviewUrl,
   getApiBase,
+  fetchLivingMirrorProfile,
   fetchKlineTrainingSlice,
   normalizeKlineTrainingSliceResult,
   syncKlineTrainingRecord,
@@ -142,6 +143,63 @@ async function runKlineSliceTests() {
   assert.strictEqual(networkSlice.source, "local_demo");
   assert.strictEqual(networkSlice.reason, "network_error");
   assert.ok(networkSlice.errorMessage.includes("network down"));
+}
+
+async function runLivingMirrorProfileTests() {
+  resetStorage();
+  envVersion = "release";
+  let requestedUrl = "";
+  global.wx.request = (options) => {
+    requestedUrl = options.url;
+    options.success({
+      statusCode: 200,
+      data: {
+        ok: true,
+        profile: {
+          totalEvents: 7,
+          dominantReaction: "怕错过",
+          repeatedThoughts: ["想追进去", "想改计划"],
+          latestBoundaryState: "先停十秒",
+          updatedAt: "2026-06-21T09:10:00.000Z"
+        }
+      }
+    });
+  };
+  const profile = await fetchLivingMirrorProfile("user 001");
+  assert.ok(requestedUrl.endsWith("/api/v1/users/user%20001/living-mirror/profile"));
+  assert.strictEqual(profile.ok, true);
+  assert.strictEqual(profile.totalEvents, 7);
+  assert.strictEqual(profile.dominantReaction, "怕错过");
+  assert.deepStrictEqual(profile.repeatedThoughts, ["想追进去", "想改计划"]);
+  assert.strictEqual(profile.latestBoundaryState, "先停十秒");
+  assert.strictEqual(profile.updatedAt, "2026-06-21T09:10:00.000Z");
+
+  let missingUserRequested = false;
+  global.wx.request = () => {
+    missingUserRequested = true;
+  };
+  const missingUser = await fetchLivingMirrorProfile("");
+  assert.strictEqual(missingUserRequested, false);
+  assert.strictEqual(missingUser.ok, false);
+  assert.strictEqual(missingUser.status, "missing_user");
+  assert.strictEqual(missingUser.totalEvents, 0);
+
+  global.wx.request = (options) => {
+    options.fail({ errMsg: "network down" });
+  };
+  const networkFallback = await fetchLivingMirrorProfile("user-001");
+  assert.strictEqual(networkFallback.ok, false);
+  assert.strictEqual(networkFallback.status, "network_error");
+  assert.strictEqual(networkFallback.totalEvents, 0);
+  assert.ok(networkFallback.errorMessage.includes("network down"));
+
+  global.wx.request = (options) => {
+    options.success({ statusCode: 200, data: { ok: true, profile: {} } });
+  };
+  const emptyFallback = await fetchLivingMirrorProfile("user-001");
+  assert.strictEqual(emptyFallback.ok, false);
+  assert.strictEqual(emptyFallback.status, "empty");
+  assert.strictEqual(emptyFallback.totalEvents, 0);
 }
 
 function resetStorage() {
@@ -385,6 +443,7 @@ async function runKlineSyncTests() {
 }
 
 runKlineSliceTests()
+  .then(runLivingMirrorProfileTests)
   .then(runKlineSyncTests)
   .then(() => console.log("miniprogram api tests passed"))
   .catch((error) => {

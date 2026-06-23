@@ -7,12 +7,33 @@ const {
   saveLivingMirrorStatsFromReviews,
   getTrainingPrescription,
   getEvidenceSummary,
-  getUnifiedJourneyView
+  getUnifiedJourneyView,
+  getUserBinding
 } = require("../../utils/store");
-const { pullTrainingPrescription } = require("../../utils/api");
+const { fetchLivingMirrorProfile, pullTrainingPrescription } = require("../../utils/api");
 const { buildTraining7View } = require("../../modules/training7/index");
 const { buildKlineDayRetestComparison, getKlineRecommendationForMirror } = require("../../modules/kline-simulator/index");
 const { buildLivingMirrorTree } = require("../../modules/mini-loop/index");
+
+function buildServerLivingMirrorProfileView(profile = {}) {
+  const repeatedThoughts = Array.isArray(profile.repeatedThoughts) ? profile.repeatedThoughts.slice(0, 3) : [];
+  const totalEvents = Number(profile.totalEvents || 0);
+  return {
+    ok: !!profile.ok,
+    status: profile.status || "empty",
+    statusText: profile.ok ? "已同步成长摘要" : "活镜仍在显影",
+    totalEvents,
+    dominantReaction: profile.dominantReaction || "待显影",
+    repeatedThoughts: repeatedThoughts.length ? repeatedThoughts : ["今日暂无成长记录"],
+    latestBoundaryState: profile.latestBoundaryState || "下一次交易前，先照见这一念",
+    updatedAt: profile.updatedAt || "待更新",
+    fallbackText: profile.ok
+      ? "成长摘要已更新"
+      : profile.status === "network_error"
+      ? "今日暂无成长记录，本地活镜仍可继续使用。"
+      : "今日暂无成长记录"
+  };
+}
 
 Page({
   data: {
@@ -42,11 +63,13 @@ Page({
     unifiedJourneyView: getUnifiedJourneyView(),
     miniLoopProgress: getMiniLoopProgress(),
     training7View: buildTraining7View(getTraining7State(), {}),
-    hasRecords: false
+    hasRecords: false,
+    serverLivingMirrorProfile: buildServerLivingMirrorProfileView()
   },
 
   onShow() {
     this.refreshStats();
+    this.loadServerLivingMirrorProfile();
   },
 
   refreshStats() {
@@ -84,6 +107,17 @@ Page({
       training7View: buildTraining7View(getTraining7State(), {}),
       hasRecords: Number(stats.totalReviews || 0) > 0
     });
+  },
+
+  loadServerLivingMirrorProfile() {
+    const userId = (getUserBinding() || {}).userId || "";
+    fetchLivingMirrorProfile(userId)
+      .then((profile) => {
+        this.setData({ serverLivingMirrorProfile: buildServerLivingMirrorProfileView(profile) });
+      })
+      .catch(() => {
+        this.setData({ serverLivingMirrorProfile: buildServerLivingMirrorProfileView({ status: "network_error" }) });
+      });
   },
 
   getPrescriptionStatusText(prescription) {
