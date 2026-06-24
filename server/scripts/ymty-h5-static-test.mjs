@@ -9,7 +9,7 @@ const repoRoot = resolve(__dirname, "../..");
 const indexPath = resolve(repoRoot, "web-mvp/hd/ymty/index.html");
 const successPath = resolve(repoRoot, "web-mvp/hd/ymty/success.html");
 const adminPath = resolve(repoRoot, "web-mvp/admin/ymty/index.html");
-const servicePreviewImagePath = resolve(repoRoot, "web-mvp/assets/service-content/sumi-service-preview.png");
+const servicePreviewImagePath = resolve(repoRoot, "web-mvp/hd/ymty/sumi-service-preview.png");
 const agreementPaths = [
   resolve(repoRoot, "web-mvp/agreement/privacy.html"),
   resolve(repoRoot, "web-mvp/agreement/service.html"),
@@ -81,7 +81,7 @@ test("ymty landing page is a simple continuous conversion page", () => {
     "你将获得",
     "服务内容",
     "服务交付示例",
-    "../../assets/service-content/sumi-service-preview.png",
+    "./sumi-service-preview.png",
     "训练营服务内容节选预览",
     "7天直播训练",
     "训练营服务内容节选",
