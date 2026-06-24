@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
@@ -9,6 +9,7 @@ const repoRoot = resolve(__dirname, "../..");
 const indexPath = resolve(repoRoot, "web-mvp/hd/ymty/index.html");
 const successPath = resolve(repoRoot, "web-mvp/hd/ymty/success.html");
 const adminPath = resolve(repoRoot, "web-mvp/admin/ymty/index.html");
+const servicePreviewImagePath = resolve(repoRoot, "web-mvp/assets/service-content/sumi-service-preview.png");
 const agreementPaths = [
   resolve(repoRoot, "web-mvp/agreement/privacy.html"),
   resolve(repoRoot, "web-mvp/agreement/service.html"),
@@ -31,6 +32,7 @@ function removeRequiredCompliancePhrases(source) {
   return source
     .replaceAll("不荐股，不喊单，不承诺收益", "")
     .replaceAll("不荐股、不喊单、不承诺收益", "")
+    .replaceAll("不提供荐股、喊单、跟单或收益承诺", "")
     .replaceAll("不荐股", "")
     .replaceAll("不喊单", "")
     .replaceAll("不承诺收益", "")
@@ -77,11 +79,21 @@ test("ymty landing page is a simple continuous conversion page", () => {
     "Day1",
     "Day7",
     "你将获得",
+    "服务内容",
+    "服务交付示例",
+    "../../assets/service-content/sumi-service-preview.png",
+    "训练营服务内容节选预览",
     "7天直播训练",
-    "交易日志模板",
-    "风控清单",
-    "复盘模板",
+    "训练营服务内容节选",
+    "知行合一执行卡",
+    "下单前三问",
+    "盘前盘中执行卡",
+    "风控与仓位工具",
+    "念头与情绪记录",
+    "复盘与月度检查",
+    "月度复盘表",
     "社群答疑",
+    "课程助教承接",
     "适合 / 不适合",
     "想减少冲动交易的人",
     "想建立交易计划的人",
@@ -111,6 +123,8 @@ test("ymty landing page is a simple continuous conversion page", () => {
     "id=\"benefits\"",
     "id=\"fit\"",
   ].forEach((text) => assertNotIncludes(html, text));
+
+  assert.ok(existsSync(servicePreviewImagePath), "Expected service content preview image to be served from web-mvp assets");
 });
 
 test("ymty landing page avoids forbidden demo and high-risk content", () => {
@@ -230,6 +244,30 @@ test("ymty public agreement pages exist and are linked from h5 pages", () => {
       "API_V3_KEY"
     ].forEach((text) => assertNotIncludes(html, text));
   });
+});
+
+test("ymty service agreement describes concrete paid deliverables", () => {
+  const html = readUtf8(resolve(repoRoot, "web-mvp/agreement/service.html"));
+
+  [
+    "产品名称：7天阳明心学交易体验营",
+    "服务内容包括",
+    "7天直播训练",
+    "训练营服务内容资料",
+    "盘前盘中执行卡",
+    "风控与仓位工具",
+    "念头与情绪记录",
+    "复盘与月度检查",
+    "知行合一执行卡",
+    "下单前三问",
+    "盘前立规矩",
+    "系统检查清单",
+    "月度复盘表",
+    "社群答疑",
+    "课程助教承接",
+    "交易认知、行为训练与风险教育",
+    "不提供荐股、喊单、跟单、实盘带单、行情预测、收益承诺或代客理财服务",
+  ].forEach((text) => assertIncludes(html, text));
 });
 
 test("ymty success page only unlocks after paid status", () => {

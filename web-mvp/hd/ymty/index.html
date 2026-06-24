@@ -23,23 +23,36 @@
       body{
         margin:0;
         background:
-          radial-gradient(100% 70% at 50% 0%, rgba(198,168,103,.12), transparent 54%),
-          radial-gradient(120% 88% at 50% 100%, rgba(112,24,18,.38), transparent 62%),
-          linear-gradient(180deg, #06100b 0%, #0a130e 48%, #180d0b 100%);
+          radial-gradient(72% 48% at 50% 8%, rgba(224,196,136,.18), transparent 58%),
+          radial-gradient(80% 48% at 50% 28%, rgba(13,35,24,.62), transparent 68%),
+          radial-gradient(120% 88% at 50% 100%, rgba(112,24,18,.42), transparent 62%),
+          linear-gradient(180deg, #050d09 0%, #08120d 48%, #180d0b 100%);
         color:var(--ink);
         font-family:var(--font);
         -webkit-font-smoothing:antialiased;
         text-rendering:optimizeLegibility;
         overflow-x:hidden;
       }
+      body::before{
+        content:"";
+        position:fixed;
+        inset:0;
+        pointer-events:none;
+        background:
+          linear-gradient(115deg, transparent 0 34%, rgba(198,168,103,.045) 34.2%, transparent 34.9%),
+          linear-gradient(245deg, transparent 0 58%, rgba(198,168,103,.035) 58.2%, transparent 58.9%);
+        opacity:.52;
+      }
 
       button{font:inherit}
       .page{
+        position:relative;
+        z-index:1;
         width:min(100%,760px);
         margin:0 auto;
         padding:0 22px;
       }
-      section{padding:28px 0}
+      section{padding:34px 0}
       .section-title{
         margin:0 0 16px;
         color:var(--gold-bright);
@@ -68,17 +81,37 @@
       }
 
       .hero{
-        min-height:auto;
+        min-height:100svh;
+        position:relative;
         display:flex;
         align-items:center;
         justify-content:center;
         text-align:center;
-        padding:58px 0 36px;
+        padding:58px 0 52px;
+      }
+      .hero::before{
+        content:"";
+        position:absolute;
+        left:50%;
+        top:50%;
+        width:min(92vw,720px);
+        aspect-ratio:1;
+        transform:translate(-50%,-52%);
+        border-radius:50%;
+        background:
+          radial-gradient(circle at 50% 44%, rgba(224,196,136,.12), transparent 42%),
+          radial-gradient(circle at 50% 50%, rgba(0,0,0,.28), transparent 62%);
+        filter:blur(.2px);
+        opacity:.9;
+      }
+      .hero-inner{
+        position:relative;
+        width:100%;
       }
       .logo{
-        width:92px;
-        height:92px;
-        margin:0 auto 20px;
+        width:104px;
+        height:104px;
+        margin:0 auto 24px;
         border:1px solid rgba(224,196,136,.72);
         border-radius:50%;
         display:flex;
@@ -86,11 +119,14 @@
         justify-content:center;
         color:var(--gold-bright);
         overflow:hidden;
-        box-shadow:0 0 0 8px rgba(198,168,103,.05), inset 0 0 28px rgba(198,168,103,.12);
+        box-shadow:
+          0 0 0 10px rgba(198,168,103,.055),
+          0 18px 56px rgba(0,0,0,.30),
+          inset 0 0 32px rgba(198,168,103,.12);
       }
       .logo img{
-        width:72px;
-        height:72px;
+        width:78px;
+        height:78px;
         display:block;
         object-fit:contain;
         filter:none;
@@ -101,11 +137,12 @@
         margin:0;
         width:100%;
         color:var(--ink);
-        font-size:clamp(28px,6vw,64px);
-        line-height:1.34;
-        font-weight:700;
+        font-size:clamp(31px,6.4vw,68px);
+        line-height:1.28;
+        font-weight:800;
         letter-spacing:0;
         text-align:center;
+        text-shadow:0 16px 46px rgba(0,0,0,.34);
       }
       .hero-title-line{
         display:block;
@@ -117,10 +154,10 @@
       }
       .hero-copy{
         max-width:680px;
-        margin:20px auto 0;
-        color:rgba(234,228,210,.82);
+        margin:24px auto 0;
+        color:rgba(234,228,210,.86);
         font-size:clamp(17px,4.2vw,22px);
-        line-height:1.72;
+        line-height:1.78;
       }
       .trust-line{
         display:flex;
@@ -133,14 +170,14 @@
         border:1px solid rgba(198,168,103,.28);
         border-radius:999px;
         padding:7px 13px;
-        color:rgba(234,228,210,.78);
-        background:rgba(0,0,0,.16);
+        color:rgba(234,228,210,.84);
+        background:rgba(0,0,0,.20);
         font-size:13px;
       }
       .hero-actions{
         display:grid;
         gap:12px;
-        margin:26px auto 0;
+        margin:30px auto 0;
         max-width:430px;
       }
       .btn{
@@ -174,12 +211,16 @@
       }
       .pain-list p{
         margin:0;
-        padding:17px 0;
+        padding:18px 0;
         border-bottom:1px solid var(--line);
         color:rgba(234,228,210,.92);
-        font-size:clamp(21px,5vw,31px);
-        line-height:1.45;
-        font-weight:700;
+        font-size:clamp(23px,5.2vw,34px);
+        line-height:1.42;
+        font-weight:800;
+      }
+      .pain-list p b{
+        color:var(--gold-bright);
+        font-weight:900;
       }
       .pain-close{
         margin:22px 0 0;
@@ -247,6 +288,29 @@
         font-size:17px;
         line-height:1.58;
       }
+      .share-card{
+        margin-top:18px;
+        padding:24px 20px;
+        border:1px solid rgba(224,196,136,.36);
+        border-radius:20px;
+        background:
+          radial-gradient(72% 110% at 50% 0%, rgba(224,196,136,.12), transparent 62%),
+          rgba(0,0,0,.18);
+        text-align:center;
+      }
+      .share-card b{
+        display:block;
+        color:var(--gold-bright);
+        font-size:clamp(25px,5.2vw,38px);
+        line-height:1.36;
+      }
+      .share-card span{
+        display:block;
+        margin-top:10px;
+        color:rgba(234,228,210,.70);
+        font-size:15px;
+        line-height:1.7;
+      }
 
       .training-list{
         display:grid;
@@ -255,10 +319,10 @@
       }
       .training-row{
         display:grid;
-        grid-template-columns:86px 156px minmax(0,1fr);
-        gap:22px;
+        grid-template-columns:82px 146px minmax(0,1fr);
+        gap:20px;
         align-items:center;
-        padding:14px 0;
+        padding:16px 0;
         border-bottom:1px solid var(--line);
       }
       .training-row b{
@@ -276,13 +340,40 @@
         display:block;
         color:rgba(234,228,210,.70);
         font-size:18px;
-        line-height:1.45;
+        line-height:1.55;
       }
 
       .benefit-grid{
         display:grid;
         grid-template-columns:repeat(2,minmax(0,1fr));
         gap:10px;
+      }
+      .service-intro{
+        margin:0 0 16px;
+        color:var(--muted);
+        font-size:16px;
+        line-height:1.8;
+      }
+      .service-preview{
+        margin:0 0 16px;
+        overflow:hidden;
+        border:1px solid rgba(224,196,136,.28);
+        border-radius:18px;
+        background:
+          radial-gradient(72% 120% at 50% 0%, rgba(224,196,136,.10), transparent 64%),
+          rgba(0,0,0,.16);
+      }
+      .service-preview img{
+        display:block;
+        width:100%;
+        height:auto;
+      }
+      .service-preview figcaption{
+        padding:12px 14px;
+        color:rgba(234,228,210,.68);
+        border-top:1px solid rgba(198,168,103,.16);
+        font-size:13px;
+        line-height:1.65;
       }
       .benefit-grid p{
         margin:0;
@@ -293,6 +384,21 @@
         color:rgba(234,228,210,.88);
         font-size:16px;
         font-weight:700;
+      }
+      .benefit-grid p b,
+      .benefit-grid p span{
+        display:block;
+      }
+      .benefit-grid p b{
+        color:rgba(234,228,210,.92);
+        font-size:17px;
+      }
+      .benefit-grid p span{
+        margin-top:4px;
+        color:rgba(234,228,210,.58);
+        font-size:13px;
+        line-height:1.55;
+        font-weight:500;
       }
 
       .fit-grid{
@@ -326,7 +432,7 @@
       .fit-card li:last-child{border-bottom:0}
 
       .signup-card{
-        padding:20px;
+        padding:22px;
         border-color:rgba(224,196,136,.44);
         background:
           radial-gradient(80% 100% at 50% 0%, rgba(224,196,136,.14), transparent 58%),
@@ -362,6 +468,20 @@
         min-width:180px;
         min-height:54px;
       }
+      .signup-badges{
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+        margin:14px 0 0;
+      }
+      .signup-badges span{
+        border:1px solid rgba(198,168,103,.22);
+        border-radius:999px;
+        padding:6px 10px;
+        color:rgba(234,228,210,.74);
+        background:rgba(0,0,0,.12);
+        font-size:12px;
+      }
       .signup-meta{
         display:grid;
         grid-template-columns:repeat(2,minmax(0,1fr));
@@ -379,10 +499,10 @@
         color:rgba(234,228,210,.92);
       }
       .pay-note{
-        margin:10px 0 0;
-        color:var(--faint);
+        margin:14px 0 0;
+        color:rgba(234,228,210,.72);
         text-align:center;
-        font-size:13px;
+        font-size:14px;
         line-height:1.7;
       }
       .agreement-note{
@@ -476,15 +596,23 @@
         .page{padding:0 18px}
         section{padding:24px 0}
         .hero{padding:46px 0 30px}
+        .logo{
+          width:96px;
+          height:96px;
+        }
+        .logo img{
+          width:72px;
+          height:72px;
+        }
         .hero-copy{font-size:17px}
         .pain-list p{font-size:22px}
         .training-row{
-          grid-template-columns:58px 88px minmax(0,1fr);
-          gap:10px;
-          padding:12px 0;
+          grid-template-columns:1fr;
+          gap:5px;
+          padding:14px 0;
         }
         .training-row b{font-size:16px}
-        .training-title{font-size:18px}
+        .training-title{font-size:20px}
         .training-desc{font-size:15px;line-height:1.42}
         .method-item{
           grid-template-columns:38px 58px minmax(0,1fr);
@@ -517,7 +645,7 @@
   <body>
     <main class="page">
       <section class="hero" id="hero">
-        <div>
+        <div class="hero-inner">
           <div class="logo" aria-label="照"><img src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22240%22%20height%3D%22240%22%20viewBox%3D%2232%2028%20208%20216%22%20role%3D%22img%22%20aria-label%3D%22%E7%85%A7%22%3E%0A%20%20%3Cg%20fill%3D%22none%22%20stroke%3D%22%23E0C488%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M55%2040H119V123H55Z%22%20stroke-width%3D%229%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M68%2068H107M68%2096H107%22%20stroke-width%3D%225%22%20opacity%3D%22.78%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M154%2042H214%22%20stroke-width%3D%229%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M184%2044C180%2068%20167%2088%20146%20104%22%20stroke-width%3D%229%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M154%2084H217V123H154Z%22%20stroke-width%3D%229%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M166%20104H206%22%20stroke-width%3D%224.8%22%20opacity%3D%22.76%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M70%20151H209%22%20stroke-width%3D%226.4%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M72%20184C63%20200%2057%20213%2050%20228M114%20183C108%20199%20105%20214%20102%20231M156%20183C160%20199%20163%20214%20166%20231M197%20184C206%20200%20215%20214%20222%20228%22%20stroke-width%3D%226.6%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%3C%2Fsvg%3E" data-source-ref="/assets/ymty-zhao-logo.svg" alt="" /></div>
           <p class="eyebrow">阳明心学 · 交易体验营</p>
           <h1 class="hero-title">
@@ -529,7 +657,8 @@
           <!-- static-test legacy marker: 你是输给了<b>下单那一念</b> -->
           <p class="hero-copy">
             7天阳明心学交易体验营<br />
-            用照心、停顿、取证、复盘，训练交易纪律。
+            用照心、停顿、取证、复盘，训练交易纪律。<br />
+            只训练你把规则真正做到。
           </p>
           <div class="trust-line">
             <span>不荐股</span><span>不喊单</span><span>不承诺收益</span>
@@ -544,10 +673,10 @@
       <section id="pain-method">
         <p class="eyebrow">这些时刻，你可能太熟了</p>
         <div class="pain-list">
-          <p>止损价到了，你的手却划掉了它。</p>
-          <p>计划写得明明白白，下单那一刻全忘了。</p>
-          <p>赚的时候怕回吐，亏的时候怕认错。</p>
-          <p>又一次“最后一把”，又一次被情绪拖走。</p>
+          <p><b>止损线前，</b>你不是不会走，是不肯认错。</p>
+          <p><b>计划写好，</b>下单那一刻却交给了情绪。</p>
+          <p><b>有利润时，</b>怕回吐；一亏损，又怕承认自己错了。</p>
+          <p><b>说好最后一次，</b>真正临盘时，又被念头拖走。</p>
         </div>
         <p class="pain-close">你怕的，<b>从来不是行情。</b><br />是临盘时失控的自己。</p>
 
@@ -560,30 +689,43 @@
             <div class="method-item"><em>04</em><b>复盘</b><span>把错误沉淀成下一次不再犯的规则。</span></div>
             <div class="method-item"><em>05</em><b>纪律</b><span>让知道的规则，长成真正做到的动作。</span></div>
           </div>
+          <div class="share-card" aria-label="传播截图文案">
+            <b>交易真正难的，<br />不是知道，是做到。</b>
+            <span>这7天不追求看对行情，只训练一次次把冲动停下来。</span>
+          </div>
         </div>
       </section>
 
       <section id="training">
-        <h2 class="section-title">7天训练路径</h2>
+        <h2 class="section-title">7天解决什么问题</h2>
         <div class="training-list">
-          <div class="training-row"><b>Day1</b><span class="training-title">照见冲动</span><span class="training-desc">解决一看到波动就想立刻下单的问题。</span></div>
-          <div class="training-row"><b>Day2</b><span class="training-title">写下计划</span><span class="training-desc">解决理由、仓位、止损、退出条件不清楚的问题。</span></div>
-          <div class="training-row"><b>Day3</b><span class="training-title">建立边界</span><span class="training-desc">解决情绪上来后不断加动作、越做越乱的问题。</span></div>
-          <div class="training-row"><b>Day4</b><span class="training-title">模拟执行</span><span class="training-desc">解决规则写了，临盘却反复改规则的问题。</span></div>
-          <div class="training-row"><b>Day5</b><span class="training-title">交易日志</span><span class="training-desc">解决只记盈亏，不记录念头、仓位和动作的问题。</span></div>
-          <div class="training-row"><b>Day6</b><span class="training-title">复盘错误</span><span class="training-desc">解决只看结果，不修正行为模式的问题。</span></div>
-          <div class="training-row"><b>Day7</b><span class="training-title">形成清单</span><span class="training-desc">解决每次交易都从零开始、没有个人纪律清单的问题。</span></div>
+          <div class="training-row"><b>Day1</b><span class="training-title">照见冲动</span><span class="training-desc">解决一看见波动就想立刻下单，事后才发现没有计划的问题。</span></div>
+          <div class="training-row"><b>Day2</b><span class="training-title">写下计划</span><span class="training-desc">解决入场理由、仓位、止损、退出条件只在脑子里打转的问题。</span></div>
+          <div class="training-row"><b>Day3</b><span class="training-title">建立边界</span><span class="training-desc">解决情绪一上来就加动作，越做越急、越急越乱的问题。</span></div>
+          <div class="training-row"><b>Day4</b><span class="training-title">模拟执行</span><span class="training-desc">解决规则写得很清楚，临盘却反复修改、不断找例外的问题。</span></div>
+          <div class="training-row"><b>Day5</b><span class="training-title">交易日志</span><span class="training-desc">解决只记盈亏，不记录当时念头、仓位、动作偏差的问题。</span></div>
+          <div class="training-row"><b>Day6</b><span class="training-title">复盘错误</span><span class="training-desc">解决复盘只看对错，不追问自己为什么重复同一种动作的问题。</span></div>
+          <div class="training-row"><b>Day7</b><span class="training-title">形成清单</span><span class="training-desc">解决每次交易都从零开始，没有自己的停手线和执行清单的问题。</span></div>
         </div>
       </section>
 
       <section id="result-fit">
-        <h2 class="section-title">你将获得</h2>
+        <p class="eyebrow">服务内容</p>
+        <h2 class="section-title">报名后你将获得</h2>
+        <p class="service-intro">
+          这是交易认知、行为训练与风险教育服务。我们交付的是 7 天训练节奏、训练营服务内容资料、复盘方法和助教承接，不提供荐股、喊单、跟单或收益承诺。
+        </p>
+        <figure class="service-preview" aria-label="服务交付示例">
+          <img src="../../assets/service-content/sumi-service-preview.png" alt="训练营服务内容节选预览" loading="lazy" />
+          <figcaption>服务交付示例：训练营服务内容节选，用于盘前立规矩、盘中停顿、念头记录、情绪复盘和系统检查。</figcaption>
+        </figure>
         <div class="benefit-grid">
-          <p>7天直播训练</p>
-          <p>交易日志模板</p>
-          <p>风控清单</p>
-          <p>复盘模板</p>
-          <p>社群答疑</p>
+          <p><b>7天直播训练</b><span>跟着固定节奏完成照心、停顿、取证、复盘训练。</span></p>
+          <p><b>盘前盘中执行卡</b><span>包含知行合一执行卡、下单前三问、盘前立规矩、止损预案卡。</span></p>
+          <p><b>风控与仓位工具</b><span>包含仓位良知线、能力圈边界、仓位稳定系统和系统检查清单。</span></p>
+          <p><b>念头与情绪记录</b><span>包含念头记录法、自欺识别表、侥幸单识别表、情绪复盘表。</span></p>
+          <p><b>复盘与月度检查</b><span>包含三省复盘法、错误归因表、亏损日流程和月度复盘表。</span></p>
+          <p><b>课程助教承接</b><span>支付后添加课程助教微信，进入社群答疑和训练提醒。</span></p>
         </div>
 
         <p class="eyebrow" style="margin-top:28px">适合 / 不适合</p>
@@ -613,6 +755,14 @@
             <div class="signup-title">
               <p class="eyebrow">报名确认</p>
               <h2 data-product-name>阳明心学交易体验营</h2>
+              <div class="signup-badges">
+                <span>7天训练</span>
+                <span>训练资料</span>
+                <span>复盘模板</span>
+                <span>助教承接</span>
+                <span>支付后解锁入口</span>
+                <span>真实金额以后端订单为准</span>
+              </div>
             </div>
             <div class="price"><small>¥</small><span data-price>1.68</span></div>
             <button class="btn btn-primary" type="button" data-signup id="bottomSignupBtn">立即报名体验营</button>
