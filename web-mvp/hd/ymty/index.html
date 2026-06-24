@@ -348,6 +348,33 @@
         grid-template-columns:repeat(2,minmax(0,1fr));
         gap:10px;
       }
+      .service-intro{
+        margin:0 0 16px;
+        color:var(--muted);
+        font-size:16px;
+        line-height:1.8;
+      }
+      .service-preview{
+        margin:0 0 16px;
+        overflow:hidden;
+        border:1px solid rgba(224,196,136,.28);
+        border-radius:18px;
+        background:
+          radial-gradient(72% 120% at 50% 0%, rgba(224,196,136,.10), transparent 64%),
+          rgba(0,0,0,.16);
+      }
+      .service-preview img{
+        display:block;
+        width:100%;
+        height:auto;
+      }
+      .service-preview figcaption{
+        padding:12px 14px;
+        color:rgba(234,228,210,.68);
+        border-top:1px solid rgba(198,168,103,.16);
+        font-size:13px;
+        line-height:1.65;
+      }
       .benefit-grid p{
         margin:0;
         padding:14px 14px;
@@ -683,13 +710,22 @@
       </section>
 
       <section id="result-fit">
-        <h2 class="section-title">你将获得</h2>
+        <p class="eyebrow">服务内容</p>
+        <h2 class="section-title">报名后你将获得</h2>
+        <p class="service-intro">
+          这是交易认知、行为训练与风险教育服务。我们交付的是 7 天训练节奏、训练营服务内容资料、复盘方法和助教承接，不提供荐股、喊单、跟单或收益承诺。
+        </p>
+        <figure class="service-preview" aria-label="服务交付示例">
+          <img src="../../assets/service-content/sumi-service-preview.png" alt="训练营服务内容节选预览" loading="lazy" />
+          <figcaption>服务交付示例：训练营服务内容节选，用于盘前立规矩、盘中停顿、念头记录、情绪复盘和系统检查。</figcaption>
+        </figure>
         <div class="benefit-grid">
-          <p><b>7天直播训练</b><span>跟着节奏练，不靠一时兴起。</span></p>
-          <p><b>交易日志模板</b><span>把念头、仓位、动作写下来。</span></p>
-          <p><b>风控清单</b><span>先定边界，再谈执行。</span></p>
-          <p><b>复盘模板</b><span>从结果回到行为，而不是只看对错。</span></p>
-          <p><b>社群答疑</b><span>支付后添加课程助教微信进入承接。</span></p>
+          <p><b>7天直播训练</b><span>跟着固定节奏完成照心、停顿、取证、复盘训练。</span></p>
+          <p><b>盘前盘中执行卡</b><span>包含知行合一执行卡、下单前三问、盘前立规矩、止损预案卡。</span></p>
+          <p><b>风控与仓位工具</b><span>包含仓位良知线、能力圈边界、仓位稳定系统和系统检查清单。</span></p>
+          <p><b>念头与情绪记录</b><span>包含念头记录法、自欺识别表、侥幸单识别表、情绪复盘表。</span></p>
+          <p><b>复盘与月度检查</b><span>包含三省复盘法、错误归因表、亏损日流程和月度复盘表。</span></p>
+          <p><b>课程助教承接</b><span>支付后添加课程助教微信，进入社群答疑和训练提醒。</span></p>
         </div>
 
         <p class="eyebrow" style="margin-top:28px">适合 / 不适合</p>
@@ -721,6 +757,9 @@
               <h2 data-product-name>阳明心学交易体验营</h2>
               <div class="signup-badges">
                 <span>7天训练</span>
+                <span>训练资料</span>
+                <span>复盘模板</span>
+                <span>助教承接</span>
                 <span>支付后解锁入口</span>
                 <span>真实金额以后端订单为准</span>
               </div>
