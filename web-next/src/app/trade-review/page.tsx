@@ -6,7 +6,13 @@ import { useSearchParams } from "next/navigation"
 
 import { ReturnHomeLink } from "@/components/navigation/ReturnHomeLink"
 import { AssessmentShell, PrimaryButton } from "@/features/assessment/components"
+import {
+  fetchLivingMirrorProfile,
+  fetchRiskPatternSummary,
+  fetchTodayState,
+} from "@/features/data-binding/api-client"
 import { getPendingReviewEvents } from "@/lib/mind-archive/archiveStatsService"
+import type { LivingMirrorProfile, RiskPatternSummary, TodayState } from "@yangming/contracts/living-mirror"
 import {
   type ChartEvidence,
   type ChartEvidenceType,
@@ -31,12 +37,12 @@ import {
 } from "@/lib/trade-review/tradeReviewRepository"
 
 const directionLabels: Array<{ value: TradeDirection; label: string }> = [
-  { value: "buy", label: "买入" },
-  { value: "sell", label: "卖出" },
-  { value: "long", label: "做多" },
-  { value: "short", label: "做空" },
-  { value: "close_long", label: "平多" },
-  { value: "close_short", label: "平空" },
+  { value: "buy", label: "进入" },
+  { value: "sell", label: "离开" },
+  { value: "long", label: "向上" },
+  { value: "short", label: "向下" },
+  { value: "close_long", label: "结束向上" },
+  { value: "close_short", label: "结束向下" },
 ]
 
 const chartEvidenceTypeLabels: Record<ChartEvidenceType, string> = {
@@ -100,6 +106,18 @@ const dataSourceLabels: Record<KlineContextResult["dataSource"], string> = {
 }
 
 const isKlineContextEnabled = process.env.NEXT_PUBLIC_ENABLE_KLINE_CONTEXT === "true"
+
+type ProjectionStatus = "missing-user" | "loading" | "ready" | "error"
+type ProjectionRecord = Record<string, unknown>
+
+type EventReviewProjectionState = {
+  status: ProjectionStatus
+  profile: LivingMirrorProfile | null
+  riskSummary: RiskPatternSummary | null
+  todayState: TodayState | null
+  message: string
+  errors: string[]
+}
 
 const reactionLabels: Record<OneThoughtReaction, string> = {
   seen: "照见了",
@@ -183,11 +201,152 @@ function buildPracticeText(params: {
   return "下次同类场景：先回到规则，再决定是否行动。"
 }
 
+function toProjectionRecord(value: unknown): ProjectionRecord | null {
+  return value && typeof value === "object" ? (value as ProjectionRecord) : null
+}
+
+function readProjectionText(source: unknown, keys: string[], fallback = "") {
+  const record = toProjectionRecord(source)
+  if (!record) return fallback
+
+  for (const key of keys) {
+    const value = record[key]
+    if (typeof value === "string" && value.trim()) return value.trim()
+    if (typeof value === "number" && Number.isFinite(value)) return String(value)
+  }
+
+  return fallback
+}
+
+function readProjectionList(source: unknown, keys: string[]) {
+  const record = toProjectionRecord(source)
+  if (!record) return []
+
+  for (const key of keys) {
+    const value = record[key]
+    if (Array.isArray(value)) return value.filter((item): item is ProjectionRecord => Boolean(toProjectionRecord(item)))
+  }
+
+  return []
+}
+
+function getProjectionNextAction(params: {
+  profile: LivingMirrorProfile | null
+  riskSummary: RiskPatternSummary | null
+  todayState: TodayState | null
+}) {
+  return (
+    readProjectionText(params.todayState, ["nextAction", "next_action", "actionText", "action_text", "trainingAction", "training_action"]) ||
+    readProjectionText(params.riskSummary, ["nextAction", "next_action"]) ||
+    params.profile?.trainingFocus ||
+    "先停十秒，记录这一念，再完成一次复盘。"
+  )
+}
+
+function EventReviewProjectionReport({
+  eventId,
+  state,
+  userId,
+}: {
+  eventId: string
+  state: EventReviewProjectionState
+  userId: string
+}) {
+  const profile = state.profile
+  const riskSummary = state.riskSummary
+  const todayState = state.todayState
+  const riskItems = readProjectionList(riskSummary, ["items", "patterns", "riskPatterns", "risk_patterns"]).slice(0, 3)
+  const sourceLabel = userId ? "已携带 userId" : eventId ? "仅携带 eventId" : "等待照见记录"
+  const isQuiet = state.status === "missing-user" || state.status === "error"
+  const todayTitle = readProjectionText(todayState, ["title", "stateText", "state_text", "statusText", "status_text"], "今日状态")
+  const todaySummary = readProjectionText(
+    todayState,
+    ["summaryText", "summary_text", "todayHeartWitness", "today_heart_witness", "focusText", "focus_text"],
+    state.status === "loading" ? "正在读取今日状态。" : "今日状态暂未显影，先保留本次照见入口。",
+  )
+  const mirrorTitle = profile?.currentMainMirror || "活镜摘要"
+  const mirrorSummary = profile?.tripleReflection?.proofLine || profile?.tripleReflection?.conclusion || profile?.trainingFocus || "活镜画像暂未显影。"
+  const riskTitle = readProjectionText(riskSummary, ["title", "primaryPattern", "primary_pattern", "riskLevelText", "risk_level_text"], "风险模式摘要")
+  const riskSummaryText = readProjectionText(
+    riskSummary,
+    ["summaryText", "summary_text", "riskLevelText", "risk_level_text"],
+    "暂无风险模式摘要，继续完成真实复盘后会逐步显影。",
+  )
+  const nextAction = getProjectionNextAction({ profile, riskSummary, todayState })
+
+  return (
+    <section className={isQuiet ? "projection-report is-quiet" : "projection-report"} aria-label="盘心合证最小报告">
+      <div className="projection-head">
+        <p>盘心合证最小报告</p>
+        <h2>盘心合证</h2>
+        <span>
+          {sourceLabel}
+          {eventId ? ` · eventId ${eventId}` : ""}
+        </span>
+      </div>
+
+      {isQuiet ? (
+        <div className="projection-fallback" role="status">
+          <strong>{state.message}</strong>
+          <span>本页仍可继续完成真实复盘；报告会在投影数据可读后显影。</span>
+        </div>
+      ) : null}
+
+      <div className="projection-grid">
+        <article className="projection-card">
+          <p>今日状态</p>
+          <h3>{todayTitle}</h3>
+          <span>{todaySummary}</span>
+        </article>
+
+        <article className="projection-card">
+          <p>活镜摘要</p>
+          <h3>{mirrorTitle}</h3>
+          <span>{mirrorSummary}</span>
+          <dl>
+            <div>
+              <dt>训练重点</dt>
+              <dd>{profile?.trainingFocus || "等待更多复盘证据。"}</dd>
+            </div>
+            <div>
+              <dt>成长状态</dt>
+              <dd>{profile?.currentStage || "暂未显影"}</dd>
+            </div>
+          </dl>
+        </article>
+
+        <article className="projection-card">
+          <p>风险模式摘要</p>
+          <h3>{riskTitle}</h3>
+          <span>{riskSummaryText}</span>
+          {riskItems.length ? (
+            <dl>
+              {riskItems.map((item, index) => (
+                <div key={`${readProjectionText(item, ["code", "id", "name"], String(index))}-${index}`}>
+                  <dt>{readProjectionText(item, ["name", "label", "code"], `模式 ${index + 1}`)}</dt>
+                  <dd>{readProjectionText(item, ["summary", "description", "reasonText", "reason_text"], "继续观察。")}</dd>
+                </div>
+              ))}
+            </dl>
+          ) : null}
+        </article>
+
+        <article className="projection-card projection-next-action">
+          <p>下一步动作</p>
+          <h3>下一步觉察</h3>
+          <span>{nextAction}</span>
+        </article>
+      </div>
+    </section>
+  )
+}
+
 function ReviewPageContent() {
   const searchParams = useSearchParams()
-  const linkedEventId = searchParams.get("linkedOneThoughtEventId") || ""
+  const queryEventId = searchParams.get("eventId") || searchParams.get("linkedOneThoughtEventId") || ""
+  const queryUserId = searchParams.get("userId") || ""
   const [events, setEvents] = useState<OneThoughtEvent[]>([])
-  const [selectedEventId, setSelectedEventId] = useState(linkedEventId)
+  const [selectedEventId, setSelectedEventId] = useState(queryEventId)
   const [symbol, setSymbol] = useState("")
   const [timeframe, setTimeframe] = useState("101")
   const [entryTime, setEntryTime] = useState("")
@@ -214,6 +373,14 @@ function ReviewPageContent() {
   const [reviewText, setReviewText] = useState("")
   const [notice, setNotice] = useState("")
   const [createdJudgement, setCreatedJudgement] = useState<ReturnType<typeof judgeTradeHeart> | null>(null)
+  const [projectionState, setProjectionState] = useState<EventReviewProjectionState>({
+    status: "missing-user",
+    profile: null,
+    riskSummary: null,
+    todayState: null,
+    message: "暂未找到本次照见记录",
+    errors: [],
+  })
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -221,18 +388,83 @@ function ReviewPageContent() {
       setEvents(pendingEvents)
       setSelectedEventId((current) => {
         if (current && pendingEvents.some((event) => event.id === current)) return current
-        if (linkedEventId && pendingEvents.some((event) => event.id === linkedEventId)) return linkedEventId
+        if (queryEventId && pendingEvents.some((event) => event.id === queryEventId)) return queryEventId
         return pendingEvents[0]?.id || ""
       })
     }, 0)
 
     return () => window.clearTimeout(timer)
-  }, [linkedEventId])
+  }, [queryEventId])
 
   const selectedEvent = useMemo(
     () => events.find((event) => event.id === selectedEventId) ?? null,
     [events, selectedEventId],
   )
+  const projectionUserId = (queryUserId.trim() || selectedEvent?.userId || "").trim()
+
+  useEffect(() => {
+    let isActive = true
+
+    async function loadProjection() {
+      if (!projectionUserId) {
+        setProjectionState({
+          status: "missing-user",
+          profile: null,
+          riskSummary: null,
+          todayState: null,
+          message: queryEventId
+            ? "当前服务未提供 eventId 反查 userId 的只读入口。"
+            : "暂未找到本次照见记录",
+          errors: [],
+        })
+        return
+      }
+
+      setProjectionState((current) => ({
+        ...current,
+        status: "loading",
+        message: "正在读取盘心合证投影。",
+        errors: [],
+      }))
+
+      const [profileResult, riskResult, todayResult] = await Promise.all([
+        fetchLivingMirrorProfile(projectionUserId),
+        fetchRiskPatternSummary(projectionUserId),
+        fetchTodayState(projectionUserId),
+      ])
+
+      if (!isActive) return
+
+      const errors = [profileResult, riskResult, todayResult].flatMap((result) => (result.ok ? [] : [result.error]))
+
+      if (!profileResult.ok && !riskResult.ok && !todayResult.ok) {
+        setProjectionState({
+          status: "error",
+          profile: null,
+          riskSummary: null,
+          todayState: null,
+          message: "记录已落印，报告暂未显影",
+          errors,
+        })
+        return
+      }
+
+      setProjectionState({
+        status: "ready",
+        profile: profileResult.ok ? profileResult.data : null,
+        riskSummary: riskResult.ok ? riskResult.data : null,
+        todayState: todayResult.ok ? todayResult.data : null,
+        message: errors.length ? "部分投影暂未显影。" : "",
+        errors,
+      })
+    }
+
+    loadProjection()
+
+    return () => {
+      isActive = false
+    }
+  }, [projectionUserId, queryEventId])
 
   const previewJudgement = useMemo(() => {
     const numberPnl = Number(pnl)
@@ -474,6 +706,8 @@ function ReviewPageContent() {
           </h1>
           <span>看盘，是为了看清位置；复盘，是为了看清谁在下单。</span>
         </header>
+
+        <EventReviewProjectionReport eventId={queryEventId} state={projectionState} userId={projectionUserId} />
 
         <section className="review-panel" aria-label="关联一念">
           <p>关联最近一念</p>
@@ -913,6 +1147,111 @@ function ReviewPageContent() {
           padding-top: 22px;
         }
 
+        .projection-report {
+          border: 1px solid rgba(216, 183, 111, 0.16);
+          border-radius: 20px;
+          background: rgba(17, 16, 13, 0.72);
+          margin-bottom: 32px;
+          padding: clamp(20px, 4vw, 30px);
+        }
+
+        .projection-report.is-quiet {
+          border-color: rgba(216, 183, 111, 0.1);
+          background: rgba(8, 8, 7, 0.24);
+        }
+
+        .projection-head {
+          display: grid;
+          gap: 10px;
+          margin-bottom: 20px;
+        }
+
+        .projection-head p,
+        .projection-card p {
+          margin: 0;
+          color: rgba(216, 183, 111, 0.58);
+          font-size: 12px;
+          letter-spacing: 0.18em;
+        }
+
+        .projection-head h2,
+        .projection-card h3 {
+          margin: 0;
+          font-family: var(--font-serif);
+          font-weight: 400;
+          color: rgba(244, 235, 221, 0.9);
+        }
+
+        .projection-head h2 {
+          font-size: clamp(30px, 4vw, 48px);
+        }
+
+        .projection-head > span {
+          color: rgba(244, 235, 221, 0.42);
+          font-size: 13px;
+          line-height: 1.8;
+        }
+
+        .projection-fallback {
+          border-top: 1px solid rgba(216, 183, 111, 0.1);
+          display: grid;
+          gap: 8px;
+          padding: 16px 0 4px;
+        }
+
+        .projection-fallback strong {
+          color: rgba(244, 235, 221, 0.72);
+          font-weight: 500;
+        }
+
+        .projection-fallback span,
+        .projection-card > span {
+          color: rgba(244, 235, 221, 0.58);
+          font-size: 14px;
+          line-height: 1.9;
+        }
+
+        .projection-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 14px;
+        }
+
+        .projection-card {
+          border: 1px solid rgba(216, 183, 111, 0.11);
+          border-radius: 16px;
+          background: rgba(8, 8, 7, 0.2);
+          padding: 18px;
+        }
+
+        .projection-card h3 {
+          font-size: 24px;
+          margin: 8px 0 10px;
+        }
+
+        .projection-card dl {
+          display: grid;
+          gap: 10px;
+          margin: 16px 0 0;
+        }
+
+        .projection-card dt {
+          color: rgba(216, 183, 111, 0.48);
+          font-size: 12px;
+          letter-spacing: 0.12em;
+        }
+
+        .projection-card dd {
+          margin: 4px 0 0;
+          color: rgba(244, 235, 221, 0.66);
+          line-height: 1.7;
+        }
+
+        .projection-next-action {
+          border-color: rgba(95, 132, 117, 0.24);
+          background: rgba(95, 132, 117, 0.08);
+        }
+
         .kline-auto-box {
           display: flex;
           flex-wrap: wrap;
@@ -1268,6 +1607,7 @@ function ReviewPageContent() {
           .linked-thought-meta,
           .evidence-grid,
           .form-grid,
+          .projection-grid,
           .kline-result dl,
           .kline-evidence {
             grid-template-columns: 1fr;

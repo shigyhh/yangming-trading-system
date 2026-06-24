@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import type { ReactNode } from "react"
+import type { LivingMirrorGrowthProjection } from "@yangming/contracts/living-mirror"
 
 import {
   AssessmentShell,
@@ -11,12 +12,19 @@ import {
   SecondaryLink,
   StatusPill,
 } from "@/features/assessment/components"
+import {
+  fetchLivingMirrorGrowthProjection,
+  getCurrentDataBindingUserId,
+} from "@/features/data-binding/api-client"
 import { recomputeAndSaveGrowthProfile } from "@/features/living-mirror-growth/growthProfileStorage"
 import type {
   GrowthProfile,
   GrowthProfileAffectedDimension,
+  GrowthProfileDataGap,
+  GrowthProfileNextCycleFocus,
   GrowthProfileRepeatedBehavior,
   GrowthProfileThought,
+  GrowthProfileTrainingContinuity,
 } from "@/features/living-mirror-growth/growthProfileTypes"
 
 const complianceText = "本系统仅用于交易心理训练与行为复盘，不预测行情，不提供买卖建议，不构成任何投资建议。"
@@ -26,12 +34,44 @@ export default function LivingMirrorGrowthPage() {
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setProfile(recomputeAndSaveGrowthProfile().growthProfile)
+    let isActive = true
+
+    async function loadGrowthProfile() {
+      const fallbackProfile = recomputeAndSaveGrowthProfile().growthProfile
+      const userId = getCurrentDataBindingUserId()
+
+      if (!userId) {
+        applyGrowthProfile(fallbackProfile)
+        return
+      }
+
+      try {
+        const result = await fetchLivingMirrorGrowthProjection(userId)
+        if (result.ok && hasGrowthProjectionData(result.data)) {
+          applyGrowthProfile(toGrowthProfileFromProjection(result.data, fallbackProfile))
+          return
+        }
+      } catch {
+        // Quietly keep the existing local growth profile fallback.
+      }
+
+      applyGrowthProfile(fallbackProfile)
+    }
+
+    function applyGrowthProfile(nextProfile: GrowthProfile) {
+      if (!isActive) return
+      setProfile(nextProfile)
       setLoaded(true)
+    }
+
+    const timer = window.setTimeout(() => {
+      void loadGrowthProfile()
     }, 0)
 
-    return () => window.clearTimeout(timer)
+    return () => {
+      isActive = false
+      window.clearTimeout(timer)
+    }
   }, [])
 
   const missingTradeReview = useMemo(
@@ -184,7 +224,7 @@ export default function LivingMirrorGrowthPage() {
           </SecondaryLink>
         </div>
 
-        <ComplianceNote>{complianceText}</ComplianceNote>
+        <ComplianceNote>{profile.complianceText || complianceText}</ComplianceNote>
       </div>
 
       <style jsx>{`
@@ -249,6 +289,277 @@ export default function LivingMirrorGrowthPage() {
       `}</style>
     </AssessmentShell>
   )
+}
+
+function hasGrowthProjectionData(projection: LivingMirrorGrowthProjection | null | undefined) {
+  if (!projection) return false
+  const lifeStage = projection.mirrorLifeStage
+  const hasLifeStage = typeof lifeStage === "string"
+    ? Boolean(lifeStage.trim())
+    : Boolean(lifeStage?.label || lifeStage?.title || lifeStage?.stage || lifeStage?.key)
+
+  return Boolean(
+    projection.growthProfileId ||
+    hasLifeStage ||
+    projection.highFrequencyThoughts?.length ||
+    projection.repeatedBehaviors?.length ||
+    projection.trainingContinuity ||
+    projection.nextCycleFocus?.title ||
+    projection.nextCycleFocus?.action,
+  )
+}
+
+function toGrowthProfileFromProjection(
+  projection: LivingMirrorGrowthProjection,
+  fallbackProfile: GrowthProfile,
+): GrowthProfile {
+  const sourceSummary = normalizeProjectionSourceSummary(projection.sourceSummary, fallbackProfile.sourceSummary)
+  const topBehaviorLoopIds = normalizeProjectionBehaviorLoopIds(projection.topBehaviorLoops, fallbackProfile.topBehaviorLoopIds)
+
+  return {
+    ...fallbackProfile,
+    growth_profile_id: projection.growthProfileId || fallbackProfile.growth_profile_id,
+    growthProfileId: projection.growthProfileId || fallbackProfile.growthProfileId,
+    userId: projection.userId || fallbackProfile.userId,
+    highFrequencyThoughts: normalizeProjectionThoughts(projection.highFrequencyThoughts, fallbackProfile.highFrequencyThoughts),
+    repeatedBehaviors: normalizeProjectionBehaviors(projection.repeatedBehaviors, fallbackProfile.repeatedBehaviors),
+    affectedDimensions: normalizeProjectionDimensions(projection.affectedDimensions, fallbackProfile.affectedDimensions),
+    trainingContinuity: normalizeProjectionTrainingContinuity(projection.trainingContinuity, fallbackProfile.trainingContinuity),
+    mirrorLifeStage: normalizeProjectionLifeStage(projection.mirrorLifeStage, fallbackProfile.mirrorLifeStage),
+    nextCycleFocus: normalizeProjectionNextCycleFocus(projection.nextCycleFocus, fallbackProfile.nextCycleFocus),
+    dataGaps: normalizeProjectionDataGaps(projection.dataGaps, fallbackProfile.dataGaps),
+    topBehaviorLoopIds,
+    sourceSummary,
+    dailyGrowthCount: sourceSummary.dailyGrowthCount,
+    heartProofCount: sourceSummary.heartProofCount,
+    tradeReviewCount: sourceSummary.tradeReviewCount,
+    behaviorLoopCount: Math.max(sourceSummary.behaviorLoopCount, topBehaviorLoopIds.length),
+    retestChangeCount: sourceSummary.retestChangeCount,
+    complianceText: projection.complianceNotice || fallbackProfile.complianceText,
+    computedAt: projection.updatedAt || fallbackProfile.computedAt,
+    computedAtHistory: mergeComputedHistory(projection.updatedAt, fallbackProfile.computedAtHistory),
+    updatedAt: projection.updatedAt || fallbackProfile.updatedAt,
+  }
+}
+
+function normalizeProjectionThoughts(
+  thoughts: LivingMirrorGrowthProjection["highFrequencyThoughts"],
+  fallbackThoughts: GrowthProfileThought[],
+): GrowthProfileThought[] {
+  if (!Array.isArray(thoughts) || !thoughts.length) return fallbackThoughts
+
+  return thoughts.map((thought, index) => {
+    const record = thought as Record<string, unknown>
+    const label = stringValue(record.label) || stringValue(record.text) || stringValue(record.thoughtType) || `一念 ${index + 1}`
+    return {
+      thoughtType: stringValue(record.thoughtType) || stringValue(record.key) || `server_thought_${index + 1}`,
+      label,
+      count: numberValue(record.count, 1),
+      weight: numberValue(record.weight, numberValue(record.count, 1)),
+      evidenceIds: stringArray(record.evidenceIds),
+    }
+  }).filter((thought) => thought.label)
+}
+
+function normalizeProjectionBehaviors(
+  behaviors: LivingMirrorGrowthProjection["repeatedBehaviors"],
+  fallbackBehaviors: GrowthProfileRepeatedBehavior[],
+): GrowthProfileRepeatedBehavior[] {
+  if (!Array.isArray(behaviors) || !behaviors.length) return fallbackBehaviors
+
+  return behaviors.map((behavior, index) => {
+    const record = behavior as Record<string, unknown>
+    const label = stringValue(record.label) || `重复行为 ${index + 1}`
+    return {
+      behaviorType: stringValue(record.behaviorType) || stringValue(record.key) || `server_behavior_${index + 1}`,
+      label,
+      count: numberValue(record.count, 1),
+      thoughtType: stringValue(record.thoughtType) || undefined,
+      evidenceIds: stringArray(record.evidenceIds),
+    }
+  }).filter((behavior) => behavior.label)
+}
+
+function normalizeProjectionDimensions(
+  dimensions: LivingMirrorGrowthProjection["affectedDimensions"],
+  fallbackDimensions: GrowthProfileAffectedDimension[],
+): GrowthProfileAffectedDimension[] {
+  if (!Array.isArray(dimensions) || !dimensions.length) return fallbackDimensions
+
+  return dimensions.map((dimension) => {
+    const record = dimension as Record<string, unknown>
+    return {
+      label: stringValue(record.label),
+      weight: numberValue(record.weight, 1),
+      sourceTypes: stringArray(record.sourceTypes) as GrowthProfileAffectedDimension["sourceTypes"],
+      evidenceIds: stringArray(record.evidenceIds),
+    }
+  }).filter((dimension) => dimension.label)
+}
+
+function normalizeProjectionTrainingContinuity(
+  continuity: LivingMirrorGrowthProjection["trainingContinuity"],
+  fallbackContinuity: GrowthProfileTrainingContinuity,
+): GrowthProfileTrainingContinuity {
+  if (!continuity) return fallbackContinuity
+  const record = continuity as Record<string, unknown>
+
+  return {
+    completedGrowthDays: numberValue(
+      record.completedGrowthDays ?? record.completedDays ?? record.activeDays,
+      fallbackContinuity.completedGrowthDays,
+    ),
+    currentStreak: numberValue(record.currentStreak ?? record.activeDays, fallbackContinuity.currentStreak),
+    longestStreak: numberValue(record.longestStreak ?? record.activeDays, fallbackContinuity.longestStreak),
+    missedDays: numberValue(record.missedDays, fallbackContinuity.missedDays),
+    trainingConsistencyScore: numberValue(
+      record.trainingConsistencyScore ?? record.consistencyScore ?? getContinuityScoreFromEvents(record),
+      fallbackContinuity.trainingConsistencyScore,
+    ),
+  }
+}
+
+function normalizeProjectionLifeStage(
+  lifeStage: LivingMirrorGrowthProjection["mirrorLifeStage"],
+  fallbackStage: GrowthProfile["mirrorLifeStage"],
+): GrowthProfile["mirrorLifeStage"] {
+  if (!lifeStage) return fallbackStage
+  if (typeof lifeStage === "string") {
+    return getProjectionLifeStage(lifeStage, fallbackStage)
+  }
+  const record = lifeStage as Record<string, unknown>
+
+  return {
+    stage: (stringValue(record.stage) || stringValue(record.key) || fallbackStage.stage) as GrowthProfile["mirrorLifeStage"]["stage"],
+    label: stringValue(record.label) || stringValue(record.title) || fallbackStage.label,
+    description: stringValue(record.description) || fallbackStage.description,
+  }
+}
+
+function normalizeProjectionNextCycleFocus(
+  focus: LivingMirrorGrowthProjection["nextCycleFocus"],
+  fallbackFocus: GrowthProfileNextCycleFocus,
+): GrowthProfileNextCycleFocus {
+  if (!focus) return fallbackFocus
+  const record = focus as Record<string, unknown>
+  const relatedDimensions = stringArray(record.relatedDimensions)
+
+  return {
+    title: stringValue(record.title) || stringValue(record.label) || fallbackFocus.title,
+    reason: stringValue(record.reason) || stringValue(record.summary) || fallbackFocus.reason,
+    nextActionText: stringValue(record.nextActionText) || stringValue(record.nextAction) || stringValue(record.actionText) || stringValue(record.action) || fallbackFocus.nextActionText,
+    relatedDimensions: relatedDimensions.length ? relatedDimensions : fallbackFocus.relatedDimensions,
+    sourceType: (stringValue(record.sourceType) || fallbackFocus.sourceType) as GrowthProfileNextCycleFocus["sourceType"],
+    sourceId: stringValue(record.sourceId) || fallbackFocus.sourceId,
+  }
+}
+
+function normalizeProjectionDataGaps(
+  gaps: LivingMirrorGrowthProjection["dataGaps"],
+  fallbackGaps: GrowthProfileDataGap[],
+): GrowthProfileDataGap[] {
+  if (!Array.isArray(gaps) || !gaps.length) return fallbackGaps
+
+  return gaps.map((gap) => {
+    const record = gap as Record<string, unknown>
+    return {
+      type: (stringValue(record.type) || stringValue(record.key) || "missing_trade_review") as GrowthProfileDataGap["type"],
+      message: stringValue(record.message) || stringValue(record.label) || "当前成长谱数据仍在累积。",
+    }
+  })
+}
+
+function normalizeProjectionBehaviorLoopIds(
+  behaviorLoops: LivingMirrorGrowthProjection["topBehaviorLoops"],
+  fallbackIds: string[],
+): string[] {
+  if (!Array.isArray(behaviorLoops) || !behaviorLoops.length) return fallbackIds
+
+  return behaviorLoops.flatMap((loop, index) => {
+    if (typeof loop === "string") return [loop]
+    const record = loop as Record<string, unknown>
+    const id = stringValue(record.behaviorLoopId) || stringValue(record.behavior_loop_id) || stringValue(record.id)
+    return id ? [id] : [`server_behavior_loop_${index + 1}`]
+  })
+}
+
+function normalizeProjectionSourceSummary(
+  sourceSummary: LivingMirrorGrowthProjection["sourceSummary"],
+  fallbackSummary: GrowthProfile["sourceSummary"],
+): GrowthProfile["sourceSummary"] {
+  if (!sourceSummary) return fallbackSummary
+  const record = sourceSummary as Record<string, unknown>
+
+  return {
+    mirrorReportCount: numberValue(record.mirrorReportCount, typeof record.mirrorReport === "boolean" ? Number(record.mirrorReport) : fallbackSummary.mirrorReportCount),
+    dailyGrowthCount: numberValue(record.dailyGrowthCount, fallbackSummary.dailyGrowthCount),
+    heartProofCount: numberValue(record.heartProofCount ?? record.oneThoughtEvents, fallbackSummary.heartProofCount),
+    tradeReviewCount: numberValue(record.tradeReviewCount ?? record.tradeReviews, fallbackSummary.tradeReviewCount),
+    behaviorLoopCount: numberValue(record.behaviorLoopCount, fallbackSummary.behaviorLoopCount),
+    retestChangeCount: numberValue(record.retestChangeCount ?? record.retests, fallbackSummary.retestChangeCount),
+  }
+}
+
+function getContinuityScoreFromEvents(record: Record<string, unknown>) {
+  const totalEvents = numberValue(record.totalEvents, 0)
+  const activeDays = numberValue(record.activeDays, 0)
+  if (!totalEvents || !activeDays) return undefined
+  return Math.max(0, Math.min(100, Math.round((activeDays / totalEvents) * 100)))
+}
+
+function getProjectionLifeStage(stageKey: string, fallbackStage: GrowthProfile["mirrorLifeStage"]): GrowthProfile["mirrorLifeStage"] {
+  const key = stageKey.trim()
+  const stageMap: Record<string, GrowthProfile["mirrorLifeStage"]> = {
+    seed: {
+      stage: "initial_reflection",
+      label: "初照",
+      description: "成长事实源刚开始累积，先稳稳记录每一次照见。",
+    },
+    sprout: {
+      stage: "seeing_thought",
+      label: "初萌",
+      description: "一念和行为开始显影，下一步是把看见的反应带回训练。",
+    },
+    rooted: {
+      stage: "guarding_action",
+      label: "扎根",
+      description: "重复模式已经较清楚，重点是守住边界和复盘动作。",
+    },
+    growing: {
+      stage: "guarding_action",
+      label: "渐明",
+      description: "行为线索逐渐清晰，继续在事上练中校准知行。",
+    },
+    stable: {
+      stage: "proven",
+      label: "稳定",
+      description: "训练连续性正在形成，继续用复盘验证变化。",
+    },
+    mature: {
+      stage: "retested",
+      label: "成形",
+      description: "成长模式已经成形，适合进入复照与复测校准。",
+    },
+  }
+
+  return stageMap[key] || fallbackStage
+}
+
+function mergeComputedHistory(updatedAt: string | undefined, history: string[]) {
+  if (!updatedAt) return history
+  return [updatedAt, ...history.filter((item) => item !== updatedAt)].slice(0, 8)
+}
+
+function stringValue(value: unknown) {
+  return typeof value === "string" ? value.trim() : ""
+}
+
+function numberValue(value: unknown, fallbackValue: number) {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallbackValue
+}
+
+function stringArray(value: unknown) {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string" && Boolean(item.trim())) : []
 }
 
 function SummaryMetric({ label, value }: { label: string; value: string }) {

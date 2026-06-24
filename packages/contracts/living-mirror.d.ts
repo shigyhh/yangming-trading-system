@@ -409,6 +409,71 @@ export type LivingMirrorProfile = {
   complianceNotice: "本画像仅用于交易心理觉察、复盘训练与行为管理，不构成投资建议。" | string
 }
 
+export type RiskPatternSummaryItem = {
+  key: string
+  label: string
+  summaryText?: string
+  summary_text?: string
+  riskLevelText?: string
+  risk_level_text?: string
+  evidenceCount?: number
+  evidence_count?: number
+  nextAction?: string
+  next_action?: string
+  updatedAt?: string
+  updated_at?: string
+}
+
+export type RiskPatternSummary = {
+  schemaVersion: "risk_pattern_summary_v1" | string
+  userId: string
+  title?: string
+  summaryText?: string
+  summary_text?: string
+  primaryPattern?: string
+  primary_pattern?: string
+  riskLevelText?: string
+  risk_level_text?: string
+  items?: RiskPatternSummaryItem[]
+  patterns?: RiskPatternSummaryItem[]
+  riskPatterns?: RiskPatternSummaryItem[]
+  risk_patterns?: RiskPatternSummaryItem[]
+  nextAction?: string
+  next_action?: string
+  updatedAt?: string
+  updated_at?: string
+  complianceNotice?: "本摘要仅用于交易行为复盘与风险教育，不构成投资建议。" | string
+}
+
+export type TodayState = {
+  schemaVersion: "today_state_v1" | string
+  userId: string
+  dateKey?: string
+  date_key?: string
+  title?: string
+  stateText?: string
+  state_text?: string
+  statusText?: string
+  status_text?: string
+  summaryText?: string
+  summary_text?: string
+  todayHeartWitness?: string
+  today_heart_witness?: string
+  mainMirror?: MirrorName | string
+  main_mirror?: MirrorName | string
+  focusText?: string
+  focus_text?: string
+  nextAction?: string
+  next_action?: string
+  actionText?: string
+  action_text?: string
+  trainingAction?: string
+  training_action?: string
+  updatedAt?: string
+  updated_at?: string
+  complianceNotice?: "本状态仅用于交易认知、行为训练与风险教育，不构成投资建议。" | string
+}
+
 export type ZhixingStabilityDimensionKey =
   | "planClarity"
   | "boundaryExecution"
@@ -572,6 +637,118 @@ export type LivingMirrorGrowthProfile = {
   }
   complianceText: "本成长谱仅用于交易心理觉察、复盘训练与行为管理，不构成投资建议。" | string
   updatedAt: string
+}
+
+export type LivingMirrorGrowthProjectionThought = {
+  thoughtType?: string
+  text?: string
+  label: string
+  count: number
+  weight?: number
+  evidenceIds?: string[]
+}
+
+export type LivingMirrorGrowthProjectionBehavior = {
+  behaviorType?: string
+  label: string
+  count: number
+  thoughtType?: string
+  evidenceIds?: string[]
+}
+
+export type LivingMirrorGrowthProjectionDimension = {
+  label: string
+  weight: number
+  sourceTypes?: string[]
+  evidenceIds?: string[]
+}
+
+export type LivingMirrorGrowthProjectionContinuity = {
+  totalEvents?: number
+  activeDays?: number
+  latestRecordedAt?: string
+  level?: string
+  completedGrowthDays?: number
+  completedDays?: number
+  currentStreak?: number
+  longestStreak?: number
+  missedDays?: number
+  trainingConsistencyScore?: number
+  heartProofCount?: number
+  tradeReviewCount?: number
+  behaviorLoopCount?: number
+  retestChangeCount?: number
+}
+
+export type LivingMirrorGrowthProjectionLifeStage = {
+  stage?: string
+  key?: string
+  label?: string
+  title?: string
+  description?: string
+} | "seed" | "sprout" | "rooted" | "growing" | "stable" | "mature" | string
+
+export type LivingMirrorGrowthProjectionNextFocus = {
+  title?: string
+  reason?: string
+  action?: string
+  nextActionText?: string
+  nextAction?: string
+  actionText?: string
+  relatedDimensions?: string[]
+  sourceType?: string
+  sourceId?: string
+}
+
+export type LivingMirrorGrowthProjectionDataGap = {
+  type?: string
+  key?: string
+  message?: string
+  label?: string
+}
+
+export type LivingMirrorGrowthProjectionBehaviorLoop = {
+  id?: string
+  behaviorLoopId?: string
+  behavior_loop_id?: string
+  label?: string
+  repeatCount?: number
+  evidenceIds?: string[]
+}
+
+export type LivingMirrorGrowthProjectionSourceSummary = {
+  klineRecords?: number
+  tradeReviews?: number
+  oneThoughtEvents?: number
+  mirrorReport?: boolean
+  retests?: number
+  heartProof?: boolean
+  dailyGrowth?: boolean
+  mirrorReportCount?: number
+  dailyGrowthCount?: number
+  heartProofCount?: number
+  tradeReviewCount?: number
+  behaviorLoopCount?: number
+  retestChangeCount?: number
+  evidenceCount?: number
+}
+
+export type LivingMirrorGrowthProjection = {
+  schemaVersion: "living_mirror_growth_projection_v1" | string
+  userId: string
+  growthProfileId: string
+  highFrequencyThoughts: LivingMirrorGrowthProjectionThought[]
+  repeatedBehaviors: LivingMirrorGrowthProjectionBehavior[]
+  affectedDimensions: LivingMirrorGrowthProjectionDimension[]
+  trainingContinuity: LivingMirrorGrowthProjectionContinuity
+  mirrorLifeStage: LivingMirrorGrowthProjectionLifeStage
+  nextCycleFocus: LivingMirrorGrowthProjectionNextFocus
+  dataGaps: LivingMirrorGrowthProjectionDataGap[]
+  topBehaviorLoops: LivingMirrorGrowthProjectionBehaviorLoop[]
+  zhixingStability?: ZhixingStability | null
+  sourceSummary: LivingMirrorGrowthProjectionSourceSummary
+  updatedAt: string
+  complianceNotice?: "本成长谱仅用于交易心理觉察、复盘训练与行为管理，不构成投资建议。" | string
 }
 
 export type BehaviorLoopEvidenceSource = {

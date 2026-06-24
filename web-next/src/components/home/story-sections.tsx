@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useRef, type MouseEvent } from "react"
+import { useCallback, useEffect, useRef, type CSSProperties, type MouseEvent } from "react"
 import { useRouter } from "next/navigation"
 
 import heroStyles from "./HomeStillWaterHero.module.css"
@@ -8,6 +8,57 @@ import heroStyles from "./HomeStillWaterHero.module.css"
 const HOME_DIVE_DURATION_MS = 2400
 const HOME_ROUTE_DELAY_MS = 2200
 const REFLECT_ENTRY_HREF = "/assessment-entry"
+const HOME_STORY_READY_EVENT = "home-three-breaths-ready"
+
+const FIRST_SECOND_LINE_INITIAL_STYLE = {
+  opacity: 1,
+  transform: "translate3d(0, 0, 0) scale(1)",
+  filter: "blur(0px)",
+} satisfies CSSProperties
+
+const SECOND_DEPTH_LINE_INITIAL_STYLE = {
+  opacity: 0,
+  transform: "translate3d(0, 22px, 0) scale(.99)",
+  filter: "blur(6px)",
+} satisfies CSSProperties
+
+const THIRD_BREATH_INITIAL_STYLE = {
+  opacity: 0,
+  transform: "translate3d(0, 70px, 0) scale(.96)",
+  filter: "blur(18px)",
+  pointerEvents: "none",
+} satisfies CSSProperties
+
+const THIRD_PHASE_INITIAL_STYLE = {
+  opacity: 0,
+  transform: "translate3d(0, 28px, 0) scale(.98)",
+  filter: "blur(8px)",
+  pointerEvents: "none",
+} satisfies CSSProperties
+
+const THIRD_NESTED_INITIAL_STYLE = {
+  opacity: 0,
+  transform: "translate3d(0, 18px, 0) scale(.985)",
+  filter: "blur(8px)",
+} satisfies CSSProperties
+
+function DoorwayContent() {
+  return (
+    <span className={heroStyles.doorMain}>
+      <span className={heroStyles.doorSeal} aria-hidden="true">
+        <svg className={heroStyles.doorSealSvg} viewBox="0 0 80 80" focusable="false" aria-hidden="true">
+          <circle className={heroStyles.doorSealTrack} cx="40" cy="40" r="36" />
+          <circle className={heroStyles.doorSealArc} cx="40" cy="40" r="36" />
+        </svg>
+        <span className={heroStyles.doorSealMoon} />
+      </span>
+      <span className={heroStyles.doorText}>
+        <span className={heroStyles.doorLabelText}>照见一念</span>
+        <span className={heroStyles.doorSubText}>入心镜</span>
+      </span>
+    </span>
+  )
+}
 
 export function StorySections() {
   const router = useRouter()
@@ -90,6 +141,15 @@ export function StorySections() {
   }, [])
 
   useEffect(() => {
+    if (window.matchMedia("(max-width: 768px)").matches) {
+      document.documentElement.setAttribute("data-home-story-gsap", "ready")
+      window.dispatchEvent(new Event(HOME_STORY_READY_EVENT))
+
+      return () => {
+        document.documentElement.removeAttribute("data-home-story-gsap")
+      }
+    }
+
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
 
     let revertGsap: (() => void) | undefined
@@ -239,6 +299,8 @@ export function StorySections() {
           .to([lawPhase, thoughtPhase], quietPhase, 15.2)
       }, rootRef)
 
+      document.documentElement.setAttribute("data-home-story-gsap", "ready")
+      window.dispatchEvent(new Event(HOME_STORY_READY_EVENT))
       revertGsap = () => context.revert()
     }
 
@@ -247,6 +309,7 @@ export function StorySections() {
     return () => {
       canceled = true
       revertGsap?.()
+      document.documentElement.removeAttribute("data-home-story-gsap")
     }
   }, [])
 
@@ -273,9 +336,65 @@ export function StorySections() {
       id="three-breaths"
       data-home-roll="three-breaths"
       aria-label="三息入照"
-      className="relative z-20 min-h-[230svh] overflow-x-clip overflow-y-visible px-5 md:px-8"
+      className="relative z-20 overflow-x-clip overflow-y-visible px-5 md:min-h-[230svh] md:px-8"
     >
-      <div data-three-breath-stage className="relative flex min-h-[100svh] items-start justify-center pt-[14svh] pb-24 md:pt-[12svh] md:pb-28">
+      <span data-home-scene="2" className="pointer-events-none absolute left-0 top-[78svh] hidden h-px w-px md:block" aria-hidden="true" />
+      <div className="relative min-h-[210svh] md:hidden">
+        <div data-home-mobile-story="second" className="flex min-h-[100svh] flex-col items-center justify-center gap-6 text-center">
+          <p className="font-worldview m-0 text-[clamp(2rem,9.2vw,3.1rem)] font-normal leading-[1.22] tracking-[.06em] text-[rgba(238,243,238,.94)] [text-shadow:0_0_44px_rgba(0,0,0,.58)]">
+            你以为你输给了行情。
+          </p>
+          <p className="font-worldview m-0 text-[clamp(1.72rem,7.4vw,2.45rem)] font-normal leading-[1.28] tracking-[.06em] text-[rgba(238,243,238,.82)]">
+            其实很多时候，
+          </p>
+          <p className="font-worldview m-0 text-[clamp(1.72rem,7.4vw,2.45rem)] font-normal leading-[1.28] tracking-[.06em] text-[rgba(255,239,188,.92)]">
+            是下单前那一念，
+          </p>
+          <p className="font-worldview m-0 text-[clamp(1.72rem,7.4vw,2.45rem)] font-normal leading-[1.28] tracking-[.06em] text-[rgba(238,243,238,.88)]">
+            先替你做了主。
+          </p>
+        </div>
+
+        <span data-home-scene="3" className="pointer-events-none absolute left-0 top-[104svh] h-px w-px" aria-hidden="true" />
+
+        <div data-home-mobile-story="third" className="flex min-h-[110svh] flex-col items-center justify-center gap-5 pb-20 text-center">
+          <p className="font-worldview m-0 text-[clamp(1.72rem,7.2vw,2.38rem)] font-normal leading-[1.26] tracking-[.08em] text-[rgba(238,243,238,.9)]">
+            照见不是预测。
+          </p>
+          <p className="font-worldview m-0 text-[clamp(1.6rem,6.8vw,2.22rem)] font-normal leading-[1.3] tracking-[.06em] text-[rgba(238,243,238,.86)]">
+            是把下单前那一念
+            <br />
+            照出来。
+          </p>
+          <div className="mt-4 flex flex-col items-center gap-3">
+            <span className="font-story text-[13px] font-light tracking-[.18em] text-[rgba(216,183,111,.48)]">比如：</span>
+            <p className="font-worldview m-0 text-[clamp(2.25rem,10vw,3.2rem)] font-normal leading-none tracking-[.08em] text-[rgba(238,243,238,.96)]">
+              「再等等。」
+            </p>
+          </div>
+          <div className="mt-4 flex flex-col items-center gap-3">
+            <span className="font-story text-[13px] font-light tracking-[.14em] text-[rgba(216,183,111,.52)]">照回：</span>
+            <p className="font-story m-0 text-[clamp(1.8rem,7.4vw,2.42rem)] font-light leading-[1.32] tracking-[.06em] text-[rgba(244,235,221,.9)]">
+              你等的不是机会。
+            </p>
+            <p className="font-story m-0 text-[clamp(2rem,8vw,2.72rem)] font-light leading-[1.22] tracking-[.06em] text-[rgba(238,203,128,.96)]">
+              是一个不用认错的台阶。
+            </p>
+          </div>
+          <a
+            href={REFLECT_ENTRY_HREF}
+            className={heroStyles.door}
+            data-door-nudge="left"
+            onClick={enterReflectThroughWater}
+          >
+            <DoorwayContent />
+          </a>
+        </div>
+      </div>
+
+      <span data-home-scene="3" className="pointer-events-none absolute left-0 top-[62svh] hidden h-px w-px md:block" aria-hidden="true" />
+      <span data-home-scene="desktop-final" className="pointer-events-none absolute left-0 top-[122svh] hidden h-px w-px md:block" aria-hidden="true" />
+      <div data-three-breath-stage className="relative hidden min-h-[100svh] items-start justify-center pt-[14svh] pb-24 md:flex md:pt-[12svh] md:pb-28">
         <div data-breath-panel="second" className="absolute -top-[12svh] inset-x-0 mx-auto flex min-h-[100svh] max-w-[1080px] flex-col items-center justify-center text-center md:-top-[10svh]">
           <div className="relative flex min-h-[24rem] w-full flex-col items-center justify-center gap-6 md:min-h-[30rem] md:gap-7">
             {[
@@ -287,8 +406,10 @@ export function StorySections() {
               <p
                 key={line}
                 data-breath-line
+                style={index === 0 ? FIRST_SECOND_LINE_INITIAL_STYLE : SECOND_DEPTH_LINE_INITIAL_STYLE}
                 className={[
                   "font-worldview m-0 mx-auto max-w-[1280px] text-[clamp(1.7rem,5.2vw,3.75rem)] font-normal leading-[1.18] tracking-[.06em] text-[rgba(238,243,238,.94)] md:whitespace-nowrap",
+                  index === 0 ? "opacity-100 blur-0 translate-y-0" : "opacity-0 blur-[6px] translate-y-[22px]",
                   index === 2 ? "[text-shadow:0_0_34px_rgba(216,183,111,.18),0_0_68px_rgba(0,0,0,.54)]" : "",
                   index === 3 ? "text-[rgba(238,243,238,.96)] [text-shadow:0_0_58px_rgba(0,0,0,.62)]" : "",
                   index < 2 ? "[text-shadow:0_0_54px_rgba(0,0,0,.62)]" : "",
@@ -308,17 +429,17 @@ export function StorySections() {
 
         </div>
 
-        <div data-breath-panel="third" className="absolute inset-x-0 top-0 mx-auto min-h-[100svh] max-w-[1100px] text-center">
-          <div data-third-phase="law" className="absolute inset-x-0 top-[17svh] mx-auto flex max-w-[820px] flex-col items-center px-2 md:top-[18svh]">
+        <div data-breath-panel="third" style={THIRD_BREATH_INITIAL_STYLE} className="pointer-events-none absolute inset-x-0 top-0 mx-auto min-h-[100svh] max-w-[1100px] translate-y-[70px] scale-[.96] text-center opacity-0 blur-[18px]">
+          <div data-third-phase="law" style={THIRD_PHASE_INITIAL_STYLE} className="pointer-events-none absolute inset-x-0 top-[17svh] mx-auto flex max-w-[820px] translate-y-7 scale-[.98] flex-col items-center px-2 opacity-0 blur-[8px] md:top-[18svh]">
             <div className="font-worldview flex flex-col gap-3 text-[clamp(1.48rem,4.4vw,2.85rem)] font-normal leading-[1.18] tracking-[.1em] text-[rgba(238,243,238,.94)] [text-shadow:0_0_42px_rgba(0,0,0,.58)] md:gap-4">
-              <p data-third-opening className="m-0">照见不是预测。</p>
-              <p data-third-opening className="m-0 hidden md:block">
+              <p data-third-opening style={THIRD_NESTED_INITIAL_STYLE} className="m-0 translate-y-[18px] scale-[.985] opacity-0 blur-[8px]">照见不是预测。</p>
+              <p data-third-opening style={THIRD_NESTED_INITIAL_STYLE} className="m-0 hidden translate-y-[18px] scale-[.985] opacity-0 blur-[8px] md:block">
                 是把
                 <span className="text-[rgba(242,209,132,.88)]">下单前那一念</span>，
                 <br />
                 照出来。
               </p>
-              <p data-third-opening className="m-0 md:hidden">
+              <p data-third-opening style={THIRD_NESTED_INITIAL_STYLE} className="m-0 translate-y-[18px] scale-[.985] opacity-0 blur-[8px] md:hidden">
                 是把下单前那一念
                 <br />
                 照出来。
@@ -326,8 +447,8 @@ export function StorySections() {
             </div>
           </div>
 
-          <div data-third-phase="thought" className="absolute inset-0 flex items-center justify-center px-2">
-            <div data-sample-thought className="relative flex flex-col items-center gap-3">
+          <div data-third-phase="thought" style={THIRD_PHASE_INITIAL_STYLE} className="pointer-events-none absolute inset-0 flex translate-y-7 scale-[.98] items-center justify-center px-2 opacity-0 blur-[8px]">
+            <div data-sample-thought style={THIRD_NESTED_INITIAL_STYLE} className="relative flex translate-y-[18px] scale-[.985] flex-col items-center gap-3 opacity-0 blur-[8px]">
               <span aria-hidden="true" className="absolute left-1/2 top-1/2 h-36 w-72 -translate-x-1/2 -translate-y-1/2 border border-[rgba(216,183,111,.035)] opacity-90 blur-[2px]" style={{ borderRadius: "999px" }} />
               <span aria-hidden="true" className="absolute left-1/2 top-1/2 h-px w-64 -translate-x-1/2 translate-y-16 bg-[linear-gradient(90deg,transparent,rgba(216,183,111,.06),transparent)]" />
               <span className="font-story relative text-[13px] font-light tracking-[.18em] text-[rgba(216,183,111,.42)] md:text-[15px]">比如：</span>
@@ -337,13 +458,13 @@ export function StorySections() {
             </div>
           </div>
 
-          <div data-third-phase="reflection" className="absolute inset-0 flex items-center justify-center px-2">
+          <div data-third-phase="reflection" style={THIRD_PHASE_INITIAL_STYLE} className="pointer-events-none absolute inset-0 flex translate-y-7 scale-[.98] items-center justify-center px-2 opacity-0 blur-[8px]">
             <div className="font-story flex flex-col items-center gap-4 md:gap-5">
-              <span data-sample-reflection-label className="text-[13px] font-light tracking-[.12em] text-[rgba(216,183,111,.5)] md:text-[15px]">照回：</span>
-              <p data-sample-reflection="first" className="m-0 text-[clamp(34px,3.8vw,52px)] font-light leading-[1.28] tracking-[.06em] text-[rgba(244,235,221,.9)]">
+              <span data-sample-reflection-label style={THIRD_NESTED_INITIAL_STYLE} className="translate-y-[18px] scale-[.985] text-[13px] font-light tracking-[.12em] text-[rgba(216,183,111,.5)] opacity-0 blur-[8px] md:text-[15px]">照回：</span>
+              <p data-sample-reflection="first" style={THIRD_NESTED_INITIAL_STYLE} className="m-0 translate-y-[18px] scale-[.985] text-[clamp(34px,3.8vw,52px)] font-light leading-[1.28] tracking-[.06em] text-[rgba(244,235,221,.9)] opacity-0 blur-[8px]">
                 你等的不是机会。
               </p>
-              <p data-sample-reflection="pain" className="m-0 font-light leading-[1.28] tracking-[.06em] text-[rgba(238,243,238,.94)]">
+              <p data-sample-reflection="pain" style={THIRD_NESTED_INITIAL_STYLE} className="m-0 translate-y-[18px] scale-[.985] font-light leading-[1.28] tracking-[.06em] text-[rgba(238,243,238,.94)] opacity-0 blur-[8px]">
                 <span className="block text-[clamp(34px,3.9vw,54px)] text-[rgba(244,235,221,.92)]">你等的是，</span>
                 <br />
                 <span className="block text-[clamp(42px,4.8vw,68px)] text-[rgba(238,203,128,.98)] [text-shadow:0_0_24px_rgba(216,183,111,.1),0_0_62px_rgba(0,0,0,.62)]">一个不用认错的台阶。</span>
@@ -351,8 +472,8 @@ export function StorySections() {
             </div>
           </div>
 
-          <div data-third-phase="closure" className="absolute inset-0 flex flex-col items-center justify-center px-2 pt-[12svh] pb-0 md:pt-[14svh] md:pb-0">
-            <div data-breath-final className="flex flex-col items-center gap-3 md:gap-4">
+          <div data-third-phase="closure" style={THIRD_PHASE_INITIAL_STYLE} className="pointer-events-none absolute inset-0 flex translate-y-7 scale-[.98] flex-col items-center justify-center px-2 pt-[12svh] pb-0 opacity-0 blur-[8px] md:pt-[14svh] md:pb-0">
+            <div data-breath-final style={THIRD_NESTED_INITIAL_STYLE} className="flex translate-y-[18px] scale-[.985] flex-col items-center gap-3 opacity-0 blur-[8px] md:gap-4">
               <p className="font-worldview m-0 text-[clamp(36px,4vw,58px)] font-normal leading-[1.18] tracking-[.1em] text-[rgba(244,235,221,.96)]">
                 今天，
                 <br />
@@ -361,12 +482,11 @@ export function StorySections() {
               <a
                 href={REFLECT_ENTRY_HREF}
                 className={heroStyles.door}
-                data-story-door="third"
+                data-door-nudge="left"
                 onClick={enterReflectThroughWater}
                 onMouseEnter={previewReflectRipple}
               >
-                <span className={heroStyles.doorMain}>照见一念　→</span>
-                <span className={heroStyles.doorLine} aria-hidden="true" />
+                <DoorwayContent />
               </a>
             </div>
           </div>

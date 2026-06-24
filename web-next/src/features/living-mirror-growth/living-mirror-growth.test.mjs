@@ -11,6 +11,8 @@ const behaviorLoopEngineUrl = new URL("./behaviorLoopEngine.ts", import.meta.url
 const behaviorLoopStorageUrl = new URL("./behaviorLoopStorage.ts", import.meta.url)
 const retestChangeStorageUrl = new URL("./retestChangeStorage.ts", import.meta.url)
 const pageUrl = new URL("../../app/living-mirror-growth/page.tsx", import.meta.url)
+const apiClientUrl = new URL("../data-binding/api-client.ts", import.meta.url)
+const contractUrl = new URL("../../../../packages/contracts/living-mirror.d.ts", import.meta.url)
 const practiceChangePageUrl = new URL("../../app/practice-change/page.tsx", import.meta.url)
 const tradeReviewPageUrl = new URL("../../app/trade-review/page.tsx", import.meta.url)
 const assessmentGeneratingPageUrl = new URL("../../app/assessment-generating/page.tsx", import.meta.url)
@@ -328,6 +330,8 @@ test("living mirror growth detail page reads GrowthProfile and renders Sprint 6 
   ;[
     "LivingMirrorGrowthPage",
     "GrowthProfile",
+    "fetchLivingMirrorGrowthProjection",
+    "getCurrentDataBindingUserId",
     "recomputeAndSaveGrowthProfile",
     "活镜成长谱",
     "把每天的一念、复盘和心证，连成可见的变化。",
@@ -369,6 +373,215 @@ test("living mirror growth detail page reads GrowthProfile and renders Sprint 6 
     assert.equal(source.includes(phrase), false, `growth detail page contains forbidden phrase ${phrase}`)
   })
 })
+
+test("living mirror growth page prefers server projection while keeping local fallback", async () => {
+  const [pageSource, apiClientSource, contractSource] = await Promise.all([
+    readFile(pageUrl, "utf8"),
+    readFile(apiClientUrl, "utf8"),
+    readFile(contractUrl, "utf8"),
+  ])
+
+  ;[
+    "fetchLivingMirrorGrowthProjection",
+    "getCurrentDataBindingUserId",
+    "recomputeAndSaveGrowthProfile().growthProfile",
+    "toGrowthProfileFromProjection",
+  ].forEach((marker) => {
+    assert.equal(pageSource.includes(marker), true, `growth page missing server projection fallback marker ${marker}`)
+  })
+
+  ;[
+    "fetchLivingMirrorGrowthProjection",
+    "/living-mirror/growth",
+    "projection",
+    "growthProjection",
+    "livingMirrorGrowthProjection",
+  ].forEach((marker) => {
+    assert.equal(apiClientSource.includes(marker), true, `api client missing growth projection marker ${marker}`)
+  })
+
+  ;[
+    "LivingMirrorGrowthProjection",
+    "schemaVersion",
+    "growthProfileId",
+    "highFrequencyThoughts",
+    "repeatedBehaviors",
+    "affectedDimensions",
+    "trainingContinuity",
+    "mirrorLifeStage",
+    "nextCycleFocus",
+    "dataGaps",
+    "topBehaviorLoops",
+    "zhixingStability",
+    "sourceSummary",
+    "updatedAt",
+    "complianceNotice",
+  ].forEach((marker) => {
+    assert.equal(contractSource.includes(marker), true, `contract missing growth projection marker ${marker}`)
+  })
+
+  forbiddenPhrases.forEach((phrase) => {
+    assert.equal(pageSource.includes(phrase), false, `growth page contains forbidden phrase ${phrase}`)
+    assert.equal(apiClientSource.includes(phrase), false, `api client contains forbidden phrase ${phrase}`)
+    assert.equal(contractSource.includes(phrase), false, `contract contains forbidden phrase ${phrase}`)
+  })
+})
+
+test("living mirror growth adapter maps server projection field names into the page profile", async () => {
+  const { toGrowthProfileFromProjection } = await loadGrowthProjectionAdapter()
+  const fallbackProfile = makeGrowthProfileFallback()
+  const profile = toGrowthProfileFromProjection({
+    schemaVersion: "living_mirror_growth_projection_v1",
+    userId: "server-user-001",
+    growthProfileId: "lmg_server_user_001",
+    highFrequencyThoughts: [{ text: "追", count: 3 }],
+    repeatedBehaviors: [],
+    affectedDimensions: [],
+    trainingContinuity: { totalEvents: 7, activeDays: 3, level: "warming" },
+    mirrorLifeStage: "sprout",
+    nextCycleFocus: { action: "继续照见追涨前的一念" },
+    dataGaps: [{ key: "dailyGrowth", label: "今日成长记录不足" }],
+    topBehaviorLoops: [],
+    zhixingStability: null,
+    sourceSummary: {},
+    updatedAt: "2026-06-22T08:00:00.000Z",
+    complianceNotice: "本成长谱仅用于交易心理觉察、复盘训练与行为管理，不构成投资建议。",
+  }, fallbackProfile)
+
+  assert.equal(profile.highFrequencyThoughts[0].label, "追")
+  assert.equal(profile.highFrequencyThoughts[0].count, 3)
+  assert.equal(profile.mirrorLifeStage.label, "初萌")
+  assert.notEqual(profile.mirrorLifeStage.label, "sprout")
+  assert.equal(profile.trainingContinuity.completedGrowthDays, 3)
+  assert.equal(profile.trainingContinuity.trainingConsistencyScore, 43)
+  assert.equal(profile.nextCycleFocus.nextActionText, "继续照见追涨前的一念")
+  assert.deepEqual(profile.nextCycleFocus.relatedDimensions, fallbackProfile.nextCycleFocus.relatedDimensions)
+  assert.equal(profile.dataGaps[0].type, "dailyGrowth")
+  assert.equal(profile.dataGaps[0].message, "今日成长记录不足")
+
+  const fallbackOnly = toGrowthProfileFromProjection({
+    schemaVersion: "living_mirror_growth_projection_v1",
+    userId: "server-user-001",
+    growthProfileId: "lmg_server_user_001",
+    highFrequencyThoughts: [],
+    repeatedBehaviors: [],
+    affectedDimensions: [],
+    trainingContinuity: {},
+    mirrorLifeStage: "",
+    nextCycleFocus: {},
+    dataGaps: [],
+    topBehaviorLoops: [],
+    sourceSummary: {},
+    updatedAt: "",
+  }, fallbackProfile)
+
+  assert.equal(fallbackOnly.highFrequencyThoughts[0].label, fallbackProfile.highFrequencyThoughts[0].label)
+  assert.equal(fallbackOnly.mirrorLifeStage.label, fallbackProfile.mirrorLifeStage.label)
+  assert.equal(fallbackOnly.nextCycleFocus.nextActionText, fallbackProfile.nextCycleFocus.nextActionText)
+})
+
+async function loadGrowthProjectionAdapter() {
+  const source = await readFile(pageUrl, "utf8")
+  const start = source.indexOf("function hasGrowthProjectionData")
+  const end = source.indexOf("function SummaryMetric")
+
+  assert.ok(start >= 0, "page should expose growth projection adapter helpers")
+  assert.ok(end > start, "page should keep adapter helpers before SummaryMetric")
+
+  const adapterSource = `${source.slice(start, end)}\nmodule.exports = { toGrowthProfileFromProjection, hasGrowthProjectionData }`
+  const compiled = ts.transpileModule(adapterSource, {
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2022,
+      esModuleInterop: true,
+    },
+  }).outputText
+  const cjsModule = { exports: {} }
+  const exports = cjsModule.exports
+  const module = cjsModule
+
+  new Function("module", "exports", compiled)(module, exports)
+  return cjsModule.exports
+}
+
+function makeGrowthProfileFallback() {
+  return {
+    schemaVersion: "growth_profile_v1",
+    growth_profile_id: "growth_profile_fallback",
+    growthProfileId: "growth_profile_fallback",
+    status: "active",
+    userId: "fallback-user",
+    anonymousId: "fallback-anon",
+    primaryPersona: "待照见",
+    secondaryPersona: "待照见",
+    sevenDayPrescription: [],
+    recommendedCamp: "",
+    highFrequencyThoughts: [{ thoughtType: "fallback", label: "本地一念", count: 1, weight: 1, evidenceIds: [] }],
+    trainingContinuity: {
+      completedGrowthDays: 1,
+      currentStreak: 1,
+      longestStreak: 1,
+      missedDays: 0,
+      trainingConsistencyScore: 14,
+    },
+    affectedDimensions: [],
+    repeatedBehaviors: [],
+    topBehaviorLoopIds: [],
+    mirrorLifeStage: {
+      stage: "initial_reflection",
+      label: "本地阶段",
+      description: "本地 fallback 阶段",
+    },
+    nextCycleFocus: {
+      title: "本地重点",
+      reason: "本地原因",
+      nextActionText: "本地下一步",
+      relatedDimensions: ["本地维度"],
+    },
+    dataGaps: [{ type: "missing_trade_review", message: "本地缺口" }],
+    retestTrend: {
+      retestCount: 0,
+      improvedDimensions: [],
+      declinedDimensions: [],
+    },
+    retestSummary: {
+      retestCount: 0,
+      baselineScores: {},
+      currentScores: {},
+      deltaScores: {},
+      improvedDimensions: [],
+      declinedDimensions: [],
+      stableDimensions: [],
+      trainingEvidenceSummary: "",
+      highFrequencyThoughtChange: "",
+      repeatedBehaviorChange: "",
+      nextCycleFocus: {
+        title: "本地重点",
+        reason: "本地原因",
+        nextActionText: "本地下一步",
+        relatedDimensions: ["本地维度"],
+      },
+      conclusionText: "",
+    },
+    sourceSummary: {
+      mirrorReportCount: 0,
+      dailyGrowthCount: 0,
+      heartProofCount: 0,
+      tradeReviewCount: 0,
+      behaviorLoopCount: 0,
+      retestChangeCount: 0,
+    },
+    dailyGrowthCount: 0,
+    heartProofCount: 0,
+    tradeReviewCount: 0,
+    behaviorLoopCount: 0,
+    retestChangeCount: 0,
+    complianceText: "本成长谱仅用于交易心理觉察、复盘训练与行为管理，不构成投资建议。",
+    computedAt: "2026-06-21T08:00:00.000Z",
+    computedAtHistory: ["2026-06-21T08:00:00.000Z"],
+    updatedAt: "2026-06-21T08:00:00.000Z",
+  }
+}
 
 async function loadBehaviorLoopEngine() {
   const source = await readFile(behaviorLoopEngineUrl, "utf8")

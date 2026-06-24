@@ -8,6 +8,8 @@ import { getAdminUserByIdForPage } from "@/features/admin/admin-data"
 
 export const dynamic = "force-dynamic"
 
+const enableFeishuSync = process.env.NEXT_PUBLIC_ENABLE_FEISHU_SYNC_DRY_RUN === "true"
+
 const mirrorScoreLabels: Record<string, string> = {
   chasing: "追涨之镜",
   holding_loss: "扛单之镜",
@@ -113,7 +115,11 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
                 完成测评报告同步后生成助教摘要。
               </p>
             )}
-            <FeishuSyncButton userId={user.id} source={source} feishuSync={user.feishuSync ?? null} />
+            {enableFeishuSync ? (
+              <FeishuSyncButton userId={user.id} source={source} feishuSync={user.feishuSync ?? null} />
+            ) : (
+              <FeishuSyncReservedNotice />
+            )}
             <AssistantHandoffForm userId={user.id} source={source} assistant={user.assistant} />
           </article>
         </section>
@@ -340,6 +346,17 @@ function ReportField({ label, value }: { label: string; value: string }) {
     <div className="rounded-lg border border-[rgba(217,189,122,.12)] bg-black/15 px-4 py-3">
       <p className="font-function text-xs text-[rgba(244,235,221,.44)]">{label}</p>
       <p className="mt-2 font-function text-sm leading-6 text-[rgba(244,235,221,.82)]">{value}</p>
+    </div>
+  )
+}
+
+function FeishuSyncReservedNotice() {
+  return (
+    <div className="mt-5 rounded-lg border border-[rgba(217,189,122,.12)] bg-black/15 p-4">
+      <p className="font-function text-xs text-[rgba(244,235,221,.44)]">飞书同步预留</p>
+      <p className="mt-2 font-function text-sm leading-7 text-[rgba(244,235,221,.62)]">
+        当前未启用真实同步。本轮仅支持人工查看、复制导出后线下跟进。
+      </p>
     </div>
   )
 }
