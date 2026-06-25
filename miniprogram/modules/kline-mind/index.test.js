@@ -14,7 +14,8 @@ const {
   getPersonalityKlineDrill,
   startKlineTrainingRuntime,
   advanceKlineTrainingRuntime,
-  recordKlineTrainingDecision
+  recordKlineTrainingDecision,
+  buildKlineTrainingRecordPatch
 } = require("./index");
 
 assert.strictEqual(SIX_GATE_MAP.length, 6);
@@ -170,6 +171,21 @@ assert.strictEqual(runtime.currentIndex, 0);
 assert.strictEqual(runtime.visibleCandles.length, 1);
 assert.strictEqual(runtime.mustDecide, false);
 
+const warmupRuntime = startKlineTrainingRuntime(buildKlineMindSession({
+  record: {
+    marketKey: "cn_equity",
+    timeframeKey: "1d",
+    historySlice: compactSchemaSlice
+  }
+}), {
+  trainingSessionId: "runtime-warmup-001",
+  initialVisibleCount: 8
+});
+assert.strictEqual(warmupRuntime.currentIndex, 7);
+assert.strictEqual(warmupRuntime.visibleCandles.length, 8);
+assert.strictEqual(warmupRuntime.activeCandle.key, warmupRuntime.visibleCandles[7].key);
+assert.strictEqual(warmupRuntime.mustDecide, false);
+
 const runtimeStep1 = advanceKlineTrainingRuntime(runtime);
 const runtimeStep2 = advanceKlineTrainingRuntime(runtimeStep1);
 const runtimeStep3 = advanceKlineTrainingRuntime(runtimeStep2);
@@ -195,6 +211,19 @@ assert.strictEqual(decidedRuntime.decisionTimeline[0].action, "BUY");
 assert.deepStrictEqual(decidedRuntime.emotionBadges.map((item) => item.type), ["GREED"]);
 assert.ok(decidedRuntime.riskHints[0].text.includes("追"));
 assert.ok(decidedRuntime.coachHints[0].text.includes("先停"));
+
+const runtimeRecordPatch = buildKlineTrainingRecordPatch(decidedRuntime);
+assert.strictEqual(runtimeRecordPatch.trainingSessionId, "runtime-001");
+assert.strictEqual(runtimeRecordPatch.simulationMode, "blind_step_replay");
+assert.strictEqual(runtimeRecordPatch.sliceSeed, "scene-fast-001");
+assert.strictEqual(runtimeRecordPatch.selectedCandleKey, decidedRuntime.activeCandle.key);
+assert.strictEqual(runtimeRecordPatch.reactionDirection, "act");
+assert.strictEqual(runtimeRecordPatch.firstReaction, "想追上去，怕错过这一根。");
+assert.strictEqual(runtimeRecordPatch.boundaryChoice, "停十秒");
+assert.strictEqual(runtimeRecordPatch.decisionTimeline.length, 1);
+assert.strictEqual(runtimeRecordPatch.emotionBadges[0].type, "GREED");
+assert.ok(runtimeRecordPatch.riskHints[0].text.includes("追"));
+assert.ok(runtimeRecordPatch.coachHints[0].text.includes("先停"));
 
 const runtimeStep4 = advanceKlineTrainingRuntime(decidedRuntime);
 assert.strictEqual(runtimeStep4.currentIndex, 4);

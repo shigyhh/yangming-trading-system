@@ -101,7 +101,7 @@
       <scroll-view class="wave-board-scroll" scroll-x="true" wx:if="{{session.hasHistoricalData}}" enhanced="true" show-scrollbar="{{false}}">
         <view class="wave-board zoom-{{session.chartZoomKey}}">
           <button
-            wx:for="{{session.candles}}"
+            wx:for="{{runtimeView.visibleCandles}}"
             wx:key="key"
             class="mind-candle {{item.tone}} {{item.focus ? 'focus' : ''}} {{item.selected ? 'selected' : ''}}"
             data-key="{{item.key}}"
@@ -117,6 +117,41 @@
       <view wx:else class="history-empty">
         <view>历史数据未载入</view>
         <text>请先同步真实历史数据；未载入前不展示占位 K线。</text>
+      </view>
+
+      <view wx:if="{{trainingRuntime && runtimeView.visibleCandles.length}}" class="simulation-console">
+        <view class="simulation-head">
+          <view>
+            <text>逐根盲练</text>
+            <view>{{runtimeView.progressText}} · 已记 {{runtimeView.decisionCount}} 次</view>
+          </view>
+          <text wx:if="{{runtimeView.latestEmotion}}" class="emotion-badge">{{runtimeView.latestEmotion}}</text>
+        </view>
+
+        <view class="risk-hint {{runtimeView.mustDecide ? 'required' : ''}}">
+          {{runtimeView.latestRisk}}
+        </view>
+        <view class="coach-hint" wx:if="{{runtimeView.latestCoach}}">
+          {{runtimeView.latestCoach}}
+        </view>
+        <view class="decision-prompt">{{runtimeView.decisionPrompt}}</view>
+
+        <view class="decision-actions">
+          <button
+            wx:for="{{decisionActions}}"
+            wx:key="key"
+            class="decision-btn {{item.key}}"
+            data-action="{{item.key}}"
+            bindtap="recordRuntimeDecision"
+          >
+            <text>{{item.label}}</text>
+            <view>{{item.detail}}</view>
+          </button>
+        </view>
+
+        <button class="runtime-next {{runtimeView.mustDecide ? 'locked' : ''}}" bindtap="advanceRuntimeCandle">
+          {{runtimeView.nextButtonText}}
+        </button>
       </view>
 
       <view class="indicator-layer">

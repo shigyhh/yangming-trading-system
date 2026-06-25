@@ -526,6 +526,14 @@ function buildRuntimeVisibleCandles(candles = [], currentIndex = 0) {
   return candles.slice(0, safeIndex + 1);
 }
 
+function normalizeInitialVisibleCount(value, totalCandles) {
+  const total = Math.max(0, Number(totalCandles || 0));
+  if (!total) return 0;
+  const number = Number(value || 1);
+  if (!Number.isFinite(number)) return 1;
+  return Math.max(1, Math.min(total, Math.round(number)));
+}
+
 function shouldRuntimeRequireDecision(currentIndex, decisionInterval) {
   const index = Number(currentIndex || 0);
   return index > 0 && index % normalizeDecisionInterval(decisionInterval) === 0;
@@ -551,6 +559,7 @@ function buildRuntimeState(baseRuntime = {}, patch = {}) {
 
 function startKlineTrainingRuntime(session = {}, options = {}) {
   const candles = Array.isArray(session.candles) ? session.candles : [];
+  const initialVisibleCount = normalizeInitialVisibleCount(options.initialVisibleCount, candles.length);
   return buildRuntimeState({
     trainingSessionId: cleanEventText(options.trainingSessionId || `kline-session-${Date.now()}`, 160),
     simulationMode: "blind_step_replay",
@@ -559,7 +568,7 @@ function startKlineTrainingRuntime(session = {}, options = {}) {
     timeframeKey: session.timeframeKey || "",
     chartZoomKey: session.chartZoomKey || "standard",
     decisionInterval: normalizeDecisionInterval(options.decisionInterval),
-    currentIndex: 0,
+    currentIndex: Math.max(0, initialVisibleCount - 1),
     totalCandles: candles.length,
     candles,
     decisionTimeline: [],
@@ -652,6 +661,25 @@ function recordKlineTrainingDecision(runtime = {}, decision = {}) {
     lockedUntilDecision: false,
     blockedReason: ""
   });
+}
+
+function buildKlineTrainingRecordPatch(runtime = {}) {
+  const decisions = Array.isArray(runtime.decisionTimeline) ? runtime.decisionTimeline : [];
+  const lastDecision = decisions[decisions.length - 1] || {};
+  const activeCandle = runtime.activeCandle || (runtime.candles || [])[runtime.currentIndex] || {};
+  return {
+    trainingSessionId: cleanEventText(runtime.trainingSessionId, 160),
+    simulationMode: cleanEventText(runtime.simulationMode || "blind_step_replay", 80),
+    sliceSeed: cleanEventText(runtime.sliceSeed, 120),
+    selectedCandleKey: cleanEventText(lastDecision.selectedCandleKey || activeCandle.key || "", 80),
+    reactionDirection: cleanEventText(lastDecision.reactionDirection, 40),
+    firstReaction: cleanEventText(lastDecision.firstReaction, 160),
+    boundaryChoice: cleanEventText(lastDecision.boundaryChoice, 120),
+    decisionTimeline: decisions,
+    emotionBadges: Array.isArray(runtime.emotionBadges) ? runtime.emotionBadges : [],
+    riskHints: Array.isArray(runtime.riskHints) ? runtime.riskHints : [],
+    coachHints: Array.isArray(runtime.coachHints) ? runtime.coachHints : []
+  };
 }
 
 function buildKlineMindSession({
@@ -885,6 +913,7 @@ module.exports = {
   startKlineTrainingRuntime,
   advanceKlineTrainingRuntime,
   recordKlineTrainingDecision,
+  buildKlineTrainingRecordPatch,
   buildKlineMindSession,
   buildKlineMindRecord,
   buildOneThoughtEvent,

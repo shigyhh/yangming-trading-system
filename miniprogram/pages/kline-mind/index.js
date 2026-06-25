@@ -29,7 +29,11 @@ const {
   buildKlineMindSession,
   buildKlineMindRecord,
   buildOneThoughtEvent,
-  getNextKlineMindSliceSeed
+  getNextKlineMindSliceSeed,
+  startKlineTrainingRuntime,
+  advanceKlineTrainingRuntime,
+  recordKlineTrainingDecision,
+  buildKlineTrainingRecordPatch
 } = require("../../modules/kline-mind/index");
 const {
   buildKlineTradeReviewRecord: buildKlineMirrorRecord,
@@ -40,6 +44,12 @@ const REACTION_DIRECTIONS = [
   { key: "act", label: "想立刻做", detail: "追、急、想证明" },
   { key: "avoid", label: "想躲开", detail: "怕错、怕亏、想退出" },
   { key: "observe", label: "先看清", detail: "停住、复核、守边界" }
+];
+
+const DECISION_ACTIONS = [
+  { key: "BUY", label: "模拟买入", detail: "记录想进入的一念" },
+  { key: "SELL", label: "模拟卖出", detail: "记录想退出的一念" },
+  { key: "HOLD", label: "观望", detail: "先看事实不动作" }
 ];
 
 function inferReactionDirection(firstReaction) {
@@ -114,6 +124,60 @@ function buildForm(record = {}, session = {}) {
   };
 }
 
+function getLastItem(items = []) {
+  return Array.isArray(items) && items.length ? items[items.length - 1] : null;
+}
+
+function buildRuntimeView(runtime = null) {
+  if (!runtime) {
+    return {
+      visibleCandles: [],
+      progressText: "等待历史片段",
+      nextButtonText: "下一根",
+      decisionPrompt: "先进入逐根盲练",
+      latestCoach: "",
+      latestRisk: "",
+      latestEmotion: "",
+      decisionCount: 0,
+      mustDecide: false,
+      isComplete: false
+    };
+  }
+  const activeKey = ((runtime.activeCandle || {}).key) || "";
+  const visibleCandles = (runtime.visibleCandles || []).map((item) => Object.assign({}, item, {
+    focus: item.key === activeKey || item.focus,
+    selected: item.key === activeKey,
+    label: item.key === activeKey ? "当" : item.label
+  }));
+  const total = Number(runtime.totalCandles || (runtime.candles || []).length || 0);
+  const current = total ? Math.min(total, Number(runtime.currentIndex || 0) + 1) : 0;
+  const latestCoach = getLastItem(runtime.coachHints || []);
+  const latestRisk = getLastItem(runtime.riskHints || []);
+  const latestEmotion = getLastItem(runtime.emotionBadges || []);
+  const isComplete = total > 0 && current >= total;
+
+  return {
+    visibleCandles,
+    progressText: total ? `第 ${current}/${total} 根` : "等待历史片段",
+    nextButtonText: runtime.mustDecide ? "先做模拟决策" : (isComplete ? "本段已完成" : "下一根"),
+    decisionPrompt: runtime.mustDecide ? "这一根必须先做一次模拟决策。" : "只看当下这一根，不猜后面。",
+    latestCoach: (latestCoach || {}).text || "",
+    latestRisk: (latestRisk || {}).text || "只做模拟训练，不作当下判断。",
+    latestEmotion: (latestEmotion || {}).label || "",
+    decisionCount: (runtime.decisionTimeline || []).length,
+    mustDecide: !!runtime.mustDecide,
+    isComplete
+  };
+}
+
+function getInitialVisibleCount(session = {}) {
+  const candles = Array.isArray(session.candles) ? session.candles : [];
+  if (!candles.length) return 0;
+  const windowSize = Number(session.chartWindowSize || 24);
+  const target = Math.max(6, Math.floor((Number.isFinite(windowSize) ? windowSize : 24) / 2));
+  return Math.min(candles.length, target);
+}
+
 function buildLocalDemoHistorySlice(record = {}, result = {}) {
   const scene = getKlineScenario(record.scenarioId || "scene-fast-001", {
     marketKey: "cn",
@@ -160,7 +224,10 @@ Page({
     training7View: buildTraining7View({}, {}),
     trainingDay: null,
     reactionDirections: REACTION_DIRECTIONS,
+    decisionActions: DECISION_ACTIONS,
     session: buildKlineMindSession({}),
+    trainingRuntime: null,
+    runtimeView: buildRuntimeView(),
     form: buildForm(),
     savedRecord: null,
     saving: false,
@@ -203,6 +270,8 @@ Page({
       training7View,
       trainingDay,
       session,
+      trainingRuntime: null,
+      runtimeView: buildRuntimeView(),
       form,
       savedRecord: klineMindRecord && klineMindRecord.updatedAt ? klineMindRecord : null,
       historyLoading: true,
@@ -221,6 +290,16 @@ Page({
     });
   },
 
+  buildTrainingRuntime(session, record = {}) {
+    if (!session || !session.hasHistoricalData) return null;
+    return startKlineTrainingRuntime(session, {
+      trainingSessionId: `kline-session-${todayKey()}-${Date.now()}`,
+      decisionInterval: 5,
+      initialVisibleCount: getInitialVisibleCount(session),
+      sliceSeed: record.scenarioId || ((session.historySlice || {}).sliceSeed) || ((session.historySlice || {}).seed) || ""
+    });
+  },
+
   loadServerHistorySlice(record = {}) {
     const requestKey = `slice-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     this.latestHistoryRequestKey = requestKey;
@@ -228,6 +307,8 @@ Page({
     this.setData({
       historyLoading: true,
       historyError: "",
+      trainingRuntime: null,
+      runtimeView: buildRuntimeView(),
       session: Object.assign({}, this.buildSession(baseRecord), {
         dataStatusText: "正在读取历史练习数据"
       })
@@ -246,8 +327,11 @@ Page({
       const historySlice = buildMindHistorySlice(result, baseRecord);
       const recordWithSlice = Object.assign({}, baseRecord, { historySlice });
       const session = this.buildSession(recordWithSlice);
+      const trainingRuntime = this.buildTrainingRuntime(session, recordWithSlice);
       this.setData({
         session,
+        trainingRuntime,
+        runtimeView: buildRuntimeView(trainingRuntime),
         form: Object.assign({}, this.data.form, recordWithSlice, { selectedCandleKey: session.selectedCandleKey }),
         historyLoading: false,
         historyError: historySlice.source === "local_demo" ? "当前为离线练习模式" : ""
@@ -295,9 +379,12 @@ Page({
     if (!chartZoomKey) return;
     const form = Object.assign({}, this.data.form, { chartZoomKey });
     const session = this.buildSession(form);
+    const trainingRuntime = this.buildTrainingRuntime(session, form);
     this.setData({
       form: Object.assign({}, form, { selectedCandleKey: session.selectedCandleKey }),
-      session
+      session,
+      trainingRuntime,
+      runtimeView: buildRuntimeView(trainingRuntime)
     });
   },
 
@@ -349,9 +436,68 @@ Page({
     this.setData({
       form: Object.assign({}, form, { selectedCandleKey: session.selectedCandleKey }),
       session,
+      trainingRuntime: null,
+      runtimeView: buildRuntimeView(),
       showBodySignal: false
     });
     this.loadServerHistorySlice(form);
+  },
+
+  advanceRuntimeCandle() {
+    const runtime = this.data.trainingRuntime;
+    if (!runtime) {
+      wx.showToast({ title: "历史片段载入后再开始", icon: "none" });
+      return;
+    }
+    if (this.data.runtimeView && this.data.runtimeView.isComplete) {
+      wx.showToast({ title: "本段已完成，可写入复盘", icon: "none" });
+      return;
+    }
+    const nextRuntime = advanceKlineTrainingRuntime(runtime);
+    if (nextRuntime.blockedReason === "decision_required") {
+      this.setData({
+        trainingRuntime: nextRuntime,
+        runtimeView: buildRuntimeView(nextRuntime)
+      });
+      wx.showToast({ title: "先做一次模拟决策", icon: "none" });
+      return;
+    }
+    this.setData({
+      trainingRuntime: nextRuntime,
+      runtimeView: buildRuntimeView(nextRuntime),
+      form: Object.assign({}, this.data.form, {
+        selectedCandleKey: ((nextRuntime.activeCandle || {}).key) || (this.data.form || {}).selectedCandleKey || ""
+      })
+    });
+  },
+
+  recordRuntimeDecision(e) {
+    const runtime = this.data.trainingRuntime;
+    if (!runtime) {
+      wx.showToast({ title: "历史片段载入后再记录", icon: "none" });
+      return;
+    }
+    const action = e.currentTarget.dataset.action || "HOLD";
+    const form = this.data.form || {};
+    const nextRuntime = recordKlineTrainingDecision(runtime, {
+      action,
+      selectedCandleKey: ((runtime.activeCandle || {}).key) || form.selectedCandleKey || "",
+      reactionDirection: form.reactionDirection || "",
+      firstReaction: form.firstReaction || "",
+      boundaryChoice: form.boundaryChoice || ""
+    });
+    const runtimePatch = buildKlineTrainingRecordPatch(nextRuntime);
+    this.setData({
+      trainingRuntime: nextRuntime,
+      runtimeView: buildRuntimeView(nextRuntime),
+      form: Object.assign({}, form, {
+        selectedCandleKey: runtimePatch.selectedCandleKey || form.selectedCandleKey || ""
+      })
+    });
+    wx.showToast({
+      title: action === "HOLD" ? "已记录观望" : "已记录模拟动作",
+      icon: "none"
+    });
   },
 
   toggleGuide() {
@@ -368,7 +514,14 @@ Page({
       wx.showToast({ title: "请先同步历史数据", icon: "none" });
       return;
     }
-    const form = this.data.form || {};
+    const rawForm = this.data.form || {};
+    const runtimePatch = this.data.trainingRuntime ? buildKlineTrainingRecordPatch(this.data.trainingRuntime) : {};
+    const form = Object.assign({}, runtimePatch, rawForm, {
+      selectedCandleKey: rawForm.selectedCandleKey || runtimePatch.selectedCandleKey || "",
+      reactionDirection: rawForm.reactionDirection || runtimePatch.reactionDirection || "",
+      firstReaction: rawForm.firstReaction || runtimePatch.firstReaction || "",
+      boundaryChoice: rawForm.boundaryChoice || runtimePatch.boundaryChoice || ""
+    });
     if (!form.firstReaction) {
       wx.showToast({ title: "先照见第一反应", icon: "none" });
       return;
