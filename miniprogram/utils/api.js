@@ -751,7 +751,7 @@ async function fetchKlineTrainingSlice({
   marketKey = "cn",
   timeframeKey = "101",
   symbol = "",
-  windowSize = 60,
+  windowSize = 150,
   mode = "step_replay",
   endDate = "",
   entryTime = "",

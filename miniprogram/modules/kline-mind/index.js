@@ -146,9 +146,9 @@ const TIMEFRAME_CATALOG = [
 ];
 
 const CHART_ZOOM_OPTIONS = [
-  { key: "wide", label: "缩小", hint: "看更多 K 线", windowSize: 36 },
-  { key: "standard", label: "标准", hint: "平衡节奏", windowSize: 24 },
-  { key: "focus", label: "放大", hint: "少量细看", windowSize: 12 }
+  { key: "wide", label: "缩小", hint: "约150根，适合横屏盲测", windowSize: 150 },
+  { key: "standard", label: "标准", hint: "约90根，平衡节奏", windowSize: 90 },
+  { key: "focus", label: "放大", hint: "约48根，细看", windowSize: 48 }
 ];
 
 const INDICATOR_CATALOG = [
@@ -342,8 +342,8 @@ const KLINE_MIND_SLICE_SEEDS = [
   "scene-retest-001"
 ];
 const MIN_VISIBLE_CANDLES = 6;
-const DEFAULT_VISIBLE_CANDLES = 24;
-const MAX_VISIBLE_CANDLES = 48;
+const DEFAULT_VISIBLE_CANDLES = 150;
+const MAX_VISIBLE_CANDLES = 150;
 
 function clampDay(day) {
   const value = Number(day || 1);
@@ -378,11 +378,11 @@ function buildTimeframeOptions(selectedKey) {
   }));
 }
 
-function getChartZoomMeta(zoomKey = "standard") {
-  return CHART_ZOOM_OPTIONS.find((item) => item.key === zoomKey) || CHART_ZOOM_OPTIONS[1];
+function getChartZoomMeta(zoomKey = "wide") {
+  return CHART_ZOOM_OPTIONS.find((item) => item.key === zoomKey) || CHART_ZOOM_OPTIONS[0];
 }
 
-function buildChartZoomOptions(selectedKey = "standard") {
+function buildChartZoomOptions(selectedKey = "wide") {
   return CHART_ZOOM_OPTIONS.map((item) => Object.assign({}, item, {
     selected: item.key === selectedKey
   }));
@@ -534,6 +534,93 @@ function normalizeInitialVisibleCount(value, totalCandles) {
   return Math.max(1, Math.min(total, Math.round(number)));
 }
 
+function roundMetric(value, digits = 2) {
+  const number = Number(value || 0);
+  if (!Number.isFinite(number)) return 0;
+  const factor = Math.pow(10, digits);
+  return Math.round(number * factor) / factor;
+}
+
+function getRuntimePrice(candle = {}) {
+  const price = Number(candle.close || candle.c || candle.price || 0);
+  return Number.isFinite(price) && price > 0 ? price : 0;
+}
+
+function normalizePositionState(state = {}) {
+  return {
+    side: state.side === "LONG" ? "LONG" : "FLAT",
+    entryPrice: roundMetric(state.entryPrice, 4),
+    positionSize: Number(state.positionSize || state.size || 0) > 0 ? 1 : 0,
+    realizedPnl: roundMetric(state.realizedPnl),
+    unrealizedPnl: roundMetric(state.unrealizedPnl),
+    equity: roundMetric(state.equity || 100),
+    peakEquity: roundMetric(state.peakEquity || 100),
+    maxDrawdown: roundMetric(state.maxDrawdown)
+  };
+}
+
+function markPositionToMarket(positionState = {}, candle = {}) {
+  const price = getRuntimePrice(candle);
+  const state = normalizePositionState(positionState);
+  const unrealizedPnl = state.side === "LONG" && state.entryPrice > 0 && price > 0
+    ? ((price - state.entryPrice) / state.entryPrice) * 100 * state.positionSize
+    : 0;
+  const equity = 100 + state.realizedPnl + unrealizedPnl;
+  const peakEquity = Math.max(state.peakEquity || 100, equity);
+  const maxDrawdown = Math.max(state.maxDrawdown || 0, peakEquity - equity);
+  return Object.assign({}, state, {
+    unrealizedPnl: roundMetric(unrealizedPnl),
+    equity: roundMetric(equity),
+    peakEquity: roundMetric(peakEquity),
+    maxDrawdown: roundMetric(maxDrawdown)
+  });
+}
+
+function executeSimulatedPosition(positionState = {}, decision = {}, candle = {}) {
+  const action = String(decision.action || "HOLD").toUpperCase();
+  const price = Number(decision.price || getRuntimePrice(candle));
+  const state = markPositionToMarket(positionState, candle);
+  if (!Number.isFinite(price) || price <= 0) return state;
+
+  if (action === "BUY" && state.side !== "LONG") {
+    return markPositionToMarket(Object.assign({}, state, {
+      side: "LONG",
+      entryPrice: price,
+      positionSize: 1,
+      unrealizedPnl: 0
+    }), candle);
+  }
+
+  if (action === "SELL" && state.side === "LONG" && state.entryPrice > 0) {
+    const realizedChange = ((price - state.entryPrice) / state.entryPrice) * 100 * state.positionSize;
+    return markPositionToMarket(Object.assign({}, state, {
+      side: "FLAT",
+      entryPrice: 0,
+      positionSize: 0,
+      realizedPnl: roundMetric(state.realizedPnl + realizedChange),
+      unrealizedPnl: 0
+    }), candle);
+  }
+
+  return state;
+}
+
+function buildSessionMetrics(positionState = {}, decisions = []) {
+  const state = normalizePositionState(positionState);
+  const tradeDecisions = Array.isArray(decisions)
+    ? decisions.filter((item) => item && item.action && item.action !== "HOLD")
+    : [];
+  return {
+    positionSide: state.side,
+    positionSize: state.positionSize,
+    realizedPnl: state.realizedPnl,
+    unrealizedPnl: state.unrealizedPnl,
+    totalPnl: roundMetric(state.realizedPnl + state.unrealizedPnl),
+    maxDrawdown: state.maxDrawdown,
+    tradeCount: tradeDecisions.length
+  };
+}
+
 function shouldRuntimeRequireDecision(currentIndex, decisionInterval) {
   const index = Number(currentIndex || 0);
   return index > 0 && index % normalizeDecisionInterval(decisionInterval) === 0;
@@ -546,12 +633,16 @@ function buildRuntimeState(baseRuntime = {}, patch = {}) {
     ? Math.max(0, Math.min(candles.length - 1, Number(runtime.currentIndex || 0)))
     : 0;
   const visibleCandles = buildRuntimeVisibleCandles(candles, safeIndex);
+  const activeCandle = visibleCandles[visibleCandles.length - 1] || null;
+  const positionState = markPositionToMarket(runtime.positionState || {}, activeCandle || {});
   const hasDecisionForCurrentIndex = Number(runtime.lastDecisionIndex) === safeIndex;
   const mustDecide = !!runtime.lockedUntilDecision || (!hasDecisionForCurrentIndex && shouldRuntimeRequireDecision(safeIndex, runtime.decisionInterval));
   return Object.assign({}, runtime, {
     currentIndex: safeIndex,
     visibleCandles,
-    activeCandle: visibleCandles[visibleCandles.length - 1] || null,
+    activeCandle,
+    positionState,
+    sessionMetrics: buildSessionMetrics(positionState, runtime.decisionTimeline || []),
     mustDecide,
     lockedUntilDecision: mustDecide
   });
@@ -566,7 +657,7 @@ function startKlineTrainingRuntime(session = {}, options = {}) {
     sliceSeed: cleanEventText(options.sliceSeed || ((session.historySlice || {}).seed) || "", 120),
     marketKey: ((session.market || {}).key) || "",
     timeframeKey: session.timeframeKey || "",
-    chartZoomKey: session.chartZoomKey || "standard",
+    chartZoomKey: session.chartZoomKey || "wide",
     decisionInterval: normalizeDecisionInterval(options.decisionInterval),
     currentIndex: Math.max(0, initialVisibleCount - 1),
     totalCandles: candles.length,
@@ -575,6 +666,8 @@ function startKlineTrainingRuntime(session = {}, options = {}) {
     emotionBadges: [],
     riskHints: [],
     coachHints: [],
+    positionState: normalizePositionState(),
+    sessionMetrics: buildSessionMetrics(),
     lastDecisionIndex: -1,
     lockedUntilDecision: false,
     blockedReason: ""
@@ -651,11 +744,18 @@ function recordKlineTrainingDecision(runtime = {}, decision = {}) {
   const emotionBadge = buildEmotionBadge(safeDecision);
   const riskHint = buildRiskHint(emotionBadge);
   const coachHint = buildCoachHint(safeDecision, emotionBadge);
+  const nextPositionState = executeSimulatedPosition(runtime.positionState || {}, safeDecision, activeCandle);
+  const decisionWithPosition = Object.assign({}, safeDecision, {
+    positionSize: nextPositionState.positionSize,
+    pnl: roundMetric(nextPositionState.realizedPnl + nextPositionState.unrealizedPnl),
+    drawdown: nextPositionState.maxDrawdown
+  });
   return buildRuntimeState(runtime, {
-    decisionTimeline: (runtime.decisionTimeline || []).concat([safeDecision]),
+    decisionTimeline: (runtime.decisionTimeline || []).concat([decisionWithPosition]),
     emotionBadges: emotionBadge ? (runtime.emotionBadges || []).concat([emotionBadge]) : (runtime.emotionBadges || []),
     riskHints: (runtime.riskHints || []).concat([riskHint]),
     coachHints: (runtime.coachHints || []).concat([coachHint]),
+    positionState: nextPositionState,
     lastDecisionIndex: Number(runtime.currentIndex || 0),
     mustDecide: false,
     lockedUntilDecision: false,
@@ -678,7 +778,9 @@ function buildKlineTrainingRecordPatch(runtime = {}) {
     decisionTimeline: decisions,
     emotionBadges: Array.isArray(runtime.emotionBadges) ? runtime.emotionBadges : [],
     riskHints: Array.isArray(runtime.riskHints) ? runtime.riskHints : [],
-    coachHints: Array.isArray(runtime.coachHints) ? runtime.coachHints : []
+    coachHints: Array.isArray(runtime.coachHints) ? runtime.coachHints : [],
+    positionState: normalizePositionState(runtime.positionState || {}),
+    sessionMetrics: buildSessionMetrics(runtime.positionState || {}, decisions)
   };
 }
 
@@ -695,7 +797,7 @@ function buildKlineMindSession({
   const marketKey = (record || {}).marketKey || "cn_equity";
   const timeframeKey = (record || {}).timeframeKey || "1d";
   const timeframeMeta = TIMEFRAME_CATALOG.find((item) => item.key === timeframeKey) || TIMEFRAME_CATALOG[0];
-  const chartZoomKey = (record || {}).chartZoomKey || "standard";
+  const chartZoomKey = (record || {}).chartZoomKey || "wide";
   const chartZoomMeta = getChartZoomMeta(chartZoomKey);
   const market = getMarketConfig(marketKey);
   const historySlice = (record || {}).historySlice || getHistorySlice(historyCache, market.key, timeframeKey);
@@ -849,7 +951,7 @@ function buildKlineMindRecord(input = {}, session = {}) {
     marketKey: ((session.market || {}).key) || input.marketKey || "cn_equity",
     marketName: ((session.market || {}).name) || input.marketName || "A股",
     timeframeKey: session.timeframeKey || input.timeframeKey || "1d",
-    chartZoomKey: session.chartZoomKey || input.chartZoomKey || "standard",
+    chartZoomKey: session.chartZoomKey || input.chartZoomKey || "wide",
     mode: ((session.historySlice || {}).mode) || input.mode || "step_replay",
     dataSource: ((session.historySlice || {}).source) || input.dataSource || "",
     klineSource: ((session.historySlice || {}).klineSource) || ((session.historySlice || {}).source) || input.klineSource || "",
@@ -883,7 +985,9 @@ function buildKlineMindRecord(input = {}, session = {}) {
     "decisionTimeline",
     "emotionBadges",
     "riskHints",
-    "coachHints"
+    "coachHints",
+    "positionState",
+    "sessionMetrics"
   ].forEach((key) => {
     if (input[key] !== undefined) extension[key] = input[key];
   });

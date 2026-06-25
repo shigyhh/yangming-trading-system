@@ -36,8 +36,7 @@ const {
   buildKlineTrainingRecordPatch
 } = require("../../modules/kline-mind/index");
 const {
-  buildKlineTradeReviewRecord: buildKlineMirrorRecord,
-  getKlineScenario
+  buildKlineTradeReviewRecord: buildKlineMirrorRecord
 } = require("../../modules/kline-simulator/index");
 
 const REACTION_DIRECTIONS = [
@@ -113,7 +112,7 @@ function buildForm(record = {}, session = {}) {
     marketKey: record.marketKey || ((session.market || {}).key) || "cn_equity",
     timeframeKey: record.timeframeKey || session.timeframeKey || "1d",
     scenarioId: savedSceneId.indexOf("scene-") === 0 ? savedSceneId : "scene-fast-001",
-    chartZoomKey: record.chartZoomKey || session.chartZoomKey || "standard",
+    chartZoomKey: record.chartZoomKey || session.chartZoomKey || "wide",
     historySlice: record.historySlice || null,
     selectedCandleKey: record.selectedCandleKey || session.selectedCandleKey || "",
     reactionDirection: record.reactionDirection || inferReactionDirection(record.firstReaction),
@@ -139,6 +138,9 @@ function buildRuntimeView(runtime = null) {
       latestRisk: "",
       latestEmotion: "",
       decisionCount: 0,
+      positionText: "空仓",
+      pnlText: "0.00%",
+      drawdownText: "0.00%",
       mustDecide: false,
       isComplete: false
     };
@@ -154,6 +156,7 @@ function buildRuntimeView(runtime = null) {
   const latestCoach = getLastItem(runtime.coachHints || []);
   const latestRisk = getLastItem(runtime.riskHints || []);
   const latestEmotion = getLastItem(runtime.emotionBadges || []);
+  const metrics = runtime.sessionMetrics || {};
   const isComplete = total > 0 && current >= total;
 
   return {
@@ -165,6 +168,9 @@ function buildRuntimeView(runtime = null) {
     latestRisk: (latestRisk || {}).text || "只做模拟训练，不作当下判断。",
     latestEmotion: (latestEmotion || {}).label || "",
     decisionCount: (runtime.decisionTimeline || []).length,
+    positionText: metrics.positionSize ? "模拟持仓" : "空仓",
+    pnlText: `${Number(metrics.totalPnl || 0).toFixed(2)}%`,
+    drawdownText: `${Number(metrics.maxDrawdown || 0).toFixed(2)}%`,
     mustDecide: !!runtime.mustDecide,
     isComplete
   };
@@ -173,28 +179,23 @@ function buildRuntimeView(runtime = null) {
 function getInitialVisibleCount(session = {}) {
   const candles = Array.isArray(session.candles) ? session.candles : [];
   if (!candles.length) return 0;
-  const windowSize = Number(session.chartWindowSize || 24);
-  const target = Math.max(6, Math.floor((Number.isFinite(windowSize) ? windowSize : 24) / 2));
+  const windowSize = Number(session.chartWindowSize || 150);
+  const safeWindowSize = Number.isFinite(windowSize) ? windowSize : 150;
+  const target = Math.max(24, Math.min(48, Math.floor(safeWindowSize / 3)));
   return Math.min(candles.length, target);
 }
 
-function buildLocalDemoHistorySlice(record = {}, result = {}) {
-  const scene = getKlineScenario(record.scenarioId || "scene-fast-001", {
-    marketKey: "cn",
-    timeframeKey: record.timeframeKey || "1d"
-  });
+function buildUnavailableHistorySlice(result = {}) {
   return {
-    source: "local_demo",
-    sliceSource: "local_demo",
-    klineSource: "local_demo",
-    symbol: record.symbol || "local-demo",
+    source: "server_unavailable",
+    sliceSource: "server_unavailable",
+    klineSource: "server_unavailable",
+    symbol: "",
     start: "",
     end: "",
     serverSliceStatus: (result || {}).reason || "server_unavailable",
-    serverSliceError: (result || {}).errorMessage || "K线服务暂不可用",
-    candles: (scene.candles || []).map((item, index) => Object.assign({}, item, {
-      date: item.date || item.time || `demo-${index + 1}`
-    }))
+    serverSliceError: (result || {}).errorMessage || "真实历史数据未载入",
+    candles: []
   };
 }
 
@@ -204,8 +205,8 @@ function resolveTradeReviewUrl(record = {}) {
   return buildTradeReviewUrl({ userId, eventId });
 }
 
-function buildMindHistorySlice(result, record = {}) {
-  if (!result || !result.ok) return buildLocalDemoHistorySlice(record, result);
+function buildMindHistorySlice(result) {
+  if (!result || !result.ok) return buildUnavailableHistorySlice(result);
   return Object.assign({}, result.slice || {}, {
     source: result.source || ((result.slice || {}).source) || "server_cache",
     sliceSource: result.source || ((result.slice || {}).source) || "server_cache",
@@ -317,14 +318,14 @@ Page({
       marketKey: baseRecord.marketKey || "cn_equity",
       timeframeKey: baseRecord.timeframeKey || "1d",
       symbol: baseRecord.symbol || "",
-      windowSize: 60,
-      mode: "mind",
+      windowSize: 150,
+      mode: "step_replay",
       gateKey: "shi_shang_mo",
       blind: true,
       seed: baseRecord.scenarioId || ""
     }).then((result) => {
       if (this.latestHistoryRequestKey !== requestKey) return;
-      const historySlice = buildMindHistorySlice(result, baseRecord);
+      const historySlice = buildMindHistorySlice(result);
       const recordWithSlice = Object.assign({}, baseRecord, { historySlice });
       const session = this.buildSession(recordWithSlice);
       const trainingRuntime = this.buildTrainingRuntime(session, recordWithSlice);
@@ -334,7 +335,7 @@ Page({
         runtimeView: buildRuntimeView(trainingRuntime),
         form: Object.assign({}, this.data.form, recordWithSlice, { selectedCandleKey: session.selectedCandleKey }),
         historyLoading: false,
-        historyError: historySlice.source === "local_demo" ? "当前为离线练习模式" : ""
+        historyError: session.hasHistoricalData ? "" : (historySlice.serverSliceError || "真实历史数据未载入")
       });
     });
   },
@@ -423,7 +424,7 @@ Page({
     const scenarioId = getNextKlineMindSliceSeed(currentForm.scenarioId || "scene-fast-001");
     const form = Object.assign({}, currentForm, {
       scenarioId,
-      chartZoomKey: currentForm.chartZoomKey || "standard",
+      chartZoomKey: currentForm.chartZoomKey || "wide",
       historySlice: null,
       selectedCandleKey: "",
       reactionDirection: "",

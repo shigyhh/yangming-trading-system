@@ -94,6 +94,33 @@ const wideVisualCandles = normalizeHistoryCandles({
 assert.strictEqual(wideVisualCandles.length, 36);
 assert.strictEqual(wideVisualCandles[0].date, "2024-03-13");
 
+const longBlindSlice = {
+  source: "server_cache",
+  candles: Array.from({ length: 180 }, (_, index) => ({
+    t: `bar-${String(index + 1).padStart(3, "0")}`,
+    o: 10 + Math.sin(index / 5) * 0.4 + index * 0.01,
+    h: 10.7 + Math.sin(index / 5) * 0.4 + index * 0.01,
+    l: 9.6 + Math.sin(index / 5) * 0.4 + index * 0.01,
+    c: 10.25 + Math.sin((index + 1) / 5) * 0.4 + index * 0.01,
+    v: 1200 + (index % 13) * 80
+  }))
+};
+const longVisualCandles = normalizeHistoryCandles(longBlindSlice, { windowSize: 150 });
+assert.strictEqual(longVisualCandles.length, 150);
+assert.strictEqual(longVisualCandles[0].date, "bar-031");
+
+const defaultLongSession = buildKlineMindSession({
+  record: {
+    marketKey: "cn_equity",
+    timeframeKey: "1d",
+    historySlice: longBlindSlice
+  }
+});
+assert.strictEqual(defaultLongSession.chartZoomKey, "wide");
+assert.strictEqual(defaultLongSession.chartWindowSize, 150);
+assert.strictEqual(defaultLongSession.candles.length, 150);
+assert.ok(defaultLongSession.chartZoomOptions.find((item) => item.key === "wide").hint.includes("150"));
+
 const sparseSession = buildKlineMindSession({
   record: {
     marketKey: "cn_equity",
@@ -119,7 +146,7 @@ assert.strictEqual(record.completed, true);
 assert.strictEqual(record.scenarioTitle, "边界触碰");
 assert.strictEqual(record.marketKey, "cn_equity");
 assert.strictEqual(record.timeframeKey, "1d");
-assert.strictEqual(record.chartZoomKey, "standard");
+assert.strictEqual(record.chartZoomKey, "wide");
 assert.strictEqual(record.symbol, "000001.SZ");
 assert.strictEqual(record.klineSource, "verified_fixture");
 assert.strictEqual(record.source, "miniprogram");
@@ -152,7 +179,7 @@ const demoRecord = buildKlineMindRecord({
 }, demoSession);
 assert.strictEqual(demoSession.dataStatusText, "离线练习模式");
 assert.strictEqual(demoSession.chartZoomKey, "wide");
-assert.strictEqual(demoSession.chartWindowSize, 36);
+assert.strictEqual(demoSession.chartWindowSize, 150);
 assert.ok(demoSession.chartOrientationHint.includes("横屏"));
 assert.deepStrictEqual(demoSession.indicatorCatalog.map((item) => item.key), ["ma", "macd", "boll", "vol"]);
 assert.strictEqual(demoRecord.klineSource, "local_demo");
@@ -170,6 +197,9 @@ assert.strictEqual(runtime.simulationMode, "blind_step_replay");
 assert.strictEqual(runtime.currentIndex, 0);
 assert.strictEqual(runtime.visibleCandles.length, 1);
 assert.strictEqual(runtime.mustDecide, false);
+assert.strictEqual(runtime.positionState.side, "FLAT");
+assert.strictEqual(runtime.sessionMetrics.positionSize, 0);
+assert.strictEqual(runtime.sessionMetrics.maxDrawdown, 0);
 
 const warmupRuntime = startKlineTrainingRuntime(buildKlineMindSession({
   record: {
@@ -208,6 +238,10 @@ assert.strictEqual(decidedRuntime.mustDecide, false);
 assert.strictEqual(decidedRuntime.lockedUntilDecision, false);
 assert.strictEqual(decidedRuntime.decisionTimeline.length, 1);
 assert.strictEqual(decidedRuntime.decisionTimeline[0].action, "BUY");
+assert.strictEqual(decidedRuntime.decisionTimeline[0].positionSize, 1);
+assert.strictEqual(decidedRuntime.positionState.side, "LONG");
+assert.strictEqual(decidedRuntime.positionState.entryPrice, decidedRuntime.decisionTimeline[0].price);
+assert.strictEqual(decidedRuntime.sessionMetrics.positionSize, 1);
 assert.deepStrictEqual(decidedRuntime.emotionBadges.map((item) => item.type), ["GREED"]);
 assert.ok(decidedRuntime.riskHints[0].text.includes("追"));
 assert.ok(decidedRuntime.coachHints[0].text.includes("先停"));
@@ -224,9 +258,24 @@ assert.strictEqual(runtimeRecordPatch.decisionTimeline.length, 1);
 assert.strictEqual(runtimeRecordPatch.emotionBadges[0].type, "GREED");
 assert.ok(runtimeRecordPatch.riskHints[0].text.includes("追"));
 assert.ok(runtimeRecordPatch.coachHints[0].text.includes("先停"));
+assert.strictEqual(runtimeRecordPatch.sessionMetrics.positionSize, 1);
+assert.strictEqual(runtimeRecordPatch.positionState.side, "LONG");
 
 const runtimeStep4 = advanceKlineTrainingRuntime(decidedRuntime);
 assert.strictEqual(runtimeStep4.currentIndex, 4);
+assert.ok(Number.isFinite(runtimeStep4.sessionMetrics.unrealizedPnl));
+
+const closedRuntime = recordKlineTrainingDecision(runtimeStep4, {
+  action: "SELL",
+  selectedCandleKey: runtimeStep4.activeCandle.key,
+  reactionDirection: "observe",
+  firstReaction: "先退出模拟仓位，记录这次波动。",
+  boundaryChoice: "回到计划"
+});
+assert.strictEqual(closedRuntime.positionState.side, "FLAT");
+assert.strictEqual(closedRuntime.sessionMetrics.positionSize, 0);
+assert.ok(Number.isFinite(closedRuntime.sessionMetrics.realizedPnl));
+assert.ok(Number.isFinite(closedRuntime.sessionMetrics.maxDrawdown));
 
 const runtimeRecord = buildKlineMindRecord({
   selectedCandleKey: demoSession.selectedCandleKey,
@@ -239,12 +288,16 @@ const runtimeRecord = buildKlineMindRecord({
   decisionTimeline: decidedRuntime.decisionTimeline,
   emotionBadges: decidedRuntime.emotionBadges,
   riskHints: decidedRuntime.riskHints,
-  coachHints: decidedRuntime.coachHints
+  coachHints: decidedRuntime.coachHints,
+  positionState: decidedRuntime.positionState,
+  sessionMetrics: decidedRuntime.sessionMetrics
 }, demoSession);
 assert.strictEqual(runtimeRecord.trainingSessionId, "runtime-001");
 assert.strictEqual(runtimeRecord.simulationMode, "blind_step_replay");
 assert.strictEqual(runtimeRecord.sliceSeed, "scene-fast-001");
 assert.strictEqual(runtimeRecord.decisionTimeline.length, 1);
+assert.strictEqual(runtimeRecord.sessionMetrics.positionSize, 1);
+assert.strictEqual(runtimeRecord.positionState.side, "LONG");
 assert.strictEqual(runtimeRecord.firstReaction, "急躁");
 assert.strictEqual(runtimeRecord.boundaryChoice, "停十秒");
 assert.strictEqual(runtimeRecord.insightLine, "我看见自己想追上去，但先停了一下。");

@@ -150,6 +150,28 @@ async function runKlineSliceTests() {
   assert.strictEqual(serverSlice.slice.candles.length, 6);
 
   global.wx.request = (options) => {
+    requestedUrl = options.url;
+    options.success({
+      statusCode: 200,
+      data: {
+        ok: true,
+        slice: {
+          source: "server_cache",
+          candles: Array.from({ length: 6 }, (_, index) => ({
+            time: `2026-03-0${index + 1}`,
+            open: 1,
+            high: 2,
+            low: 0.8,
+            close: 1.5
+          }))
+        }
+      }
+    });
+  };
+  await fetchKlineTrainingSlice({ marketKey: "cn", timeframeKey: "1d" });
+  assert.ok(requestedUrl.includes("window=150"));
+
+  global.wx.request = (options) => {
     options.success({ statusCode: 200, data: { ok: true, slice: { source: "server_cache", candles: [] } } });
   };
   const emptySlice = await fetchKlineTrainingSlice({ marketKey: "cn", timeframeKey: "30m" });

@@ -131,6 +131,20 @@
         <view class="risk-hint {{runtimeView.mustDecide ? 'required' : ''}}">
           {{runtimeView.latestRisk}}
         </view>
+        <view class="runtime-metrics">
+          <view>
+            <text>仓位</text>
+            <view>{{runtimeView.positionText}}</view>
+          </view>
+          <view>
+            <text>模拟盈亏</text>
+            <view>{{runtimeView.pnlText}}</view>
+          </view>
+          <view>
+            <text>回撤</text>
+            <view>{{runtimeView.drawdownText}}</view>
+          </view>
+        </view>
         <view class="coach-hint" wx:if="{{runtimeView.latestCoach}}">
           {{runtimeView.latestCoach}}
         </view>

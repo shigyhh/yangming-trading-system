@@ -319,9 +319,11 @@ assert.ok(klineMindSource.includes("fetchKlineTrainingSlice"));
 assert.ok(klineMindSource.includes("retryPendingKlineTrainingSync"));
 assert.strictEqual(klineMindSource.includes("getKlineHistoryCache"), false);
 assert.ok(klineMindSource.includes("historySlice"));
-assert.ok(klineMindSource.includes("buildLocalDemoHistorySlice"));
-assert.ok(klineMindSource.includes("local_demo"));
-assert.ok(klineMindSource.includes("K线服务暂不可用"));
+assert.ok(klineMindSource.includes("buildUnavailableHistorySlice"));
+assert.ok(klineMindSource.includes("server_unavailable"));
+assert.ok(klineMindSource.includes("真实历史数据未载入"));
+assert.strictEqual(klineMindSource.includes("buildLocalDemoHistorySlice"), false);
+assert.strictEqual(klineMindSource.includes("getKlineScenario"), false);
 
 const appConfig = JSON.parse(fs.readFileSync(path.join(__dirname, "../app.json"), "utf8"));
 const klineMindWxmlSource = fs.readFileSync(path.join(__dirname, "../pages/kline-mind/index.wxml"), "utf8");
