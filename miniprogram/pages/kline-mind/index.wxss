@@ -229,22 +229,6 @@
   line-height: 1.55;
 }
 
-.wave-head > text {
-  width: 76rpx;
-  height: 76rpx;
-  flex: 0 0 76rpx;
-  display: grid;
-  place-items: center;
-  border-radius: 24rpx;
-  color: #16160f;
-  background:
-    linear-gradient(180deg, rgba(255, 247, 207, 0.8), rgba(216, 183, 111, 0.92)),
-    #d8b76f;
-  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", serif;
-  font-size: 38rpx;
-  font-weight: 900;
-}
-
 .wave-source-line {
   position: relative;
   z-index: 1;
@@ -638,7 +622,6 @@
 }
 
 .mind-candle.selected .body {
-  width: 14rpx;
   box-shadow:
     0 0 0 1rpx rgba(255, 223, 117, 0.72),
     0 0 0 3rpx rgba(255, 223, 117, 0.14);

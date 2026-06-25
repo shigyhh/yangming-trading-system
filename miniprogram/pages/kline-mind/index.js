@@ -164,7 +164,7 @@ function buildRuntimeView(runtime = null) {
   const visibleCandles = (runtime.visibleCandles || []).map((item) => Object.assign({}, item, {
     focus: item.key === activeKey || item.focus,
     selected: item.key === activeKey,
-    label: item.key === activeKey ? "当" : item.label
+    label: item.key === activeKey ? "" : item.label
   }));
   const total = Number(runtime.totalCandles || (runtime.candles || []).length || 0);
   const current = total ? Math.min(total, Number(runtime.currentIndex || 0) + 1) : 0;

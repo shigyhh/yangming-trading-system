@@ -37,7 +37,6 @@
           <text>K线盲练</text>
           <view>{{session.subtitle}}</view>
         </view>
-        <text>{{session.stageGate.seal}}</text>
       </view>
 
       <view wx:if="{{false}}" class="wave-source-line">

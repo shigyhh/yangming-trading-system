@@ -193,11 +193,13 @@ assertRuleHas(klineMindWxss, ".reaction-direction-row", ["grid-template-columns:
 assertRuleHas(klineMindWxss, ".reaction-direction-pill", ["width: 100%", "min-width: 0", "margin: 0", "box-sizing: border-box"], "kline first-thought choice buttons should not inherit native button widths that overlap");
 assert.ok(klineMindWxml.includes('bindtap="switchSlice"'), "kline change-slice action should actually request the next training slice");
 assert.ok(klineMindJs.includes("getNextKlineMindSliceSeed"), "kline page should rotate the training slice seed instead of only expanding selectors");
+assert.equal(klineMindWxml.includes("session.stageGate.seal"), false, "kline blind practice card should not show unexplained six-gate seal text such as 良");
 assert.ok(klineMindWxml.includes('class="slice-playbook"'), "kline chart should include an immediate concrete playbook for how to train this slice");
 assert.ok(klineMindWxml.includes("点最牵动的一根"), "kline playbook should tell the user exactly what to do with the chart");
 assert.ok(klineMindWxml.includes('scroll-view class="wave-board-scroll" scroll-x="true"'), "kline blind chart should allow dragging left to review revealed history");
 assert.ok(klineMindWxml.includes('scroll-left="{{runtimeView.chartScrollLeft}}"'), "kline blind chart should snap back to the current candle as the right boundary");
 assert.equal(klineMindWxml.includes('bounces="true"'), false, "kline blind chart should not keep native horizontal panning that can reveal unreplayed candles");
+assert.equal(klineMindJs.includes('label: item.key === activeKey ? "当"'), false, "kline chart should not render a text marker on the active candle");
 assert.ok(klineMindWxml.includes('class="chart-stepper"'), "kline chart should expose compact -/+ zoom controls in the chart corner");
 assert.ok(klineMindWxml.includes("bindtap=\"decreaseChartZoom\""), "kline chart should let the user zoom out with a minus control");
 assert.ok(klineMindWxml.includes("bindtap=\"increaseChartZoom\""), "kline chart should let the user zoom in with a plus control");
