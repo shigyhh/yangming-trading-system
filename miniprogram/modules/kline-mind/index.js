@@ -514,6 +514,146 @@ function markSelectedCandles(candles, selectedKey, fallbackIndex) {
   }));
 }
 
+function normalizeDecisionInterval(value) {
+  const number = Number(value || 5);
+  if (!Number.isFinite(number)) return 5;
+  return Math.max(3, Math.min(10, Math.round(number)));
+}
+
+function buildRuntimeVisibleCandles(candles = [], currentIndex = 0) {
+  if (!Array.isArray(candles) || !candles.length) return [];
+  const safeIndex = Math.max(0, Math.min(candles.length - 1, Number(currentIndex || 0)));
+  return candles.slice(0, safeIndex + 1);
+}
+
+function shouldRuntimeRequireDecision(currentIndex, decisionInterval) {
+  const index = Number(currentIndex || 0);
+  return index > 0 && index % normalizeDecisionInterval(decisionInterval) === 0;
+}
+
+function buildRuntimeState(baseRuntime = {}, patch = {}) {
+  const runtime = Object.assign({}, baseRuntime, patch);
+  const candles = Array.isArray(runtime.candles) ? runtime.candles : [];
+  const safeIndex = candles.length
+    ? Math.max(0, Math.min(candles.length - 1, Number(runtime.currentIndex || 0)))
+    : 0;
+  const visibleCandles = buildRuntimeVisibleCandles(candles, safeIndex);
+  const hasDecisionForCurrentIndex = Number(runtime.lastDecisionIndex) === safeIndex;
+  const mustDecide = !!runtime.lockedUntilDecision || (!hasDecisionForCurrentIndex && shouldRuntimeRequireDecision(safeIndex, runtime.decisionInterval));
+  return Object.assign({}, runtime, {
+    currentIndex: safeIndex,
+    visibleCandles,
+    activeCandle: visibleCandles[visibleCandles.length - 1] || null,
+    mustDecide,
+    lockedUntilDecision: mustDecide
+  });
+}
+
+function startKlineTrainingRuntime(session = {}, options = {}) {
+  const candles = Array.isArray(session.candles) ? session.candles : [];
+  return buildRuntimeState({
+    trainingSessionId: cleanEventText(options.trainingSessionId || `kline-session-${Date.now()}`, 160),
+    simulationMode: "blind_step_replay",
+    sliceSeed: cleanEventText(options.sliceSeed || ((session.historySlice || {}).seed) || "", 120),
+    marketKey: ((session.market || {}).key) || "",
+    timeframeKey: session.timeframeKey || "",
+    chartZoomKey: session.chartZoomKey || "standard",
+    decisionInterval: normalizeDecisionInterval(options.decisionInterval),
+    currentIndex: 0,
+    totalCandles: candles.length,
+    candles,
+    decisionTimeline: [],
+    emotionBadges: [],
+    riskHints: [],
+    coachHints: [],
+    lastDecisionIndex: -1,
+    lockedUntilDecision: false,
+    blockedReason: ""
+  });
+}
+
+function buildEmotionBadge(decision = {}) {
+  const text = `${decision.action || ""} ${decision.reactionDirection || ""} ${decision.firstReaction || ""} ${decision.boundaryChoice || ""}`;
+  if (/不甘|夺回|回本|扳回/.test(text)) return { type: "REVENGE", label: "不甘", text: "不顺后想立刻夺回节奏。" };
+  if (/追|错过|贪|急|证明/.test(text) || decision.reactionDirection === "act") {
+    return { type: "GREED", label: "追念", text: "想追上去时，先照见怕错过。" };
+  }
+  if (/怕|恐|割|退出|躲/.test(text) || decision.reactionDirection === "avoid") {
+    return { type: "FEAR", label: "惧念", text: "想退出时，先分清事实与不安。" };
+  }
+  if (/犹豫|不敢|等确认/.test(text)) return { type: "HESITATION", label: "犹疑", text: "知而未行时，先看见停滞处。" };
+  if (decision.action && decision.action !== "HOLD" && !decision.boundaryChoice) {
+    return { type: "IMPULSE", label: "冲动", text: "无边界动作容易变成临场反应。" };
+  }
+  return null;
+}
+
+function buildRiskHint(emotionBadge = null) {
+  const type = (emotionBadge || {}).type || "";
+  if (type === "GREED") return { level: "medium", text: "出现追念：先停十秒，再回到原边界。" };
+  if (type === "FEAR") return { level: "medium", text: "出现惧念：先看事实，再记录不安。" };
+  if (type === "REVENGE") return { level: "high", text: "出现不甘：本轮只记录，不加重动作。" };
+  if (type === "HESITATION") return { level: "low", text: "出现犹疑：写下知道却未行动的原因。" };
+  if (type === "IMPULSE") return { level: "medium", text: "出现无边界动作：先补边界，再继续训练。" };
+  return { level: "low", text: "继续只做模拟记录，不作当下判断。" };
+}
+
+function buildCoachHint(decision = {}, emotionBadge = null) {
+  const action = String(decision.action || "HOLD").toUpperCase();
+  const label = (emotionBadge || {}).label || "观照";
+  return {
+    title: `${label}已记录`,
+    text: action === "HOLD"
+      ? "你先停下来观察，这一刻先守住了记录。"
+      : "动作已经作为模拟记录写入，下一步先停十秒，再看是否仍合边界。"
+  };
+}
+
+function advanceKlineTrainingRuntime(runtime = {}) {
+  if (runtime.lockedUntilDecision || runtime.mustDecide) {
+    return Object.assign({}, runtime, {
+      blockedReason: "decision_required",
+      mustDecide: true,
+      lockedUntilDecision: true
+    });
+  }
+  const total = Number(runtime.totalCandles || (runtime.candles || []).length || 0);
+  const nextIndex = Math.min(Math.max(0, total - 1), Number(runtime.currentIndex || 0) + 1);
+  return buildRuntimeState(runtime, {
+    currentIndex: nextIndex,
+    blockedReason: ""
+  });
+}
+
+function recordKlineTrainingDecision(runtime = {}, decision = {}) {
+  const activeCandle = runtime.activeCandle || (runtime.candles || [])[runtime.currentIndex] || {};
+  const safeDecision = {
+    id: `decision-${runtime.trainingSessionId || "local"}-${runtime.currentIndex}-${(runtime.decisionTimeline || []).length + 1}`,
+    sessionId: runtime.trainingSessionId || "",
+    index: Number(runtime.currentIndex || 0),
+    action: String(decision.action || "HOLD").toUpperCase(),
+    price: Number(activeCandle.close || 0),
+    selectedCandleKey: cleanEventText(decision.selectedCandleKey || activeCandle.key || "", 80),
+    reactionDirection: cleanEventText(decision.reactionDirection, 40),
+    firstReaction: cleanEventText(decision.firstReaction, 160),
+    boundaryChoice: cleanEventText(decision.boundaryChoice, 120),
+    createdAt: decision.createdAt || Date.now()
+  };
+  const emotionBadge = buildEmotionBadge(safeDecision);
+  const riskHint = buildRiskHint(emotionBadge);
+  const coachHint = buildCoachHint(safeDecision, emotionBadge);
+  return buildRuntimeState(runtime, {
+    decisionTimeline: (runtime.decisionTimeline || []).concat([safeDecision]),
+    emotionBadges: emotionBadge ? (runtime.emotionBadges || []).concat([emotionBadge]) : (runtime.emotionBadges || []),
+    riskHints: (runtime.riskHints || []).concat([riskHint]),
+    coachHints: (runtime.coachHints || []).concat([coachHint]),
+    lastDecisionIndex: Number(runtime.currentIndex || 0),
+    mustDecide: false,
+    lockedUntilDecision: false,
+    blockedReason: ""
+  });
+}
+
 function buildKlineMindSession({
   assessment = null,
   trainingDay = null,
@@ -707,7 +847,19 @@ function buildKlineMindRecord(input = {}, session = {}) {
     completed: !!(firstReaction && boundaryChoice && insightLine),
     updatedAt: Date.now()
   };
-  return Object.assign({}, record, {
+  const extension = {};
+  [
+    "trainingSessionId",
+    "simulationMode",
+    "sliceSeed",
+    "decisionTimeline",
+    "emotionBadges",
+    "riskHints",
+    "coachHints"
+  ].forEach((key) => {
+    if (input[key] !== undefined) extension[key] = input[key];
+  });
+  return Object.assign({}, record, extension, {
     score: calculateKlineMindScore(record)
   });
 }
@@ -730,6 +882,9 @@ module.exports = {
   getNextKlineMindSliceSeed,
   getMarketConfig,
   normalizeHistoryCandles,
+  startKlineTrainingRuntime,
+  advanceKlineTrainingRuntime,
+  recordKlineTrainingDecision,
   buildKlineMindSession,
   buildKlineMindRecord,
   buildOneThoughtEvent,

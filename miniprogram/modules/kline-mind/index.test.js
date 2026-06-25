@@ -11,7 +11,10 @@ const {
   KLINE_TRAINING_METHODS,
   normalizeHistoryCandles,
   getNextKlineMindSliceSeed,
-  getPersonalityKlineDrill
+  getPersonalityKlineDrill,
+  startKlineTrainingRuntime,
+  advanceKlineTrainingRuntime,
+  recordKlineTrainingDecision
 } = require("./index");
 
 assert.strictEqual(SIX_GATE_MAP.length, 6);
@@ -155,6 +158,67 @@ assert.strictEqual(demoRecord.klineSource, "local_demo");
 assert.strictEqual(demoRecord.sliceSource, "local_demo");
 assert.strictEqual(demoRecord.serverSliceStatus, "network_error");
 assert.strictEqual(demoRecord.serverSliceError, "K线服务暂不可用");
+
+const runtime = startKlineTrainingRuntime(demoSession, {
+  trainingSessionId: "runtime-001",
+  decisionInterval: 3,
+  sliceSeed: "scene-fast-001"
+});
+assert.strictEqual(runtime.trainingSessionId, "runtime-001");
+assert.strictEqual(runtime.simulationMode, "blind_step_replay");
+assert.strictEqual(runtime.currentIndex, 0);
+assert.strictEqual(runtime.visibleCandles.length, 1);
+assert.strictEqual(runtime.mustDecide, false);
+
+const runtimeStep1 = advanceKlineTrainingRuntime(runtime);
+const runtimeStep2 = advanceKlineTrainingRuntime(runtimeStep1);
+const runtimeStep3 = advanceKlineTrainingRuntime(runtimeStep2);
+assert.strictEqual(runtimeStep3.currentIndex, 3);
+assert.strictEqual(runtimeStep3.mustDecide, true);
+assert.strictEqual(runtimeStep3.lockedUntilDecision, true);
+
+const blockedRuntime = advanceKlineTrainingRuntime(runtimeStep3);
+assert.strictEqual(blockedRuntime.currentIndex, 3);
+assert.strictEqual(blockedRuntime.blockedReason, "decision_required");
+
+const decidedRuntime = recordKlineTrainingDecision(runtimeStep3, {
+  action: "BUY",
+  selectedCandleKey: runtimeStep3.activeCandle.key,
+  reactionDirection: "act",
+  firstReaction: "想追上去，怕错过这一根。",
+  boundaryChoice: "停十秒"
+});
+assert.strictEqual(decidedRuntime.mustDecide, false);
+assert.strictEqual(decidedRuntime.lockedUntilDecision, false);
+assert.strictEqual(decidedRuntime.decisionTimeline.length, 1);
+assert.strictEqual(decidedRuntime.decisionTimeline[0].action, "BUY");
+assert.deepStrictEqual(decidedRuntime.emotionBadges.map((item) => item.type), ["GREED"]);
+assert.ok(decidedRuntime.riskHints[0].text.includes("追"));
+assert.ok(decidedRuntime.coachHints[0].text.includes("先停"));
+
+const runtimeStep4 = advanceKlineTrainingRuntime(decidedRuntime);
+assert.strictEqual(runtimeStep4.currentIndex, 4);
+
+const runtimeRecord = buildKlineMindRecord({
+  selectedCandleKey: demoSession.selectedCandleKey,
+  firstReaction: "急躁",
+  boundaryChoice: "停十秒",
+  insightLine: "我看见自己想追上去，但先停了一下。",
+  trainingSessionId: decidedRuntime.trainingSessionId,
+  simulationMode: decidedRuntime.simulationMode,
+  sliceSeed: decidedRuntime.sliceSeed,
+  decisionTimeline: decidedRuntime.decisionTimeline,
+  emotionBadges: decidedRuntime.emotionBadges,
+  riskHints: decidedRuntime.riskHints,
+  coachHints: decidedRuntime.coachHints
+}, demoSession);
+assert.strictEqual(runtimeRecord.trainingSessionId, "runtime-001");
+assert.strictEqual(runtimeRecord.simulationMode, "blind_step_replay");
+assert.strictEqual(runtimeRecord.sliceSeed, "scene-fast-001");
+assert.strictEqual(runtimeRecord.decisionTimeline.length, 1);
+assert.strictEqual(runtimeRecord.firstReaction, "急躁");
+assert.strictEqual(runtimeRecord.boundaryChoice, "停十秒");
+assert.strictEqual(runtimeRecord.insightLine, "我看见自己想追上去，但先停了一下。");
 
 const oneThoughtEvent = buildOneThoughtEvent(Object.assign({}, demoRecord, {
   localRecordId: "kline-mind-local-001",
