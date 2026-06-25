@@ -222,11 +222,6 @@
     <view class="practice-card card">
       <view class="section-kicker">心念记录</view>
       <view class="practice-title">这一刻，先看见自己</view>
-      <view class="practice-flow">
-        <text>一念</text>
-        <text>一界</text>
-        <text>一句</text>
-      </view>
 
       <view class="first-thought-focus">
         <view class="field-block">

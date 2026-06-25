@@ -204,6 +204,7 @@ assert.equal(klineMindJs.includes("模拟卖出"), false, "kline decision button
 assert.equal(klineMindJs.includes("已记录模拟动作"), false, "kline action toast should not repeat simulation wording");
 assert.equal(sliceBetween(klineMindWxml, 'class="decision-actions"', 'class="runtime-next').includes("{{item.detail}}"), false, "kline decision buttons should stay compact without secondary detail rows");
 assert.equal(klineMindWxml.includes("训练方法"), false, "kline page should not show a separate training-method explainer entry");
+assert.equal(klineMindWxml.includes('class="practice-flow"'), false, "kline record flow should not look like three inactive navigation pills");
 assert.ok(klineMindWxml.includes("横屏训练更稳"), "kline chart should recommend landscape practice for dense K-line training");
 assert.ok(klineMindJson.includes('"pageOrientation": "auto"'), "kline mind should allow landscape practice on real devices");
 assert.ok(klineMindWxml.includes('class="sub-indicator-board'), "kline indicator layer should render below the chart");
