@@ -158,6 +158,13 @@ const INDICATOR_CATALOG = [
   { key: "vol", label: "VOL", name: "量能", trainingUse: "看放量反应" }
 ];
 
+const INDICATOR_PANEL_OPTIONS = [
+  { key: "hide", label: "隐藏" },
+  { key: "vol", label: "VOL" },
+  { key: "macd", label: "MACD" },
+  { key: "boll", label: "BOLL" }
+];
+
 const CHART_GEOMETRY = {
   wide: { candleWidth: 8, gap: 6, paddingX: 18, paddingTop: 24 },
   standard: { candleWidth: 12, gap: 6, paddingX: 18, paddingTop: 24 },
@@ -595,6 +602,124 @@ function buildIndicatorOverlay(candles = [], zoomKey = "wide") {
   };
 }
 
+function getIndicatorPanelMeta(key = "vol") {
+  return INDICATOR_PANEL_OPTIONS.find((item) => item.key === key) || INDICATOR_PANEL_OPTIONS[1];
+}
+
+function emaSeries(values = [], period) {
+  const k = 2 / (period + 1);
+  let previous = null;
+  return values.map((value) => {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return null;
+    previous = previous === null ? number : number * k + previous * (1 - k);
+    return previous;
+  });
+}
+
+function buildPanelLineSegments(points = [], field, zoomKey = "wide") {
+  const geometry = getChartGeometry(zoomKey);
+  const segments = [];
+  for (let index = 0; index < points.length - 1; index += 1) {
+    const currentRawY = points[index][field];
+    const nextRawY = points[index + 1][field];
+    if (currentRawY === null || currentRawY === undefined || nextRawY === null || nextRawY === undefined) continue;
+    const currentY = Number(currentRawY);
+    const nextY = Number(nextRawY);
+    if (!Number.isFinite(currentY) || !Number.isFinite(nextY)) continue;
+    const x1 = geometry.paddingX + index * (geometry.candleWidth + geometry.gap) + geometry.candleWidth / 2;
+    const x2 = geometry.paddingX + (index + 1) * (geometry.candleWidth + geometry.gap) + geometry.candleWidth / 2;
+    const y1 = currentY;
+    const y2 = nextY;
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const width = Math.sqrt(dx * dx + dy * dy);
+    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+    segments.push({
+      key: `${field}-${index}`,
+      style: `left: ${roundMetric(x1, 1)}rpx; top: ${roundMetric(y1, 1)}rpx; width: ${roundMetric(width, 1)}rpx; transform: rotate(${roundMetric(angle, 2)}deg);`
+    });
+  }
+  return segments;
+}
+
+function buildVolPanel(candles = []) {
+  const maxVolume = Math.max.apply(null, candles.map((item) => Number(item.volume || 0)).concat([1]));
+  return candles.map((item, index) => ({
+    key: `vol-${item.key || index}`,
+    tone: item.tone || "flat",
+    barStyle: `height: ${Math.max(2, Math.round((Number(item.volume || 0) / maxVolume) * 76))}rpx;`
+  }));
+}
+
+function buildMacdPanel(candles = [], zoomKey = "wide") {
+  const closes = candles.map((item) => Number(item.close || 0));
+  const ema12 = emaSeries(closes, 12);
+  const ema26 = emaSeries(closes, 26);
+  const dif = closes.map((_, index) => Number(ema12[index]) - Number(ema26[index]));
+  const dea = emaSeries(dif, 9);
+  const hist = dif.map((value, index) => value - Number(dea[index] || 0));
+  const maxAbs = Math.max.apply(null, hist.concat(dif).concat(dea).map((value) => Math.abs(Number(value || 0))).concat([0.0001]));
+  const mid = 46;
+  const points = candles.map((item, index) => {
+    const histogram = Number(hist[index] || 0);
+    const barHeight = Math.max(2, Math.round(Math.abs(histogram) / maxAbs * 42));
+    return {
+      key: `macd-${item.key || index}`,
+      tone: histogram >= 0 ? "gold" : "jade",
+      barStyle: `height: ${barHeight}rpx; top: ${histogram >= 0 ? mid - barHeight : mid}rpx;`,
+      difY: mid - Number(dif[index] || 0) / maxAbs * 38,
+      deaY: mid - Number(dea[index] || 0) / maxAbs * 38
+    };
+  });
+  return {
+    items: points,
+    lines: {
+      dif: buildPanelLineSegments(points, "difY", zoomKey),
+      dea: buildPanelLineSegments(points, "deaY", zoomKey)
+    }
+  };
+}
+
+function buildBollPanel(candles = [], zoomKey = "wide") {
+  const points = candles.map((item, index) => ({
+    key: `boll-${item.key || index}`,
+    upperY: Number.isFinite(Number(item.bollUpperY)) ? Math.max(6, Math.min(86, Number(item.bollUpperY) / 2.7)) : null,
+    lowerY: Number.isFinite(Number(item.bollLowerY)) ? Math.max(6, Math.min(86, Number(item.bollLowerY) / 2.7)) : null,
+    midY: Number.isFinite(Number(item.ma20Y)) ? Math.max(6, Math.min(86, Number(item.ma20Y) / 2.7)) : null
+  }));
+  return {
+    items: [],
+    lines: {
+      upper: buildPanelLineSegments(points, "upperY", zoomKey),
+      lower: buildPanelLineSegments(points, "lowerY", zoomKey),
+      mid: buildPanelLineSegments(points, "midY", zoomKey)
+    }
+  };
+}
+
+function buildIndicatorPanel(candles = [], key = "vol", zoomKey = "wide") {
+  const meta = getIndicatorPanelMeta(key);
+  if (meta.key === "hide") {
+    return { type: "hide", label: meta.label, visible: false, items: [], lines: {} };
+  }
+  if (meta.key === "macd") {
+    const macd = buildMacdPanel(candles, zoomKey);
+    return { type: "macd", label: meta.label, visible: true, items: macd.items, lines: macd.lines };
+  }
+  if (meta.key === "boll") {
+    const boll = buildBollPanel(candles, zoomKey);
+    return { type: "boll", label: meta.label, visible: true, items: boll.items, lines: boll.lines };
+  }
+  return {
+    type: "vol",
+    label: meta.label,
+    visible: true,
+    items: buildVolPanel(candles),
+    lines: {}
+  };
+}
+
 function getHistorySlice(historyCache = {}, marketKey, timeframeKey) {
   const marketCache = historyCache[marketKey] || {};
   return marketCache[timeframeKey] || null;
@@ -741,6 +866,7 @@ function buildRuntimeState(baseRuntime = {}, patch = {}) {
     activeCandle,
     chartBoardStyle: `width: ${getChartBoardWidth(visibleCandles.length, runtime.chartZoomKey || "wide")}rpx;`,
     indicatorOverlay: buildIndicatorOverlay(visibleCandles, runtime.chartZoomKey || "wide"),
+    indicatorPanel: buildIndicatorPanel(visibleCandles, runtime.indicatorPanelKey || "vol", runtime.chartZoomKey || "wide"),
     positionState,
     sessionMetrics: buildSessionMetrics(positionState, runtime.decisionTimeline || []),
     mustDecide,
@@ -758,6 +884,7 @@ function startKlineTrainingRuntime(session = {}, options = {}) {
     marketKey: ((session.market || {}).key) || "",
     timeframeKey: session.timeframeKey || "",
     chartZoomKey: session.chartZoomKey || "wide",
+    indicatorPanelKey: options.initialIndicatorKey || session.defaultIndicatorKey || "vol",
     decisionInterval: normalizeDecisionInterval(options.decisionInterval),
     currentIndex: Math.max(0, initialVisibleCount - 1),
     totalCandles: candles.length,
@@ -771,6 +898,12 @@ function startKlineTrainingRuntime(session = {}, options = {}) {
     lastDecisionIndex: -1,
     lockedUntilDecision: false,
     blockedReason: ""
+  });
+}
+
+function setKlineRuntimeIndicator(runtime = {}, indicatorKey = "vol") {
+  return buildRuntimeState(runtime, {
+    indicatorPanelKey: getIndicatorPanelMeta(indicatorKey).key
   });
 }
 
@@ -928,6 +1061,8 @@ function buildKlineMindSession({
     chartZoomOptions: buildChartZoomOptions(chartZoomMeta.key),
     chartBoardStyle: `width: ${chartBoardWidth}rpx;`,
     indicatorOverlay,
+    defaultIndicatorKey: "vol",
+    indicatorPanelOptions: INDICATOR_PANEL_OPTIONS,
     chartOrientationHint: "横屏训练更稳，适合看更多 K 线；竖屏可放大少量细看。",
     indicatorCatalog: INDICATOR_CATALOG,
     historySlice: historySlice || null,
@@ -1121,6 +1256,7 @@ module.exports = {
   startKlineTrainingRuntime,
   advanceKlineTrainingRuntime,
   recordKlineTrainingDecision,
+  setKlineRuntimeIndicator,
   buildKlineTrainingRecordPatch,
   buildKlineMindSession,
   buildKlineMindRecord,

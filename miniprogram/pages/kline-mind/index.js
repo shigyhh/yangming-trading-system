@@ -33,6 +33,7 @@ const {
   startKlineTrainingRuntime,
   advanceKlineTrainingRuntime,
   recordKlineTrainingDecision,
+  setKlineRuntimeIndicator,
   buildKlineTrainingRecordPatch
 } = require("../../modules/kline-mind/index");
 const {
@@ -142,6 +143,7 @@ function buildRuntimeView(runtime = null) {
       pnlText: "0.00%",
       drawdownText: "0.00%",
       chartBoardStyle: "",
+      indicatorPanel: { type: "vol", label: "VOL", visible: true, items: [], lines: {} },
       indicatorOverlay: {
         ma5: [],
         ma10: [],
@@ -179,6 +181,7 @@ function buildRuntimeView(runtime = null) {
     pnlText: `${Number(metrics.totalPnl || 0).toFixed(2)}%`,
     drawdownText: `${Number(metrics.maxDrawdown || 0).toFixed(2)}%`,
     chartBoardStyle: runtime.chartBoardStyle || "",
+    indicatorPanel: runtime.indicatorPanel || { type: "vol", label: "VOL", visible: true, items: [], lines: {} },
     indicatorOverlay: runtime.indicatorOverlay || {
       ma5: [],
       ma10: [],
@@ -251,6 +254,8 @@ Page({
     showSelectors: false,
     showGuide: false,
     showBodySignal: false,
+    showIndicatorPicker: false,
+    selectedIndicatorKey: "vol",
     tradeReviewUrl: ""
   },
 
@@ -311,6 +316,7 @@ Page({
       trainingSessionId: `kline-session-${todayKey()}-${Date.now()}`,
       decisionInterval: 5,
       initialVisibleCount: getInitialVisibleCount(session),
+      initialIndicatorKey: this.data.selectedIndicatorKey || session.defaultIndicatorKey || "vol",
       sliceSeed: record.scenarioId || ((session.historySlice || {}).sliceSeed) || ((session.historySlice || {}).seed) || ""
     });
   },
@@ -400,6 +406,23 @@ Page({
       session,
       trainingRuntime,
       runtimeView: buildRuntimeView(trainingRuntime)
+    });
+  },
+
+  toggleIndicatorPicker() {
+    this.setData({ showIndicatorPicker: !this.data.showIndicatorPicker });
+  },
+
+  selectIndicator(e) {
+    const indicatorKey = e.currentTarget.dataset.indicator || "vol";
+    const runtime = this.data.trainingRuntime
+      ? setKlineRuntimeIndicator(this.data.trainingRuntime, indicatorKey)
+      : null;
+    this.setData({
+      selectedIndicatorKey: indicatorKey,
+      showIndicatorPicker: false,
+      trainingRuntime: runtime,
+      runtimeView: buildRuntimeView(runtime)
     });
   },
 

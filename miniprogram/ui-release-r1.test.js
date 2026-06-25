@@ -189,7 +189,7 @@ assert.ok(klineMindWxml.includes('scroll-view class="wave-board-scroll" scroll-x
 assert.ok(klineMindWxml.includes('class="chart-zoom-rail"'), "kline chart should expose zoom controls for more or fewer candles per screen");
 assert.ok(klineMindWxml.includes("横屏训练更稳"), "kline chart should recommend landscape practice for dense K-line training");
 assert.ok(klineMindJson.includes('"pageOrientation": "auto"'), "kline mind should allow landscape practice on real devices");
-assert.ok(klineMindWxml.includes('class="indicator-layer"'), "kline indicator layer should render below the chart");
+assert.ok(klineMindWxml.includes('class="sub-indicator-board'), "kline indicator layer should render below the chart");
 assert.deepStrictEqual(demoSession.indicatorCatalog.map((item) => item.label), ["MA", "MACD", "BOLL", "VOL"]);
 assertRuleHas(klineMindWxss, ".slice-switch", ["flex-wrap: wrap"], "kline slice controls should wrap instead of overflowing on narrow screens");
 assertRuleHas(klineMindWxss, ".slice-switch > .slice-actions", ["grid-template-columns: repeat(2, minmax(0, 1fr))", "width: 100%"], "kline slice action buttons should stay inside the card");

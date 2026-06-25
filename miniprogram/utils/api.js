@@ -289,10 +289,10 @@ function getClientId() {
   return clientId;
 }
 
-function request({ path, method = "GET", data = null, token = "" }) {
-  const apiBase = getApiBase();
+function request({ path, method = "GET", data = null, token = "", apiBaseOverride = "", allowUnconfigured = false }) {
+  const apiBase = apiBaseOverride || getApiBase();
   return new Promise((resolve, reject) => {
-    if (!hasConfiguredApiBase()) {
+    if (!allowUnconfigured && !hasConfiguredApiBase()) {
       reject(new Error("连接未完成"));
       return;
     }
@@ -776,7 +776,12 @@ async function fetchKlineTrainingSlice({
     seed ? `seed=${encodeURIComponent(seed)}` : ""
   ].filter(Boolean).join("&");
   try {
-    const result = await request({ path: `/api/v1/kline-history/slice?${query}` });
+    const useProductionFallback = !hasConfiguredApiBase();
+    const result = await request({
+      path: `/api/v1/kline-history/slice?${query}`,
+      apiBaseOverride: useProductionFallback ? PRODUCTION_API_BASE : "",
+      allowUnconfigured: useProductionFallback
+    });
     return normalizeKlineTrainingSliceResult(result, { market, timeframe, symbol });
   } catch (error) {
     saveConnectionFallback(error, "历史数据连接未完成");

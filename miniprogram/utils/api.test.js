@@ -171,6 +171,35 @@ async function runKlineSliceTests() {
   await fetchKlineTrainingSlice({ marketKey: "cn", timeframeKey: "1d" });
   assert.ok(requestedUrl.includes("window=150"));
 
+  resetStorage();
+  delete storage.zhixing_api_base;
+  delete storage.zhixing_api_base_enabled;
+  envVersion = "develop";
+  global.wx.request = (options) => {
+    requestedUrl = options.url;
+    options.success({
+      statusCode: 200,
+      data: {
+        ok: true,
+        slice: {
+          source: "server_cache",
+          candles: Array.from({ length: 6 }, (_, index) => ({
+            time: `2026-04-0${index + 1}`,
+            open: 1,
+            high: 2,
+            low: 0.8,
+            close: 1.5
+          }))
+        }
+      }
+    });
+  };
+  const developFallbackSlice = await fetchKlineTrainingSlice({ marketKey: "cn", timeframeKey: "1d" });
+  assert.ok(requestedUrl.startsWith("https://xxjyxt.com/api/v1/kline-history/slice?"));
+  assert.strictEqual(developFallbackSlice.ok, true);
+
+  resetStorage();
+  envVersion = "release";
   global.wx.request = (options) => {
     options.success({ statusCode: 200, data: { ok: true, slice: { source: "server_cache", candles: [] } } });
   };
