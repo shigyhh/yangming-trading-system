@@ -400,8 +400,10 @@
   z-index: 1;
   width: 100%;
   margin-top: 24rpx;
-  border-radius: 24rpx;
+  border-radius: 12rpx;
   overflow: hidden;
+  border: 1rpx solid rgba(244, 235, 221, 0.08);
+  background: #030504;
 }
 
 .wave-board {
@@ -413,25 +415,11 @@
   justify-content: flex-start;
   gap: 6rpx;
   overflow: hidden;
-  border-radius: 24rpx;
   background:
-    linear-gradient(90deg, rgba(244, 235, 221, 0.035) 1rpx, transparent 1rpx),
-    linear-gradient(180deg, rgba(244, 235, 221, 0.04) 1rpx, transparent 1rpx),
-    linear-gradient(180deg, rgba(244, 235, 221, 0.045), rgba(244, 235, 221, 0.018)),
-    rgba(4, 8, 7, 0.46);
-  background-size: 46rpx 100%, 100% 56rpx, 100% 100%, 100% 100%;
-}
-
-.wave-board.zoom-wide {
-  min-width: 1680rpx;
-}
-
-.wave-board.zoom-standard {
-  min-width: 1520rpx;
-}
-
-.wave-board.zoom-focus {
-  min-width: 1340rpx;
+    linear-gradient(90deg, rgba(50, 112, 96, 0.14) 1rpx, transparent 1rpx),
+    linear-gradient(180deg, rgba(128, 36, 28, 0.24) 1rpx, transparent 1rpx),
+    linear-gradient(180deg, rgba(4, 9, 8, 0.96), rgba(0, 0, 0, 0.98));
+  background-size: 42rpx 100%, 100% 42rpx, 100% 100%;
 }
 
 .wave-board::before {
@@ -441,11 +429,40 @@
   right: 22rpx;
   top: 50%;
   height: 1rpx;
-  background: rgba(216, 183, 111, 0.12);
+  background: rgba(160, 34, 30, 0.22);
+}
+
+.indicator-lines {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.indicator-segment {
+  position: absolute;
+  height: 2rpx;
+  transform-origin: 0 50%;
+  opacity: 0.9;
+}
+
+.indicator-segment.ma5 {
+  background: rgba(235, 217, 78, 0.88);
+}
+
+.indicator-segment.ma10 {
+  background: rgba(190, 76, 215, 0.82);
+}
+
+.indicator-segment.boll {
+  height: 1rpx;
+  opacity: 0.72;
+  background: rgba(58, 210, 105, 0.78);
 }
 
 .mind-candle {
   position: relative;
+  z-index: 2;
   min-width: 0;
   flex: 0 0 8rpx;
   height: 286rpx;
@@ -474,7 +491,7 @@
   width: 2rpx;
   transform: translateX(-50%);
   border-radius: 0;
-  background: rgba(244, 235, 221, 0.22);
+  background: rgba(214, 224, 218, 0.72);
 }
 
 .mind-candle .body {
@@ -484,8 +501,8 @@
   min-height: 8rpx;
   transform: translateX(-50%);
   border-radius: 1rpx;
-  background: rgba(244, 235, 221, 0.2);
-  box-shadow: 0 0 10rpx rgba(244, 235, 221, 0.06);
+  background: rgba(214, 224, 218, 0.72);
+  box-shadow: none;
 }
 
 .mind-candle .volume {
@@ -495,7 +512,7 @@
   width: 7rpx;
   transform: translateX(-50%);
   border-radius: 1rpx 1rpx 0 0;
-  background: rgba(244, 235, 221, 0.12);
+  background: rgba(214, 224, 218, 0.24);
 }
 
 .wave-board.zoom-standard .mind-candle .body,
@@ -512,31 +529,31 @@
   position: absolute;
   z-index: 3;
   left: 50%;
-  top: 12rpx;
-  width: 40rpx;
-  height: 40rpx;
+  top: 2rpx;
+  width: 18rpx;
+  height: 18rpx;
   display: grid;
   place-items: center;
   transform: translateX(-50%);
-  border-radius: 50%;
-  background: rgba(216, 183, 111, 0.22);
-  color: rgba(244, 235, 221, 0.54);
-  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", serif;
-  font-size: 23rpx;
+  border-radius: 2rpx;
+  background: rgba(216, 183, 111, 0.18);
+  color: rgba(216, 183, 111, 0.82);
+  font-size: 13rpx;
+  line-height: 1;
 }
 
 .mind-candle.gold .wick,
 .mind-candle.gold .body,
 .mind-candle.gold .volume {
-  background: rgba(216, 183, 111, 0.72);
-  box-shadow: 0 0 28rpx rgba(216, 183, 111, 0.18);
+  background: rgba(225, 62, 56, 0.92);
+  box-shadow: none;
 }
 
 .mind-candle.jade .wick,
 .mind-candle.jade .body,
 .mind-candle.jade .volume {
-  background: rgba(95, 132, 117, 0.76);
-  box-shadow: 0 0 24rpx rgba(95, 132, 117, 0.16);
+  background: rgba(54, 214, 204, 0.9);
+  box-shadow: none;
 }
 
 .mind-candle.ash .wick,
@@ -548,7 +565,7 @@
 .mind-candle.flat .wick,
 .mind-candle.flat .body,
 .mind-candle.flat .volume {
-  background: rgba(244, 235, 221, 0.24);
+  background: rgba(214, 224, 218, 0.54);
 }
 
 .mind-candle.focus text,
@@ -559,12 +576,12 @@
 .mind-candle.selected .body {
   width: 14rpx;
   box-shadow:
-    0 0 0 1rpx rgba(255, 246, 230, 0.18),
-    0 0 34rpx rgba(216, 183, 111, 0.28);
+    0 0 0 1rpx rgba(255, 223, 117, 0.72),
+    0 0 0 3rpx rgba(255, 223, 117, 0.14);
 }
 
 .mind-candle.selected {
-  background: linear-gradient(180deg, rgba(216, 183, 111, 0.1), transparent 70%);
+  background: linear-gradient(180deg, rgba(216, 183, 111, 0.08), transparent 70%);
 }
 
 .history-empty {

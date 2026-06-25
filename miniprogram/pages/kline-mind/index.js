@@ -141,6 +141,13 @@ function buildRuntimeView(runtime = null) {
       positionText: "空仓",
       pnlText: "0.00%",
       drawdownText: "0.00%",
+      chartBoardStyle: "",
+      indicatorOverlay: {
+        ma5: [],
+        ma10: [],
+        bollUpper: [],
+        bollLower: []
+      },
       mustDecide: false,
       isComplete: false
     };
@@ -171,6 +178,13 @@ function buildRuntimeView(runtime = null) {
     positionText: metrics.positionSize ? "模拟持仓" : "空仓",
     pnlText: `${Number(metrics.totalPnl || 0).toFixed(2)}%`,
     drawdownText: `${Number(metrics.maxDrawdown || 0).toFixed(2)}%`,
+    chartBoardStyle: runtime.chartBoardStyle || "",
+    indicatorOverlay: runtime.indicatorOverlay || {
+      ma5: [],
+      ma10: [],
+      bollUpper: [],
+      bollLower: []
+    },
     mustDecide: !!runtime.mustDecide,
     isComplete
   };

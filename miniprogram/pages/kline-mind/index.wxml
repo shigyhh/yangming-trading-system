@@ -99,7 +99,13 @@
       </view>
 
       <scroll-view class="wave-board-scroll" scroll-x="true" wx:if="{{session.hasHistoricalData}}" enhanced="true" show-scrollbar="{{false}}">
-        <view class="wave-board zoom-{{session.chartZoomKey}}">
+        <view class="wave-board zoom-{{session.chartZoomKey}}" style="{{runtimeView.chartBoardStyle}}">
+          <view class="indicator-lines">
+            <view wx:for="{{runtimeView.indicatorOverlay.bollUpper}}" wx:key="key" class="indicator-segment boll" style="{{item.style}}"></view>
+            <view wx:for="{{runtimeView.indicatorOverlay.bollLower}}" wx:key="key" class="indicator-segment boll" style="{{item.style}}"></view>
+            <view wx:for="{{runtimeView.indicatorOverlay.ma10}}" wx:key="key" class="indicator-segment ma10" style="{{item.style}}"></view>
+            <view wx:for="{{runtimeView.indicatorOverlay.ma5}}" wx:key="key" class="indicator-segment ma5" style="{{item.style}}"></view>
+          </view>
           <button
             wx:for="{{runtimeView.visibleCandles}}"
             wx:key="key"

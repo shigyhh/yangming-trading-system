@@ -120,6 +120,12 @@ assert.strictEqual(defaultLongSession.chartZoomKey, "wide");
 assert.strictEqual(defaultLongSession.chartWindowSize, 150);
 assert.strictEqual(defaultLongSession.candles.length, 150);
 assert.ok(defaultLongSession.chartZoomOptions.find((item) => item.key === "wide").hint.includes("150"));
+assert.ok(defaultLongSession.chartBoardStyle.includes("width:"));
+assert.ok(defaultLongSession.indicatorOverlay.ma5.length > 0);
+assert.ok(defaultLongSession.indicatorOverlay.ma10.length > 0);
+assert.ok(defaultLongSession.indicatorOverlay.bollUpper.length > 0);
+assert.ok(defaultLongSession.indicatorOverlay.bollLower.length > 0);
+assert.strictEqual(defaultLongSession.candles[4].ma5Y !== null, true);
 
 const sparseSession = buildKlineMindSession({
   record: {
@@ -214,6 +220,9 @@ const warmupRuntime = startKlineTrainingRuntime(buildKlineMindSession({
 assert.strictEqual(warmupRuntime.currentIndex, 7);
 assert.strictEqual(warmupRuntime.visibleCandles.length, 8);
 assert.strictEqual(warmupRuntime.activeCandle.key, warmupRuntime.visibleCandles[7].key);
+assert.ok(warmupRuntime.chartBoardStyle.includes("width:"));
+assert.ok(warmupRuntime.indicatorOverlay.ma5.length > 0);
+assert.strictEqual(warmupRuntime.indicatorOverlay.bollUpper.length, 0);
 assert.strictEqual(warmupRuntime.mustDecide, false);
 
 const runtimeStep1 = advanceKlineTrainingRuntime(runtime);

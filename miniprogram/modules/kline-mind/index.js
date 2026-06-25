@@ -158,6 +158,12 @@ const INDICATOR_CATALOG = [
   { key: "vol", label: "VOL", name: "量能", trainingUse: "看放量反应" }
 ];
 
+const CHART_GEOMETRY = {
+  wide: { candleWidth: 8, gap: 6, paddingX: 18, paddingTop: 24 },
+  standard: { candleWidth: 12, gap: 6, paddingX: 18, paddingTop: 24 },
+  focus: { candleWidth: 20, gap: 6, paddingX: 18, paddingTop: 24 }
+};
+
 const KLINE_TRAINING_METHODS = [
   {
     key: "firecracker",
@@ -428,6 +434,22 @@ function normalizeWindowSize(windowSize) {
   return Math.max(MIN_VISIBLE_CANDLES, Math.min(MAX_VISIBLE_CANDLES, Math.round(value)));
 }
 
+function average(values = []) {
+  if (!values.length) return null;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function movingAverage(values = [], index, period) {
+  if (index < period - 1) return null;
+  return average(values.slice(index - period + 1, index + 1));
+}
+
+function standardDeviation(values = [], mean) {
+  if (!values.length || mean === null) return null;
+  const variance = values.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) / values.length;
+  return Math.sqrt(variance);
+}
+
 function pickVisibleHistoryWindow(candles, windowSize = DEFAULT_VISIBLE_CANDLES) {
   const safeWindowSize = normalizeWindowSize(windowSize);
   if (candles.length < MIN_VISIBLE_CANDLES) return [];
@@ -455,10 +477,34 @@ function normalizeHistoryCandles(historySlice = {}, options = {}) {
   const highs = candles.map((item) => Number(item.high)).filter(Number.isFinite);
   const lows = candles.map((item) => Number(item.low)).filter(Number.isFinite);
   const volumes = candles.map((item) => Number(item.volume || 0)).filter(Number.isFinite);
-  const maxHigh = Math.max.apply(null, highs);
-  const minLow = Math.min.apply(null, lows);
+  const closes = candles.map((item) => Number(item.close));
+  const indicatorValues = candles.map((item, index) => {
+    const ma5 = movingAverage(closes, index, 5);
+    const ma10 = movingAverage(closes, index, 10);
+    const ma20 = movingAverage(closes, index, 20);
+    const bollWindow = index >= 19 ? closes.slice(index - 19, index + 1) : [];
+    const deviation = ma20 === null ? null : standardDeviation(bollWindow, ma20);
+    return {
+      ma5,
+      ma10,
+      ma20,
+      bollUpper: ma20 === null || deviation === null ? null : ma20 + deviation * 2,
+      bollLower: ma20 === null || deviation === null ? null : ma20 - deviation * 2
+    };
+  });
+  const overlayValues = indicatorValues.reduce((items, item) => {
+    ["ma5", "ma10", "ma20", "bollUpper", "bollLower"].forEach((key) => {
+      if (Number.isFinite(item[key])) items.push(item[key]);
+    });
+    return items;
+  }, []);
+  const maxHigh = Math.max.apply(null, highs.concat(overlayValues));
+  const minLow = Math.min.apply(null, lows.concat(overlayValues));
   const maxVolume = Math.max.apply(null, volumes.concat([1]));
   const range = Math.max(0.0001, maxHigh - minLow);
+  const valueToY = (value) => Number.isFinite(value)
+    ? Math.round(((maxHigh - value) / range) * 168 + 34)
+    : null;
 
   return candles.map((item, index) => {
     const open = Number(item.open);
@@ -476,6 +522,7 @@ function normalizeHistoryCandles(historySlice = {}, options = {}) {
     const volumeHeight = Math.max(8, Math.round((volume / maxVolume) * 62));
     const key = item.key || `m${index + 1}`;
     const tone = close > open ? "gold" : close < open ? "jade" : "flat";
+    const indicator = indicatorValues[index] || {};
 
     return {
       key,
@@ -491,10 +538,61 @@ function normalizeHistoryCandles(historySlice = {}, options = {}) {
       wickStyle: `height: ${Math.round(wickHeight)}rpx; top: ${Math.round(highY)}rpx;`,
       bodyStyle: `height: ${Math.round(bodyHeight)}rpx; top: ${Math.round(bodyTop)}rpx;`,
       volumeStyle: `height: ${volumeHeight}rpx;`,
+      closeY: valueToY(close),
+      ma5Y: valueToY(indicator.ma5),
+      ma10Y: valueToY(indicator.ma10),
+      ma20Y: valueToY(indicator.ma20),
+      bollUpperY: valueToY(indicator.bollUpper),
+      bollLowerY: valueToY(indicator.bollLower),
       focus: !!item.focus,
       selected: false
     };
   });
+}
+
+function getChartGeometry(zoomKey = "wide") {
+  return CHART_GEOMETRY[zoomKey] || CHART_GEOMETRY.wide;
+}
+
+function getChartBoardWidth(candleCount, zoomKey = "wide") {
+  const count = Math.max(1, Number(candleCount || 0));
+  const geometry = getChartGeometry(zoomKey);
+  return Math.round(geometry.paddingX * 2 + count * geometry.candleWidth + Math.max(0, count - 1) * geometry.gap);
+}
+
+function buildOverlaySegments(candles = [], field, zoomKey = "wide") {
+  const geometry = getChartGeometry(zoomKey);
+  const segments = [];
+  for (let index = 0; index < candles.length - 1; index += 1) {
+    const currentRawY = candles[index][field];
+    const nextRawY = candles[index + 1][field];
+    if (currentRawY === null || currentRawY === undefined || nextRawY === null || nextRawY === undefined) continue;
+    const currentY = Number(currentRawY);
+    const nextY = Number(nextRawY);
+    if (!Number.isFinite(currentY) || !Number.isFinite(nextY)) continue;
+    const x1 = geometry.paddingX + index * (geometry.candleWidth + geometry.gap) + geometry.candleWidth / 2;
+    const x2 = geometry.paddingX + (index + 1) * (geometry.candleWidth + geometry.gap) + geometry.candleWidth / 2;
+    const y1 = geometry.paddingTop + currentY;
+    const y2 = geometry.paddingTop + nextY;
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const width = Math.sqrt(dx * dx + dy * dy);
+    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+    segments.push({
+      key: `${field}-${index}`,
+      style: `left: ${roundMetric(x1, 1)}rpx; top: ${roundMetric(y1, 1)}rpx; width: ${roundMetric(width, 1)}rpx; transform: rotate(${roundMetric(angle, 2)}deg);`
+    });
+  }
+  return segments;
+}
+
+function buildIndicatorOverlay(candles = [], zoomKey = "wide") {
+  return {
+    ma5: buildOverlaySegments(candles, "ma5Y", zoomKey),
+    ma10: buildOverlaySegments(candles, "ma10Y", zoomKey),
+    bollUpper: buildOverlaySegments(candles, "bollUpperY", zoomKey),
+    bollLower: buildOverlaySegments(candles, "bollLowerY", zoomKey)
+  };
 }
 
 function getHistorySlice(historyCache = {}, marketKey, timeframeKey) {
@@ -641,6 +739,8 @@ function buildRuntimeState(baseRuntime = {}, patch = {}) {
     currentIndex: safeIndex,
     visibleCandles,
     activeCandle,
+    chartBoardStyle: `width: ${getChartBoardWidth(visibleCandles.length, runtime.chartZoomKey || "wide")}rpx;`,
+    indicatorOverlay: buildIndicatorOverlay(visibleCandles, runtime.chartZoomKey || "wide"),
     positionState,
     sessionMetrics: buildSessionMetrics(positionState, runtime.decisionTimeline || []),
     mustDecide,
@@ -806,6 +906,8 @@ function buildKlineMindSession({
   const prescription = getKlinePrescription(personalityType);
   const stageGate = getSixGate(stagePlan.stageKey);
   const candles = markSelectedCandles(rawCandles, selectedKey, scenario.focusIndex);
+  const chartBoardWidth = getChartBoardWidth(candles.length, chartZoomMeta.key);
+  const indicatorOverlay = buildIndicatorOverlay(candles, chartZoomMeta.key);
   const selectedCandleKey = selectedKey || ((candles.find((item) => item.selected) || {}).key) || "";
 
   return {
@@ -824,6 +926,8 @@ function buildKlineMindSession({
     chartZoomKey: chartZoomMeta.key,
     chartWindowSize: chartZoomMeta.windowSize,
     chartZoomOptions: buildChartZoomOptions(chartZoomMeta.key),
+    chartBoardStyle: `width: ${chartBoardWidth}rpx;`,
+    indicatorOverlay,
     chartOrientationHint: "横屏训练更稳，适合看更多 K 线；竖屏可放大少量细看。",
     indicatorCatalog: INDICATOR_CATALOG,
     historySlice: historySlice || null,
