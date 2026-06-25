@@ -354,9 +354,31 @@
 }
 
 .chart-period-rail {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10rpx;
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 6rpx;
+  border: 1rpx solid rgba(244, 235, 221, 0.1);
+  border-radius: 999rpx;
+  background: rgba(5, 9, 8, 0.28);
+}
+
+.chart-period-rail > text {
+  padding: 0 8rpx 0 10rpx;
+  color: rgba(244, 235, 221, 0.42);
+  font-size: 19rpx;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.chart-period-rail .timeframe-chip {
+  width: auto;
+  min-width: 70rpx;
+  height: 42rpx;
+  margin: 0;
+  padding: 0 16rpx;
+  font-size: 20rpx;
 }
 
 .chart-orientation-note {
@@ -440,6 +462,37 @@
     linear-gradient(180deg, rgba(128, 36, 28, 0.24) 1rpx, transparent 1rpx),
     linear-gradient(180deg, rgba(4, 9, 8, 0.96), rgba(0, 0, 0, 0.98));
   background-size: 42rpx 100%, 100% 42rpx, 100% 100%;
+}
+
+.chart-stepper {
+  position: absolute;
+  z-index: 5;
+  right: 16rpx;
+  top: 14rpx;
+  display: inline-flex;
+  overflow: hidden;
+  border: 1rpx solid rgba(244, 235, 221, 0.16);
+  border-radius: 6rpx;
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.chart-stepper button {
+  width: 54rpx;
+  height: 42rpx;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 0;
+  color: rgba(244, 235, 221, 0.82);
+  background: transparent;
+  font-size: 26rpx;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.chart-stepper button + button {
+  border-left: 1rpx solid rgba(244, 235, 221, 0.12);
 }
 
 .wave-board::before {
@@ -611,12 +664,14 @@
   padding: 0 18rpx;
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   border-top: 1rpx solid rgba(244, 235, 221, 0.08);
   background: rgba(0, 0, 0, 0.96);
 }
 
 .sub-indicator-head > button {
   height: 38rpx;
+  margin: 0;
   padding: 0 14rpx;
   display: inline-flex;
   align-items: center;
@@ -633,7 +688,8 @@
 .sub-indicator-menu {
   position: absolute;
   left: 18rpx;
-  top: 46rpx;
+  top: auto;
+  bottom: 46rpx;
   z-index: 8;
   min-width: 196rpx;
   padding: 8rpx;
@@ -904,9 +960,11 @@
 }
 
 .decision-btn {
+  width: 100%;
   min-width: 0;
   min-height: 104rpx;
-  padding: 14rpx 8rpx;
+  margin: 0;
+  padding: 14rpx 6rpx;
   display: grid;
   align-content: center;
   justify-items: center;
@@ -921,7 +979,7 @@
 
 .decision-btn text {
   color: inherit;
-  font-size: 22rpx;
+  font-size: 21rpx;
   font-weight: 900;
 }
 

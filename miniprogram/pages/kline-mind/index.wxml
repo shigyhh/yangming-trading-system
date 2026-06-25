@@ -72,6 +72,7 @@
       <view class="chart-toolbar">
         <view class="chart-orientation-note">横屏训练更稳</view>
         <view class="chart-period-rail">
+          <text>周期</text>
           <button
             wx:for="{{session.timeframeOptions}}"
             wx:key="key"
@@ -82,22 +83,15 @@
             {{item.label}}
           </button>
         </view>
-        <view class="chart-zoom-rail">
-          <button
-            wx:for="{{session.chartZoomOptions}}"
-            wx:key="key"
-            class="chart-zoom-chip {{item.selected ? 'active' : ''}}"
-            data-zoom="{{item.key}}"
-            bindtap="selectChartZoom"
-          >
-            <text>{{item.label}}</text>
-          </button>
-        </view>
       </view>
 
       <scroll-view class="wave-board-scroll" scroll-x="true" wx:if="{{session.hasHistoricalData}}" enhanced="true" show-scrollbar="{{false}}">
         <view class="chart-scroll-inner" style="{{runtimeView.chartBoardStyle}}">
           <view class="wave-board zoom-{{session.chartZoomKey}}">
+            <view class="chart-stepper">
+              <button bindtap="decreaseChartZoom">-</button>
+              <button bindtap="increaseChartZoom">+</button>
+            </view>
             <view class="indicator-lines">
               <view wx:for="{{runtimeView.indicatorOverlay.bollUpper}}" wx:key="key" class="indicator-segment boll" style="{{item.style}}"></view>
               <view wx:for="{{runtimeView.indicatorOverlay.bollLower}}" wx:key="key" class="indicator-segment boll" style="{{item.style}}"></view>

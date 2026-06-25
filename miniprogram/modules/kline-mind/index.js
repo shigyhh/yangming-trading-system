@@ -141,8 +141,8 @@ const MARKET_CATALOG = {
 
 const TIMEFRAME_CATALOG = [
   { key: "1d", label: "日线", granularity: "daily", required: true },
-  { key: "60m", label: "60分钟", granularity: "intraday", required: true },
-  { key: "30m", label: "30分钟", granularity: "intraday", required: true }
+  { key: "60m", label: "60m", granularity: "intraday", required: true },
+  { key: "30m", label: "30m", granularity: "intraday", required: true }
 ];
 
 const CHART_ZOOM_OPTIONS = [

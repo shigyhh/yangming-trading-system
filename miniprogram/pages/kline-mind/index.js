@@ -47,10 +47,12 @@ const REACTION_DIRECTIONS = [
 ];
 
 const DECISION_ACTIONS = [
-  { key: "BUY", label: "模拟买入", detail: "记录想进入的一念" },
-  { key: "SELL", label: "模拟卖出", detail: "记录想退出的一念" },
+  { key: "BUY", label: "买入", detail: "记录想进入的一念" },
+  { key: "SELL", label: "卖出", detail: "记录想退出的一念" },
   { key: "HOLD", label: "观望", detail: "先看事实不动作" }
 ];
+
+const CHART_ZOOM_ORDER = ["wide", "standard", "focus"];
 
 function inferReactionDirection(firstReaction) {
   const value = String(firstReaction || "");
@@ -397,6 +399,10 @@ Page({
 
   selectChartZoom(e) {
     const chartZoomKey = e.currentTarget.dataset.zoom;
+    this.updateChartZoom(chartZoomKey);
+  },
+
+  updateChartZoom(chartZoomKey) {
     if (!chartZoomKey) return;
     const form = Object.assign({}, this.data.form, { chartZoomKey });
     const session = this.buildSession(form);
@@ -407,6 +413,21 @@ Page({
       trainingRuntime,
       runtimeView: buildRuntimeView(trainingRuntime)
     });
+  },
+
+  decreaseChartZoom() {
+    const current = ((this.data.session || {}).chartZoomKey) || ((this.data.form || {}).chartZoomKey) || "wide";
+    const index = CHART_ZOOM_ORDER.indexOf(current);
+    const nextIndex = Math.max(0, index <= 0 ? 0 : index - 1);
+    this.updateChartZoom(CHART_ZOOM_ORDER[nextIndex]);
+  },
+
+  increaseChartZoom() {
+    const current = ((this.data.session || {}).chartZoomKey) || ((this.data.form || {}).chartZoomKey) || "wide";
+    const index = CHART_ZOOM_ORDER.indexOf(current);
+    const safeIndex = index >= 0 ? index : 0;
+    const nextIndex = Math.min(CHART_ZOOM_ORDER.length - 1, safeIndex + 1);
+    this.updateChartZoom(CHART_ZOOM_ORDER[nextIndex]);
   },
 
   toggleIndicatorPicker() {
@@ -533,7 +554,7 @@ Page({
       })
     });
     wx.showToast({
-      title: action === "HOLD" ? "已记录观望" : "已记录模拟动作",
+      title: action === "HOLD" ? "已记录观望" : "已记录动作",
       icon: "none"
     });
   },
