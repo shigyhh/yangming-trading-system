@@ -3,12 +3,33 @@ import test from "node:test";
 
 import {
   buildHistoricalKlineSlice,
+  chooseCachedInstrument,
   downloadHistoricalKline,
   getHistoricalKlineRules,
   listHistoricalKlineCatalog,
   listHistoricalKlineInstruments,
   revealHistoricalKlineSlice
 } from "../src/services/historicalKline.js";
+
+test("historical kline random slice prefers cached symbols for the requested timeframe", () => {
+  const instruments = Array.from({ length: 820 }, (_, index) => ({
+    symbol: String(100000 + index),
+    name: `未缓存-${index}`
+  })).concat([
+    { symbol: "600519", name: "缓存标的" },
+    { symbol: "000001", name: "缓存标的二" }
+  ]);
+
+  const picked = chooseCachedInstrument({
+    instruments,
+    cachedSymbols: ["600519", "000001"],
+    marketKey: "cn_equity",
+    timeframeKey: "30m",
+    seed: "contract-test"
+  });
+
+  assert.ok(["600519", "000001"].includes(picked.symbol));
+});
 
 test("historical kline catalog exposes markets, cycles and rules", () => {
   const catalog = listHistoricalKlineCatalog();

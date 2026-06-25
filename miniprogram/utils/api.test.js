@@ -23,6 +23,7 @@ const {
   fetchLivingMirrorProfile,
   fetchTodayState,
   fetchKlineTrainingSlice,
+  prefetchKlineTrainingSlices,
   normalizeKlineTrainingSliceResult,
   syncKlineTrainingRecord,
   retryPendingKlineTrainingSync
@@ -106,8 +107,10 @@ async function runKlineSliceTests() {
   resetStorage();
   envVersion = "release";
   let requestedUrl = "";
+  let requestedTimeout = 0;
   global.wx.request = (options) => {
     requestedUrl = options.url;
+    requestedTimeout = options.timeout;
     options.success({
       statusCode: 200,
       data: {
@@ -142,12 +145,73 @@ async function runKlineSliceTests() {
   assert.ok(requestedUrl.includes("timeframe=101"));
   assert.ok(requestedUrl.includes("mode=step_replay"));
   assert.ok(requestedUrl.includes("end_date=2026-06-15"));
+  assert.ok(requestedTimeout >= 20000);
   assert.strictEqual(requestedUrl.includes("localhost"), false);
   assert.strictEqual(requestedUrl.includes("127.0.0.1"), false);
   assert.strictEqual(serverSlice.ok, true);
   assert.strictEqual(serverSlice.source, "server_cache");
   assert.strictEqual(serverSlice.slice.source, "server_cache");
   assert.strictEqual(serverSlice.slice.candles.length, 6);
+
+  let cacheRequestCount = 0;
+  global.wx.request = (options) => {
+    cacheRequestCount += 1;
+    options.success({
+      statusCode: 200,
+      data: {
+        ok: true,
+        slice: {
+          source: "server_cache",
+          timeframe: "30m",
+          candles: Array.from({ length: 6 }, (_, index) => ({
+            time: `2026-02-1${index}`,
+            open: 1 + index / 10,
+            high: 2 + index / 10,
+            low: 0.8 + index / 10,
+            close: 1.5 + index / 10
+          }))
+        }
+      }
+    });
+  };
+  const cachedSliceParams = { marketKey: "cn", timeframeKey: "30m", seed: "cache-test-001" };
+  const firstCachedSlice = await fetchKlineTrainingSlice(cachedSliceParams);
+  const secondCachedSlice = await fetchKlineTrainingSlice(cachedSliceParams);
+  assert.strictEqual(firstCachedSlice.ok, true);
+  assert.strictEqual(secondCachedSlice.ok, true);
+  assert.strictEqual(cacheRequestCount, 1);
+
+  const prefetchUrls = [];
+  global.wx.request = (options) => {
+    prefetchUrls.push(options.url);
+    options.success({
+      statusCode: 200,
+      data: {
+        ok: true,
+        slice: {
+          source: "server_cache",
+          candles: Array.from({ length: 6 }, (_, index) => ({
+            time: `2026-05-0${index + 1}`,
+            open: 1,
+            high: 2,
+            low: 0.8,
+            close: 1.5
+          }))
+        }
+      }
+    });
+  };
+  const prefetchResult = await prefetchKlineTrainingSlices({
+    marketKey: "cn",
+    scenarioId: "prefetch-test-001"
+  });
+  assert.strictEqual(prefetchResult.length, 3);
+  assert.strictEqual(prefetchUrls.length, 3);
+  assert.ok(prefetchUrls.some((url) => url.includes("timeframe=101")));
+  assert.ok(prefetchUrls.some((url) => url.includes("timeframe=60m")));
+  assert.ok(prefetchUrls.some((url) => url.includes("timeframe=30m")));
+  await fetchKlineTrainingSlice({ marketKey: "cn", timeframeKey: "60m", seed: "prefetch-test-001" });
+  assert.strictEqual(prefetchUrls.length, 3);
 
   global.wx.request = (options) => {
     requestedUrl = options.url;

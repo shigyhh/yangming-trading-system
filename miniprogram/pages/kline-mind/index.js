@@ -83,9 +83,9 @@ function buildMirrorReviewFromKline(record = {}, session = {}, assessment = {}) 
     marketKey: record.marketKey,
     marketLabel: record.marketName || market.name || "历史品类",
     timeframeKey: record.timeframeKey,
-    timeframeLabel: timeframe.label || record.timeframeKey || "历史周期",
+    timeframeLabel: timeframe.label || record.timeframeKey || "交易风格",
     trainingDay: record.day || session.day || 1,
-    sceneTitle: `${record.marketName || market.name || "历史品类"} · ${timeframe.label || record.timeframeKey || "历史周期"}`,
+    sceneTitle: `${record.marketName || market.name || "历史品类"} · ${timeframe.label || record.timeframeKey || "交易风格"}`,
     trigger: session.prompt || market.mindQuestion || "历史 K 线观心",
     primaryReaction: record.firstReaction,
     emotion: record.bodySignal,
@@ -241,6 +241,15 @@ function buildMindHistorySlice(result) {
   });
 }
 
+function buildHistorySliceCacheKey(record = {}) {
+  return [
+    record.marketKey || "cn_equity",
+    record.timeframeKey || "1d",
+    record.scenarioId || "scene-fast-001",
+    record.symbol || ""
+  ].join("|");
+}
+
 Page({
   data: {
     assessment: null,
@@ -256,7 +265,6 @@ Page({
     saving: false,
     historyLoading: false,
     historyError: "",
-    showSelectors: false,
     showBodySignal: false,
     selectedMainIndicatorKey: "ma",
     selectedIndicatorKey: "vol",
@@ -264,6 +272,8 @@ Page({
   },
 
   onShow() {
+    this.historySliceCache = this.historySliceCache || {};
+    this.prefetchHistoryRequests = this.prefetchHistoryRequests || {};
     retryPendingKlineTrainingSync().catch(() => {});
     this.load();
   },
@@ -326,18 +336,58 @@ Page({
     });
   },
 
-  loadServerHistorySlice(record = {}) {
+  applyHistorySlice(record = {}, historySlice = {}) {
+    const recordWithSlice = Object.assign({}, record || {}, { historySlice });
+    const session = this.buildSession(recordWithSlice);
+    const trainingRuntime = this.buildTrainingRuntime(session, recordWithSlice);
+    this.setData({
+      session,
+      trainingRuntime,
+      runtimeView: buildRuntimeView(trainingRuntime),
+      form: Object.assign({}, this.data.form, recordWithSlice, { selectedCandleKey: session.selectedCandleKey }),
+      historyLoading: false,
+      historyError: session.hasHistoricalData ? "" : (historySlice.serverSliceError || "真实历史数据未载入")
+    });
+    if (session.hasHistoricalData) {
+      this.prefetchTimeframeSlices(recordWithSlice);
+      this.prefetchNextSlice(recordWithSlice);
+    }
+  },
+
+  buildPendingHistorySession(record = {}) {
+    const nextSession = this.buildSession(record);
+    return Object.assign({}, this.data.session || nextSession, {
+      market: nextSession.market,
+      marketKey: nextSession.marketKey,
+      timeframeKey: nextSession.timeframeKey,
+      timeframeLabel: nextSession.timeframeLabel,
+      timeframeOptions: nextSession.timeframeOptions,
+      dataStatusText: "正在读取历史练习数据"
+    });
+  },
+
+  loadServerHistorySlice(record = {}, options = {}) {
     const requestKey = `slice-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     this.latestHistoryRequestKey = requestKey;
-    const baseRecord = Object.assign({}, record || {}, { historySlice: null });
+    const baseRecord = Object.assign({}, record || {});
+    const cacheKey = buildHistorySliceCacheKey(baseRecord);
+    const cachedSlice = (this.historySliceCache || {})[cacheKey];
+    if (cachedSlice) {
+      this.applyHistorySlice(baseRecord, cachedSlice);
+      return;
+    }
+    const keepCurrentChart = !!options.keepCurrentChart && !!((this.data.session || {}).hasHistoricalData);
     this.setData({
       historyLoading: true,
       historyError: "",
-      trainingRuntime: null,
-      runtimeView: buildRuntimeView(),
-      session: Object.assign({}, this.buildSession(baseRecord), {
-        dataStatusText: "正在读取历史练习数据"
-      })
+      form: Object.assign({}, this.data.form, baseRecord),
+      trainingRuntime: keepCurrentChart ? this.data.trainingRuntime : null,
+      runtimeView: keepCurrentChart ? this.data.runtimeView : buildRuntimeView(),
+      session: keepCurrentChart
+        ? this.buildPendingHistorySession(baseRecord)
+        : Object.assign({}, this.buildSession(Object.assign({}, baseRecord, { historySlice: null })), {
+          dataStatusText: "正在读取历史练习数据"
+        })
     });
     fetchKlineTrainingSlice({
       marketKey: baseRecord.marketKey || "cn_equity",
@@ -351,17 +401,67 @@ Page({
     }).then((result) => {
       if (this.latestHistoryRequestKey !== requestKey) return;
       const historySlice = buildMindHistorySlice(result);
-      const recordWithSlice = Object.assign({}, baseRecord, { historySlice });
-      const session = this.buildSession(recordWithSlice);
-      const trainingRuntime = this.buildTrainingRuntime(session, recordWithSlice);
-      this.setData({
-        session,
-        trainingRuntime,
-        runtimeView: buildRuntimeView(trainingRuntime),
-        form: Object.assign({}, this.data.form, recordWithSlice, { selectedCandleKey: session.selectedCandleKey }),
-        historyLoading: false,
-        historyError: session.hasHistoricalData ? "" : (historySlice.serverSliceError || "真实历史数据未载入")
+      if (historySlice.candles && historySlice.candles.length) {
+        this.historySliceCache = Object.assign({}, this.historySliceCache || {}, { [cacheKey]: historySlice });
+      }
+      this.applyHistorySlice(baseRecord, historySlice);
+    });
+  },
+
+  prefetchTimeframeSlices(record = {}) {
+    const currentKey = record.timeframeKey || "1d";
+    ["1d", "60m", "30m"].forEach((timeframeKey) => {
+      if (timeframeKey === currentKey) return;
+      const nextRecord = Object.assign({}, record, { timeframeKey });
+      const cacheKey = buildHistorySliceCacheKey(nextRecord);
+      if ((this.historySliceCache || {})[cacheKey] || (this.prefetchHistoryRequests || {})[cacheKey]) return;
+      this.prefetchHistoryRequests = Object.assign({}, this.prefetchHistoryRequests || {}, { [cacheKey]: true });
+      fetchKlineTrainingSlice({
+        marketKey: nextRecord.marketKey || "cn_equity",
+        timeframeKey,
+        symbol: nextRecord.symbol || "",
+        windowSize: 150,
+        mode: "step_replay",
+        gateKey: "shi_shang_mo",
+        blind: true,
+        seed: nextRecord.scenarioId || ""
+      }).then((result) => {
+        const historySlice = buildMindHistorySlice(result);
+        if (historySlice.candles && historySlice.candles.length) {
+          this.historySliceCache = Object.assign({}, this.historySliceCache || {}, { [cacheKey]: historySlice });
+        }
+      }).finally(() => {
+        const nextRequests = Object.assign({}, this.prefetchHistoryRequests || {});
+        delete nextRequests[cacheKey];
+        this.prefetchHistoryRequests = nextRequests;
       });
+    });
+  },
+
+  prefetchNextSlice(record = {}) {
+    const nextScenarioId = getNextKlineMindSliceSeed(record.scenarioId || "scene-fast-001");
+    const nextRecord = Object.assign({}, record, { scenarioId: nextScenarioId });
+    const cacheKey = buildHistorySliceCacheKey(nextRecord);
+    if ((this.historySliceCache || {})[cacheKey] || (this.prefetchHistoryRequests || {})[cacheKey]) return;
+    this.prefetchHistoryRequests = Object.assign({}, this.prefetchHistoryRequests || {}, { [cacheKey]: true });
+    fetchKlineTrainingSlice({
+      marketKey: nextRecord.marketKey || "cn_equity",
+      timeframeKey: nextRecord.timeframeKey || "1d",
+      symbol: nextRecord.symbol || "",
+      windowSize: 150,
+      mode: "step_replay",
+      gateKey: "shi_shang_mo",
+      blind: true,
+      seed: nextScenarioId
+    }).then((result) => {
+      const historySlice = buildMindHistorySlice(result);
+      if (historySlice.candles && historySlice.candles.length) {
+        this.historySliceCache = Object.assign({}, this.historySliceCache || {}, { [cacheKey]: historySlice });
+      }
+    }).finally(() => {
+      const nextRequests = Object.assign({}, this.prefetchHistoryRequests || {});
+      delete nextRequests[cacheKey];
+      this.prefetchHistoryRequests = nextRequests;
     });
   },
 
@@ -378,12 +478,8 @@ Page({
       marketKey,
       selectedCandleKey: ""
     });
-    const session = this.buildSession(form);
-    this.setData({
-      form: Object.assign({}, form, { selectedCandleKey: session.selectedCandleKey }),
-      session
-    });
-    this.loadServerHistorySlice(form);
+    this.setData({ form });
+    this.loadServerHistorySlice(form, { keepCurrentChart: true });
   },
 
   selectTimeframe(e) {
@@ -392,12 +488,8 @@ Page({
       timeframeKey,
       selectedCandleKey: ""
     });
-    const session = this.buildSession(form);
-    this.setData({
-      form: Object.assign({}, form, { selectedCandleKey: session.selectedCandleKey }),
-      session
-    });
-    this.loadServerHistorySlice(form);
+    this.setData({ form });
+    this.loadServerHistorySlice(form, { keepCurrentChart: true });
   },
 
   selectChartZoom(e) {
@@ -484,10 +576,6 @@ Page({
 
   inputInsight(e) {
     this.setData({ "form.insightLine": e.detail.value });
-  },
-
-  toggleSelectors() {
-    this.setData({ showSelectors: !this.data.showSelectors });
   },
 
   switchSlice() {

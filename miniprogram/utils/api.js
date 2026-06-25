@@ -289,7 +289,7 @@ function getClientId() {
   return clientId;
 }
 
-function request({ path, method = "GET", data = null, token = "", apiBaseOverride = "", allowUnconfigured = false }) {
+function request({ path, method = "GET", data = null, token = "", apiBaseOverride = "", allowUnconfigured = false, timeout = 8000 }) {
   const apiBase = apiBaseOverride || getApiBase();
   return new Promise((resolve, reject) => {
     if (!allowUnconfigured && !hasConfiguredApiBase()) {
@@ -300,7 +300,7 @@ function request({ path, method = "GET", data = null, token = "", apiBaseOverrid
       url: `${apiBase}${path}`,
       method,
       data,
-      timeout: 8000,
+      timeout,
       header: Object.assign(
         {
           "content-type": "application/json"
@@ -747,6 +747,39 @@ const KLINE_TIMEFRAME_MAP = {
   "30m": "30m"
 };
 
+const klineSliceCache = {};
+const klineSliceRequests = {};
+
+function buildKlineSliceCacheKey({
+  marketKey = "cn",
+  timeframeKey = "101",
+  symbol = "",
+  windowSize = 150,
+  mode = "step_replay",
+  endDate = "",
+  entryTime = "",
+  personalityType = "",
+  gateKey = "shi_shang_mo",
+  blind = true,
+  seed = ""
+} = {}) {
+  const market = KLINE_MARKET_MAP[marketKey] || "cn_equity";
+  const timeframe = KLINE_TIMEFRAME_MAP[timeframeKey] || "101";
+  return [
+    market,
+    timeframe,
+    String(symbol || ""),
+    String(windowSize || 150),
+    String(mode || "step_replay"),
+    String(endDate || ""),
+    String(entryTime || ""),
+    String(personalityType || ""),
+    String(gateKey || ""),
+    blind ? "blind" : "open",
+    String(seed || "")
+  ].join("|");
+}
+
 async function fetchKlineTrainingSlice({
   marketKey = "cn",
   timeframeKey = "101",
@@ -762,6 +795,21 @@ async function fetchKlineTrainingSlice({
 } = {}) {
   const market = KLINE_MARKET_MAP[marketKey] || "cn_equity";
   const timeframe = KLINE_TIMEFRAME_MAP[timeframeKey] || "101";
+  const cacheKey = buildKlineSliceCacheKey({
+    marketKey,
+    timeframeKey,
+    symbol,
+    windowSize,
+    mode,
+    endDate,
+    entryTime,
+    personalityType,
+    gateKey,
+    blind,
+    seed
+  });
+  if (klineSliceCache[cacheKey]) return klineSliceCache[cacheKey];
+  if (klineSliceRequests[cacheKey]) return klineSliceRequests[cacheKey];
   const query = [
     `market=${encodeURIComponent(market)}`,
     symbol ? `symbol=${encodeURIComponent(symbol)}` : "",
@@ -775,36 +823,79 @@ async function fetchKlineTrainingSlice({
     `blind=${blind ? "1" : "0"}`,
     seed ? `seed=${encodeURIComponent(seed)}` : ""
   ].filter(Boolean).join("&");
-  try {
-    const useProductionFallback = !hasConfiguredApiBase();
-    const result = await request({
-      path: `/api/v1/kline-history/slice?${query}`,
-      apiBaseOverride: useProductionFallback ? PRODUCTION_API_BASE : "",
-      allowUnconfigured: useProductionFallback
-    });
-    return normalizeKlineTrainingSliceResult(result, { market, timeframe, symbol });
-  } catch (error) {
-    saveConnectionFallback(error, "历史数据连接未完成");
-    return {
-      ok: false,
-      symbol,
-      timeframe,
-      candles: [],
-      bars: [],
-      source: "local_demo",
-      manifestStatus: "unavailable",
-      barCount: 0,
-      reason: "network_error",
-      errorMessage: getTechnicalMessage(error) || "K线服务暂不可用",
-      raw: null,
-      slice: {
-        source: "local_demo",
-        candles: [],
-        manifestStatus: "unavailable",
-        barCount: 0
+  klineSliceRequests[cacheKey] = (async () => {
+    try {
+      const useProductionFallback = !hasConfiguredApiBase();
+      const result = await request({
+        path: `/api/v1/kline-history/slice?${query}`,
+        apiBaseOverride: useProductionFallback ? PRODUCTION_API_BASE : "",
+        allowUnconfigured: useProductionFallback,
+        timeout: 25000
+      });
+      const normalized = normalizeKlineTrainingSliceResult(result, { market, timeframe, symbol });
+      if (normalized.ok && (normalized.candles || []).length >= KLINE_MIN_CANDLES) {
+        klineSliceCache[cacheKey] = normalized;
       }
-    };
-  }
+      return normalized;
+    } catch (error) {
+      saveConnectionFallback(error, "历史数据连接未完成");
+      return {
+        ok: false,
+        symbol,
+        timeframe,
+        candles: [],
+        bars: [],
+        source: "local_demo",
+        manifestStatus: "unavailable",
+        barCount: 0,
+        reason: "network_error",
+        errorMessage: getTechnicalMessage(error) || "K线服务暂不可用",
+        raw: null,
+        slice: {
+          source: "local_demo",
+          candles: [],
+          manifestStatus: "unavailable",
+          barCount: 0
+        }
+      };
+    } finally {
+      delete klineSliceRequests[cacheKey];
+    }
+  })();
+  return klineSliceRequests[cacheKey];
+}
+
+function prefetchKlineTrainingSlices({
+  marketKey = "cn",
+  symbol = "",
+  timeframes = ["1d", "60m", "30m"],
+  windowSize = 150,
+  mode = "step_replay",
+  gateKey = "shi_shang_mo",
+  blind = true,
+  scenarioId = "scene-fast-001",
+  seed = ""
+} = {}) {
+  const sliceSeed = seed || scenarioId || "scene-fast-001";
+  const uniqueTimeframes = Array.from(new Set(timeframes));
+  return Promise.all(uniqueTimeframes.map((timeframeKey) => (
+    fetchKlineTrainingSlice({
+      marketKey,
+      timeframeKey,
+      symbol,
+      windowSize,
+      mode,
+      gateKey,
+      blind,
+      seed: sliceSeed
+    }).catch((error) => ({
+      ok: false,
+      timeframeKey,
+      source: "local_demo",
+      reason: "network_error",
+      errorMessage: getTechnicalMessage(error)
+    }))
+  )));
 }
 
 function pickKlineNumber(...values) {
@@ -901,5 +992,6 @@ module.exports = {
   pullTrainingPrescription,
   syncShareAttribution,
   fetchKlineTrainingSlice,
+  prefetchKlineTrainingSlices,
   normalizeKlineTrainingSliceResult
 };

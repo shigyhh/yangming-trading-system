@@ -404,11 +404,19 @@ export async function buildHistoricalKlineSlice({
   const trainingMode = getTrainingMode(mode);
   const gate = getGatePractice(gateKey);
   const personality = getPersonalityPractice(personalityType);
-  const instruments = await loadInstrumentList(market);
-  const instrument = await resolveInstrument({ market, symbol, instruments, timeframeKey: timeframe.key, seed });
-  const dataset = await loadKlineDataset({ market, symbol: instrument.symbol, timeframeKey: timeframe.key, adjustmentMode: adjustment.key });
-  const candles = filterCandlesByDate(dataset.candles, { startDate, endDate });
   const safeWindowSize = clamp(Number(windowSize || DEFAULT_WINDOW_SIZE), MIN_WINDOW_SIZE, MAX_WINDOW_SIZE);
+  const instruments = await loadInstrumentList(market);
+  const { instrument, dataset, candles } = await resolveSliceDataset({
+    market,
+    symbol,
+    instruments,
+    timeframeKey: timeframe.key,
+    adjustmentMode: adjustment.key,
+    windowSize: safeWindowSize,
+    seed,
+    startDate,
+    endDate
+  });
 
   if (candles.length < safeWindowSize) {
     const error = new Error(`真实历史K线数量不足：${market.label} ${timeframe.label} ${instrument.symbol}`);
@@ -742,6 +750,15 @@ async function loadAshareInstruments(market) {
 
 async function listCachedMarketSymbols(market) {
   const root = path.join(config.marketDataDir, market.dataDir);
+  return listCachedSymbolsInRoot(root);
+}
+
+async function listCachedAshareSymbols() {
+  const root = path.join(config.marketDataDir, "ashare");
+  return listCachedSymbolsInRoot(root);
+}
+
+async function listCachedSymbolsInRoot(root) {
   const symbols = new Set();
   try {
     const timeframeDirs = await fs.readdir(root, { withFileTypes: true });
@@ -758,22 +775,64 @@ async function listCachedMarketSymbols(market) {
   return Array.from(symbols);
 }
 
-async function listCachedAshareSymbols() {
-  const root = path.join(config.marketDataDir, "ashare");
+async function listCachedSymbolsInDir(root) {
   const symbols = new Set();
   try {
-    const timeframeDirs = await fs.readdir(root, { withFileTypes: true });
-    for (const dirent of timeframeDirs) {
-      if (!dirent.isDirectory()) continue;
-      const files = await fs.readdir(path.join(root, dirent.name), { withFileTypes: true });
-      files.forEach((file) => {
-        if (file.isFile() && file.name.endsWith(".json")) symbols.add(file.name.replace(/\.json$/, ""));
-      });
-    }
+    const files = await fs.readdir(root, { withFileTypes: true });
+    files.forEach((file) => {
+      if (file.isFile() && file.name.endsWith(".json")) symbols.add(file.name.replace(/\.json$/, ""));
+    });
   } catch (error) {
     if (error.code !== "ENOENT") throw error;
   }
   return Array.from(symbols);
+}
+
+async function listCachedSymbolsForTimeframe(market, timeframeKey) {
+  const symbols = new Set(await listCachedSymbolsInDir(path.join(config.marketDataDir, market.dataDir, timeframeKey)));
+  if (market.key === "cn_equity") {
+    const klt = ASHARE_KLT_BY_TIMEFRAME[timeframeKey];
+    if (klt) {
+      const legacySymbols = await listCachedSymbolsInDir(path.join(config.marketDataDir, "ashare", klt));
+      legacySymbols.forEach((symbol) => symbols.add(symbol));
+    }
+  }
+  return Array.from(symbols);
+}
+
+export function chooseCachedInstrument({
+  instruments = [],
+  cachedSymbols = [],
+  marketKey = "",
+  timeframeKey = "",
+  seed = ""
+} = {}) {
+  const cachedPool = buildCachedInstrumentCandidates({ instruments, cachedSymbols, marketKey, timeframeKey, seed });
+  if (!cachedPool.length) return null;
+  return cachedPool[0];
+}
+
+function buildCachedInstrumentCandidates({
+  instruments = [],
+  cachedSymbols = [],
+  marketKey = "",
+  timeframeKey = "",
+  seed = ""
+} = {}) {
+  const cached = uniqueStrings(cachedSymbols);
+  if (!cached.length) return [];
+  const instrumentMap = new Map(instruments.map((item) => [item.symbol, item]));
+  const rng = createSeededRng(`${marketKey}:${timeframeKey}:${seed || "cached"}`);
+  return cached
+    .map((symbol) => instrumentMap.get(symbol) || {
+      symbol,
+      name: "",
+      secid: "",
+      instrument_key: createInstrumentKey(symbol)
+    })
+    .map((instrument) => ({ instrument, rank: rng() }))
+    .sort((a, b) => a.rank - b.rank)
+    .map((item) => item.instrument);
 }
 
 async function upsertInstrument(market, patch) {
@@ -814,12 +873,75 @@ function normalizeInstrument(item) {
   };
 }
 
-async function resolveInstrument({ market, symbol, instruments, timeframeKey, seed }) {
+async function resolveSliceDataset({
+  market,
+  symbol = "",
+  instruments = [],
+  timeframeKey,
+  adjustmentMode,
+  windowSize,
+  seed = "",
+  startDate = "",
+  endDate = ""
+}) {
+  const requested = String(symbol || "").trim();
+  if (requested) {
+    const instrument = await resolveInstrument({ market, symbol: requested, instruments, timeframeKey, seed });
+    const dataset = await loadKlineDataset({ market, symbol: instrument.symbol, timeframeKey, adjustmentMode });
+    const candles = filterCandlesByDate(dataset.candles, { startDate, endDate });
+    return { instrument, dataset, candles };
+  }
+
+  const cachedSymbols = await listCachedSymbolsForTimeframe(market, timeframeKey);
+  const candidates = buildCachedInstrumentCandidates({
+    instruments,
+    cachedSymbols,
+    marketKey: market.key,
+    timeframeKey,
+    seed
+  });
+  const attempts = candidates.slice(0, 24);
+  let best = null;
+
+  for (const instrument of attempts) {
+    try {
+      const dataset = await loadKlineDataset({ market, symbol: instrument.symbol, timeframeKey, adjustmentMode, allowMissing: true });
+      const candles = filterCandlesByDate(dataset.candles, { startDate, endDate });
+      if (!best || candles.length > best.candles.length) best = { instrument, dataset, candles };
+      if (candles.length >= windowSize) return { instrument, dataset, candles };
+    } catch {
+      // Skip broken cache files; the next cached symbol may still be usable.
+    }
+  }
+
+  if (best) return best;
+
+  const error = new Error(`真实历史K线未缓存：${market.label} ${getTimeframe(timeframeKey).label}`);
+  error.statusCode = 404;
+  error.details = {
+    market_key: market.key,
+    timeframe_key: timeframeKey,
+    cached_symbol_count: cachedSymbols.length,
+    tried_count: attempts.length
+  };
+  throw error;
+}
+
+async function resolveInstrument({ market, symbol, instruments, timeframeKey, seed, cachedSymbols = [] }) {
   const requested = String(symbol || "").trim();
   if (requested) {
     const found = instruments.find((item) => item.symbol === requested || item.instrument_key === requested);
     return found || { symbol: requested, name: "", secid: "", instrument_key: createInstrumentKey(requested) };
   }
+
+  const cachedInstrument = chooseCachedInstrument({
+    instruments,
+    cachedSymbols,
+    marketKey: market.key,
+    timeframeKey,
+    seed
+  });
+  if (cachedInstrument) return cachedInstrument;
 
   const ready = [];
   for (const instrument of instruments.slice(0, 800)) {

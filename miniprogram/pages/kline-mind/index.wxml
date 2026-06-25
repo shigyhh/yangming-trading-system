@@ -29,36 +29,12 @@
         </view>
       </view>
 
-      <view class="slice-switch">
-        <view>
-          <text>真实历史盲练</text>
-          <view>先看这一段，只记录第一反应。</view>
-        </view>
-        <view class="slice-actions">
-          <button bindtap="switchSlice">换一段</button>
-          <button class="quiet" bindtap="toggleSelectors">{{showSelectors ? '收起' : '周期'}}</button>
-        </view>
-      </view>
-
-      <view wx:if="{{showSelectors}}" class="market-rail">
-        <button
-          wx:for="{{session.marketOptions}}"
-          wx:key="key"
-          class="market-chip {{item.selected ? 'active' : ''}}"
-          data-market="{{item.key}}"
-          bindtap="selectMarket"
-        >
-          <text>{{item.name}}</text>
-          <view>{{item.rhythm}}</view>
-        </button>
-      </view>
-
     </view>
 
     <view class="mind-wave card">
       <view class="wave-head">
         <view>
-          <text>真实历史片段</text>
+          <text>K线盲练</text>
           <view>{{session.subtitle}}</view>
         </view>
         <text>{{session.stageGate.seal}}</text>
@@ -70,19 +46,22 @@
       </view>
 
       <view class="chart-toolbar">
-        <view class="chart-orientation-note">横屏训练更稳</view>
-        <view class="chart-period-rail">
-          <text>交易风格</text>
-          <button
-            wx:for="{{session.timeframeOptions}}"
-            wx:key="key"
-            class="timeframe-chip {{item.selected ? 'active' : ''}}"
-            data-timeframe="{{item.key}}"
-            bindtap="selectTimeframe"
-          >
-            {{item.label}}
-          </button>
+        <view class="chart-toolbar-row">
+          <view class="chart-period-rail">
+            <text>交易风格</text>
+            <button
+              wx:for="{{session.timeframeOptions}}"
+              wx:key="key"
+              class="timeframe-chip {{item.selected ? 'active' : ''}}"
+              data-timeframe="{{item.key}}"
+              bindtap="selectTimeframe"
+            >
+              {{item.label}}
+            </button>
+          </view>
+          <button class="slice-change-btn" bindtap="switchSlice">换一段</button>
         </view>
+        <view class="chart-orientation-note">横屏训练更稳</view>
       </view>
 
       <view wx:if="{{session.hasHistoricalData}}" class="chart-canvas-wrap">
@@ -155,8 +134,8 @@
         </scroll-view>
       </view>
       <view wx:else class="history-empty">
-        <view>历史数据未载入</view>
-        <text>请先同步真实历史数据；未载入前不展示占位 K线。</text>
+        <view>{{historyLoading ? '正在读取历史数据' : '历史数据未载入'}}</view>
+        <text>{{historyLoading ? '正在从服务器读取真实历史片段。' : '请先同步真实历史数据；未载入前不展示占位 K线。'}}</text>
       </view>
 
       <view wx:if="{{trainingRuntime && runtimeView.visibleCandles.length}}" class="simulation-console">

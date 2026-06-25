@@ -1,4 +1,5 @@
 const { ensureProfile } = require("./utils/store");
+const { prefetchKlineTrainingSlices } = require("./utils/api");
 
 function getEnvVersion() {
   try {
@@ -32,9 +33,17 @@ function setupUpdateManager() {
   });
 }
 
+function warmKlineTrainingSlices() {
+  prefetchKlineTrainingSlices({
+    marketKey: "cn",
+    scenarioId: "scene-fast-001"
+  }).catch(() => {});
+}
+
 App({
   onLaunch() {
     ensureProfile();
+    warmKlineTrainingSlices();
     setupUpdateManager();
   },
   globalData: {

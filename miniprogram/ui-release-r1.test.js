@@ -37,6 +37,7 @@ const klineMindJson = readPage("kline-mind", "index.json");
 const tradeReviewWxml = readPage("trade-review", "index.wxml");
 const reportWxml = readPage("report", "index.wxml");
 const profileJs = readPage("profile", "index.js");
+const appJs = readFileSync(join(root, "miniprogram", "app.js"), "utf8");
 const appWxss = readFileSync(join(root, "miniprogram", "app.wxss"), "utf8");
 const bottomTabWxss = readFileSync(join(root, "miniprogram", "components", "bottom-tab-bar", "index.wxss"), "utf8");
 const bottomTabJs = readFileSync(join(root, "miniprogram", "components", "bottom-tab-bar", "index.js"), "utf8");
@@ -117,7 +118,8 @@ assert.equal(klineMindWxml.includes("session.market.defaultSymbol"), false, "kli
 assert.equal(klineMindWxml.includes("数据状态"), false, "kline mind page should use user-facing source labels");
 assert.equal(klineMindWxml.includes('class="sim-meta"'), false, "kline mind should not render cockpit-style data status blocks");
 assert.ok(klineMindWxml.includes('class="wave-source-line"'), "kline mind should collapse source/rhythm into quiet metadata");
-assert.ok(klineMindWxml.includes("真实历史盲练"), "kline mind should frame the session as a real historical blind-practice ritual");
+assert.ok(klineMindWxml.includes("K线盲练"), "kline mind should frame the session as K-line blind practice");
+assert.equal(klineMindWxml.includes("真实历史盲练"), false, "kline mind should not keep a duplicated blind-practice control block above the chart");
 assert.ok(klineMindWxml.includes('wx:if="{{savedRecord && savedRecord.completed}}" class="path-links"'), "kline mind should show cross-page links only after the record is complete");
 assertRuleHas(klineMindWxss, ".wave-board", ["display: flex", "justify-content: flex-start", "overflow: hidden"], "kline mind wave board should use a horizontal training strip instead of a sparse fixed grid");
 
@@ -213,6 +215,14 @@ assert.ok(klineMindWxml.includes('class="sub-indicator-board'), "kline indicator
 assert.ok(klineMindWxml.includes('class="indicator-strip"'), "kline indicators should render as a single-row selector");
 assert.ok(klineMindWxml.includes("交易风格"), "kline timeframe selector should be framed as trading style, not chart period switching");
 assert.equal(klineMindWxml.includes("<text>周期</text>"), false, "kline timeframe selector should not look like same-symbol period switching");
+assert.equal(klineMindWxml.includes("{{showSelectors ? '收起' : '周期'}}"), false, "kline selector toggle should not call the style drawer a chart period");
+assert.equal(klineMindWxml.includes("toggleSelectors"), false, "kline page should not keep a duplicate selector drawer above the chart");
+assert.ok(klineMindWxml.includes('class="slice-change-btn" bindtap="switchSlice"'), "kline change-slice action should sit inside the chart toolbar");
+assert.ok(klineMindWxml.includes("正在读取历史数据"), "kline empty state should show a loading copy instead of immediately looking broken");
+assert.ok(klineMindJs.includes("historySliceCache"), "kline style switching should use an in-page history slice cache");
+assert.ok(klineMindJs.includes("prefetchTimeframeSlices"), "kline page should prefetch style slices so switching feels instant");
+assert.ok(appJs.includes("prefetchKlineTrainingSlices"), "miniapp launch should warm real historical K-line slices before the user enters training");
+assert.ok(klineMindJs.includes("prefetchNextSlice"), "kline page should keep the next random history slice warm for the change-slice action");
 assert.equal(klineMindWxml.includes("toggleIndicatorPicker"), false, "kline indicators should not use a dropdown picker");
 assert.equal(klineMindWxml.includes('class="sub-indicator-menu"'), false, "kline indicators should not render a dropdown menu");
 assert.equal(sliceBetween(klineMindWxml, 'class="indicator-strip"', 'class="sub-indicator-board').includes("主图"), false, "kline indicator row should not spell out main-chart labels");
@@ -221,9 +231,9 @@ assert.ok(sliceBetween(klineMindWxml, 'class="indicator-strip"', 'class="sub-ind
 assert.deepStrictEqual(demoSession.mainIndicatorOptions.map((item) => item.label), ["MA", "BOLL"]);
 assert.deepStrictEqual(demoSession.indicatorPanelOptions.map((item) => item.label), ["VOL", "MACD"]);
 assert.deepStrictEqual(demoSession.indicatorCatalog.map((item) => item.label), ["MA", "MACD", "BOLL", "VOL"]);
-assertRuleHas(klineMindWxss, ".slice-switch", ["flex-wrap: wrap"], "kline slice controls should wrap instead of overflowing on narrow screens");
-assertRuleHas(klineMindWxss, ".slice-switch > .slice-actions", ["grid-template-columns: repeat(2, minmax(0, 1fr))", "width: 100%"], "kline slice action buttons should stay inside the card");
-assertRuleHas(klineMindWxss, ".chart-period-rail", ["display: inline-flex", "align-items: center"], "kline timeframe selector should use a compact toolbar instead of a full-width segmented block");
+assertRuleHas(klineMindWxss, ".chart-toolbar-row", ["grid-template-columns: minmax(0, 1fr) 132rpx", "align-items: center"], "kline toolbar should keep trading style and change-slice action on one stable row");
+assertRuleHas(klineMindWxss, ".chart-period-rail", ["display: flex", "overflow-x: auto"], "kline timeframe selector should use a compact scrollable toolbar instead of a full-width segmented block");
+assertRuleHas(klineMindWxss, ".slice-change-btn", ["width: 132rpx", "justify-content: center"], "kline change-slice button should not overlap the trading style rail");
 assertRuleHas(klineMindWxss, ".indicator-strip", ["display: flex", "overflow-x: auto"], "kline indicator selector should be one horizontal row");
 assertRuleHas(klineMindWxss, ".chart-indicator-chip", ["flex: 0 0 auto", "height: 38rpx"], "kline indicator chips should stay compact inside the chart toolbar");
 assertRuleHas(klineMindWxss, ".decision-action", ["width: 100%", "box-sizing: border-box"], "kline decision actions should use stable non-native button boxes");
@@ -261,7 +271,7 @@ assert.equal(homeWxss.includes(".mini-card-qr > view"), false, "home QR preview 
 assert.equal(homeWxss.includes(".retention-next view"), false, "home retention next detail should use class selectors instead of tag selectors");
 assertRuleHas(homeWxss, ".mini-primary", ["line-height: 1.2"], "home primary CTA should use the shared button baseline");
 assertRuleHas(homeWxss, ".home-today-state-action", ["line-height: 1.2"], "home compact action should use the shared button baseline");
-assertRuleHas(klineMindWxss, ".slice-switch button", ["display: inline-flex", "align-items: center", "justify-content: center", "line-height: 1.2"], "kline slice switch should center its label");
+assertRuleHas(klineMindWxss, ".slice-change-btn", ["display: inline-flex", "align-items: center", "justify-content: center", "line-height: 1.2"], "kline slice switch should center its label");
 assertRuleHas(klineMindWxss, ".option-pill", ["display: flex", "align-items: center", "justify-content: center", "line-height: 1.2"], "kline option pills should center text vertically");
 assertRuleHas(tradeReviewWxss, ".mini-choice button", ["display: flex", "align-items: center", "justify-content: center", "line-height: 1.2"], "trade review binary choices should center labels");
 assertRuleHas(trainingWxss, ".plan-toggle", ["line-height: 1.2"], "training plan toggle should use the shared button baseline");
