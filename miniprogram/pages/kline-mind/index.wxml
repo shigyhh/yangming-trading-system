@@ -69,28 +69,30 @@
           <view class="chart-stepper-control" bindtap="decreaseChartZoom">-</view>
           <view class="chart-stepper-control" bindtap="increaseChartZoom">+</view>
         </view>
-        <scroll-view class="wave-board-scroll" scroll-x="true" enhanced="true" bounces="true" show-scrollbar="{{false}}">
-          <view class="chart-scroll-inner" style="{{runtimeView.chartBoardStyle}}">
+        <scroll-view class="wave-board-scroll" scroll-x="{{false}}" enhanced="true" show-scrollbar="{{false}}">
+          <view class="chart-scroll-inner">
             <view class="wave-board zoom-{{session.chartZoomKey}}">
-            <view class="indicator-lines">
-              <view wx:for="{{runtimeView.indicatorOverlay.bollUpper}}" wx:key="key" class="indicator-segment boll" style="{{item.style}}"></view>
-              <view wx:for="{{runtimeView.indicatorOverlay.bollLower}}" wx:key="key" class="indicator-segment boll" style="{{item.style}}"></view>
-              <view wx:for="{{runtimeView.indicatorOverlay.ma20}}" wx:key="key" class="indicator-segment ma20" style="{{item.style}}"></view>
-              <view wx:for="{{runtimeView.indicatorOverlay.ma10}}" wx:key="key" class="indicator-segment ma10" style="{{item.style}}"></view>
-              <view wx:for="{{runtimeView.indicatorOverlay.ma5}}" wx:key="key" class="indicator-segment ma5" style="{{item.style}}"></view>
+              <view class="wave-board-content" style="{{runtimeView.chartBoardStyle}}">
+                <view class="indicator-lines">
+                  <view wx:for="{{runtimeView.indicatorOverlay.bollUpper}}" wx:key="key" class="indicator-segment boll" style="{{item.style}}"></view>
+                  <view wx:for="{{runtimeView.indicatorOverlay.bollLower}}" wx:key="key" class="indicator-segment boll" style="{{item.style}}"></view>
+                  <view wx:for="{{runtimeView.indicatorOverlay.ma20}}" wx:key="key" class="indicator-segment ma20" style="{{item.style}}"></view>
+                  <view wx:for="{{runtimeView.indicatorOverlay.ma10}}" wx:key="key" class="indicator-segment ma10" style="{{item.style}}"></view>
+                  <view wx:for="{{runtimeView.indicatorOverlay.ma5}}" wx:key="key" class="indicator-segment ma5" style="{{item.style}}"></view>
+                </view>
+                <button
+                  wx:for="{{runtimeView.visibleCandles}}"
+                  wx:key="key"
+                  class="mind-candle {{item.tone}} {{item.focus ? 'focus' : ''}} {{item.selected ? 'selected' : ''}}"
+                  data-key="{{item.key}}"
+                  bindtap="selectCandle"
+                >
+                  <view class="wick" style="{{item.wickStyle}}"></view>
+                  <view class="body" style="{{item.bodyStyle}}"></view>
+                  <text wx:if="{{item.label}}">{{item.label}}</text>
+                </button>
+              </view>
             </view>
-            <button
-              wx:for="{{runtimeView.visibleCandles}}"
-              wx:key="key"
-              class="mind-candle {{item.tone}} {{item.focus ? 'focus' : ''}} {{item.selected ? 'selected' : ''}}"
-              data-key="{{item.key}}"
-              bindtap="selectCandle"
-            >
-              <view class="wick" style="{{item.wickStyle}}"></view>
-              <view class="body" style="{{item.bodyStyle}}"></view>
-              <text wx:if="{{item.label}}">{{item.label}}</text>
-            </button>
-          </view>
 
             <view class="indicator-strip">
               <view
@@ -117,23 +119,25 @@
             </view>
 
             <view wx:if="{{runtimeView.indicatorPanel.visible}}" class="sub-indicator-board {{runtimeView.indicatorPanel.type}} zoom-{{session.chartZoomKey}}">
-            <view wx:for="{{runtimeView.indicatorPanel.lines.upper}}" wx:key="key" class="sub-line boll-upper" style="{{item.style}}"></view>
-            <view wx:for="{{runtimeView.indicatorPanel.lines.lower}}" wx:key="key" class="sub-line boll-lower" style="{{item.style}}"></view>
-            <view wx:for="{{runtimeView.indicatorPanel.lines.mid}}" wx:key="key" class="sub-line boll-mid" style="{{item.style}}"></view>
-            <view wx:for="{{runtimeView.indicatorPanel.lines.dif}}" wx:key="key" class="sub-line dif" style="{{item.style}}"></view>
-            <view wx:for="{{runtimeView.indicatorPanel.lines.dea}}" wx:key="key" class="sub-line dea" style="{{item.style}}"></view>
-            <view wx:for="{{runtimeView.indicatorPanel.lines.rsi}}" wx:key="key" class="sub-line rsi" style="{{item.style}}"></view>
-            <view wx:for="{{runtimeView.indicatorPanel.lines.k}}" wx:key="key" class="sub-line k" style="{{item.style}}"></view>
-            <view wx:for="{{runtimeView.indicatorPanel.lines.d}}" wx:key="key" class="sub-line d" style="{{item.style}}"></view>
-            <view wx:for="{{runtimeView.indicatorPanel.lines.j}}" wx:key="key" class="sub-line j" style="{{item.style}}"></view>
-            <view
-              wx:for="{{runtimeView.indicatorPanel.items}}"
-              wx:key="key"
-              class="sub-indicator-item {{item.tone}}"
-            >
-              <view class="sub-bar" style="{{item.barStyle}}"></view>
+              <view class="sub-indicator-content" style="{{runtimeView.chartBoardStyle}}">
+                <view wx:for="{{runtimeView.indicatorPanel.lines.upper}}" wx:key="key" class="sub-line boll-upper" style="{{item.style}}"></view>
+                <view wx:for="{{runtimeView.indicatorPanel.lines.lower}}" wx:key="key" class="sub-line boll-lower" style="{{item.style}}"></view>
+                <view wx:for="{{runtimeView.indicatorPanel.lines.mid}}" wx:key="key" class="sub-line boll-mid" style="{{item.style}}"></view>
+                <view wx:for="{{runtimeView.indicatorPanel.lines.dif}}" wx:key="key" class="sub-line dif" style="{{item.style}}"></view>
+                <view wx:for="{{runtimeView.indicatorPanel.lines.dea}}" wx:key="key" class="sub-line dea" style="{{item.style}}"></view>
+                <view wx:for="{{runtimeView.indicatorPanel.lines.rsi}}" wx:key="key" class="sub-line rsi" style="{{item.style}}"></view>
+                <view wx:for="{{runtimeView.indicatorPanel.lines.k}}" wx:key="key" class="sub-line k" style="{{item.style}}"></view>
+                <view wx:for="{{runtimeView.indicatorPanel.lines.d}}" wx:key="key" class="sub-line d" style="{{item.style}}"></view>
+                <view wx:for="{{runtimeView.indicatorPanel.lines.j}}" wx:key="key" class="sub-line j" style="{{item.style}}"></view>
+                <view
+                  wx:for="{{runtimeView.indicatorPanel.items}}"
+                  wx:key="key"
+                  class="sub-indicator-item {{item.tone}}"
+                >
+                  <view class="sub-bar" style="{{item.barStyle}}"></view>
+                </view>
+              </view>
             </view>
-          </view>
           </view>
         </scroll-view>
       </view>

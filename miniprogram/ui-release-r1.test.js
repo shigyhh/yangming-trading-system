@@ -121,7 +121,8 @@ assert.ok(klineMindWxml.includes('class="wave-source-line"'), "kline mind should
 assert.ok(klineMindWxml.includes("K线盲练"), "kline mind should frame the session as K-line blind practice");
 assert.equal(klineMindWxml.includes("真实历史盲练"), false, "kline mind should not keep a duplicated blind-practice control block above the chart");
 assert.ok(klineMindWxml.includes('wx:if="{{savedRecord && savedRecord.completed}}" class="path-links"'), "kline mind should show cross-page links only after the record is complete");
-assertRuleHas(klineMindWxss, ".wave-board", ["display: flex", "justify-content: flex-start", "overflow: hidden"], "kline mind wave board should use a horizontal training strip instead of a sparse fixed grid");
+assertRuleHas(klineMindWxss, ".wave-board", ["position: relative", "overflow: hidden"], "kline mind wave board should act as a fixed blind viewport");
+assertRuleHas(klineMindWxss, ".wave-board-content", ["right: 0", "display: flex", "justify-content: flex-start"], "kline mind candle strip should be right-pinned inside the blind viewport");
 
 assert.ok(profileWxml.includes('wx:if="{{debugMode}}" class="debug-release-tools card"'), "profile debug release tools should be hidden behind debugMode");
 assert.equal(profileWxml.includes('class="danger-clear"'), false, "profile should not expose dangerous clear action in normal page flow");
@@ -194,8 +195,8 @@ assert.ok(klineMindWxml.includes('bindtap="switchSlice"'), "kline change-slice a
 assert.ok(klineMindJs.includes("getNextKlineMindSliceSeed"), "kline page should rotate the training slice seed instead of only expanding selectors");
 assert.ok(klineMindWxml.includes('class="slice-playbook"'), "kline chart should include an immediate concrete playbook for how to train this slice");
 assert.ok(klineMindWxml.includes("点最牵动的一根"), "kline playbook should tell the user exactly what to do with the chart");
-assert.ok(klineMindWxml.includes('scroll-view class="wave-board-scroll" scroll-x="true"'), "kline chart should use a horizontal training canvas for many real candles");
-assert.ok(klineMindWxml.includes('bounces="true"'), "kline chart scroll should keep native touch panning feel on real devices");
+assert.ok(klineMindWxml.includes('scroll-view class="wave-board-scroll" scroll-x="{{false}}"'), "kline blind chart should lock the viewport instead of allowing future candles to be dragged into view");
+assert.equal(klineMindWxml.includes('bounces="true"'), false, "kline blind chart should not keep native horizontal panning that can reveal unreplayed candles");
 assert.ok(klineMindWxml.includes('class="chart-stepper"'), "kline chart should expose compact -/+ zoom controls in the chart corner");
 assert.ok(klineMindWxml.includes("bindtap=\"decreaseChartZoom\""), "kline chart should let the user zoom out with a minus control");
 assert.ok(klineMindWxml.includes("bindtap=\"increaseChartZoom\""), "kline chart should let the user zoom in with a plus control");
@@ -245,8 +246,8 @@ assertRuleHas(klineMindWxss, ".chart-period-rail", ["display: flex", "width: 100
 assertRuleHas(klineMindWxss, ".slice-change-btn", ["width: 100%", "max-width: 112rpx", "justify-content: center"], "kline change-slice button should not overlap the trading style rail");
 assertRuleHas(klineMindWxss, ".indicator-strip", ["display: flex", "overflow-x: auto"], "kline indicator selector should be one horizontal row");
 assertRuleHas(klineMindWxss, ".chart-indicator-chip", ["flex: 0 0 auto", "height: 38rpx"], "kline indicator chips should stay compact inside the chart toolbar");
-assertRuleHas(klineMindWxss, ".chart-scroll-inner", ["min-width: 920rpx"], "kline chart should keep horizontal scroll room even in the widest overview mode");
-assertRuleHas(klineMindWxss, ".wave-board", ["min-width: 920rpx"], "kline chart board should remain pannable by touch instead of collapsing to the viewport");
+assertRuleHas(klineMindWxss, ".chart-scroll-inner", ["width: 100%", "min-width: 0"], "kline chart should keep a fixed blind viewport while zoom changes candle density");
+assertRuleHas(klineMindWxss, ".wave-board", ["min-width: 0", "justify-content: flex-end"], "kline chart should pin the current candle to the right edge and compress only revealed history");
 assertRuleHas(klineMindWxss, ".wave-board.zoom-overview .mind-candle", ["flex-basis: 5rpx"], "kline overview zoom should fit more real candles in the same training strip");
 assertRuleHas(klineMindWxss, ".sub-indicator-board.zoom-overview .sub-indicator-item", ["flex-basis: 5rpx"], "kline overview zoom should keep sub indicators aligned with candles");
 assertRuleHas(klineMindWxss, ".decision-action", ["width: 100%", "box-sizing: border-box"], "kline decision actions should use stable non-native button boxes");

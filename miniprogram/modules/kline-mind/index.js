@@ -581,7 +581,7 @@ function getChartBoardWidth(candleCount, zoomKey = "wide") {
 }
 
 function getChartBoardStyle(candleCount, zoomKey = "wide") {
-  return `width: ${getChartBoardWidth(candleCount, zoomKey)}rpx; min-width: 920rpx;`;
+  return `width: ${getChartBoardWidth(candleCount, zoomKey)}rpx; min-width: 0;`;
 }
 
 function buildOverlaySegments(candles = [], field, zoomKey = "wide") {

@@ -151,7 +151,7 @@ const overviewSession = buildKlineMindSession({
 assert.strictEqual(overviewSession.chartZoomKey, "overview");
 assert.strictEqual(overviewSession.chartWindowSize, 180);
 assert.strictEqual(overviewSession.candles.length, 180);
-assert.ok(overviewSession.chartBoardStyle.includes("min-width: 920rpx"));
+assert.ok(overviewSession.chartBoardStyle.includes("min-width: 0"));
 
 const bollCompleteSession = buildKlineMindSession({
   record: {
@@ -258,6 +258,10 @@ const warmupRuntime = startKlineTrainingRuntime(buildKlineMindSession({
 assert.strictEqual(warmupRuntime.currentIndex, 7);
 assert.strictEqual(warmupRuntime.visibleCandles.length, 8);
 assert.strictEqual(warmupRuntime.activeCandle.key, warmupRuntime.visibleCandles[7].key);
+assert.strictEqual(
+  warmupRuntime.visibleCandles.some((item) => Number(item.sourceIndex) > warmupRuntime.currentIndex),
+  false
+);
 assert.ok(warmupRuntime.chartBoardStyle.includes("width:"));
 assert.strictEqual(warmupRuntime.indicatorPanel.type, "vol");
 assert.strictEqual(warmupRuntime.indicatorPanel.items.length, 8);
