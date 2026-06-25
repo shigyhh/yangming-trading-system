@@ -1123,7 +1123,329 @@ V3 可以引入“不可预测训练场”，但优先通过真实历史片段�
 - 记录基础压力信号。
 - 保持模拟决策不可随意编辑的产品原则。
 
-## 12. 命名原则
+## 12. Future V4：人格收敛与稳态交易系统
+
+V4 已经不是训练系统升级，而是“交易行为收敛系统”。它不进入当前 P1 / P2 实现，必须建立在 V1 盲练、V2 完整训练器、V3 压力仿真都稳定之后。
+
+### 12.1 V4 一句话定义
+
+构建一个基于 K 线盲测交易与行为数据的“交易人格收敛系统”，通过行为约束、错误模式压缩、情绪弱化与决策稳定化机制，将用户交易行为从高波动非稳定状态逐步收敛为低熵、高一致性的稳定交易人格。
+
+这里的“交易人格”只指交易训练中的行为模式，不是医学、心理诊断，也不约束用户真实交易行为。
+
+### 12.2 V4 新增核心层
+
+| V4 层 | 责任 | 当前处理 |
+| --- | --- | --- |
+| Behavioral Convergence Engine | 对用户训练行为聚类，识别主导行为模式并推动收敛 | 后置；P4 后再接 |
+| Error Compression Engine | 将错误压缩成有限类型，避免错误分类无限扩散 | 后置；P3 可先做错误类型归一 |
+| Emotional Dampening System | 降低情绪对行为输出的权重，让情绪只是信号 | 后置；当前仍先识别情绪 |
+| Decision Stability Engine | 提升同类条件下决策一致性 | 后置；P3/P4 可先做一致性指标 |
+| Trader Identity Engine | 建立固定交易行为画像，并检测人格偏移 | 后置；只作为训练画像，不作真实身份判断 |
+
+### 12.3 V4 核心指标
+
+```ts
+type KlineConvergenceExtension = {
+  stabilityIndex?: number;
+  entropyIndex?: number;
+  identityCoherence?: number;
+  dominantBehaviorPattern?: "trend" | "range" | "impulsive" | "patient" | "unknown";
+  behaviorDeviationPct?: number;
+  compressedErrorType?: "chase" | "panic" | "hesitation" | "none";
+  emotionWeight?: number;
+  decisionConsistency?: number;
+  traderIdentity?: {
+    type: string;
+    constraints: string[];
+    allowedBehaviors: string[];
+    discouragedBehaviors: string[];
+  };
+};
+```
+
+### 12.4 V4 UI 原则
+
+V4 UI 不再强化情绪干预，而是转向低干扰、一致性反馈：
+
+- 少情绪词。
+- 少强提醒。
+- 少即时纠错。
+- 强化行为一致性提示。
+- 强化人格偏移提示。
+- 强化稳态评分。
+- 情绪提示弱化为灰色辅助信号。
+
+### 12.5 V4 暂不进入当前实现
+
+当前不做：
+
+- 行为聚类与人格固定。
+- 行为偏移惩罚。
+- 情绪权重衰减模型。
+- 人格约束交易行为。
+- UI 稳态评分系统。
+
+当前可以先做：
+
+- 保持错误类型有限集合：追涨、恐慌、犹豫。
+- 在复盘中避免错误类型无限扩散。
+- 在文案上弱化“情绪决定动作”，强调情绪只是信号。
+
+## 13. Future V5：交易数字分身系统
+
+V5 是系统终局形态：交易数字分身对照系统。它不进入当前 P1 / P2 / P3 / P4 实现，只作为长期产品愿景保留。
+
+### 13.1 V5 一句话定义
+
+构建一个基于 K 线行为数据、情绪轨迹与决策历史的“交易数字分身系统”，为每个用户生成一个可独立运行的 AI 交易人格分身，用于模拟、对照、预测与重塑用户训练行为，实现“自我与分身对照进化”的交易认知系统。
+
+补充边界：
+
+- “AI 分身”只在模拟训练中运行。
+- 不接入真实交易。
+- 不生成真实买卖建议。
+- 不承诺收益。
+- “预测”只预测用户可能出现的行为风险，不预测行情。
+- “反事实路径”只比较纪律路径与实际训练路径，不称为投资最优路径。
+
+### 13.2 V5 新增终局系统
+
+| V5 层 | 责任 | 当前处理 |
+| --- | --- | --- |
+| Trading Digital Twin Engine | 基于历史行为、情绪、决策生成模拟分身 | 后置；需长期数据后再做 |
+| Self-Shadow Simulation Engine | 用历史错误模式模拟“过去的我” | 后置；可由 P3/P4 复盘数据沉淀 |
+| Behavior Forecast Engine | 预测用户下一步高风险行为 | 后置；只做行为风险，不做行情预测 |
+| Counterfactual Trading Engine | 比较实际路径与纪律路径 | 后置；禁止输出收益承诺式“最优路径” |
+| Twin vs Self Divergence Engine | 计算用户、历史自我、AI 分身的行为差异 | 后置；用于认知对照报告 |
+
+### 13.3 V5 三重对照结构
+
+V5 UI 不再是交易界面，而是自我认知对照界面：
+
+```text
+当前用户行为
+  vs
+AI 分身行为
+  vs
+历史影子行为
+```
+
+三层含义：
+
+- 真实自我：当前训练中的实际行为。
+- 历史自我：过去反复出现的错误影子。
+- 理想自我：由稳定规则压缩出的模拟分身。
+
+### 13.4 V5 可提前预留的兼容字段
+
+这些字段只作为未来扩展，不进入当前页面展示：
+
+```ts
+type KlineDigitalTwinExtension = {
+  twinProfileId?: string;
+  twinModelVersion?: string;
+  shadowModelId?: string;
+  behaviorForecasts?: Array<{
+    type: "chase" | "panic" | "hesitation" | "revenge" | "overtrade";
+    probability: number;
+    triggerContext: string;
+  }>;
+  counterfactualPaths?: Array<{
+    pathId: string;
+    label: string;
+    premise: string;
+    disciplineScoreDelta?: number;
+    riskDelta?: number;
+  }>;
+  divergenceScores?: {
+    decisionGap: number;
+    emotionGap: number;
+    timingGap: number;
+    riskGap: number;
+  };
+};
+```
+
+### 13.5 V5 暂不进入当前实现
+
+当前不做：
+
+- AI 分身自主交易模拟。
+- 未来行为概率预警。
+- 多路径交易对照。
+- Twin vs Self 三屏 UI。
+- 任何收益对比式“如果按 AI 做会赚多少”的输出。
+
+当前可以先做：
+
+- 保留行为轨迹、情绪轨迹、决策轨迹。
+- 让 `decisionTimeline` / `emotionTimeline` 足够干净，未来可训练分身。
+- 复盘中保持“实际路径 vs 纪律路径”的数据可能性，但不展示收益承诺。
+
+## 14. Future V6：交易文明与群体智能系统
+
+V6 是远期“交易文明模拟系统”，已经不是个人训练系统。它只能作为研究级未来方向保留，不进入当前工程化路线，不设计当前 DB / API / 小程序页面。
+
+### 14.1 V6 一句话定义
+
+构建一个基于多用户交易行为、数字分身交互与市场反馈循环的“交易文明模拟系统”，让多个交易人格分身在同一模拟市场环境中相互影响、竞争、学习与演化，从而形成可观察、可建模、可干预的交易群体智能生态。
+
+补充边界：
+
+- 只在脱敏模拟环境中运行。
+- 不使用可识别用户数据做公开群体模拟。
+- 不预测真实市场。
+- 不模拟或指导真实市场操纵。
+- 不进入当前产品功能承诺。
+
+### 14.2 V6 新增文明层
+
+| V6 层 | 责任 | 当前处理 |
+| --- | --- | --- |
+| Multi-Agent Trading Civilization Engine | 生成多类交易人格 Agent，并在同一模拟市场中决策 | 远期研究层 |
+| Market Ecology Engine | 模拟流动性、波动率、情绪与 Agent 压力图 | 远期研究层 |
+| Behavior Herding Engine | 模拟恐慌、FOMO、流动性踩踏等群体行为 | 远期研究层 |
+| Strategy Evolution Engine | 模拟策略复制、变异、淘汰 | 远期研究层 |
+| Civilization Memory Engine | 记录群体行为周期、极端事件、策略演化路径 | 远期研究层 |
+
+### 14.3 V6 Agent 类型
+
+```ts
+type TradingCivilizationAgent = {
+  id: string;
+  personalityType: "trend_follower" | "contrarian" | "scalper" | "emotional_trader" | "ai_rational";
+  riskProfile: string;
+  strategyModel: string;
+  capitalWeight: number;
+};
+```
+
+预置 Agent：
+
+- Trend Follower：趋势追随者。
+- Contrarian：逆势交易者。
+- Scalper：短线高频。
+- Emotional Trader：情绪交易者。
+- AI Rational Agent：理性模型。
+
+### 14.4 V6 可提前保留的概念字段
+
+这些字段不进入当前存储，只作为未来研究契约：
+
+```ts
+type KlineCivilizationExtension = {
+  civilizationSessionId?: string;
+  agentPopulationSummary?: Array<{
+    type: string;
+    count: number;
+    capitalWeight: number;
+  }>;
+  marketEcologyState?: {
+    liquidity: number;
+    volatility: number;
+    sentiment: number;
+    herdingIndex: number;
+  };
+  strategyEvolutionEvents?: Array<{
+    eventType: "replicate" | "mutate" | "eliminate";
+    strategyId: string;
+    reason: string;
+  }>;
+  civilizationMemoryRefs?: string[];
+};
+```
+
+### 14.5 V6 暂不进入当前实现
+
+当前不做：
+
+- 多用户分身对战。
+- 群体市场价格反馈模拟。
+- 策略达尔文进化。
+- 文明记忆库。
+- 群体情绪曲线 UI。
+
+当前可以做：
+
+- 保证个人训练数据结构足够干净，未来可匿名聚合。
+- 保持 `klineMindRecord`、`decisionTimeline`、`emotionTimeline` 不夹带敏感身份数据。
+- 在文档中保留 V6 作为远期研究方向，不进入短期 backlog。
+
+## 15. Future V7：Market-as-Mind 终极认知系统
+
+V7 是“市场即心智”的终极哲学与认知建模层，不是当前产品功能，不是工程承诺，也不是对真实市场的因果断言。
+
+### 15.1 V7 一句话定义
+
+构建一个“市场即心智”的终极交易认知系统，将 K 线市场从外部数据环境升级为可建模、可干预、可反演的集体心智结构，使市场行为、交易者行为与认知模型在同一系统中闭环共振，实现“市场 = 心智投影场”的统一建模体系。
+
+重要边界：
+
+- “市场即心智”是认知建模视角，不是金融科学定论。
+- “可编辑”只指训练场景和认知模型可编辑，不指真实市场可编辑。
+- 不输出真实市场预测。
+- 不进行真实市场干预。
+- 不把群体心理模型包装成买卖依据。
+
+### 15.2 V7 终极跃迁层
+
+| V7 层 | 责任 | 当前处理 |
+| --- | --- | --- |
+| Market-as-Mind Engine | 将模拟市场视为集体心智投影结构 | 哲学 / 研究层 |
+| Cognitive Field Engine | 建模信念、预期、注意力与矛盾结构 | 哲学 / 研究层 |
+| Intention Projection Engine | 将交易者意图映射到模拟市场行为 | 哲学 / 研究层 |
+| Reality Feedback Loop Engine | 建立认知 -> 行为 -> 市场 -> 反馈 -> 认知闭环 | 哲学 / 研究层 |
+| Mind-Market Unity Engine | 统一交易者行为与模拟市场状态 | 哲学 / 研究层 |
+
+### 15.3 V7 认知变量
+
+```ts
+type MarketMindState = {
+  collectiveEmotionField?: number;
+  attentionFlow?: number;
+  fearGreedDensity?: number;
+  decisionEntropy?: number;
+  beliefConflict?: number;
+  expectationPressure?: number;
+  cognitiveCollapseRisk?: number;
+};
+```
+
+这些变量只能用于训练可视化、模拟解释和认知复盘，不用于真实行情判断。
+
+### 15.4 V7 体验方向
+
+V7 用户看到的不是传统 K 线，而是训练场中的认知结构可视化：
+
+- 群体恐惧浓度。
+- 贪婪扩散结构。
+- 信念冲突区域。
+- 注意力流向。
+- 认知塌陷点。
+
+这些可视化都必须标注为“训练模拟解释”，不得呈现为真实市场信号。
+
+### 15.5 V1 到 V7 的完整进化链
+
+```text
+V1 工具
+  -> V2 教练
+  -> V3 压力模拟
+  -> V4 人格收敛
+  -> V5 数字分身
+  -> V6 交易文明
+  -> V7 心智市场
+```
+
+### 15.6 V7 之后不再扩展产品形态
+
+V7 之后不再继续定义新版本。本规格到 V7 为止，后续只能做两件事：
+
+1. 工程化落地：把 V1-P4 当前可实现部分做成真实系统。
+2. 认知收敛：把 V5-V7 作为长期哲学与研究框架沉淀。
+
+## 16. 命名原则
 
 为了避免投顾误解，V1 用户侧命名建议：
 
@@ -1133,7 +1455,7 @@ V3 可以引入“不可预测训练场”，但优先通过真实历史片段�
 - “收益 / 胜率”只在复盘分析中作为模拟训练指标，不作为能力承诺。
 - “风险提示”只指行为风险，不指市场风险方向。
 
-## 13. 合规文案
+## 17. 合规文案
 
 所有 K线训练页面保留轻量合规边界：
 
