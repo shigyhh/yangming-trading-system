@@ -72,7 +72,7 @@
       <view class="chart-toolbar">
         <view class="chart-orientation-note">横屏训练更稳</view>
         <view class="chart-period-rail">
-          <text>周期</text>
+          <text>交易风格</text>
           <button
             wx:for="{{session.timeframeOptions}}"
             wx:key="key"

@@ -434,7 +434,8 @@ Page({
   },
 
   selectMainIndicator(e) {
-    const indicatorKey = e.currentTarget.dataset.indicator || "ma";
+    const tappedKey = e.currentTarget.dataset.indicator || "ma";
+    const indicatorKey = tappedKey === this.data.selectedMainIndicatorKey ? "hide" : tappedKey;
     const runtime = this.data.trainingRuntime
       ? setKlineRuntimeMainIndicator(this.data.trainingRuntime, indicatorKey)
       : null;
@@ -447,7 +448,8 @@ Page({
   },
 
   selectIndicator(e) {
-    const indicatorKey = e.currentTarget.dataset.indicator || "vol";
+    const tappedKey = e.currentTarget.dataset.indicator || "vol";
+    const indicatorKey = tappedKey === this.data.selectedIndicatorKey ? "hide" : tappedKey;
     const runtime = this.data.trainingRuntime
       ? setKlineRuntimeIndicator(this.data.trainingRuntime, indicatorKey)
       : null;

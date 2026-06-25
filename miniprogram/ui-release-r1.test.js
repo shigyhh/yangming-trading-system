@@ -211,11 +211,15 @@ assert.ok(klineMindWxml.includes("横屏训练更稳"), "kline chart should reco
 assert.ok(klineMindJson.includes('"pageOrientation": "auto"'), "kline mind should allow landscape practice on real devices");
 assert.ok(klineMindWxml.includes('class="sub-indicator-board'), "kline indicator layer should render below the chart");
 assert.ok(klineMindWxml.includes('class="indicator-strip"'), "kline indicators should render as a single-row selector");
+assert.ok(klineMindWxml.includes("交易风格"), "kline timeframe selector should be framed as trading style, not chart period switching");
+assert.equal(klineMindWxml.includes("<text>周期</text>"), false, "kline timeframe selector should not look like same-symbol period switching");
 assert.equal(klineMindWxml.includes("toggleIndicatorPicker"), false, "kline indicators should not use a dropdown picker");
 assert.equal(klineMindWxml.includes('class="sub-indicator-menu"'), false, "kline indicators should not render a dropdown menu");
 assert.equal(sliceBetween(klineMindWxml, 'class="indicator-strip"', 'class="sub-indicator-board').includes("主图"), false, "kline indicator row should not spell out main-chart labels");
 assert.equal(sliceBetween(klineMindWxml, 'class="indicator-strip"', 'class="sub-indicator-board').includes("副图"), false, "kline indicator row should not spell out sub-chart labels");
 assert.ok(sliceBetween(klineMindWxml, 'class="indicator-strip"', 'class="sub-indicator-board').includes("chart-indicator-chip"), "kline indicator row should use chart-scoped chip styles");
+assert.deepStrictEqual(demoSession.mainIndicatorOptions.map((item) => item.label), ["MA", "BOLL"]);
+assert.deepStrictEqual(demoSession.indicatorPanelOptions.map((item) => item.label), ["VOL", "MACD"]);
 assert.deepStrictEqual(demoSession.indicatorCatalog.map((item) => item.label), ["MA", "MACD", "BOLL", "VOL"]);
 assertRuleHas(klineMindWxss, ".slice-switch", ["flex-wrap: wrap"], "kline slice controls should wrap instead of overflowing on narrow screens");
 assertRuleHas(klineMindWxss, ".slice-switch > .slice-actions", ["grid-template-columns: repeat(2, minmax(0, 1fr))", "width: 100%"], "kline slice action buttons should stay inside the card");

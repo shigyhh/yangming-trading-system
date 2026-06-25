@@ -140,9 +140,9 @@ const MARKET_CATALOG = {
 };
 
 const TIMEFRAME_CATALOG = [
-  { key: "1d", label: "日线", granularity: "daily", required: true },
-  { key: "60m", label: "60m", granularity: "intraday", required: true },
-  { key: "30m", label: "30m", granularity: "intraday", required: true }
+  { key: "1d", label: "长线", granularity: "daily", required: true },
+  { key: "60m", label: "中线", granularity: "intraday", required: true },
+  { key: "30m", label: "短线", granularity: "intraday", required: true }
 ];
 
 const CHART_ZOOM_OPTIONS = [
@@ -159,13 +159,11 @@ const INDICATOR_CATALOG = [
 ];
 
 const MAIN_INDICATOR_OPTIONS = [
-  { key: "hide", label: "无" },
   { key: "ma", label: "MA" },
   { key: "boll", label: "BOLL" }
 ];
 
 const INDICATOR_PANEL_OPTIONS = [
-  { key: "hide", label: "无" },
   { key: "vol", label: "VOL" },
   { key: "macd", label: "MACD" }
 ];
@@ -602,7 +600,8 @@ function buildOverlaySegments(candles = [], field, zoomKey = "wide") {
 }
 
 function getMainIndicatorMeta(key = "ma") {
-  return MAIN_INDICATOR_OPTIONS.find((item) => item.key === key) || MAIN_INDICATOR_OPTIONS[1];
+  if (key === "hide") return { key: "hide", label: "" };
+  return MAIN_INDICATOR_OPTIONS.find((item) => item.key === key) || MAIN_INDICATOR_OPTIONS[0];
 }
 
 function buildEmptyIndicatorOverlay() {
@@ -633,7 +632,8 @@ function buildIndicatorOverlay(candles = [], zoomKey = "wide", indicatorKey = "m
 }
 
 function getIndicatorPanelMeta(key = "vol") {
-  return INDICATOR_PANEL_OPTIONS.find((item) => item.key === key) || INDICATOR_PANEL_OPTIONS[1];
+  if (key === "hide") return { key: "hide", label: "" };
+  return INDICATOR_PANEL_OPTIONS.find((item) => item.key === key) || INDICATOR_PANEL_OPTIONS[0];
 }
 
 function emaSeries(values = [], period) {
