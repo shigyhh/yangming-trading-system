@@ -85,13 +85,14 @@
         </view>
       </view>
 
-      <scroll-view class="wave-board-scroll" scroll-x="true" wx:if="{{session.hasHistoricalData}}" enhanced="true" show-scrollbar="{{false}}">
-        <view class="chart-scroll-inner" style="{{runtimeView.chartBoardStyle}}">
-          <view class="wave-board zoom-{{session.chartZoomKey}}">
-            <view class="chart-stepper">
-              <button bindtap="decreaseChartZoom">-</button>
-              <button bindtap="increaseChartZoom">+</button>
-            </view>
+      <view wx:if="{{session.hasHistoricalData}}" class="chart-canvas-wrap">
+        <view class="chart-stepper">
+          <view class="chart-stepper-control" bindtap="decreaseChartZoom">-</view>
+          <view class="chart-stepper-control" bindtap="increaseChartZoom">+</view>
+        </view>
+        <scroll-view class="wave-board-scroll" scroll-x="true" enhanced="true" show-scrollbar="{{false}}">
+          <view class="chart-scroll-inner" style="{{runtimeView.chartBoardStyle}}">
+            <view class="wave-board zoom-{{session.chartZoomKey}}">
             <view class="indicator-lines">
               <view wx:for="{{runtimeView.indicatorOverlay.bollUpper}}" wx:key="key" class="indicator-segment boll" style="{{item.style}}"></view>
               <view wx:for="{{runtimeView.indicatorOverlay.bollLower}}" wx:key="key" class="indicator-segment boll" style="{{item.style}}"></view>
@@ -112,22 +113,31 @@
             </button>
           </view>
 
-          <view class="sub-indicator-head">
-            <button bindtap="toggleIndicatorPicker">{{runtimeView.indicatorPanel.label}} ▾</button>
-            <view wx:if="{{showIndicatorPicker}}" class="sub-indicator-menu">
-              <button
-                wx:for="{{session.indicatorPanelOptions}}"
+            <view class="indicator-strip">
+              <view
+                wx:for="{{session.mainIndicatorOptions}}"
+                wx:for-item="mainIndicator"
                 wx:key="key"
-                class="{{item.key === selectedIndicatorKey ? 'active' : ''}}"
-                data-indicator="{{item.key}}"
+                class="chart-indicator-chip {{mainIndicator.key === selectedMainIndicatorKey ? 'active' : ''}}"
+                data-indicator="{{mainIndicator.key}}"
+                bindtap="selectMainIndicator"
+              >
+                {{mainIndicator.label}}
+              </view>
+              <view class="indicator-divider"></view>
+              <view
+                wx:for="{{session.indicatorPanelOptions}}"
+                wx:for-item="subIndicator"
+                wx:key="key"
+                class="chart-indicator-chip {{subIndicator.key === selectedIndicatorKey ? 'active' : ''}}"
+                data-indicator="{{subIndicator.key}}"
                 bindtap="selectIndicator"
               >
-                {{item.label}}
-              </button>
+                {{subIndicator.label}}
+              </view>
             </view>
-          </view>
 
-          <view wx:if="{{runtimeView.indicatorPanel.visible}}" class="sub-indicator-board {{runtimeView.indicatorPanel.type}} zoom-{{session.chartZoomKey}}">
+            <view wx:if="{{runtimeView.indicatorPanel.visible}}" class="sub-indicator-board {{runtimeView.indicatorPanel.type}} zoom-{{session.chartZoomKey}}">
             <view wx:for="{{runtimeView.indicatorPanel.lines.upper}}" wx:key="key" class="sub-line boll-upper" style="{{item.style}}"></view>
             <view wx:for="{{runtimeView.indicatorPanel.lines.lower}}" wx:key="key" class="sub-line boll-lower" style="{{item.style}}"></view>
             <view wx:for="{{runtimeView.indicatorPanel.lines.mid}}" wx:key="key" class="sub-line boll-mid" style="{{item.style}}"></view>
@@ -141,8 +151,9 @@
               <view class="sub-bar" style="{{item.barStyle}}"></view>
             </view>
           </view>
-        </view>
-      </scroll-view>
+          </view>
+        </scroll-view>
+      </view>
       <view wx:else class="history-empty">
         <view>历史数据未载入</view>
         <text>请先同步真实历史数据；未载入前不展示占位 K线。</text>
@@ -180,15 +191,15 @@
         <view class="decision-prompt">{{runtimeView.decisionPrompt}}</view>
 
         <view class="decision-actions">
-          <button
+          <view
             wx:for="{{decisionActions}}"
             wx:key="key"
-            class="decision-btn {{item.key}}"
+            class="decision-action decision-btn {{item.key}}"
             data-action="{{item.key}}"
             bindtap="recordRuntimeDecision"
           >
             <text>{{item.label}}</text>
-          </button>
+          </view>
         </view>
 
         <button class="runtime-next {{runtimeView.mustDecide ? 'locked' : ''}}" bindtap="advanceRuntimeCandle">

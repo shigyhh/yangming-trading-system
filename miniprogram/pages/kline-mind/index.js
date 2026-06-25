@@ -34,6 +34,7 @@ const {
   advanceKlineTrainingRuntime,
   recordKlineTrainingDecision,
   setKlineRuntimeIndicator,
+  setKlineRuntimeMainIndicator,
   buildKlineTrainingRecordPatch
 } = require("../../modules/kline-mind/index");
 const {
@@ -116,6 +117,7 @@ function buildForm(record = {}, session = {}) {
     timeframeKey: record.timeframeKey || session.timeframeKey || "1d",
     scenarioId: savedSceneId.indexOf("scene-") === 0 ? savedSceneId : "scene-fast-001",
     chartZoomKey: record.chartZoomKey || session.chartZoomKey || "wide",
+    mainIndicatorKey: record.mainIndicatorKey || session.defaultMainIndicatorKey || "ma",
     historySlice: record.historySlice || null,
     selectedCandleKey: record.selectedCandleKey || session.selectedCandleKey || "",
     reactionDirection: record.reactionDirection || inferReactionDirection(record.firstReaction),
@@ -256,7 +258,7 @@ Page({
     historyError: "",
     showSelectors: false,
     showBodySignal: false,
-    showIndicatorPicker: false,
+    selectedMainIndicatorKey: "ma",
     selectedIndicatorKey: "vol",
     tradeReviewUrl: ""
   },
@@ -318,6 +320,7 @@ Page({
       trainingSessionId: `kline-session-${todayKey()}-${Date.now()}`,
       decisionInterval: 5,
       initialVisibleCount: getInitialVisibleCount(session),
+      initialMainIndicatorKey: this.data.selectedMainIndicatorKey || session.defaultMainIndicatorKey || "ma",
       initialIndicatorKey: this.data.selectedIndicatorKey || session.defaultIndicatorKey || "vol",
       sliceSeed: record.scenarioId || ((session.historySlice || {}).sliceSeed) || ((session.historySlice || {}).seed) || ""
     });
@@ -430,8 +433,17 @@ Page({
     this.updateChartZoom(CHART_ZOOM_ORDER[nextIndex]);
   },
 
-  toggleIndicatorPicker() {
-    this.setData({ showIndicatorPicker: !this.data.showIndicatorPicker });
+  selectMainIndicator(e) {
+    const indicatorKey = e.currentTarget.dataset.indicator || "ma";
+    const runtime = this.data.trainingRuntime
+      ? setKlineRuntimeMainIndicator(this.data.trainingRuntime, indicatorKey)
+      : null;
+    this.setData({
+      selectedMainIndicatorKey: indicatorKey,
+      trainingRuntime: runtime,
+      runtimeView: buildRuntimeView(runtime),
+      form: Object.assign({}, this.data.form || {}, { mainIndicatorKey: indicatorKey })
+    });
   },
 
   selectIndicator(e) {
@@ -441,7 +453,6 @@ Page({
       : null;
     this.setData({
       selectedIndicatorKey: indicatorKey,
-      showIndicatorPicker: false,
       trainingRuntime: runtime,
       runtimeView: buildRuntimeView(runtime)
     });

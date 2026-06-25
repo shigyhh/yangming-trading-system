@@ -158,8 +158,14 @@ const INDICATOR_CATALOG = [
   { key: "vol", label: "VOL", name: "量能", trainingUse: "看放量反应" }
 ];
 
+const MAIN_INDICATOR_OPTIONS = [
+  { key: "hide", label: "无" },
+  { key: "ma", label: "MA" },
+  { key: "boll", label: "BOLL" }
+];
+
 const INDICATOR_PANEL_OPTIONS = [
-  { key: "hide", label: "隐藏" },
+  { key: "hide", label: "无" },
   { key: "vol", label: "VOL" },
   { key: "macd", label: "MACD" }
 ];
@@ -595,14 +601,35 @@ function buildOverlaySegments(candles = [], field, zoomKey = "wide") {
   return segments;
 }
 
-function buildIndicatorOverlay(candles = [], zoomKey = "wide") {
+function getMainIndicatorMeta(key = "ma") {
+  return MAIN_INDICATOR_OPTIONS.find((item) => item.key === key) || MAIN_INDICATOR_OPTIONS[1];
+}
+
+function buildEmptyIndicatorOverlay() {
   return {
+    ma5: [],
+    ma10: [],
+    ma20: [],
+    bollUpper: [],
+    bollLower: []
+  };
+}
+
+function buildIndicatorOverlay(candles = [], zoomKey = "wide", indicatorKey = "ma") {
+  const meta = getMainIndicatorMeta(indicatorKey);
+  if (meta.key === "hide") return buildEmptyIndicatorOverlay();
+  if (meta.key === "boll") {
+    return Object.assign(buildEmptyIndicatorOverlay(), {
+      ma20: buildOverlaySegments(candles, "ma20Y", zoomKey),
+      bollUpper: buildOverlaySegments(candles, "bollUpperY", zoomKey),
+      bollLower: buildOverlaySegments(candles, "bollLowerY", zoomKey)
+    });
+  }
+  return Object.assign(buildEmptyIndicatorOverlay(), {
     ma5: buildOverlaySegments(candles, "ma5Y", zoomKey),
     ma10: buildOverlaySegments(candles, "ma10Y", zoomKey),
-    ma20: buildOverlaySegments(candles, "ma20Y", zoomKey),
-    bollUpper: buildOverlaySegments(candles, "bollUpperY", zoomKey),
-    bollLower: buildOverlaySegments(candles, "bollLowerY", zoomKey)
-  };
+    ma20: buildOverlaySegments(candles, "ma20Y", zoomKey)
+  });
 }
 
 function getIndicatorPanelMeta(key = "vol") {
@@ -868,7 +895,7 @@ function buildRuntimeState(baseRuntime = {}, patch = {}) {
     visibleCandles,
     activeCandle,
     chartBoardStyle: `width: ${getChartBoardWidth(visibleCandles.length, runtime.chartZoomKey || "wide")}rpx;`,
-    indicatorOverlay: buildIndicatorOverlay(visibleCandles, runtime.chartZoomKey || "wide"),
+    indicatorOverlay: buildIndicatorOverlay(visibleCandles, runtime.chartZoomKey || "wide", runtime.mainIndicatorKey || "ma"),
     indicatorPanel: buildIndicatorPanel(visibleCandles, runtime.indicatorPanelKey || "vol", runtime.chartZoomKey || "wide"),
     positionState,
     sessionMetrics: buildSessionMetrics(positionState, runtime.decisionTimeline || []),
@@ -887,6 +914,7 @@ function startKlineTrainingRuntime(session = {}, options = {}) {
     marketKey: ((session.market || {}).key) || "",
     timeframeKey: session.timeframeKey || "",
     chartZoomKey: session.chartZoomKey || "wide",
+    mainIndicatorKey: options.initialMainIndicatorKey || session.defaultMainIndicatorKey || "ma",
     indicatorPanelKey: options.initialIndicatorKey || session.defaultIndicatorKey || "vol",
     decisionInterval: normalizeDecisionInterval(options.decisionInterval),
     currentIndex: Math.max(0, initialVisibleCount - 1),
@@ -907,6 +935,12 @@ function startKlineTrainingRuntime(session = {}, options = {}) {
 function setKlineRuntimeIndicator(runtime = {}, indicatorKey = "vol") {
   return buildRuntimeState(runtime, {
     indicatorPanelKey: getIndicatorPanelMeta(indicatorKey).key
+  });
+}
+
+function setKlineRuntimeMainIndicator(runtime = {}, indicatorKey = "ma") {
+  return buildRuntimeState(runtime, {
+    mainIndicatorKey: getMainIndicatorMeta(indicatorKey).key
   });
 }
 
@@ -1043,7 +1077,8 @@ function buildKlineMindSession({
   const stageGate = getSixGate(stagePlan.stageKey);
   const candles = markSelectedCandles(rawCandles, selectedKey, scenario.focusIndex);
   const chartBoardWidth = getChartBoardWidth(candles.length, chartZoomMeta.key);
-  const indicatorOverlay = buildIndicatorOverlay(candles, chartZoomMeta.key);
+  const mainIndicatorKey = (record || {}).mainIndicatorKey || "ma";
+  const indicatorOverlay = buildIndicatorOverlay(candles, chartZoomMeta.key, mainIndicatorKey);
   const selectedCandleKey = selectedKey || ((candles.find((item) => item.selected) || {}).key) || "";
 
   return {
@@ -1064,6 +1099,8 @@ function buildKlineMindSession({
     chartZoomOptions: buildChartZoomOptions(chartZoomMeta.key),
     chartBoardStyle: `width: ${chartBoardWidth}rpx;`,
     indicatorOverlay,
+    defaultMainIndicatorKey: "ma",
+    mainIndicatorOptions: MAIN_INDICATOR_OPTIONS,
     defaultIndicatorKey: "vol",
     indicatorPanelOptions: INDICATOR_PANEL_OPTIONS,
     chartOrientationHint: "横屏训练更稳，适合看更多 K 线；竖屏可放大少量细看。",
@@ -1260,6 +1297,7 @@ module.exports = {
   advanceKlineTrainingRuntime,
   recordKlineTrainingDecision,
   setKlineRuntimeIndicator,
+  setKlineRuntimeMainIndicator,
   buildKlineTrainingRecordPatch,
   buildKlineMindSession,
   buildKlineMindRecord,

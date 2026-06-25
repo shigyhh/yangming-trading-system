@@ -125,13 +125,16 @@ assert.strictEqual(defaultLongSession.chartZoomKey, "wide");
 assert.strictEqual(defaultLongSession.chartWindowSize, 150);
 assert.strictEqual(defaultLongSession.candles.length, 150);
 assert.ok(defaultLongSession.chartZoomOptions.find((item) => item.key === "wide").hint.includes("150"));
+assert.strictEqual(defaultLongSession.defaultMainIndicatorKey, "ma");
 assert.strictEqual(defaultLongSession.defaultIndicatorKey, "vol");
+assert.deepStrictEqual(defaultLongSession.mainIndicatorOptions.map((item) => item.key), ["hide", "ma", "boll"]);
 assert.deepStrictEqual(defaultLongSession.indicatorPanelOptions.map((item) => item.key), ["hide", "vol", "macd"]);
 assert.ok(defaultLongSession.chartBoardStyle.includes("width:"));
 assert.ok(defaultLongSession.indicatorOverlay.ma5.length > 0);
 assert.ok(defaultLongSession.indicatorOverlay.ma10.length > 0);
-assert.ok(defaultLongSession.indicatorOverlay.bollUpper.length > 0);
-assert.ok(defaultLongSession.indicatorOverlay.bollLower.length > 0);
+assert.ok(defaultLongSession.indicatorOverlay.ma20.length > 0);
+assert.strictEqual(defaultLongSession.indicatorOverlay.bollUpper.length, 0);
+assert.strictEqual(defaultLongSession.indicatorOverlay.bollLower.length, 0);
 assert.strictEqual(defaultLongSession.candles[4].ma5Y !== null, true);
 
 const sparseSession = buildKlineMindSession({
