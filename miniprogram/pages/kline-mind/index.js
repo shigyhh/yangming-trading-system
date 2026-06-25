@@ -148,6 +148,7 @@ function buildRuntimeView(runtime = null) {
       pnlText: "0.00%",
       drawdownText: "0.00%",
       chartBoardStyle: "",
+      chartScrollLeft: 0,
       indicatorPanel: { type: "vol", label: "VOL", visible: true, items: [], lines: {} },
       indicatorOverlay: {
         ma5: [],
@@ -186,6 +187,7 @@ function buildRuntimeView(runtime = null) {
     pnlText: `${Number(metrics.totalPnl || 0).toFixed(2)}%`,
     drawdownText: `${Number(metrics.maxDrawdown || 0).toFixed(2)}%`,
     chartBoardStyle: runtime.chartBoardStyle || "",
+    chartScrollLeft: Number(runtime.chartScrollLeft || 0),
     indicatorPanel: runtime.indicatorPanel || { type: "vol", label: "VOL", visible: true, items: [], lines: {} },
     indicatorOverlay: runtime.indicatorOverlay || {
       ma5: [],

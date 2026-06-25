@@ -151,7 +151,8 @@ const overviewSession = buildKlineMindSession({
 assert.strictEqual(overviewSession.chartZoomKey, "overview");
 assert.strictEqual(overviewSession.chartWindowSize, 180);
 assert.strictEqual(overviewSession.candles.length, 180);
-assert.ok(overviewSession.chartBoardStyle.includes("min-width: 0"));
+assert.ok(overviewSession.chartBoardStyle.includes("min-width: 100%"));
+assert.ok(overviewSession.chartBoardStyle.includes("--kline-gap"));
 
 const bollCompleteSession = buildKlineMindSession({
   record: {
@@ -263,6 +264,8 @@ assert.strictEqual(
   false
 );
 assert.ok(warmupRuntime.chartBoardStyle.includes("width:"));
+assert.ok(warmupRuntime.chartBoardStyle.includes("min-width: 100%"));
+assert.strictEqual(warmupRuntime.chartScrollLeft, 99999);
 assert.strictEqual(warmupRuntime.indicatorPanel.type, "vol");
 assert.strictEqual(warmupRuntime.indicatorPanel.items.length, 8);
 assert.ok(warmupRuntime.indicatorOverlay.ma5.length > 0);

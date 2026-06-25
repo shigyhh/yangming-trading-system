@@ -408,7 +408,7 @@
 
 .chart-scroll-inner {
   width: 100%;
-  min-width: 0;
+  min-width: 100%;
   background: #030504;
 }
 
@@ -429,16 +429,15 @@
 }
 
 .wave-board-content {
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
+  position: relative;
+  width: 100%;
+  height: 100%;
   box-sizing: border-box;
   padding: 24rpx 18rpx 18rpx;
   display: flex;
   align-items: flex-end;
   justify-content: flex-start;
-  gap: 6rpx;
+  gap: var(--kline-gap, 6rpx);
 }
 
 .chart-stepper {
@@ -712,16 +711,15 @@
 }
 
 .sub-indicator-content {
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
+  position: relative;
+  width: 100%;
+  height: 100%;
   box-sizing: border-box;
   padding: 8rpx 18rpx 12rpx;
   display: flex;
   align-items: flex-end;
   justify-content: flex-start;
-  gap: 6rpx;
+  gap: var(--kline-gap, 6rpx);
 }
 
 .sub-indicator-item {

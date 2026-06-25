@@ -179,6 +179,8 @@ const CHART_GEOMETRY = {
   standard: { candleWidth: 12, gap: 6, paddingX: 18, paddingTop: 24 },
   focus: { candleWidth: 20, gap: 6, paddingX: 18, paddingTop: 24 }
 };
+const BLIND_CHART_MIN_WIDTH = 690;
+const CHART_RIGHT_BOUNDARY_SCROLL_LEFT = 99999;
 
 const KLINE_TRAINING_METHODS = [
   {
@@ -574,18 +576,29 @@ function getChartGeometry(zoomKey = "wide") {
   return CHART_GEOMETRY[zoomKey] || CHART_GEOMETRY.wide;
 }
 
-function getChartBoardWidth(candleCount, zoomKey = "wide") {
+function getChartLayout(candleCount, zoomKey = "wide") {
   const count = Math.max(1, Number(candleCount || 0));
   const geometry = getChartGeometry(zoomKey);
-  return Math.round(geometry.paddingX * 2 + count * geometry.candleWidth + Math.max(0, count - 1) * geometry.gap);
+  const naturalWidth = Math.round(geometry.paddingX * 2 + count * geometry.candleWidth + Math.max(0, count - 1) * geometry.gap);
+  const width = Math.max(BLIND_CHART_MIN_WIDTH, naturalWidth);
+  if (count <= 1 || naturalWidth >= width) {
+    return Object.assign({}, geometry, { width, gap: geometry.gap });
+  }
+  const gap = Math.max(geometry.gap, (width - geometry.paddingX * 2 - count * geometry.candleWidth) / (count - 1));
+  return Object.assign({}, geometry, { width, gap });
+}
+
+function getChartBoardWidth(candleCount, zoomKey = "wide") {
+  return getChartLayout(candleCount, zoomKey).width;
 }
 
 function getChartBoardStyle(candleCount, zoomKey = "wide") {
-  return `width: ${getChartBoardWidth(candleCount, zoomKey)}rpx; min-width: 0;`;
+  const layout = getChartLayout(candleCount, zoomKey);
+  return `width: ${layout.width}rpx; min-width: 100%; --kline-gap: ${roundMetric(layout.gap, 2)}rpx;`;
 }
 
 function buildOverlaySegments(candles = [], field, zoomKey = "wide") {
-  const geometry = getChartGeometry(zoomKey);
+  const geometry = getChartLayout(candles.length, zoomKey);
   const segments = [];
   for (let index = 0; index < candles.length - 1; index += 1) {
     const currentRawY = candles[index][field];
@@ -659,7 +672,7 @@ function emaSeries(values = [], period) {
 }
 
 function buildPanelLineSegments(points = [], field, zoomKey = "wide") {
-  const geometry = getChartGeometry(zoomKey);
+  const geometry = getChartLayout(points.length, zoomKey);
   const segments = [];
   for (let index = 0; index < points.length - 1; index += 1) {
     const currentRawY = points[index][field];
@@ -982,6 +995,7 @@ function buildRuntimeState(baseRuntime = {}, patch = {}) {
     visibleCandles,
     activeCandle,
     chartBoardStyle: getChartBoardStyle(visibleCandles.length, runtime.chartZoomKey || "wide"),
+    chartScrollLeft: CHART_RIGHT_BOUNDARY_SCROLL_LEFT,
     indicatorOverlay: buildIndicatorOverlay(visibleCandles, runtime.chartZoomKey || "wide", runtime.mainIndicatorKey || "ma"),
     indicatorPanel: buildIndicatorPanel(visibleCandles, runtime.indicatorPanelKey || "vol", runtime.chartZoomKey || "wide"),
     positionState,

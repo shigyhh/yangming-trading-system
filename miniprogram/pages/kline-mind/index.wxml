@@ -69,10 +69,10 @@
           <view class="chart-stepper-control" bindtap="decreaseChartZoom">-</view>
           <view class="chart-stepper-control" bindtap="increaseChartZoom">+</view>
         </view>
-        <scroll-view class="wave-board-scroll" scroll-x="{{false}}" enhanced="true" show-scrollbar="{{false}}">
-          <view class="chart-scroll-inner">
+        <scroll-view class="wave-board-scroll" scroll-x="true" scroll-left="{{runtimeView.chartScrollLeft}}" enhanced="true" show-scrollbar="{{false}}">
+          <view class="chart-scroll-inner" style="{{runtimeView.chartBoardStyle}}">
             <view class="wave-board zoom-{{session.chartZoomKey}}">
-              <view class="wave-board-content" style="{{runtimeView.chartBoardStyle}}">
+              <view class="wave-board-content">
                 <view class="indicator-lines">
                   <view wx:for="{{runtimeView.indicatorOverlay.bollUpper}}" wx:key="key" class="indicator-segment boll" style="{{item.style}}"></view>
                   <view wx:for="{{runtimeView.indicatorOverlay.bollLower}}" wx:key="key" class="indicator-segment boll" style="{{item.style}}"></view>
@@ -119,7 +119,7 @@
             </view>
 
             <view wx:if="{{runtimeView.indicatorPanel.visible}}" class="sub-indicator-board {{runtimeView.indicatorPanel.type}} zoom-{{session.chartZoomKey}}">
-              <view class="sub-indicator-content" style="{{runtimeView.chartBoardStyle}}">
+              <view class="sub-indicator-content">
                 <view wx:for="{{runtimeView.indicatorPanel.lines.upper}}" wx:key="key" class="sub-line boll-upper" style="{{item.style}}"></view>
                 <view wx:for="{{runtimeView.indicatorPanel.lines.lower}}" wx:key="key" class="sub-line boll-lower" style="{{item.style}}"></view>
                 <view wx:for="{{runtimeView.indicatorPanel.lines.mid}}" wx:key="key" class="sub-line boll-mid" style="{{item.style}}"></view>
