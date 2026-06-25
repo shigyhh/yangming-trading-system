@@ -79,7 +79,7 @@
       <view>今日导引视频、训练营直播预约和往期回放，先做内容占位。</view>
     </view>
 
-    <compliance-notice compact="{{true}}" />
+    <compliance-notice variant="compact" />
   </view>
 
   <bottom-tab-bar active="zhixing" />

@@ -37,6 +37,18 @@ const HOME_TODAY_ACTION_ROUTES = {
   "查看活镜": { actionKey: "living-mirror", route: "/pages/living-mirror/index" }
 };
 
+function formatHomeTodayUpdatedAt(value = "") {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  const date = new Date(raw);
+  if (Number.isNaN(date.getTime())) return raw;
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hour = String(date.getHours()).padStart(2, "0");
+  const minute = String(date.getMinutes()).padStart(2, "0");
+  return `${month}月${day}日 ${hour}:${minute}更新`;
+}
+
 function buildMiniProgramBinding({ userBinding = {}, profile = {}, linkToken = "", reportId = "" } = {}) {
   const anonymousId = userBinding.userId || profile.anonymousId || `anon_${userBinding.inviteCode || "pending"}`;
   return {
@@ -150,7 +162,7 @@ function buildHomeTodayStateView(todayState = {}) {
     statusText: HOME_TODAY_STATE_STATUS[status],
     nextActionText,
     progress: Math.max(0, Math.min(100, Number(todayState.progress || 0))),
-    updatedAt: todayState.updatedAt || "",
+    updatedAt: formatHomeTodayUpdatedAt(todayState.updatedAt),
     fallbackText: status === "unknown" ? "今日状态暂未同步，本地修行仍可继续。" : ""
   };
 }
@@ -304,6 +316,7 @@ module.exports = {
   buildMiniLoopProgress,
   buildMiniHomeView,
   buildHomeTodayStateView,
+  formatHomeTodayUpdatedAt,
   resolveHomeTodayStateAction,
   buildMiniDailyPractice,
   buildMiniHeartProof,

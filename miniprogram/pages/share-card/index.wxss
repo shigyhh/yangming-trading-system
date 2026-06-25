@@ -310,29 +310,16 @@
   font-size: 30rpx;
 }
 
-.mini-seal.brand-zhao-mini {
-  font-size: 0;
-  gap: 5rpx;
-  color: rgba(216, 183, 111, 0.84);
+.mini-seal.brand-seal-frame {
+  width: 60rpx;
+  height: 60rpx;
+  flex: 0 0 60rpx;
+  border-radius: 14rpx;
 }
 
-.mini-seal.brand-zhao-mini .zhao-eye {
-  width: 14rpx;
-  height: 13rpx;
-  border-width: 2rpx;
-}
-
-.mini-seal.brand-zhao-mini .zhao-mirror {
-  width: 36rpx;
-}
-
-.mini-seal.brand-zhao-mini .zhao-fire {
-  gap: 15rpx;
-}
-
-.mini-seal.brand-zhao-mini .zhao-fire-dot {
-  width: 3rpx;
-  height: 15rpx;
+.mini-seal.brand-seal-frame .brand-seal-art {
+  width: 48rpx;
+  height: 48rpx;
 }
 
 .headline {
@@ -609,29 +596,16 @@
   font-size: 36rpx;
 }
 
-.poster-brand-seal.brand-zhao-mini {
-  font-size: 0;
-  gap: 6rpx;
-  color: rgba(240, 213, 139, 0.88);
+.poster-brand-seal.brand-seal-frame {
+  width: 72rpx;
+  height: 72rpx;
+  flex: 0 0 72rpx;
+  border-radius: 17rpx;
 }
 
-.poster-brand-seal.brand-zhao-mini .zhao-eye {
-  width: 16rpx;
-  height: 14rpx;
-  border-width: 2rpx;
-}
-
-.poster-brand-seal.brand-zhao-mini .zhao-mirror {
-  width: 42rpx;
-}
-
-.poster-brand-seal.brand-zhao-mini .zhao-fire {
-  gap: 18rpx;
-}
-
-.poster-brand-seal.brand-zhao-mini .zhao-fire-dot {
-  width: 3rpx;
-  height: 18rpx;
+.poster-brand-seal.brand-seal-frame .brand-seal-art {
+  width: 56rpx;
+  height: 56rpx;
 }
 
 .poster-brand-copy {

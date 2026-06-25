@@ -7,8 +7,8 @@
         <view>{{savedRecord && savedRecord.completed ? '已观心' : '待观心'}}</view>
       </view>
 
-      <view class="page-title">今日 K 线观心</view>
-      <view class="page-subtitle">看一段真实历史 K 线，记录第一反应；不连接实时数据，不做当下判断。</view>
+      <view class="page-title">今日观心</view>
+      <view class="page-subtitle">看一段历史片段，先记录第一反应；不连接实时数据，不做当下判断。</view>
       <view class="kline-one-thing">
         <text>今日只练</text>
         <view>{{session.prescription.boundaryPractice}}</view>
@@ -31,10 +31,13 @@
 
       <view class="slice-switch">
         <view>
-          <text>{{session.market.name}} · {{session.timeframeLabel}}</text>
-          <view>{{session.market.rule}}</view>
+          <text>真实历史盲练</text>
+          <view>先看这一段，只记录第一反应。</view>
         </view>
-        <button bindtap="toggleSelectors">{{showSelectors ? '收起' : '切换'}}</button>
+        <view class="slice-actions">
+          <button bindtap="switchSlice">换一段</button>
+          <button class="quiet" bindtap="toggleSelectors">{{showSelectors ? '收起' : '周期'}}</button>
+        </view>
       </view>
 
       <view wx:if="{{showSelectors}}" class="market-rail">
@@ -66,21 +69,15 @@
     <view class="mind-wave card">
       <view class="wave-head">
         <view>
-          <text>{{session.market.name}} · {{session.market.triggerLabel}}</text>
+          <text>真实历史片段</text>
           <view>{{session.subtitle}}</view>
         </view>
         <text>{{session.stageGate.seal}}</text>
       </view>
 
-      <view class="sim-meta">
-        <view>
-          <text>市场节奏</text>
-          <view>{{session.market.rhythm}} · {{session.market.rule}}</view>
-        </view>
-        <view>
-          <text>数据状态</text>
-          <view>{{session.dataStatusText}} · {{session.market.defaultSymbol}}</view>
-        </view>
+      <view wx:if="{{false}}" class="wave-source-line">
+        <text>观心片段</text>
+        <view>{{session.market.rhythm}} · {{session.dataStatusText}}</view>
       </view>
 
       <view wx:if="{{session.hasHistoricalData}}" class="wave-board">
@@ -102,6 +99,22 @@
         <text>请先同步真实历史数据；未载入前不展示占位 K线。</text>
       </view>
 
+      <view class="slice-playbook">
+        <text class="slice-playbook-title">本段练法</text>
+        <view class="slice-playbook-step">
+          <text class="slice-playbook-index">1</text>
+          <view class="slice-playbook-copy">先停十秒，只看哪一根最牵动你。</view>
+        </view>
+        <view class="slice-playbook-step">
+          <text class="slice-playbook-index">2</text>
+          <view class="slice-playbook-copy">点最牵动的一根，写下第一反应。</view>
+        </view>
+        <view class="slice-playbook-step">
+          <text class="slice-playbook-index">3</text>
+          <view class="slice-playbook-copy">回到边界，不把历史片段当成当下判断。</view>
+        </view>
+      </view>
+
       <view class="wave-question">
         <text>今日观心</text>
         <view>{{session.hasHistoricalData ? session.prompt : session.marketQuestion}}</view>
@@ -110,7 +123,7 @@
     </view>
 
     <view class="guide-toggle">
-      <button class="ghost-btn" bindtap="toggleGuide">{{showGuide ? '收起训练说明' : '查看训练说明'}}</button>
+      <button class="ghost-btn" bindtap="toggleGuide">{{showGuide ? '收起方法' : '训练方法'}}</button>
     </view>
 
     <view wx:if="{{showGuide}}" class="method-card card">
@@ -132,30 +145,53 @@
     </view>
 
     <view class="practice-card card">
-      <view class="section-kicker">MIND RECORD</view>
+      <view class="section-kicker">心念记录</view>
       <view class="practice-title">这一刻，先看见自己</view>
       <view class="practice-flow">
-        <text>选一念</text>
-        <text>守一界</text>
-        <text>写一句</text>
+        <text>一念</text>
+        <text>一界</text>
+        <text>一句</text>
       </view>
 
-      <view class="field-block">
-        <text>第一反应</text>
-        <view class="option-grid">
-          <button
-            wx:for="{{session.reactionOptions}}"
-            wx:key="*this"
-            class="option-pill {{form.firstReaction === item ? 'active' : ''}}"
-            data-field="firstReaction"
-            data-value="{{item}}"
-            bindtap="selectOption"
-          >
-            <text>{{item}}</text>
-          </button>
+      <view class="first-thought-focus">
+        <view class="field-block">
+          <text>先问一句</text>
+          <view class="field-hint">是看见事实，还是想用行动缓解不安？</view>
+          <view class="reaction-direction-row">
+            <button
+              wx:for="{{reactionDirections}}"
+              wx:key="key"
+              class="reaction-direction-pill {{form.reactionDirection === item.key ? 'active' : ''}}"
+              data-field="reactionDirection"
+              data-value="{{item.key}}"
+              bindtap="selectOption"
+            >
+              <text>{{item.label}}</text>
+              <view>{{item.detail}}</view>
+            </button>
+          </view>
+        </view>
+
+        <view wx:if="{{form.reactionDirection}}" class="reaction-detail-tags">
+          <view class="field-block">
+            <text>再给这一念命名</text>
+            <view class="option-grid">
+              <button
+                wx:for="{{session.reactionOptions}}"
+                wx:key="*this"
+                class="option-pill {{form.firstReaction === item ? 'active' : ''}}"
+                data-field="firstReaction"
+                data-value="{{item}}"
+                bindtap="selectOption"
+              >
+                <text>{{item}}</text>
+              </button>
+            </view>
+          </view>
         </view>
       </view>
 
+      <view wx:if="{{form.firstReaction}}" class="record-depth-fields">
       <view class="field-mini-toggle">
         <button class="ghost-btn" bindtap="toggleBodySignal">{{showBodySignal ? '收起身体感受' : '补身体感受'}}</button>
       </view>
@@ -204,6 +240,7 @@
       </view>
 
       <button class="primary-btn save-btn" bindtap="saveRecord">{{savedRecord && savedRecord.completed ? '更新活镜记录' : '写入活镜'}}</button>
+      </view>
     </view>
 
     <view wx:if="{{showGuide}}" class="prescription-card card">
@@ -264,13 +301,13 @@
       </view>
     </view>
 
-    <view class="path-links">
+    <view wx:if="{{savedRecord && savedRecord.completed}}" class="path-links">
       <button class="ghost-btn" bindtap="goTraining">7 天训练</button>
       <button wx:if="{{training7View.canRetest}}" class="secondary-btn" bindtap="goRetest">进入复测</button>
       <button wx:else class="secondary-btn" bindtap="goReport">人格报告</button>
     </view>
 
-    <compliance-notice />
+    <compliance-notice variant="full" />
   </view>
   <bottom-tab-bar active="mind" />
 </view>

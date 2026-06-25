@@ -115,7 +115,7 @@
       <button class="primary-btn" bindtap="goUpload">上传第一条记录</button>
     </view>
 
-    <compliance-notice />
+    <compliance-notice variant="full" />
   </view>
   <bottom-tab-bar active="review" />
 </view>

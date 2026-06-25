@@ -2,6 +2,7 @@ const {
   getAssessmentResult,
   getTradeReviewRecords,
   getTraining7State,
+  getUserBinding,
   applyTradeReviewBindingResult,
   saveTradeReviewRecord,
   saveTraining7Task,
@@ -20,6 +21,7 @@ const {
 } = require("../../modules/trade-review/index");
 const { MARKET_PRESETS, TIMEFRAME_PRESETS } = require("../../modules/kline-simulator/index");
 const {
+  buildTradeReviewUrl,
   requestTradeReviewOcrDraft,
   syncLocalState,
   syncTradeReviewRecord,
@@ -113,6 +115,15 @@ function buildReviewFlow(form = {}, report = null) {
 
 function decorateReport(report) {
   return buildTradeReviewRecordView(report);
+}
+
+function resolveReportUrl(record = {}) {
+  const userId = ((record.userBinding || {}).userId) || ((getUserBinding() || {}).userId) || "";
+  const eventId = ((record.oneThoughtEvent || {}).eventId) ||
+    record.linkedOneThoughtEventId ||
+    record.oneThoughtEventId ||
+    "";
+  return buildTradeReviewUrl({ userId, eventId });
 }
 
 Page({
@@ -304,7 +315,7 @@ Page({
   generateReview() {
     const form = this.data.form || {};
     if (!form.screenshotPath && !String(form.symbol || "").trim() && !String(form.firstThought || "").trim()) {
-      wx.showToast({ title: "先上传或手动记录", icon: "none" });
+      wx.showToast({ title: "还差一条真实记录", icon: "none" });
       return;
     }
     if (!String(form.firstThought || "").trim()) {
@@ -399,5 +410,14 @@ Page({
 
   goLivingMirror() {
     wx.redirectTo({ url: "/pages/living-mirror/index" });
+  },
+
+  goReport() {
+    const reportUrl = resolveReportUrl(this.data.report || {});
+    if (reportUrl) {
+      wx.navigateTo({ url: `/pages/h5-bridge/index?url=${encodeURIComponent(reportUrl)}` });
+      return;
+    }
+    wx.navigateTo({ url: "/pages/report/index" });
   }
 });

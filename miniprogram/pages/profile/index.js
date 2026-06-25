@@ -63,7 +63,7 @@ const USER_DATA_CHAIN = [
   "训练记录",
   "交易复盘",
   "活镜变化",
-  "助教承接"
+  "成长沉淀"
 ];
 
 const DEBUG_DATA_CHAIN = [
@@ -120,6 +120,26 @@ function buildSyncView(syncStatus = {}, debugMode = false) {
   };
 }
 
+function buildReleaseMenu({ result, growth, profile, trainingDone, debugMode }) {
+  const releaseMenu = [
+    { key: "report", title: "心镜报告", subtitle: result ? "复盘完成后可回看" : "完成复盘后自然出现" },
+    { key: "stages", title: "六大修行关卡", subtitle: `${growth.activeGate.name} · ${growth.overall}` },
+    { key: "zhixingGrowth", title: "知行成长记录", subtitle: profile.growth_level ? `${profile.growth_level} · ${profile.zhixingScore || 0}` : "沉淀7日与30日趋势" },
+    { key: "training", title: "今日事上练记录", subtitle: `${trainingDone}/3 步已完成` },
+    { key: "boundary", title: "合规边界", subtitle: "查看系统使用边界" },
+    { key: "assessment", title: "重新照见", subtitle: "用当下状态重新照见" }
+  ];
+  if (!debugMode) return releaseMenu;
+  return releaseMenu.concat([
+    { key: "growth", title: "修行成长树", subtitle: `${growth.activeGate.name} · ${growth.overall}` },
+    { key: "dojo", title: "修行道场", subtitle: "同修、观心助手、排行榜" },
+    { key: "cards", title: "我的心证卡册", subtitle: `${getShareCardAlbum().length} 张照见卡` },
+    { key: "classroom", title: "知行讲堂预约", subtitle: `${Object.keys(getLessonReservations()).length} 条课程记录` },
+    { key: "resource", title: "省察表资料", subtitle: profile.resourceUnlocked ? "领取口令已保存" : "复制资料领取口令" },
+    { key: "assistant", title: "修行营助理", subtitle: "复制助理暗号，便于私域承接" }
+  ]);
+}
+
 Page({
   data: {
     profile: {},
@@ -155,7 +175,9 @@ Page({
     userDataChain: USER_DATA_CHAIN,
     debugDataChain: DEBUG_DATA_CHAIN,
     shareMoments: buildShareMomentEntries(),
-    menu: []
+    menu: [],
+    showProfileDepth: false,
+    showEvidenceChain: false
   },
 
   onShow() {
@@ -243,25 +265,20 @@ Page({
       userDataChain: USER_DATA_CHAIN,
       debugDataChain: DEBUG_DATA_CHAIN,
       shareMoments: buildShareMomentEntries(),
-      menu: [
-        { key: "report", title: "交易人格心证", subtitle: result ? `${result.primary} · ${result.secondary}` : "完成照见后生成" },
-        { key: "stages", title: "六大修行关卡", subtitle: `${growth.activeGate.name} · ${growth.overall}` },
-        { key: "zhixingGrowth", title: "知行成长记录", subtitle: profile.growth_level ? `${profile.growth_level} · ${profile.zhixingScore || 0}` : "沉淀7日与30日趋势" },
-        { key: "growth", title: "修行成长树", subtitle: `${growth.activeGate.name} · ${growth.overall}` },
-        { key: "dojo", title: "修行道场", subtitle: "同修、观心助手、排行榜" },
-        { key: "training", title: "今日事上练记录", subtitle: `${trainingDone}/3 步已完成` },
-        { key: "cards", title: "我的心证卡册", subtitle: `${getShareCardAlbum().length} 张照见卡` },
-        { key: "classroom", title: "知行讲堂预约", subtitle: `${Object.keys(getLessonReservations()).length} 条课程记录` },
-        { key: "resource", title: "省察表资料", subtitle: profile.resourceUnlocked ? "领取口令已保存" : "复制资料领取口令" },
-        { key: "assistant", title: "修行营助理", subtitle: "复制助理暗号，便于私域承接" },
-        { key: "boundary", title: "合规边界", subtitle: "查看系统使用边界" },
-        { key: "assessment", title: "重新照见", subtitle: "用当下状态重新照见" }
-      ]
+      menu: buildReleaseMenu({ result, growth, profile, trainingDone, debugMode })
     });
   },
 
   inputApiBase(e) {
     this.setData({ apiBase: e.detail.value });
+  },
+
+  toggleProfileDepth() {
+    this.setData({ showProfileDepth: !this.data.showProfileDepth });
+  },
+
+  toggleEvidenceChain() {
+    this.setData({ showEvidenceChain: !this.data.showEvidenceChain });
   },
 
   saveApiBase() {
@@ -282,7 +299,7 @@ Page({
     }
     bindPhone(phone, { bindSource: "profile_identity_card" });
     syncLocalState({ silent: true }).catch(() => {});
-    wx.showToast({ title: "手机号已贯穿绑定", icon: "success" });
+    wx.showToast({ title: "心镜档案已绑定", icon: "success" });
     this.onShow();
   },
 
@@ -435,11 +452,11 @@ Page({
   contactAssistant() {
     const handoff = getAssistantHandoff();
     wx.setClipboardData({
-      data: handoff.coachCopyText || handoff.handoffSummary || "阳明心学交易系统 · 助教承接摘要待生成",
+      data: handoff.coachCopyText || handoff.handoffSummary || "阳明心学交易系统 · 心镜摘要待生成",
       success: () => {
         wx.showModal({
-          title: "承接摘要已复制",
-          content: "这份摘要会带上统一档案、人格、复盘念头、活镜变化与建议训练动作，方便助教继续陪跑。",
+          title: "心镜摘要已复制",
+          content: "这份摘要会带上心镜档案、复盘念头、活镜变化与下一步修行，方便自己回看。",
           showCancel: false,
           confirmText: "知道了"
         });
@@ -450,8 +467,8 @@ Page({
   copyAssistantHandoff() {
     const handoff = getAssistantHandoff();
     wx.setClipboardData({
-      data: handoff.coachCopyText || handoff.handoffSummary || "阳明心学交易系统 · 助教承接摘要待生成",
-      success: () => wx.showToast({ title: "承接摘要已复制", icon: "success" })
+      data: handoff.coachCopyText || handoff.handoffSummary || "阳明心学交易系统 · 心镜摘要待生成",
+      success: () => wx.showToast({ title: "心镜摘要已复制", icon: "success" })
     });
   },
 

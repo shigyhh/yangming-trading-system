@@ -6,17 +6,17 @@
 }
 
 .training-brand-mark {
-  width: 82rpx;
-  height: 82rpx;
-  flex: 0 0 82rpx;
-  border-radius: 24rpx;
-  border: 1rpx solid rgba(217, 189, 122, 0.16);
+  width: 78rpx;
+  height: 78rpx;
+  flex: 0 0 78rpx;
+  border-radius: 17rpx;
+  border: 1.5rpx solid rgba(224, 196, 136, 0.42);
   background:
-    radial-gradient(circle at 50% 42%, rgba(216, 183, 111, 0.12), transparent 66%),
-    rgba(17, 16, 13, 0.42);
+    radial-gradient(circle at 50% 44%, rgba(224, 196, 136, 0.1), rgba(17, 16, 13, 0.22) 68%),
+    rgba(8, 8, 7, 0.1);
   box-shadow:
-    inset 0 1rpx 0 rgba(244, 235, 221, 0.1),
-    0 20rpx 42rpx rgba(0, 0, 0, 0.26);
+    inset 0 1rpx 0 rgba(244, 235, 221, 0.12),
+    0 12rpx 28rpx rgba(0, 0, 0, 0.28);
 }
 
 .training-brand-copy text {
@@ -94,12 +94,104 @@
   background: linear-gradient(90deg, rgba(95, 132, 117, 0.92), rgba(216, 183, 111, 0.96));
 }
 
+.training-today-focus {
+  position: relative;
+  z-index: 1;
+  margin-top: 22rpx;
+  padding: 24rpx;
+  border-radius: 22rpx;
+  border: 1rpx solid rgba(216, 183, 111, 0.14);
+  background:
+    radial-gradient(circle at 86% 8%, rgba(216, 183, 111, 0.1), transparent 42%),
+    rgba(255, 255, 255, 0.034);
+}
+
+.training-today-focus > text:first-child {
+  display: block;
+  color: rgba(216, 183, 111, 0.74);
+  font-size: 20rpx;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.training-today-focus view {
+  margin-top: 10rpx;
+  color: #fff6e6;
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", serif;
+  font-size: 38rpx;
+  line-height: 1.32;
+  font-weight: 900;
+}
+
+.training-today-focus > text:last-child {
+  display: block;
+  margin-top: 12rpx;
+  color: rgba(247, 239, 223, 0.62);
+  font-size: 24rpx;
+  line-height: 1.52;
+}
+
+.plan-toggle {
+  width: 100%;
+  margin-top: 18rpx;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.quiet-plan-toggle {
+  min-height: 58rpx;
+  margin-top: 14rpx;
+  color: rgba(247, 239, 223, 0.44);
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+.training-subtle-links {
+  margin-top: 18rpx;
+  display: flex;
+  justify-content: center;
+  gap: 28rpx;
+}
+
+.training-subtle-link {
+  min-height: 48rpx;
+  padding: 0;
+  color: rgba(247, 239, 223, 0.46);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  font-size: 22rpx;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.training-depth-toggle {
+  width: 100%;
+  min-height: 64rpx;
+  margin-top: 18rpx;
+  color: rgba(247, 239, 223, 0.5);
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  line-height: 1.2;
+}
+
+.training-depth {
+  display: grid;
+  gap: 0;
+}
+
 .seven-day-list {
   position: relative;
   z-index: 1;
   margin-top: 22rpx;
   display: grid;
   gap: 12rpx;
+}
+
+.quiet-plan-list {
+  margin-top: 12rpx;
 }
 
 .seven-day-row {
@@ -146,6 +238,12 @@
 
 .kline-entry-btn {
   margin-top: 20rpx;
+  line-height: 1.2;
+}
+
+.seven-training-card .kline-entry-btn {
+  width: 100%;
+  min-height: 88rpx;
 }
 
 .mind-bridge {
@@ -178,10 +276,15 @@
   font-weight: 900;
 }
 
-.mind-seal.brand-zhao-mini {
-  display: flex;
-  gap: 6rpx;
+.mind-seal.brand-seal-frame {
+  display: grid;
+  place-items: center;
   font-size: 0;
+}
+
+.mind-seal.brand-seal-frame .brand-seal-art {
+  width: 58rpx;
+  height: 58rpx;
 }
 
 .mind-copy text {
@@ -216,6 +319,12 @@
 .pre-card button {
   position: relative;
   z-index: 1;
+}
+
+.pre-card button,
+.reflection-card button {
+  line-height: 1.2;
+  text-align: center;
 }
 
 .pre-card view {
@@ -516,4 +625,6 @@
 
 .reflection-card button {
   margin-top: 18rpx;
+  line-height: 1.2;
+  text-align: center;
 }

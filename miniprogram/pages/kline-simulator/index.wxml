@@ -59,7 +59,7 @@
       </view>
     </view>
 
-    <compliance-notice />
+    <compliance-notice variant="full" />
   </view>
   <bottom-tab-bar active="mind" />
 </view>

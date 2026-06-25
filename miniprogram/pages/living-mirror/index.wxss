@@ -1,3 +1,4 @@
+.mirror-summary-card,
 .mirror-bridge,
 .server-profile-card,
 .mirror-hero,
@@ -18,6 +19,9 @@
   padding: 30rpx;
 }
 
+.mirror-summary-card text,
+.mirror-summary-card view,
+.mirror-summary-card button,
 .mirror-bridge text,
 .mirror-bridge view,
 .server-profile-card text,
@@ -65,6 +69,86 @@
   background:
     radial-gradient(circle at 92% 0%, rgba(216, 183, 111, 0.12), transparent 40%),
     rgba(255, 255, 255, 0.034);
+}
+
+.mirror-summary-card {
+  display: grid;
+  grid-template-columns: 84rpx minmax(0, 1fr);
+  gap: 20rpx;
+  overflow: hidden;
+  border-color: rgba(216, 183, 111, 0.18);
+  background:
+    radial-gradient(circle at 88% 0%, rgba(216, 183, 111, 0.14), transparent 42%),
+    radial-gradient(circle at 18% 92%, rgba(95, 132, 117, 0.1), transparent 40%),
+    rgba(255, 255, 255, 0.036);
+}
+
+.summary-seal {
+  width: 84rpx;
+  height: 84rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 28rpx;
+  color: rgba(255, 236, 205, 0.92);
+  border: 2rpx solid rgba(120, 60, 45, 0.58);
+  background: rgba(120, 60, 45, 0.28);
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", serif;
+  font-size: 42rpx;
+  transform: rotate(-7deg);
+}
+
+.summary-main {
+  min-width: 0;
+}
+
+.summary-main text,
+.summary-grid text {
+  display: block;
+  color: rgba(216, 183, 111, 0.74);
+  font-size: 20rpx;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.summary-main view {
+  margin-top: 8rpx;
+  color: #fff6e6;
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", serif;
+  font-size: 46rpx;
+  line-height: 1.18;
+  font-weight: 900;
+}
+
+.summary-grid,
+.summary-actions {
+  grid-column: 1 / -1;
+}
+
+.summary-grid {
+  margin-top: 2rpx;
+  display: grid;
+  gap: 12rpx;
+}
+
+.summary-grid > view {
+  padding: 18rpx;
+  border-radius: 18rpx;
+  border: 1rpx solid rgba(216, 183, 111, 0.1);
+  background: rgba(8, 8, 7, 0.22);
+}
+
+.summary-grid view view {
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.84);
+  font-size: 25rpx;
+  line-height: 1.45;
+  font-weight: 850;
+}
+
+.summary-actions {
+  margin-top: 4rpx;
+  display: grid;
+  gap: 12rpx;
 }
 
 .server-profile-grid {
@@ -833,6 +917,8 @@
 .recommend-card button,
 .assistant-card button {
   margin-top: 24rpx;
+  line-height: 1.2;
+  text-align: center;
 }
 
 .recommend-title {
@@ -883,7 +969,7 @@
   border-bottom: 1rpx solid rgba(241, 210, 125, 0.08);
   background: transparent;
   font-size: 25rpx;
-  line-height: 1.4;
+  line-height: 1.28;
   text-align: left;
 }
 

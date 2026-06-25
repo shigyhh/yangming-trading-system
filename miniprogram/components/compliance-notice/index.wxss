@@ -1,20 +1,42 @@
 .compliance {
   margin-top: 34rpx;
-  padding: 24rpx;
   display: flex;
   gap: 18rpx;
   align-items: flex-start;
-  border: 1rpx solid rgba(201, 157, 76, 0.25);
-  border-radius: 18rpx;
   color: rgba(247, 239, 223, 0.58);
-  background: rgba(255, 255, 255, 0.035);
   font-size: 22rpx;
   line-height: 1.62;
 }
 
-.compliance.compact {
+.compliance--full {
+  padding: 24rpx;
+  border: 1rpx solid rgba(201, 157, 76, 0.25);
+  border-radius: 18rpx;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.compliance--compact {
   margin-top: 24rpx;
-  padding: 20rpx;
+  padding: 0 4rpx;
+  align-items: center;
+  border: 0;
+  color: rgba(247, 239, 223, 0.38);
+  background: transparent;
+  font-size: 20rpx;
+  line-height: 1.45;
+}
+
+.compliance--link {
+  margin-top: 22rpx;
+  padding: 0 4rpx;
+  min-height: 56rpx;
+  align-items: center;
+  justify-content: flex-end;
+  border: 0;
+  color: rgba(216, 183, 111, 0.66);
+  background: transparent;
+  font-size: 22rpx;
+  line-height: 1.2;
 }
 
 .seal {
@@ -29,4 +51,13 @@
   background: rgba(201, 157, 76, 0.1);
   font-family: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", serif;
   font-weight: 700;
+}
+
+.link-label {
+  font-weight: 800;
+}
+
+.link-hint {
+  color: rgba(247, 239, 223, 0.38);
+  font-size: 20rpx;
 }

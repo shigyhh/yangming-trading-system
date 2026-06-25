@@ -1,16 +1,8 @@
 <view class="page-shell">
   <view class="page-content">
     <view class="training-brand-row">
-      <view class="training-brand-mark brand-zhao-mini" aria-label="阳明照见训练小标">
-        <view class="zhao-eyes">
-          <view class="zhao-eye"></view>
-          <view class="zhao-eye"></view>
-        </view>
-        <view class="zhao-mirror"></view>
-        <view class="zhao-fire">
-          <view class="zhao-fire-dot"></view>
-          <view class="zhao-fire-dot"></view>
-        </view>
+      <view class="training-brand-mark brand-seal-frame" aria-label="阳明照见艺术标">
+        <image class="brand-seal-art" src="/assets/brand/ymty-zhao-logo.svg" mode="aspectFit"></image>
       </view>
       <view class="training-brand-copy">
         <text>阳明训练系统</text>
@@ -21,35 +13,33 @@
     <view class="page-title">每日修心<br />事上练</view>
     <view class="page-subtitle">{{result ? type + '专属路径' : '未照见时使用通用事上练；完成照见后会自动匹配路径。'}}</view>
 
-    <view class="mind-bridge card" bindtap="goMind">
-      <view class="mind-seal brand-zhao-mini" aria-label="开盘照心小标">
-        <view class="zhao-eyes">
-          <view class="zhao-eye"></view>
-          <view class="zhao-eye"></view>
-        </view>
-        <view class="zhao-mirror"></view>
-        <view class="zhao-fire">
-          <view class="zhao-fire-dot"></view>
-          <view class="zhao-fire-dot"></view>
-        </view>
-      </view>
-      <view class="mind-copy">
-        <text>{{mind ? '今日照心 · ' + mind.name : '先做开盘照心'}}</text>
-        <view>{{mindTask || '开盘前先看见此刻之心，再进入今日修行。'}}</view>
-      </view>
-      <view class="mind-axis">{{indexFocus}}</view>
-    </view>
-
     <view class="seven-training-card card">
       <view class="seven-training-head">
         <view>
-          <text>7 天交易观心陪跑</text>
+          <text>今日只练一件事</text>
           <view>Day {{training7View.currentDay}} · {{trainingDay.title}}</view>
         </view>
         <text>{{training7View.progressText}}</text>
       </view>
       <view class="seven-training-bar"><view style="width: {{training7View.progressPercent}}%;"></view></view>
-      <view class="seven-day-list">
+      <view class="training-today-focus">
+        <text>{{trainingDayFocus.dayText}}</text>
+        <view>{{trainingDayFocus.title}}</view>
+        <text>{{trainingDayFocus.question}}</text>
+      </view>
+      <view class="training-field jade">
+        <view class="field-label with-glyph">
+          <view class="mini-glyph mini-glyph-train"></view>
+          <text>今日动作</text>
+        </view>
+        <view>{{trainingDayFocus.action}}</view>
+      </view>
+      <button class="primary-btn kline-entry-btn" bindtap="goKlineMind">开始K线观心</button>
+      <view class="training-subtle-links">
+        <button class="training-subtle-link" bindtap="toggleTrainingPlan">{{showTrainingPlan ? '收起7天计划' : '查看7天计划'}}</button>
+        <button class="training-subtle-link" bindtap="toggleTrainingDepth">{{showTrainingDepth ? '收起训练细节' : '查看训练细节'}}</button>
+      </view>
+      <view wx:if="{{showTrainingPlan}}" class="seven-day-list quiet-plan-list">
         <button
           wx:for="{{training7View.days}}"
           wx:key="day"
@@ -62,23 +52,27 @@
           <text>{{item.completed ? '已闭环' : item.active ? '今日' : '待练'}}</text>
         </button>
       </view>
-      <view class="training-field jade">
-        <view class="field-label with-glyph">
-          <view class="mini-glyph mini-glyph-train"></view>
-          <text>今日观心问题</text>
-        </view>
-        <view>{{trainingDay.reflectionQuestion}}</view>
-      </view>
-      <button class="secondary-btn kline-entry-btn" bindtap="goKlineMind">进入 K 线历史训练</button>
       <button wx:if="{{training7View.canRetest}}" class="secondary-btn" bindtap="goRetest">开始复测</button>
     </view>
 
-    <view wx:if="{{!result}}" class="pre-card card">
+    <view wx:if="{{false}}" class="mind-bridge card" bindtap="goMind">
+      <view class="mind-seal brand-seal-frame" aria-label="阳明照见艺术标">
+        <image class="brand-seal-art" src="/assets/brand/ymty-zhao-logo.svg" mode="aspectFit"></image>
+      </view>
+      <view class="mind-copy">
+        <text>{{mind ? '今日照心 · ' + mind.name : '先做开盘照心'}}</text>
+        <view>{{mindTask || '开盘前先看见此刻之心，再进入今日修行。'}}</view>
+      </view>
+      <view class="mind-axis">{{indexFocus}}</view>
+    </view>
+
+    <view wx:if="{{false && !result}}" class="pre-card card">
       <view>建议先照见人格</view>
       <text>照见后，事上练会按你的主导人格切换触发场景和克治动作。</text>
       <button class="secondary-btn" bindtap="goAssessment">去照见</button>
     </view>
 
+    <view wx:if="{{showTrainingDepth}}" class="training-depth">
     <view class="training-card card">
       <view class="training-head">
         <view>
@@ -171,8 +165,9 @@
       <button class="ghost-btn" bindtap="goReview">去省察</button>
       <button class="primary-btn" bindtap="completeDay">{{completed ? '去收盘省察' : '完成今日事上练'}}</button>
     </view>
+    </view>
 
-    <compliance-notice />
+    <compliance-notice variant="compact" />
   </view>
   <bottom-tab-bar active="stages" />
 </view>

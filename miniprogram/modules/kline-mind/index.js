@@ -147,39 +147,39 @@ const TIMEFRAME_CATALOG = [
 
 const KLINE_TRAINING_METHODS = [
   {
-    key: "step_replay",
-    title: "逐根推进",
-    subtitle: "像复盘一样一根一根展开，只记录被牵动的那一刻。",
-    focus: "训练反应速度与停顿能力",
-    steps: ["看已展开片段", "点选最牵动的一根", "写第一反应", "回到边界再继续"]
-  },
-  {
-    key: "blind_mirror",
-    title: "盲练观心",
-    subtitle: "隐藏名称与时间，只看结构、节奏和自己的第一念。",
-    focus: "训练少受外部标签影响",
-    steps: ["隐藏标的标签", "隐藏日期区间", "只记念头变化", "结束后再揭示来源"]
-  },
-  {
-    key: "rule_mapping",
-    title: "规则映射",
-    subtitle: "不同市场有不同制度，把规则转成边界训练。",
-    focus: "训练规则意识与执行稳定",
-    steps: ["识别市场规则", "写下今日边界", "触碰即记录", "复盘是否改口径"]
-  },
-  {
     key: "firecracker",
     title: "爆竹 K 线",
     subtitle: "连续急促、放量、长实体或长影线的强触发历史片段。",
     focus: "训练急念、不甘、证明欲",
-    steps: ["先停十秒", "标记身体感受", "写下想动的理由", "只完成一次观心记录"]
+    steps: ["先停十秒", "点最想追的一根", "写下想动理由", "只做一次记录"]
+  },
+  {
+    key: "step_replay",
+    title: "逐根推进",
+    subtitle: "把图当成回放，不猜后面，只看当下哪一根牵动你。",
+    focus: "训练反应速度与停顿能力",
+    steps: ["看十秒", "点最牵动的一根", "选第一念", "回到边界"]
+  },
+  {
+    key: "blind_mirror",
+    title: "盲练观心",
+    subtitle: "不看名称、盈亏、时间，只看结构和身体里的第一反应。",
+    focus: "训练少受外部标签影响",
+    steps: ["不问是哪只", "不问涨跌结论", "只记想追还是想躲", "结束后再看来源"]
+  },
+  {
+    key: "rule_mapping",
+    title: "规则映射",
+    subtitle: "先把市场规则翻译成今天的一条边界，再看图。",
+    focus: "训练规则意识与执行稳定",
+    steps: ["写一条边界", "看到触发先停", "不临场改口", "复盘是否守住"]
   },
   {
     key: "review_loop",
     title: "省察回放",
-    subtitle: "训练后不评价对错，只回看反应、边界与知行断点。",
+    subtitle: "训练后不判断对错，只问这一次哪里被牵动。",
     focus: "训练复盘而不责备",
-    steps: ["回看触发点", "记录是否守界", "写一句照见", "沉淀到七日复测"]
+    steps: ["回看触发点", "写身体感受", "写一句照见", "沉淀到活镜"]
   }
 ];
 
@@ -319,6 +319,17 @@ const DAY_SCENARIOS = {
 const REACTION_OPTIONS = ["急躁", "恐惧", "贪念", "证明", "抗拒", "逃避"];
 const BODY_OPTIONS = ["紧", "热", "空", "沉", "乱", "稳"];
 const BOUNDARY_OPTIONS = ["停十秒", "写边界", "只记录", "延后判断", "回到计划", "做收盘省察"];
+const KLINE_MIND_SLICE_SEEDS = [
+  "scene-fast-001",
+  "scene-missed-001",
+  "scene-fake-001",
+  "scene-drop-001",
+  "scene-boundary-001",
+  "scene-loss-streak-001",
+  "scene-retest-001"
+];
+const MIN_VISIBLE_CANDLES = 6;
+const MAX_VISIBLE_CANDLES = 14;
 
 function clampDay(day) {
   const value = Number(day || 1);
@@ -353,8 +364,61 @@ function buildTimeframeOptions(selectedKey) {
   }));
 }
 
+function getNextKlineMindSliceSeed(currentSeed = "") {
+  const index = KLINE_MIND_SLICE_SEEDS.indexOf(String(currentSeed || ""));
+  if (index < 0) return KLINE_MIND_SLICE_SEEDS[0];
+  return KLINE_MIND_SLICE_SEEDS[(index + 1) % KLINE_MIND_SLICE_SEEDS.length];
+}
+
+function pickFiniteNumber(...values) {
+  for (const value of values) {
+    if (value === "" || value === null || value === undefined) continue;
+    const number = Number(value);
+    if (Number.isFinite(number)) return number;
+  }
+  return NaN;
+}
+
+function normalizeRawHistoryCandle(item = {}, index = 0) {
+  const open = pickFiniteNumber(item.open, item.o, item.openPrice, item.open_price);
+  const high = pickFiniteNumber(item.high, item.h, item.highPrice, item.high_price);
+  const low = pickFiniteNumber(item.low, item.l, item.lowPrice, item.low_price);
+  const close = pickFiniteNumber(item.close, item.c, item.closePrice, item.close_price);
+  if (![open, high, low, close].every(Number.isFinite)) return null;
+
+  return {
+    key: item.id || item.key || `m${index + 1}`,
+    date: item.date || item.time || item.t || item.label || "",
+    open,
+    high: Math.max(high, open, close, low),
+    low: Math.min(low, open, close, high),
+    close,
+    volume: pickFiniteNumber(item.volume, item.vol, item.v, item.amount, 0),
+    focus: !!item.focus
+  };
+}
+
+function pickVisibleHistoryWindow(candles) {
+  if (candles.length < MIN_VISIBLE_CANDLES) return [];
+  if (candles.length <= MAX_VISIBLE_CANDLES) return candles;
+
+  const focusIndex = candles.findIndex((item) => item.focus);
+  if (focusIndex >= 0) {
+    const half = Math.floor(MAX_VISIBLE_CANDLES / 2);
+    const start = Math.max(0, Math.min(candles.length - MAX_VISIBLE_CANDLES, focusIndex - half));
+    return candles.slice(start, start + MAX_VISIBLE_CANDLES);
+  }
+
+  return candles.slice(candles.length - MAX_VISIBLE_CANDLES);
+}
+
 function normalizeHistoryCandles(historySlice = {}) {
-  const candles = Array.isArray(historySlice.candles) ? historySlice.candles : [];
+  const rawCandles = Array.isArray(historySlice.candles)
+    ? historySlice.candles
+    : Array.isArray(historySlice.bars) ? historySlice.bars : [];
+  const candles = pickVisibleHistoryWindow(rawCandles
+    .map(normalizeRawHistoryCandle)
+    .filter(Boolean));
   if (!candles.length) return [];
 
   const highs = candles.map((item) => Number(item.high)).filter(Number.isFinite);
@@ -379,7 +443,7 @@ function normalizeHistoryCandles(historySlice = {}) {
     const bodyHeight = Math.max(6, Math.abs(openY - closeY));
     const wickHeight = Math.max(8, lowY - highY);
     const volumeHeight = Math.max(8, Math.round((volume / maxVolume) * 62));
-    const key = item.id || `m${index + 1}`;
+    const key = item.key || `m${index + 1}`;
     const tone = close > open ? "gold" : close < open ? "jade" : "flat";
 
     return {
@@ -387,7 +451,7 @@ function normalizeHistoryCandles(historySlice = {}) {
       label: item.focus ? "问" : "",
       indexLabel: String(index + 1).padStart(2, "0"),
       tone,
-      date: item.date || item.time || "",
+      date: item.date || "",
       open,
       high,
       low,
@@ -457,8 +521,8 @@ function buildKlineMindSession({
     historySlice: historySlice || null,
     hasHistoricalData: candles.length > 0,
     dataStatusText: candles.length
-      ? ((historySlice || {}).source === "local_demo" ? "当前为本地练习样本" : "server 历史数据已载入")
-      : "等待历史数据同步",
+      ? ((historySlice || {}).source === "local_demo" ? "离线练习模式" : "历史练习数据已载入")
+      : "等待历史练习数据",
     marketQuestion: market.mindQuestion,
     marketGuardrail: market.guardrail,
     trainingMethods: KLINE_TRAINING_METHODS,
@@ -567,6 +631,7 @@ function buildOneThoughtEvent(record = {}, options = {}) {
 function buildKlineMindRecord(input = {}, session = {}) {
   const selectedCandleKey = input.selectedCandleKey || session.selectedCandleKey || "";
   const selectedCandle = (session.candles || []).find((item) => item.key === selectedCandleKey) || {};
+  const reactionDirection = String(input.reactionDirection || "").trim();
   const firstReaction = String(input.firstReaction || "").trim();
   const bodySignal = String(input.bodySignal || "").trim();
   const boundaryChoice = String(input.boundaryChoice || "").trim();
@@ -594,6 +659,7 @@ function buildKlineMindRecord(input = {}, session = {}) {
     stageName: (session.stageGate || {}).name || input.stageName || "",
     selectedCandleKey,
     selectedCandleLabel: selectedCandle.label || selectedCandle.indexLabel || input.selectedCandleLabel || "",
+    reactionDirection,
     firstReaction,
     bodySignal,
     boundaryChoice,
@@ -622,6 +688,7 @@ module.exports = {
   getSixGate,
   getKlinePrescription,
   getPersonalityKlineDrill,
+  getNextKlineMindSliceSeed,
   getMarketConfig,
   normalizeHistoryCandles,
   buildKlineMindSession,

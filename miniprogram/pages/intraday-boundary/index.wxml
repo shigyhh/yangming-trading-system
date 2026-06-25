@@ -85,7 +85,7 @@
     </view>
     <button class="ghost" bindtap="goShareCard">生成守界卡</button>
 
-    <compliance-notice compact="{{true}}" />
+    <compliance-notice variant="compact" />
   </view>
 
   <bottom-tab-bar active="mind" />

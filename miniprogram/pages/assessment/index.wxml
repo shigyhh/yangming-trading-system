@@ -72,7 +72,7 @@
       <view>本照见只用于照见交易人格倾向，帮助你匹配每日事上练。心证关注情绪触发、行为偏差和省察克治路径。</view>
     </view>
 
-    <compliance-notice />
+    <compliance-notice variant="compact" />
   </view>
   <bottom-tab-bar active="assessment" />
 </view>

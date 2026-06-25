@@ -802,24 +802,41 @@ async function fetchKlineTrainingSlice({
   }
 }
 
+function pickKlineNumber(...values) {
+  for (const value of values) {
+    if (value === "" || value === null || value === undefined) continue;
+    const number = Number(value);
+    if (Number.isFinite(number)) return number;
+  }
+  return NaN;
+}
+
 function normalizeKlineCandle(candle = {}) {
+  const open = pickKlineNumber(candle.open, candle.o, candle.openPrice, candle.open_price);
+  const high = pickKlineNumber(candle.high, candle.h, candle.highPrice, candle.high_price);
+  const low = pickKlineNumber(candle.low, candle.l, candle.lowPrice, candle.low_price);
+  const close = pickKlineNumber(candle.close, candle.c, candle.closePrice, candle.close_price);
+  const volume = pickKlineNumber(candle.volume, candle.vol, candle.v, candle.amount, 0);
+
   return {
-    time: candle.time || candle.date || candle.label || "",
-    label: candle.label || candle.date || candle.time || "",
-    open: Number(candle.open || 0),
-    high: Number(candle.high || 0),
-    low: Number(candle.low || 0),
-    close: Number(candle.close || 0),
-    volume: Number(candle.volume || 0)
+    time: candle.time || candle.date || candle.t || candle.label || "",
+    label: candle.label || candle.date || candle.time || candle.t || "",
+    open,
+    high: Math.max(high, open, close, low),
+    low: Math.min(low, open, close, high),
+    close,
+    volume: Number.isFinite(volume) ? volume : 0
   };
 }
 
 function normalizeKlineTrainingSliceResult(result = {}, context = {}) {
   const slice = result.slice || result.data || result;
   const rawCandles = Array.isArray(slice.candles) ? slice.candles : (Array.isArray(slice.bars) ? slice.bars : []);
-  const candles = rawCandles.map(normalizeKlineCandle).filter((item) => item.open || item.high || item.low || item.close);
+  const candles = rawCandles.map(normalizeKlineCandle).filter((item) => (
+    [item.open, item.high, item.low, item.close].every(Number.isFinite)
+  ));
   const barCount = Number(slice.barCount || slice.bar_count || candles.length || 0);
-  const reason = candles.length <= 0
+  const reason = rawCandles.length <= 0
     ? "empty_slice"
     : candles.length < KLINE_MIN_CANDLES ? "insufficient_slice" : "";
   const ok = result.ok !== false && !reason;

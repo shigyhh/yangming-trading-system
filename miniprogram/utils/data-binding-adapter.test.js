@@ -314,6 +314,7 @@ const klineSimulatorPageSource = fs.readFileSync(path.join(__dirname, "../pages/
 assert.ok(klineSimulatorPageSource.includes("stripScenarioRuntimeData"));
 assert.ok(klineSimulatorPageSource.includes("saveKlineScenarioState(scenarios.map(stripScenarioRuntimeData))"));
 const klineMindSource = fs.readFileSync(path.join(__dirname, "../pages/kline-mind/index.js"), "utf8");
+const tradeReviewPageSource = fs.readFileSync(path.join(__dirname, "../pages/trade-review/index.js"), "utf8");
 assert.ok(klineMindSource.includes("fetchKlineTrainingSlice"));
 assert.ok(klineMindSource.includes("retryPendingKlineTrainingSync"));
 assert.strictEqual(klineMindSource.includes("getKlineHistoryCache"), false);
@@ -331,6 +332,10 @@ assert.ok(klineMindWxmlSource.includes("查看本次复盘"));
 assert.ok(klineMindWxmlSource.includes('wx:if="{{tradeReviewUrl}}"'));
 assert.ok(appConfig.pages.includes("pages/h5-bridge/index"));
 assert.ok(h5BridgeWxmlSource.includes("<web-view"));
+assert.ok(tradeReviewPageSource.includes("buildTradeReviewUrl"));
+assert.ok(tradeReviewPageSource.includes("resolveReportUrl"));
+assert.ok(tradeReviewPageSource.includes("/pages/h5-bridge/index?url="));
+assert.ok(tradeReviewPageSource.includes("/pages/report/index"));
 
 const livingMirrorPageSource = fs.readFileSync(path.join(__dirname, "../pages/living-mirror/index.js"), "utf8");
 const livingMirrorWxmlSource = fs.readFileSync(path.join(__dirname, "../pages/living-mirror/index.wxml"), "utf8");

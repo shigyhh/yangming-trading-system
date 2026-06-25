@@ -51,7 +51,7 @@
     <button class="ghost" bindtap="goShareCard">生成事上练课卡</button>
 
     <view class="compliance">{{lesson.compliance}}</view>
-    <compliance-notice compact="{{true}}" />
+    <compliance-notice variant="compact" />
   </view>
 
   <bottom-tab-bar active="index" />

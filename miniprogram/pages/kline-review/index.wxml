@@ -107,7 +107,7 @@
       <button class="primary-btn" bindtap="goSimulator">开始训练</button>
     </view>
 
-    <compliance-notice />
+    <compliance-notice variant="full" />
   </view>
   <bottom-tab-bar active="mind" />
 </view>

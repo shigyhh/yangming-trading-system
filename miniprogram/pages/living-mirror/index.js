@@ -15,6 +15,26 @@ const { buildTraining7View } = require("../../modules/training7/index");
 const { buildKlineDayRetestComparison, getKlineRecommendationForMirror } = require("../../modules/kline-simulator/index");
 const { buildLivingMirrorTree } = require("../../modules/mini-loop/index");
 
+function formatGrowthDate(value = "") {
+  const text = String(value || "").trim();
+  if (!text) return "待更新";
+  return text.includes("T") ? text.split("T")[0] : text;
+}
+
+function formatLivingMirrorUpdatedAt(value = "") {
+  const text = String(value || "").trim();
+  if (!text) return "待更新";
+  const date = new Date(text);
+  if (!Number.isNaN(date.getTime())) {
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    return `${month}月${day}日 ${hours}:${minutes}更新`;
+  }
+  return formatGrowthDate(text);
+}
+
 function buildServerLivingMirrorProfileView(profile = {}) {
   const repeatedThoughts = Array.isArray(profile.repeatedThoughts) ? profile.repeatedThoughts.slice(0, 3) : [];
   const totalEvents = Number(profile.totalEvents || 0);
@@ -26,7 +46,7 @@ function buildServerLivingMirrorProfileView(profile = {}) {
     dominantReaction: profile.dominantReaction || "待显影",
     repeatedThoughts: repeatedThoughts.length ? repeatedThoughts : ["今日暂无成长记录"],
     latestBoundaryState: profile.latestBoundaryState || "下一次交易前，先照见这一念",
-    updatedAt: profile.updatedAt || "待更新",
+    updatedAt: formatLivingMirrorUpdatedAt(profile.updatedAt),
     fallbackText: profile.ok
       ? "成长摘要已更新"
       : profile.status === "network_error"
@@ -56,12 +76,6 @@ function pickGrowthNumber(...values) {
     if (Number.isFinite(number)) return number;
   }
   return 0;
-}
-
-function formatGrowthDate(value = "") {
-  const text = String(value || "").trim();
-  if (!text) return "待更新";
-  return text.includes("T") ? text.split("T")[0] : text;
 }
 
 function buildLivingMirrorGrowthSummaryView(growth = null) {
@@ -173,7 +187,8 @@ Page({
     training7View: buildTraining7View(getTraining7State(), {}),
     hasRecords: false,
     serverLivingMirrorProfile: buildServerLivingMirrorProfileView(),
-    growthSummary: null
+    growthSummary: null,
+    showMirrorDepth: false
   },
 
   onShow() {
@@ -259,6 +274,10 @@ Page({
         this.refreshStats();
       })
       .catch(() => {});
+  },
+
+  toggleMirrorDepth() {
+    this.setData({ showMirrorDepth: !this.data.showMirrorDepth });
   },
 
   goReview() {

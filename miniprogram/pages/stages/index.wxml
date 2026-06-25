@@ -131,7 +131,7 @@
       <button class="secondary-btn" bindtap="goCurrent">继续个人境界</button>
     </view>
 
-    <compliance-notice />
+    <compliance-notice variant="compact" />
   </view>
   <bottom-tab-bar active="stages" />
 </view>

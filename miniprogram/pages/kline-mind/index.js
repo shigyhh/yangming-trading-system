@@ -28,12 +28,26 @@ const { buildTraining7View } = require("../../modules/training7/index");
 const {
   buildKlineMindSession,
   buildKlineMindRecord,
-  buildOneThoughtEvent
+  buildOneThoughtEvent,
+  getNextKlineMindSliceSeed
 } = require("../../modules/kline-mind/index");
 const {
   buildKlineTradeReviewRecord: buildKlineMirrorRecord,
   getKlineScenario
 } = require("../../modules/kline-simulator/index");
+
+const REACTION_DIRECTIONS = [
+  { key: "act", label: "想立刻做", detail: "追、急、想证明" },
+  { key: "avoid", label: "想躲开", detail: "怕错、怕亏、想退出" },
+  { key: "observe", label: "先看清", detail: "停住、复核、守边界" }
+];
+
+function inferReactionDirection(firstReaction) {
+  const value = String(firstReaction || "");
+  if (/急躁|贪念|证明/.test(value)) return "act";
+  if (/恐惧|抗拒|逃避/.test(value)) return "avoid";
+  return "";
+}
 
 function inferHeartThieves(text) {
   const value = String(text || "");
@@ -84,11 +98,14 @@ function buildMirrorReviewFromKline(record = {}, session = {}, assessment = {}) 
 }
 
 function buildForm(record = {}, session = {}) {
+  const savedSceneId = String(record.klineSceneId || record.sliceSeed || record.scenarioId || "");
   return {
     marketKey: record.marketKey || ((session.market || {}).key) || "cn_equity",
     timeframeKey: record.timeframeKey || session.timeframeKey || "1d",
+    scenarioId: savedSceneId.indexOf("scene-") === 0 ? savedSceneId : "scene-fast-001",
     historySlice: record.historySlice || null,
     selectedCandleKey: record.selectedCandleKey || session.selectedCandleKey || "",
+    reactionDirection: record.reactionDirection || inferReactionDirection(record.firstReaction),
     firstReaction: record.firstReaction || "",
     bodySignal: record.bodySignal || "",
     boundaryChoice: record.boundaryChoice || "",
@@ -141,6 +158,7 @@ Page({
     assessment: null,
     training7View: buildTraining7View({}, {}),
     trainingDay: null,
+    reactionDirections: REACTION_DIRECTIONS,
     session: buildKlineMindSession({}),
     form: buildForm(),
     savedRecord: null,
@@ -210,7 +228,7 @@ Page({
       historyLoading: true,
       historyError: "",
       session: Object.assign({}, this.buildSession(baseRecord), {
-        dataStatusText: "正在读取 server 历史切片"
+        dataStatusText: "正在读取历史练习数据"
       })
     });
     fetchKlineTrainingSlice({
@@ -231,7 +249,7 @@ Page({
         session,
         form: Object.assign({}, this.data.form, recordWithSlice, { selectedCandleKey: session.selectedCandleKey }),
         historyLoading: false,
-        historyError: historySlice.source === "local_demo" ? "当前为本地练习样本" : ""
+        historyError: historySlice.source === "local_demo" ? "当前为离线练习模式" : ""
       });
     });
   },
@@ -275,6 +293,21 @@ Page({
     const field = e.currentTarget.dataset.field;
     const value = e.currentTarget.dataset.value;
     if (!field) return;
+    if (field === "reactionDirection") {
+      const currentForm = this.data.form || {};
+      const directionChanged = currentForm.reactionDirection !== value;
+      this.setData({
+        form: Object.assign({}, currentForm, {
+          reactionDirection: value,
+          firstReaction: directionChanged ? "" : currentForm.firstReaction,
+          bodySignal: directionChanged ? "" : currentForm.bodySignal,
+          boundaryChoice: directionChanged ? "" : currentForm.boundaryChoice,
+          insightLine: directionChanged ? "" : currentForm.insightLine
+        }),
+        showBodySignal: directionChanged ? false : this.data.showBodySignal
+      });
+      return;
+    }
     this.setData({ [`form.${field}`]: value });
   },
 
@@ -284,6 +317,28 @@ Page({
 
   toggleSelectors() {
     this.setData({ showSelectors: !this.data.showSelectors });
+  },
+
+  switchSlice() {
+    const currentForm = this.data.form || {};
+    const scenarioId = getNextKlineMindSliceSeed(currentForm.scenarioId || "scene-fast-001");
+    const form = Object.assign({}, currentForm, {
+      scenarioId,
+      historySlice: null,
+      selectedCandleKey: "",
+      reactionDirection: "",
+      firstReaction: "",
+      bodySignal: "",
+      boundaryChoice: "",
+      insightLine: ""
+    });
+    const session = this.buildSession(form);
+    this.setData({
+      form: Object.assign({}, form, { selectedCandleKey: session.selectedCandleKey }),
+      session,
+      showBodySignal: false
+    });
+    this.loadServerHistorySlice(form);
   },
 
   toggleGuide() {

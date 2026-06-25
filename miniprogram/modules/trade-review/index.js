@@ -249,6 +249,13 @@ function applyServerTradeReviewResult(record = {}, result = {}) {
   const serverReview = result.review || result.trade_review || {};
   const profile = result.living_mirror_profile || result.livingMirrorProfile || null;
   const marketContext = serverReview.marketContext || serverReview.market_context || (profile || {}).latestMarketContext || null;
+  const serverOneThoughtEvent = serverReview.oneThoughtEvent || serverReview.one_thought_event || null;
+  const linkedOneThoughtEventId = serverReview.linkedOneThoughtEventId ||
+    serverReview.linked_one_thought_event_id ||
+    (serverOneThoughtEvent || {}).eventId ||
+    (serverOneThoughtEvent || {}).event_id ||
+    record.linkedOneThoughtEventId ||
+    "";
   const historicalMatch = marketContext
     ? buildHistoricalMatchFromMarketContext(marketContext, Object.assign({}, record, record.historicalMatch || {}))
     : (record.historicalMatch || buildHistoricalMatch(record));
@@ -274,6 +281,8 @@ function applyServerTradeReviewResult(record = {}, result = {}) {
     crossEndStatusText: serverReview.crossEndStatusText || serverReview.cross_end_status_text || record.crossEndStatusText,
     crossEndStatusSteps: serverReview.crossEndStatusSteps || serverReview.cross_end_status_steps || record.crossEndStatusSteps,
     statusUpdatedAt: serverReview.statusUpdatedAt || serverReview.status_updated_at || record.statusUpdatedAt,
+    linkedOneThoughtEventId,
+    oneThoughtEvent: serverOneThoughtEvent || record.oneThoughtEvent || null,
     updatedAt: Date.now()
   });
   return withTradeReviewCrossEndStatus(merged, { force: true });

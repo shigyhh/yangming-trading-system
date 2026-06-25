@@ -217,7 +217,7 @@
     <view class="companion-guard">{{companion.guardrailText}}</view>
 
     <button class="growth-link" bindtap="goGrowth">回到修行成长树</button>
-    <compliance-notice compact="{{true}}" />
+    <compliance-notice variant="compact" />
   </view>
 
   <bottom-tab-bar active="index" />

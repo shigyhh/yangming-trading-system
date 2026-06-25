@@ -114,7 +114,7 @@
     </view>
 
     <button class="primary-btn main-action" disabled="{{!historicalReady}}" bindtap="nextStep">{{mainActionText}}</button>
-    <compliance-notice />
+    <compliance-notice variant="full" />
   </view>
   <bottom-tab-bar active="mind" />
 </view>

@@ -34,7 +34,7 @@
 
     <view class="classroom-compliance">{{classroom.compliance}}</view>
     <button class="home-link" bindtap="goHome">回到今日陪跑</button>
-    <compliance-notice compact="{{true}}" />
+    <compliance-notice variant="compact" />
   </view>
 
   <bottom-tab-bar active="index" />

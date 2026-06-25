@@ -1,10 +1,36 @@
 <view class="page-shell">
   <view class="page-content">
     <text class="eyebrow">LIVING MIRROR · 行为印记</text>
-    <view class="page-title">活镜成长<br />训练台</view>
-    <view class="page-subtitle">这里不是报告展示页，而是把每次真实复盘沉淀成九镜变化、心贼频次和下一次训练动作。</view>
+    <view class="page-title">活镜</view>
+    <view class="page-subtitle">把每次真实复盘沉淀成一面镜：看见反复出现的念头，再决定下一步只练什么。</view>
 
-    <view class="mirror-bridge card">
+    <view class="mirror-summary-card card">
+      <view class="summary-seal">镜</view>
+      <view class="summary-main">
+        <text>当前主镜</text>
+        <view>{{stats.currentMirror || '活镜未点亮'}}</view>
+      </view>
+      <view class="summary-grid">
+        <view>
+          <text>高频一念</text>
+          <view>{{stats.topThievesText || '待照见'}}</view>
+        </view>
+        <view>
+          <text>下一步修行</text>
+          <view>{{stats.mainTraining || '先完成一条真实复盘。'}}</view>
+        </view>
+        <view>
+          <text>最近沉淀</text>
+          <view>{{hasRecords ? stats.totalReviews + ' 条真实复盘' : '待第一条复盘'}}</view>
+        </view>
+      </view>
+      <view class="summary-actions">
+        <button class="primary-btn" bindtap="goReview">{{hasRecords ? '继续记录一笔复盘' : '写下第一条复盘'}}</button>
+        <button wx:if="{{hasRecords}}" class="ghost-btn mirror-depth-toggle" bindtap="toggleMirrorDepth">{{showMirrorDepth ? '收起细节' : '查看成长细节'}}</button>
+      </view>
+    </view>
+
+    <view wx:if="{{showMirrorDepth}}" class="mirror-bridge card">
       <view class="bridge-line">复盘，是你写下事实。活镜，是系统照见反复出现的念头。</view>
       <view class="journey-progress-grid">
         <view>
@@ -40,7 +66,7 @@
       </view>
     </view>
 
-    <view class="server-profile-card card">
+    <view wx:if="{{showMirrorDepth}}" class="server-profile-card card">
       <view class="card-head">
         <text>活镜成长摘要</text>
         <view>{{serverLivingMirrorProfile.statusText}}</view>
@@ -63,7 +89,7 @@
       <view class="server-profile-foot">{{serverLivingMirrorProfile.updatedAt}} · {{serverLivingMirrorProfile.fallbackText}}</view>
     </view>
 
-    <view class="mirror-hero card">
+    <view wx:if="{{showMirrorDepth}}" class="mirror-hero card">
       <view class="lake-glow"></view>
       <view class="mirror-label">复盘生成主镜</view>
       <view class="mirror-name">{{stats.currentMirror || '活镜未点亮'}}</view>
@@ -103,7 +129,7 @@
       </view>
     </view>
 
-    <view class="stability-card card">
+    <view wx:if="{{showMirrorDepth}}" class="stability-card card">
       <view class="card-head">
         <text>知行稳定度</text>
         <view>{{zhixingStability.level}}</view>
@@ -126,7 +152,7 @@
       <view class="stability-foot">{{zhixingStability.riskLine}}</view>
     </view>
 
-    <view class="triple-card card">
+    <view wx:if="{{showMirrorDepth}}" class="triple-card card">
       <view class="card-head">
         <text>三证互照</text>
         <view>{{tripleReflection.evidenceLevelText || tripleReflection.stateLabel}}</view>
@@ -144,7 +170,7 @@
       <view class="triple-prescription">{{tripleReflection.nextCalibration || tripleReflection.prescription}}</view>
     </view>
 
-    <view class="server-prescription-card card">
+    <view wx:if="{{showMirrorDepth}}" class="server-prescription-card card">
       <view class="card-head">
         <text>中枢今日训练</text>
         <view>{{prescriptionStatusText}}</view>
@@ -159,7 +185,7 @@
       <button class="primary-btn" bindtap="receiveServerPrescription">接收今日训练</button>
     </view>
 
-    <view class="mirror-tree-card card">
+    <view wx:if="{{showMirrorDepth}}" class="mirror-tree-card card">
       <view class="tree-glow"></view>
       <view class="card-head">
         <text>活镜树</text>
@@ -182,7 +208,7 @@
       </view>
     </view>
 
-    <view class="evidence-tree-card card">
+    <view wx:if="{{showMirrorDepth}}" class="evidence-tree-card card">
       <view class="card-head">
         <text>闭环印记</text>
         <view>{{evidenceSummary.total ? evidenceSummary.total + ' 条入树' : '待第一枚心证入树'}}</view>
@@ -197,7 +223,7 @@
       <view wx:else class="empty-text">完成今日落印后，第一枚心证会长成活镜树的一片叶。</view>
     </view>
 
-    <view class="change-card card">
+    <view wx:if="{{showMirrorDepth}}" class="change-card card">
       <view class="card-head">
         <text>7 天印记变化</text>
         <view>只看反应模式，不绑定结果</view>
@@ -208,7 +234,7 @@
       </view>
     </view>
 
-    <view class="kline-retest-card card">
+    <view wx:if="{{showMirrorDepth}}" class="kline-retest-card card">
       <view class="card-head">
         <text>{{klineDayRetest.title}}</text>
         <view>{{klineDayRetest.stageText}}</view>
@@ -223,7 +249,7 @@
       <view class="retest-insight">{{klineDayRetest.insight}}</view>
     </view>
 
-    <view class="training-progress-card card">
+    <view wx:if="{{showMirrorDepth}}" class="training-progress-card card">
       <view class="card-head">
         <text>训练进度</text>
         <view>Day {{training7View.currentDay}} · {{training7View.progressText}}</view>
@@ -235,7 +261,7 @@
       </view>
     </view>
 
-    <view class="loop-card card">
+    <view wx:if="{{showMirrorDepth}}" class="loop-card card">
       <view class="card-head">
         <text>{{miniLoopProgress.behaviorLoop.title || '循环之镜'}}</text>
         <view>重复反应路径</view>
@@ -244,7 +270,7 @@
       <view class="loop-next">{{miniLoopProgress.behaviorLoop.nextAction || '完成两次复盘后生成下一次提醒。'}}</view>
     </view>
 
-    <view class="reminder-card card">
+    <view wx:if="{{showMirrorDepth}}" class="reminder-card card">
       <view class="card-head">
         <text>下一次训练提醒</text>
         <view>今日只练一件事</view>
@@ -254,7 +280,7 @@
       <button class="primary-btn" bindtap="goReview">{{hasRecords ? '继续记录一笔复盘' : '上传第一条记录'}}</button>
     </view>
 
-    <view class="recommend-card card">
+    <view wx:if="{{showMirrorDepth}}" class="recommend-card card">
       <view class="card-head">
         <text>活镜推荐切片</text>
         <view>按当前主镜生成</view>
@@ -267,7 +293,7 @@
 
     <view class="recent-card card">
       <view class="card-head">
-        <text>最近三次复盘</text>
+        <text>最近沉淀</text>
         <view bindtap="goArchive">进入档案</view>
       </view>
       <view wx:if="{{stats.recentThree.length}}">
@@ -282,7 +308,7 @@
       <view wx:else class="empty-text">还没有复盘记录。先上传一张截图，照见第一次真实反应。</view>
     </view>
 
-    <view class="assistant-card card">
+    <view wx:if="{{showMirrorDepth}}" class="assistant-card card">
       <view class="card-head">
         <text>助教承接摘要</text>
         <view>本地记录</view>
@@ -315,7 +341,7 @@
       <button class="ghost-btn" bindtap="goAssistant">去我的页承接</button>
     </view>
 
-    <compliance-notice />
+    <compliance-notice variant="compact" />
   </view>
   <bottom-tab-bar active="mirror" />
 </view>

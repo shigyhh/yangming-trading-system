@@ -1,25 +1,17 @@
 <view class="page-shell">
   <view class="page-content">
     <view class="report-brand-row">
-      <view class="report-brand-mark brand-zhao-mini" aria-label="阳明照见报告小标">
-        <view class="zhao-eyes">
-          <view class="zhao-eye"></view>
-          <view class="zhao-eye"></view>
-        </view>
-        <view class="zhao-mirror"></view>
-        <view class="zhao-fire">
-          <view class="zhao-fire-dot"></view>
-          <view class="zhao-fire-dot"></view>
-        </view>
+      <view class="report-brand-mark brand-seal-frame" aria-label="阳明照见艺术标">
+        <image class="brand-seal-art" src="/assets/brand/ymty-zhao-logo.svg" mode="aspectFit"></image>
       </view>
       <view class="report-brand-copy">
-        <text>阳明照见报告</text>
-        <view>心证 · 复盘 · 训练 · 纪律</view>
+        <text>阳明心镜报告</text>
+        <view>真实复盘 · 第一念 · 下一步修行</view>
       </view>
     </view>
-    <text class="eyebrow">PERSONALITY · 观心</text>
-    <view class="page-title">九型人格<br />心证</view>
-    <view class="page-subtitle">不是评判你，而是照见惯性动作，把它转成每日修行。</view>
+    <text class="eyebrow">LIVING MIRROR · 复盘</text>
+    <view class="page-title">复盘心镜<br />报告</view>
+    <view class="page-subtitle">不是评判你，而是把一次真实记录、当时第一念与下一步修行，留成可回看的心镜。</view>
 
     <block wx:if="{{hasResult}}">
       <view class="hero-report card">
@@ -42,7 +34,7 @@
         </view>
         <view class="binding-grid">
           <view>
-            <text>网站测评报告</text>
+            <text>心镜照见</text>
             <view>{{result.primary}}</view>
           </view>
           <view>
@@ -207,7 +199,7 @@
       <view class="compliance-card card">{{miniReport.compliance}}</view>
 
       <view class="split-actions">
-        <button class="secondary-btn" bindtap="saveReport">收藏心证</button>
+        <button class="secondary-btn" bindtap="saveReport">收藏心镜</button>
         <button class="primary-btn" bindtap="goTraining">开始事上练</button>
       </view>
       <view class="single-action">
@@ -234,12 +226,12 @@
     </block>
 
     <view wx:else class="empty-report card">
-      <view>还没有人格心证</view>
-      <text>先完成九型人格照见，再生成专属事上练路径。</text>
-      <button class="primary-btn" bindtap="goAssessment">开始照见</button>
+      <view>还没有复盘心镜</view>
+      <text>完成一次真实复盘后，这里会自然生成心镜报告。</text>
+      <button class="primary-btn" bindtap="goTradeReview">去真实复盘</button>
     </view>
 
-    <compliance-notice />
+    <compliance-notice variant="full" />
   </view>
   <bottom-tab-bar active="assessment" />
 </view>

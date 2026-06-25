@@ -5,16 +5,8 @@
 
   <view class="mind-content">
     <view class="mind-head">
-      <view class="seal brand-zhao-mini" aria-label="阳明照见开盘照心小标">
-        <view class="zhao-eyes">
-          <view class="zhao-eye"></view>
-          <view class="zhao-eye"></view>
-        </view>
-        <view class="zhao-mirror"></view>
-        <view class="zhao-fire">
-          <view class="zhao-fire-dot"></view>
-          <view class="zhao-fire-dot"></view>
-        </view>
+      <view class="seal brand-seal-frame" aria-label="阳明照见艺术标">
+        <image class="brand-seal-art" src="/assets/brand/ymty-zhao-logo.svg" mode="aspectFit"></image>
       </view>
       <view>
         <text>开盘照心</text>
@@ -175,7 +167,7 @@
     </view>
 
     <view class="review-link" bindtap="goReview">收盘后回到这里，做一次省察克治</view>
-    <compliance-notice compact="{{true}}" />
+    <compliance-notice variant="compact" />
   </view>
 
   <bottom-tab-bar active="mind" />

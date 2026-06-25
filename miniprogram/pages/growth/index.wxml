@@ -121,7 +121,7 @@
       <button class="primary-action" bindtap="goDojo">进入修行道场</button>
     </view>
 
-    <compliance-notice compact="{{true}}" />
+    <compliance-notice variant="compact" />
   </view>
 
   <bottom-tab-bar active="index" />

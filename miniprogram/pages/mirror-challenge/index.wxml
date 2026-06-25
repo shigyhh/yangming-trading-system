@@ -51,7 +51,7 @@
       <button class="ghost-btn" bindtap="goSimulator">再练一段</button>
     </view>
 
-    <compliance-notice />
+    <compliance-notice variant="compact" />
   </view>
   <bottom-tab-bar active="mind" />
 </view>

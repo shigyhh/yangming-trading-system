@@ -88,7 +88,8 @@ assert.strictEqual(todayStateView.status, "not_trained");
 assert.strictEqual(todayStateView.statusText, "待训练");
 assert.strictEqual(todayStateView.nextActionText, "K线训练");
 assert.strictEqual(todayStateView.progress, 35);
-assert.strictEqual(todayStateView.updatedAt, "2026-06-21T10:00:00.000Z");
+assert.equal(/T\d{2}:\d{2}:\d{2}/.test(todayStateView.updatedAt), false);
+assert.ok(todayStateView.updatedAt.includes("更新"));
 assert.strictEqual(Object.prototype.hasOwnProperty.call(todayStateView, "rawPayloadShouldNotLeak"), false);
 
 const fallbackTodayStateView = buildHomeTodayStateView({

@@ -79,6 +79,11 @@ const syncedReview = applyServerTradeReviewResult(review, {
     id: review.id,
     detectedMirror: "追涨之镜",
     detectedThieves: ["贪", "急"],
+    linkedOneThoughtEventId: "evt-review-001",
+    oneThoughtEvent: {
+      eventId: "evt-review-001",
+      eventType: "trade_review"
+    },
     marketContext: {
       status: "ready",
       marketKey: "cn_equity",
@@ -103,6 +108,8 @@ assert.strictEqual(syncedReview.historicalMatch.sourceStatus, "历史片段已�
 assert.strictEqual(syncedReview.marketContext.status, "ready");
 assert.strictEqual(syncedReview.serverLivingMirrorProfile.currentMainMirror, "追涨之镜");
 assert.strictEqual(syncedReview.crossEndStatusText, "待训练");
+assert.strictEqual(syncedReview.linkedOneThoughtEventId, "evt-review-001");
+assert.strictEqual(syncedReview.oneThoughtEvent.eventId, "evt-review-001");
 
 const secondReview = buildTradeReview({
   marketKey: "cn",

@@ -9,6 +9,8 @@ const {
   MARKET_CATALOG,
   TIMEFRAME_CATALOG,
   KLINE_TRAINING_METHODS,
+  normalizeHistoryCandles,
+  getNextKlineMindSliceSeed,
   getPersonalityKlineDrill
 } = require("./index");
 
@@ -17,7 +19,12 @@ assert.ok(Object.keys(PERSONALITY_KLINE_PRESCRIPTIONS).length >= 9);
 assert.deepStrictEqual(Object.keys(MARKET_CATALOG), ["cn_equity"]);
 assert.deepStrictEqual(TIMEFRAME_CATALOG.map((item) => item.key), ["30m", "60m", "1d"]);
 assert.ok(KLINE_TRAINING_METHODS.find((item) => item.key === "firecracker"));
+assert.strictEqual(KLINE_TRAINING_METHODS[0].key, "firecracker");
+assert.ok(KLINE_TRAINING_METHODS[0].steps.includes("点最想追的一根"));
 assert.ok(getPersonalityKlineDrill("焦虑型").drillAction.includes("固定观察窗口"));
+assert.strictEqual(getNextKlineMindSliceSeed(""), "scene-fast-001");
+assert.notStrictEqual(getNextKlineMindSliceSeed("scene-fast-001"), "scene-fast-001");
+assert.strictEqual(getNextKlineMindSliceSeed("unknown-seed"), "scene-fast-001");
 
 const historicalSlice = {
   source: "verified_fixture",
@@ -52,6 +59,35 @@ assert.strictEqual(session.prescription.heartThief, "怕错过");
 assert.strictEqual(session.candles.length, 6);
 assert.ok(session.candles.some((item) => item.selected));
 assert.ok(session.gates.find((item) => item.key === "zhaoxin").trainingAction);
+
+const compactSchemaSlice = {
+  source: "server_cache",
+  candles: Array.from({ length: 20 }, (_, index) => ({
+    t: `2024-02-${String(index + 1).padStart(2, "0")}`,
+    o: 10 + index * 0.1,
+    h: 10.8 + index * 0.1,
+    l: 9.8 + index * 0.1,
+    c: 10.4 + index * 0.1,
+    v: 1000 + index * 50
+  }))
+};
+const visualCandles = normalizeHistoryCandles(compactSchemaSlice);
+assert.strictEqual(visualCandles.length, 14);
+assert.ok(visualCandles.every((item) => !String(item.wickStyle + item.bodyStyle + item.volumeStyle).includes("NaN")));
+assert.strictEqual(visualCandles[0].date, "2024-02-07");
+
+const sparseSession = buildKlineMindSession({
+  record: {
+    marketKey: "cn_equity",
+    timeframeKey: "1d",
+    historySlice: {
+      source: "server_cache",
+      candles: historicalSlice.candles.slice(0, 2)
+    }
+  }
+});
+assert.strictEqual(sparseSession.hasHistoricalData, false);
+assert.strictEqual(sparseSession.candles.length, 0);
 
 const record = buildKlineMindRecord({
   selectedCandleKey: session.selectedCandleKey,
@@ -92,9 +128,9 @@ const demoRecord = buildKlineMindRecord({
   selectedCandleKey: demoSession.selectedCandleKey,
   firstReaction: "急躁",
   boundaryChoice: "停十秒",
-  insightLine: "当前为本地练习样本，我只记录第一念。"
+  insightLine: "离线练习模式下，我只记录第一念。"
 }, demoSession);
-assert.strictEqual(demoSession.dataStatusText, "当前为本地练习样本");
+assert.strictEqual(demoSession.dataStatusText, "离线练习模式");
 assert.strictEqual(demoRecord.klineSource, "local_demo");
 assert.strictEqual(demoRecord.sliceSource, "local_demo");
 assert.strictEqual(demoRecord.serverSliceStatus, "network_error");

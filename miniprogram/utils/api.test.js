@@ -73,6 +73,27 @@ assert.strictEqual(normalized.source, "server");
 assert.strictEqual(normalized.barCount, 6);
 assert.strictEqual(normalized.slice.candles.length, 6);
 
+const compactSchemaNormalized = normalizeKlineTrainingSliceResult({
+  ok: true,
+  slice: {
+    source: "server_cache",
+    symbol: "600519",
+    timeframe: "101",
+    candles: [
+      { t: "2026-02-01", o: 1, h: 2, l: 0.8, c: 1.5, v: 100 },
+      { t: "2026-02-02", o: 1.5, h: 2.1, l: 1.2, c: 1.8, v: 120 },
+      { t: "2026-02-03", o: 1.8, h: 2.4, l: 1.7, c: 2.2, v: 140 },
+      { t: "2026-02-04", o: 2.2, h: 2.3, l: 1.9, c: 2.0, v: 130 },
+      { t: "2026-02-05", o: 2.0, h: 2.5, l: 1.9, c: 2.3, v: 150 },
+      { t: "2026-02-06", o: 2.3, h: 2.6, l: 2.1, c: 2.4, v: 160 }
+    ]
+  }
+});
+assert.strictEqual(compactSchemaNormalized.ok, true);
+assert.strictEqual(compactSchemaNormalized.slice.candles[0].time, "2026-02-01");
+assert.strictEqual(compactSchemaNormalized.slice.candles[0].open, 1);
+assert.strictEqual(compactSchemaNormalized.slice.candles[0].volume, 100);
+
 const empty = normalizeKlineTrainingSliceResult({ ok: true, slice: { candles: [] } });
 assert.strictEqual(empty.ok, false);
 assert.strictEqual(empty.reason, "empty_slice");

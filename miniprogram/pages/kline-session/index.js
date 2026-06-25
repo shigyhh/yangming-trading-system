@@ -201,9 +201,9 @@ function mergeLocalDemoSlice(scene, result) {
     barCount: (scene.candles || []).length
   };
   return Object.assign({}, scene, {
-    subtitle: `${scene.subtitle} · 当前为本地练习样本`,
-    segmentLabel: `${scene.marketLabel || "A股"} · ${scene.timeframeLabel || "日线"} · 本地练习样本`,
-    dataSourceLabel: "本地练习样本",
+    subtitle: `${scene.subtitle} · 离线练习模式`,
+    segmentLabel: `${scene.marketLabel || "A股"} · ${scene.timeframeLabel || "日线"} · 离线练习模式`,
+    dataSourceLabel: "离线练习模式",
     isRealHistorical: false,
     klineSource: "local_demo",
     sliceSource: "local_demo",
@@ -315,14 +315,14 @@ Page({
           futureBars: chartView.futureBars,
           firstCandleText: chartView.firstCandleText,
           lastCandleText: chartView.lastCandleText,
-          dataStatus: "当前为本地练习样本",
+          dataStatus: "离线练习模式",
           chartRevealText: buildChartRevealText(scene, chartView.candles, true),
           mainActionText: "记录并继续",
           historicalReady: true,
           historicalError: scene.serverSliceError,
-          historicalEmptyText: "当前为本地练习样本",
+          historicalEmptyText: "离线练习模式",
           elapsedText: "0.0 秒",
-          reactionHint: "当前为本地练习样本；先停一息，再照见第一反应。"
+          reactionHint: "离线练习模式；先停一息，再照见第一反应。"
         }, this.startStepTimer);
         return;
       }
@@ -342,7 +342,7 @@ Page({
         futureBars: chartView.futureBars,
         firstCandleText: chartView.firstCandleText,
         lastCandleText: chartView.lastCandleText,
-        dataStatus: "已载入 server 历史数据切片（非实时）",
+        dataStatus: "历史练习数据已载入（非实时）",
         chartRevealText: buildChartRevealText(scene, chartView.candles, true),
         mainActionText: "记录并继续",
         historicalReady: true,
@@ -368,14 +368,14 @@ Page({
         futureBars: chartView.futureBars,
         firstCandleText: chartView.firstCandleText,
         lastCandleText: chartView.lastCandleText,
-        dataStatus: "当前为本地练习样本",
+        dataStatus: "离线练习模式",
         chartRevealText: buildChartRevealText(scene, chartView.candles, true),
         mainActionText: "记录并继续",
         historicalReady: true,
         historicalError: scene.serverSliceError,
-        historicalEmptyText: "当前为本地练习样本",
+        historicalEmptyText: "离线练习模式",
         elapsedText: "0.0 秒",
-        reactionHint: "当前为本地练习样本；先停一息，再照见第一反应。"
+        reactionHint: "离线练习模式；先停一息，再照见第一反应。"
       }, this.startStepTimer);
     });
   },

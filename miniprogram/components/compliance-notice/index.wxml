@@ -1,4 +1,10 @@
-<view class="compliance {{compact ? 'compact' : ''}}">
-  <view class="seal">界</view>
-  <text>{{text}}</text>
+<view class="compliance compliance--{{resolvedVariant}}" bindtap="showBoundary">
+  <block wx:if="{{resolvedVariant === 'link'}}">
+    <text class="link-label">合规边界</text>
+    <text class="link-hint">查看</text>
+  </block>
+  <block wx:else>
+    <view wx:if="{{resolvedVariant === 'full'}}" class="seal">界</view>
+    <text>{{resolvedVariant === 'compact' ? compactText : text}}</text>
+  </block>
 </view>

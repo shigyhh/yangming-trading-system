@@ -51,16 +51,8 @@
             <text class="card-top-label">{{card.typeLabel}}</text>
             <view class="card-top-brand">阳明心学交易系统</view>
           </view>
-          <view class="mini-seal brand-zhao-mini" aria-label="阳明照见分享卡小标">
-            <view class="zhao-eyes">
-              <view class="zhao-eye"></view>
-              <view class="zhao-eye"></view>
-            </view>
-            <view class="zhao-mirror"></view>
-            <view class="zhao-fire">
-              <view class="zhao-fire-dot"></view>
-              <view class="zhao-fire-dot"></view>
-            </view>
+          <view class="mini-seal brand-seal-frame" aria-label="阳明照见艺术标">
+            <image class="brand-seal-art" src="/assets/brand/ymty-zhao-logo.svg" mode="aspectFit"></image>
           </view>
         </view>
         <view class="headline">{{card.headline}}</view>
@@ -122,16 +114,8 @@
     <view class="poster-card poster-master">
       <view class="poster-ink"></view>
       <view class="poster-brand">
-        <view class="poster-brand-seal brand-zhao-mini" aria-label="阳明照见分享卡海报小标">
-          <view class="zhao-eyes">
-            <view class="zhao-eye"></view>
-            <view class="zhao-eye"></view>
-          </view>
-          <view class="zhao-mirror"></view>
-          <view class="zhao-fire">
-            <view class="zhao-fire-dot"></view>
-            <view class="zhao-fire-dot"></view>
-          </view>
+        <view class="poster-brand-seal brand-seal-frame" aria-label="阳明照见艺术标">
+          <image class="brand-seal-art" src="/assets/brand/ymty-zhao-logo.svg" mode="aspectFit"></image>
         </view>
         <view class="poster-brand-copy">
           <text class="poster-brand-title">{{posterCard.brandTitle}}</text>

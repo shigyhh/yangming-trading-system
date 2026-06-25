@@ -191,7 +191,7 @@
     </view>
     <button class="ghost-btn single-action" bindtap="goTraining">回到事上练</button>
 
-    <compliance-notice />
+    <compliance-notice variant="full" />
   </view>
   <bottom-tab-bar active="training" />
 </view>

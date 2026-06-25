@@ -60,12 +60,18 @@ const MOCK_KLINE_SCENARIOS = [
     relatedPersonalities: ["冲动型", "焦虑型"],
     trainingDay: 1,
     candles: [
-      { open: 100, high: 102, low: 99, close: 101 },
-      { open: 101, high: 104, low: 100, close: 103 },
-      { open: 103, high: 108, low: 102, close: 107 },
-      { open: 107, high: 111, low: 106, close: 110 },
-      { open: 110, high: 112, low: 105, close: 106 },
-      { open: 106, high: 108, low: 102, close: 103 }
+      { open: 100, high: 102, low: 99, close: 101, volume: 820 },
+      { open: 101, high: 103, low: 100, close: 102, volume: 900 },
+      { open: 102, high: 106, low: 101, close: 105, volume: 1180 },
+      { open: 105, high: 112, low: 104, close: 111, volume: 1860 },
+      { open: 111, high: 121, low: 110, close: 119, volume: 2460 },
+      { open: 119, high: 128, low: 117, close: 126, volume: 2880 },
+      { open: 126, high: 130, low: 119, close: 121, volume: 2320 },
+      { open: 121, high: 124, low: 114, close: 116, volume: 1980 },
+      { open: 116, high: 121, low: 111, close: 119, volume: 1680 },
+      { open: 119, high: 126, low: 118, close: 124, volume: 2140 },
+      { open: 124, high: 127, low: 115, close: 117, volume: 2260 },
+      { open: 117, high: 120, low: 110, close: 112, volume: 1880 }
     ],
     checkpoints: [
       {
