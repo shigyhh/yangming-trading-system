@@ -1445,7 +1445,169 @@ V7 之后不再继续定义新版本。本规格到 V7 为止，后续只能做�
 1. 工程化落地：把 V1-P4 当前可实现部分做成真实系统。
 2. 认知收敛：把 V5-V7 作为长期哲学与研究框架沉淀。
 
-## 16. 命名原则
+## 16. Trading Cognitive OS：工程化收敛层
+
+“交易认知操作系统（Trading Cognitive OS）”是本规格的工程化收敛命名，用于把 V1-V7 压缩为可运行、可验收、可持续演进的系统边界。
+
+重要边界：
+
+- 当前不新建 `ym-kline-cognitive-os/` 独立仓库。
+- 当前不另起一套孤立 schema。
+- 当前不把 NestJS 微服务、Docker 多服务拆分作为 P1 前置条件。
+- 当前小程序、Web、H5 复盘、活镜成长仍以现有事件链和数据绑定为主。
+- “OS”是产品与工程组织方式，不是实盘交易系统、策略系统或量化系统。
+
+### 16.1 收敛定位
+
+Trading Cognitive OS 只做一件事：
+
+> 把交易行为从随机情绪输出，收敛为稳定、可复盘、可训练的认知决策闭环。
+
+它不是：
+
+- 策略系统。
+- 量化系统。
+- 行情预测系统。
+- AI 投资分析工具。
+
+它只做：
+
+- 行为记录。
+- 认知建模。
+- 模拟训练。
+- 复盘反馈。
+- 成长画像。
+
+核心公式：
+
+```text
+Trading Cognitive OS = f(Behavior, Cognition, Market)
+
+Behavior = Cognition x Market Context
+```
+
+### 16.2 三层核心模型
+
+| 层级 | 关注点 | 当前落点 |
+| --- | --- | --- |
+| Behavior Layer | 用户做了什么：BUY / SELL / HOLD、仓位、频率、犹豫、追涨、恐慌 | `decisionTimeline`、`klineMindRecord`、`oneThoughtEvent` |
+| Cognition Layer | 用户为什么这样做：恐惧、贪婪、FOMO、知行偏差、纪律偏移 | `emotionBadges`、`riskHints`、`coachHints`、未来 `cognitionTrace` |
+| Market Simulation Field | 用户在什么环境里做：趋势、震荡、假突破、波动、量能、周期 | `/api/v1/kline-history/slice`、`visibleCandles`、`simulationMode` |
+
+三层必须合在同一条训练链路里，不允许拆成互不相干的“小程序训练器”和“网站报告系统”。
+
+### 16.3 统一运行闭环
+
+工程闭环固定为：
+
+```text
+Market
+  -> Session
+  -> Behavior
+  -> Cognition
+  -> Coach
+  -> Feedback
+  -> Update State
+```
+
+这条闭环映射到状态机：
+
+| 状态 | 含义 | 当前 / 近期实现 |
+| --- | --- | --- |
+| `INIT` | 初始化训练上下文 | 页面进入、读取用户与本地记录 |
+| `LOAD_MARKET` | 加载真实历史 K 线切片 | `fetchKlineTrainingSlice` -> `/api/v1/kline-history/slice` |
+| `RUN_SESSION` | 启动盲测训练会话 | `startKlineTrainingRuntime` |
+| `WAIT_DECISION` | 等待用户单次模拟决策 | `mustDecide`、`lockedUntilDecision` |
+| `EXECUTE_TRADE` | 记录不可撤销的模拟决策 | `recordKlineTrainingDecision` |
+| `UPDATE_COGNITION` | 更新情绪与行为偏差 | `emotionBadges`、`riskHints` |
+| `COACH_FEEDBACK` | 输出教练反馈 | `coachHints` |
+| `NEXT_CANDLE` | 推进下一根 K 线 | `advanceKlineTrainingRuntime` |
+| `END_SESSION` | 生成复盘与成长事件 | `buildKlineMindRecord` -> `oneThoughtEvent` -> `tradeReviewRecord` -> `livingMirrorGrowth` |
+
+### 16.4 工程模块落点
+
+工程化 V1 的模块划分有参考意义，但在当前项目里先作为“逻辑模块”，不立即拆成物理微服务。
+
+| 工程化模块 | 责任 | 当前项目落点 |
+| --- | --- | --- |
+| Session Core | 会话、状态机、当前 index、训练结果 | `miniprogram/modules/kline-mind/index.js` runtime 扩展 |
+| Market Engine | 随机真实历史切片、脱敏 OHLCV、周期参数 | `/api/v1/kline-history/slice`、后端历史 K 线服务 |
+| Behavior Service | 模拟买卖、持有、跳过、延迟、行为日志 | `decisionTimeline`、未来模拟 PnL / 回撤快照 |
+| Cognition Service | fear / greed / fomo / hesitation / disciplineDeviation | `emotionBadges`、`riskHints`、未来 `cognitionTrace` |
+| Coach Service | 训练反馈、错误提示、下一步省察 | `coachHints`、`tradeReviewRecord`、H5 心镜报告 |
+| Scoring System | 稳定性、纪律、知行一致、认知准确度 | `calculateKlineMindScore`、未来 `stabilityScore` / `disciplineScore` |
+| Replay Engine | K 线回放、买卖点、情绪轨迹 | P3 复盘报告阶段 |
+| Growth Engine | 长期成长画像与人格演化 | `livingMirror`、网站成长画像 |
+
+### 16.5 数据模型落点
+
+工程化 V1 提到的 `users`、`sessions`、`trades`、`cognition_logs` 只作为未来投影表参考，当前不能替换既有数据链路。
+
+| 工程模型 | 当前主数据 | 可新增兼容字段 |
+| --- | --- | --- |
+| `UserState` | `livingMirror` / 用户绑定档案 | `behaviorVector`、`cognitionVector`、`marketSensitivity`、`entropyLevel` |
+| `Session` | `klineMindRecord` + runtime state | `trainingSessionId`、`simulationMode`、`sliceSeed`、`chartZoomKey` |
+| `TradeLog` | `decisionTimeline` | `positionSize`、`simulatedPnl`、`maxDrawdownSnapshot` |
+| `CognitionLog` | `emotionBadges` / `riskHints` | `cognitionTrace`、`disciplineDeviation`、`hesitationLevel` |
+| `FeedbackTrace` | `coachHints` / 复盘反馈 | `feedbackTrace`、`reviewInsightRefs` |
+| `FinalScore` | `calculateKlineMindScore` 输出 | `stability`、`discipline`、`cognitionAccuracy` |
+
+字段原则：
+
+- 新字段只能作为兼容扩展。
+- 不替换 `selectedCandleKey`、`firstReaction`、`boundaryChoice`、`insightLine`。
+- 不替换 `oneThoughtEvent`、`tradeReviewRecord`、`livingMirrorGrowth`。
+- 不在小程序私有存储里形成独立成长画像。
+
+### 16.6 API 与部署边界
+
+工程化 V1 的 API 命名需要收敛到现有后端风格：
+
+| 工程化草案 | 当前可接受命名 |
+| --- | --- |
+| `POST /session/create` | `POST /api/v1/kline-training/session` |
+| `POST /session/next-candle` | `POST /api/v1/kline-training/session/:id/next` |
+| `POST /session/execute-trade` | `POST /api/v1/kline-training/session/:id/decision` |
+| `GET /session/result` | `GET /api/v1/kline-training/session/:id/result` |
+
+当前 P1 优先级：
+
+1. 继续复用 `/api/v1/kline-history/slice`。
+2. 继续复用现有 data-binding 同步链路。
+3. 先在小程序内完成 runtime 与页面体验。
+4. 后端 session API 只在 P1 runtime 稳定后补充。
+
+暂不做：
+
+- 新建 `market-service`、`simulation-service`、`cognition-service` 多服务仓库。
+- 新建 Docker Compose 多服务部署。
+- 新增 PostgreSQL schema 作为唯一数据源。
+- 先做 Next.js 训练系统再回接小程序。
+
+### 16.7 第一阶段工程收敛目标
+
+第一阶段不是“搭完整 OS”，而是把 OS 的最小闭环跑通：
+
+```text
+真实历史 K 线切片
+  -> 逐根盲练 session
+  -> 模拟决策记录
+  -> 行为 / 情绪提示
+  -> KlineMindRecord
+  -> OneThoughtEvent
+  -> TradeReviewRecord
+  -> LivingMirrorGrowth
+```
+
+Done when：
+
+- 用户能从 K线观心页唯一主入口进入逐根盲练。
+- 一屏能看到足够多的真实 K 线，并可缩放 / 横屏优先训练。
+- 每一步模拟决策被记录，且不可编辑为“事后美化”。
+- 训练完成后自然生成复盘入口，而不是藏在我的页列表。
+- 训练结果进入现有活镜成长链路，不形成孤立训练数据。
+
+## 17. 命名原则
 
 为了避免投顾误解，V1 用户侧命名建议：
 
@@ -1455,7 +1617,7 @@ V7 之后不再继续定义新版本。本规格到 V7 为止，后续只能做�
 - “收益 / 胜率”只在复盘分析中作为模拟训练指标，不作为能力承诺。
 - “风险提示”只指行为风险，不指市场风险方向。
 
-## 17. 合规文案
+## 18. 合规文案
 
 所有 K线训练页面保留轻量合规边界：
 
