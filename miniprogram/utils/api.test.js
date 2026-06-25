@@ -29,6 +29,17 @@ const {
   retryPendingKlineTrainingSync
 } = require("./api");
 
+function buildApiCandles(length, prefix = "2026-01") {
+  return Array.from({ length }, (_, index) => ({
+    time: `${prefix}-${String(index + 1).padStart(2, "0")}`,
+    open: 1 + index / 100,
+    high: 2 + index / 100,
+    low: 0.8 + index / 100,
+    close: 1.5 + index / 100,
+    volume: 100 + index
+  }));
+}
+
 assert.strictEqual(PRODUCTION_API_BASE, "https://xxjyxt.com");
 storage.zhixing_api_base = "http://127.0.0.1:8787";
 envVersion = "release";
@@ -103,6 +114,13 @@ const insufficient = normalizeKlineTrainingSliceResult({ ok: true, slice: { cand
 assert.strictEqual(insufficient.ok, false);
 assert.strictEqual(insufficient.reason, "insufficient_slice");
 
+const insufficientWindow = normalizeKlineTrainingSliceResult(
+  { ok: true, slice: { candles: buildApiCandles(150, "2026-06") } },
+  { windowSize: 180 }
+);
+assert.strictEqual(insufficientWindow.ok, false);
+assert.strictEqual(insufficientWindow.reason, "insufficient_slice");
+
 async function runKlineSliceTests() {
   resetStorage();
   envVersion = "release";
@@ -120,14 +138,7 @@ async function runKlineSliceTests() {
           source: "server_cache",
           symbol: "600519",
           timeframe: "101",
-          candles: [
-            { time: "2026-01-01", open: 1, high: 2, low: 0.8, close: 1.5 },
-            { time: "2026-01-02", open: 1, high: 2, low: 0.8, close: 1.5 },
-            { time: "2026-01-03", open: 1, high: 2, low: 0.8, close: 1.5 },
-            { time: "2026-01-04", open: 1, high: 2, low: 0.8, close: 1.5 },
-            { time: "2026-01-05", open: 1, high: 2, low: 0.8, close: 1.5 },
-            { time: "2026-01-06", open: 1, high: 2, low: 0.8, close: 1.5 }
-          ]
+          candles: buildApiCandles(60, "2026-01")
         }
       }
     });
@@ -151,7 +162,7 @@ async function runKlineSliceTests() {
   assert.strictEqual(serverSlice.ok, true);
   assert.strictEqual(serverSlice.source, "server_cache");
   assert.strictEqual(serverSlice.slice.source, "server_cache");
-  assert.strictEqual(serverSlice.slice.candles.length, 6);
+  assert.strictEqual(serverSlice.slice.candles.length, 60);
 
   let cacheRequestCount = 0;
   global.wx.request = (options) => {
@@ -163,13 +174,7 @@ async function runKlineSliceTests() {
         slice: {
           source: "server_cache",
           timeframe: "30m",
-          candles: Array.from({ length: 6 }, (_, index) => ({
-            time: `2026-02-1${index}`,
-            open: 1 + index / 10,
-            high: 2 + index / 10,
-            low: 0.8 + index / 10,
-            close: 1.5 + index / 10
-          }))
+          candles: buildApiCandles(180, "2026-02")
         }
       }
     });
@@ -190,13 +195,7 @@ async function runKlineSliceTests() {
         ok: true,
         slice: {
           source: "server_cache",
-          candles: Array.from({ length: 6 }, (_, index) => ({
-            time: `2026-05-0${index + 1}`,
-            open: 1,
-            high: 2,
-            low: 0.8,
-            close: 1.5
-          }))
+          candles: buildApiCandles(180, "2026-05")
         }
       }
     });
@@ -221,19 +220,13 @@ async function runKlineSliceTests() {
         ok: true,
         slice: {
           source: "server_cache",
-          candles: Array.from({ length: 6 }, (_, index) => ({
-            time: `2026-03-0${index + 1}`,
-            open: 1,
-            high: 2,
-            low: 0.8,
-            close: 1.5
-          }))
+          candles: buildApiCandles(180, "2026-03")
         }
       }
     });
   };
   await fetchKlineTrainingSlice({ marketKey: "cn", timeframeKey: "1d" });
-  assert.ok(requestedUrl.includes("window=150"));
+  assert.ok(requestedUrl.includes("window=180"));
 
   resetStorage();
   delete storage.zhixing_api_base;
@@ -247,13 +240,7 @@ async function runKlineSliceTests() {
         ok: true,
         slice: {
           source: "server_cache",
-          candles: Array.from({ length: 6 }, (_, index) => ({
-            time: `2026-04-0${index + 1}`,
-            open: 1,
-            high: 2,
-            low: 0.8,
-            close: 1.5
-          }))
+          candles: buildApiCandles(180, "2026-04")
         }
       }
     });

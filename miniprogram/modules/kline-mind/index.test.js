@@ -124,12 +124,14 @@ const defaultLongSession = buildKlineMindSession({
 assert.strictEqual(defaultLongSession.chartZoomKey, "wide");
 assert.strictEqual(defaultLongSession.chartWindowSize, 150);
 assert.strictEqual(defaultLongSession.candles.length, 150);
+assert.deepStrictEqual(defaultLongSession.chartZoomOptions.map((item) => item.key), ["overview", "wide", "standard", "focus"]);
+assert.ok(defaultLongSession.chartZoomOptions.find((item) => item.key === "overview").hint.includes("180"));
 assert.ok(defaultLongSession.chartZoomOptions.find((item) => item.key === "wide").hint.includes("150"));
 assert.strictEqual(defaultLongSession.defaultMainIndicatorKey, "ma");
 assert.strictEqual(defaultLongSession.defaultIndicatorKey, "vol");
 assert.deepStrictEqual(defaultLongSession.timeframeOptions.map((item) => item.label), ["长线", "中线", "短线"]);
 assert.deepStrictEqual(defaultLongSession.mainIndicatorOptions.map((item) => item.key), ["ma", "boll"]);
-assert.deepStrictEqual(defaultLongSession.indicatorPanelOptions.map((item) => item.key), ["vol", "macd"]);
+assert.deepStrictEqual(defaultLongSession.indicatorPanelOptions.map((item) => item.key), ["vol", "macd", "rsi", "kdj"]);
 assert.ok(defaultLongSession.chartBoardStyle.includes("width:"));
 assert.ok(defaultLongSession.indicatorOverlay.ma5.length > 0);
 assert.ok(defaultLongSession.indicatorOverlay.ma10.length > 0);
@@ -137,6 +139,31 @@ assert.ok(defaultLongSession.indicatorOverlay.ma20.length > 0);
 assert.strictEqual(defaultLongSession.indicatorOverlay.bollUpper.length, 0);
 assert.strictEqual(defaultLongSession.indicatorOverlay.bollLower.length, 0);
 assert.strictEqual(defaultLongSession.candles[4].ma5Y !== null, true);
+
+const overviewSession = buildKlineMindSession({
+  record: {
+    marketKey: "cn_equity",
+    timeframeKey: "1d",
+    chartZoomKey: "overview",
+    historySlice: longBlindSlice
+  }
+});
+assert.strictEqual(overviewSession.chartZoomKey, "overview");
+assert.strictEqual(overviewSession.chartWindowSize, 180);
+assert.strictEqual(overviewSession.candles.length, 180);
+assert.ok(overviewSession.chartBoardStyle.includes("min-width: 920rpx"));
+
+const bollCompleteSession = buildKlineMindSession({
+  record: {
+    marketKey: "cn_equity",
+    timeframeKey: "1d",
+    chartZoomKey: "overview",
+    mainIndicatorKey: "boll",
+    historySlice: longBlindSlice
+  }
+});
+assert.strictEqual(bollCompleteSession.indicatorOverlay.bollUpper.length, bollCompleteSession.candles.length - 1);
+assert.strictEqual(bollCompleteSession.indicatorOverlay.bollLower.length, bollCompleteSession.candles.length - 1);
 
 const sparseSession = buildKlineMindSession({
   record: {
@@ -198,7 +225,7 @@ assert.strictEqual(demoSession.dataStatusText, "离线练习模式");
 assert.strictEqual(demoSession.chartZoomKey, "wide");
 assert.strictEqual(demoSession.chartWindowSize, 150);
 assert.ok(demoSession.chartOrientationHint.includes("横屏"));
-assert.deepStrictEqual(demoSession.indicatorCatalog.map((item) => item.key), ["ma", "macd", "boll", "vol"]);
+assert.deepStrictEqual(demoSession.indicatorCatalog.map((item) => item.key), ["ma", "macd", "boll", "vol", "rsi", "kdj"]);
 assert.strictEqual(demoRecord.klineSource, "local_demo");
 assert.strictEqual(demoRecord.sliceSource, "local_demo");
 assert.strictEqual(demoRecord.serverSliceStatus, "network_error");
@@ -237,6 +264,24 @@ assert.strictEqual(warmupRuntime.indicatorPanel.items.length, 8);
 assert.ok(warmupRuntime.indicatorOverlay.ma5.length > 0);
 assert.strictEqual(warmupRuntime.indicatorOverlay.bollUpper.length, 0);
 assert.strictEqual(warmupRuntime.mustDecide, false);
+
+const rsiRuntime = startKlineTrainingRuntime(demoSession, {
+  trainingSessionId: "runtime-rsi-001",
+  initialVisibleCount: 6,
+  initialIndicatorKey: "rsi"
+});
+assert.strictEqual(rsiRuntime.indicatorPanel.type, "rsi");
+assert.ok(rsiRuntime.indicatorPanel.lines.rsi.length > 0);
+
+const kdjRuntime = startKlineTrainingRuntime(demoSession, {
+  trainingSessionId: "runtime-kdj-001",
+  initialVisibleCount: 6,
+  initialIndicatorKey: "kdj"
+});
+assert.strictEqual(kdjRuntime.indicatorPanel.type, "kdj");
+assert.ok(kdjRuntime.indicatorPanel.lines.k.length > 0);
+assert.ok(kdjRuntime.indicatorPanel.lines.d.length > 0);
+assert.ok(kdjRuntime.indicatorPanel.lines.j.length > 0);
 
 const runtimeStep1 = advanceKlineTrainingRuntime(runtime);
 const runtimeStep2 = advanceKlineTrainingRuntime(runtimeStep1);

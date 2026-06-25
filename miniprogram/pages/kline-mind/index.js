@@ -19,6 +19,7 @@ const {
 const {
   buildTradeReviewUrl,
   fetchKlineTrainingSlice,
+  KLINE_TRAINING_WINDOW_SIZE,
   retryPendingKlineTrainingSync,
   syncKlineTrainingRecord,
   syncLocalState,
@@ -53,7 +54,7 @@ const DECISION_ACTIONS = [
   { key: "HOLD", label: "观望" }
 ];
 
-const CHART_ZOOM_ORDER = ["wide", "standard", "focus"];
+const CHART_ZOOM_ORDER = ["overview", "wide", "standard", "focus"];
 
 function inferReactionDirection(firstReaction) {
   const value = String(firstReaction || "");
@@ -175,13 +176,13 @@ function buildRuntimeView(runtime = null) {
   return {
     visibleCandles,
     progressText: total ? `第 ${current}/${total} 根` : "等待历史片段",
-    nextButtonText: runtime.mustDecide ? "先做模拟决策" : (isComplete ? "本段已完成" : "下一根"),
-    decisionPrompt: runtime.mustDecide ? "这一根必须先做一次模拟决策。" : "只看当下这一根，不猜后面。",
+    nextButtonText: runtime.mustDecide ? "先做决策" : (isComplete ? "本段已完成" : "下一根"),
+    decisionPrompt: runtime.mustDecide ? "这一根必须先做一次决策。" : "只看当下这一根，不猜后面。",
     latestCoach: (latestCoach || {}).text || "",
-    latestRisk: (latestRisk || {}).text || "只做模拟训练，不作当下判断。",
+    latestRisk: (latestRisk || {}).text || "只做训练记录，不作当下判断。",
     latestEmotion: (latestEmotion || {}).label || "",
     decisionCount: (runtime.decisionTimeline || []).length,
-    positionText: metrics.positionSize ? "模拟持仓" : "空仓",
+    positionText: metrics.positionSize ? "持仓" : "空仓",
     pnlText: `${Number(metrics.totalPnl || 0).toFixed(2)}%`,
     drawdownText: `${Number(metrics.maxDrawdown || 0).toFixed(2)}%`,
     chartBoardStyle: runtime.chartBoardStyle || "",
@@ -393,7 +394,7 @@ Page({
       marketKey: baseRecord.marketKey || "cn_equity",
       timeframeKey: baseRecord.timeframeKey || "1d",
       symbol: baseRecord.symbol || "",
-      windowSize: 150,
+      windowSize: KLINE_TRAINING_WINDOW_SIZE,
       mode: "step_replay",
       gateKey: "shi_shang_mo",
       blind: true,
@@ -420,7 +421,7 @@ Page({
         marketKey: nextRecord.marketKey || "cn_equity",
         timeframeKey,
         symbol: nextRecord.symbol || "",
-        windowSize: 150,
+        windowSize: KLINE_TRAINING_WINDOW_SIZE,
         mode: "step_replay",
         gateKey: "shi_shang_mo",
         blind: true,
@@ -448,7 +449,7 @@ Page({
       marketKey: nextRecord.marketKey || "cn_equity",
       timeframeKey: nextRecord.timeframeKey || "1d",
       symbol: nextRecord.symbol || "",
-      windowSize: 150,
+      windowSize: KLINE_TRAINING_WINDOW_SIZE,
       mode: "step_replay",
       gateKey: "shi_shang_mo",
       blind: true,
@@ -619,7 +620,7 @@ Page({
         trainingRuntime: nextRuntime,
         runtimeView: buildRuntimeView(nextRuntime)
       });
-      wx.showToast({ title: "先做一次模拟决策", icon: "none" });
+      wx.showToast({ title: "先做一次决策", icon: "none" });
       return;
     }
     this.setData({

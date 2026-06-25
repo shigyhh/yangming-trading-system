@@ -146,6 +146,7 @@ const TIMEFRAME_CATALOG = [
 ];
 
 const CHART_ZOOM_OPTIONS = [
+  { key: "overview", label: "总览", hint: "约180根，先看整体趋势", windowSize: 180 },
   { key: "wide", label: "缩小", hint: "约150根，适合横屏盲测", windowSize: 150 },
   { key: "standard", label: "标准", hint: "约90根，平衡节奏", windowSize: 90 },
   { key: "focus", label: "放大", hint: "约48根，细看", windowSize: 48 }
@@ -155,7 +156,9 @@ const INDICATOR_CATALOG = [
   { key: "ma", label: "MA", name: "均线", trainingUse: "看趋势牵动" },
   { key: "macd", label: "MACD", name: "动能", trainingUse: "看冲动来源" },
   { key: "boll", label: "BOLL", name: "波动边界", trainingUse: "看边界感" },
-  { key: "vol", label: "VOL", name: "量能", trainingUse: "看放量反应" }
+  { key: "vol", label: "VOL", name: "量能", trainingUse: "看放量反应" },
+  { key: "rsi", label: "RSI", name: "强弱", trainingUse: "看过热牵动" },
+  { key: "kdj", label: "KDJ", name: "摆动", trainingUse: "看追涨犹豫" }
 ];
 
 const MAIN_INDICATOR_OPTIONS = [
@@ -165,10 +168,13 @@ const MAIN_INDICATOR_OPTIONS = [
 
 const INDICATOR_PANEL_OPTIONS = [
   { key: "vol", label: "VOL" },
-  { key: "macd", label: "MACD" }
+  { key: "macd", label: "MACD" },
+  { key: "rsi", label: "RSI" },
+  { key: "kdj", label: "KDJ" }
 ];
 
 const CHART_GEOMETRY = {
+  overview: { candleWidth: 5, gap: 3, paddingX: 18, paddingTop: 24 },
   wide: { candleWidth: 8, gap: 6, paddingX: 18, paddingTop: 24 },
   standard: { candleWidth: 12, gap: 6, paddingX: 18, paddingTop: 24 },
   focus: { candleWidth: 20, gap: 6, paddingX: 18, paddingTop: 24 }
@@ -359,7 +365,7 @@ const KLINE_MIND_SLICE_SEEDS = [
 ];
 const MIN_VISIBLE_CANDLES = 6;
 const DEFAULT_VISIBLE_CANDLES = 150;
-const MAX_VISIBLE_CANDLES = 150;
+const MAX_VISIBLE_CANDLES = 180;
 
 function clampDay(day) {
   const value = Number(day || 1);
@@ -450,8 +456,9 @@ function average(values = []) {
 }
 
 function movingAverage(values = [], index, period) {
-  if (index < period - 1) return null;
-  return average(values.slice(index - period + 1, index + 1));
+  if (index < 0) return null;
+  const start = Math.max(0, index - period + 1);
+  return average(values.slice(start, index + 1));
 }
 
 function standardDeviation(values = [], mean) {
@@ -494,7 +501,7 @@ function normalizeHistoryCandles(historySlice = {}, options = {}) {
     const ma5 = movingAverage(closes, index, 5);
     const ma10 = movingAverage(closes, index, 10);
     const ma20 = movingAverage(closes, index, 20);
-    const bollWindow = index >= 19 ? closes.slice(index - 19, index + 1) : [];
+    const bollWindow = closes.slice(Math.max(0, index - 19), index + 1);
     const deviation = ma20 === null ? null : standardDeviation(bollWindow, ma20);
     return {
       ma5,
@@ -571,6 +578,10 @@ function getChartBoardWidth(candleCount, zoomKey = "wide") {
   const count = Math.max(1, Number(candleCount || 0));
   const geometry = getChartGeometry(zoomKey);
   return Math.round(geometry.paddingX * 2 + count * geometry.candleWidth + Math.max(0, count - 1) * geometry.gap);
+}
+
+function getChartBoardStyle(candleCount, zoomKey = "wide") {
+  return `width: ${getChartBoardWidth(candleCount, zoomKey)}rpx; min-width: 920rpx;`;
 }
 
 function buildOverlaySegments(candles = [], field, zoomKey = "wide") {
@@ -711,6 +722,74 @@ function buildMacdPanel(candles = [], zoomKey = "wide") {
   };
 }
 
+function indicatorValueToY(value) {
+  const safe = Math.max(0, Math.min(100, Number(value || 0)));
+  return 86 - safe / 100 * 80;
+}
+
+function buildRsiValues(candles = [], period = 14) {
+  let avgGain = 0;
+  let avgLoss = 0;
+  return candles.map((item, index) => {
+    if (index === 0) return 50;
+    const prev = Number(candles[index - 1].close || 0);
+    const current = Number(item.close || 0);
+    const change = current - prev;
+    const gain = Math.max(0, change);
+    const loss = Math.max(0, -change);
+    const divisor = Math.min(period, index);
+    avgGain = index === 1 ? gain : ((avgGain * (divisor - 1)) + gain) / divisor;
+    avgLoss = index === 1 ? loss : ((avgLoss * (divisor - 1)) + loss) / divisor;
+    if (avgLoss <= 0) return 100;
+    const rs = avgGain / avgLoss;
+    return 100 - 100 / (1 + rs);
+  });
+}
+
+function buildRsiPanel(candles = [], zoomKey = "wide") {
+  const rsiValues = buildRsiValues(candles, 14);
+  const points = candles.map((item, index) => ({
+    key: `rsi-${item.key || index}`,
+    rsiY: indicatorValueToY(rsiValues[index])
+  }));
+  return {
+    items: [],
+    lines: {
+      rsi: buildPanelLineSegments(points, "rsiY", zoomKey)
+    }
+  };
+}
+
+function buildKdjPanel(candles = [], zoomKey = "wide") {
+  let k = 50;
+  let d = 50;
+  const points = candles.map((item, index) => {
+    const start = Math.max(0, index - 8);
+    const window = candles.slice(start, index + 1);
+    const high = Math.max.apply(null, window.map((candle) => Number(candle.high || 0)).concat([Number(item.high || 0)]));
+    const low = Math.min.apply(null, window.map((candle) => Number(candle.low || 0)).concat([Number(item.low || 0)]));
+    const close = Number(item.close || 0);
+    const rsv = high === low ? 50 : ((close - low) / (high - low)) * 100;
+    k = k * 2 / 3 + rsv / 3;
+    d = d * 2 / 3 + k / 3;
+    const j = 3 * k - 2 * d;
+    return {
+      key: `kdj-${item.key || index}`,
+      kY: indicatorValueToY(k),
+      dY: indicatorValueToY(d),
+      jY: indicatorValueToY(j)
+    };
+  });
+  return {
+    items: [],
+    lines: {
+      k: buildPanelLineSegments(points, "kY", zoomKey),
+      d: buildPanelLineSegments(points, "dY", zoomKey),
+      j: buildPanelLineSegments(points, "jY", zoomKey)
+    }
+  };
+}
+
 function buildBollPanel(candles = [], zoomKey = "wide") {
   const points = candles.map((item, index) => ({
     key: `boll-${item.key || index}`,
@@ -740,6 +819,14 @@ function buildIndicatorPanel(candles = [], key = "vol", zoomKey = "wide") {
   if (meta.key === "boll") {
     const boll = buildBollPanel(candles, zoomKey);
     return { type: "boll", label: meta.label, visible: true, items: boll.items, lines: boll.lines };
+  }
+  if (meta.key === "rsi") {
+    const rsi = buildRsiPanel(candles, zoomKey);
+    return { type: "rsi", label: meta.label, visible: true, items: rsi.items, lines: rsi.lines };
+  }
+  if (meta.key === "kdj") {
+    const kdj = buildKdjPanel(candles, zoomKey);
+    return { type: "kdj", label: meta.label, visible: true, items: kdj.items, lines: kdj.lines };
   }
   return {
     type: "vol",
@@ -894,7 +981,7 @@ function buildRuntimeState(baseRuntime = {}, patch = {}) {
     currentIndex: safeIndex,
     visibleCandles,
     activeCandle,
-    chartBoardStyle: `width: ${getChartBoardWidth(visibleCandles.length, runtime.chartZoomKey || "wide")}rpx;`,
+    chartBoardStyle: getChartBoardStyle(visibleCandles.length, runtime.chartZoomKey || "wide"),
     indicatorOverlay: buildIndicatorOverlay(visibleCandles, runtime.chartZoomKey || "wide", runtime.mainIndicatorKey || "ma"),
     indicatorPanel: buildIndicatorPanel(visibleCandles, runtime.indicatorPanelKey || "vol", runtime.chartZoomKey || "wide"),
     positionState,
@@ -967,7 +1054,7 @@ function buildRiskHint(emotionBadge = null) {
   if (type === "REVENGE") return { level: "high", text: "出现不甘：本轮只记录，不加重动作。" };
   if (type === "HESITATION") return { level: "low", text: "出现犹疑：写下知道却未行动的原因。" };
   if (type === "IMPULSE") return { level: "medium", text: "出现无边界动作：先补边界，再继续训练。" };
-  return { level: "low", text: "继续只做模拟记录，不作当下判断。" };
+  return { level: "low", text: "继续只做训练记录，不作当下判断。" };
 }
 
 function buildCoachHint(decision = {}, emotionBadge = null) {
@@ -977,7 +1064,7 @@ function buildCoachHint(decision = {}, emotionBadge = null) {
     title: `${label}已记录`,
     text: action === "HOLD"
       ? "你先停下来观察，这一刻先守住了记录。"
-      : "动作已经作为模拟记录写入，下一步先停十秒，再看是否仍合边界。"
+      : "动作已经写入记录，下一步先停十秒，再看是否仍合边界。"
   };
 }
 
@@ -1076,7 +1163,7 @@ function buildKlineMindSession({
   const prescription = getKlinePrescription(personalityType);
   const stageGate = getSixGate(stagePlan.stageKey);
   const candles = markSelectedCandles(rawCandles, selectedKey, scenario.focusIndex);
-  const chartBoardWidth = getChartBoardWidth(candles.length, chartZoomMeta.key);
+  const chartBoardStyle = getChartBoardStyle(candles.length, chartZoomMeta.key);
   const mainIndicatorKey = (record || {}).mainIndicatorKey || "ma";
   const indicatorOverlay = buildIndicatorOverlay(candles, chartZoomMeta.key, mainIndicatorKey);
   const selectedCandleKey = selectedKey || ((candles.find((item) => item.selected) || {}).key) || "";
@@ -1097,7 +1184,7 @@ function buildKlineMindSession({
     chartZoomKey: chartZoomMeta.key,
     chartWindowSize: chartZoomMeta.windowSize,
     chartZoomOptions: buildChartZoomOptions(chartZoomMeta.key),
-    chartBoardStyle: `width: ${chartBoardWidth}rpx;`,
+    chartBoardStyle,
     indicatorOverlay,
     defaultMainIndicatorKey: "ma",
     mainIndicatorOptions: MAIN_INDICATOR_OPTIONS,

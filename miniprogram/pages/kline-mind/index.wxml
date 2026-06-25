@@ -69,7 +69,7 @@
           <view class="chart-stepper-control" bindtap="decreaseChartZoom">-</view>
           <view class="chart-stepper-control" bindtap="increaseChartZoom">+</view>
         </view>
-        <scroll-view class="wave-board-scroll" scroll-x="true" enhanced="true" show-scrollbar="{{false}}">
+        <scroll-view class="wave-board-scroll" scroll-x="true" enhanced="true" bounces="true" show-scrollbar="{{false}}">
           <view class="chart-scroll-inner" style="{{runtimeView.chartBoardStyle}}">
             <view class="wave-board zoom-{{session.chartZoomKey}}">
             <view class="indicator-lines">
@@ -122,6 +122,10 @@
             <view wx:for="{{runtimeView.indicatorPanel.lines.mid}}" wx:key="key" class="sub-line boll-mid" style="{{item.style}}"></view>
             <view wx:for="{{runtimeView.indicatorPanel.lines.dif}}" wx:key="key" class="sub-line dif" style="{{item.style}}"></view>
             <view wx:for="{{runtimeView.indicatorPanel.lines.dea}}" wx:key="key" class="sub-line dea" style="{{item.style}}"></view>
+            <view wx:for="{{runtimeView.indicatorPanel.lines.rsi}}" wx:key="key" class="sub-line rsi" style="{{item.style}}"></view>
+            <view wx:for="{{runtimeView.indicatorPanel.lines.k}}" wx:key="key" class="sub-line k" style="{{item.style}}"></view>
+            <view wx:for="{{runtimeView.indicatorPanel.lines.d}}" wx:key="key" class="sub-line d" style="{{item.style}}"></view>
+            <view wx:for="{{runtimeView.indicatorPanel.lines.j}}" wx:key="key" class="sub-line j" style="{{item.style}}"></view>
             <view
               wx:for="{{runtimeView.indicatorPanel.items}}"
               wx:key="key"
@@ -156,7 +160,7 @@
             <view>{{runtimeView.positionText}}</view>
           </view>
           <view>
-            <text>模拟盈亏</text>
+            <text>盈亏</text>
             <view>{{runtimeView.pnlText}}</view>
           </view>
           <view>

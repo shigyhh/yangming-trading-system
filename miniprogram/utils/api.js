@@ -27,6 +27,7 @@ const CLIENT_ID_KEY = "zhixing_client_id";
 const PRODUCTION_API_BASE = "https://xxjyxt.com";
 const DEFAULT_API_BASE = "http://127.0.0.1:8787";
 const KLINE_MIN_CANDLES = 6;
+const KLINE_TRAINING_WINDOW_SIZE = 180;
 const SAFE_CONNECTION_MESSAGE = "后端同步：暂未连接";
 const SAFE_FALLBACK_TEXT = "本地档案已保存。可稍后再同步，也可以先继续今日修行。";
 
@@ -754,7 +755,7 @@ function buildKlineSliceCacheKey({
   marketKey = "cn",
   timeframeKey = "101",
   symbol = "",
-  windowSize = 150,
+  windowSize = KLINE_TRAINING_WINDOW_SIZE,
   mode = "step_replay",
   endDate = "",
   entryTime = "",
@@ -769,7 +770,7 @@ function buildKlineSliceCacheKey({
     market,
     timeframe,
     String(symbol || ""),
-    String(windowSize || 150),
+    String(windowSize || KLINE_TRAINING_WINDOW_SIZE),
     String(mode || "step_replay"),
     String(endDate || ""),
     String(entryTime || ""),
@@ -784,7 +785,7 @@ async function fetchKlineTrainingSlice({
   marketKey = "cn",
   timeframeKey = "101",
   symbol = "",
-  windowSize = 150,
+  windowSize = KLINE_TRAINING_WINDOW_SIZE,
   mode = "step_replay",
   endDate = "",
   entryTime = "",
@@ -832,7 +833,7 @@ async function fetchKlineTrainingSlice({
         allowUnconfigured: useProductionFallback,
         timeout: 25000
       });
-      const normalized = normalizeKlineTrainingSliceResult(result, { market, timeframe, symbol });
+      const normalized = normalizeKlineTrainingSliceResult(result, { market, timeframe, symbol, windowSize });
       if (normalized.ok && (normalized.candles || []).length >= KLINE_MIN_CANDLES) {
         klineSliceCache[cacheKey] = normalized;
       }
@@ -869,7 +870,7 @@ function prefetchKlineTrainingSlices({
   marketKey = "cn",
   symbol = "",
   timeframes = ["1d", "60m", "30m"],
-  windowSize = 150,
+  windowSize = KLINE_TRAINING_WINDOW_SIZE,
   mode = "step_replay",
   gateKey = "shi_shang_mo",
   blind = true,
@@ -932,9 +933,10 @@ function normalizeKlineTrainingSliceResult(result = {}, context = {}) {
     [item.open, item.high, item.low, item.close].every(Number.isFinite)
   ));
   const barCount = Number(slice.barCount || slice.bar_count || candles.length || 0);
+  const requiredWindowSize = Math.max(KLINE_MIN_CANDLES, Number(context.windowSize || 0));
   const reason = rawCandles.length <= 0
     ? "empty_slice"
-    : candles.length < KLINE_MIN_CANDLES ? "insufficient_slice" : "";
+    : candles.length < requiredWindowSize ? "insufficient_slice" : "";
   const ok = result.ok !== false && !reason;
   const symbol = slice.symbol || (slice.instrument || {}).symbol || context.symbol || "";
   const timeframeValue = slice.timeframe || {};
@@ -972,6 +974,7 @@ module.exports = {
   PRODUCTION_API_BASE,
   DEFAULT_API_BASE,
   KLINE_MIN_CANDLES,
+  KLINE_TRAINING_WINDOW_SIZE,
   buildTradeReviewUrl,
   fetchLivingMirrorProfile,
   fetchLivingMirrorGrowthProjection,

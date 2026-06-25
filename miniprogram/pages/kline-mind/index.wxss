@@ -407,13 +407,14 @@
 }
 
 .chart-scroll-inner {
-  min-width: 100%;
+  min-width: 920rpx;
   background: #030504;
 }
 
 .wave-board {
   position: relative;
   width: 100%;
+  min-width: 920rpx;
   box-sizing: border-box;
   height: 336rpx;
   padding: 24rpx 18rpx 18rpx;
@@ -516,6 +517,10 @@
   border-radius: 2rpx;
 }
 
+.wave-board.zoom-overview .mind-candle {
+  flex-basis: 5rpx;
+}
+
 .wave-board.zoom-standard .mind-candle {
   flex-basis: 12rpx;
 }
@@ -557,6 +562,11 @@
   transform: translateX(-50%);
   border-radius: 1rpx 1rpx 0 0;
   background: rgba(214, 224, 218, 0.24);
+}
+
+.wave-board.zoom-overview .mind-candle .body,
+.wave-board.zoom-overview .mind-candle .volume {
+  width: 5rpx;
 }
 
 .wave-board.zoom-standard .mind-candle .body,
@@ -701,6 +711,10 @@
   height: 86rpx;
 }
 
+.sub-indicator-board.zoom-overview .sub-indicator-item {
+  flex-basis: 5rpx;
+}
+
 .sub-indicator-board.zoom-standard .sub-indicator-item {
   flex-basis: 12rpx;
 }
@@ -721,6 +735,10 @@
 
 .sub-indicator-board.macd .sub-bar {
   bottom: auto;
+}
+
+.sub-indicator-board.zoom-overview .sub-bar {
+  width: 5rpx;
 }
 
 .sub-indicator-board.zoom-standard .sub-bar {
@@ -764,6 +782,22 @@
 .sub-line.boll-mid {
   height: 1rpx;
   background: rgba(235, 217, 78, 0.62);
+}
+
+.sub-line.rsi {
+  background: rgba(216, 183, 111, 0.82);
+}
+
+.sub-line.k {
+  background: rgba(54, 214, 204, 0.78);
+}
+
+.sub-line.d {
+  background: rgba(235, 217, 78, 0.82);
+}
+
+.sub-line.j {
+  background: rgba(190, 76, 215, 0.78);
 }
 
 .history-empty {

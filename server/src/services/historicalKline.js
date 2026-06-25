@@ -8,7 +8,7 @@ import { fetchProviderKlines, listKlineProviders, resolveDefaultProvider } from 
 const COMPLIANCE_TEXT = "本数据仅用于交易心理训练、行为觉察与复盘教育；不构成投资建议。";
 const DEFAULT_MARKET = "cn_equity";
 const DEFAULT_TIMEFRAME = "1d";
-const DEFAULT_WINDOW_SIZE = 96;
+const DEFAULT_WINDOW_SIZE = 180;
 const MIN_WINDOW_SIZE = 12;
 const MAX_WINDOW_SIZE = 240;
 const SLICE_TOKEN_VERSION = "kline_slice_v1";
