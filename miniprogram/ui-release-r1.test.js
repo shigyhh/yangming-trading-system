@@ -231,9 +231,9 @@ assert.ok(sliceBetween(klineMindWxml, 'class="indicator-strip"', 'class="sub-ind
 assert.deepStrictEqual(demoSession.mainIndicatorOptions.map((item) => item.label), ["MA", "BOLL"]);
 assert.deepStrictEqual(demoSession.indicatorPanelOptions.map((item) => item.label), ["VOL", "MACD"]);
 assert.deepStrictEqual(demoSession.indicatorCatalog.map((item) => item.label), ["MA", "MACD", "BOLL", "VOL"]);
-assertRuleHas(klineMindWxss, ".chart-toolbar-row", ["grid-template-columns: minmax(0, 1fr) 132rpx", "align-items: center"], "kline toolbar should keep trading style and change-slice action on one stable row");
-assertRuleHas(klineMindWxss, ".chart-period-rail", ["display: flex", "overflow-x: auto"], "kline timeframe selector should use a compact scrollable toolbar instead of a full-width segmented block");
-assertRuleHas(klineMindWxss, ".slice-change-btn", ["width: 132rpx", "justify-content: center"], "kline change-slice button should not overlap the trading style rail");
+assertRuleHas(klineMindWxss, ".chart-toolbar-row", ["grid-template-columns: minmax(0, 1fr) minmax(96rpx, 112rpx)", "width: 100%", "overflow: hidden"], "kline toolbar should keep trading style and change-slice action inside the card");
+assertRuleHas(klineMindWxss, ".chart-period-rail", ["display: flex", "width: 100%", "overflow-x: auto"], "kline timeframe selector should use a compact scrollable toolbar instead of a full-width segmented block");
+assertRuleHas(klineMindWxss, ".slice-change-btn", ["width: 100%", "max-width: 112rpx", "justify-content: center"], "kline change-slice button should not overlap the trading style rail");
 assertRuleHas(klineMindWxss, ".indicator-strip", ["display: flex", "overflow-x: auto"], "kline indicator selector should be one horizontal row");
 assertRuleHas(klineMindWxss, ".chart-indicator-chip", ["flex: 0 0 auto", "height: 38rpx"], "kline indicator chips should stay compact inside the chart toolbar");
 assertRuleHas(klineMindWxss, ".decision-action", ["width: 100%", "box-sizing: border-box"], "kline decision actions should use stable non-native button boxes");
