@@ -527,6 +527,12 @@
   background: rgba(190, 76, 215, 0.82);
 }
 
+.indicator-segment.ma20 {
+  height: 2rpx;
+  opacity: 0.78;
+  background: rgba(234, 238, 116, 0.74);
+}
+
 .indicator-segment.boll {
   height: 1rpx;
   opacity: 0.72;
@@ -956,19 +962,19 @@
   margin-top: 18rpx;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10rpx;
+  gap: 8rpx;
 }
 
 .decision-btn {
   width: 100%;
   min-width: 0;
-  min-height: 104rpx;
+  min-height: 72rpx;
   margin: 0;
-  padding: 14rpx 6rpx;
+  padding: 0 6rpx;
   display: grid;
   align-content: center;
   justify-items: center;
-  border-radius: 22rpx;
+  border-radius: 16rpx;
   border: 1rpx solid rgba(244, 235, 221, 0.1);
   color: rgba(244, 235, 221, 0.72);
   background: rgba(255, 255, 255, 0.035);
@@ -984,10 +990,7 @@
 }
 
 .decision-btn view {
-  margin-top: 8rpx;
-  color: rgba(244, 235, 221, 0.44);
-  font-size: 18rpx;
-  line-height: 1.3;
+  display: none;
 }
 
 .decision-btn.BUY,

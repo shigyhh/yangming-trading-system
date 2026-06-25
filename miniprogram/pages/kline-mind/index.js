@@ -47,9 +47,9 @@ const REACTION_DIRECTIONS = [
 ];
 
 const DECISION_ACTIONS = [
-  { key: "BUY", label: "买入", detail: "记录想进入的一念" },
-  { key: "SELL", label: "卖出", detail: "记录想退出的一念" },
-  { key: "HOLD", label: "观望", detail: "先看事实不动作" }
+  { key: "BUY", label: "买入" },
+  { key: "SELL", label: "卖出" },
+  { key: "HOLD", label: "观望" }
 ];
 
 const CHART_ZOOM_ORDER = ["wide", "standard", "focus"];
@@ -187,6 +187,7 @@ function buildRuntimeView(runtime = null) {
     indicatorOverlay: runtime.indicatorOverlay || {
       ma5: [],
       ma10: [],
+      ma20: [],
       bollUpper: [],
       bollLower: []
     },
@@ -254,7 +255,6 @@ Page({
     historyLoading: false,
     historyError: "",
     showSelectors: false,
-    showGuide: false,
     showBodySignal: false,
     showIndicatorPicker: false,
     selectedIndicatorKey: "vol",
@@ -557,10 +557,6 @@ Page({
       title: action === "HOLD" ? "已记录观望" : "已记录动作",
       icon: "none"
     });
-  },
-
-  toggleGuide() {
-    this.setData({ showGuide: !this.data.showGuide });
   },
 
   toggleBodySignal() {

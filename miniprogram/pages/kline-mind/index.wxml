@@ -95,6 +95,7 @@
             <view class="indicator-lines">
               <view wx:for="{{runtimeView.indicatorOverlay.bollUpper}}" wx:key="key" class="indicator-segment boll" style="{{item.style}}"></view>
               <view wx:for="{{runtimeView.indicatorOverlay.bollLower}}" wx:key="key" class="indicator-segment boll" style="{{item.style}}"></view>
+              <view wx:for="{{runtimeView.indicatorOverlay.ma20}}" wx:key="key" class="indicator-segment ma20" style="{{item.style}}"></view>
               <view wx:for="{{runtimeView.indicatorOverlay.ma10}}" wx:key="key" class="indicator-segment ma10" style="{{item.style}}"></view>
               <view wx:for="{{runtimeView.indicatorOverlay.ma5}}" wx:key="key" class="indicator-segment ma5" style="{{item.style}}"></view>
             </view>
@@ -187,7 +188,6 @@
             bindtap="recordRuntimeDecision"
           >
             <text>{{item.label}}</text>
-            <view>{{item.detail}}</view>
           </button>
         </view>
 
@@ -216,28 +216,6 @@
         <text>今日观心</text>
         <view>{{session.hasHistoricalData ? session.prompt : session.marketQuestion}}</view>
         <text class="guardrail">{{session.marketGuardrail}}</text>
-      </view>
-    </view>
-
-    <view class="guide-toggle">
-      <button class="ghost-btn" bindtap="toggleGuide">{{showGuide ? '收起方法' : '训练方法'}}</button>
-    </view>
-
-    <view wx:if="{{showGuide}}" class="method-card card">
-      <view class="section-kicker">TRAINING SYSTEM</view>
-      <view class="method-title">训练方法详解</view>
-      <view class="method-list">
-        <view wx:for="{{session.trainingMethods}}" wx:key="key" class="method-row {{item.key === 'firecracker' ? 'firecracker' : ''}}">
-          <view class="method-index">{{index + 1}}</view>
-          <view class="method-copy">
-            <text>{{item.title}}</text>
-            <view>{{item.subtitle}}</view>
-            <view class="method-focus">{{item.focus}}</view>
-            <view class="method-steps">
-              <text wx:for="{{item.steps}}" wx:for-item="step" wx:key="*this">{{step}}</text>
-            </view>
-          </view>
-        </view>
       </view>
     </view>
 
@@ -337,50 +315,6 @@
       </view>
 
       <button class="primary-btn save-btn" bindtap="saveRecord">{{savedRecord && savedRecord.completed ? '更新活镜记录' : '写入活镜'}}</button>
-      </view>
-    </view>
-
-    <view wx:if="{{showGuide}}" class="prescription-card card">
-      <view class="section-kicker">PERSONAL PATH</view>
-      <view class="prescription-title">{{session.prescription.title}}</view>
-      <view class="drill-card">
-        <text>九型专练动作</text>
-        <view>{{session.personalityDrill.targetScene}}</view>
-        <view>{{session.personalityDrill.drillAction}}</view>
-        <view>{{session.personalityDrill.reviewPrompt}}</view>
-      </view>
-      <view class="prescription-grid">
-        <view>
-          <text>当前心贼</text>
-          <view>{{session.prescription.heartThief}}</view>
-        </view>
-        <view>
-          <text>最易被牵动处</text>
-          <view>{{session.prescription.watchPoint}}</view>
-        </view>
-        <view>
-          <text>第一问</text>
-          <view>{{session.prescription.firstQuestion}}</view>
-        </view>
-        <view>
-          <text>今日克治</text>
-          <view>{{session.prescription.boundaryPractice}}</view>
-        </view>
-      </view>
-    </view>
-
-    <view wx:if="{{showGuide}}" class="gate-card card">
-      <view class="section-kicker">SIX GATES</view>
-      <view class="gate-title">六大关口训练地图</view>
-      <view class="gate-list">
-        <view wx:for="{{session.gates}}" wx:key="key" class="gate-row {{item.active ? 'active' : ''}}">
-          <view class="gate-seal">{{item.seal}}</view>
-          <view>
-            <text>{{item.order}} · {{item.name}} · {{item.title}}</text>
-            <view>{{item.trainingAction}}</view>
-            <view class="gate-check">{{item.passCheck}}</view>
-          </view>
-        </view>
       </view>
     </view>
 

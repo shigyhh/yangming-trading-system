@@ -50,6 +50,13 @@ const tradeReviewWxss = readPage("trade-review", "index.wxss");
 const trainingWxss = readPage("training", "index.wxss");
 const profileWxss = readPage("profile", "index.wxss");
 
+function sliceBetween(text, startMarker, endMarker) {
+  const start = text.indexOf(startMarker);
+  if (start < 0) return "";
+  const end = text.indexOf(endMarker, start + startMarker.length);
+  return end > start ? text.slice(start, end) : text.slice(start);
+}
+
 function assertRuleHas(css, selector, properties, message) {
   const marker = `${selector} {`;
   const index = css.indexOf(marker);
@@ -195,6 +202,8 @@ assert.equal(klineMindWxml.includes("放大"), false, "kline chart should not re
 assert.equal(klineMindJs.includes("模拟买入"), false, "kline decision buttons should not repeat simulation wording");
 assert.equal(klineMindJs.includes("模拟卖出"), false, "kline decision buttons should not repeat simulation wording");
 assert.equal(klineMindJs.includes("已记录模拟动作"), false, "kline action toast should not repeat simulation wording");
+assert.equal(sliceBetween(klineMindWxml, 'class="decision-actions"', 'class="runtime-next').includes("{{item.detail}}"), false, "kline decision buttons should stay compact without secondary detail rows");
+assert.equal(klineMindWxml.includes("训练方法"), false, "kline page should not show a separate training-method explainer entry");
 assert.ok(klineMindWxml.includes("横屏训练更稳"), "kline chart should recommend landscape practice for dense K-line training");
 assert.ok(klineMindJson.includes('"pageOrientation": "auto"'), "kline mind should allow landscape practice on real devices");
 assert.ok(klineMindWxml.includes('class="sub-indicator-board'), "kline indicator layer should render below the chart");

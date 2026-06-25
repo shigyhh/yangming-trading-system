@@ -108,6 +108,11 @@ const longBlindSlice = {
 const longVisualCandles = normalizeHistoryCandles(longBlindSlice, { windowSize: 150 });
 assert.strictEqual(longVisualCandles.length, 150);
 assert.strictEqual(longVisualCandles[0].date, "bar-031");
+assert.strictEqual(longVisualCandles[0].ma5Y !== null, true);
+assert.strictEqual(longVisualCandles[0].ma10Y !== null, true);
+assert.strictEqual(longVisualCandles[0].ma20Y !== null, true);
+assert.strictEqual(longVisualCandles[0].bollUpperY !== null, true);
+assert.strictEqual(longVisualCandles[0].bollLowerY !== null, true);
 
 const defaultLongSession = buildKlineMindSession({
   record: {
@@ -121,7 +126,7 @@ assert.strictEqual(defaultLongSession.chartWindowSize, 150);
 assert.strictEqual(defaultLongSession.candles.length, 150);
 assert.ok(defaultLongSession.chartZoomOptions.find((item) => item.key === "wide").hint.includes("150"));
 assert.strictEqual(defaultLongSession.defaultIndicatorKey, "vol");
-assert.deepStrictEqual(defaultLongSession.indicatorPanelOptions.map((item) => item.key), ["hide", "vol", "macd", "boll"]);
+assert.deepStrictEqual(defaultLongSession.indicatorPanelOptions.map((item) => item.key), ["hide", "vol", "macd"]);
 assert.ok(defaultLongSession.chartBoardStyle.includes("width:"));
 assert.ok(defaultLongSession.indicatorOverlay.ma5.length > 0);
 assert.ok(defaultLongSession.indicatorOverlay.ma10.length > 0);

@@ -161,8 +161,7 @@ const INDICATOR_CATALOG = [
 const INDICATOR_PANEL_OPTIONS = [
   { key: "hide", label: "隐藏" },
   { key: "vol", label: "VOL" },
-  { key: "macd", label: "MACD" },
-  { key: "boll", label: "BOLL" }
+  { key: "macd", label: "MACD" }
 ];
 
 const CHART_GEOMETRY = {
@@ -476,16 +475,18 @@ function normalizeHistoryCandles(historySlice = {}, options = {}) {
   const rawCandles = Array.isArray(historySlice.candles)
     ? historySlice.candles
     : Array.isArray(historySlice.bars) ? historySlice.bars : [];
-  const candles = pickVisibleHistoryWindow(rawCandles
+  const normalizedCandles = rawCandles
     .map(normalizeRawHistoryCandle)
-    .filter(Boolean), options.windowSize);
+    .filter(Boolean)
+    .map((item, sourceIndex) => Object.assign({}, item, { sourceIndex }));
+  const candles = pickVisibleHistoryWindow(normalizedCandles, options.windowSize);
   if (!candles.length) return [];
 
   const highs = candles.map((item) => Number(item.high)).filter(Number.isFinite);
   const lows = candles.map((item) => Number(item.low)).filter(Number.isFinite);
   const volumes = candles.map((item) => Number(item.volume || 0)).filter(Number.isFinite);
-  const closes = candles.map((item) => Number(item.close));
-  const indicatorValues = candles.map((item, index) => {
+  const closes = normalizedCandles.map((item) => Number(item.close));
+  const allIndicatorValues = normalizedCandles.map((item, index) => {
     const ma5 = movingAverage(closes, index, 5);
     const ma10 = movingAverage(closes, index, 10);
     const ma20 = movingAverage(closes, index, 20);
@@ -499,6 +500,7 @@ function normalizeHistoryCandles(historySlice = {}, options = {}) {
       bollLower: ma20 === null || deviation === null ? null : ma20 - deviation * 2
     };
   });
+  const indicatorValues = candles.map((item) => allIndicatorValues[item.sourceIndex] || {});
   const overlayValues = indicatorValues.reduce((items, item) => {
     ["ma5", "ma10", "ma20", "bollUpper", "bollLower"].forEach((key) => {
       if (Number.isFinite(item[key])) items.push(item[key]);
@@ -597,6 +599,7 @@ function buildIndicatorOverlay(candles = [], zoomKey = "wide") {
   return {
     ma5: buildOverlaySegments(candles, "ma5Y", zoomKey),
     ma10: buildOverlaySegments(candles, "ma10Y", zoomKey),
+    ma20: buildOverlaySegments(candles, "ma20Y", zoomKey),
     bollUpper: buildOverlaySegments(candles, "bollUpperY", zoomKey),
     bollLower: buildOverlaySegments(candles, "bollLowerY", zoomKey)
   };
