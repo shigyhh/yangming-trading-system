@@ -33,6 +33,7 @@ const livingMirrorWxml = readPage("living-mirror", "index.wxml");
 const livingMirrorJs = readPage("living-mirror", "index.js");
 const klineMindWxml = readPage("kline-mind", "index.wxml");
 const klineMindJs = readPage("kline-mind", "index.js");
+const klineMindJson = readPage("kline-mind", "index.json");
 const tradeReviewWxml = readPage("trade-review", "index.wxml");
 const reportWxml = readPage("report", "index.wxml");
 const profileJs = readPage("profile", "index.js");
@@ -111,7 +112,7 @@ assert.equal(klineMindWxml.includes('class="sim-meta"'), false, "kline mind shou
 assert.ok(klineMindWxml.includes('class="wave-source-line"'), "kline mind should collapse source/rhythm into quiet metadata");
 assert.ok(klineMindWxml.includes("真实历史盲练"), "kline mind should frame the session as a real historical blind-practice ritual");
 assert.ok(klineMindWxml.includes('wx:if="{{savedRecord && savedRecord.completed}}" class="path-links"'), "kline mind should show cross-page links only after the record is complete");
-assertRuleHas(klineMindWxss, ".wave-board", ["display: flex", "justify-content: space-between", "overflow: hidden"], "kline mind wave board should distribute a sparse real slice instead of leaving a broken grid");
+assertRuleHas(klineMindWxss, ".wave-board", ["display: flex", "justify-content: flex-start", "overflow: hidden"], "kline mind wave board should use a horizontal training strip instead of a sparse fixed grid");
 
 assert.ok(profileWxml.includes('wx:if="{{debugMode}}" class="debug-release-tools card"'), "profile debug release tools should be hidden behind debugMode");
 assert.equal(profileWxml.includes('class="danger-clear"'), false, "profile should not expose dangerous clear action in normal page flow");
@@ -184,6 +185,15 @@ assert.ok(klineMindWxml.includes('bindtap="switchSlice"'), "kline change-slice a
 assert.ok(klineMindJs.includes("getNextKlineMindSliceSeed"), "kline page should rotate the training slice seed instead of only expanding selectors");
 assert.ok(klineMindWxml.includes('class="slice-playbook"'), "kline chart should include an immediate concrete playbook for how to train this slice");
 assert.ok(klineMindWxml.includes("点最牵动的一根"), "kline playbook should tell the user exactly what to do with the chart");
+assert.ok(klineMindWxml.includes('scroll-view class="wave-board-scroll" scroll-x="true"'), "kline chart should use a horizontal training canvas for many real candles");
+assert.ok(klineMindWxml.includes('class="chart-zoom-rail"'), "kline chart should expose zoom controls for more or fewer candles per screen");
+assert.ok(klineMindWxml.includes("横屏训练更稳"), "kline chart should recommend landscape practice for dense K-line training");
+assert.ok(klineMindJson.includes('"pageOrientation": "auto"'), "kline mind should allow landscape practice on real devices");
+assert.ok(klineMindWxml.includes('class="indicator-layer"'), "kline indicator layer should render below the chart");
+assert.deepStrictEqual(demoSession.indicatorCatalog.map((item) => item.label), ["MA", "MACD", "BOLL", "VOL"]);
+assertRuleHas(klineMindWxss, ".slice-switch", ["flex-wrap: wrap"], "kline slice controls should wrap instead of overflowing on narrow screens");
+assertRuleHas(klineMindWxss, ".slice-switch > .slice-actions", ["grid-template-columns: repeat(2, minmax(0, 1fr))", "width: 100%"], "kline slice action buttons should stay inside the card");
+assertRuleHas(klineMindWxss, ".timeframe-rail", ["display: grid", "grid-template-columns: repeat(3, minmax(0, 1fr))", "overflow: visible"], "kline timeframe selector should show daily, 60m, and 30m without horizontal clipping");
 assert.ok(trainingWxml.includes('class="training-subtle-links"'), "training plan/detail entries should sit in a quiet secondary link row");
 assert.ok(trainingWxml.indexOf('class="primary-btn kline-entry-btn"') < trainingWxml.indexOf('class="training-subtle-links"'), "training first screen should visually encounter the single primary action before optional links");
 assertRuleHas(trainingWxss, ".training-subtle-link", ["background: transparent", "border: 0", "box-shadow: none"], "training optional links should be visually quieter than buttons");

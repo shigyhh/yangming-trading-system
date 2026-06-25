@@ -140,9 +140,22 @@ const MARKET_CATALOG = {
 };
 
 const TIMEFRAME_CATALOG = [
-  { key: "30m", label: "30分钟", granularity: "intraday", required: true },
+  { key: "1d", label: "日线", granularity: "daily", required: true },
   { key: "60m", label: "60分钟", granularity: "intraday", required: true },
-  { key: "1d", label: "日线", granularity: "daily", required: true }
+  { key: "30m", label: "30分钟", granularity: "intraday", required: true }
+];
+
+const CHART_ZOOM_OPTIONS = [
+  { key: "wide", label: "缩小", hint: "看更多 K 线", windowSize: 36 },
+  { key: "standard", label: "标准", hint: "平衡节奏", windowSize: 24 },
+  { key: "focus", label: "放大", hint: "少量细看", windowSize: 12 }
+];
+
+const INDICATOR_CATALOG = [
+  { key: "ma", label: "MA", name: "均线", trainingUse: "看趋势牵动" },
+  { key: "macd", label: "MACD", name: "动能", trainingUse: "看冲动来源" },
+  { key: "boll", label: "BOLL", name: "波动边界", trainingUse: "看边界感" },
+  { key: "vol", label: "VOL", name: "量能", trainingUse: "看放量反应" }
 ];
 
 const KLINE_TRAINING_METHODS = [
@@ -329,7 +342,8 @@ const KLINE_MIND_SLICE_SEEDS = [
   "scene-retest-001"
 ];
 const MIN_VISIBLE_CANDLES = 6;
-const MAX_VISIBLE_CANDLES = 14;
+const DEFAULT_VISIBLE_CANDLES = 24;
+const MAX_VISIBLE_CANDLES = 48;
 
 function clampDay(day) {
   const value = Number(day || 1);
@@ -360,6 +374,16 @@ function buildMarketOptions(selectedKey) {
 
 function buildTimeframeOptions(selectedKey) {
   return TIMEFRAME_CATALOG.map((item) => Object.assign({}, item, {
+    selected: item.key === selectedKey
+  }));
+}
+
+function getChartZoomMeta(zoomKey = "standard") {
+  return CHART_ZOOM_OPTIONS.find((item) => item.key === zoomKey) || CHART_ZOOM_OPTIONS[1];
+}
+
+function buildChartZoomOptions(selectedKey = "standard") {
+  return CHART_ZOOM_OPTIONS.map((item) => Object.assign({}, item, {
     selected: item.key === selectedKey
   }));
 }
@@ -398,27 +422,34 @@ function normalizeRawHistoryCandle(item = {}, index = 0) {
   };
 }
 
-function pickVisibleHistoryWindow(candles) {
+function normalizeWindowSize(windowSize) {
+  const value = Number(windowSize || DEFAULT_VISIBLE_CANDLES);
+  if (!Number.isFinite(value)) return DEFAULT_VISIBLE_CANDLES;
+  return Math.max(MIN_VISIBLE_CANDLES, Math.min(MAX_VISIBLE_CANDLES, Math.round(value)));
+}
+
+function pickVisibleHistoryWindow(candles, windowSize = DEFAULT_VISIBLE_CANDLES) {
+  const safeWindowSize = normalizeWindowSize(windowSize);
   if (candles.length < MIN_VISIBLE_CANDLES) return [];
-  if (candles.length <= MAX_VISIBLE_CANDLES) return candles;
+  if (candles.length <= safeWindowSize) return candles;
 
   const focusIndex = candles.findIndex((item) => item.focus);
   if (focusIndex >= 0) {
-    const half = Math.floor(MAX_VISIBLE_CANDLES / 2);
-    const start = Math.max(0, Math.min(candles.length - MAX_VISIBLE_CANDLES, focusIndex - half));
-    return candles.slice(start, start + MAX_VISIBLE_CANDLES);
+    const half = Math.floor(safeWindowSize / 2);
+    const start = Math.max(0, Math.min(candles.length - safeWindowSize, focusIndex - half));
+    return candles.slice(start, start + safeWindowSize);
   }
 
-  return candles.slice(candles.length - MAX_VISIBLE_CANDLES);
+  return candles.slice(candles.length - safeWindowSize);
 }
 
-function normalizeHistoryCandles(historySlice = {}) {
+function normalizeHistoryCandles(historySlice = {}, options = {}) {
   const rawCandles = Array.isArray(historySlice.candles)
     ? historySlice.candles
     : Array.isArray(historySlice.bars) ? historySlice.bars : [];
   const candles = pickVisibleHistoryWindow(rawCandles
     .map(normalizeRawHistoryCandle)
-    .filter(Boolean));
+    .filter(Boolean), options.windowSize);
   if (!candles.length) return [];
 
   const highs = candles.map((item) => Number(item.high)).filter(Number.isFinite);
@@ -495,10 +526,12 @@ function buildKlineMindSession({
   const scenario = DAY_SCENARIOS[day] || DAY_SCENARIOS[1];
   const marketKey = (record || {}).marketKey || "cn_equity";
   const timeframeKey = (record || {}).timeframeKey || "1d";
-  const timeframeMeta = TIMEFRAME_CATALOG.find((item) => item.key === timeframeKey) || TIMEFRAME_CATALOG[4];
+  const timeframeMeta = TIMEFRAME_CATALOG.find((item) => item.key === timeframeKey) || TIMEFRAME_CATALOG[0];
+  const chartZoomKey = (record || {}).chartZoomKey || "standard";
+  const chartZoomMeta = getChartZoomMeta(chartZoomKey);
   const market = getMarketConfig(marketKey);
   const historySlice = (record || {}).historySlice || getHistorySlice(historyCache, market.key, timeframeKey);
-  const rawCandles = normalizeHistoryCandles(historySlice || {});
+  const rawCandles = normalizeHistoryCandles(historySlice || {}, { windowSize: chartZoomMeta.windowSize });
   const selectedKey = (record || {}).selectedCandleKey || "";
   const prescription = getKlinePrescription(personalityType);
   const stageGate = getSixGate(stagePlan.stageKey);
@@ -518,6 +551,11 @@ function buildKlineMindSession({
     timeframeKey,
     timeframeLabel: timeframeMeta.label,
     timeframeOptions: buildTimeframeOptions(timeframeKey),
+    chartZoomKey: chartZoomMeta.key,
+    chartWindowSize: chartZoomMeta.windowSize,
+    chartZoomOptions: buildChartZoomOptions(chartZoomMeta.key),
+    chartOrientationHint: "横屏训练更稳，适合看更多 K 线；竖屏可放大少量细看。",
+    indicatorCatalog: INDICATOR_CATALOG,
     historySlice: historySlice || null,
     hasHistoricalData: candles.length > 0,
     dataStatusText: candles.length
@@ -643,6 +681,7 @@ function buildKlineMindRecord(input = {}, session = {}) {
     marketKey: ((session.market || {}).key) || input.marketKey || "cn_equity",
     marketName: ((session.market || {}).name) || input.marketName || "A股",
     timeframeKey: session.timeframeKey || input.timeframeKey || "1d",
+    chartZoomKey: session.chartZoomKey || input.chartZoomKey || "standard",
     mode: ((session.historySlice || {}).mode) || input.mode || "step_replay",
     dataSource: ((session.historySlice || {}).source) || input.dataSource || "",
     klineSource: ((session.historySlice || {}).klineSource) || ((session.historySlice || {}).source) || input.klineSource || "",

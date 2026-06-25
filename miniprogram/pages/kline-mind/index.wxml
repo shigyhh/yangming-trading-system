@@ -80,23 +80,56 @@
         <view>{{session.market.rhythm}} · {{session.dataStatusText}}</view>
       </view>
 
-      <view wx:if="{{session.hasHistoricalData}}" class="wave-board">
-        <button
-          wx:for="{{session.candles}}"
-          wx:key="key"
-          class="mind-candle {{item.tone}} {{item.focus ? 'focus' : ''}} {{item.selected ? 'selected' : ''}}"
-          data-key="{{item.key}}"
-          bindtap="selectCandle"
-        >
-          <view class="wick" style="{{item.wickStyle}}"></view>
-          <view class="body" style="{{item.bodyStyle}}"></view>
-          <view class="volume" style="{{item.volumeStyle}}"></view>
-          <text wx:if="{{item.label}}">{{item.label}}</text>
-        </button>
+      <view class="chart-toolbar">
+        <view>
+          <text>横屏训练更稳</text>
+          <view>{{session.chartOrientationHint}}</view>
+        </view>
+        <view class="chart-zoom-rail">
+          <button
+            wx:for="{{session.chartZoomOptions}}"
+            wx:key="key"
+            class="chart-zoom-chip {{item.selected ? 'active' : ''}}"
+            data-zoom="{{item.key}}"
+            bindtap="selectChartZoom"
+          >
+            <text>{{item.label}}</text>
+          </button>
+        </view>
       </view>
+
+      <scroll-view class="wave-board-scroll" scroll-x="true" wx:if="{{session.hasHistoricalData}}" enhanced="true" show-scrollbar="{{false}}">
+        <view class="wave-board zoom-{{session.chartZoomKey}}">
+          <button
+            wx:for="{{session.candles}}"
+            wx:key="key"
+            class="mind-candle {{item.tone}} {{item.focus ? 'focus' : ''}} {{item.selected ? 'selected' : ''}}"
+            data-key="{{item.key}}"
+            bindtap="selectCandle"
+          >
+            <view class="wick" style="{{item.wickStyle}}"></view>
+            <view class="body" style="{{item.bodyStyle}}"></view>
+            <view class="volume" style="{{item.volumeStyle}}"></view>
+            <text wx:if="{{item.label}}">{{item.label}}</text>
+          </button>
+        </view>
+      </scroll-view>
       <view wx:else class="history-empty">
         <view>历史数据未载入</view>
         <text>请先同步真实历史数据；未载入前不展示占位 K线。</text>
+      </view>
+
+      <view class="indicator-layer">
+        <view class="indicator-title">
+          <text>观心指标</text>
+          <view>只作触发观察，不作买卖信号。</view>
+        </view>
+        <view class="indicator-grid">
+          <view wx:for="{{session.indicatorCatalog}}" wx:key="key" class="indicator-chip">
+            <text>{{item.label}}</text>
+            <view>{{item.name}} · {{item.trainingUse}}</view>
+          </view>
+        </view>
       </view>
 
       <view class="slice-playbook">

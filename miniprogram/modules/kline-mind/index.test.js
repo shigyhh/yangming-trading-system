@@ -17,7 +17,7 @@ const {
 assert.strictEqual(SIX_GATE_MAP.length, 6);
 assert.ok(Object.keys(PERSONALITY_KLINE_PRESCRIPTIONS).length >= 9);
 assert.deepStrictEqual(Object.keys(MARKET_CATALOG), ["cn_equity"]);
-assert.deepStrictEqual(TIMEFRAME_CATALOG.map((item) => item.key), ["30m", "60m", "1d"]);
+assert.deepStrictEqual(TIMEFRAME_CATALOG.map((item) => item.key), ["1d", "60m", "30m"]);
 assert.ok(KLINE_TRAINING_METHODS.find((item) => item.key === "firecracker"));
 assert.strictEqual(KLINE_TRAINING_METHODS[0].key, "firecracker");
 assert.ok(KLINE_TRAINING_METHODS[0].steps.includes("点最想追的一根"));
@@ -72,9 +72,23 @@ const compactSchemaSlice = {
   }))
 };
 const visualCandles = normalizeHistoryCandles(compactSchemaSlice);
-assert.strictEqual(visualCandles.length, 14);
+assert.strictEqual(visualCandles.length, 20);
 assert.ok(visualCandles.every((item) => !String(item.wickStyle + item.bodyStyle + item.volumeStyle).includes("NaN")));
-assert.strictEqual(visualCandles[0].date, "2024-02-07");
+assert.strictEqual(visualCandles[0].date, "2024-02-01");
+
+const wideVisualCandles = normalizeHistoryCandles({
+  source: "server_cache",
+  candles: Array.from({ length: 48 }, (_, index) => ({
+    t: `2024-03-${String(index + 1).padStart(2, "0")}`,
+    o: 10 + index * 0.05,
+    h: 10.7 + index * 0.05,
+    l: 9.8 + index * 0.05,
+    c: 10.35 + index * 0.05,
+    v: 1200 + index * 40
+  }))
+}, { windowSize: 36 });
+assert.strictEqual(wideVisualCandles.length, 36);
+assert.strictEqual(wideVisualCandles[0].date, "2024-03-13");
 
 const sparseSession = buildKlineMindSession({
   record: {
@@ -101,6 +115,7 @@ assert.strictEqual(record.completed, true);
 assert.strictEqual(record.scenarioTitle, "边界触碰");
 assert.strictEqual(record.marketKey, "cn_equity");
 assert.strictEqual(record.timeframeKey, "1d");
+assert.strictEqual(record.chartZoomKey, "standard");
 assert.strictEqual(record.symbol, "000001.SZ");
 assert.strictEqual(record.klineSource, "verified_fixture");
 assert.strictEqual(record.source, "miniprogram");
@@ -113,6 +128,7 @@ const demoSession = buildKlineMindSession({
   record: {
     marketKey: "cn_equity",
     timeframeKey: "30m",
+    chartZoomKey: "wide",
     historySlice: {
       source: "local_demo",
       klineSource: "local_demo",
@@ -131,6 +147,10 @@ const demoRecord = buildKlineMindRecord({
   insightLine: "离线练习模式下，我只记录第一念。"
 }, demoSession);
 assert.strictEqual(demoSession.dataStatusText, "离线练习模式");
+assert.strictEqual(demoSession.chartZoomKey, "wide");
+assert.strictEqual(demoSession.chartWindowSize, 36);
+assert.ok(demoSession.chartOrientationHint.includes("横屏"));
+assert.deepStrictEqual(demoSession.indicatorCatalog.map((item) => item.key), ["ma", "macd", "boll", "vol"]);
 assert.strictEqual(demoRecord.klineSource, "local_demo");
 assert.strictEqual(demoRecord.sliceSource, "local_demo");
 assert.strictEqual(demoRecord.serverSliceStatus, "network_error");

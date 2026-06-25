@@ -103,6 +103,7 @@ function buildForm(record = {}, session = {}) {
     marketKey: record.marketKey || ((session.market || {}).key) || "cn_equity",
     timeframeKey: record.timeframeKey || session.timeframeKey || "1d",
     scenarioId: savedSceneId.indexOf("scene-") === 0 ? savedSceneId : "scene-fast-001",
+    chartZoomKey: record.chartZoomKey || session.chartZoomKey || "standard",
     historySlice: record.historySlice || null,
     selectedCandleKey: record.selectedCandleKey || session.selectedCandleKey || "",
     reactionDirection: record.reactionDirection || inferReactionDirection(record.firstReaction),
@@ -289,6 +290,17 @@ Page({
     this.loadServerHistorySlice(form);
   },
 
+  selectChartZoom(e) {
+    const chartZoomKey = e.currentTarget.dataset.zoom;
+    if (!chartZoomKey) return;
+    const form = Object.assign({}, this.data.form, { chartZoomKey });
+    const session = this.buildSession(form);
+    this.setData({
+      form: Object.assign({}, form, { selectedCandleKey: session.selectedCandleKey }),
+      session
+    });
+  },
+
   selectOption(e) {
     const field = e.currentTarget.dataset.field;
     const value = e.currentTarget.dataset.value;
@@ -324,6 +336,7 @@ Page({
     const scenarioId = getNextKlineMindSliceSeed(currentForm.scenarioId || "scene-fast-001");
     const form = Object.assign({}, currentForm, {
       scenarioId,
+      chartZoomKey: currentForm.chartZoomKey || "standard",
       historySlice: null,
       selectedCandleKey: "",
       reactionDirection: "",

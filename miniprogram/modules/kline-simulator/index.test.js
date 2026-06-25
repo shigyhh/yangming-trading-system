@@ -30,7 +30,7 @@ assert.deepStrictEqual(KLINE_TRAINING_MARKET_PRESETS.map((item) => item.key), ["
 assert.deepStrictEqual(KLINE_TRAINING_TIMEFRAME_PRESETS.map((item) => item.key), ["30m", "60m", "1d"]);
 
 const scene = getKlineScenario("scene-fast-001");
-assert.ok(scene.candles.length >= 10);
+assert.ok(scene.candles.length >= 30);
 assert.ok(scene.candles.some((item) => Math.abs(item.close - item.open) >= 7));
 assert.ok(scene.candles.some((item) => item.volume >= 2200));
 let session = createKlineSession(scene.id);
