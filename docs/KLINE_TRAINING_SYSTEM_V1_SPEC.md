@@ -987,7 +987,143 @@ V1 应优先在这些路径上做增量，不新建孤立系统。
 - 人格类型演化曲线。
 - 活镜成长页读取同一数据语义，不单独维护小程序私有成长模型。
 
-## 10. 命名原则
+## 10. 借鉴但不新建：未来模块化蓝图
+
+以下结构来自独立 K 线训练系统的目标形态，可以作为职责拆分参考，但当前阶段不新建 `ym-kline-mind-system/`，不另起前端、后端、数据库或 shared 工程。
+
+当前施工原则：
+
+- 借鉴模块边界。
+- 不迁移目录。
+- 不新建孤立 schema。
+- 不替换现有页面。
+- 不绕过 `data-binding-adapter`。
+- 功能先长在现有小程序与现有后端链路上。
+
+### 10.1 蓝图到当前项目的映射
+
+| 未来蓝图 | 可借鉴职责 | 当前落点 |
+| --- | --- | --- |
+| `web/pages/training/blind.tsx` | Web 盲测训练页 | 当前先不做，优先小程序 `miniprogram/pages/kline-mind/index` |
+| `web/pages/training/replay.tsx` | 回放系统 | P3 后接 H5 / Web 报告 |
+| `web/pages/review/report.tsx` | 复盘报告 | 当前沿用 `tradeReviewRecord` 与报告入口 |
+| `web/pages/profile/growth.tsx` | 人格画像 | 当前沿用 `livingMirror` |
+| `components/kline/KLineChart` | K 线渲染核心 | 当前落在小程序 WXML/WXSS 与 `kline-mind` session 数据 |
+| `components/trade/TradePanel` | 模拟决策面板 | 当前落在现有 K线观心页面交互 |
+| `components/emotion/EmotionLayer` | 情绪层 | 当前落在 `emotionBadges` / `riskHints` |
+| `components/replay/ReplayEngine` | 回放引擎 | P3 从 `decisionTimeline` / `emotionTimeline` 生成 |
+| `server/modules/market-engine` | 真实历史切片 | `server/src/services/historicalKline.js` |
+| `server/modules/simulation-engine` | 逐根推进运行态 | `miniprogram/modules/kline-mind/index.js`，未来可抽后端投影 |
+| `server/modules/decision-engine` | 模拟决策、仓位、PnL | 当前先在 `kline-mind` runtime 内补 |
+| `server/modules/emotion-engine` | 情绪识别与心法映射 | 当前先在 `kline-mind` runtime 内补 |
+| `server/modules/review-engine` | 训练复盘 | `tradeReviewRecord` + `data-binding` |
+| `server/modules/growth-engine` | 长期成长画像 | `livingMirror` |
+| `shared/types.ts` | 统一契约 | 当前先由本规格与测试约束，稳定后再抽 contracts |
+| `db/schema.sql` / migrations | 持久化结构 | 当前不新增权威主表；如需要，只加运行态投影 |
+| `data/market` | 脱敏 K 线数据池 | 复用现有 `server/data/market` 与历史 K 线缓存 |
+
+### 10.2 何时可以抽模块
+
+只有同时满足以下条件，才考虑从当前页面 / 模块抽成独立组件或服务：
+
+- 小程序 P1 盲练闭环已经稳定。
+- `klineMindRecord -> oneThoughtEvent -> tradeReviewRecord -> livingMirrorGrowth` 已真实跑通。
+- Web / H5 也开始消费同一训练记录。
+- 同一逻辑在两个以上端重复出现。
+- 抽出后不会改变现有字段和同步链路。
+
+## 11. Future V3：高仿真压力训练层
+
+V3 是未来“接近真实交易心理压力”的仿真层，不进入当前 P1 / P2 实现。它的价值是补足训练环境中的压力、不可逆、时间限制与行为延迟，但必须建立在 V1 盲练和 V2 完整训练器稳定之后。
+
+### 11.1 V3 目标
+
+在不接入真实交易、不输出投资建议的前提下，通过高仿真压力层逼近真实交易中的心理与行为压力。
+
+V3 目标不是让用户更会交易，而是训练：
+
+- 压力下是否仍能守边界。
+- 决策后是否能接受不可逆结果。
+- 亏损、震荡、假信号中是否能识别自己的反应模式。
+- 行为延迟、犹豫、冲动是否能被记录和复盘。
+
+### 11.2 V3 新增核心仿真层
+
+| V3 层 | 责任 | 当前处理 |
+| --- | --- | --- |
+| Market Reality Simulator | 生成更真实、更不可预测的训练片段 | 后置；优先用真实历史片段筛选，不直接伪造 K 线 |
+| Pressure & Time Engine | 3-8 秒决策倒计时、超时 MISS、压力递增 | 后置；当前只预留字段 |
+| Irreversible Decision Engine | 决策不可撤销、不可修改、不可回退 | 后置；V1 可先在文案和数据上保持不可编辑原则 |
+| Behavior Latency Engine | 模拟点击到成交之间 300-1500ms 延迟 | 后置；当前只记录真实用户决策耗时 |
+| Session Reality Scoring | 输出真实度评分 | 后置；P3/P4 后再接 |
+
+### 11.3 可提前预留的兼容字段
+
+这些字段可以作为未来扩展预留，但当前页面不必展示，也不应影响 V1 闭环：
+
+```ts
+type KlineRealitySimulationExtension = {
+  decisionStartedAt?: number;
+  decisionSubmittedAt?: number;
+  decisionLatencyMs?: number;
+  decisionTimeLimitMs?: number;
+  isMissedDecision?: boolean;
+  pressureLevel?: "low" | "medium" | "high";
+  stressSignals?: string[];
+  isIrreversible?: boolean;
+  behaviorLatencyMs?: number;
+  realityScore?: {
+    total: number;
+    pressureMatch: number;
+    emotionConsistency: number;
+    executionSpeed: number;
+    disciplineExecution: number;
+  };
+  interventionEvents?: Array<{
+    type: string;
+    message: string;
+    createdAt: number;
+  }>;
+};
+```
+
+### 11.4 市场不可解释性原则
+
+V3 可以引入“不可预测训练场”，但优先通过真实历史片段筛选实现，而不是直接篡改真实 OHLCV。
+
+推荐方式：
+
+- 从真实历史中筛选假突破。
+- 从真实历史中筛选震荡陷阱。
+- 从真实历史中筛选高波动切换。
+- 从真实历史中筛选流动性断层。
+- 从真实历史中筛选亏钱行情、假信号行情、震荡反复行情。
+
+谨慎或禁止：
+
+- 不直接制造会误导用户的假行情。
+- 不输出“这是未来会发生的结构”。
+- 不把训练场景包装成市场预测。
+- 不让 AI Coach 输出方向判断。
+
+### 11.5 V3 暂不进入当前实现
+
+当前不做：
+
+- 3-8 秒强制倒计时。
+- UI 变暗、提示减少、压力递增的压迫式界面。
+- 不可撤销强压力交互。
+- `applyNoise()` 直接改造真实 K 线。
+- “压迫式教练”的风险概率输出。
+
+当前可以先做：
+
+- 记录决策开始与提交时间。
+- 记录是否错过决策点。
+- 记录基础压力信号。
+- 保持模拟决策不可随意编辑的产品原则。
+
+## 12. 命名原则
 
 为了避免投顾误解，V1 用户侧命名建议：
 
@@ -997,7 +1133,7 @@ V1 应优先在这些路径上做增量，不新建孤立系统。
 - “收益 / 胜率”只在复盘分析中作为模拟训练指标，不作为能力承诺。
 - “风险提示”只指行为风险，不指市场风险方向。
 
-## 11. 合规文案
+## 13. 合规文案
 
 所有 K线训练页面保留轻量合规边界：
 
