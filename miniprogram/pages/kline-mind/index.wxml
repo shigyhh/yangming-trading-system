@@ -41,7 +41,7 @@
 
       <view wx:if="{{false}}" class="wave-source-line">
         <text>观心片段</text>
-        <view>{{session.market.rhythm}} · {{session.dataStatusText}}</view>
+        <view class="wave-source-detail">{{session.market.rhythm}} · {{session.dataStatusText}}</view>
       </view>
 
       <view class="chart-toolbar">
@@ -88,7 +88,6 @@
                 >
                   <view class="wick" style="{{item.wickStyle}}"></view>
                   <view class="body" style="{{item.bodyStyle}}"></view>
-                  <text wx:if="{{item.label}}">{{item.label}}</text>
                 </button>
               </view>
             </view>

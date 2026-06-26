@@ -251,7 +251,7 @@
   letter-spacing: 0.16em;
 }
 
-.wave-source-line view {
+.wave-source-detail {
   min-width: 0;
   color: rgba(244, 235, 221, 0.58);
   font-size: 22rpx;
@@ -573,23 +573,6 @@
   width: 15rpx;
 }
 
-.mind-candle text {
-  position: absolute;
-  z-index: 3;
-  left: 50%;
-  top: 2rpx;
-  width: 18rpx;
-  height: 18rpx;
-  display: grid;
-  place-items: center;
-  transform: translateX(-50%);
-  border-radius: 2rpx;
-  background: rgba(216, 183, 111, 0.18);
-  color: rgba(216, 183, 111, 0.82);
-  font-size: 13rpx;
-  line-height: 1;
-}
-
 .mind-candle.gold .wick,
 .mind-candle.gold .body,
 .mind-candle.gold .volume {
@@ -614,11 +597,6 @@
 .mind-candle.flat .body,
 .mind-candle.flat .volume {
   background: rgba(214, 224, 218, 0.54);
-}
-
-.mind-candle.focus text,
-.mind-candle.selected text {
-  color: #f6e0aa;
 }
 
 .mind-candle.selected .body {
@@ -1652,7 +1630,7 @@
     flex-direction: column;
   }
 
-  .wave-source-line view {
+  .wave-source-detail {
     text-align: left;
   }
 
