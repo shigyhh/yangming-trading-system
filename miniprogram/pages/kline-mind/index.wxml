@@ -92,29 +92,7 @@
               </view>
             </view>
 
-            <view class="indicator-strip">
-              <view
-                wx:for="{{session.mainIndicatorOptions}}"
-                wx:for-item="mainIndicator"
-                wx:key="key"
-                class="chart-indicator-chip {{mainIndicator.key === selectedMainIndicatorKey ? 'active' : ''}}"
-                data-indicator="{{mainIndicator.key}}"
-                bindtap="selectMainIndicator"
-              >
-                {{mainIndicator.label}}
-              </view>
-              <view class="indicator-divider"></view>
-              <view
-                wx:for="{{session.indicatorPanelOptions}}"
-                wx:for-item="subIndicator"
-                wx:key="key"
-                class="chart-indicator-chip {{subIndicator.key === selectedIndicatorKey ? 'active' : ''}}"
-                data-indicator="{{subIndicator.key}}"
-                bindtap="selectIndicator"
-              >
-                {{subIndicator.label}}
-              </view>
-            </view>
+            <view class="indicator-strip-spacer"></view>
 
             <view wx:if="{{runtimeView.indicatorPanel.visible}}" class="sub-indicator-board {{runtimeView.indicatorPanel.type}} zoom-{{session.chartZoomKey}}">
               <view class="sub-indicator-content">
@@ -138,6 +116,29 @@
             </view>
           </view>
         </scroll-view>
+        <view class="indicator-strip">
+          <view
+            wx:for="{{session.mainIndicatorOptions}}"
+            wx:for-item="mainIndicator"
+            wx:key="key"
+            class="chart-indicator-chip {{mainIndicator.key === selectedMainIndicatorKey ? 'active' : ''}}"
+            data-indicator="{{mainIndicator.key}}"
+            bindtap="selectMainIndicator"
+          >
+            {{mainIndicator.label}}
+          </view>
+          <view class="indicator-divider"></view>
+          <view
+            wx:for="{{session.indicatorPanelOptions}}"
+            wx:for-item="subIndicator"
+            wx:key="key"
+            class="chart-indicator-chip {{subIndicator.key === selectedIndicatorKey ? 'active' : ''}}"
+            data-indicator="{{subIndicator.key}}"
+            bindtap="selectIndicator"
+          >
+            {{subIndicator.label}}
+          </view>
+        </view>
       </view>
       <view wx:else class="history-empty">
         <view>{{historyLoading ? '正在读取历史数据' : '历史数据未载入'}}</view>

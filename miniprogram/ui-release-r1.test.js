@@ -205,6 +205,10 @@ assert.ok(klineMindWxml.includes('class="chart-stepper"'), "kline chart should e
 assert.ok(klineMindWxml.includes("bindtap=\"decreaseChartZoom\""), "kline chart should let the user zoom out with a minus control");
 assert.ok(klineMindWxml.includes("bindtap=\"increaseChartZoom\""), "kline chart should let the user zoom in with a plus control");
 assert.ok(klineMindWxml.indexOf('class="chart-stepper"') < klineMindWxml.indexOf('scroll-view class="wave-board-scroll"'), "kline zoom controls should stay fixed in the visible chart corner, not inside the horizontal candle canvas");
+const klineChartScrollStart = klineMindWxml.indexOf('scroll-view class="wave-board-scroll"');
+const klineChartScrollEnd = klineMindWxml.indexOf("</scroll-view>", klineChartScrollStart);
+assert.ok(klineMindWxml.indexOf('class="indicator-strip-spacer"', klineChartScrollStart) < klineChartScrollEnd, "kline chart should reserve space for a fixed indicator rail inside the scrollable canvas");
+assert.ok(klineMindWxml.indexOf('class="indicator-strip"', klineChartScrollEnd) > klineChartScrollEnd, "kline indicator rail should stay fixed outside the horizontal candle canvas");
 assert.equal(klineMindWxml.includes("缩小"), false, "kline chart should not render the old segmented zoom labels");
 assert.equal(klineMindWxml.includes("标准"), false, "kline chart should not render the old segmented zoom labels");
 assert.equal(klineMindWxml.includes("放大"), false, "kline chart should not render the old segmented zoom labels");

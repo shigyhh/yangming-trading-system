@@ -610,15 +610,25 @@
 }
 
 .indicator-strip {
-  position: relative;
-  z-index: 4;
-  min-height: 54rpx;
+  position: absolute;
+  z-index: 7;
+  top: 337rpx;
+  left: 1rpx;
+  right: 1rpx;
+  height: 54rpx;
   padding: 8rpx 18rpx;
   display: flex;
   align-items: center;
   gap: 8rpx;
   overflow-x: auto;
   white-space: nowrap;
+  border-top: 1rpx solid rgba(244, 235, 221, 0.08);
+  background: rgba(0, 0, 0, 0.96);
+  box-sizing: border-box;
+}
+
+.indicator-strip-spacer {
+  height: 54rpx;
   border-top: 1rpx solid rgba(244, 235, 221, 0.08);
   background: rgba(0, 0, 0, 0.96);
   box-sizing: border-box;
