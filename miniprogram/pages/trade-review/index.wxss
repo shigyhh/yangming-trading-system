@@ -1,5 +1,6 @@
 .concept-bridge,
 .upload-card,
+.anchor-card,
 .quick-review-card,
 .form-card,
 .report-card,
@@ -31,8 +32,13 @@
 .recent-card > text,
 .upload-empty,
 .upload-preview,
+.upload-actions,
 .upload-card button,
 .upload-note,
+.anchor-head,
+.anchor-head text,
+.anchor-status,
+.anchor-meta,
 .quick-review-card view,
 .quick-review-card input,
 .quick-review-card textarea,
@@ -315,6 +321,80 @@
 
 .upload-card button {
   margin-top: 20rpx;
+}
+
+.upload-actions {
+  margin-top: 20rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12rpx;
+}
+
+.upload-actions button {
+  width: 100%;
+  min-width: 0;
+  margin-top: 0;
+  box-sizing: border-box;
+}
+
+.upload-actions .ghost-btn {
+  color: rgba(247, 239, 223, 0.68);
+  border-color: rgba(247, 239, 223, 0.12);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.anchor-card {
+  overflow: hidden;
+  border-color: rgba(88, 194, 173, 0.14);
+  background:
+    radial-gradient(circle at 92% 12%, rgba(88, 194, 173, 0.1), transparent 40%),
+    rgba(255, 255, 255, 0.032);
+}
+
+.anchor-head {
+  display: grid;
+  grid-template-columns: minmax(0, 180rpx) minmax(0, 1fr);
+  gap: 16rpx;
+  align-items: center;
+}
+
+.anchor-head > text {
+  color: #f1d27d;
+  font-size: 24rpx;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.anchor-status {
+  color: rgba(247, 239, 223, 0.54);
+  font-size: 21rpx;
+  line-height: 1.45;
+  font-weight: 800;
+  text-align: right;
+}
+
+.anchor-status.ready {
+  color: rgba(110, 216, 195, 0.88);
+}
+
+.anchor-status.loading,
+.anchor-status.pending {
+  color: rgba(241, 210, 125, 0.78);
+}
+
+.anchor-status.failed {
+  color: rgba(247, 239, 223, 0.5);
+}
+
+.anchor-meta {
+  margin-top: 18rpx;
+  padding: 16rpx 18rpx;
+  color: rgba(247, 239, 223, 0.6);
+  border-radius: 16rpx;
+  background: rgba(88, 194, 173, 0.055);
+  font-size: 21rpx;
+  line-height: 1.45;
+  font-weight: 800;
 }
 
 .quick-actions {

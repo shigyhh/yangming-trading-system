@@ -174,13 +174,12 @@ const INDICATOR_PANEL_OPTIONS = [
 ];
 
 const CHART_GEOMETRY = {
-  overview: { candleWidth: 5, gap: 3, paddingX: 18, paddingTop: 24 },
-  wide: { candleWidth: 8, gap: 6, paddingX: 18, paddingTop: 24 },
-  standard: { candleWidth: 12, gap: 6, paddingX: 18, paddingTop: 24 },
-  focus: { candleWidth: 20, gap: 6, paddingX: 18, paddingTop: 24 }
+  overview: { candleWidth: 2, bodyWidth: 2, gap: 1, paddingX: 18, paddingTop: 24 },
+  wide: { candleWidth: 4, bodyWidth: 4, gap: 1, paddingX: 18, paddingTop: 24 },
+  standard: { candleWidth: 10, bodyWidth: 8, gap: 4, paddingX: 18, paddingTop: 24 },
+  focus: { candleWidth: 22, bodyWidth: 17, gap: 7, paddingX: 18, paddingTop: 24 }
 };
 const BLIND_CHART_MIN_WIDTH = 690;
-const CHART_RIGHT_BOUNDARY_SCROLL_LEFT = 99999;
 
 const KLINE_TRAINING_METHODS = [
   {
@@ -548,6 +547,7 @@ function normalizeHistoryCandles(historySlice = {}, options = {}) {
 
     return {
       key,
+      sourceIndex: Number(item.sourceIndex || index),
       label: item.focus ? "问" : "",
       indexLabel: String(index + 1).padStart(2, "0"),
       tone,
@@ -579,11 +579,10 @@ function getChartGeometry(zoomKey = "wide") {
 function getChartLayout(candleCount, zoomKey = "wide") {
   const count = Math.max(1, Number(candleCount || 0));
   const geometry = getChartGeometry(zoomKey);
+  const width = BLIND_CHART_MIN_WIDTH;
+  if (count <= 1) return Object.assign({}, geometry, { width, gap: geometry.gap });
   const naturalWidth = Math.round(geometry.paddingX * 2 + count * geometry.candleWidth + Math.max(0, count - 1) * geometry.gap);
-  const width = Math.max(BLIND_CHART_MIN_WIDTH, naturalWidth);
-  if (count <= 1 || naturalWidth >= width) {
-    return Object.assign({}, geometry, { width, gap: geometry.gap });
-  }
+  if (naturalWidth >= width) return Object.assign({}, geometry, { width: naturalWidth, gap: geometry.gap });
   const gap = Math.max(geometry.gap, (width - geometry.paddingX * 2 - count * geometry.candleWidth) / (count - 1));
   return Object.assign({}, geometry, { width, gap });
 }
@@ -594,7 +593,25 @@ function getChartBoardWidth(candleCount, zoomKey = "wide") {
 
 function getChartBoardStyle(candleCount, zoomKey = "wide") {
   const layout = getChartLayout(candleCount, zoomKey);
-  return `width: ${layout.width}rpx; min-width: 100%; --kline-gap: ${roundMetric(layout.gap, 2)}rpx;`;
+  return [
+    `width: ${layout.width}rpx`,
+    "min-width: 100%",
+    `--kline-gap: ${roundMetric(layout.gap, 2)}rpx`,
+    `--kline-candle-width: ${roundMetric(layout.candleWidth, 2)}rpx`,
+    `--kline-body-width: ${roundMetric(layout.bodyWidth || layout.candleWidth, 2)}rpx`
+  ].join("; ") + ";";
+}
+
+function getChartRightBoundaryScrollLeft(candleCount, zoomKey = "wide") {
+  const layout = getChartLayout(candleCount, zoomKey);
+  return Math.max(0, Math.round(layout.width - BLIND_CHART_MIN_WIDTH));
+}
+
+function getChartViewportCapacity(zoomKey = "wide") {
+  const geometry = getChartGeometry(zoomKey);
+  const plotWidth = BLIND_CHART_MIN_WIDTH - geometry.paddingX * 2;
+  const step = Math.max(1, geometry.candleWidth + geometry.gap);
+  return Math.max(1, Math.floor((plotWidth + geometry.gap) / step));
 }
 
 function buildOverlaySegments(candles = [], field, zoomKey = "wide") {
@@ -873,10 +890,43 @@ function normalizeDecisionInterval(value) {
   return Math.max(3, Math.min(10, Math.round(number)));
 }
 
-function buildRuntimeVisibleCandles(candles = [], currentIndex = 0) {
-  if (!Array.isArray(candles) || !candles.length) return [];
+function buildRuntimeViewport(candles = [], currentIndex = 0, zoomKey = "wide", panOffset = 0) {
+  if (!Array.isArray(candles) || !candles.length) {
+    return {
+      startIndex: 0,
+      endIndex: 0,
+      rightBoundaryIndex: 0,
+      panOffset: 0,
+      maxPanOffset: 0,
+      capacity: 0,
+      barStepRpx: 1
+    };
+  }
   const safeIndex = Math.max(0, Math.min(candles.length - 1, Number(currentIndex || 0)));
-  return candles.slice(0, safeIndex + 1);
+  const capacity = Math.max(1, Math.min(safeIndex + 1, getChartViewportCapacity(zoomKey)));
+  const maxPanOffset = Math.max(0, safeIndex - capacity + 1);
+  const safePanOffset = Math.max(0, Math.min(maxPanOffset, Math.round(Number(panOffset || 0))));
+  const endIndex = Math.max(capacity - 1, safeIndex - safePanOffset);
+  const startIndex = Math.max(0, endIndex - capacity + 1);
+  const geometry = getChartGeometry(zoomKey);
+  return {
+    startIndex,
+    endIndex,
+    rightBoundaryIndex: safeIndex,
+    panOffset: safePanOffset,
+    maxPanOffset,
+    capacity,
+    barStepRpx: geometry.candleWidth + geometry.gap
+  };
+}
+
+function buildRuntimeVisibleCandles(candles = [], viewport = {}) {
+  if (!Array.isArray(candles) || !candles.length) return [];
+  const startIndex = Math.max(0, Number(viewport.startIndex || 0));
+  const endIndex = Math.max(startIndex, Number(viewport.endIndex || startIndex));
+  return candles.slice(startIndex, endIndex + 1).map((item, index) => Object.assign({}, item, {
+    runtimeIndex: startIndex + index
+  }));
 }
 
 function normalizeInitialVisibleCount(value, totalCandles) {
@@ -885,6 +935,15 @@ function normalizeInitialVisibleCount(value, totalCandles) {
   const number = Number(value || 1);
   if (!Number.isFinite(number)) return 1;
   return Math.max(1, Math.min(total, Math.round(number)));
+}
+
+function getInitialKlineVisibleCount(session = {}) {
+  const candles = Array.isArray(session.candles) ? session.candles : [];
+  if (!candles.length) return 0;
+  const windowSize = Number(session.chartWindowSize || DEFAULT_VISIBLE_CANDLES);
+  const safeWindowSize = Number.isFinite(windowSize) ? windowSize : DEFAULT_VISIBLE_CANDLES;
+  const target = Math.max(72, Math.min(132, Math.floor(safeWindowSize * 0.8)));
+  return Math.min(candles.length, target);
 }
 
 function roundMetric(value, digits = 2) {
@@ -985,8 +1044,10 @@ function buildRuntimeState(baseRuntime = {}, patch = {}) {
   const safeIndex = candles.length
     ? Math.max(0, Math.min(candles.length - 1, Number(runtime.currentIndex || 0)))
     : 0;
-  const visibleCandles = buildRuntimeVisibleCandles(candles, safeIndex);
-  const activeCandle = visibleCandles[visibleCandles.length - 1] || null;
+  const zoomKey = runtime.chartZoomKey || "wide";
+  const viewport = buildRuntimeViewport(candles, safeIndex, zoomKey, runtime.chartPanOffset);
+  const visibleCandles = buildRuntimeVisibleCandles(candles, viewport);
+  const activeCandle = candles[safeIndex] ? Object.assign({}, candles[safeIndex], { runtimeIndex: safeIndex }) : (visibleCandles[visibleCandles.length - 1] || null);
   const positionState = markPositionToMarket(runtime.positionState || {}, activeCandle || {});
   const hasDecisionForCurrentIndex = Number(runtime.lastDecisionIndex) === safeIndex;
   const mustDecide = !!runtime.lockedUntilDecision || (!hasDecisionForCurrentIndex && shouldRuntimeRequireDecision(safeIndex, runtime.decisionInterval));
@@ -994,10 +1055,12 @@ function buildRuntimeState(baseRuntime = {}, patch = {}) {
     currentIndex: safeIndex,
     visibleCandles,
     activeCandle,
-    chartBoardStyle: getChartBoardStyle(visibleCandles.length, runtime.chartZoomKey || "wide"),
-    chartScrollLeft: CHART_RIGHT_BOUNDARY_SCROLL_LEFT,
-    indicatorOverlay: buildIndicatorOverlay(visibleCandles, runtime.chartZoomKey || "wide", runtime.mainIndicatorKey || "ma"),
-    indicatorPanel: buildIndicatorPanel(visibleCandles, runtime.indicatorPanelKey || "vol", runtime.chartZoomKey || "wide"),
+    chartViewport: viewport,
+    chartPanOffset: viewport.panOffset,
+    chartBoardStyle: getChartBoardStyle(visibleCandles.length, zoomKey),
+    chartScrollLeft: 0,
+    indicatorOverlay: buildIndicatorOverlay(visibleCandles, zoomKey, runtime.mainIndicatorKey || "ma"),
+    indicatorPanel: buildIndicatorPanel(visibleCandles, runtime.indicatorPanelKey || "vol", zoomKey),
     positionState,
     sessionMetrics: buildSessionMetrics(positionState, runtime.decisionTimeline || []),
     mustDecide,
@@ -1021,6 +1084,8 @@ function startKlineTrainingRuntime(session = {}, options = {}) {
     currentIndex: Math.max(0, initialVisibleCount - 1),
     totalCandles: candles.length,
     candles,
+    chartPanOffset: 0,
+    chartViewport: null,
     decisionTimeline: [],
     emotionBadges: [],
     riskHints: [],
@@ -1042,6 +1107,18 @@ function setKlineRuntimeIndicator(runtime = {}, indicatorKey = "vol") {
 function setKlineRuntimeMainIndicator(runtime = {}, indicatorKey = "ma") {
   return buildRuntimeState(runtime, {
     mainIndicatorKey: getMainIndicatorMeta(indicatorKey).key
+  });
+}
+
+function setKlineRuntimeChartZoom(runtime = {}, chartZoomKey = "wide") {
+  return buildRuntimeState(runtime, {
+    chartZoomKey: getChartZoomMeta(chartZoomKey).key
+  });
+}
+
+function setKlineRuntimeViewportPan(runtime = {}, panOffset = 0) {
+  return buildRuntimeState(runtime, {
+    chartPanOffset: panOffset
   });
 }
 
@@ -1094,6 +1171,7 @@ function advanceKlineTrainingRuntime(runtime = {}) {
   const nextIndex = Math.min(Math.max(0, total - 1), Number(runtime.currentIndex || 0) + 1);
   return buildRuntimeState(runtime, {
     currentIndex: nextIndex,
+    chartPanOffset: 0,
     blockedReason: ""
   });
 }
@@ -1394,9 +1472,12 @@ module.exports = {
   getNextKlineMindSliceSeed,
   getMarketConfig,
   normalizeHistoryCandles,
+  getInitialKlineVisibleCount,
   startKlineTrainingRuntime,
   advanceKlineTrainingRuntime,
   recordKlineTrainingDecision,
+  setKlineRuntimeChartZoom,
+  setKlineRuntimeViewportPan,
   setKlineRuntimeIndicator,
   setKlineRuntimeMainIndicator,
   buildKlineTrainingRecordPatch,

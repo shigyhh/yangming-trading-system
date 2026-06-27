@@ -27,9 +27,11 @@ const CLIENT_ID_KEY = "zhixing_client_id";
 const PRODUCTION_API_BASE = "https://xxjyxt.com";
 const DEFAULT_API_BASE = "http://127.0.0.1:8787";
 const KLINE_MIN_CANDLES = 6;
-const KLINE_TRAINING_WINDOW_SIZE = 180;
+const KLINE_TRAINING_WINDOW_SIZE = 150;
 const SAFE_CONNECTION_MESSAGE = "后端同步：暂未连接";
 const SAFE_FALLBACK_TEXT = "本地档案已保存。可稍后再同步，也可以先继续今日修行。";
+const KLINE_HOT_POOL_QUEUE_LIMIT = 12;
+const klineHotPoolQueues = {};
 
 function getMiniProgramEnvVersion() {
   try {
@@ -781,6 +783,68 @@ function buildKlineSliceCacheKey({
   ].join("|");
 }
 
+function buildKlinePrefetchSeedQueue({ seed = "", scenarioId = "", seedQueue = [], prefetchDepth = 1 } = {}) {
+  const primarySeed = seed || scenarioId || "scene-fast-001";
+  const candidates = Array.isArray(seedQueue) && seedQueue.length ? seedQueue : [primarySeed];
+  const uniqueSeeds = Array.from(new Set([primarySeed].concat(candidates).filter(Boolean)));
+  const depth = Math.max(1, Math.min(12, Number(prefetchDepth || uniqueSeeds.length || 1)));
+  return uniqueSeeds.slice(0, depth);
+}
+
+function shouldUseKlineHotPool({ symbol = "", endDate = "", entryTime = "", blind = true } = {}) {
+  return Boolean(blind) && !String(symbol || "").trim() && !String(endDate || "").trim() && !String(entryTime || "").trim();
+}
+
+function buildKlineHotPoolQueueKey({
+  marketKey = "cn",
+  timeframeKey = "101",
+  symbol = "",
+  windowSize = KLINE_TRAINING_WINDOW_SIZE,
+  mode = "step_replay",
+  endDate = "",
+  entryTime = "",
+  personalityType = "",
+  gateKey = "shi_shang_mo",
+  blind = true
+} = {}) {
+  const market = KLINE_MARKET_MAP[marketKey] || "cn_equity";
+  const timeframe = KLINE_TIMEFRAME_MAP[timeframeKey] || "101";
+  return [
+    market,
+    timeframe,
+    String(symbol || ""),
+    String(windowSize || KLINE_TRAINING_WINDOW_SIZE),
+    String(mode || "step_replay"),
+    String(endDate || ""),
+    String(entryTime || ""),
+    String(personalityType || ""),
+    String(gateKey || ""),
+    blind ? "blind" : "open"
+  ].join("|");
+}
+
+function buildHotPoolRequestSlot(prefix = "hot") {
+  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function takeQueuedKlineHotPoolSlice(params = {}) {
+  const queueKey = buildKlineHotPoolQueueKey(params);
+  const queue = klineHotPoolQueues[queueKey] || [];
+  const next = queue.shift();
+  if (!queue.length) delete klineHotPoolQueues[queueKey];
+  else klineHotPoolQueues[queueKey] = queue;
+  return next || null;
+}
+
+function queueKlineHotPoolSlice(params = {}, result = {}) {
+  if (!result || !result.ok || !(result.candles || []).length) return;
+  const queueKey = buildKlineHotPoolQueueKey(params);
+  const queue = klineHotPoolQueues[queueKey] || [];
+  queue.push(result);
+  while (queue.length > KLINE_HOT_POOL_QUEUE_LIMIT) queue.shift();
+  klineHotPoolQueues[queueKey] = queue;
+}
+
 async function fetchKlineTrainingSlice({
   marketKey = "cn",
   timeframeKey = "101",
@@ -792,10 +856,30 @@ async function fetchKlineTrainingSlice({
   personalityType = "",
   gateKey = "shi_shang_mo",
   blind = true,
-  seed = ""
+  seed = "",
+  hotPoolSlot = "",
+  useHotPoolQueue = true,
+  storeHotPoolResult = false
 } = {}) {
   const market = KLINE_MARKET_MAP[marketKey] || "cn_equity";
   const timeframe = KLINE_TIMEFRAME_MAP[timeframeKey] || "101";
+  const useHotPool = shouldUseKlineHotPool({ symbol, endDate, entryTime, blind });
+  const queueParams = {
+    marketKey,
+    timeframeKey,
+    symbol,
+    windowSize,
+    mode,
+    endDate,
+    entryTime,
+    personalityType,
+    gateKey,
+    blind
+  };
+  if (useHotPool && useHotPoolQueue && !storeHotPoolResult) {
+    const queuedSlice = takeQueuedKlineHotPoolSlice(queueParams);
+    if (queuedSlice) return queuedSlice;
+  }
   const cacheKey = buildKlineSliceCacheKey({
     marketKey,
     timeframeKey,
@@ -807,9 +891,9 @@ async function fetchKlineTrainingSlice({
     personalityType,
     gateKey,
     blind,
-    seed
+    seed: useHotPool ? (hotPoolSlot || buildHotPoolRequestSlot("fetch")) : seed
   });
-  if (klineSliceCache[cacheKey]) return klineSliceCache[cacheKey];
+  if (!useHotPool && klineSliceCache[cacheKey]) return klineSliceCache[cacheKey];
   if (klineSliceRequests[cacheKey]) return klineSliceRequests[cacheKey];
   const query = [
     `market=${encodeURIComponent(market)}`,
@@ -822,20 +906,42 @@ async function fetchKlineTrainingSlice({
     personalityType ? `personality_type=${encodeURIComponent(personalityType)}` : "",
     gateKey ? `gate=${encodeURIComponent(gateKey)}` : "",
     `blind=${blind ? "1" : "0"}`,
-    seed ? `seed=${encodeURIComponent(seed)}` : ""
+    !useHotPool && seed ? `seed=${encodeURIComponent(seed)}` : "",
+    useHotPool ? `pool_slot=${encodeURIComponent(hotPoolSlot || buildHotPoolRequestSlot("pool"))}` : ""
   ].filter(Boolean).join("&");
   klineSliceRequests[cacheKey] = (async () => {
     try {
       const useProductionFallback = !hasConfiguredApiBase();
-      const result = await request({
-        path: `/api/v1/kline-history/slice?${query}`,
-        apiBaseOverride: useProductionFallback ? PRODUCTION_API_BASE : "",
-        allowUnconfigured: useProductionFallback,
-        timeout: 25000
-      });
-      const normalized = normalizeKlineTrainingSliceResult(result, { market, timeframe, symbol, windowSize });
+      const requestSlice = async (path) => {
+        const result = await request({
+          path,
+          apiBaseOverride: useProductionFallback ? PRODUCTION_API_BASE : "",
+          allowUnconfigured: useProductionFallback,
+          timeout: 25000
+        });
+        return normalizeKlineTrainingSliceResult(result, { market, timeframe, symbol, windowSize });
+      };
+      const hotPoolPath = `/api/v1/kline-history/hot-slice?${query}`;
+      const normalPath = `/api/v1/kline-history/slice?${query}`;
+      if (useHotPool) {
+        try {
+          const hotPoolNormalized = await requestSlice(hotPoolPath);
+          if (hotPoolNormalized.ok && (hotPoolNormalized.candles || []).length >= KLINE_MIN_CANDLES) {
+            if (storeHotPoolResult) queueKlineHotPoolSlice(queueParams, hotPoolNormalized);
+            return hotPoolNormalized;
+          }
+        } catch (hotPoolError) {
+          saveConnectionFallback(hotPoolError, "历史数据热池连接未完成");
+        }
+      }
+      const normalized = await requestSlice(normalPath);
       if (normalized.ok && (normalized.candles || []).length >= KLINE_MIN_CANDLES) {
-        klineSliceCache[cacheKey] = normalized;
+        if (useHotPool && storeHotPoolResult) {
+          queueKlineHotPoolSlice(queueParams, normalized);
+        }
+        if (!useHotPool) {
+          klineSliceCache[cacheKey] = normalized;
+        }
       }
       return normalized;
     } catch (error) {
@@ -875,28 +981,159 @@ function prefetchKlineTrainingSlices({
   gateKey = "shi_shang_mo",
   blind = true,
   scenarioId = "scene-fast-001",
-  seed = ""
+  seed = "",
+  seedQueue = [],
+  prefetchDepth = 1
 } = {}) {
-  const sliceSeed = seed || scenarioId || "scene-fast-001";
   const uniqueTimeframes = Array.from(new Set(timeframes));
-  return Promise.all(uniqueTimeframes.map((timeframeKey) => (
-    fetchKlineTrainingSlice({
+  const requests = [];
+  const useHotPool = shouldUseKlineHotPool({ symbol, blind });
+  const hotPoolDepth = Math.max(1, Math.min(12, Number(prefetchDepth || 1)));
+  if (useHotPool) {
+    uniqueTimeframes.forEach((timeframeKey) => {
+      for (let index = 0; index < hotPoolDepth; index += 1) {
+        requests.push(fetchKlineTrainingSlice({
+          marketKey,
+          timeframeKey,
+          symbol,
+          windowSize,
+          mode,
+          gateKey,
+          blind,
+          hotPoolSlot: buildHotPoolRequestSlot(`prefetch-${timeframeKey}-${index}`),
+          useHotPoolQueue: false,
+          storeHotPoolResult: true
+        }).catch((error) => ({
+          ok: false,
+          timeframeKey,
+          source: "local_demo",
+          reason: "network_error",
+          errorMessage: getTechnicalMessage(error)
+        })));
+      }
+    });
+    return Promise.all(requests);
+  }
+  const sliceSeeds = buildKlinePrefetchSeedQueue({ seed, scenarioId, seedQueue, prefetchDepth });
+  uniqueTimeframes.forEach((timeframeKey) => {
+    sliceSeeds.forEach((sliceSeed) => {
+      requests.push(fetchKlineTrainingSlice({
+        marketKey,
+        timeframeKey,
+        symbol,
+        windowSize,
+        mode,
+        gateKey,
+        blind,
+        seed: sliceSeed
+      }).catch((error) => ({
+        ok: false,
+        timeframeKey,
+        seed: sliceSeed,
+        source: "local_demo",
+        reason: "network_error",
+        errorMessage: getTechnicalMessage(error)
+      })));
+    });
+  });
+  return Promise.all(requests);
+}
+
+function getTradeReviewMarketLabel(marketKey = "cn") {
+  const key = String(marketKey || "").toLowerCase();
+  if (["cn", "cn_equity", "ashare", "a_share"].includes(key)) return "A股";
+  if (["hk", "hk_equity"].includes(key)) return "港股";
+  if (["us", "us_equity"].includes(key)) return "美股";
+  if (["futures", "future"].includes(key)) return "期货";
+  if (["crypto", "coin"].includes(key)) return "数字货币";
+  return "市场";
+}
+
+function getTradeReviewTimeframeLabel(timeframeKey = "1d") {
+  const key = String(timeframeKey || "").toLowerCase();
+  if (["101", "1d", "day", "daily"].includes(key)) return "日线";
+  if (["60m", "60", "60min"].includes(key)) return "60分钟";
+  if (["30m", "30", "30min"].includes(key)) return "30分钟";
+  if (["5m", "5", "5min"].includes(key)) return "5分钟";
+  if (["15m", "15", "15min"].includes(key)) return "15分钟";
+  return timeframeKey || "周期";
+}
+
+async function fetchTradeReviewMarketContext({
+  marketKey = "cn",
+  timeframeKey = "1d",
+  symbol = "",
+  tradeDate = "",
+  windowSize = KLINE_TRAINING_WINDOW_SIZE
+} = {}) {
+  const safeSymbol = String(symbol || "").trim();
+  const marketLabel = getTradeReviewMarketLabel(marketKey);
+  const timeframeLabel = getTradeReviewTimeframeLabel(timeframeKey);
+  if (!safeSymbol) {
+    return {
+      status: "missing_symbol",
       marketKey,
+      marketLabel,
       timeframeKey,
-      symbol,
-      windowSize,
-      mode,
-      gateKey,
-      blind,
-      seed: sliceSeed
-    }).catch((error) => ({
-      ok: false,
+      timeframeLabel,
+      tradeDate,
+      symbolMasked: "",
+      sourceStatus: "待补充标的后回看",
+      sourceNote: "补充代码、周期和日期后，系统会提前回看真实历史位置。"
+    };
+  }
+
+  const result = await fetchKlineTrainingSlice({
+    marketKey,
+    timeframeKey,
+    symbol: safeSymbol,
+    windowSize,
+    endDate: tradeDate,
+    mode: "step_replay",
+    gateKey: "shi_shang_mo",
+    blind: false,
+    seed: ["trade-review", marketKey, timeframeKey, safeSymbol, tradeDate || "latest"].join("-")
+  });
+  const slice = result.slice || {};
+  const timeframe = slice.timeframe || {};
+  const dataRange = slice.data_range || slice.dataRange || {};
+  const candleCount = (result.candles || []).length;
+  if (!result.ok || candleCount < KLINE_MIN_CANDLES) {
+    return {
+      status: result.reason === "empty_slice" ? "missing_cache" : "failed",
+      marketKey,
+      marketLabel,
       timeframeKey,
-      source: "local_demo",
-      reason: "network_error",
-      errorMessage: getTechnicalMessage(error)
-    }))
-  )));
+      timeframeLabel,
+      tradeDate,
+      symbolMasked: safeSymbol,
+      sourceStatus: result.errorMessage || "历史回看暂未完成",
+      sourceNote: "本地复盘可先保存，历史位置稍后可继续补充。",
+      source: result.source || "",
+      candleCount
+    };
+  }
+
+  return {
+    status: "ready",
+    marketKey,
+    marketLabel: ((slice.market || {}).label) || marketLabel,
+    timeframeKey: typeof timeframe === "object" ? (timeframe.key || timeframeKey) : (timeframe || timeframeKey),
+    timeframeLabel: typeof timeframe === "object" ? (timeframe.label || timeframeLabel) : timeframeLabel,
+    tradeDate,
+    symbolMasked: safeSymbol,
+    positionLabel: "历史位置已回看",
+    sourceStatus: "历史位置已回看",
+    sourceNote: "已按市场、标的、周期和记录日期回看当时历史片段。",
+    source: slice.source || result.source || "server_cache",
+    cacheStatus: slice.cache_status || "",
+    deterministicCache: Boolean(slice.deterministic_cache),
+    dataStart: dataRange.start || "",
+    dataEnd: dataRange.end || "",
+    candleCount,
+    rulesSummary: ((slice.rules || {}).settlement || "") ? `${(slice.rules || {}).settlement} · ${((slice.rules || {}).boundaryNotes || []).slice(0, 1).join("")}` : "",
+    reviewPrompt: ((slice.training || {}).prompt) || ""
+  };
 }
 
 function pickKlineNumber(...values) {
@@ -995,6 +1232,7 @@ module.exports = {
   pullTrainingPrescription,
   syncShareAttribution,
   fetchKlineTrainingSlice,
+  fetchTradeReviewMarketContext,
   prefetchKlineTrainingSlices,
   normalizeKlineTrainingSliceResult
 };

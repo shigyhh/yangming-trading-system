@@ -12,9 +12,12 @@ const {
   normalizeHistoryCandles,
   getNextKlineMindSliceSeed,
   getPersonalityKlineDrill,
+  getInitialKlineVisibleCount,
   startKlineTrainingRuntime,
   advanceKlineTrainingRuntime,
   recordKlineTrainingDecision,
+  setKlineRuntimeChartZoom,
+  setKlineRuntimeViewportPan,
   buildKlineTrainingRecordPatch
 } = require("./index");
 
@@ -260,17 +263,99 @@ assert.strictEqual(warmupRuntime.currentIndex, 7);
 assert.strictEqual(warmupRuntime.visibleCandles.length, 8);
 assert.strictEqual(warmupRuntime.activeCandle.key, warmupRuntime.visibleCandles[7].key);
 assert.strictEqual(
-  warmupRuntime.visibleCandles.some((item) => Number(item.sourceIndex) > warmupRuntime.currentIndex),
+  warmupRuntime.visibleCandles.some((item) => Number(item.runtimeIndex) > warmupRuntime.currentIndex),
   false
 );
 assert.ok(warmupRuntime.chartBoardStyle.includes("width:"));
 assert.ok(warmupRuntime.chartBoardStyle.includes("min-width: 100%"));
-assert.strictEqual(warmupRuntime.chartScrollLeft, 99999);
+assert.strictEqual(warmupRuntime.chartScrollLeft, 0);
 assert.strictEqual(warmupRuntime.indicatorPanel.type, "vol");
 assert.strictEqual(warmupRuntime.indicatorPanel.items.length, 8);
 assert.ok(warmupRuntime.indicatorOverlay.ma5.length > 0);
 assert.strictEqual(warmupRuntime.indicatorOverlay.bollUpper.length, 0);
 assert.strictEqual(warmupRuntime.mustDecide, false);
+
+const zoomedWarmupRuntime = setKlineRuntimeChartZoom(warmupRuntime, "focus");
+assert.strictEqual(zoomedWarmupRuntime.currentIndex, warmupRuntime.currentIndex);
+assert.strictEqual(zoomedWarmupRuntime.activeCandle.key, warmupRuntime.activeCandle.key);
+assert.strictEqual(zoomedWarmupRuntime.visibleCandles.length, warmupRuntime.visibleCandles.length);
+assert.strictEqual(zoomedWarmupRuntime.chartZoomKey, "focus");
+
+const anchoredRuntime = startKlineTrainingRuntime(defaultLongSession, {
+  trainingSessionId: "runtime-anchor-001",
+  initialVisibleCount: 48
+});
+const anchoredZoomRuntime = setKlineRuntimeChartZoom(anchoredRuntime, "focus");
+assert.strictEqual(anchoredZoomRuntime.currentIndex, anchoredRuntime.currentIndex);
+assert.strictEqual(anchoredZoomRuntime.activeCandle.key, anchoredRuntime.activeCandle.key);
+assert.strictEqual(anchoredZoomRuntime.chartScrollLeft, 0);
+assert.strictEqual(anchoredZoomRuntime.chartViewport.rightBoundaryIndex, anchoredRuntime.currentIndex);
+assert.strictEqual(
+  Number(anchoredZoomRuntime.visibleCandles[anchoredZoomRuntime.visibleCandles.length - 1].runtimeIndex),
+  anchoredRuntime.currentIndex
+);
+
+const initialTrainingContext = getInitialKlineVisibleCount(defaultLongSession);
+assert.strictEqual(initialTrainingContext, 120);
+const expandedContextRuntime = startKlineTrainingRuntime(defaultLongSession, {
+  trainingSessionId: "runtime-expanded-context-001",
+  initialVisibleCount: initialTrainingContext
+});
+assert.strictEqual(expandedContextRuntime.visibleCandles.length, 120);
+assert.strictEqual(expandedContextRuntime.currentIndex, 119);
+assert.strictEqual(
+  expandedContextRuntime.visibleCandles.some((item) => Number(item.runtimeIndex) > expandedContextRuntime.currentIndex),
+  false
+);
+
+const overviewFullRuntime = startKlineTrainingRuntime(overviewSession, {
+  trainingSessionId: "runtime-overview-full-001",
+  initialVisibleCount: 180
+});
+assert.strictEqual(overviewFullRuntime.chartZoomKey, "overview");
+assert.strictEqual(overviewFullRuntime.visibleCandles.length, 180);
+assert.strictEqual(Number(overviewFullRuntime.visibleCandles[0].runtimeIndex), 0);
+assert.strictEqual(
+  Number(overviewFullRuntime.visibleCandles[overviewFullRuntime.visibleCandles.length - 1].runtimeIndex),
+  179
+);
+
+const professionalViewportRuntime = startKlineTrainingRuntime(defaultLongSession, {
+  trainingSessionId: "runtime-professional-viewport-001",
+  initialVisibleCount: 150
+});
+assert.strictEqual(professionalViewportRuntime.currentIndex, 149);
+assert.strictEqual(
+  Number(professionalViewportRuntime.visibleCandles[professionalViewportRuntime.visibleCandles.length - 1].runtimeIndex),
+  professionalViewportRuntime.currentIndex
+);
+assert.strictEqual(
+  professionalViewportRuntime.visibleCandles.some((item) => Number(item.runtimeIndex) > professionalViewportRuntime.currentIndex),
+  false
+);
+const professionalZoomOutRuntime = setKlineRuntimeChartZoom(professionalViewportRuntime, "overview");
+assert.ok(professionalZoomOutRuntime.visibleCandles.length > professionalViewportRuntime.visibleCandles.length);
+assert.strictEqual(
+  Number(professionalZoomOutRuntime.visibleCandles[professionalZoomOutRuntime.visibleCandles.length - 1].runtimeIndex),
+  professionalZoomOutRuntime.currentIndex
+);
+assert.strictEqual(Number(professionalZoomOutRuntime.visibleCandles[0].runtimeIndex), 0);
+const professionalPannedRuntime = setKlineRuntimeViewportPan(professionalViewportRuntime, 18);
+assert.strictEqual(professionalPannedRuntime.chartPanOffset, 18);
+assert.strictEqual(
+  Number(professionalPannedRuntime.visibleCandles[professionalPannedRuntime.visibleCandles.length - 1].runtimeIndex),
+  professionalViewportRuntime.currentIndex - 18
+);
+assert.strictEqual(
+  professionalPannedRuntime.visibleCandles.some((item) => Number(item.runtimeIndex) > professionalPannedRuntime.currentIndex),
+  false
+);
+const professionalOverPannedRuntime = setKlineRuntimeViewportPan(professionalViewportRuntime, 999);
+assert.strictEqual(Number(professionalOverPannedRuntime.visibleCandles[0].runtimeIndex), 0);
+assert.strictEqual(
+  professionalOverPannedRuntime.chartPanOffset,
+  professionalOverPannedRuntime.chartViewport.maxPanOffset
+);
 
 const rsiRuntime = startKlineTrainingRuntime(demoSession, {
   trainingSessionId: "runtime-rsi-001",

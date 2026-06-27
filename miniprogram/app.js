@@ -36,7 +36,8 @@ function setupUpdateManager() {
 function warmKlineTrainingSlices() {
   prefetchKlineTrainingSlices({
     marketKey: "cn",
-    scenarioId: "scene-fast-001"
+    timeframes: ["1d", "60m", "30m"],
+    prefetchDepth: 5
   }).catch(() => {});
 }
 

@@ -22,6 +22,7 @@ const {
 const { MARKET_PRESETS, TIMEFRAME_PRESETS } = require("../../modules/kline-simulator/index");
 const {
   buildTradeReviewUrl,
+  fetchTradeReviewMarketContext,
   requestTradeReviewOcrDraft,
   syncLocalState,
   syncTradeReviewRecord,
@@ -52,15 +53,67 @@ function defaultForm() {
   };
 }
 
-function buildReviewFlow(form = {}, report = null) {
+function defaultMarketContextStatus() {
+  return {
+    state: "idle",
+    text: "确认代码、日期和周期后，系统会提前回看历史位置。"
+  };
+}
+
+function buildMarketContextKey(form = {}) {
+  return [
+    form.marketKey || "cn",
+    form.timeframeKey || "1d",
+    form.tradeDate || "",
+    String(form.symbol || "").trim()
+  ].join("|");
+}
+
+function shouldPrefetchMarketContext(form = {}) {
+  return !!String(form.symbol || "").trim() && !!form.tradeDate && !!form.timeframeKey;
+}
+
+function buildMarketContextStatus(context = {}) {
+  if (context.status === "ready") {
+    const range = context.dataStart && context.dataEnd ? ` · ${context.dataStart} 至 ${context.dataEnd}` : "";
+    return {
+      state: "ready",
+      text: `历史位置已回看${range}`
+    };
+  }
+  if (context.status === "missing_symbol") {
+    return {
+      state: "missing",
+      text: "补充代码后回看当时位置。"
+    };
+  }
+  if (context.status === "missing_cache") {
+    return {
+      state: "pending",
+      text: "该标的历史缓存待载入，复盘可先保存。"
+    };
+  }
+  if (context.status === "failed") {
+    return {
+      state: "failed",
+      text: context.sourceStatus || "回看暂未完成，复盘可先保存。"
+    };
+  }
+  return defaultMarketContextStatus();
+}
+
+function buildReviewFlow(form = {}, report = null, marketContext = null) {
   const hasSource = !!form.screenshotPath || !!String(form.symbol || "").trim() || !!String(form.firstThought || "").trim();
   const hasConfirmed = !!String(form.firstThought || "").trim() && !!String(form.nextAction || "").trim();
   const hasReport = !!report;
+  const marketReady = (marketContext || {}).status === "ready";
   const matchText = hasReport
     ? (((report.historicalMatch || {}).sourceStatus) || "等待历史数据回看")
-    : hasConfirmed
-      ? "可先生成复盘，历史位置随后回看"
-      : "确认字段后回看当时位置";
+    : marketReady
+      ? ((marketContext || {}).sourceStatus || "历史位置已回看")
+      : hasConfirmed
+        ? "可先生成复盘，历史位置随后回看"
+        : "确认字段后回看当时位置";
   return [
     {
       key: "source",
@@ -83,8 +136,8 @@ function buildReviewFlow(form = {}, report = null) {
       number: "03",
       title: "回看当时位置",
       detail: matchText,
-      done: hasReport,
-      current: hasConfirmed && !hasReport
+      done: hasReport || marketReady,
+      current: hasConfirmed && !hasReport && !marketReady
     },
     {
       key: "review",
@@ -140,6 +193,10 @@ Page({
     latestReviewId: "",
     records: [],
     reviewFlow: buildReviewFlow(defaultForm(), null),
+    manualAnchorVisible: false,
+    marketContext: null,
+    marketContextKey: "",
+    marketContextStatus: defaultMarketContextStatus(),
     ocrStatus: {
       state: "idle",
       text: "截图字段以手动确认为准。"
@@ -172,6 +229,7 @@ Page({
       if (!path) return;
       this.setData({
         form: Object.assign({}, this.data.form, { screenshotPath: path }),
+        manualAnchorVisible: true,
         ocrStatus: {
           state: "loading",
           text: "正在请求识别草稿，字段仍需你确认。"
@@ -206,22 +264,34 @@ Page({
         if (fields.marketKey) patch.marketKey = fields.marketKey;
         if (fields.timeframeKey) patch.timeframeKey = fields.timeframeKey;
         this.setData({
-          form: Object.keys(patch).length ? Object.assign({}, this.data.form, patch) : this.data.form,
+          manualAnchorVisible: true,
           ocrDraft: draft,
           ocrStatus: {
             state: draft.status || "pending",
             text: draft.message || "识别草稿已生成，请继续手动确认。"
           }
         });
+        if (Object.keys(patch).length) this.patchForm(patch);
       })
       .catch(() => {
         this.setData({
+          manualAnchorVisible: true,
           ocrStatus: {
             state: "manual",
             text: "识别服务未连接，先手动确认字段。"
           }
         });
       });
+  },
+
+  showManualAnchor() {
+    this.setData({
+      manualAnchorVisible: true,
+      ocrStatus: {
+        state: "manual",
+        text: "可直接填写代码、日期和周期，和截图复盘共用同一回看逻辑。"
+      }
+    });
   },
 
   selectMarket(e) {
@@ -297,11 +367,74 @@ Page({
   },
 
   patchForm(patch) {
+    const previousKey = buildMarketContextKey(this.data.form || {});
     const nextForm = Object.assign({}, this.data.form, patch || {});
+    const nextKey = buildMarketContextKey(nextForm);
+    const shouldRefreshMarketContext = previousKey !== nextKey && (
+      Object.prototype.hasOwnProperty.call(patch || {}, "marketKey") ||
+      Object.prototype.hasOwnProperty.call(patch || {}, "timeframeKey") ||
+      Object.prototype.hasOwnProperty.call(patch || {}, "tradeDate") ||
+      Object.prototype.hasOwnProperty.call(patch || {}, "symbol")
+    );
     this.setData({
       form: nextForm,
-      reviewFlow: buildReviewFlow(nextForm, this.data.report)
+      reviewFlow: buildReviewFlow(nextForm, this.data.report, this.data.marketContext)
     });
+    if (!shouldRefreshMarketContext) return;
+    if (!shouldPrefetchMarketContext(nextForm)) {
+      this.setData({
+        marketContext: null,
+        marketContextKey: nextKey,
+        marketContextStatus: defaultMarketContextStatus(),
+        reviewFlow: buildReviewFlow(nextForm, this.data.report, null)
+      });
+      return;
+    }
+    this.scheduleMarketContextPrefetch(nextForm, nextKey);
+  },
+
+  scheduleMarketContextPrefetch(form, key = buildMarketContextKey(form)) {
+    if (this.marketContextTimer) clearTimeout(this.marketContextTimer);
+    this.setData({
+      marketContextKey: key,
+      marketContextStatus: {
+        state: "loading",
+        text: "正在回看当时历史位置。"
+      }
+    });
+    this.marketContextTimer = setTimeout(() => {
+      this.prefetchMarketContext(form, key);
+    }, 650);
+  },
+
+  prefetchMarketContext(form, key) {
+    fetchTradeReviewMarketContext({
+      marketKey: form.marketKey,
+      timeframeKey: form.timeframeKey,
+      symbol: form.symbol,
+      tradeDate: form.tradeDate,
+      windowSize: 150
+    })
+      .then((context) => {
+        if (this.data.marketContextKey !== key) return;
+        this.setData({
+          marketContext: context,
+          marketContextStatus: buildMarketContextStatus(context),
+          reviewFlow: buildReviewFlow(this.data.form, this.data.report, context)
+        });
+      })
+      .catch(() => {
+        if (this.data.marketContextKey !== key) return;
+        const context = {
+          status: "failed",
+          sourceStatus: "回看暂未完成，复盘可先保存。"
+        };
+        this.setData({
+          marketContext: context,
+          marketContextStatus: buildMarketContextStatus(context),
+          reviewFlow: buildReviewFlow(this.data.form, this.data.report, context)
+        });
+      });
   },
 
   toggleAdvanced() {
@@ -333,6 +466,7 @@ Page({
       exitReason: form.exitReason || form.afterReaction || (form.exitPrepared === "yes" ? "已提前写边界条件" : "边界条件未写清"),
       planBoundary: form.planBoundary || (form.exitPrepared === "yes" ? "已提前写边界条件" : "边界待补充"),
       reviewNote: form.reviewNote || form.nextAction,
+      marketContext: this.data.marketContext || null,
       ocrDraft: this.data.ocrDraft || null
     });
     const report = buildTradeReview(formForReview, {
@@ -358,7 +492,7 @@ Page({
           closure: buildTradeReviewClosure(latest, nextReminder),
           latestReviewId: (latest || {}).id || "",
           records: (nextState.records || []).slice().reverse().slice(0, 5).map(decorateReport),
-          reviewFlow: buildReviewFlow(this.data.form, latest)
+          reviewFlow: buildReviewFlow(this.data.form, latest, this.data.marketContext)
         });
       })
       .catch(() => {
@@ -371,7 +505,7 @@ Page({
       closure: buildTradeReviewClosure(state.latest, reminder),
       latestReviewId: (state.latest || {}).id || "",
       records: (state.records || []).slice().reverse().slice(0, 5).map(decorateReport),
-      reviewFlow: buildReviewFlow(this.data.form, state.latest),
+      reviewFlow: buildReviewFlow(this.data.form, state.latest, this.data.marketContext),
       showResultDetail: false
     });
     wx.showToast({ title: "已写入活镜", icon: "success" });
@@ -384,8 +518,16 @@ Page({
       report: null,
       closure: null,
       latestReviewId: "",
-      reviewFlow: buildReviewFlow(form, null)
+      manualAnchorVisible: false,
+      marketContext: null,
+      marketContextKey: "",
+      marketContextStatus: defaultMarketContextStatus(),
+      reviewFlow: buildReviewFlow(form, null, null)
     });
+  },
+
+  onUnload() {
+    if (this.marketContextTimer) clearTimeout(this.marketContextTimer);
   },
 
   goKlineTraining() {

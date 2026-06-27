@@ -47,12 +47,49 @@
       <view class="upload-preview" wx:if="{{form.screenshotPath}}">
         <image src="{{form.screenshotPath}}" mode="aspectFill" aria-label="交易复盘截图预览" />
       </view>
-      <view wx:else class="upload-empty">支持 K 线、分时、交易记录、持仓截图；也可以先手动补充。</view>
-      <button class="secondary-btn" bindtap="chooseImage">{{form.screenshotPath ? '重新选择记录' : '添加截图记录'}}</button>
+      <view wx:else class="upload-empty">留住一条真实记录；也可以先手动填写代码和日期。</view>
+      <view class="upload-actions">
+        <button class="secondary-btn" bindtap="chooseImage">{{form.screenshotPath ? '重新选择记录' : '添加截图记录'}}</button>
+        <button class="ghost-btn" bindtap="showManualAnchor">手动填写代码</button>
+      </view>
       <view class="upload-note">{{ocrStatus.text}}</view>
     </view>
 
-    <view wx:if="{{form.screenshotPath}}" class="quick-review-card card">
+    <view wx:if="{{manualAnchorVisible || form.screenshotPath || form.symbol}}" class="anchor-card card">
+      <view class="anchor-head">
+        <text>确认锚点</text>
+        <view class="anchor-status {{marketContextStatus.state}}">{{marketContextStatus.text}}</view>
+      </view>
+
+      <view class="field-grid">
+        <view>
+          <text>记录日期</text>
+          <picker mode="date" value="{{form.tradeDate}}" bindchange="changeDate">
+            <view>{{form.tradeDate}}</view>
+          </picker>
+        </view>
+        <view>
+          <text>标的/合约</text>
+          <input value="{{form.symbol}}" bindinput="inputSymbol" placeholder="代码 / 合约 / 币种" />
+        </view>
+      </view>
+
+      <view class="field-label">数据品类</view>
+      <scroll-view scroll-x class="chip-strip" show-scrollbar="{{false}}">
+        <button wx:for="{{markets}}" wx:key="key" class="{{form.marketKey === item.key ? 'active' : ''}}" data-key="{{item.key}}" bindtap="selectMarket">{{item.label}}</button>
+      </scroll-view>
+
+      <view class="field-label">周期切片</view>
+      <scroll-view scroll-x class="chip-strip" show-scrollbar="{{false}}">
+        <button wx:for="{{timeframes}}" wx:key="key" class="{{form.timeframeKey === item.key ? 'active' : ''}}" data-key="{{item.key}}" bindtap="selectTimeframe">{{item.label}}</button>
+      </scroll-view>
+
+      <view wx:if="{{marketContext && marketContext.status === 'ready'}}" class="anchor-meta">
+        {{marketContext.marketLabel}} · {{marketContext.timeframeLabel}} · {{marketContext.candleCount}} 根
+      </view>
+    </view>
+
+    <view wx:if="{{form.screenshotPath || manualAnchorVisible || form.symbol}}" class="quick-review-card card">
       <text>60 秒真实复盘</text>
       <view>只回答三件事：第一念是什么，是否在计划内，下一次守什么。</view>
 
@@ -82,22 +119,22 @@
       <input wx:if="{{showAdvanced}}" value="{{form.afterReaction}}" bindinput="inputAfterReaction" placeholder="行动后第一反应是什么？例：后悔 / 松一口气 / 想再来一次" />
     </view>
 
-    <view wx:if="{{!report && !form.screenshotPath}}" class="report-gate-hint">
+    <view wx:if="{{!report && !form.screenshotPath && !manualAnchorVisible && !form.symbol}}" class="report-gate-hint">
       先留住一条真实记录，再进入第一念；完成后生成你的第一面活镜。
     </view>
-    <view wx:elif="{{!report && form.screenshotPath && !form.firstThought}}" class="report-gate-hint">
+    <view wx:elif="{{!report && (form.screenshotPath || manualAnchorVisible || form.symbol) && !form.firstThought}}" class="report-gate-hint">
       记录已留住。下一步，只写当时最强的一念。
     </view>
-    <view wx:elif="{{!report && form.screenshotPath && form.firstThought && !form.nextAction}}" class="report-gate-hint">
+    <view wx:elif="{{!report && (form.screenshotPath || manualAnchorVisible || form.symbol) && form.firstThought && !form.nextAction}}" class="report-gate-hint">
       第一念已写下。最后补一句下一次守什么。
     </view>
 
-    <view wx:if="{{form.screenshotPath && form.firstThought && form.nextAction}}" class="primary-stack quick-actions">
+    <view wx:if="{{(form.screenshotPath || manualAnchorVisible || form.symbol) && form.firstThought && form.nextAction}}" class="primary-stack quick-actions">
       <button class="primary-btn" bindtap="generateReview">生成活镜复盘</button>
       <button class="ghost-btn" bindtap="toggleAdvanced">{{showAdvanced ? '收起细节' : '补充细节'}}</button>
     </view>
 
-    <view wx:if="{{showAdvanced}}" class="form-card card">
+    <view wx:if="{{showAdvanced && !manualAnchorVisible && !form.screenshotPath && !form.symbol}}" class="form-card card">
       <text>历史数据锚点</text>
       <view class="field-label">数据品类</view>
       <scroll-view scroll-x class="chip-strip" show-scrollbar="{{false}}">

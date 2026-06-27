@@ -31,9 +31,12 @@ const {
   buildKlineMindRecord,
   buildOneThoughtEvent,
   getNextKlineMindSliceSeed,
+  getInitialKlineVisibleCount,
   startKlineTrainingRuntime,
   advanceKlineTrainingRuntime,
   recordKlineTrainingDecision,
+  setKlineRuntimeChartZoom,
+  setKlineRuntimeViewportPan,
   setKlineRuntimeIndicator,
   setKlineRuntimeMainIndicator,
   buildKlineTrainingRecordPatch
@@ -55,6 +58,8 @@ const DECISION_ACTIONS = [
 ];
 
 const CHART_ZOOM_ORDER = ["overview", "wide", "standard", "focus"];
+const SLICE_SWITCH_LIMIT = 5;
+const SLICE_SWITCH_COOLDOWN_MS = 3000;
 
 function inferReactionDirection(firstReaction) {
   const value = String(firstReaction || "");
@@ -201,15 +206,6 @@ function buildRuntimeView(runtime = null) {
   };
 }
 
-function getInitialVisibleCount(session = {}) {
-  const candles = Array.isArray(session.candles) ? session.candles : [];
-  if (!candles.length) return 0;
-  const windowSize = Number(session.chartWindowSize || 150);
-  const safeWindowSize = Number.isFinite(windowSize) ? windowSize : 150;
-  const target = Math.max(24, Math.min(48, Math.floor(safeWindowSize / 3)));
-  return Math.min(candles.length, target);
-}
-
 function buildUnavailableHistorySlice(result = {}) {
   return {
     source: "server_unavailable",
@@ -253,6 +249,26 @@ function buildHistorySliceCacheKey(record = {}) {
   ].join("|");
 }
 
+function shouldCachePageHistorySlice(historySlice = {}) {
+  return !!(historySlice.candles && historySlice.candles.length)
+    && !historySlice.hot_pool
+    && !historySlice.hotPool;
+}
+
+function buildSliceRequestSlot(prefix = "page") {
+  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function buildFutureSliceSeeds(currentSeed = "scene-fast-001", depth = 3) {
+  const seeds = [];
+  let cursor = currentSeed || "scene-fast-001";
+  for (let index = 0; index < depth; index += 1) {
+    cursor = getNextKlineMindSliceSeed(cursor);
+    if (seeds.indexOf(cursor) < 0) seeds.push(cursor);
+  }
+  return seeds;
+}
+
 Page({
   data: {
     assessment: null,
@@ -271,6 +287,8 @@ Page({
     showBodySignal: false,
     selectedMainIndicatorKey: "ma",
     selectedIndicatorKey: "vol",
+    sliceSwitchCount: 0,
+    sliceSwitchLocked: false,
     tradeReviewUrl: ""
   },
 
@@ -279,6 +297,11 @@ Page({
     this.prefetchHistoryRequests = this.prefetchHistoryRequests || {};
     retryPendingKlineTrainingSync().catch(() => {});
     this.load();
+  },
+
+  onUnload() {
+    clearTimeout(this.sliceSwitchUnlockTimer);
+    this.sliceSwitchUnlockTimer = null;
   },
 
   load() {
@@ -332,7 +355,7 @@ Page({
     return startKlineTrainingRuntime(session, {
       trainingSessionId: `kline-session-${todayKey()}-${Date.now()}`,
       decisionInterval: 5,
-      initialVisibleCount: getInitialVisibleCount(session),
+      initialVisibleCount: getInitialKlineVisibleCount(session),
       initialMainIndicatorKey: this.data.selectedMainIndicatorKey || session.defaultMainIndicatorKey || "ma",
       initialIndicatorKey: this.data.selectedIndicatorKey || session.defaultIndicatorKey || "vol",
       sliceSeed: record.scenarioId || ((session.historySlice || {}).sliceSeed) || ((session.historySlice || {}).seed) || ""
@@ -400,11 +423,12 @@ Page({
       mode: "step_replay",
       gateKey: "shi_shang_mo",
       blind: true,
-      seed: baseRecord.scenarioId || ""
+      seed: baseRecord.scenarioId || "",
+      hotPoolSlot: buildSliceRequestSlot("active")
     }).then((result) => {
       if (this.latestHistoryRequestKey !== requestKey) return;
       const historySlice = buildMindHistorySlice(result);
-      if (historySlice.candles && historySlice.candles.length) {
+      if (shouldCachePageHistorySlice(historySlice)) {
         this.historySliceCache = Object.assign({}, this.historySliceCache || {}, { [cacheKey]: historySlice });
       }
       this.applyHistorySlice(baseRecord, historySlice);
@@ -427,10 +451,13 @@ Page({
         mode: "step_replay",
         gateKey: "shi_shang_mo",
         blind: true,
-        seed: nextRecord.scenarioId || ""
+        seed: nextRecord.scenarioId || "",
+        hotPoolSlot: buildSliceRequestSlot(`timeframe-${timeframeKey}`),
+        useHotPoolQueue: false,
+        storeHotPoolResult: true
       }).then((result) => {
         const historySlice = buildMindHistorySlice(result);
-        if (historySlice.candles && historySlice.candles.length) {
+        if (shouldCachePageHistorySlice(historySlice)) {
           this.historySliceCache = Object.assign({}, this.historySliceCache || {}, { [cacheKey]: historySlice });
         }
       }).finally(() => {
@@ -442,29 +469,33 @@ Page({
   },
 
   prefetchNextSlice(record = {}) {
-    const nextScenarioId = getNextKlineMindSliceSeed(record.scenarioId || "scene-fast-001");
-    const nextRecord = Object.assign({}, record, { scenarioId: nextScenarioId });
-    const cacheKey = buildHistorySliceCacheKey(nextRecord);
-    if ((this.historySliceCache || {})[cacheKey] || (this.prefetchHistoryRequests || {})[cacheKey]) return;
-    this.prefetchHistoryRequests = Object.assign({}, this.prefetchHistoryRequests || {}, { [cacheKey]: true });
-    fetchKlineTrainingSlice({
-      marketKey: nextRecord.marketKey || "cn_equity",
-      timeframeKey: nextRecord.timeframeKey || "1d",
-      symbol: nextRecord.symbol || "",
-      windowSize: KLINE_TRAINING_WINDOW_SIZE,
-      mode: "step_replay",
-      gateKey: "shi_shang_mo",
-      blind: true,
-      seed: nextScenarioId
-    }).then((result) => {
-      const historySlice = buildMindHistorySlice(result);
-      if (historySlice.candles && historySlice.candles.length) {
-        this.historySliceCache = Object.assign({}, this.historySliceCache || {}, { [cacheKey]: historySlice });
-      }
-    }).finally(() => {
-      const nextRequests = Object.assign({}, this.prefetchHistoryRequests || {});
-      delete nextRequests[cacheKey];
-      this.prefetchHistoryRequests = nextRequests;
+    buildFutureSliceSeeds(record.scenarioId || "scene-fast-001", 3).forEach((nextScenarioId) => {
+      const nextRecord = Object.assign({}, record, { scenarioId: nextScenarioId });
+      const cacheKey = buildHistorySliceCacheKey(nextRecord);
+      if ((this.historySliceCache || {})[cacheKey] || (this.prefetchHistoryRequests || {})[cacheKey]) return;
+      this.prefetchHistoryRequests = Object.assign({}, this.prefetchHistoryRequests || {}, { [cacheKey]: true });
+      fetchKlineTrainingSlice({
+        marketKey: nextRecord.marketKey || "cn_equity",
+        timeframeKey: nextRecord.timeframeKey || "1d",
+        symbol: nextRecord.symbol || "",
+        windowSize: KLINE_TRAINING_WINDOW_SIZE,
+        mode: "step_replay",
+        gateKey: "shi_shang_mo",
+        blind: true,
+        seed: nextScenarioId,
+        hotPoolSlot: buildSliceRequestSlot(`next-${nextScenarioId}`),
+        useHotPoolQueue: false,
+        storeHotPoolResult: true
+      }).then((result) => {
+        const historySlice = buildMindHistorySlice(result);
+        if (shouldCachePageHistorySlice(historySlice)) {
+          this.historySliceCache = Object.assign({}, this.historySliceCache || {}, { [cacheKey]: historySlice });
+        }
+      }).finally(() => {
+        const nextRequests = Object.assign({}, this.prefetchHistoryRequests || {});
+        delete nextRequests[cacheKey];
+        this.prefetchHistoryRequests = nextRequests;
+      });
     });
   },
 
@@ -502,11 +533,16 @@ Page({
 
   updateChartZoom(chartZoomKey) {
     if (!chartZoomKey) return;
-    const form = Object.assign({}, this.data.form, { chartZoomKey });
+    const currentRuntime = this.data.trainingRuntime;
+    const activeCandleKey = ((currentRuntime || {}).activeCandle || {}).key || ((this.data.form || {}).selectedCandleKey) || "";
+    const form = Object.assign({}, this.data.form, { chartZoomKey, selectedCandleKey: activeCandleKey });
     const session = this.buildSession(form);
-    const trainingRuntime = this.buildTrainingRuntime(session, form);
+    const trainingRuntime = currentRuntime
+      ? setKlineRuntimeChartZoom(currentRuntime, session.chartZoomKey || chartZoomKey)
+      : this.buildTrainingRuntime(session, form);
+    const selectedCandleKey = ((trainingRuntime || {}).activeCandle || {}).key || session.selectedCandleKey || activeCandleKey;
     this.setData({
-      form: Object.assign({}, form, { selectedCandleKey: session.selectedCandleKey }),
+      form: Object.assign({}, form, { selectedCandleKey }),
       session,
       trainingRuntime,
       runtimeView: buildRuntimeView(trainingRuntime)
@@ -526,6 +562,37 @@ Page({
     const safeIndex = index >= 0 ? index : 0;
     const nextIndex = Math.min(CHART_ZOOM_ORDER.length - 1, safeIndex + 1);
     this.updateChartZoom(CHART_ZOOM_ORDER[nextIndex]);
+  },
+
+  onChartPanStart(e) {
+    const touch = (e.touches || [])[0] || {};
+    const runtime = this.data.trainingRuntime || {};
+    this.chartPanStart = {
+      x: Number(touch.clientX || 0),
+      panOffset: Number(runtime.chartPanOffset || 0)
+    };
+  },
+
+  onChartPanMove(e) {
+    if (!this.chartPanStart || !this.data.trainingRuntime) return;
+    const touch = (e.touches || [])[0] || {};
+    const currentX = Number(touch.clientX || 0);
+    const dx = currentX - Number(this.chartPanStart.x || 0);
+    const viewport = (this.data.trainingRuntime || {}).chartViewport || {};
+    const barStepPx = Math.max(4, Number(viewport.barStepRpx || 8) / 2);
+    const deltaBars = Math.round(dx / barStepPx);
+    const nextRuntime = setKlineRuntimeViewportPan(
+      this.data.trainingRuntime,
+      Number(this.chartPanStart.panOffset || 0) + deltaBars
+    );
+    this.setData({
+      trainingRuntime: nextRuntime,
+      runtimeView: buildRuntimeView(nextRuntime)
+    });
+  },
+
+  onChartPanEnd() {
+    this.chartPanStart = null;
   },
 
   selectMainIndicator(e) {
@@ -582,6 +649,14 @@ Page({
   },
 
   switchSlice() {
+    if (this.data.historyLoading || this.data.sliceSwitchLocked) {
+      wx.showToast({ title: "稍候再换", icon: "none" });
+      return;
+    }
+    if (Number(this.data.sliceSwitchCount || 0) >= SLICE_SWITCH_LIMIT) {
+      wx.showToast({ title: "本次先练这一段", icon: "none" });
+      return;
+    }
     const currentForm = this.data.form || {};
     const scenarioId = getNextKlineMindSliceSeed(currentForm.scenarioId || "scene-fast-001");
     const form = Object.assign({}, currentForm, {
@@ -599,11 +674,15 @@ Page({
     this.setData({
       form: Object.assign({}, form, { selectedCandleKey: session.selectedCandleKey }),
       session,
-      trainingRuntime: null,
-      runtimeView: buildRuntimeView(),
+      sliceSwitchCount: Number(this.data.sliceSwitchCount || 0) + 1,
+      sliceSwitchLocked: true,
       showBodySignal: false
     });
-    this.loadServerHistorySlice(form);
+    clearTimeout(this.sliceSwitchUnlockTimer);
+    this.sliceSwitchUnlockTimer = setTimeout(() => {
+      this.setData({ sliceSwitchLocked: false });
+    }, SLICE_SWITCH_COOLDOWN_MS);
+    this.loadServerHistorySlice(form, { keepCurrentChart: true });
   },
 
   advanceRuntimeCandle() {

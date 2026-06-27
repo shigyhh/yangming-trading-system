@@ -58,7 +58,13 @@
               {{item.label}}
             </button>
           </view>
-          <button class="slice-change-btn" bindtap="switchSlice">换一段</button>
+          <button
+            class="slice-change-btn {{sliceSwitchLocked || historyLoading ? 'disabled' : ''}}"
+            disabled="{{sliceSwitchLocked || historyLoading}}"
+            bindtap="switchSlice"
+          >
+            换一段
+          </button>
         </view>
         <view class="chart-orientation-note">横屏训练更稳</view>
       </view>
@@ -68,7 +74,13 @@
           <view class="chart-stepper-control" bindtap="decreaseChartZoom">-</view>
           <view class="chart-stepper-control" bindtap="increaseChartZoom">+</view>
         </view>
-        <scroll-view class="wave-board-scroll" scroll-x="true" scroll-left="{{runtimeView.chartScrollLeft}}" enhanced="true" show-scrollbar="{{false}}">
+        <view
+          class="wave-board-scroll"
+          bindtouchstart="onChartPanStart"
+          bindtouchmove="onChartPanMove"
+          bindtouchend="onChartPanEnd"
+          bindtouchcancel="onChartPanEnd"
+        >
           <view class="chart-scroll-inner" style="{{runtimeView.chartBoardStyle}}">
             <view class="wave-board zoom-{{session.chartZoomKey}}">
               <view class="wave-board-content">
@@ -115,7 +127,7 @@
               </view>
             </view>
           </view>
-        </scroll-view>
+        </view>
         <view class="indicator-strip">
           <view
             wx:for="{{session.mainIndicatorOptions}}"

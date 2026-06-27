@@ -23,6 +23,7 @@ const {
   fetchLivingMirrorProfile,
   fetchTodayState,
   fetchKlineTrainingSlice,
+  fetchTradeReviewMarketContext,
   prefetchKlineTrainingSlices,
   normalizeKlineTrainingSliceResult,
   syncKlineTrainingRecord,
@@ -174,17 +175,121 @@ async function runKlineSliceTests() {
         slice: {
           source: "server_cache",
           timeframe: "30m",
-          candles: buildApiCandles(180, "2026-02")
+          candles: buildApiCandles(150, "2026-02")
         }
       }
     });
   };
-  const cachedSliceParams = { marketKey: "cn", timeframeKey: "30m", seed: "cache-test-001" };
+  const cachedSliceParams = { marketKey: "cn", symbol: "600519", timeframeKey: "30m", seed: "cache-test-001" };
   const firstCachedSlice = await fetchKlineTrainingSlice(cachedSliceParams);
   const secondCachedSlice = await fetchKlineTrainingSlice(cachedSliceParams);
   assert.strictEqual(firstCachedSlice.ok, true);
   assert.strictEqual(secondCachedSlice.ok, true);
   assert.strictEqual(cacheRequestCount, 1);
+
+  const hotPoolUrls = [];
+  global.wx.request = (options) => {
+    hotPoolUrls.push(options.url);
+    options.success({
+      statusCode: 200,
+      data: {
+        ok: true,
+        slice: {
+          source: "server_cache",
+          cache_status: "pool_hit",
+          hot_pool: true,
+          candles: buildApiCandles(150, "2026-08")
+        }
+      }
+    });
+  };
+  const hotPoolSlice = await fetchKlineTrainingSlice({
+    marketKey: "cn",
+    timeframeKey: "1d",
+    seed: "hot-client-001"
+  });
+  assert.strictEqual(hotPoolSlice.ok, true);
+  assert.strictEqual(hotPoolSlice.slice.cache_status, "pool_hit");
+  assert.ok(hotPoolUrls[0].includes("/api/v1/kline-history/hot-slice?"));
+  assert.ok(hotPoolUrls[0].includes("window=150"));
+
+  const hotQueueUrls = [];
+  let hotQueueIndex = 0;
+  global.wx.request = (options) => {
+    hotQueueIndex += 1;
+    hotQueueUrls.push(options.url);
+    options.success({
+      statusCode: 200,
+      data: {
+        ok: true,
+        slice: {
+          source: "server_cache",
+          cache_status: "pool_hit",
+          hot_pool: true,
+          candles: buildApiCandles(150, `2026-${String(hotQueueIndex).padStart(2, "0")}`)
+        }
+      }
+    });
+  };
+  const queuedPrefetch = await prefetchKlineTrainingSlices({
+    marketKey: "cn",
+    timeframes: ["60m"],
+    prefetchDepth: 2,
+    mode: "queue-random-test"
+  });
+  assert.strictEqual(queuedPrefetch.length, 2);
+  assert.strictEqual(hotQueueUrls.length, 2);
+  assert.ok(hotQueueUrls.every((url) => url.includes("/api/v1/kline-history/hot-slice?")));
+  const queuedFirst = await fetchKlineTrainingSlice({
+    marketKey: "cn",
+    timeframeKey: "60m",
+    mode: "queue-random-test"
+  });
+  const queuedSecond = await fetchKlineTrainingSlice({
+    marketKey: "cn",
+    timeframeKey: "60m",
+    mode: "queue-random-test"
+  });
+  assert.notStrictEqual(queuedFirst.candles[0].time, queuedSecond.candles[0].time);
+  assert.strictEqual(hotQueueUrls.length, 2);
+
+  const fallbackQueueUrls = [];
+  global.wx.request = (options) => {
+    fallbackQueueUrls.push(options.url);
+    if (options.url.includes("/api/v1/kline-history/hot-slice?")) {
+      options.success({ statusCode: 200, data: { ok: false, error: "接口不存在" } });
+      return;
+    }
+    options.success({
+      statusCode: 200,
+      data: {
+        ok: true,
+        slice: {
+          source: "server_cache",
+          candles: buildApiCandles(150, "2026-09")
+        }
+      }
+    });
+  };
+  const fallbackPrefetch = await fetchKlineTrainingSlice({
+    marketKey: "cn",
+    timeframeKey: "30m",
+    mode: "fallback-queue-test",
+    useHotPoolQueue: false,
+    storeHotPoolResult: true
+  });
+  assert.strictEqual(fallbackPrefetch.ok, true);
+  assert.strictEqual(fallbackQueueUrls.length, 2);
+  assert.ok(fallbackQueueUrls[0].includes("/api/v1/kline-history/hot-slice?"));
+  assert.ok(fallbackQueueUrls[1].includes("/api/v1/kline-history/slice?"));
+  const fallbackQueuedSlice = await fetchKlineTrainingSlice({
+    marketKey: "cn",
+    timeframeKey: "30m",
+    mode: "fallback-queue-test"
+  });
+  assert.strictEqual(fallbackQueuedSlice.ok, true);
+  assert.strictEqual(fallbackQueuedSlice.candles[0].time, "2026-09-01");
+  assert.strictEqual(fallbackQueueUrls.length, 2);
 
   const prefetchUrls = [];
   global.wx.request = (options) => {
@@ -195,7 +300,7 @@ async function runKlineSliceTests() {
         ok: true,
         slice: {
           source: "server_cache",
-          candles: buildApiCandles(180, "2026-05")
+          candles: buildApiCandles(150, "2026-05")
         }
       }
     });
@@ -212,6 +317,35 @@ async function runKlineSliceTests() {
   await fetchKlineTrainingSlice({ marketKey: "cn", timeframeKey: "60m", seed: "prefetch-test-001" });
   assert.strictEqual(prefetchUrls.length, 3);
 
+  const deepPrefetchUrls = [];
+  global.wx.request = (options) => {
+    deepPrefetchUrls.push(options.url);
+    options.success({
+      statusCode: 200,
+      data: {
+        ok: true,
+        slice: {
+          source: "server_cache",
+          candles: buildApiCandles(150, "2026-07")
+        }
+      }
+    });
+  };
+  const deepPrefetchResult = await prefetchKlineTrainingSlices({
+    marketKey: "cn",
+    symbol: "600519",
+    timeframes: ["1d", "30m"],
+    scenarioId: "prefetch-deep-001",
+    seedQueue: ["prefetch-deep-001", "prefetch-deep-002"],
+    prefetchDepth: 2
+  });
+  assert.strictEqual(deepPrefetchResult.length, 4);
+  assert.strictEqual(deepPrefetchUrls.length, 4);
+  assert.ok(deepPrefetchUrls.some((url) => url.includes("timeframe=101") && url.includes("seed=prefetch-deep-002")));
+  assert.ok(deepPrefetchUrls.some((url) => url.includes("timeframe=30m") && url.includes("seed=prefetch-deep-002")));
+  await fetchKlineTrainingSlice({ marketKey: "cn", symbol: "600519", timeframeKey: "30m", seed: "prefetch-deep-002" });
+  assert.strictEqual(deepPrefetchUrls.length, 4);
+
   global.wx.request = (options) => {
     requestedUrl = options.url;
     options.success({
@@ -220,13 +354,15 @@ async function runKlineSliceTests() {
         ok: true,
         slice: {
           source: "server_cache",
-          candles: buildApiCandles(180, "2026-03")
+          candles: buildApiCandles(150, "2026-03")
         }
       }
     });
   };
-  await fetchKlineTrainingSlice({ marketKey: "cn", timeframeKey: "1d" });
-  assert.ok(requestedUrl.includes("window=180"));
+  const defaultWindowSlice = await fetchKlineTrainingSlice({ marketKey: "cn", symbol: "000001", timeframeKey: "1d" });
+  assert.strictEqual(defaultWindowSlice.ok, true);
+  assert.strictEqual(defaultWindowSlice.candles.length, 150);
+  assert.ok(requestedUrl.includes("window=150"));
 
   resetStorage();
   delete storage.zhixing_api_base;
@@ -240,13 +376,18 @@ async function runKlineSliceTests() {
         ok: true,
         slice: {
           source: "server_cache",
-          candles: buildApiCandles(180, "2026-04")
+          candles: buildApiCandles(150, "2026-04")
         }
       }
     });
   };
-  const developFallbackSlice = await fetchKlineTrainingSlice({ marketKey: "cn", timeframeKey: "1d" });
-  assert.ok(requestedUrl.startsWith("https://xxjyxt.com/api/v1/kline-history/slice?"));
+  const developFallbackSlice = await fetchKlineTrainingSlice({
+    marketKey: "cn",
+    timeframeKey: "1d",
+    hotPoolSlot: "develop-fallback-test",
+    useHotPoolQueue: false
+  });
+  assert.ok(requestedUrl.startsWith("https://xxjyxt.com/api/v1/kline-history/hot-slice?"));
   assert.strictEqual(developFallbackSlice.ok, true);
 
   resetStorage();
@@ -254,7 +395,12 @@ async function runKlineSliceTests() {
   global.wx.request = (options) => {
     options.success({ statusCode: 200, data: { ok: true, slice: { source: "server_cache", candles: [] } } });
   };
-  const emptySlice = await fetchKlineTrainingSlice({ marketKey: "cn", timeframeKey: "30m" });
+  const emptySlice = await fetchKlineTrainingSlice({
+    marketKey: "cn",
+    timeframeKey: "30m",
+    hotPoolSlot: "empty-slice-test",
+    useHotPoolQueue: false
+  });
   assert.strictEqual(emptySlice.ok, false);
   assert.strictEqual(emptySlice.source, "local_demo");
   assert.strictEqual(emptySlice.reason, "empty_slice");
@@ -263,11 +409,78 @@ async function runKlineSliceTests() {
   global.wx.request = (options) => {
     options.fail({ errMsg: "network down" });
   };
-  const networkSlice = await fetchKlineTrainingSlice({ marketKey: "cn", timeframeKey: "60m" });
+  const networkSlice = await fetchKlineTrainingSlice({
+    marketKey: "cn",
+    timeframeKey: "60m",
+    hotPoolSlot: "network-slice-test",
+    useHotPoolQueue: false
+  });
   assert.strictEqual(networkSlice.ok, false);
   assert.strictEqual(networkSlice.source, "local_demo");
   assert.strictEqual(networkSlice.reason, "network_error");
   assert.ok(networkSlice.errorMessage.includes("network down"));
+}
+
+async function runTradeReviewMarketContextTests() {
+  resetStorage();
+  envVersion = "release";
+  let requestedUrl = "";
+  let requestCount = 0;
+  global.wx.request = (options) => {
+    requestCount += 1;
+    requestedUrl = options.url;
+    options.success({
+      statusCode: 200,
+      data: {
+        ok: true,
+        slice: {
+          source: "server_cache",
+          cache_status: "deterministic_hit",
+          deterministic_cache: true,
+          market: { label: "A股" },
+          timeframe: { key: "1d", label: "日线" },
+          data_range: {
+            start: "2026-01-01",
+            end: "2026-06-15"
+          },
+          rules: {
+            settlement: "T+1",
+            boundaryNotes: ["不可当日回转。"]
+          },
+          training: {
+            prompt: "只回看当时位置。"
+          },
+          candles: buildApiCandles(150, "2026-06")
+        }
+      }
+    });
+  };
+
+  const context = await fetchTradeReviewMarketContext({
+    marketKey: "cn",
+    timeframeKey: "1d",
+    symbol: "600519",
+    tradeDate: "2026-06-15",
+    windowSize: 150
+  });
+  assert.strictEqual(context.status, "ready");
+  assert.strictEqual(context.symbolMasked, "600519");
+  assert.strictEqual(context.cacheStatus, "deterministic_hit");
+  assert.strictEqual(context.deterministicCache, true);
+  assert.strictEqual(context.candleCount, 150);
+  assert.ok(requestedUrl.includes("/api/v1/kline-history/slice?"));
+  assert.strictEqual(requestedUrl.includes("/api/v1/kline-history/hot-slice?"), false);
+  assert.ok(requestedUrl.includes("symbol=600519"));
+  assert.ok(requestedUrl.includes("end_date=2026-06-15"));
+  assert.ok(requestedUrl.includes("blind=0"));
+
+  const missingSymbol = await fetchTradeReviewMarketContext({
+    marketKey: "cn",
+    timeframeKey: "1d",
+    tradeDate: "2026-06-15"
+  });
+  assert.strictEqual(missingSymbol.status, "missing_symbol");
+  assert.strictEqual(requestCount, 1);
 }
 
 async function runLivingMirrorProfileTests() {
@@ -728,6 +941,7 @@ async function runKlineSyncTests() {
 }
 
 runKlineSliceTests()
+  .then(runTradeReviewMarketContextTests)
   .then(runLivingMirrorProfileTests)
   .then(runLivingMirrorGrowthProjectionTests)
   .then(runTodayStateTests)

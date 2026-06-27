@@ -35,6 +35,7 @@ const klineMindWxml = readPage("kline-mind", "index.wxml");
 const klineMindJs = readPage("kline-mind", "index.js");
 const klineMindJson = readPage("kline-mind", "index.json");
 const tradeReviewWxml = readPage("trade-review", "index.wxml");
+const tradeReviewJs = readPage("trade-review", "index.js");
 const reportWxml = readPage("report", "index.wxml");
 const profileJs = readPage("profile", "index.js");
 const appJs = readFileSync(join(root, "miniprogram", "app.js"), "utf8");
@@ -148,6 +149,11 @@ assert.equal(livingMirrorJs.includes("updatedAt: profile.updatedAt ||"), false, 
 
 assert.ok(tradeReviewWxml.includes('wx:if="{{showAdvanced}}" class="record-flow card"'), "trade review flow explainer should be opt-in detail");
 assert.ok(tradeReviewWxml.includes('class="secondary-btn" bindtap="chooseImage"'), "trade review upload should be secondary to the generated review action");
+assert.ok(tradeReviewWxml.includes('bindtap="showManualAnchor"'), "trade review should support manual code/date anchors as the same review path");
+assert.ok(tradeReviewWxml.includes('class="anchor-card card"'), "trade review should expose one shared anchor confirmation card");
+assert.ok(tradeReviewWxml.includes("确认锚点"), "trade review should make manual and OCR market anchors explicit");
+assert.ok(tradeReviewJs.includes("fetchTradeReviewMarketContext"), "trade review should prefetch deterministic market context through the shared api helper");
+assert.ok(tradeReviewJs.includes("marketContext: this.data.marketContext || null"), "trade review generation should pass the shared market context into the review model");
 assert.ok(tradeReviewWxml.includes("只回答三件事"), "trade review should communicate the lightweight 60-second path");
 assert.ok(tradeReviewWxml.includes('class="primary-stack quick-actions"'), "trade review should make generated review the only dominant action row");
 assert.ok(tradeReviewWxml.includes("你的第一面活镜"), "trade review should explain the missing-material state as a mirror promise");
@@ -174,9 +180,9 @@ assert.equal(profileWxml.includes("统一档案ID"), false, "profile should not 
 assert.equal(profileWxml.includes("<text>助教承接</text>"), false, "profile should not present assistant handoff as a first-level product module");
 assert.ok(trainingWxml.includes('bindtap="toggleTrainingDepth"'), "training should expose detailed prescription only after the one-task first screen");
 assert.ok(trainingWxml.includes('wx:if="{{showTrainingDepth}}" class="training-depth"'), "training prescription, checklist, reflection, and completion actions should be folded below the first screen");
-assert.ok(tradeReviewWxml.includes('wx:if="{{form.screenshotPath}}" class="quick-review-card card"'), "trade review should reveal first-thought writing only after a real record is uploaded");
+assert.ok(tradeReviewWxml.includes('wx:if="{{form.screenshotPath || manualAnchorVisible || form.symbol}}" class="quick-review-card card"'), "trade review should reveal first-thought writing after screenshot or manual anchor starts");
 assert.ok(tradeReviewWxml.includes('wx:if="{{form.firstThought}}" class="quick-next-step"'), "trade review should reveal next-action fields after the first thought is written");
-assert.ok(tradeReviewWxml.includes('wx:if="{{form.screenshotPath && form.firstThought && form.nextAction}}" class="primary-stack quick-actions"'), "trade review should not show the generate action until upload, first thought, and next action are present");
+assert.ok(tradeReviewWxml.includes('wx:if="{{(form.screenshotPath || manualAnchorVisible || form.symbol) && form.firstThought && form.nextAction}}" class="primary-stack quick-actions"'), "trade review should not show the generate action until source, first thought, and next action are present");
 assert.ok(tradeReviewWxml.includes("查看心镜报告"), "trade review completion should reveal a productized H5/report action");
 assert.ok(tradeReviewWxml.includes('class="report-arrival-card card"'), "trade review completion should present the report as a natural result card");
 assert.ok(tradeReviewWxml.includes("复盘完成后，心镜报告会在这里出现"), "trade review should set the expectation that report follows completion");
@@ -196,19 +202,20 @@ assert.ok(klineMindJs.includes("getNextKlineMindSliceSeed"), "kline page should 
 assert.equal(klineMindWxml.includes("session.stageGate.seal"), false, "kline blind practice card should not show unexplained six-gate seal text such as 良");
 assert.ok(klineMindWxml.includes('class="slice-playbook"'), "kline chart should include an immediate concrete playbook for how to train this slice");
 assert.ok(klineMindWxml.includes("点最牵动的一根"), "kline playbook should tell the user exactly what to do with the chart");
-assert.ok(klineMindWxml.includes('scroll-view class="wave-board-scroll" scroll-x="true"'), "kline blind chart should allow dragging left to review revealed history");
-assert.ok(klineMindWxml.includes('scroll-left="{{runtimeView.chartScrollLeft}}"'), "kline blind chart should snap back to the current candle as the right boundary");
+assert.ok(klineMindWxml.includes('bindtouchmove="onChartPanMove"'), "kline blind chart should allow touch dragging to review revealed history");
+assert.ok(klineMindJs.includes("setKlineRuntimeViewportPan"), "kline blind chart should clamp touch panning through the training viewport engine");
+assert.ok(klineMindJs.includes("chartPanOffset"), "kline blind chart should keep viewport pan state instead of relying on native scroll position");
 assert.equal(klineMindWxml.includes('bounces="true"'), false, "kline blind chart should not keep native horizontal panning that can reveal unreplayed candles");
 assert.equal(klineMindJs.includes('label: item.key === activeKey ? "当"'), false, "kline chart should not render a text marker on the active candle");
 assert.equal(klineMindWxml.includes('<text wx:if="{{item.label}}"'), false, "kline chart should not render any text labels inside real K-line candles");
 assert.ok(klineMindWxml.includes('class="chart-stepper"'), "kline chart should expose compact -/+ zoom controls in the chart corner");
 assert.ok(klineMindWxml.includes("bindtap=\"decreaseChartZoom\""), "kline chart should let the user zoom out with a minus control");
 assert.ok(klineMindWxml.includes("bindtap=\"increaseChartZoom\""), "kline chart should let the user zoom in with a plus control");
-assert.ok(klineMindWxml.indexOf('class="chart-stepper"') < klineMindWxml.indexOf('scroll-view class="wave-board-scroll"'), "kline zoom controls should stay fixed in the visible chart corner, not inside the horizontal candle canvas");
-const klineChartScrollStart = klineMindWxml.indexOf('scroll-view class="wave-board-scroll"');
-const klineChartScrollEnd = klineMindWxml.indexOf("</scroll-view>", klineChartScrollStart);
-assert.ok(klineMindWxml.indexOf('class="indicator-strip-spacer"', klineChartScrollStart) < klineChartScrollEnd, "kline chart should reserve space for a fixed indicator rail inside the scrollable canvas");
-assert.ok(klineMindWxml.indexOf('class="indicator-strip"', klineChartScrollEnd) > klineChartScrollEnd, "kline indicator rail should stay fixed outside the horizontal candle canvas");
+assert.ok(klineMindWxml.indexOf('class="chart-stepper"') < klineMindWxml.indexOf('class="wave-board-scroll"'), "kline zoom controls should stay fixed in the visible chart corner, not inside the horizontal candle canvas");
+const klineChartTouchStart = klineMindWxml.indexOf('class="wave-board-scroll"');
+const klineIndicatorRailStart = klineMindWxml.indexOf('class="indicator-strip"', klineChartTouchStart);
+assert.ok(klineMindWxml.indexOf('class="indicator-strip-spacer"', klineChartTouchStart) < klineIndicatorRailStart, "kline chart should reserve space for a fixed indicator rail inside the candle canvas");
+assert.ok(klineIndicatorRailStart > klineChartTouchStart, "kline indicator rail should stay fixed outside the touch-panned candle canvas");
 assert.equal(klineMindWxml.includes("缩小"), false, "kline chart should not render the old segmented zoom labels");
 assert.equal(klineMindWxml.includes("标准"), false, "kline chart should not render the old segmented zoom labels");
 assert.equal(klineMindWxml.includes("放大"), false, "kline chart should not render the old segmented zoom labels");
@@ -227,12 +234,20 @@ assert.ok(klineMindWxml.includes("交易风格"), "kline timeframe selector shou
 assert.equal(klineMindWxml.includes("<text>周期</text>"), false, "kline timeframe selector should not look like same-symbol period switching");
 assert.equal(klineMindWxml.includes("{{showSelectors ? '收起' : '周期'}}"), false, "kline selector toggle should not call the style drawer a chart period");
 assert.equal(klineMindWxml.includes("toggleSelectors"), false, "kline page should not keep a duplicate selector drawer above the chart");
-assert.ok(klineMindWxml.includes('class="slice-change-btn" bindtap="switchSlice"'), "kline change-slice action should sit inside the chart toolbar");
+assert.ok(
+  sliceBetween(klineMindWxml, 'class="chart-toolbar-row"', 'class="chart-orientation-note"').includes('class="slice-change-btn')
+    && sliceBetween(klineMindWxml, 'class="chart-toolbar-row"', 'class="chart-orientation-note"').includes('bindtap="switchSlice"'),
+  "kline change-slice action should sit inside the chart toolbar"
+);
 assert.ok(klineMindWxml.includes("正在读取历史数据"), "kline empty state should show a loading copy instead of immediately looking broken");
 assert.ok(klineMindJs.includes("historySliceCache"), "kline style switching should use an in-page history slice cache");
 assert.ok(klineMindJs.includes("prefetchTimeframeSlices"), "kline page should prefetch style slices so switching feels instant");
 assert.ok(klineMindJs.includes("KLINE_TRAINING_WINDOW_SIZE"), "kline page should request the full prewarmed training slice instead of a shorter temporary segment");
 assert.ok(klineMindJs.includes('const CHART_ZOOM_ORDER = ["overview", "wide", "standard", "focus"];'), "kline zoom controls should support one more overview zoom-out step");
+assert.ok(
+  sliceBetween(klineMindJs, "switchSlice()", "advanceRuntimeCandle()").includes("this.loadServerHistorySlice(form, { keepCurrentChart: true })"),
+  "kline change-slice action should keep the current chart visible while the next slice loads"
+);
 assert.ok(appJs.includes("prefetchKlineTrainingSlices"), "miniapp launch should warm real historical K-line slices before the user enters training");
 assert.ok(klineMindJs.includes("prefetchNextSlice"), "kline page should keep the next random history slice warm for the change-slice action");
 assert.equal(klineMindWxml.includes("模拟盈亏"), false, "kline runtime metrics should avoid repeating the simulation caveat in every small label");
@@ -256,8 +271,8 @@ assertRuleHas(klineMindWxss, ".indicator-strip", ["display: flex", "overflow-x: 
 assertRuleHas(klineMindWxss, ".chart-indicator-chip", ["flex: 0 0 auto", "height: 38rpx"], "kline indicator chips should stay compact inside the chart toolbar");
 assertRuleHas(klineMindWxss, ".chart-scroll-inner", ["width: 100%", "min-width: 100%"], "kline chart should fill the visible viewport even at the widest zoom-out");
 assertRuleHas(klineMindWxss, ".wave-board-content", ["width: 100%", "gap: var(--kline-gap, 6rpx)"], "kline candle track should fill the board while using the runtime gap");
-assertRuleHas(klineMindWxss, ".wave-board.zoom-overview .mind-candle", ["flex-basis: 5rpx"], "kline overview zoom should fit more real candles in the same training strip");
-assertRuleHas(klineMindWxss, ".sub-indicator-board.zoom-overview .sub-indicator-item", ["flex-basis: 5rpx"], "kline overview zoom should keep sub indicators aligned with candles");
+assertRuleHas(klineMindWxss, ".mind-candle", ["flex: 0 0 var(--kline-candle-width, 4rpx)"], "kline zoom should use runtime bar width instead of fixed segmented classes");
+assertRuleHas(klineMindWxss, ".sub-indicator-item", ["flex: 0 0 var(--kline-candle-width, 4rpx)"], "kline sub indicators should share the same runtime bar width");
 assertRuleHas(klineMindWxss, ".decision-action", ["width: 100%", "box-sizing: border-box"], "kline decision actions should use stable non-native button boxes");
 assert.ok(trainingWxml.includes('class="training-subtle-links"'), "training plan/detail entries should sit in a quiet secondary link row");
 assert.ok(trainingWxml.indexOf('class="primary-btn kline-entry-btn"') < trainingWxml.indexOf('class="training-subtle-links"'), "training first screen should visually encounter the single primary action before optional links");
