@@ -47,10 +47,10 @@
       <view class="upload-preview" wx:if="{{form.screenshotPath}}">
         <image src="{{form.screenshotPath}}" mode="aspectFill" aria-label="交易复盘截图预览" />
       </view>
-      <view wx:else class="upload-empty">留住一条真实记录；也可以先手动填写代码和日期。</view>
+      <view wx:else class="upload-empty">上传一张交易截图；系统尽量识别代码、日期和周期。</view>
       <view class="upload-actions">
-        <button class="secondary-btn" bindtap="chooseImage">{{form.screenshotPath ? '重新选择记录' : '添加截图记录'}}</button>
-        <button class="ghost-btn" bindtap="showManualAnchor">手动填写代码</button>
+        <button class="primary-btn upload-primary" bindtap="chooseImage">{{form.screenshotPath ? '重新上传截图' : '上传交易截图'}}</button>
+        <button class="manual-anchor-link" bindtap="showManualAnchor">没有截图，手动填写</button>
       </view>
       <view class="upload-note">{{ocrStatus.text}}</view>
     </view>
@@ -63,7 +63,7 @@
 
       <view class="field-grid">
         <view>
-          <text>记录日期</text>
+          <text>买入/记录日期</text>
           <picker mode="date" value="{{form.tradeDate}}" bindchange="changeDate">
             <view>{{form.tradeDate}}</view>
           </picker>
@@ -93,15 +93,52 @@
       <text>60 秒真实复盘</text>
       <view>只回答三件事：第一念是什么，是否在计划内，下一次守什么。</view>
 
-      <textarea value="{{form.firstThought}}" bindinput="inputThought" placeholder="下单前最强的一念是什么？例：怕错过 / 不甘心 / 想证明" />
+      <view class="quick-label">第一念是什么？</view>
+      <view class="quick-choice-grid thought">
+        <button
+          wx:for="{{firstThoughtOptions}}"
+          wx:key="*this"
+          class="quick-choice-pill {{form.firstThought === item ? 'active' : ''}}"
+          data-value="{{item}}"
+          bindtap="selectFirstThought"
+        >{{item}}</button>
+      </view>
 
       <view wx:if="{{form.firstThought}}" class="quick-next-step">
         <view class="quick-label">这笔交易是否在原计划内？</view>
-        <view class="mini-choice">
-          <button class="{{form.inPlan === 'yes' ? 'active' : ''}}" data-value="yes" bindtap="selectPlanState">在计划内</button>
-          <button class="{{form.inPlan === 'no' ? 'active' : ''}}" data-value="no" bindtap="selectPlanState">计划外</button>
+        <view class="quick-choice-grid three">
+          <button
+            wx:for="{{planStateOptions}}"
+            wx:key="key"
+            class="quick-choice-pill {{form.inPlan === item.key ? 'active' : ''}}"
+            data-value="{{item.key}}"
+            bindtap="selectPlanState"
+          >{{item.label}}</button>
         </view>
-        <textarea value="{{form.nextAction}}" bindinput="inputNextAction" placeholder="下一次同场景先做什么？例：先停十秒，写下第一念" />
+
+        <view class="quick-label">现在这笔是什么状态？</view>
+        <view class="quick-choice-grid three">
+          <button
+            wx:for="{{positionStates}}"
+            wx:key="key"
+            class="quick-choice-pill {{form.positionState === item.key ? 'active' : ''}}"
+            data-key="{{item.key}}"
+            bindtap="selectPositionState"
+          >{{item.label}}</button>
+        </view>
+
+        <view class="quick-label">下一次守什么？</view>
+        <view class="quick-choice-grid next-rule">
+          <button
+            wx:for="{{nextActionOptions}}"
+            wx:key="*this"
+            class="quick-choice-pill {{form.nextAction === item ? 'active' : ''}}"
+            data-value="{{item}}"
+            bindtap="selectNextAction"
+          >{{item}}</button>
+        </view>
+
+        <textarea class="optional-review-note" value="{{form.reviewNote}}" bindinput="inputNote" placeholder="可选补充一句，不写也可以。" />
       </view>
 
       <view wx:if="{{showAdvanced}}" class="quick-label">有没有临盘改计划？</view>
@@ -123,10 +160,10 @@
       先留住一条真实记录，再进入第一念；完成后生成你的第一面活镜。
     </view>
     <view wx:elif="{{!report && (form.screenshotPath || manualAnchorVisible || form.symbol) && !form.firstThought}}" class="report-gate-hint">
-      记录已留住。下一步，只写当时最强的一念。
+      记录已留住。下一步，选择当时最强的一念。
     </view>
     <view wx:elif="{{!report && (form.screenshotPath || manualAnchorVisible || form.symbol) && form.firstThought && !form.nextAction}}" class="report-gate-hint">
-      第一念已写下。最后补一句下一次守什么。
+      第一念已确认。最后选择下一次守什么。
     </view>
 
     <view wx:if="{{(form.screenshotPath || manualAnchorVisible || form.symbol) && form.firstThought && form.nextAction}}" class="primary-stack quick-actions">
@@ -148,7 +185,7 @@
 
       <view class="field-grid">
         <view>
-          <text>记录日期</text>
+          <text>买入/记录日期</text>
           <picker mode="date" value="{{form.tradeDate}}" bindchange="changeDate">
             <view>{{form.tradeDate}}</view>
           </picker>
@@ -302,5 +339,4 @@
 
     <compliance-notice variant="full" />
   </view>
-  <bottom-tab-bar active="review" />
 </view>

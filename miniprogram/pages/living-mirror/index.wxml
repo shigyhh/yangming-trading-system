@@ -343,5 +343,4 @@
 
     <compliance-notice variant="compact" />
   </view>
-  <bottom-tab-bar active="mirror" />
 </view>

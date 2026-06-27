@@ -2,6 +2,7 @@ const assert = require("assert");
 
 const storage = {};
 let envVersion = "release";
+let platform = "devtools";
 
 global.wx = {
   getStorageSync(key) {
@@ -12,6 +13,9 @@ global.wx = {
   },
   getAccountInfoSync() {
     return { miniProgram: { envVersion } };
+  },
+  getSystemInfoSync() {
+    return { platform };
   }
 };
 
@@ -47,7 +51,12 @@ envVersion = "release";
 assert.strictEqual(getApiBase(), "https://xxjyxt.com");
 
 envVersion = "develop";
+platform = "devtools";
 assert.strictEqual(getApiBase(), "http://127.0.0.1:8787");
+
+platform = "ios";
+assert.strictEqual(getApiBase(), "https://xxjyxt.com");
+platform = "devtools";
 
 const tradeReviewUrl = buildTradeReviewUrl({
   userId: "user 001",

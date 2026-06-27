@@ -10,7 +10,6 @@ Component({
   },
   data: {
     activeKey: "today",
-    transitioning: false,
     tabs: [
       { key: "today", label: "今日", mark: "今", url: "/pages/home/index" },
       { key: "review", label: "复盘", mark: "复", url: "/pages/trade-review/index" },
@@ -27,17 +26,15 @@ Component({
   methods: {
     go(e) {
       const { key, url } = e.currentTarget.dataset;
-      if (!url || key === this.data.activeKey || this.data.transitioning) return;
-      this.setData({ transitioning: true }, () => {
-        setTimeout(() => {
-          wx.redirectTo({
-            url,
-            fail: () => wx.reLaunch({
-              url,
-              fail: () => this.setData({ transitioning: false })
-            })
-          });
-        }, 32);
+      if (!url) return;
+      if (key === this.data.activeKey && isCurrentRoute(url)) return;
+      wx.switchTab({
+        url,
+        success: () => this.setData({ activeKey: normalizeActive(key) }),
+        fail: () => wx.showToast({
+          title: "暂时无法切换",
+          icon: "none"
+        })
       });
     }
   }
@@ -64,4 +61,12 @@ function normalizeActive(value) {
     profile: "profile"
   };
   return map[key] || key;
+}
+
+function isCurrentRoute(url) {
+  if (typeof getCurrentPages !== "function") return false;
+  const pages = getCurrentPages();
+  const current = pages[pages.length - 1] || {};
+  const route = current.route ? `/${current.route}` : "";
+  return route === url;
 }

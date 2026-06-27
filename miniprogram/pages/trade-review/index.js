@@ -29,6 +29,19 @@ const {
   syncTrainingProgress
 } = require("../../utils/api");
 
+const FIRST_THOUGHT_OPTIONS = ["怕错过", "不甘心", "想证明", "怕亏", "想扳回"];
+const PLAN_STATE_OPTIONS = [
+  { key: "yes", label: "计划内" },
+  { key: "no", label: "计划外" },
+  { key: "unclear", label: "说不清" }
+];
+const POSITION_STATES = [
+  { key: "holding", label: "持仓中" },
+  { key: "closed", label: "已平仓" },
+  { key: "trapped", label: "被套承压" }
+];
+const NEXT_ACTION_OPTIONS = ["停十秒", "只按计划", "不追涨", "不扛单", "先记录"];
+
 function defaultForm() {
   return {
     screenshotPath: "",
@@ -41,6 +54,7 @@ function defaultForm() {
     inPlan: "yes",
     changedPlan: "no",
     exitPrepared: "yes",
+    positionState: "holding",
     afterReaction: "",
     nextAction: "",
     actionKey: "planned",
@@ -56,8 +70,12 @@ function defaultForm() {
 function defaultMarketContextStatus() {
   return {
     state: "idle",
-    text: "确认代码、日期和周期后，系统会提前回看历史位置。"
+    text: "补好代码、日期和周期后，会自动回看当时位置。"
   };
+}
+
+function getChoiceLabel(list = [], key = "") {
+  return ((list.find((item) => item.key === key) || {}).label) || "";
 }
 
 function buildMarketContextKey(form = {}) {
@@ -127,7 +145,7 @@ function buildReviewFlow(form = {}, report = null, marketContext = null) {
       key: "confirm",
       number: "02",
       title: "确认第一念",
-      detail: hasConfirmed ? "第一念与下一次动作已写清" : "写下当时第一念和下一次动作",
+      detail: hasConfirmed ? "第一念与下一次守法已确认" : "选择当时第一念和下一次守法",
       done: hasConfirmed,
       current: hasSource && !hasConfirmed
     },
@@ -184,6 +202,10 @@ Page({
     form: defaultForm(),
     markets: MARKET_PRESETS,
     timeframes: TIMEFRAME_PRESETS,
+    firstThoughtOptions: FIRST_THOUGHT_OPTIONS,
+    planStateOptions: PLAN_STATE_OPTIONS,
+    positionStates: POSITION_STATES,
+    nextActionOptions: NEXT_ACTION_OPTIONS,
     actions: ACTION_OPTIONS,
     emotions: EMOTION_OPTIONS,
     boundaryStates: BOUNDARY_STATES,
@@ -199,7 +221,7 @@ Page({
     marketContextStatus: defaultMarketContextStatus(),
     ocrStatus: {
       state: "idle",
-      text: "截图字段以手动确认为准。"
+      text: "识别不准时，只确认一两个字段。"
     },
     ocrDraft: null,
     showAdvanced: false,
@@ -232,7 +254,7 @@ Page({
         manualAnchorVisible: true,
         ocrStatus: {
           state: "loading",
-          text: "正在请求识别草稿，字段仍需你确认。"
+          text: "正在识别截图，稍后确认字段。"
         }
       });
       this.requestOcrDraft(path);
@@ -268,7 +290,7 @@ Page({
           ocrDraft: draft,
           ocrStatus: {
             state: draft.status || "pending",
-            text: draft.message || "识别草稿已生成，请继续手动确认。"
+            text: draft.message || "识别草稿已生成，确认后继续。"
           }
         });
         if (Object.keys(patch).length) this.patchForm(patch);
@@ -278,7 +300,7 @@ Page({
           manualAnchorVisible: true,
           ocrStatus: {
             state: "manual",
-            text: "识别服务未连接，先手动确认字段。"
+            text: "截图未识别出来，补日期和代码即可。"
           }
         });
       });
@@ -289,7 +311,7 @@ Page({
       manualAnchorVisible: true,
       ocrStatus: {
         state: "manual",
-        text: "可直接填写代码、日期和周期，和截图复盘共用同一回看逻辑。"
+        text: "没有截图时，补日期和代码即可。"
       }
     });
   },
@@ -336,6 +358,18 @@ Page({
 
   selectPlanState(e) {
     this.patchForm({ inPlan: e.currentTarget.dataset.value || "yes" });
+  },
+
+  selectFirstThought(e) {
+    this.patchForm({ firstThought: e.currentTarget.dataset.value || "" });
+  },
+
+  selectPositionState(e) {
+    this.patchForm({ positionState: e.currentTarget.dataset.key || "holding" });
+  },
+
+  selectNextAction(e) {
+    this.patchForm({ nextAction: e.currentTarget.dataset.value || "" });
   },
 
   selectChangedPlan(e) {
@@ -459,13 +493,20 @@ Page({
       wx.showToast({ title: "写下下一次动作", icon: "none" });
       return;
     }
+    const positionStateLabel = getChoiceLabel(POSITION_STATES, form.positionState);
+    const planStateLabel = getChoiceLabel(PLAN_STATE_OPTIONS, form.inPlan);
+    const autoReviewNote = [
+      positionStateLabel ? `当前状态：${positionStateLabel}` : "",
+      planStateLabel ? `计划状态：${planStateLabel}` : "",
+      form.nextAction ? `下一次守法：${form.nextAction}` : ""
+    ].filter(Boolean).join("；");
     const formForReview = Object.assign({}, form, {
       actionKey: form.inPlan === "no" ? "impulse" : form.actionKey,
       boundaryState: form.changedPlan === "yes" || form.exitPrepared === "no" ? "near" : form.boundaryState,
       entryReason: form.entryReason || (form.inPlan === "no" ? "计划外动作" : "计划内动作"),
       exitReason: form.exitReason || form.afterReaction || (form.exitPrepared === "yes" ? "已提前写边界条件" : "边界条件未写清"),
       planBoundary: form.planBoundary || (form.exitPrepared === "yes" ? "已提前写边界条件" : "边界待补充"),
-      reviewNote: form.reviewNote || form.nextAction,
+      reviewNote: form.reviewNote || autoReviewNote || form.nextAction,
       marketContext: this.data.marketContext || null,
       ocrDraft: this.data.ocrDraft || null
     });

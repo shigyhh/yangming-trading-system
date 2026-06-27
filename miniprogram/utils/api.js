@@ -45,9 +45,31 @@ function isReleaseEnv() {
   return getMiniProgramEnvVersion() === "release";
 }
 
+function getRuntimePlatform() {
+  try {
+    return String((wx.getSystemInfoSync() || {}).platform || "");
+  } catch (error) {
+    return "";
+  }
+}
+
+function isRealDeviceRuntime() {
+  const platform = getRuntimePlatform();
+  return !!platform && platform !== "devtools";
+}
+
+function isUnsafeRealDeviceApiBase(value) {
+  const apiBase = String(value || "").trim();
+  return !apiBase ||
+    /^http:\/\//i.test(apiBase) ||
+    /^https?:\/\/(127\.0\.0\.1|localhost|0\.0\.0\.0)(:|\/|$)/i.test(apiBase);
+}
+
 function getApiBase() {
   if (isReleaseEnv()) return PRODUCTION_API_BASE;
-  return wx.getStorageSync(API_BASE_KEY) || DEFAULT_API_BASE;
+  const apiBase = wx.getStorageSync(API_BASE_KEY) || DEFAULT_API_BASE;
+  if (isRealDeviceRuntime() && isUnsafeRealDeviceApiBase(apiBase)) return PRODUCTION_API_BASE;
+  return apiBase;
 }
 
 function pickProjectionText(...values) {
@@ -243,6 +265,7 @@ async function fetchTodayState(userId = "") {
 
 function hasConfiguredApiBase() {
   if (isReleaseEnv()) return true;
+  if (getApiBase() === PRODUCTION_API_BASE) return true;
   return !!wx.getStorageSync(API_BASE_ENABLED_KEY);
 }
 

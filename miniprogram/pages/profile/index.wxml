@@ -406,5 +406,4 @@
 
     <compliance-notice variant="link" />
   </view>
-  <bottom-tab-bar active="profile" />
 </view>

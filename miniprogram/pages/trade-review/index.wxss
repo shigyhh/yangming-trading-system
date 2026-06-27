@@ -229,6 +229,51 @@
   font-weight: 900;
 }
 
+.quick-choice-grid {
+  margin-top: 12rpx;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12rpx;
+}
+
+.quick-choice-grid.thought,
+.quick-choice-grid.next-rule {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.quick-choice-grid.three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.quick-choice-pill {
+  min-width: 0;
+  min-height: 68rpx;
+  margin: 0;
+  padding: 0 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border-radius: 999rpx;
+  color: rgba(247, 239, 223, 0.72);
+  border: 1rpx solid rgba(247, 239, 223, 0.12);
+  background: rgba(255, 255, 255, 0.045);
+  font-size: 23rpx;
+  font-weight: 900;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.quick-choice-pill.active {
+  color: #11140f;
+  border-color: rgba(241, 210, 125, 0.68);
+  background: linear-gradient(180deg, #f1d27d, #c99d4c);
+}
+
+.quick-choice-pill::after {
+  display: none;
+}
+
 .quick-next-step {
   margin-top: 20rpx;
   padding-top: 6rpx;
@@ -288,9 +333,20 @@
   min-height: 112rpx;
 }
 
+.quick-review-card .optional-review-note {
+  min-height: 96rpx;
+  color: rgba(247, 239, 223, 0.78);
+}
+
 @media (max-width: 360px) {
   .bridge-steps {
     grid-template-columns: 1fr;
+  }
+
+  .quick-choice-grid.thought,
+  .quick-choice-grid.next-rule,
+  .quick-choice-grid.three {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -326,8 +382,8 @@
 .upload-actions {
   margin-top: 20rpx;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12rpx;
+  grid-template-columns: 1fr;
+  gap: 10rpx;
 }
 
 .upload-actions button {
@@ -337,10 +393,28 @@
   box-sizing: border-box;
 }
 
-.upload-actions .ghost-btn {
-  color: rgba(247, 239, 223, 0.68);
-  border-color: rgba(247, 239, 223, 0.12);
-  background: rgba(255, 255, 255, 0.035);
+.upload-primary {
+  width: 100%;
+}
+
+.manual-anchor-link {
+  width: 100%;
+  min-height: 58rpx;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(247, 239, 223, 0.52);
+  border: 0;
+  background: transparent;
+  font-size: 23rpx;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.manual-anchor-link::after {
+  display: none;
 }
 
 .anchor-card {
@@ -860,7 +934,10 @@
 @media (max-width: 340px) {
   .field-grid,
   .choice-grid,
-  .mirror-grid {
+  .mirror-grid,
+  .quick-choice-grid.thought,
+  .quick-choice-grid.next-rule,
+  .quick-choice-grid.three {
     grid-template-columns: 1fr;
   }
 }

@@ -1072,6 +1072,18 @@ const initialUnifiedJourneyView = getUnifiedJourneyView({
   dailyContent: initialDailyContent
 });
 
+function setNativeTabBarVisible(visible) {
+  if (typeof wx === "undefined") return;
+  const action = visible ? wx.showTabBar : wx.hideTabBar;
+  if (typeof action !== "function") return;
+  try {
+    action({
+      animation: false,
+      fail() {}
+    });
+  } catch (error) {}
+}
+
 Page({
   data: {
     phone: "",
@@ -1161,12 +1173,14 @@ Page({
   },
 
   onShow() {
+    setNativeTabBarVisible(!this.data.posterMode);
     this.loadEntryState();
     this.loadServerTodayState();
     this.maybeShowEntryRitual();
   },
 
   onUnload() {
+    setNativeTabBarVisible(true);
     clearTimeout(this.sealEffectTimer);
     clearTimeout(this.entryRitualTimer);
   },
@@ -2112,11 +2126,15 @@ Page({
   openPosterMode() {
     this.setData({
       posterMode: true
+    }, () => {
+      setNativeTabBarVisible(false);
     });
   },
 
   closePosterMode() {
-    this.setData({ posterMode: false });
+    this.setData({ posterMode: false }, () => {
+      setNativeTabBarVisible(true);
+    });
   },
 
   noop() {},

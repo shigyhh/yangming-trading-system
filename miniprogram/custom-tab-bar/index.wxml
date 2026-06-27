@@ -1,0 +1,1 @@
+<bottom-tab-bar active="{{activeKey}}" />

@@ -1,7 +1,10 @@
 {
   "navigationBarTitleText": "今日心证",
+  "navigationBarBackgroundColor": "#07100e",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#07100e",
+  "backgroundTextStyle": "light",
   "usingComponents": {
-    "compliance-notice": "../../components/compliance-notice/index",
-    "bottom-tab-bar": "../../components/bottom-tab-bar/index"
+    "compliance-notice": "../../components/compliance-notice/index"
   }
 }

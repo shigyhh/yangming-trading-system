@@ -633,5 +633,4 @@
 
   <canvas type="2d" id="heartCardCanvas" class="heart-card-canvas"></canvas>
 
-  <bottom-tab-bar wx:if="{{!posterMode}}" active="today" />
 </view>

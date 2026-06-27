@@ -39,6 +39,8 @@ const tradeReviewJs = readPage("trade-review", "index.js");
 const reportWxml = readPage("report", "index.wxml");
 const profileJs = readPage("profile", "index.js");
 const appJs = readFileSync(join(root, "miniprogram", "app.js"), "utf8");
+const appJsonText = readFileSync(join(root, "miniprogram", "app.json"), "utf8");
+const appJson = JSON.parse(appJsonText);
 const appWxss = readFileSync(join(root, "miniprogram", "app.wxss"), "utf8");
 const bottomTabWxss = readFileSync(join(root, "miniprogram", "components", "bottom-tab-bar", "index.wxss"), "utf8");
 const bottomTabJs = readFileSync(join(root, "miniprogram", "components", "bottom-tab-bar", "index.js"), "utf8");
@@ -148,13 +150,22 @@ assert.ok(livingMirrorJs.includes("formatLivingMirrorUpdatedAt(profile.updatedAt
 assert.equal(livingMirrorJs.includes("updatedAt: profile.updatedAt ||"), false, "living mirror should not pass raw server ISO time into the page");
 
 assert.ok(tradeReviewWxml.includes('wx:if="{{showAdvanced}}" class="record-flow card"'), "trade review flow explainer should be opt-in detail");
-assert.ok(tradeReviewWxml.includes('class="secondary-btn" bindtap="chooseImage"'), "trade review upload should be secondary to the generated review action");
+assert.ok(tradeReviewWxml.includes('class="primary-btn upload-primary" bindtap="chooseImage"'), "trade review should make screenshot upload the main path");
+assert.ok(tradeReviewWxml.includes('class="manual-anchor-link" bindtap="showManualAnchor"'), "trade review manual code entry should be a quiet fallback link");
+assert.ok(tradeReviewWxml.indexOf("上传交易截图") < tradeReviewWxml.indexOf("没有截图，手动填写"), "trade review should present upload before manual fallback");
 assert.ok(tradeReviewWxml.includes('bindtap="showManualAnchor"'), "trade review should support manual code/date anchors as the same review path");
 assert.ok(tradeReviewWxml.includes('class="anchor-card card"'), "trade review should expose one shared anchor confirmation card");
 assert.ok(tradeReviewWxml.includes("确认锚点"), "trade review should make manual and OCR market anchors explicit");
 assert.ok(tradeReviewJs.includes("fetchTradeReviewMarketContext"), "trade review should prefetch deterministic market context through the shared api helper");
 assert.ok(tradeReviewJs.includes("marketContext: this.data.marketContext || null"), "trade review generation should pass the shared market context into the review model");
 assert.ok(tradeReviewWxml.includes("只回答三件事"), "trade review should communicate the lightweight 60-second path");
+assert.ok(tradeReviewWxml.includes('wx:for="{{firstThoughtOptions}}"'), "trade review should offer first-thought choices instead of requiring typing");
+assert.ok(tradeReviewWxml.includes('wx:for="{{positionStates}}"'), "trade review should capture holding/closed/trapped state with choices");
+assert.ok(tradeReviewWxml.includes('wx:for="{{nextActionOptions}}"'), "trade review should offer next-law choices instead of requiring prose");
+["怕错过", "不甘心", "想证明", "怕亏", "想扳回", "持仓中", "已平仓", "被套承压", "计划内", "计划外", "说不清", "停十秒", "只按计划", "不追涨", "不扛单", "先记录"].forEach((label) => {
+  assert.ok(tradeReviewWxml.includes(label) || tradeReviewJs.includes(label), `trade review should expose quick choice: ${label}`);
+});
+assert.ok(tradeReviewWxml.includes("可选补充一句"), "trade review text input should be framed as optional supplement");
 assert.ok(tradeReviewWxml.includes('class="primary-stack quick-actions"'), "trade review should make generated review the only dominant action row");
 assert.ok(tradeReviewWxml.includes("你的第一面活镜"), "trade review should explain the missing-material state as a mirror promise");
 
@@ -181,8 +192,8 @@ assert.equal(profileWxml.includes("<text>助教承接</text>"), false, "profile 
 assert.ok(trainingWxml.includes('bindtap="toggleTrainingDepth"'), "training should expose detailed prescription only after the one-task first screen");
 assert.ok(trainingWxml.includes('wx:if="{{showTrainingDepth}}" class="training-depth"'), "training prescription, checklist, reflection, and completion actions should be folded below the first screen");
 assert.ok(tradeReviewWxml.includes('wx:if="{{form.screenshotPath || manualAnchorVisible || form.symbol}}" class="quick-review-card card"'), "trade review should reveal first-thought writing after screenshot or manual anchor starts");
-assert.ok(tradeReviewWxml.includes('wx:if="{{form.firstThought}}" class="quick-next-step"'), "trade review should reveal next-action fields after the first thought is written");
-assert.ok(tradeReviewWxml.includes('wx:if="{{(form.screenshotPath || manualAnchorVisible || form.symbol) && form.firstThought && form.nextAction}}" class="primary-stack quick-actions"'), "trade review should not show the generate action until source, first thought, and next action are present");
+assert.ok(tradeReviewWxml.includes('wx:if="{{form.firstThought}}" class="quick-next-step"'), "trade review should reveal plan/position/next-law fields after the first thought is chosen");
+assert.ok(tradeReviewWxml.includes('wx:if="{{(form.screenshotPath || manualAnchorVisible || form.symbol) && form.firstThought && form.nextAction}}" class="primary-stack quick-actions"'), "trade review should not show the generate action until source, first thought, and next law are present");
 assert.ok(tradeReviewWxml.includes("查看心镜报告"), "trade review completion should reveal a productized H5/report action");
 assert.ok(tradeReviewWxml.includes('class="report-arrival-card card"'), "trade review completion should present the report as a natural result card");
 assert.ok(tradeReviewWxml.includes("复盘完成后，心镜报告会在这里出现"), "trade review should set the expectation that report follows completion");
@@ -278,13 +289,33 @@ assert.ok(trainingWxml.includes('class="training-subtle-links"'), "training plan
 assert.ok(trainingWxml.indexOf('class="primary-btn kline-entry-btn"') < trainingWxml.indexOf('class="training-subtle-links"'), "training first screen should visually encounter the single primary action before optional links");
 assertRuleHas(trainingWxss, ".training-subtle-link", ["background: transparent", "border: 0", "box-shadow: none"], "training optional links should be visually quieter than buttons");
 assert.ok(livingMirrorWxml.includes('wx:if="{{hasRecords}}" class="ghost-btn mirror-depth-toggle"'), "living mirror should show growth details only after at least one record exists");
-assert.ok(bottomTabJs.includes("wx.redirectTo({"), "bottom tab primary navigation should use light redirect navigation to avoid full-page white reloads");
-assert.ok(bottomTabJs.includes("fail: () => wx.reLaunch({"), "bottom tab navigation should keep reLaunch only as a fallback when redirect fails");
+assert.equal((appJson.tabBar || {}).custom, true, "five main entries should be owned by native custom tabBar");
+assert.deepStrictEqual(
+  ((appJson.tabBar || {}).list || []).map((item) => item.pagePath),
+  [
+    "pages/home/index",
+    "pages/trade-review/index",
+    "pages/training/index",
+    "pages/living-mirror/index",
+    "pages/profile/index"
+  ],
+  "native tabBar should contain the five main miniapp entries in product order"
+);
+assert.ok(bottomTabJs.includes("wx.switchTab({"), "bottom tab primary navigation should use native switchTab");
+assert.equal(bottomTabJs.includes("wx.redirectTo({"), false, "bottom tab should not destroy and recreate tab pages with redirectTo");
+assert.equal(bottomTabJs.includes("wx.reLaunch({"), false, "bottom tab should not fall back to full app relaunch for tab routes");
 assert.equal(bottomTabJs.includes("this.setData({ activeKey: key });"), false, "bottom tab should not visually switch the old page before the route has changed");
-assert.ok(bottomTabJs.includes("transitioning"), "bottom tab should expose an in-flight transition state to cover stale or white page frames");
-assert.ok(bottomTabJs.includes("setTimeout("), "bottom tab should let the transition veil paint before starting the route change");
-assert.ok(bottomTabWxml.includes('wx:if="{{transitioning}}" class="tab-transition-veil"'), "bottom tab should render a dark transition veil while routes change");
-assertRuleHas(bottomTabWxss, ".tab-transition-veil", ["position: fixed", "z-index: 58"], "bottom tab transition veil should cover the page content but leave the tab bar stable");
+assert.equal(bottomTabJs.includes("transitioning"), false, "bottom tab should not need an artificial transition veil after moving to native tabBar");
+assert.equal(bottomTabWxml.includes("tab-transition-veil"), false, "bottom tab should not render a route-change veil after moving to native tabBar");
+[
+  homeWxml,
+  tradeReviewWxml,
+  trainingWxml,
+  livingMirrorWxml,
+  profileWxml
+].forEach((pageWxml) => {
+  assert.equal(pageWxml.includes("<bottom-tab-bar"), false, "native tab pages should not mount a duplicate page-level bottom tab component");
+});
 assert.ok(homeWxml.includes('class="home-quiet-paths"'), "home should expose quiet secondary paths without competing with the main CTA");
 assert.ok(homeWxml.includes("K线观心"), "home should make the core K-line mind training naturally discoverable");
 assert.ok(homeWxml.indexOf("今日只练一件事") < homeWxml.indexOf('class="home-quiet-paths"'), "home should encounter the single daily task before secondary paths");

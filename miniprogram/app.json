@@ -35,6 +35,35 @@
     "backgroundColor": "#07100e",
     "backgroundTextStyle": "light"
   },
+  "tabBar": {
+    "custom": true,
+    "color": "#8f8b82",
+    "selectedColor": "#dab256",
+    "backgroundColor": "#07100e",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/home/index",
+        "text": "今日"
+      },
+      {
+        "pagePath": "pages/trade-review/index",
+        "text": "复盘"
+      },
+      {
+        "pagePath": "pages/training/index",
+        "text": "训练"
+      },
+      {
+        "pagePath": "pages/living-mirror/index",
+        "text": "活镜"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "我的"
+      }
+    ]
+  },
   "style": "v2",
   "lazyCodeLoading": "requiredComponents"
 }

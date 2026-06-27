@@ -1,4 +1,3 @@
-<view wx:if="{{transitioning}}" class="tab-transition-veil" aria-hidden="true"></view>
 <view class="tabbar">
   <view
     wx:for="{{tabs}}"
