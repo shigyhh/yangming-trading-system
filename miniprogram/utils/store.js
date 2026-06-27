@@ -88,6 +88,88 @@ const {
   resolveJourneyPagePath
 } = require("../core/journey-state");
 
+const TRADE_REVIEW_STORAGE_ERROR_TYPES = [
+  "追高冲动",
+  "扛单被套",
+  "卖飞懊悔",
+  "补仓冲动",
+  "计划外交易",
+  "盈利拿不住",
+  "空仓焦虑",
+  "急于翻本"
+];
+const TRADE_REVIEW_STORAGE_ERROR_TYPE_SET = new Set(TRADE_REVIEW_STORAGE_ERROR_TYPES);
+const TRADE_REVIEW_STORAGE_ERROR_ALIASES = {
+  买少懊悔: "盈利拿不住",
+  恐惧止损: "扛单被套"
+};
+const TRADE_REVIEW_STORAGE_PRESCRIPTIONS = {
+  追高冲动: {
+    packId: "chase_high_impulse",
+    title: "追高冲动专项训练",
+    focusText: "放量拉升 / 假突破 / 冲高回落",
+    scene: "放量拉升",
+    rule: "第一根放量不追，先停十秒",
+    summary: "追高冲动专项训练｜放量拉升 / 假突破 / 冲高回落"
+  },
+  扛单被套: {
+    packId: "hold_loss_boundary",
+    title: "扛单被套专项训练",
+    focusText: "破位下跌 / 弱反弹 / 连续阴跌",
+    scene: "破位下跌",
+    rule: "破位认错，不用希望代替规则",
+    summary: "扛单被套专项训练｜破位下跌 / 弱反弹 / 连续阴跌"
+  },
+  卖飞懊悔: {
+    packId: "sell_flying_regret",
+    title: "卖飞懊悔专项训练",
+    focusText: "趋势持有 / 洗盘后走强",
+    scene: "洗盘后走强",
+    rule: "按趋势规则持有",
+    summary: "卖飞懊悔专项训练｜趋势持有 / 洗盘后走强"
+  },
+  补仓冲动: {
+    packId: "no_loss_averaging",
+    title: "补仓冲动专项训练",
+    focusText: "下跌中继 / 反抽诱多",
+    scene: "下跌中继",
+    rule: "不在破位亏损中补仓",
+    summary: "补仓冲动专项训练｜下跌中继 / 反抽诱多"
+  },
+  计划外交易: {
+    packId: "no_plan_no_trade",
+    title: "计划外交易专项训练",
+    focusText: "无计划不交易",
+    scene: "横盘噪音",
+    rule: "无计划不交易",
+    summary: "计划外交易专项训练｜无计划不交易"
+  },
+  盈利拿不住: {
+    packId: "hold_profit_by_rule",
+    title: "盈利拿不住专项训练",
+    focusText: "趋势未破不提前卖",
+    scene: "小幅回撤",
+    rule: "趋势未破不提前卖",
+    summary: "盈利拿不住专项训练｜趋势未破不提前卖"
+  },
+  空仓焦虑: {
+    packId: "empty_position_patience",
+    title: "空仓焦虑专项训练",
+    focusText: "空仓等待",
+    scene: "普涨行情",
+    rule: "空仓等待",
+    summary: "空仓焦虑专项训练｜空仓等待"
+  },
+  急于翻本: {
+    packId: "stop_after_loss",
+    title: "急于翻本专项训练",
+    focusText: "亏损后停止交易",
+    scene: "连续亏损后反弹诱多",
+    rule: "亏损后停止交易",
+    summary: "急于翻本专项训练｜亏损后停止交易"
+  }
+};
+
 function todayKey() {
   const now = new Date();
   const year = now.getFullYear();
@@ -1454,11 +1536,130 @@ function applyTrainingRecordEntity(entity = {}) {
   if (entity.closingReviews && typeof entity.closingReviews === "object") write(REVIEW_KEY, entity.closingReviews);
 }
 
+function pickTradeReviewStorageValue(...values) {
+  for (const value of values) {
+    if (value === undefined || value === null) continue;
+    if (typeof value === "string" && !value.trim()) continue;
+    if (Array.isArray(value) && !value.length) continue;
+    return value;
+  }
+  return "";
+}
+
+function normalizeTradeReviewText(value, fallback = "") {
+  if (value === undefined || value === null) return fallback;
+  const text = String(value || "").trim();
+  return text || fallback;
+}
+
+function normalizeTradeReviewPlanValue(value) {
+  if (value === true) return true;
+  if (value === false) return false;
+  const text = normalizeTradeReviewText(value);
+  if (!text) return "";
+  if (/计划外|执行偏离|no|false/i.test(text)) return false;
+  if (/计划内|按计划|yes|true/i.test(text)) return true;
+  return text;
+}
+
+function normalizeTradeReviewLawResult(value) {
+  const text = normalizeTradeReviewText(value);
+  if (!text) return "";
+  if (text === "守法") return "按计划执行";
+  if (text === "破法") return "执行偏离";
+  return text;
+}
+
+function normalizeTradeReviewMainErrorType(record = {}) {
+  const card = record.mistakeCard || {};
+  const raw = normalizeTradeReviewText(pickTradeReviewStorageValue(
+    record.main_error_type,
+    record.mainErrorType,
+    card.mainErrorType,
+    card.main_error_type
+  ));
+  const aliased = TRADE_REVIEW_STORAGE_ERROR_ALIASES[raw] || raw;
+  if (TRADE_REVIEW_STORAGE_ERROR_TYPE_SET.has(aliased)) return aliased;
+
+  const firstThought = normalizeTradeReviewText(pickTradeReviewStorageValue(record.first_thought, record.firstThought, card.firstThought));
+  const triggerScene = normalizeTradeReviewText(pickTradeReviewStorageValue(record.trigger_scene, record.triggerScene, card.triggerScene));
+  const actionText = normalizeTradeReviewText(pickTradeReviewStorageValue(record.actionLabel, record.action, record.tradeAction));
+  const statusText = normalizeTradeReviewText(pickTradeReviewStorageValue(record.status, record.statusLabel, record.positionStateLabel, record.positionState));
+  const planState = normalizeTradeReviewPlanValue(pickTradeReviewStorageValue(record.is_planned, record.isPlanned, record.inPlan, record.planState));
+  const merged = [firstThought, triggerScene, actionText, statusText].join(" ");
+
+  if (planState === false) return "计划外交易";
+  if (/怕错过|追高|放量拉升|快速拉升|突然拉升|冲高回落|假突破/.test(merged) && /买入|加仓|追/.test(actionText || merged)) return "追高冲动";
+  if (/被套|扛单/.test(merged)) return "扛单被套";
+  if (/补仓|加仓/.test(merged) && /被套|亏损|下跌/.test(merged)) return "补仓冲动";
+  if (/卖飞|不甘心|怕卖飞/.test(merged)) return "卖飞懊悔";
+  if (/拿不住|怕回吐|小赚就跑/.test(merged)) return "盈利拿不住";
+  if (/空仓|没票|踏空/.test(merged)) return "空仓焦虑";
+  if (/翻本|扳回/.test(merged)) return "急于翻本";
+  return "计划外交易";
+}
+
+function normalizeTradeReviewSecondaryErrorTypes(record = {}, mainErrorType) {
+  const card = record.mistakeCard || {};
+  const raw = pickTradeReviewStorageValue(
+    record.secondary_error_types,
+    record.secondaryErrorTypes,
+    card.secondaryErrorTypes,
+    card.secondary_error_types
+  );
+  const list = Array.isArray(raw) ? raw : (normalizeTradeReviewText(raw) ? String(raw).split(/[、,，/]/) : []);
+  return list
+    .map((item) => TRADE_REVIEW_STORAGE_ERROR_ALIASES[normalizeTradeReviewText(item)] || normalizeTradeReviewText(item))
+    .filter((item) => item && item !== mainErrorType && TRADE_REVIEW_STORAGE_ERROR_TYPE_SET.has(item))
+    .slice(0, 3);
+}
+
+function normalizeTradeReviewStoragePrescription(mainErrorType) {
+  const base = TRADE_REVIEW_STORAGE_PRESCRIPTIONS[mainErrorType] || TRADE_REVIEW_STORAGE_PRESCRIPTIONS["计划外交易"];
+  return Object.assign({}, base, {
+    summary: base.summary || `${base.title}｜${base.focusText}`
+  });
+}
+
+function normalizeTradeReviewStorageRecord(record = {}) {
+  const mainErrorType = normalizeTradeReviewMainErrorType(record);
+  const card = record.mistakeCard || {};
+  const prescription = normalizeTradeReviewStoragePrescription(mainErrorType);
+  const firstThought = normalizeTradeReviewText(pickTradeReviewStorageValue(record.first_thought, record.firstThought, card.firstThought), "待补充");
+  const triggerScene = normalizeTradeReviewText(pickTradeReviewStorageValue(record.trigger_scene, record.triggerScene, card.triggerScene), prescription.scene || "待补充");
+  const nextRule = normalizeTradeReviewText(pickTradeReviewStorageValue(record.next_rule, record.nextRule, record.nextAction, card.nextRule), prescription.rule || "待补充");
+  const secondaryErrorTypes = normalizeTradeReviewSecondaryErrorTypes(record, mainErrorType);
+  const isPlanned = normalizeTradeReviewPlanValue(pickTradeReviewStorageValue(record.is_planned, record.isPlanned, record.inPlan, record.planState));
+  const positionLevel = normalizeTradeReviewText(pickTradeReviewStorageValue(record.position_level, record.positionLevel, record.position, record.positionStateLabel));
+  const lawResult = normalizeTradeReviewLawResult(pickTradeReviewStorageValue(record.law_result, record.lawResult));
+
+  return Object.assign({}, record, {
+    mainErrorType,
+    main_error_type: mainErrorType,
+    firstThought,
+    first_thought: firstThought,
+    triggerScene,
+    trigger_scene: triggerScene,
+    nextRule,
+    next_rule: nextRule,
+    secondaryErrorTypes,
+    secondary_error_types: secondaryErrorTypes,
+    isPlanned,
+    is_planned: isPlanned,
+    positionLevel,
+    position_level: positionLevel,
+    lawResult,
+    law_result: lawResult,
+    trainingPrescription: prescription,
+    training_prescription: prescription
+  });
+}
+
 function saveTradeReviewRecord(record) {
   const state = getTradeReviewRecords();
-  const nextRecord = withUserBinding(Object.assign({}, record || {}, {
+  const nextRecord = normalizeTradeReviewStorageRecord(withUserBinding(Object.assign({}, record || {}, {
     updatedAt: Date.now()
-  }));
+  })));
   const records = (state.records || []).filter((item) => item.id !== nextRecord.id).concat(nextRecord).slice(-60);
   const nextState = write(YM_TRADE_REVIEW_RECORDS, {
     latest: nextRecord,
