@@ -424,6 +424,135 @@ function splitKlineTrainingFocusTags(text = "") {
     .filter(Boolean);
 }
 
+const SPECIAL_TRAINING_PACKS = [
+  {
+    id: "chase_high_impulse",
+    error_type: "追高冲动",
+    title: "追高冲动专项",
+    scene_tags: ["放量拉升", "假突破", "冲高回落"],
+    training_goal: "训练看到快速拉升时不被第一念牵走，先看事实再行动。",
+    expected_action: "第一根放量不追，先停十秒",
+    default_prompt: "先看事实：这一根是结构确认，还是情绪牵动？"
+  },
+  {
+    id: "average_down_impulse",
+    error_type: "补仓冲动",
+    title: "补仓冲动专项",
+    scene_tags: ["下跌中继", "反抽诱多"],
+    training_goal: "训练亏损中不急着摊低成本，先确认结构是否已经破坏。",
+    expected_action: "不在破位亏损中补仓",
+    default_prompt: "先看事实：这是修复，还是下跌中的反抽？"
+  },
+  {
+    id: "sell_fly_regret",
+    error_type: "卖飞懊悔",
+    title: "卖飞懊悔专项",
+    scene_tags: ["洗盘后走强", "趋势中继"],
+    training_goal: "训练卖出后不被懊悔牵回，按趋势规则重新判断。",
+    expected_action: "按趋势规则持有，不因一根波动急追急退",
+    default_prompt: "先看事实：你是在重新确认趋势，还是被卖飞感牵动？"
+  },
+  {
+    id: "unplanned_trade",
+    error_type: "计划外交易",
+    title: "计划外交易专项",
+    scene_tags: ["横盘噪音", "突然异动"],
+    training_goal: "训练临盘刺激出现时先回到计划，不把异动当成必须行动。",
+    expected_action: "无计划不交易",
+    default_prompt: "先看事实：这笔动作是否已经在计划里？"
+  }
+];
+
+function normalizeSpecialTrainingPack(pack = {}) {
+  const errorType = cleanEventText(pack.errorType || pack.error_type, 80);
+  const sceneTags = Array.isArray(pack.sceneTags || pack.scene_tags)
+    ? (pack.sceneTags || pack.scene_tags).map((item) => cleanEventText(item, 80)).filter(Boolean)
+    : splitKlineTrainingFocusTags(pack.sceneText || pack.scene_text || "");
+  const title = cleanEventText(pack.title, 80) || (errorType ? `${errorType}专项` : "专项训练");
+  const trainingGoal = cleanEventText(pack.trainingGoal || pack.training_goal, 180);
+  const expectedAction = cleanEventText(pack.expectedAction || pack.expected_action, 160);
+  const defaultPrompt = cleanEventText(pack.defaultPrompt || pack.default_prompt, 180);
+  const id = cleanEventText(pack.id || pack.packId || pack.trainingPackId || pack.training_pack_id, 80);
+  const sceneText = sceneTags.length ? sceneTags.join(" / ") : "待补充";
+  return {
+    id,
+    packId: id,
+    pack_id: id,
+    trainingPackId: id,
+    training_pack_id: id,
+    title,
+    trainingPackTitle: title,
+    training_pack_title: title,
+    errorType,
+    error_type: errorType,
+    sceneTags,
+    scene_tags: sceneTags,
+    sceneText,
+    scene_text: sceneText,
+    trainingGoal,
+    training_goal: trainingGoal,
+    expectedAction,
+    expected_action: expectedAction,
+    actionText: expectedAction,
+    defaultPrompt,
+    default_prompt: defaultPrompt
+  };
+}
+
+function listSpecialTrainingPacks() {
+  return SPECIAL_TRAINING_PACKS.map((pack) => normalizeSpecialTrainingPack(pack));
+}
+
+function getSpecialTrainingPack(value = "") {
+  const key = cleanEventText(value && (value.errorType || value.error_type || value.id || value.packId || value.trainingPackId || value.training_pack_id || value), 100);
+  if (!key) return null;
+  return listSpecialTrainingPacks().find((pack) => (
+    pack.id === key ||
+    pack.errorType === key ||
+    pack.error_type === key ||
+    pack.title === key
+  )) || null;
+}
+
+function buildSpecialTrainingSessionMeta(value = "") {
+  const pack = getSpecialTrainingPack(value);
+  if (!pack) {
+    const errorType = cleanEventText(value && (value.errorType || value.error_type || value), 80);
+    return {
+      errorType,
+      error_type: errorType,
+      trainingPackId: "",
+      training_pack_id: "",
+      trainingPackTitle: errorType ? `${errorType}专项` : "",
+      training_pack_title: errorType ? `${errorType}专项` : "",
+      sceneTags: [],
+      scene_tags: [],
+      trainingGoal: "",
+      training_goal: "",
+      expectedAction: "",
+      expected_action: "",
+      defaultPrompt: "",
+      default_prompt: ""
+    };
+  }
+  return {
+    errorType: pack.errorType,
+    error_type: pack.error_type,
+    trainingPackId: pack.trainingPackId,
+    training_pack_id: pack.training_pack_id,
+    trainingPackTitle: pack.trainingPackTitle,
+    training_pack_title: pack.training_pack_title,
+    sceneTags: pack.sceneTags,
+    scene_tags: pack.scene_tags,
+    trainingGoal: pack.trainingGoal,
+    training_goal: pack.training_goal,
+    expectedAction: pack.expectedAction,
+    expected_action: pack.expected_action,
+    defaultPrompt: pack.defaultPrompt,
+    default_prompt: pack.default_prompt
+  };
+}
+
 function buildKlineTargetedTrainingEntry(reviewTrainingFocus = {}) {
   const focus = reviewTrainingFocus || {};
   if (!focus.hasPrescription || !String(focus.mainErrorType || "").trim()) {
@@ -436,29 +565,51 @@ function buildKlineTargetedTrainingEntry(reviewTrainingFocus = {}) {
       sceneTags: [],
       sceneText: "真实历史片段 / 第一反应 / 下一根推进",
       actionText: "先看事实，再记录第一念。",
+      packId: "",
+      trainingPackId: "",
+      trainingPackTitle: "基础盲练",
+      trainingGoal: "先完成一段基础盲练，建立逐根推进的观察节奏。",
+      expectedAction: "先看事实，再记录第一念。",
+      defaultPrompt: "只看当下这一根，不猜后面。",
       routeParams: { error_type: "" }
     };
   }
 
   const prescription = focus.prescription || {};
   const errorType = String(focus.mainErrorType || "").trim();
+  const pack = getSpecialTrainingPack(focus.packId || prescription.packId || errorType);
   const focusText = String(focus.focusText || prescription.focusText || "").trim();
-  const sceneTags = splitKlineTrainingFocusTags(focusText);
-  const actionText = String(focus.rule || prescription.rule || "先停十秒，只记录第一念。").trim();
-  const title = `${errorType}专项`;
+  const sceneTags = (pack && pack.sceneTags.length) ? pack.sceneTags : splitKlineTrainingFocusTags(focusText);
+  const actionText = (pack && pack.expectedAction) || String(focus.rule || prescription.rule || "先停十秒，只记录第一念。").trim();
+  const title = (pack && pack.title) || `${errorType}专项`;
+  const packId = (pack && pack.id) || focus.packId || prescription.packId || "";
+  const trainingGoal = (pack && pack.trainingGoal) || String(focus.trainingGoal || prescription.trainingGoal || "").trim();
+  const defaultPrompt = (pack && pack.defaultPrompt) || String(focus.defaultPrompt || prescription.defaultPrompt || "").trim();
 
   return {
     hasTarget: true,
     errorType,
+    error_type: errorType,
     title,
     trainingTitle: title,
     summary: `根据你最近真实复盘，系统发现：你最近最高频错题是「${errorType}」。`,
     sceneTags,
+    scene_tags: sceneTags,
     sceneText: sceneTags.length ? sceneTags.join(" / ") : "待补充",
     actionText,
-    packId: focus.packId || prescription.packId || "",
+    expectedAction: actionText,
+    expected_action: actionText,
+    trainingGoal,
+    training_goal: trainingGoal,
+    defaultPrompt,
+    default_prompt: defaultPrompt,
+    packId,
+    trainingPackId: packId,
+    training_pack_id: packId,
+    trainingPackTitle: title,
+    training_pack_title: title,
     count: Number(focus.count || 0),
-    routeParams: { error_type: errorType }
+    routeParams: { error_type: errorType, training_pack_id: packId }
   };
 }
 
@@ -1157,12 +1308,25 @@ function startKlineTrainingRuntime(session = {}, options = {}) {
   const candles = Array.isArray(session.candles) ? session.candles : [];
   const initialVisibleCount = normalizeInitialVisibleCount(options.initialVisibleCount, candles.length);
   const errorType = cleanEventText(options.errorType || options.error_type || session.errorType || session.error_type || "", 80);
+  const pack = getSpecialTrainingPack(options.trainingPackId || options.training_pack_id || errorType);
+  const trainingPackId = cleanEventText(options.trainingPackId || options.training_pack_id || (pack || {}).trainingPackId || "", 100);
+  const trainingPackTitle = cleanEventText(options.trainingPackTitle || options.training_pack_title || (pack || {}).trainingPackTitle || (errorType ? `${errorType}专项` : ""), 100);
   return buildRuntimeState({
     trainingSessionId: cleanEventText(options.trainingSessionId || `kline-session-${Date.now()}`, 160),
     simulationMode: "blind_step_replay",
     sliceSeed: cleanEventText(options.sliceSeed || ((session.historySlice || {}).seed) || "", 120),
     errorType,
     error_type: errorType,
+    trainingPackId,
+    training_pack_id: trainingPackId,
+    trainingPackTitle,
+    training_pack_title: trainingPackTitle,
+    trainingGoal: cleanEventText(options.trainingGoal || options.training_goal || (pack || {}).trainingGoal || "", 180),
+    training_goal: cleanEventText(options.trainingGoal || options.training_goal || (pack || {}).trainingGoal || "", 180),
+    expectedAction: cleanEventText(options.expectedAction || options.expected_action || (pack || {}).expectedAction || "", 160),
+    expected_action: cleanEventText(options.expectedAction || options.expected_action || (pack || {}).expectedAction || "", 160),
+    defaultPrompt: cleanEventText(options.defaultPrompt || options.default_prompt || (pack || {}).defaultPrompt || "", 180),
+    default_prompt: cleanEventText(options.defaultPrompt || options.default_prompt || (pack || {}).defaultPrompt || "", 180),
     marketKey: ((session.market || {}).key) || "",
     timeframeKey: session.timeframeKey || "",
     chartZoomKey: session.chartZoomKey || "wide",
@@ -1588,12 +1752,27 @@ function buildKlineTrainingRecordPatch(runtime = {}) {
   const lastDecision = decisions[decisions.length - 1] || {};
   const activeCandle = runtime.activeCandle || (runtime.candles || [])[runtime.currentIndex] || {};
   const errorType = cleanEventText(runtime.errorType || runtime.error_type || lastDecision.errorType || lastDecision.error_type || "", 80);
+  const trainingPackId = cleanEventText(runtime.trainingPackId || runtime.training_pack_id || "", 100);
+  const trainingPackTitle = cleanEventText(runtime.trainingPackTitle || runtime.training_pack_title || "", 100);
+  const trainingGoal = cleanEventText(runtime.trainingGoal || runtime.training_goal || "", 180);
+  const expectedAction = cleanEventText(runtime.expectedAction || runtime.expected_action || "", 160);
+  const defaultPrompt = cleanEventText(runtime.defaultPrompt || runtime.default_prompt || "", 180);
   return {
     trainingSessionId: cleanEventText(runtime.trainingSessionId, 160),
     simulationMode: cleanEventText(runtime.simulationMode || "blind_step_replay", 80),
     sliceSeed: cleanEventText(runtime.sliceSeed, 120),
     errorType,
     error_type: errorType,
+    trainingPackId,
+    training_pack_id: trainingPackId,
+    trainingPackTitle,
+    training_pack_title: trainingPackTitle,
+    trainingGoal,
+    training_goal: trainingGoal,
+    expectedAction,
+    expected_action: expectedAction,
+    defaultPrompt,
+    default_prompt: defaultPrompt,
     selectedCandleKey: cleanEventText(lastDecision.selectedCandleKey || activeCandle.key || "", 80),
     reactionDirection: cleanEventText(lastDecision.reactionDirection, 40),
     firstReaction: cleanEventText(lastDecision.firstReaction, 160),
@@ -1830,7 +2009,15 @@ function buildKlineMindRecord(input = {}, session = {}) {
     "errorType",
     "error_type",
     "trainingPackId",
-    "trainingPackTitle"
+    "training_pack_id",
+    "trainingPackTitle",
+    "training_pack_title",
+    "trainingGoal",
+    "training_goal",
+    "expectedAction",
+    "expected_action",
+    "defaultPrompt",
+    "default_prompt"
   ].forEach((key) => {
     if (input[key] !== undefined) extension[key] = input[key];
   });
@@ -1851,11 +2038,15 @@ module.exports = {
   REACTION_OPTIONS,
   BODY_OPTIONS,
   BOUNDARY_OPTIONS,
+  SPECIAL_TRAINING_PACKS,
   getSixGate,
   getKlinePrescription,
   getPersonalityKlineDrill,
   getNextKlineMindSliceSeed,
   buildKlineTargetedTrainingEntry,
+  listSpecialTrainingPacks,
+  getSpecialTrainingPack,
+  buildSpecialTrainingSessionMeta,
   getMarketConfig,
   normalizeHistoryCandles,
   getInitialKlineVisibleCount,

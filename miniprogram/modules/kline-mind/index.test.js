@@ -21,7 +21,10 @@ const {
   setKlineRuntimeChartZoom,
   setKlineRuntimeViewportPan,
   buildKlineTrainingRecordPatch,
-  buildKlineTargetedTrainingEntry
+  buildKlineTargetedTrainingEntry,
+  listSpecialTrainingPacks,
+  getSpecialTrainingPack,
+  buildSpecialTrainingSessionMeta
 } = require("./index");
 
 assert.strictEqual(SIX_GATE_MAP.length, 6);
@@ -53,6 +56,24 @@ assert.deepStrictEqual(targetedTrainingEntry.sceneTags, ["放量拉升", "假突
 assert.strictEqual(targetedTrainingEntry.sceneText, "放量拉升 / 假突破 / 冲高回落");
 assert.strictEqual(targetedTrainingEntry.actionText, "第一根放量不追，先停十秒");
 assert.strictEqual(targetedTrainingEntry.routeParams.error_type, "追高冲动");
+
+const specialTrainingPacks = listSpecialTrainingPacks();
+assert.deepStrictEqual(specialTrainingPacks.map((item) => item.error_type), [
+  "追高冲动",
+  "补仓冲动",
+  "卖飞懊悔",
+  "计划外交易"
+]);
+const chaseHighPack = getSpecialTrainingPack("追高冲动");
+assert.strictEqual(chaseHighPack.title, "追高冲动专项");
+assert.deepStrictEqual(chaseHighPack.scene_tags, ["放量拉升", "假突破", "冲高回落"]);
+assert.ok(chaseHighPack.training_goal.includes("看到快速拉升"));
+assert.strictEqual(chaseHighPack.expected_action, "第一根放量不追，先停十秒");
+assert.ok(chaseHighPack.default_prompt.includes("先看事实"));
+const specialSessionMeta = buildSpecialTrainingSessionMeta("chase_high_impulse");
+assert.strictEqual(specialSessionMeta.error_type, "追高冲动");
+assert.strictEqual(specialSessionMeta.trainingPackId, "chase_high_impulse");
+assert.strictEqual(specialSessionMeta.training_pack_title, "追高冲动专项");
 
 const basicTrainingEntry = buildKlineTargetedTrainingEntry({ hasPrescription: false });
 assert.strictEqual(basicTrainingEntry.hasTarget, false);
@@ -470,6 +491,11 @@ const targetedRuntime = startKlineTrainingRuntime(demoSession, {
   initialVisibleCount: 2,
   errorType: "追高冲动"
 });
+assert.strictEqual(targetedRuntime.trainingPackId, "chase_high_impulse");
+assert.strictEqual(targetedRuntime.training_pack_id, "chase_high_impulse");
+assert.strictEqual(targetedRuntime.trainingPackTitle, "追高冲动专项");
+assert.strictEqual(targetedRuntime.training_pack_title, "追高冲动专项");
+assert.strictEqual(targetedRuntime.expectedAction, "第一根放量不追，先停十秒");
 const targetedDecisionRuntime = recordKlineTrainingDecision(targetedRuntime, {
   action: "BUY",
   positionLevel: "半仓",
@@ -506,6 +532,11 @@ const finishedTargetedPatch = buildKlineTrainingRecordPatch(finishedTargetedRunt
 assert.strictEqual(finishedTargetedPatch.completed, true);
 assert.strictEqual(finishedTargetedPatch.errorType, "追高冲动");
 assert.strictEqual(finishedTargetedPatch.error_type, "追高冲动");
+assert.strictEqual(finishedTargetedPatch.trainingPackId, "chase_high_impulse");
+assert.strictEqual(finishedTargetedPatch.training_pack_id, "chase_high_impulse");
+assert.strictEqual(finishedTargetedPatch.trainingPackTitle, "追高冲动专项");
+assert.strictEqual(finishedTargetedPatch.training_pack_title, "追高冲动专项");
+assert.strictEqual(finishedTargetedPatch.expectedAction, "第一根放量不追，先停十秒");
 assert.strictEqual(finishedTargetedPatch.trainingResult.totalActions, 1);
 
 const chaseHighCard = buildKlineTrainingMistakeCard({

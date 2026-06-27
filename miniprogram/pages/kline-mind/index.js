@@ -42,6 +42,8 @@ const {
   setKlineRuntimeIndicator,
   setKlineRuntimeMainIndicator,
   buildKlineTargetedTrainingEntry,
+  listSpecialTrainingPacks,
+  buildSpecialTrainingSessionMeta,
   buildKlineTrainingRecordPatch
 } = require("../../modules/kline-mind/index");
 const {
@@ -344,6 +346,7 @@ Page({
     selectedIndicatorKey: "vol",
     reviewTrainingFocus: buildReviewTrainingFocus({ records: [] }),
     targetedTrainingEntry: buildKlineTargetedTrainingEntry(),
+    specialTrainingPacks: listSpecialTrainingPacks(),
     todayTrainingLine: "",
     ...buildSliceSwitchState(0),
     tradeReviewUrl: ""
@@ -376,6 +379,7 @@ Page({
     });
     const reviewTrainingFocus = buildReviewTrainingFocus({ records: getTradeReviewRecords() });
     const targetedTrainingEntry = buildKlineTargetedTrainingEntry(reviewTrainingFocus);
+    const specialTrainingPacks = listSpecialTrainingPacks();
     const todayTrainingLine = targetedTrainingEntry.hasTarget
       ? targetedTrainingEntry.actionText
       : (session.prescription || {}).boundaryPractice || "先停十秒，只记录第一念。";
@@ -389,6 +393,7 @@ Page({
       session,
       reviewTrainingFocus,
       targetedTrainingEntry,
+      specialTrainingPacks,
       todayTrainingLine,
       trainingRuntime: null,
       runtimeView: buildRuntimeView(),
@@ -419,7 +424,12 @@ Page({
       initialMainIndicatorKey: this.data.selectedMainIndicatorKey || session.defaultMainIndicatorKey || "ma",
       initialIndicatorKey: this.data.selectedIndicatorKey || session.defaultIndicatorKey || "vol",
       sliceSeed: record.scenarioId || ((session.historySlice || {}).sliceSeed) || ((session.historySlice || {}).seed) || "",
-      errorType: record.errorType || record.error_type || ""
+      errorType: record.errorType || record.error_type || "",
+      trainingPackId: record.trainingPackId || record.training_pack_id || "",
+      trainingPackTitle: record.trainingPackTitle || record.training_pack_title || "",
+      trainingGoal: record.trainingGoal || record.training_goal || "",
+      expectedAction: record.expectedAction || record.expected_action || "",
+      defaultPrompt: record.defaultPrompt || record.default_prompt || ""
     });
   },
 
@@ -590,28 +600,60 @@ Page({
   },
 
   startTargetedTraining(e) {
-    const errorType = String((e.currentTarget.dataset || {}).errorType || "").trim();
+    const dataset = e.currentTarget.dataset || {};
+    const errorType = String(dataset.errorType || "").trim();
+    const packId = String(dataset.packId || "").trim();
     const entry = this.data.targetedTrainingEntry || buildKlineTargetedTrainingEntry();
+    const meta = buildSpecialTrainingSessionMeta(packId || errorType);
     const currentForm = this.data.form || {};
-    const form = Object.assign({}, currentForm, {
-      errorType,
-      error_type: errorType,
-      trainingPackId: entry.packId || "",
-      trainingPackTitle: entry.title || ""
+    const form = Object.assign({}, currentForm, meta, {
+      errorType: meta.errorType || errorType,
+      error_type: meta.error_type || errorType,
+      trainingPackId: meta.trainingPackId || entry.packId || entry.trainingPackId || "",
+      training_pack_id: meta.training_pack_id || entry.training_pack_id || entry.packId || "",
+      trainingPackTitle: meta.trainingPackTitle || entry.trainingPackTitle || entry.title || "",
+      training_pack_title: meta.training_pack_title || entry.training_pack_title || entry.title || "",
+      trainingGoal: meta.trainingGoal || entry.trainingGoal || "",
+      training_goal: meta.training_goal || entry.training_goal || "",
+      expectedAction: meta.expectedAction || entry.expectedAction || entry.actionText || "",
+      expected_action: meta.expected_action || entry.expected_action || entry.actionText || "",
+      defaultPrompt: meta.defaultPrompt || entry.defaultPrompt || "",
+      default_prompt: meta.default_prompt || entry.default_prompt || ""
     });
     const session = this.buildSession(form);
-    const runtime = this.data.trainingRuntime
-      ? this.data.trainingRuntime
-      : (session.hasHistoricalData ? this.buildTrainingRuntime(session, form) : null);
+    const runtime = session.hasHistoricalData ? this.buildTrainingRuntime(session, form) : null;
     this.setData({
       form,
       session,
       trainingRuntime: runtime,
       runtimeView: buildRuntimeView(runtime),
-      todayTrainingLine: entry.actionText || this.data.todayTrainingLine
+      todayTrainingLine: form.expectedAction || entry.actionText || this.data.todayTrainingLine
     });
     wx.showToast({
-      title: errorType ? "已进入针对训练" : "进入基础盲练",
+      title: form.errorType ? "已进入针对训练" : "进入基础盲练",
+      icon: "none"
+    });
+  },
+
+  startSpecialTraining(e) {
+    const packId = String(((e.currentTarget || {}).dataset || {}).packId || "").trim();
+    const meta = buildSpecialTrainingSessionMeta(packId);
+    if (!meta.errorType) {
+      wx.showToast({ title: "专项训练暂不可用", icon: "none" });
+      return;
+    }
+    const form = Object.assign({}, this.data.form || {}, meta);
+    const session = this.buildSession(form);
+    const runtime = session.hasHistoricalData ? this.buildTrainingRuntime(session, form) : null;
+    this.setData({
+      form,
+      session,
+      trainingRuntime: runtime,
+      runtimeView: buildRuntimeView(runtime),
+      todayTrainingLine: meta.expectedAction || this.data.todayTrainingLine
+    });
+    wx.showToast({
+      title: "已进入专项训练",
       icon: "none"
     });
   },
