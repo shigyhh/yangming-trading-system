@@ -17,6 +17,7 @@ const {
   advanceKlineTrainingRuntime,
   recordKlineTrainingDecision,
   finishKlineTrainingRuntime,
+  buildKlineTrainingMistakeCard,
   setKlineRuntimeChartZoom,
   setKlineRuntimeViewportPan,
   buildKlineTrainingRecordPatch,
@@ -506,6 +507,74 @@ assert.strictEqual(finishedTargetedPatch.completed, true);
 assert.strictEqual(finishedTargetedPatch.errorType, "追高冲动");
 assert.strictEqual(finishedTargetedPatch.error_type, "追高冲动");
 assert.strictEqual(finishedTargetedPatch.trainingResult.totalActions, 1);
+
+const chaseHighCard = buildKlineTrainingMistakeCard({
+  trainingSessionId: "runtime-chase-high",
+  errorType: "追高冲动",
+  decisionTimeline: [
+    {
+      action: "BUY",
+      sceneTag: "放量拉升",
+      scene_tag: "放量拉升",
+      positionLevel: "重仓",
+      position_level: "重仓",
+      barIndex: 8,
+      bar_index: 8,
+      price: 10.25
+    }
+  ],
+  trainingResult: {
+    pnlResult: -1.25,
+    pnl_result: -1.25,
+    totalActions: 1,
+    total_actions: 1
+  }
+});
+assert.strictEqual(chaseHighCard.errorType, "追高冲动");
+assert.strictEqual(chaseHighCard.error_type, "追高冲动");
+assert.strictEqual(chaseHighCard.trainingType, "追高冲动专项");
+assert.strictEqual(chaseHighCard.repeatCount, 1);
+assert.strictEqual(chaseHighCard.repeat_count, 1);
+assert.strictEqual(chaseHighCard.executionResult, "执行偏离");
+assert.ok(chaseHighCard.obviousMiss.includes("重仓追高"));
+assert.ok(chaseHighCard.nextAction.includes("第一根放量不追"));
+assert.ok(chaseHighCard.trainingPrescription.includes("追高冲动专项"));
+
+const addPositionCard = buildKlineTrainingMistakeCard({
+  trainingSessionId: "runtime-add-position",
+  errorType: "补仓冲动",
+  decisionTimeline: [
+    { action: "BUY", price: 10, barIndex: 2, positionLevel: "半仓" },
+    { action: "BUY", price: 9.2, barIndex: 5, positionLevel: "重仓" }
+  ],
+  trainingResult: { totalActions: 2, total_actions: 2 }
+});
+assert.strictEqual(addPositionCard.repeatCount, 1);
+assert.ok(addPositionCard.obviousMiss.includes("补仓冲动"));
+
+const sellFlyCard = buildKlineTrainingMistakeCard({
+  trainingSessionId: "runtime-sell-fly",
+  errorType: "卖飞懊悔",
+  decisionTimeline: [
+    { action: "SELL", price: 10.8, barIndex: 10 },
+    { action: "BUY", price: 11.1, barIndex: 12, positionLevel: "半仓" }
+  ],
+  trainingResult: { totalActions: 2, total_actions: 2 }
+});
+assert.strictEqual(sellFlyCard.repeatCount, 1);
+assert.ok(sellFlyCard.obviousMiss.includes("卖飞后急追"));
+
+const cleanCard = buildKlineTrainingMistakeCard({
+  trainingSessionId: "runtime-clean",
+  errorType: "追高冲动",
+  decisionTimeline: [
+    { action: "HOLD", sceneTag: "放量拉升", barIndex: 4 }
+  ],
+  trainingResult: { totalActions: 1, total_actions: 1 }
+});
+assert.strictEqual(cleanCard.repeatCount, 0);
+assert.strictEqual(cleanCard.obviousMiss, "本局暂无明显失守");
+assert.strictEqual(cleanCard.executionResult, "本局暂无明显失守");
 
 const runtimeStep4 = advanceKlineTrainingRuntime(decidedRuntime);
 assert.strictEqual(runtimeStep4.currentIndex, 4);

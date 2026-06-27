@@ -238,10 +238,39 @@
         </view>
 
         <view wx:if="{{runtimeView.trainingResult}}" class="runtime-result-card">
-          <text>训练结果</text>
-          <view>动作 {{runtimeView.trainingResult.totalActions}} 次 · 买 {{runtimeView.trainingResult.buyCount}} / 卖 {{runtimeView.trainingResult.sellCount}} / 观望 {{runtimeView.trainingResult.holdCount}}</view>
-          <view>盈亏 {{runtimeView.trainingResult.pnlText}} · 回撤 {{runtimeView.trainingResult.drawdownText}}</view>
-          <view wx:if="{{runtimeView.trainingResult.errorType}}">针对错题：{{runtimeView.trainingResult.errorType}}</view>
+          <text>训练错题卡</text>
+          <view class="runtime-result-line">
+            <text>训练类型</text>
+            <view>{{runtimeView.trainingResult.mistakeCard.trainingType || '基础盲练'}}</view>
+          </view>
+          <view class="runtime-result-line">
+            <text>操作统计</text>
+            <view>动作 {{runtimeView.trainingResult.totalActions}} 次 · 买 {{runtimeView.trainingResult.buyCount}} / 卖 {{runtimeView.trainingResult.sellCount}} / 观望 {{runtimeView.trainingResult.holdCount}}</view>
+          </view>
+          <view class="runtime-result-line">
+            <text>盈亏结果</text>
+            <view>{{runtimeView.trainingResult.pnlText}} · 回撤 {{runtimeView.trainingResult.drawdownText}}</view>
+          </view>
+          <view class="runtime-result-line">
+            <text>按计划执行结果</text>
+            <view>{{runtimeView.trainingResult.mistakeCard.executionResult || '本局暂无明显失守'}}</view>
+          </view>
+          <view class="runtime-result-line">
+            <text>旧题复现次数</text>
+            <view>{{runtimeView.trainingResult.mistakeCard.repeatCount || 0}} 次</view>
+          </view>
+          <view class="runtime-result-line">
+            <text>最明显失守</text>
+            <view>{{runtimeView.trainingResult.mistakeCard.obviousMiss || '本局暂无明显失守'}}</view>
+          </view>
+          <view class="runtime-result-line">
+            <text>下次执行动作</text>
+            <view>{{runtimeView.trainingResult.mistakeCard.nextAction || '继续只看当下这一根，先记录再行动'}}</view>
+          </view>
+          <view class="runtime-result-line">
+            <text>下一次训练处方</text>
+            <view>{{runtimeView.trainingResult.mistakeCard.trainingPrescription || '基础盲练：继续训练买 / 卖 / 观望的稳定执行'}}</view>
+          </view>
         </view>
       </view>
 

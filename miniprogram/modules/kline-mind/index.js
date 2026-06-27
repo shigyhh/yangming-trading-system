@@ -1247,6 +1247,208 @@ function buildCoachHint(decision = {}, emotionBadge = null) {
   };
 }
 
+const TRAINING_MISTAKE_SCENE_TAGS = {
+  "追高冲动": ["放量拉升", "假突破", "冲高回落"]
+};
+
+const TRAINING_MISTAKE_PRESCRIPTION_MAP = {
+  "追高冲动": {
+    trainingType: "追高冲动专项",
+    nextAction: "第一根放量不追，先停十秒",
+    trainingPrescription: "追高冲动专项：放量拉升 / 假突破 / 冲高回落"
+  },
+  "扛单被套": {
+    trainingType: "扛单被套专项",
+    nextAction: "破位认错，不用希望代替规则",
+    trainingPrescription: "扛单被套专项：破位下跌 / 弱反弹 / 连续阴跌"
+  },
+  "卖飞懊悔": {
+    trainingType: "卖飞懊悔专项",
+    nextAction: "按趋势规则持有，不因一根波动急追急退",
+    trainingPrescription: "卖飞懊悔专项：趋势持有 / 洗盘后走强"
+  },
+  "补仓冲动": {
+    trainingType: "补仓冲动专项",
+    nextAction: "不在破位亏损中补仓",
+    trainingPrescription: "补仓冲动专项：下跌中继 / 反抽诱多"
+  },
+  "计划外交易": {
+    trainingType: "计划外交易专项",
+    nextAction: "无计划不交易",
+    trainingPrescription: "计划外交易专项：无计划不交易"
+  },
+  "盈利拿不住": {
+    trainingType: "盈利拿不住专项",
+    nextAction: "盈利按规则拿，趋势未破不提前卖",
+    trainingPrescription: "盈利拿不住专项：趋势未破不提前卖"
+  },
+  "空仓焦虑": {
+    trainingType: "空仓焦虑专项",
+    nextAction: "空仓也是按计划执行",
+    trainingPrescription: "空仓焦虑专项：空仓等待"
+  },
+  "急于翻本": {
+    trainingType: "急于翻本专项",
+    nextAction: "亏损后停止，先复盘",
+    trainingPrescription: "急于翻本专项：亏损后停止交易"
+  }
+};
+
+function normalizeDecisionAction(action = "") {
+  const text = cleanEventText(action, 20);
+  const upper = text.toUpperCase();
+  if (upper === "BUY" || text === "买入" || text === "加仓") return "BUY";
+  if (upper === "SELL" || text === "卖出" || text === "减仓") return "SELL";
+  return "HOLD";
+}
+
+function getDecisionBarIndex(decision = {}) {
+  const value = decision.barIndex !== undefined
+    ? decision.barIndex
+    : (decision.bar_index !== undefined ? decision.bar_index : decision.index);
+  const index = Number(value);
+  return Number.isFinite(index) ? index : 0;
+}
+
+function getDecisionSceneTag(decision = {}) {
+  return cleanEventText(
+    decision.sceneTag || decision.scene_tag || decision.triggerScene || decision.trigger_scene || "",
+    80
+  );
+}
+
+function getDecisionPositionLevel(decision = {}) {
+  return cleanEventText(decision.positionLevel || decision.position_level || "", 20);
+}
+
+function getDecisionPrice(decision = {}) {
+  const price = Number(decision.price || decision.close || decision.c || 0);
+  return Number.isFinite(price) && price > 0 ? price : 0;
+}
+
+function buildTrainingRepeatEvents(errorType = "", decisions = []) {
+  const events = [];
+  const normalizedDecisions = (Array.isArray(decisions) ? decisions : []).map((item) => Object.assign({}, item, {
+    action: normalizeDecisionAction((item || {}).action),
+    barIndex: getDecisionBarIndex(item || {}),
+    sceneTag: getDecisionSceneTag(item || {}),
+    positionLevel: getDecisionPositionLevel(item || {}),
+    price: getDecisionPrice(item || {})
+  }));
+
+  if (errorType === "追高冲动") {
+    const targetScenes = TRAINING_MISTAKE_SCENE_TAGS["追高冲动"];
+    normalizedDecisions.forEach((decision) => {
+      if (decision.action !== "BUY" || !targetScenes.includes(decision.sceneTag)) return;
+      const heavy = decision.positionLevel === "重仓" || decision.positionLevel === "满仓";
+      events.push({
+        type: errorType,
+        label: heavy ? "重仓追高" : "疑似追高失守",
+        barIndex: decision.barIndex,
+        sceneTag: decision.sceneTag
+      });
+    });
+  }
+
+  if (errorType === "补仓冲动") {
+    let holding = false;
+    let entryPrice = 0;
+    normalizedDecisions.forEach((decision) => {
+      if (decision.action === "SELL") {
+        holding = false;
+        entryPrice = 0;
+        return;
+      }
+      if (decision.action !== "BUY" || decision.price <= 0) return;
+      if (holding && entryPrice > 0 && decision.price < entryPrice) {
+        events.push({
+          type: errorType,
+          label: "补仓冲动",
+          barIndex: decision.barIndex,
+          sceneTag: decision.sceneTag
+        });
+      }
+      if (!holding) {
+        holding = true;
+        entryPrice = decision.price;
+      }
+    });
+  }
+
+  if (errorType === "卖飞懊悔") {
+    let lastSellIndex = null;
+    normalizedDecisions.forEach((decision) => {
+      if (decision.action === "SELL") {
+        lastSellIndex = decision.barIndex;
+        return;
+      }
+      if (decision.action === "BUY" && lastSellIndex !== null && decision.barIndex - lastSellIndex > 0 && decision.barIndex - lastSellIndex <= 3) {
+        events.push({
+          type: errorType,
+          label: "卖飞后急追",
+          barIndex: decision.barIndex,
+          sceneTag: decision.sceneTag
+        });
+      }
+    });
+  }
+
+  return events;
+}
+
+function buildKlineTrainingMistakeCard(runtime = {}, options = {}) {
+  const decisions = Array.isArray(runtime.decisionTimeline) ? runtime.decisionTimeline : [];
+  const trainingResult = runtime.trainingResult || options.trainingResult || options.training_result || {};
+  const errorType = cleanEventText(
+    options.errorType || options.error_type || runtime.errorType || runtime.error_type || trainingResult.errorType || trainingResult.error_type || "",
+    80
+  );
+  const prescription = TRAINING_MISTAKE_PRESCRIPTION_MAP[errorType] || {
+    trainingType: errorType ? `${errorType}专项` : "基础盲练",
+    nextAction: "继续只看当下这一根，先记录再行动",
+    trainingPrescription: "基础盲练：继续训练买 / 卖 / 观望的稳定执行"
+  };
+  const repeatEvents = buildTrainingRepeatEvents(errorType, decisions);
+  const repeatCount = repeatEvents.length;
+  const obviousMiss = repeatEvents[0]
+    ? `${repeatEvents[0].label}${repeatEvents[0].sceneTag ? ` · ${repeatEvents[0].sceneTag}` : ""}${repeatEvents[0].barIndex ? ` · 第${repeatEvents[0].barIndex}根` : ""}`
+    : "本局暂无明显失守";
+  const executionResult = repeatCount > 0 ? "执行偏离" : "本局暂无明显失守";
+  const totalActions = Number(trainingResult.totalActions || trainingResult.total_actions || decisions.length || 0);
+  const pnlResult = Number(trainingResult.pnlResult || trainingResult.pnl_result || 0);
+  const sessionId = cleanEventText(runtime.trainingSessionId || runtime.training_session_id || trainingResult.sessionId || trainingResult.session_id || "", 160);
+
+  return {
+    title: "训练错题卡",
+    sessionId,
+    session_id: sessionId,
+    errorType,
+    error_type: errorType,
+    trainingType: prescription.trainingType,
+    training_type: prescription.trainingType,
+    pnlResult: Number.isFinite(pnlResult) ? roundMetric(pnlResult) : 0,
+    pnl_result: Number.isFinite(pnlResult) ? roundMetric(pnlResult) : 0,
+    actionSummary: `动作 ${totalActions} 次`,
+    action_summary: `动作 ${totalActions} 次`,
+    executionResult,
+    execution_result: executionResult,
+    lawResult: executionResult,
+    law_result: executionResult,
+    repeatCount,
+    repeat_count: repeatCount,
+    obviousMiss,
+    obvious_miss: obviousMiss,
+    nextAction: prescription.nextAction,
+    next_action: prescription.nextAction,
+    nextRule: prescription.nextAction,
+    next_rule: prescription.nextAction,
+    trainingPrescription: prescription.trainingPrescription,
+    training_prescription: prescription.trainingPrescription,
+    repeatEvents,
+    repeat_events: repeatEvents
+  };
+}
+
 function advanceKlineTrainingRuntime(runtime = {}) {
   if (runtime.lockedUntilDecision || runtime.mustDecide) {
     return Object.assign({}, runtime, {
@@ -1284,6 +1486,8 @@ function recordKlineTrainingDecision(runtime = {}, decision = {}) {
     position_level: positionLevel.label,
     errorType,
     error_type: errorType,
+    sceneTag: cleanEventText(decision.sceneTag || decision.scene_tag || "", 80),
+    scene_tag: cleanEventText(decision.sceneTag || decision.scene_tag || "", 80),
     selectedCandleKey: cleanEventText(decision.selectedCandleKey || activeCandle.key || "", 80),
     reactionDirection: cleanEventText(decision.reactionDirection, 40),
     firstReaction: cleanEventText(decision.firstReaction, 160),
@@ -1321,7 +1525,7 @@ function buildKlineTrainingResult(runtime = {}, options = {}) {
   const completedAt = options.completedAt || options.completed_at || Date.now();
   const countByAction = (action) => decisions.filter((item) => String((item || {}).action || "").toUpperCase() === action).length;
   const lastDecision = decisions[decisions.length - 1] || {};
-  return {
+  const result = {
     sessionId,
     session_id: sessionId,
     errorType,
@@ -1349,6 +1553,13 @@ function buildKlineTrainingResult(runtime = {}, options = {}) {
     completedAt,
     completed_at: completedAt
   };
+  const trainingMistakeCard = buildKlineTrainingMistakeCard(Object.assign({}, runtime, {
+    trainingResult: result
+  }), options);
+  return Object.assign({}, result, {
+    trainingMistakeCard,
+    training_mistake_card: trainingMistakeCard
+  });
 }
 
 function finishKlineTrainingRuntime(runtime = {}, options = {}) {
@@ -1358,6 +1569,8 @@ function finishKlineTrainingRuntime(runtime = {}, options = {}) {
     completedAt: trainingResult.completedAt,
     completed_at: trainingResult.completed_at,
     trainingResult,
+    trainingMistakeCard: trainingResult.trainingMistakeCard,
+    training_mistake_card: trainingResult.training_mistake_card,
     mustDecide: false,
     lockedUntilDecision: false,
     blockedReason: ""
@@ -1386,7 +1599,9 @@ function buildKlineTrainingRecordPatch(runtime = {}) {
     positionState: normalizePositionState(runtime.positionState || {}),
     sessionMetrics: buildSessionMetrics(runtime.positionState || {}, decisions),
     completed: !!runtime.completed,
-    trainingResult: runtime.trainingResult || null
+    trainingResult: runtime.trainingResult || null,
+    trainingMistakeCard: runtime.trainingMistakeCard || runtime.training_mistake_card || ((runtime.trainingResult || {}).trainingMistakeCard) || ((runtime.trainingResult || {}).training_mistake_card) || null,
+    training_mistake_card: runtime.training_mistake_card || runtime.trainingMistakeCard || ((runtime.trainingResult || {}).training_mistake_card) || ((runtime.trainingResult || {}).trainingMistakeCard) || null
   };
 }
 
@@ -1646,6 +1861,7 @@ module.exports = {
   setKlineRuntimeViewportPan,
   setKlineRuntimeIndicator,
   setKlineRuntimeMainIndicator,
+  buildKlineTrainingMistakeCard,
   buildKlineTrainingRecordPatch,
   buildKlineMindSession,
   buildKlineMindRecord,

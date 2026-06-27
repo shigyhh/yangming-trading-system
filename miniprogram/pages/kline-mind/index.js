@@ -205,8 +205,24 @@ function buildRuntimeView(runtime = null) {
   const latestEmotion = getLastItem(runtime.emotionBadges || []);
   const metrics = runtime.sessionMetrics || {};
   const result = runtime.trainingResult || null;
+  const rawMistakeCard = runtime.trainingMistakeCard || runtime.training_mistake_card || ((result || {}).trainingMistakeCard) || ((result || {}).training_mistake_card) || null;
   const isComplete = !!runtime.completed || (total > 0 && current >= total);
   const positionLevel = ((runtime.positionState || {}).positionLevel) || ((runtime.positionState || {}).position_level) || "";
+  const mistakeCard = rawMistakeCard ? {
+    trainingType: rawMistakeCard.trainingType || rawMistakeCard.training_type || "基础盲练",
+    executionResult: rawMistakeCard.executionResult || rawMistakeCard.execution_result || "本局暂无明显失守",
+    repeatCount: Number(rawMistakeCard.repeatCount || rawMistakeCard.repeat_count || 0),
+    obviousMiss: rawMistakeCard.obviousMiss || rawMistakeCard.obvious_miss || "本局暂无明显失守",
+    nextAction: rawMistakeCard.nextAction || rawMistakeCard.next_action || rawMistakeCard.nextRule || rawMistakeCard.next_rule || "继续只看当下这一根，先记录再行动",
+    trainingPrescription: rawMistakeCard.trainingPrescription || rawMistakeCard.training_prescription || "基础盲练：继续训练买 / 卖 / 观望的稳定执行"
+  } : {
+    trainingType: "基础盲练",
+    executionResult: "本局暂无明显失守",
+    repeatCount: 0,
+    obviousMiss: "本局暂无明显失守",
+    nextAction: "继续只看当下这一根，先记录再行动",
+    trainingPrescription: "基础盲练：继续训练买 / 卖 / 观望的稳定执行"
+  };
   const normalizedResult = result ? {
     totalActions: Number(result.totalActions || result.total_actions || 0),
     buyCount: Number(result.buyCount || result.buy_count || 0),
@@ -214,7 +230,8 @@ function buildRuntimeView(runtime = null) {
     holdCount: Number(result.holdCount || result.hold_count || 0),
     pnlText: `${Number(result.pnlResult || result.pnl_result || 0).toFixed(2)}%`,
     drawdownText: `${Number(result.maxDrawdown || result.max_drawdown || 0).toFixed(2)}%`,
-    errorType: result.errorType || result.error_type || ""
+    errorType: result.errorType || result.error_type || "",
+    mistakeCard
   } : null;
 
   return {
@@ -803,6 +820,7 @@ Page({
       selectedCandleKey: ((runtime.activeCandle || {}).key) || form.selectedCandleKey || "",
       positionLevel: form.positionLevel || form.position_level || "半仓",
       errorType: form.errorType || form.error_type || "",
+      sceneTag: form.sceneTag || form.scene_tag || "",
       reactionDirection: form.reactionDirection || "",
       firstReaction: form.firstReaction || "",
       boundaryChoice: form.boundaryChoice || ""
