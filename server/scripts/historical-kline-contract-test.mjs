@@ -2,14 +2,27 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  buildHistoricalKlineHotSlice,
   buildHistoricalKlineSlice,
   chooseCachedInstrument,
   downloadHistoricalKline,
   getHistoricalKlineRules,
   listHistoricalKlineCatalog,
   listHistoricalKlineInstruments,
-  revealHistoricalKlineSlice
+  revealHistoricalKlineSlice,
+  warmHistoricalKlineHotPool
 } from "../src/services/historicalKline.js";
+import { getKlineWindowSizeParam } from "../src/routes/router.js";
+
+test("historical kline route accepts count as window size alias", () => {
+  const countOnly = new URL("http://local/api/v1/kline-history/hot-slice?count=150");
+  const windowSizeOnly = new URL("http://local/api/v1/kline-history/hot-slice?window_size=120&count=150");
+  const explicitWindow = new URL("http://local/api/v1/kline-history/hot-slice?window=90&window_size=120&count=150");
+
+  assert.equal(getKlineWindowSizeParam(countOnly), "150");
+  assert.equal(getKlineWindowSizeParam(windowSizeOnly), "120");
+  assert.equal(getKlineWindowSizeParam(explicitWindow), "90");
+});
 
 test("historical kline random slice prefers cached symbols for the requested timeframe", () => {
   const instruments = Array.from({ length: 820 }, (_, index) => ({
@@ -84,6 +97,109 @@ test("historical kline slice returns blind real-data practice segment", async ()
   const reveal = revealHistoricalKlineSlice(result.slice.reveal_token);
   assert.equal(reveal.reveal.symbol, "600519");
   assert.equal(reveal.reveal.timeframe_key, "1d");
+});
+
+test("historical kline slice caches deterministic review anchors", async () => {
+  const params = {
+    marketKey: "cn_equity",
+    symbol: "600519",
+    timeframeKey: "1d",
+    windowSize: 60,
+    mode: "step_replay",
+    gateKey: "shi_shang_mo",
+    blind: false,
+    seed: "review-anchor-cache-test",
+    endDate: "2014-03-19"
+  };
+
+  const first = await buildHistoricalKlineSlice(params);
+  const second = await buildHistoricalKlineSlice(params);
+
+  assert.equal(first.slice.cache_status, "deterministic_miss");
+  assert.equal(first.slice.deterministic_cache, true);
+  assert.equal(second.slice.cache_status, "deterministic_hit");
+  assert.equal(second.slice.deterministic_cache, true);
+  assert.equal(second.slice.visible_count, 60);
+  assert.ok(second.slice.data_range.end <= "2014-03-19");
+  assert.equal(second.slice.data_range.end, first.slice.data_range.end);
+});
+
+test("historical kline hot pool returns prebuilt random-ready practice slices", async () => {
+  const params = {
+    marketKey: "cn_equity",
+    symbol: "600519",
+    timeframeKey: "1d",
+    windowSize: 60,
+    mode: "firecracker",
+    personalityType: "冲动型",
+    gateKey: "shi_shang_mo",
+    blind: true,
+    poolSize: 3,
+    poolSeed: "hot-pool-contract-test"
+  };
+
+  const warmed = await warmHistoricalKlineHotPool(params);
+  const first = await buildHistoricalKlineHotSlice(params);
+  const second = await buildHistoricalKlineHotSlice(params);
+
+  assert.equal(warmed.pool.status, "ready");
+  assert.equal(warmed.pool.size, 3);
+  assert.equal(first.slice.cache_status, "pool_hit");
+  assert.equal(second.slice.cache_status, "pool_hit");
+  assert.equal(first.slice.hot_pool, true);
+  assert.equal(first.slice.visible_count, 60);
+  assert.equal(first.slice.candles.length, 60);
+  assert.ok(first.slice.pool_key);
+  assert.ok(second.slice.pool_key);
+});
+
+test("historical kline hot slice uses default training gate for warmed pools", async () => {
+  const warmedParams = {
+    marketKey: "cn_equity",
+    symbol: "600519",
+    timeframeKey: "1d",
+    windowSize: 60,
+    mode: "step_replay",
+    gateKey: "shi_shang_mo",
+    blind: true,
+    poolSize: 2,
+    poolSeed: "hot-pool-default-gate-test"
+  };
+
+  await warmHistoricalKlineHotPool(warmedParams);
+  const slice = await buildHistoricalKlineHotSlice({
+    marketKey: warmedParams.marketKey,
+    symbol: warmedParams.symbol,
+    timeframeKey: warmedParams.timeframeKey,
+    windowSize: warmedParams.windowSize,
+    mode: warmedParams.mode,
+    blind: true
+  });
+
+  assert.equal(slice.slice.cache_status, "pool_hit");
+  assert.equal(slice.slice.hot_pool, true);
+  assert.equal(slice.slice.candles.length, 60);
+});
+
+test("historical kline hot slice does not synchronously fill full pool when cold", async () => {
+  const slice = await buildHistoricalKlineHotSlice({
+    marketKey: "cn_equity",
+    symbol: "600519",
+    timeframeKey: "1d",
+    windowSize: 60,
+    mode: "step_replay",
+    gateKey: "shi_shang_mo",
+    blind: true,
+    startDate: "2016-01-01",
+    endDate: "2018-12-31",
+    poolSize: 6,
+    poolSeed: "hot-pool-cold-single-fill-test"
+  });
+
+  assert.equal(slice.slice.cache_status, "pool_cold_fill");
+  assert.equal(slice.slice.hot_pool, true);
+  assert.equal(slice.slice.pool_size, 1);
+  assert.equal(slice.slice.candles.length, 60);
 });
 
 test("historical kline slice can resample daily cache into week and year cycles", async () => {
