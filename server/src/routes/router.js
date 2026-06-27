@@ -18,10 +18,14 @@ import { consumeWechatAuthCode, createWechatAuthUrl } from "../services/wechatAu
 import { advanceZhixingReplaySession, finishZhixingReplaySession, getZhixingReplaySession, listZhixingReplayResults, startZhixingReplaySession, submitZhixingReplayDecision } from "../services/zhixingReplay.js";
 import { dispatchTrainingPrescriptionBinding, generateShareCardBinding, getAdminUserFromBindings, getDataBindingUserSummary, getInviteSourceStatsBinding, getRetestComparisonBinding, getShareCardBinding, getTrainingPrescriptionBinding, getUserReportBinding, listAdminUsersFromBindings, listTradeReviewBindings, saveAssessmentReportBinding, saveKLineRecordBinding, saveRetestResultBinding, saveTradeReviewBinding, saveTrainingRecordBinding, syncAssistantSummaryToFeishuBinding, updateAssistantHandoffBinding } from "../services/dataBinding.js";
 import { getGlobalReflectionToday, listGlobalReflectionChoices, submitGlobalReflectionVote } from "../services/globalReflection.js";
-import { buildEmptyHistoricalKlineSlice, buildHistoricalKlineSlice, downloadHistoricalKline, getHistoricalKlineRules, getHistoricalKlineStatus, listHistoricalKlineCatalog, listHistoricalKlineInstruments, revealHistoricalKlineSlice } from "../services/historicalKline.js";
+import { buildEmptyHistoricalKlineSlice, buildHistoricalKlineHotSlice, buildHistoricalKlineSlice, downloadHistoricalKline, getHistoricalKlineRules, getHistoricalKlineStatus, listHistoricalKlineCatalog, listHistoricalKlineInstruments, revealHistoricalKlineSlice, warmHistoricalKlineHotPool } from "../services/historicalKline.js";
 import { buildTradeReviewOcrDraft } from "../services/tradeReviewOcr.js";
 import { completeMockYmtyPayment, createYmtyOrder, getYmtyAfterpayEntrance, getYmtyOrderStatus, listYmtyCourses, recordYmtyPaymentNotification } from "../services/ymty.js";
 import { getLivingMirrorGrowthProjection, getLivingMirrorProfile, getRiskPatternSummary, getTodayState } from "../services/eventAggregator.js";
+
+export function getKlineWindowSizeParam(url) {
+  return url.searchParams.get("window") || url.searchParams.get("window_size") || url.searchParams.get("count") || "";
+}
 
 export async function route(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
@@ -69,6 +73,8 @@ export async function route(req, res) {
         kline_history_status: "GET /api/v1/kline-history/status?market=cn_equity&timeframe=1d",
         kline_history_rules: "GET /api/v1/kline-history/rules?market=cn_equity",
         kline_history_slice: "GET /api/v1/kline-history/slice?market=cn_equity&symbol=600519&timeframe=1d&blind=1",
+        kline_history_hot_slice: "GET /api/v1/kline-history/hot-slice?market=cn_equity&timeframe=1d&window=150&blind=1",
+        kline_history_hot_pool: "GET /api/v1/kline-history/hot-pool?market=cn_equity&timeframe=1d&window=150&pool_size=12",
         kline_history_reveal: "GET /api/v1/kline-history/reveal?token=xxx",
         kline_history_download: "POST /api/v1/kline-history/download",
         zhixing_replay_start: "POST /api/v1/zhixing-replay/start",
@@ -806,7 +812,7 @@ export async function route(req, res) {
       symbol: url.searchParams.get("symbol") || url.searchParams.get("code") || url.searchParams.get("instrument") || "",
       timeframeKey: url.searchParams.get("timeframe") || url.searchParams.get("timeframe_key") || url.searchParams.get("klt") || "",
       adjustmentMode: url.searchParams.get("adjustment") || url.searchParams.get("adjustment_mode") || url.searchParams.get("fq") || "",
-      windowSize: url.searchParams.get("window") || url.searchParams.get("window_size") || "",
+      windowSize: getKlineWindowSizeParam(url),
       mode: url.searchParams.get("mode") || "step_replay",
       personalityType: url.searchParams.get("personality_type") || "",
       gateKey: url.searchParams.get("gate") || url.searchParams.get("gate_key") || "",
@@ -825,6 +831,43 @@ export async function route(req, res) {
         reason: error.message
       });
     }
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/v1/kline-history/hot-slice") {
+    const result = await buildHistoricalKlineHotSlice({
+      marketKey: url.searchParams.get("market") || url.searchParams.get("market_key") || "",
+      symbol: url.searchParams.get("symbol") || url.searchParams.get("code") || url.searchParams.get("instrument") || "",
+      timeframeKey: url.searchParams.get("timeframe") || url.searchParams.get("timeframe_key") || url.searchParams.get("klt") || "",
+      adjustmentMode: url.searchParams.get("adjustment") || url.searchParams.get("adjustment_mode") || url.searchParams.get("fq") || "",
+      windowSize: getKlineWindowSizeParam(url),
+      mode: url.searchParams.get("mode") || "step_replay",
+      personalityType: url.searchParams.get("personality_type") || "",
+      gateKey: url.searchParams.get("gate") || url.searchParams.get("gate_key") || "shi_shang_mo",
+      blind: getBooleanParam(url, "blind", true),
+      startDate: url.searchParams.get("start_date") || url.searchParams.get("start") || "",
+      endDate: url.searchParams.get("end_date") || url.searchParams.get("entryTime") || url.searchParams.get("entry_time") || url.searchParams.get("end") || "",
+      poolSize: url.searchParams.get("pool_size") || ""
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/v1/kline-history/hot-pool") {
+    const result = await warmHistoricalKlineHotPool({
+      marketKey: url.searchParams.get("market") || url.searchParams.get("market_key") || "",
+      symbol: url.searchParams.get("symbol") || url.searchParams.get("code") || url.searchParams.get("instrument") || "",
+      timeframeKey: url.searchParams.get("timeframe") || url.searchParams.get("timeframe_key") || url.searchParams.get("klt") || "",
+      adjustmentMode: url.searchParams.get("adjustment") || url.searchParams.get("adjustment_mode") || url.searchParams.get("fq") || "",
+      windowSize: getKlineWindowSizeParam(url),
+      mode: url.searchParams.get("mode") || "step_replay",
+      personalityType: url.searchParams.get("personality_type") || "",
+      gateKey: url.searchParams.get("gate") || url.searchParams.get("gate_key") || "shi_shang_mo",
+      blind: getBooleanParam(url, "blind", true),
+      startDate: url.searchParams.get("start_date") || url.searchParams.get("start") || "",
+      endDate: url.searchParams.get("end_date") || url.searchParams.get("entryTime") || url.searchParams.get("entry_time") || url.searchParams.get("end") || "",
+      poolSize: url.searchParams.get("pool_size") || "",
+      poolSeed: url.searchParams.get("pool_seed") || ""
+    });
     return sendJson(res, 200, { ok: true, ...result });
   }
 

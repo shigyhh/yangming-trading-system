@@ -12,6 +12,16 @@ const DEFAULT_WINDOW_SIZE = 96;
 const MIN_WINDOW_SIZE = 12;
 const MAX_WINDOW_SIZE = 240;
 const SLICE_TOKEN_VERSION = "kline_slice_v1";
+const HOT_SLICE_CACHE_LIMIT = clamp(Number(process.env.KLINE_SLICE_HOT_CACHE_LIMIT || 256), 16, 1000);
+const DETERMINISTIC_SLICE_CACHE_TTL_MS = 10 * 60 * 1000;
+const DETERMINISTIC_SLICE_CACHE_LIMIT = 360;
+const HOT_POOL_DEFAULT_SIZE = clamp(Number(process.env.KLINE_HOT_POOL_SIZE || 12), 3, 60);
+const HOT_POOL_MAX_SIZE = clamp(Number(process.env.KLINE_HOT_POOL_MAX_SIZE || 60), 3, 120);
+const HOT_POOL_DEFAULT_GATE = "shi_shang_mo";
+const hotSliceCache = new Map();
+const deterministicSliceCache = new Map();
+const hotSlicePools = new Map();
+const hotPoolWarmTasks = new Map();
 
 const TIMEFRAMES = [
   { key: "5m", label: "5分钟", granularity: "intraday", minutes: 5 },
@@ -409,12 +419,48 @@ export async function buildHistoricalKlineSlice({
   const trainingMode = getTrainingMode(mode);
   const gate = getGatePractice(gateKey);
   const personality = getPersonalityPractice(personalityType);
+  const safeWindowSize = clamp(Number(windowSize || DEFAULT_WINDOW_SIZE), MIN_WINDOW_SIZE, MAX_WINDOW_SIZE);
+  const requestedSymbol = String(symbol || "").trim();
+  const deterministicCacheKey = buildDeterministicSliceCacheKey({
+    marketKey: market.key,
+    symbol: requestedSymbol,
+    timeframeKey: timeframe.key,
+    adjustmentMode: adjustment.key,
+    windowSize: safeWindowSize,
+    mode: trainingMode.key,
+    personalityType,
+    gateKey: gate?.key || "",
+    blind,
+    seed,
+    startDate,
+    endDate
+  });
+  const deterministicCachedResult = deterministicCacheKey ? readDeterministicSliceCache(deterministicCacheKey) : null;
+  if (deterministicCachedResult) return withDeterministicSliceCacheStatus(deterministicCachedResult, "deterministic_hit");
+
+  const cacheKey = buildHotSliceCacheKey({
+    marketKey: market.key,
+    symbol,
+    timeframeKey: timeframe.key,
+    adjustmentMode: adjustment.key,
+    windowSize: safeWindowSize,
+    mode: trainingMode.key,
+    personalityType: personality.label,
+    gateKey: gate.key,
+    blind,
+    seed,
+    startDate,
+    endDate,
+    anchor
+  });
+  const cachedResult = getHotSliceCache(cacheKey);
+  if (cachedResult) return withSliceCacheStatus(cachedResult, "hit");
+
   const instruments = await loadInstrumentList(market);
   const instrument = await resolveInstrument({ market, symbol, instruments, timeframeKey: timeframe.key, seed });
   const dataset = await loadKlineDataset({ market, symbol: instrument.symbol, timeframeKey: timeframe.key, adjustmentMode: adjustment.key });
   const manifestStatus = await getManifestStatus({ market, timeframeKey: timeframe.key });
   const candles = filterCandlesByDate(dataset.candles, { startDate, endDate });
-  const safeWindowSize = clamp(Number(windowSize || DEFAULT_WINDOW_SIZE), MIN_WINDOW_SIZE, MAX_WINDOW_SIZE);
 
   if (candles.length < safeWindowSize) {
     const error = new Error(`真实历史K线数量不足：${market.label} ${timeframe.label} ${instrument.symbol}`);
@@ -430,7 +476,9 @@ export async function buildHistoricalKlineSlice({
   }
 
   const rng = createSeededRng([market.key, instrument.symbol, timeframe.key, trainingMode.key, personality?.label || "", gate?.key || "", seed || ""].join(":"));
-  const startIndex = anchor === "end"
+  const startIndex = requestedSymbol && (startDate || endDate)
+    ? chooseAnchoredSliceStartIndex(candles, { windowSize: safeWindowSize, startDate, endDate })
+    : anchor === "end"
     ? Math.max(0, candles.length - safeWindowSize)
     : chooseSliceStartIndex(candles, {
       windowSize: safeWindowSize,
@@ -467,7 +515,7 @@ export async function buildHistoricalKlineSlice({
   const blindBasePrice = segment[0]?.close || segment[0]?.open || 1;
   const blindVolumeBase = average(segment.map((item) => Number(item.volume || 0)).filter((value) => value > 0)) || 1;
 
-  return {
+  const result = {
     slice: {
       id: sliceId,
       blind: Boolean(blind),
@@ -521,6 +569,156 @@ export async function buildHistoricalKlineSlice({
       reveal: Boolean(blind) ? null : descriptor,
       compliance: COMPLIANCE_TEXT
     }
+  };
+  if (deterministicCacheKey) {
+    const deterministicResult = withDeterministicSliceCacheStatus(result, "deterministic_miss");
+    writeDeterministicSliceCache(deterministicCacheKey, deterministicResult);
+    return deterministicResult;
+  }
+  setHotSliceCache(cacheKey, result);
+  return withSliceCacheStatus(result, "miss");
+}
+
+export async function warmHistoricalKlineHotPool({
+  marketKey = DEFAULT_MARKET,
+  symbol = "",
+  timeframeKey = DEFAULT_TIMEFRAME,
+  adjustmentMode = "none",
+  windowSize = DEFAULT_WINDOW_SIZE,
+  mode = "step_replay",
+  personalityType = "",
+  gateKey = "",
+  blind = true,
+  startDate = "",
+  endDate = "",
+  anchor = "",
+  poolSize = HOT_POOL_DEFAULT_SIZE,
+  poolSeed = "",
+  dedupe = true
+} = {}) {
+  const normalizedGateKey = gateKey || HOT_POOL_DEFAULT_GATE;
+  const poolKey = buildHotPoolKey({
+    marketKey,
+    symbol,
+    timeframeKey,
+    adjustmentMode,
+    windowSize,
+    mode,
+    personalityType,
+    gateKey: normalizedGateKey,
+    blind,
+    startDate,
+    endDate,
+    anchor
+  });
+  const safePoolSize = clamp(Number(poolSize || HOT_POOL_DEFAULT_SIZE), 1, HOT_POOL_MAX_SIZE);
+  const existing = hotSlicePools.get(poolKey);
+  if (existing?.items?.length >= safePoolSize) {
+    return buildHotPoolSummary(poolKey, existing.items, "ready");
+  }
+  if (dedupe && hotPoolWarmTasks.has(poolKey)) {
+    return hotPoolWarmTasks.get(poolKey);
+  }
+
+  const task = (async () => {
+    const items = Array.isArray(existing?.items) ? existing.items.slice(0, safePoolSize) : [];
+    const baseSeed = String(poolSeed || `${Date.now()}-${crypto.randomBytes(6).toString("hex")}`);
+    for (let index = items.length; index < safePoolSize; index += 1) {
+      const seed = `${baseSeed}:pool:${index}`;
+      const result = await buildHistoricalKlineSlice({
+        marketKey,
+        symbol,
+        timeframeKey,
+        adjustmentMode,
+        windowSize,
+        mode,
+        personalityType,
+        gateKey: normalizedGateKey,
+        blind,
+        seed,
+        startDate,
+        endDate,
+        anchor
+      });
+      items.push(withHotPoolMetadata(result, {
+        cacheStatus: "pool_warm",
+        poolKey,
+        poolSize: safePoolSize
+      }));
+    }
+
+    hotSlicePools.set(poolKey, {
+      updatedAt: new Date().toISOString(),
+      items
+    });
+    return buildHotPoolSummary(poolKey, items, "ready");
+  })();
+
+  if (dedupe) {
+    hotPoolWarmTasks.set(poolKey, task);
+    task.finally(() => {
+      if (hotPoolWarmTasks.get(poolKey) === task) hotPoolWarmTasks.delete(poolKey);
+    });
+  }
+  return task;
+}
+
+export async function buildHistoricalKlineHotSlice(params = {}) {
+  const normalizedParams = Object.assign({}, params, {
+    gateKey: params.gateKey || HOT_POOL_DEFAULT_GATE
+  });
+  const poolKey = buildHotPoolKey(normalizedParams);
+  let entry = hotSlicePools.get(poolKey);
+  const hadReadyPool = !!(entry?.items?.length);
+  if (!hadReadyPool) {
+    await warmHistoricalKlineHotPool(Object.assign({}, normalizedParams, { poolSize: 1, dedupe: true }));
+    entry = hotSlicePools.get(poolKey);
+  }
+
+  const items = Array.isArray(entry?.items) ? entry.items : [];
+  if (!items.length) return buildHistoricalKlineSlice(params);
+  const index = Math.floor(Math.random() * items.length);
+  const poolSizeBeforeConsume = items.length;
+  const [selected] = items.splice(index, 1);
+  hotSlicePools.set(poolKey, {
+    updatedAt: new Date().toISOString(),
+    items
+  });
+  warmHistoricalKlineHotPool(normalizedParams).catch(() => {});
+  return withHotPoolMetadata(selected, {
+    cacheStatus: hadReadyPool ? "pool_hit" : "pool_cold_fill",
+    poolKey,
+    poolSize: poolSizeBeforeConsume
+  });
+}
+
+export async function warmDefaultHistoricalKlineHotPools() {
+  const timeframes = ["1d", "60m", "30m"];
+  const results = [];
+  for (const timeframeKey of timeframes) {
+    try {
+      const result = await warmHistoricalKlineHotPool({
+        marketKey: "cn_equity",
+        timeframeKey,
+        windowSize: 150,
+        mode: "step_replay",
+        gateKey: "shi_shang_mo",
+        blind: true,
+        poolSize: HOT_POOL_DEFAULT_SIZE
+      });
+      results.push(result.pool);
+    } catch (error) {
+      results.push({
+        status: "error",
+        timeframe_key: timeframeKey,
+        error: error.message
+      });
+    }
+  }
+  return {
+    ok: results.some((item) => item.status === "ready"),
+    pools: results,
+    warmed_at: new Date().toISOString()
   };
 }
 
@@ -1190,6 +1388,163 @@ function uniqueStrings(values = []) {
   return Array.from(new Set(values.map((item) => String(item || "").trim()).filter(Boolean)));
 }
 
+function buildHotSliceCacheKey(input = {}) {
+  return JSON.stringify([
+    input.marketKey || DEFAULT_MARKET,
+    String(input.symbol || "").trim(),
+    input.timeframeKey || DEFAULT_TIMEFRAME,
+    input.adjustmentMode || "none",
+    Number(input.windowSize || DEFAULT_WINDOW_SIZE),
+    input.mode || "step_replay",
+    input.personalityType || "",
+    input.gateKey || "",
+    Boolean(input.blind),
+    String(input.seed || ""),
+    normalizeDateKey(input.startDate || ""),
+    normalizeDateKey(input.endDate || ""),
+    input.anchor || ""
+  ]);
+}
+
+function cloneJson(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+function buildDeterministicSliceCacheKey({
+  marketKey = DEFAULT_MARKET,
+  symbol = "",
+  timeframeKey = DEFAULT_TIMEFRAME,
+  adjustmentMode = "none",
+  windowSize = DEFAULT_WINDOW_SIZE,
+  mode = "",
+  personalityType = "",
+  gateKey = "",
+  blind = true,
+  seed = "",
+  startDate = "",
+  endDate = ""
+} = {}) {
+  const safeSymbol = String(symbol || "").trim();
+  if (!safeSymbol) return "";
+  if (!startDate && !endDate) return "";
+  return [
+    marketKey,
+    safeSymbol,
+    timeframeKey,
+    adjustmentMode,
+    windowSize,
+    mode,
+    personalityType,
+    gateKey,
+    blind ? "blind" : "open",
+    seed,
+    normalizeDateKey(startDate),
+    normalizeDateKey(endDate)
+  ].join("|");
+}
+
+function readDeterministicSliceCache(cacheKey) {
+  const cached = deterministicSliceCache.get(cacheKey);
+  if (!cached) return null;
+  if (Date.now() - cached.cachedAt > DETERMINISTIC_SLICE_CACHE_TTL_MS) {
+    deterministicSliceCache.delete(cacheKey);
+    return null;
+  }
+  deterministicSliceCache.delete(cacheKey);
+  deterministicSliceCache.set(cacheKey, cached);
+  return cloneJson(cached.result);
+}
+
+function writeDeterministicSliceCache(cacheKey, result) {
+  if (!cacheKey || !result?.slice) return;
+  deterministicSliceCache.set(cacheKey, {
+    cachedAt: Date.now(),
+    result: cloneJson(result)
+  });
+  while (deterministicSliceCache.size > DETERMINISTIC_SLICE_CACHE_LIMIT) {
+    deterministicSliceCache.delete(deterministicSliceCache.keys().next().value);
+  }
+}
+
+function withDeterministicSliceCacheStatus(result, cacheStatus) {
+  const cloned = withSliceCacheStatus(result, cacheStatus);
+  if (cloned?.slice) cloned.slice.deterministic_cache = true;
+  return cloned;
+}
+
+function getHotSliceCache(cacheKey) {
+  if (!hotSliceCache.has(cacheKey)) return null;
+  const cached = hotSliceCache.get(cacheKey);
+  hotSliceCache.delete(cacheKey);
+  hotSliceCache.set(cacheKey, cached);
+  return cached;
+}
+
+function setHotSliceCache(cacheKey, result) {
+  if (!cacheKey || !result?.slice) return;
+  hotSliceCache.set(cacheKey, cloneJson(result));
+  while (hotSliceCache.size > HOT_SLICE_CACHE_LIMIT) {
+    const oldestKey = hotSliceCache.keys().next().value;
+    hotSliceCache.delete(oldestKey);
+  }
+}
+
+function withSliceCacheStatus(result, cacheStatus) {
+  const cloned = cloneJson(result);
+  if (cloned?.slice) cloned.slice.cache_status = cacheStatus;
+  return cloned;
+}
+
+function buildHotPoolKey(input = {}) {
+  const market = getMarket(input.marketKey || DEFAULT_MARKET);
+  const timeframe = getTimeframe(input.timeframeKey || market.defaultTimeframe || DEFAULT_TIMEFRAME);
+  const adjustment = getAdjustmentMode(input.adjustmentMode || "none");
+  const trainingMode = getTrainingMode(input.mode || "step_replay");
+  const gate = getGatePractice(input.gateKey || "");
+  const personality = getPersonalityPractice(input.personalityType || "");
+  const safeWindowSize = clamp(Number(input.windowSize || DEFAULT_WINDOW_SIZE), MIN_WINDOW_SIZE, MAX_WINDOW_SIZE);
+  return JSON.stringify([
+    market.key,
+    String(input.symbol || "").trim(),
+    timeframe.key,
+    adjustment.key,
+    safeWindowSize,
+    trainingMode.key,
+    personality.label,
+    gate.key,
+    Boolean(input.blind !== false),
+    normalizeDateKey(input.startDate || ""),
+    normalizeDateKey(input.endDate || ""),
+    input.anchor || ""
+  ]);
+}
+
+function buildHotPoolSummary(poolKey, items = [], status = "ready") {
+  return {
+    pool: {
+      key: hashText(poolKey),
+      status,
+      size: items.length,
+      updated_at: new Date().toISOString()
+    },
+    compliance: COMPLIANCE_TEXT
+  };
+}
+
+function withHotPoolMetadata(result, { cacheStatus = "pool_hit", poolKey = "", poolSize = 0 } = {}) {
+  const cloned = withSliceCacheStatus(result, cacheStatus);
+  if (cloned?.slice) {
+    cloned.slice.hot_pool = true;
+    cloned.slice.pool_key = hashText(poolKey);
+    cloned.slice.pool_size = poolSize;
+  }
+  return cloned;
+}
+
+function hashText(value = "") {
+  return crypto.createHash("sha256").update(String(value || "")).digest("hex").slice(0, 18);
+}
+
 function shouldAggregateFromDaily(timeframeKey) {
   return ["1w", "1mo", "1y"].includes(timeframeKey);
 }
@@ -1269,6 +1624,16 @@ function filterCandlesByDate(candles, { startDate = "", endDate = "" } = {}) {
     if (end && key > end) return false;
     return true;
   });
+}
+
+function chooseAnchoredSliceStartIndex(candles, { windowSize, startDate = "", endDate = "" } = {}) {
+  const maxStart = Math.max(0, candles.length - windowSize);
+  if (maxStart <= 0) return 0;
+  const start = normalizeDateKey(startDate);
+  const end = normalizeDateKey(endDate);
+  if (end) return maxStart;
+  if (start) return 0;
+  return maxStart;
 }
 
 function chooseSliceStartIndex(candles, { windowSize, mode, personality, gate, rng }) {
