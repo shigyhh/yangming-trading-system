@@ -103,6 +103,50 @@ assert.strictEqual(sceneDrivenReview.mainErrorType, "追高冲动");
 assert.strictEqual(sceneDrivenReview.triggerScene, "突然拉升");
 assert.strictEqual(sceneDrivenReview.mistakeCard.triggerScene, "突然拉升");
 
+const p1ErrorRuleCases = [
+  {
+    name: "buy from fear of missing out",
+    input: { action: "买入", firstThought: "怕错过", inPlan: "yes" },
+    expected: "追高冲动"
+  },
+  {
+    name: "trapped and wants to average down",
+    input: { positionState: "trapped", firstThought: "想补仓", inPlan: "yes" },
+    expected: "补仓冲动"
+  },
+  {
+    name: "sold too early and regrets it",
+    input: { positionStateLabel: "卖飞了", firstThought: "不甘心", inPlan: "yes" },
+    expected: "卖飞懊悔"
+  },
+  {
+    name: "outside plan",
+    input: { firstThought: "想动一下", inPlan: "no" },
+    expected: "计划外交易"
+  }
+];
+p1ErrorRuleCases.forEach((item) => {
+  const built = buildTradeReview(Object.assign({
+    marketKey: "cn",
+    timeframeKey: "1d",
+    tradeDate: "2026-06-27",
+    symbol: "300223"
+  }, item.input));
+  assert.strictEqual(built.mainErrorType, item.expected, `P1 mistake rule should classify ${item.name}`);
+  assert.strictEqual(built.mistakeCard.mainErrorType, item.expected, `P1 mistake card should carry ${item.name}`);
+});
+
+const fallbackMistakeCard = buildTradeReview({
+  marketKey: "cn",
+  timeframeKey: "1d",
+  tradeDate: "2026-06-27",
+  symbol: ""
+});
+assert.strictEqual(fallbackMistakeCard.mistakeCard.symbol, "待补充");
+assert.strictEqual(fallbackMistakeCard.mistakeCard.firstThought, "待补充");
+assert.strictEqual(fallbackMistakeCard.mistakeCard.triggerScene.length > 0, true);
+assert.strictEqual(fallbackMistakeCard.mistakeCard.nextRule.length > 0, true);
+
 const syncedReview = applyServerTradeReviewResult(review, {
   review: {
     id: review.id,

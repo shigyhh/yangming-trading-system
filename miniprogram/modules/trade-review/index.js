@@ -449,27 +449,87 @@ function normalizeTextParts(parts = []) {
   return parts.filter(Boolean).map((item) => String(item || "")).join(" ");
 }
 
+function pickReviewText(input = {}, keys = []) {
+  for (const key of keys) {
+    const value = input[key];
+    if (value !== undefined && value !== null && String(value || "").trim()) {
+      return String(value || "").trim();
+    }
+  }
+  return "";
+}
+
+function getReviewFirstThought(input = {}) {
+  return pickReviewText(input, ["firstThought", "first_thought", "strongestThought", "strongest_thought"]);
+}
+
+function getReviewTriggerScene(input = {}) {
+  return pickReviewText(input, ["triggerScene", "trigger_scene"]);
+}
+
+function getReviewNextRule(input = {}) {
+  return pickReviewText(input, ["nextAction", "next_action", "nextRule", "next_rule"]);
+}
+
+function getReviewActionLabel(input = {}, fallback = "") {
+  return pickReviewText(input, ["action", "actionLabel", "action_label", "tradeAction", "trade_action"]) || fallback || "待补充";
+}
+
+function getReviewStatusLabel(input = {}) {
+  const explicit = pickReviewText(input, ["status", "statusLabel", "status_label", "positionStateLabel", "position_state_label"]);
+  if (explicit) return explicit;
+  const state = pickReviewText(input, ["positionState", "position_state"]);
+  return POSITION_STATE_LABELS[state] || "待补充";
+}
+
+function getReviewPlanState(input = {}) {
+  const raw = input.inPlan !== undefined ? input.inPlan :
+    (input.isPlanned !== undefined ? input.isPlanned :
+      (input.is_planned !== undefined ? input.is_planned :
+        (input.planState !== undefined ? input.planState : input.plan_state)));
+  if (raw === true) return "yes";
+  if (raw === false) return "no";
+  const text = String(raw || "").trim();
+  if (!text) return "";
+  if (/计划外|执行偏离|no|false/.test(text)) return "no";
+  if (/说不清|unclear/.test(text)) return "unclear";
+  if (/计划内|按计划|yes|true/.test(text)) return "yes";
+  return text;
+}
+
 function resolveTradeReviewMainErrorType(input = {}) {
+  const firstThought = getReviewFirstThought(input);
+  const triggerScene = getReviewTriggerScene(input);
+  const nextRule = getReviewNextRule(input);
+  const actionLabel = getReviewActionLabel(input, "");
+  const statusLabel = getReviewStatusLabel(input);
+  const planState = getReviewPlanState(input);
   const text = normalizeTextParts([
-    input.firstThought,
-    input.triggerScene,
+    firstThought,
+    triggerScene,
     input.entryReason,
     input.exitReason,
     input.afterReaction,
-    input.nextAction,
+    nextRule,
     input.reviewNote,
-    input.planBoundary
+    input.planBoundary,
+    actionLabel,
+    statusLabel
   ]);
+  if (/怕错过/.test(firstThought) && /买入|加仓/.test(actionLabel)) return "追高冲动";
+  if (/被套/.test(statusLabel) && /想补仓|补仓/.test(firstThought)) return "补仓冲动";
+  if (/卖飞/.test(statusLabel) && /不甘心|不甘|怕卖飞/.test(firstThought)) return "卖飞懊悔";
+  if (planState === "no") return "计划外交易";
   if (/怕错过|追高|上车|来不及|放量拉升|突然拉升|快速拉升|快速上冲|冲高回落|假突破/.test(text)) return "追高冲动";
-  if (/被套|扛单|不认错|再等等|会回来/.test(text) || input.positionState === "trapped") return "扛单被套";
   if (/卖飞|怕卖飞/.test(text)) return "卖飞懊悔";
   if (/买少/.test(text)) return "买少懊悔";
   if (/补仓|加仓/.test(text)) return "补仓冲动";
+  if (/被套|扛单|不认错|再等等|会回来/.test(text) || input.positionState === "trapped") return "扛单被套";
   if (/拿不住|怕回吐/.test(text)) return "盈利拿不住";
   if (/空仓|没票/.test(text)) return "空仓焦虑";
   if (/翻本|扳回|不甘/.test(text) || input.actionKey === "compensate") return "急于翻本";
   if (/怕亏|恐惧/.test(text) || input.emotion === "恐惧") return "恐惧止损";
-  if (input.inPlan === "no" || input.actionKey === "impulse") return "计划外交易";
+  if (input.actionKey === "impulse") return "计划外交易";
   return "计划外交易";
 }
 
@@ -478,18 +538,24 @@ function uniqueTags(tags = []) {
 }
 
 function resolveTradeReviewSecondaryErrors(input = {}, mainErrorType = "") {
+  const firstThought = getReviewFirstThought(input);
+  const triggerScene = getReviewTriggerScene(input);
+  const nextRule = getReviewNextRule(input);
+  const statusLabel = getReviewStatusLabel(input);
+  const planState = getReviewPlanState(input);
   const text = normalizeTextParts([
-    input.firstThought,
-    input.triggerScene,
+    firstThought,
+    triggerScene,
     input.entryReason,
     input.exitReason,
     input.afterReaction,
-    input.nextAction,
+    nextRule,
     input.reviewNote,
-    input.planBoundary
+    input.planBoundary,
+    statusLabel
   ]);
   const tags = [];
-  if (input.inPlan === "no" || input.actionKey === "impulse") tags.push("计划外交易");
+  if (planState === "no" || input.actionKey === "impulse") tags.push("计划外交易");
   if (input.positionState === "trapped" || /被套|扛单/.test(text)) tags.push("扛单被套");
   if (/怕错过|追高|放量拉升|突然拉升|快速拉升|快速上冲|冲高回落|假突破/.test(text)) tags.push("追高冲动");
   if (/补仓|加仓/.test(text)) tags.push("补仓冲动");
@@ -501,8 +567,9 @@ function resolveTradeReviewSecondaryErrors(input = {}, mainErrorType = "") {
 }
 
 function resolveTradeReviewLawResult(input = {}) {
-  if (input.inPlan === "no" || input.changedPlan === "yes" || input.boundaryState === "lost") return "破法";
-  if (input.inPlan === "unclear" || input.boundaryState === "near") return "说不清";
+  const planState = getReviewPlanState(input);
+  if (planState === "no" || input.changedPlan === "yes" || input.boundaryState === "lost") return "破法";
+  if (planState === "unclear" || input.boundaryState === "near") return "说不清";
   return "守法";
 }
 
@@ -510,31 +577,43 @@ function buildTradeReviewMistake(input = {}, reportBase = {}) {
   const mainErrorType = resolveTradeReviewMainErrorType(input);
   const secondaryErrorTypes = resolveTradeReviewSecondaryErrors(input, mainErrorType);
   const prescription = TRADE_REVIEW_ERROR_PRESCRIPTIONS[mainErrorType] || TRADE_REVIEW_ERROR_PRESCRIPTIONS["计划外交易"];
-  const triggerScene = input.triggerScene || prescription.scene;
-  const nextRule = input.nextAction || prescription.rule;
+  const firstThought = getReviewFirstThought(input) || "待补充";
+  const triggerScene = getReviewTriggerScene(input) || prescription.scene || "待补充";
+  const nextRule = getReviewNextRule(input) || prescription.rule || "待补充";
   const lawResult = resolveTradeReviewLawResult(input);
   const positionState = input.positionState || "holding";
-  const positionStateLabel = POSITION_STATE_LABELS[positionState] || "待确认";
+  const positionStateLabel = getReviewStatusLabel(input);
+  const symbol = pickReviewText(input, ["symbol", "symbolMasked", "symbol_masked"]) || "待补充";
+  const date = pickReviewText(input, ["date", "tradeDate", "trade_date"]) || "待补充";
+  const actionLabel = getReviewActionLabel(input, reportBase.actionLabel);
+  const mirrorAttribution = firstThought === "待补充"
+    ? `这次记录指向「${mainErrorType}」，第一念仍待补充。`
+    : `这次记录指向「${mainErrorType}」：第一念是「${firstThought}」，触发场景是「${triggerScene}」。`;
   const mistakeCard = {
     title: "错题卡",
+    symbol,
+    date,
     mainErrorType,
     secondaryErrorTypes,
-    firstThought: input.firstThought || "待照见",
+    firstThought,
     triggerScene,
     nextRule,
-    actionLabel: reportBase.actionLabel || "",
+    actionLabel,
     statusLabel: positionStateLabel,
     lawResult,
+    mirrorAttribution,
     mirrorDeposit: {
       title: "活镜沉淀",
-      line: `本次「${mainErrorType}」已写入活镜；后续同类记录会累计成复发模式。`
+      line: `活镜归因：${mirrorAttribution}`
     },
     trainingPrescription: {
       title: prescription.title,
       focusText: prescription.focusText,
       rule: prescription.rule,
-      packId: prescription.packId
-    }
+      packId: prescription.packId,
+      summary: `${prescription.title}｜${prescription.focusText}`
+    },
+    trainingPrescriptionText: `${prescription.title}｜${prescription.focusText}`
   };
 
   return {
@@ -597,6 +676,9 @@ function buildTradeReview(input = {}, context = {}) {
   const action = getOption(ACTION_OPTIONS, input.actionKey);
   const boundary = getOption(BOUNDARY_STATES, input.boundaryState);
   const mistake = buildTradeReviewMistake(input, { actionLabel: action.label });
+  const firstThought = getReviewFirstThought(input);
+  const nextRule = getReviewNextRule(input);
+  const planState = getReviewPlanState(input);
   const report = {
     id: input.id || `tr-${Date.now()}`,
     sourceType: "trade_review",
@@ -610,17 +692,20 @@ function buildTradeReview(input = {}, context = {}) {
     symbol: historicalMatch.symbol,
     actionKey: action.key,
     actionLabel: action.label,
+    action: mistake.mistakeCard.actionLabel,
     emotion: input.emotion || "未记录",
     entryReason: input.entryReason || "未记录",
     exitReason: input.exitReason || "未记录",
-    inPlan: input.inPlan || "yes",
+    inPlan: planState || "yes",
     changedPlan: input.changedPlan || "no",
     exitPrepared: input.exitPrepared || "yes",
     positionState: mistake.positionState,
     positionStateLabel: mistake.positionStateLabel,
+    status: mistake.positionStateLabel,
     afterReaction: input.afterReaction || "未记录",
-    nextAction: input.nextAction || "",
-    firstThought: input.firstThought || "未记录",
+    nextAction: nextRule || "",
+    firstThought: firstThought || "未记录",
+    first_thought: firstThought || "",
     planBoundary: input.planBoundary || "未记录",
     boundaryState: boundary.key,
     boundaryStateLabel: boundary.label,
@@ -636,13 +721,18 @@ function buildTradeReview(input = {}, context = {}) {
     oneLine: buildOneLine({ type, input, action, boundary, historicalMatch }),
     verdict: (keywordRule || {}).verdict || buildOneLine({ type, input, action, boundary, historicalMatch }),
     mainErrorType: mistake.mainErrorType,
+    main_error_type: mistake.mainErrorType,
     secondaryErrorTypes: mistake.secondaryErrorTypes,
+    secondary_error_types: mistake.secondaryErrorTypes,
     triggerScene: mistake.triggerScene,
+    trigger_scene: mistake.triggerScene,
     brokenRule: mistake.brokenRule,
     lawResult: mistake.lawResult,
     tradeResult: mistake.tradeResult,
     trainingPrescription: mistake.trainingPrescription,
+    training_prescription: mistake.trainingPrescription,
     trainingPackId: mistake.trainingPackId,
+    next_rule: mistake.mistakeCard.nextRule,
     mistakeCard: mistake.mistakeCard,
     mirrorDeposit: mistake.mirrorDeposit,
     trainingAction: mistake.trainingPrescription.rule || (keywordRule || {}).trainingAction || buildTrainingAction(type, boundary.key),
@@ -787,7 +877,7 @@ function buildTradeReviewTop3Stats(tradeReviewState = {}) {
     topErrors,
     topFirstThoughts,
     topTriggerScenes,
-    nextRule: (prescription || {}).rule || "先留下一条真实复盘，再生成下一次守法。",
+    nextRule: (prescription || {}).rule || "先留下一条真实复盘，再生成下次执行动作。",
     trainingPrescription: prescription,
     summary: mainErrorType
       ? `近 ${days} 天最高频错题是「${mainErrorType}」。`

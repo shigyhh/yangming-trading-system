@@ -236,12 +236,32 @@
           <view>这一次复盘，已进入你的行为印记。</view>
         </view>
       </view>
-      <text>错题卡</text>
-      <view class="one-line">{{report.oneLine}}</view>
       <view wx:if="{{report.mistakeCard}}" class="mistake-card">
         <view class="mistake-card-head">
-          <text>{{report.mistakeCard.title}}</text>
-          <view>{{report.mainErrorType}}</view>
+          <text>【错题卡】</text>
+          <view>{{report.mistakeCard.mainErrorType}}</view>
+        </view>
+        <view class="mistake-card-facts">
+          <view class="mistake-card-fact">
+            <text>标的</text>
+            <view>{{report.mistakeCard.symbol}}</view>
+          </view>
+          <view class="mistake-card-fact">
+            <text>日期</text>
+            <view>{{report.mistakeCard.date}}</view>
+          </view>
+          <view class="mistake-card-fact">
+            <text>操作</text>
+            <view>{{report.mistakeCard.actionLabel}}</view>
+          </view>
+          <view class="mistake-card-fact">
+            <text>状态</text>
+            <view>{{report.mistakeCard.statusLabel}}</view>
+          </view>
+        </view>
+        <view class="mistake-card-row">
+          <text>主错题</text>
+          <view>{{report.mistakeCard.mainErrorType}}</view>
         </view>
         <view class="mistake-card-row">
           <text>第一念</text>
@@ -249,11 +269,20 @@
         </view>
         <view class="mistake-card-row">
           <text>触发场景</text>
-          <view>{{report.triggerScene}}</view>
+          <view>{{report.mistakeCard.triggerScene}}</view>
         </view>
         <view class="mistake-card-row">
-          <text>下一次守法</text>
+          <text>活镜归因</text>
+          <view>{{report.mistakeCard.mirrorAttribution}}</view>
+        </view>
+        <view class="mistake-card-row">
+          <text>下次执行动作</text>
           <view>{{report.mistakeCard.nextRule}}</view>
+        </view>
+        <view class="mistake-card-row">
+          <text>训练处方</text>
+          <view>{{report.mistakeCard.trainingPrescriptionText}}</view>
+          <view class="mistake-card-prescription">{{report.mistakeCard.trainingPrescription.rule}}</view>
         </view>
       </view>
       <view wx:if="{{report.mirrorDeposit}}" class="mirror-deposit-card">
@@ -261,7 +290,7 @@
         <view>{{report.mirrorDeposit.line}}</view>
       </view>
       <view wx:if="{{report.trainingPrescription}}" class="prescription-card">
-        <text>修行心证</text>
+        <text>训练处方</text>
         <view>{{report.trainingPrescription.focusText}}</view>
         <view>{{report.trainingPrescription.rule}}</view>
       </view>

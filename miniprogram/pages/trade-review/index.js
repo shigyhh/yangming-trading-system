@@ -534,7 +534,7 @@ Page({
       positionStateLabel ? `当前状态：${positionStateLabel}` : "",
       planStateLabel ? `计划状态：${planStateLabel}` : "",
       form.triggerScene ? `触发情境：${form.triggerScene}` : "",
-      form.nextAction ? `下一次守法：${form.nextAction}` : ""
+      form.nextAction ? `下次执行动作：${form.nextAction}` : ""
     ].filter(Boolean).join("；");
     const formForReview = Object.assign({}, form, {
       actionKey: form.inPlan === "no" ? "impulse" : form.actionKey,

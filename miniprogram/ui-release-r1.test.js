@@ -188,6 +188,11 @@ assert.ok(tradeReviewWxml.includes("可选补充一句"), "trade review text inp
 assert.ok(tradeReviewWxml.includes('class="primary-stack quick-actions"'), "trade review should make generated review the only dominant action row");
 assert.ok(tradeReviewWxml.includes("你的第一面活镜"), "trade review should explain the missing-material state as a mirror promise");
 assert.ok(tradeReviewWxml.includes("mistake-card"), "trade review result should surface a mistake-card output");
+assert.ok(tradeReviewWxml.includes("主错题"), "trade review mistake card should lead with the main error type");
+assert.ok(tradeReviewWxml.includes("活镜归因"), "trade review mistake card should show a mirror attribution line");
+assert.ok(tradeReviewWxml.includes("下次执行动作"), "trade review mistake card should use the P1 execution-action wording");
+assert.ok(tradeReviewWxml.includes("训练处方"), "trade review mistake card should show the K-line training prescription");
+assert.equal(tradeReviewWxml.includes("下一次守法"), false, "trade review user-facing result copy should avoid old law wording");
 assert.ok(tradeReviewWxml.includes("mirror-deposit-card"), "trade review result should show living-mirror deposition");
 assert.ok(tradeReviewWxml.includes("prescription-card"), "trade review result should show the next K-line training prescription");
 assert.ok(tradeReviewWxml.includes("mirror-top3-card"), "trade review should surface living-mirror Top3 mistake statistics");
