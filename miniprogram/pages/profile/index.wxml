@@ -287,14 +287,14 @@
       <view wx:if="{{debugMode}}" class="debug-sync-panel">
         <text>开发调试</text>
         <label class="form-label">后端地址</label>
-        <input class="input-field" value="{{apiBase}}" bindinput="inputApiBase" placeholder="http://电脑局域网IP:8787" />
+        <input class="input-field" value="{{apiBase}}" bindinput="inputApiBase" placeholder="http://127.0.0.1:8787" />
         <view class="debug-sync-actions">
           <button class="ghost-btn" bindtap="saveApiBase">保存地址</button>
           <button class="secondary-btn" bindtap="pullNow">拉取</button>
           <button class="primary-btn" bindtap="syncNow">同步</button>
         </view>
         <view wx:if="{{syncView.showTechnical}}" class="debug-technical">{{syncView.technicalMessage}}</view>
-        <text class="sync-tip">开发者工具可用 127.0.0.1；手机真机预览请改成电脑局域网 IP，并确认后端服务已启动。</text>
+        <text class="sync-tip">开发者工具可用 127.0.0.1；手机真机预览固定使用 https://xxjyxt.com，并需配置 request 合法域名。</text>
       </view>
     </view>
     </view>

@@ -23,6 +23,7 @@ const {
   PRODUCTION_API_BASE,
   buildTradeReviewUrl,
   getApiBase,
+  setApiBase,
   fetchLivingMirrorGrowthProjection,
   fetchLivingMirrorProfile,
   fetchTodayState,
@@ -56,6 +57,10 @@ assert.strictEqual(getApiBase(), "http://127.0.0.1:8787");
 
 platform = "ios";
 assert.strictEqual(getApiBase(), "https://xxjyxt.com");
+storage.zhixing_api_base = "https://old.example.com";
+assert.strictEqual(getApiBase(), "https://xxjyxt.com");
+assert.strictEqual(setApiBase("https://old.example.com"), "https://xxjyxt.com");
+assert.strictEqual(storage.zhixing_api_base, "https://xxjyxt.com");
 platform = "devtools";
 
 const tradeReviewUrl = buildTradeReviewUrl({

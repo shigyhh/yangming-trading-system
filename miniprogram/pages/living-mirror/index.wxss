@@ -1,6 +1,7 @@
 .mirror-summary-card,
 .mirror-bridge,
 .server-profile-card,
+.review-top3-card,
 .mirror-hero,
 .stability-card,
 .triple-card,
@@ -26,6 +27,8 @@
 .mirror-bridge view,
 .server-profile-card text,
 .server-profile-card view,
+.review-top3-card text,
+.review-top3-card view,
 .mirror-hero text,
 .mirror-hero view,
 .stability-card text,
@@ -69,6 +72,82 @@
   background:
     radial-gradient(circle at 92% 0%, rgba(216, 183, 111, 0.12), transparent 40%),
     rgba(255, 255, 255, 0.034);
+}
+
+.review-top3-card {
+  overflow: hidden;
+  border: 1rpx solid rgba(216, 183, 111, 0.18);
+  background:
+    radial-gradient(circle at 90% 0%, rgba(216, 183, 111, 0.12), transparent 42%),
+    radial-gradient(circle at 12% 100%, rgba(88, 194, 173, 0.09), transparent 44%),
+    rgba(255, 255, 255, 0.034);
+}
+
+.review-top3-summary {
+  margin-top: 18rpx;
+  color: #fff6e6;
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", serif;
+  font-size: 30rpx;
+  line-height: 1.45;
+  font-weight: 900;
+}
+
+.review-top3-grid {
+  margin-top: 20rpx;
+  display: grid;
+  gap: 14rpx;
+}
+
+.review-top3-section {
+  padding: 18rpx;
+  border-radius: 18rpx;
+  border: 1rpx solid rgba(241, 210, 125, 0.09);
+  background: rgba(8, 8, 7, 0.24);
+}
+
+.review-top3-title {
+  color: rgba(216, 183, 111, 0.72);
+  font-size: 21rpx;
+  line-height: 1.35;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.review-top3-row {
+  margin-top: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.review-top3-row text {
+  min-width: 0;
+  color: rgba(247, 239, 223, 0.86);
+  font-size: 25rpx;
+  line-height: 1.35;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
+.review-top3-row view {
+  flex: 0 0 auto;
+  color: #73d6bd;
+  font-size: 22rpx;
+  line-height: 1.35;
+  font-weight: 900;
+}
+
+.review-top3-rule {
+  margin-top: 18rpx;
+  padding: 18rpx 20rpx;
+  border-left: 4rpx solid rgba(88, 194, 173, 0.56);
+  border-radius: 12rpx;
+  color: rgba(247, 239, 223, 0.88);
+  background: rgba(88, 194, 173, 0.07);
+  font-size: 24rpx;
+  line-height: 1.5;
+  font-weight: 900;
 }
 
 .mirror-summary-card {

@@ -157,6 +157,23 @@ assert.strictEqual(overviewSession.candles.length, 180);
 assert.ok(overviewSession.chartBoardStyle.includes("min-width: 100%"));
 assert.ok(overviewSession.chartBoardStyle.includes("--kline-gap"));
 
+const focusReadableSession = buildKlineMindSession({
+  record: {
+    marketKey: "cn_equity",
+    timeframeKey: "1d",
+    chartZoomKey: "focus",
+    historySlice: longBlindSlice
+  }
+});
+assert.strictEqual(focusReadableSession.chartWindowSize, 32);
+assert.strictEqual(focusReadableSession.candles.length, 32);
+assert.ok(focusReadableSession.chartBoardStyle.includes("--kline-candle-width: 32rpx"));
+assert.ok(focusReadableSession.chartBoardStyle.includes("--kline-body-width: 24rpx"));
+assert.ok(focusReadableSession.candles.every((item) => {
+  const match = /height:\s*(\d+)rpx/.exec(item.bodyStyle || "");
+  return Number(match && match[1]) >= 10;
+}));
+
 const bollCompleteSession = buildKlineMindSession({
   record: {
     marketKey: "cn_equity",

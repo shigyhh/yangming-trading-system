@@ -9,6 +9,8 @@ const {
   buildTradeReviewClosure,
   buildLiveMirrorReminder,
   buildLivingMirrorStats,
+  buildReviewTrainingFocus,
+  buildTradeReviewTop3Stats,
   buildTradeReview
 } = require("./index");
 
@@ -73,6 +75,33 @@ assert.ok(review.evidenceChain.length >= 6);
 assert.ok(review.oneLine.includes("照见"));
 assert.strictEqual(review.crossEndStatusText, "待回看");
 assert.ok(review.crossEndStatusSteps.some((item) => item.label === "待训练"));
+assert.strictEqual(review.mainErrorType, "追高冲动");
+assert.ok(review.secondaryErrorTypes.includes("计划外交易"));
+assert.strictEqual(review.triggerScene, "放量拉升");
+assert.strictEqual(review.trainingPackId, "chase_high_impulse");
+assert.strictEqual(review.mistakeCard.title, "错题卡");
+assert.strictEqual(review.mistakeCard.mainErrorType, "追高冲动");
+assert.ok(review.mistakeCard.mirrorDeposit.line.includes("活镜"));
+assert.ok(review.mistakeCard.trainingPrescription.title.includes("专项"));
+
+const sceneDrivenReview = buildTradeReview({
+  marketKey: "cn",
+  timeframeKey: "1d",
+  tradeDate: "2026-06-03",
+  symbol: "示例标的",
+  actionKey: "planned",
+  emotion: "平静",
+  firstThought: "当时心里一紧",
+  triggerScene: "突然拉升",
+  inPlan: "yes",
+  planBoundary: "先看触发情境",
+  boundaryState: "near",
+  positionState: "holding",
+  nextAction: "停十秒"
+});
+assert.strictEqual(sceneDrivenReview.mainErrorType, "追高冲动");
+assert.strictEqual(sceneDrivenReview.triggerScene, "突然拉升");
+assert.strictEqual(sceneDrivenReview.mistakeCard.triggerScene, "突然拉升");
 
 const syncedReview = applyServerTradeReviewResult(review, {
   review: {
@@ -131,6 +160,30 @@ assert.strictEqual(reminder.count, 2);
 assert.notStrictEqual(reminder.highFrequencyThievesText, "待照见");
 assert.ok(reminder.highFrequencyStage);
 assert.ok(reminder.mainTraining.length > 8);
+
+const focus = buildReviewTrainingFocus({ records: [review, Object.assign({}, review, { id: "tr-repeat-001", createdAt: review.createdAt + 1 }), secondReview] });
+assert.strictEqual(focus.hasPrescription, true);
+assert.strictEqual(focus.mainErrorType, "追高冲动");
+assert.strictEqual(focus.prescription.packId, "chase_high_impulse");
+assert.ok(focus.rule.includes("停十秒"));
+assert.ok(focus.summary.includes("真实复盘"));
+assert.ok(focus.top3Stats.hasStats);
+
+const top3Stats = buildTradeReviewTop3Stats({
+  records: [
+    Object.assign({}, review, { id: "top3-001", firstThought: "怕错过", triggerScene: "放量拉升", createdAt: review.createdAt + 1 }),
+    Object.assign({}, review, { id: "top3-002", firstThought: "怕错过", triggerScene: "放量拉升", createdAt: review.createdAt + 2 }),
+    Object.assign({}, review, { id: "top3-003", firstThought: "怕错过", triggerScene: "放量拉升", createdAt: review.createdAt + 3 }),
+    Object.assign({}, secondReview, { id: "top3-004", mainErrorType: "补仓冲动", firstThought: "不甘心", triggerScene: "弱反弹", nextAction: "不补仓", createdAt: review.createdAt + 4 }),
+    Object.assign({}, secondReview, { id: "top3-005", mainErrorType: "补仓冲动", firstThought: "不甘心", triggerScene: "弱反弹", nextAction: "不补仓", createdAt: review.createdAt + 5 }),
+    Object.assign({}, secondReview, { id: "top3-006", mainErrorType: "卖飞懊悔", firstThought: "想证明", triggerScene: "冲高回落", nextAction: "只按计划", createdAt: review.createdAt + 6 })
+  ]
+});
+assert.strictEqual(top3Stats.hasStats, true);
+assert.deepStrictEqual(top3Stats.topErrors.map((item) => item.label), ["追高冲动", "补仓冲动", "卖飞懊悔"]);
+assert.deepStrictEqual(top3Stats.topFirstThoughts.map((item) => item.label), ["怕错过", "不甘心", "想证明"]);
+assert.deepStrictEqual(top3Stats.topTriggerScenes.map((item) => item.label), ["放量拉升", "弱反弹", "冲高回落"]);
+assert.ok(top3Stats.nextRule.includes("停十秒"));
 
 const closure = buildTradeReviewClosure(review, reminder);
 assert.strictEqual(closure.title, "本次复盘已入活镜");

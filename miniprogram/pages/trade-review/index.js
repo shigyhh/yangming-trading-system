@@ -17,9 +17,9 @@ const {
   buildLiveMirrorReminder,
   buildTradeReview,
   buildTradeReviewClosure,
-  buildTradeReviewRecordView
+  buildTradeReviewRecordView,
+  buildTradeReviewTop3Stats
 } = require("../../modules/trade-review/index");
-const { MARKET_PRESETS, TIMEFRAME_PRESETS } = require("../../modules/kline-simulator/index");
 const {
   buildTradeReviewUrl,
   fetchTradeReviewMarketContext,
@@ -29,7 +29,34 @@ const {
   syncTrainingProgress
 } = require("../../utils/api");
 
-const FIRST_THOUGHT_OPTIONS = ["怕错过", "不甘心", "想证明", "怕亏", "想扳回"];
+const FIRST_THOUGHT_OPTIONS = [
+  "怕错过",
+  "不甘心",
+  "想证明",
+  "怕亏",
+  "想扳回",
+  "买少了",
+  "卖飞了",
+  "追高了",
+  "被套了",
+  "想补仓",
+  "拿不住",
+  "空仓焦虑"
+];
+const TRIGGER_SCENE_OPTIONS = [
+  "放量拉升",
+  "冲高回落",
+  "弱反弹",
+  "快速下跌",
+  "跌破边界",
+  "刚卖就涨",
+  "被套很久",
+  "消息刺激",
+  "群体声音",
+  "账户亏损后",
+  "空仓焦虑",
+  "想把亏损赚回来"
+];
 const PLAN_STATE_OPTIONS = [
   { key: "yes", label: "计划内" },
   { key: "no", label: "计划外" },
@@ -40,7 +67,17 @@ const POSITION_STATES = [
   { key: "closed", label: "已平仓" },
   { key: "trapped", label: "被套承压" }
 ];
-const NEXT_ACTION_OPTIONS = ["停十秒", "只按计划", "不追涨", "不扛单", "先记录"];
+const NEXT_ACTION_OPTIONS = [
+  "停十秒",
+  "只按计划",
+  "不追涨",
+  "不扛单",
+  "先记录",
+  "等确认",
+  "破位认错",
+  "盈利按规则拿",
+  "空仓也算守法"
+];
 
 function defaultForm() {
   return {
@@ -57,6 +94,7 @@ function defaultForm() {
     positionState: "holding",
     afterReaction: "",
     nextAction: "",
+    triggerScene: "",
     actionKey: "planned",
     emotion: "平静",
     firstThought: "",
@@ -70,7 +108,7 @@ function defaultForm() {
 function defaultMarketContextStatus() {
   return {
     state: "idle",
-    text: "补好代码、日期和周期后，会自动回看当时位置。"
+    text: "补好代码和日期后，会自动回看当时位置。"
   };
 }
 
@@ -200,9 +238,8 @@ function resolveReportUrl(record = {}) {
 Page({
   data: {
     form: defaultForm(),
-    markets: MARKET_PRESETS,
-    timeframes: TIMEFRAME_PRESETS,
     firstThoughtOptions: FIRST_THOUGHT_OPTIONS,
+    triggerSceneOptions: TRIGGER_SCENE_OPTIONS,
     planStateOptions: PLAN_STATE_OPTIONS,
     positionStates: POSITION_STATES,
     nextActionOptions: NEXT_ACTION_OPTIONS,
@@ -214,6 +251,7 @@ Page({
     closure: null,
     latestReviewId: "",
     records: [],
+    mirrorTop3: buildTradeReviewTop3Stats({ records: [] }),
     reviewFlow: buildReviewFlow(defaultForm(), null),
     manualAnchorVisible: false,
     marketContext: null,
@@ -242,7 +280,8 @@ Page({
   refreshRecords() {
     const state = getTradeReviewRecords();
     this.setData({
-      records: (state.records || []).slice().reverse().slice(0, 5).map(decorateReport)
+      records: (state.records || []).slice().reverse().slice(0, 5).map(decorateReport),
+      mirrorTop3: buildTradeReviewTop3Stats(state)
     });
   },
 
@@ -316,14 +355,6 @@ Page({
     });
   },
 
-  selectMarket(e) {
-    this.patchForm({ marketKey: e.currentTarget.dataset.key || "cn" });
-  },
-
-  selectTimeframe(e) {
-    this.patchForm({ timeframeKey: e.currentTarget.dataset.key || "1d" });
-  },
-
   selectAction(e) {
     this.patchForm({ actionKey: e.currentTarget.dataset.key || "planned" });
   },
@@ -362,6 +393,10 @@ Page({
 
   selectFirstThought(e) {
     this.patchForm({ firstThought: e.currentTarget.dataset.value || "" });
+  },
+
+  selectTriggerScene(e) {
+    this.patchForm({ triggerScene: e.currentTarget.dataset.value || "" });
   },
 
   selectPositionState(e) {
@@ -498,6 +533,7 @@ Page({
     const autoReviewNote = [
       positionStateLabel ? `当前状态：${positionStateLabel}` : "",
       planStateLabel ? `计划状态：${planStateLabel}` : "",
+      form.triggerScene ? `触发情境：${form.triggerScene}` : "",
       form.nextAction ? `下一次守法：${form.nextAction}` : ""
     ].filter(Boolean).join("；");
     const formForReview = Object.assign({}, form, {
@@ -533,6 +569,7 @@ Page({
           closure: buildTradeReviewClosure(latest, nextReminder),
           latestReviewId: (latest || {}).id || "",
           records: (nextState.records || []).slice().reverse().slice(0, 5).map(decorateReport),
+          mirrorTop3: buildTradeReviewTop3Stats(nextState),
           reviewFlow: buildReviewFlow(this.data.form, latest, this.data.marketContext)
         });
       })
@@ -546,6 +583,7 @@ Page({
       closure: buildTradeReviewClosure(state.latest, reminder),
       latestReviewId: (state.latest || {}).id || "",
       records: (state.records || []).slice().reverse().slice(0, 5).map(decorateReport),
+      mirrorTop3: buildTradeReviewTop3Stats(state),
       reviewFlow: buildReviewFlow(this.data.form, state.latest, this.data.marketContext),
       showResultDetail: false
     });
@@ -563,6 +601,7 @@ Page({
       marketContext: null,
       marketContextKey: "",
       marketContextStatus: defaultMarketContextStatus(),
+      mirrorTop3: buildTradeReviewTop3Stats(getTradeReviewRecords()),
       reviewFlow: buildReviewFlow(form, null, null)
     });
   },

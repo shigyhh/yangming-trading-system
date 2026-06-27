@@ -9,6 +9,7 @@ const {
   getTraining7State,
   saveTraining7Task,
   getTodayKlineMindRecord,
+  getTradeReviewRecords,
   saveTodayKlineMindRecord,
   saveTradeReviewRecord,
   saveInviteConversionEvent,
@@ -44,6 +45,9 @@ const {
 const {
   buildKlineTradeReviewRecord: buildKlineMirrorRecord
 } = require("../../modules/kline-simulator/index");
+const {
+  buildReviewTrainingFocus
+} = require("../../modules/trade-review/index");
 
 const REACTION_DIRECTIONS = [
   { key: "act", label: "想立刻做", detail: "追、急、想证明" },
@@ -58,8 +62,17 @@ const DECISION_ACTIONS = [
 ];
 
 const CHART_ZOOM_ORDER = ["overview", "wide", "standard", "focus"];
-const SLICE_SWITCH_LIMIT = 5;
-const SLICE_SWITCH_COOLDOWN_MS = 3000;
+const SLICE_SWITCH_LIMIT = 9;
+
+function buildSliceSwitchState(count = 0) {
+  const safeCount = Math.max(0, Number(count || 0));
+  const remaining = Math.max(0, SLICE_SWITCH_LIMIT - safeCount);
+  return {
+    sliceSwitchCount: safeCount,
+    sliceSwitchExhausted: remaining <= 0,
+    sliceSwitchRemainingText: remaining > 0 ? `余${remaining}次` : "今日已满"
+  };
+}
 
 function inferReactionDirection(firstReaction) {
   const value = String(firstReaction || "");
@@ -250,9 +263,7 @@ function buildHistorySliceCacheKey(record = {}) {
 }
 
 function shouldCachePageHistorySlice(historySlice = {}) {
-  return !!(historySlice.candles && historySlice.candles.length)
-    && !historySlice.hot_pool
-    && !historySlice.hotPool;
+  return !!(historySlice.candles && historySlice.candles.length);
 }
 
 function buildSliceRequestSlot(prefix = "page") {
@@ -287,8 +298,9 @@ Page({
     showBodySignal: false,
     selectedMainIndicatorKey: "ma",
     selectedIndicatorKey: "vol",
-    sliceSwitchCount: 0,
-    sliceSwitchLocked: false,
+    reviewTrainingFocus: buildReviewTrainingFocus({ records: [] }),
+    todayTrainingLine: "",
+    ...buildSliceSwitchState(0),
     tradeReviewUrl: ""
   },
 
@@ -297,11 +309,6 @@ Page({
     this.prefetchHistoryRequests = this.prefetchHistoryRequests || {};
     retryPendingKlineTrainingSync().catch(() => {});
     this.load();
-  },
-
-  onUnload() {
-    clearTimeout(this.sliceSwitchUnlockTimer);
-    this.sliceSwitchUnlockTimer = null;
   },
 
   load() {
@@ -322,6 +329,10 @@ Page({
       trainingDay,
       record: klineMindRecord
     });
+    const reviewTrainingFocus = buildReviewTrainingFocus({ records: getTradeReviewRecords() });
+    const todayTrainingLine = reviewTrainingFocus.hasPrescription
+      ? reviewTrainingFocus.rule
+      : (session.prescription || {}).boundaryPractice || "先停十秒，只记录第一念。";
     const form = buildForm(klineMindRecord, session);
     const tradeReviewUrl = resolveTradeReviewUrl(klineMindRecord);
 
@@ -330,6 +341,8 @@ Page({
       training7View,
       trainingDay,
       session,
+      reviewTrainingFocus,
+      todayTrainingLine,
       trainingRuntime: null,
       runtimeView: buildRuntimeView(),
       form,
@@ -518,6 +531,8 @@ Page({
 
   selectTimeframe(e) {
     const timeframeKey = e.currentTarget.dataset.timeframe;
+    const currentTimeframeKey = ((this.data.form || {}).timeframeKey) || ((this.data.session || {}).timeframeKey) || "1d";
+    if (timeframeKey === currentTimeframeKey) return;
     const form = Object.assign({}, this.data.form, {
       timeframeKey,
       selectedCandleKey: ""
@@ -649,14 +664,16 @@ Page({
   },
 
   switchSlice() {
-    if (this.data.historyLoading || this.data.sliceSwitchLocked) {
+    if (this.data.historyLoading) {
       wx.showToast({ title: "稍候再换", icon: "none" });
       return;
     }
-    if (Number(this.data.sliceSwitchCount || 0) >= SLICE_SWITCH_LIMIT) {
+    if (this.data.sliceSwitchExhausted || Number(this.data.sliceSwitchCount || 0) >= SLICE_SWITCH_LIMIT) {
+      this.setData(buildSliceSwitchState(SLICE_SWITCH_LIMIT));
       wx.showToast({ title: "本次先练这一段", icon: "none" });
       return;
     }
+    const nextSwitchCount = Number(this.data.sliceSwitchCount || 0) + 1;
     const currentForm = this.data.form || {};
     const scenarioId = getNextKlineMindSliceSeed(currentForm.scenarioId || "scene-fast-001");
     const form = Object.assign({}, currentForm, {
@@ -674,14 +691,9 @@ Page({
     this.setData({
       form: Object.assign({}, form, { selectedCandleKey: session.selectedCandleKey }),
       session,
-      sliceSwitchCount: Number(this.data.sliceSwitchCount || 0) + 1,
-      sliceSwitchLocked: true,
+      ...buildSliceSwitchState(nextSwitchCount),
       showBodySignal: false
     });
-    clearTimeout(this.sliceSwitchUnlockTimer);
-    this.sliceSwitchUnlockTimer = setTimeout(() => {
-      this.setData({ sliceSwitchLocked: false });
-    }, SLICE_SWITCH_COOLDOWN_MS);
     this.loadServerHistorySlice(form, { keepCurrentChart: true });
   },
 

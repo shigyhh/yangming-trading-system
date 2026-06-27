@@ -149,7 +149,7 @@ const CHART_ZOOM_OPTIONS = [
   { key: "overview", label: "总览", hint: "约180根，先看整体趋势", windowSize: 180 },
   { key: "wide", label: "缩小", hint: "约150根，适合横屏盲测", windowSize: 150 },
   { key: "standard", label: "标准", hint: "约90根，平衡节奏", windowSize: 90 },
-  { key: "focus", label: "放大", hint: "约48根，细看", windowSize: 48 }
+  { key: "focus", label: "放大", hint: "约32根，细看单根结构", windowSize: 32 }
 ];
 
 const INDICATOR_CATALOG = [
@@ -177,7 +177,7 @@ const CHART_GEOMETRY = {
   overview: { candleWidth: 2, bodyWidth: 2, gap: 1, paddingX: 18, paddingTop: 24 },
   wide: { candleWidth: 4, bodyWidth: 4, gap: 1, paddingX: 18, paddingTop: 24 },
   standard: { candleWidth: 10, bodyWidth: 8, gap: 4, paddingX: 18, paddingTop: 24 },
-  focus: { candleWidth: 22, bodyWidth: 17, gap: 7, paddingX: 18, paddingTop: 24 }
+  focus: { candleWidth: 32, bodyWidth: 24, gap: 9, paddingX: 18, paddingTop: 24 }
 };
 const BLIND_CHART_MIN_WIDTH = 690;
 
@@ -523,6 +523,9 @@ function normalizeHistoryCandles(historySlice = {}, options = {}) {
   const minLow = Math.min.apply(null, lows.concat(overlayValues));
   const maxVolume = Math.max.apply(null, volumes.concat([1]));
   const range = Math.max(0.0001, maxHigh - minLow);
+  const visualZoomKey = getChartZoomMeta(options.zoomKey).key;
+  const minBodyHeight = visualZoomKey === "focus" ? 10 : 6;
+  const minWickHeight = visualZoomKey === "focus" ? 12 : 8;
   const valueToY = (value) => Number.isFinite(value)
     ? Math.round(((maxHigh - value) / range) * 168 + 34)
     : null;
@@ -538,8 +541,8 @@ function normalizeHistoryCandles(historySlice = {}, options = {}) {
     const openY = ((maxHigh - open) / range) * 168 + 34;
     const closeY = ((maxHigh - close) / range) * 168 + 34;
     const bodyTop = Math.min(openY, closeY);
-    const bodyHeight = Math.max(6, Math.abs(openY - closeY));
-    const wickHeight = Math.max(8, lowY - highY);
+    const bodyHeight = Math.max(minBodyHeight, Math.abs(openY - closeY));
+    const wickHeight = Math.max(minWickHeight, lowY - highY);
     const volumeHeight = Math.max(8, Math.round((volume / maxVolume) * 62));
     const key = item.key || `m${index + 1}`;
     const tone = close > open ? "gold" : close < open ? "jade" : "flat";
@@ -1250,7 +1253,10 @@ function buildKlineMindSession({
   const chartZoomMeta = getChartZoomMeta(chartZoomKey);
   const market = getMarketConfig(marketKey);
   const historySlice = (record || {}).historySlice || getHistorySlice(historyCache, market.key, timeframeKey);
-  const rawCandles = normalizeHistoryCandles(historySlice || {}, { windowSize: chartZoomMeta.windowSize });
+  const rawCandles = normalizeHistoryCandles(historySlice || {}, {
+    windowSize: chartZoomMeta.windowSize,
+    zoomKey: chartZoomMeta.key
+  });
   const selectedKey = (record || {}).selectedCandleKey || "";
   const prescription = getKlinePrescription(personalityType);
   const stageGate = getSixGate(stagePlan.stageKey);

@@ -14,6 +14,7 @@ const { fetchLivingMirrorGrowthProjection, fetchLivingMirrorProfile, pullTrainin
 const { buildTraining7View } = require("../../modules/training7/index");
 const { buildKlineDayRetestComparison, getKlineRecommendationForMirror } = require("../../modules/kline-simulator/index");
 const { buildLivingMirrorTree } = require("../../modules/mini-loop/index");
+const { buildTradeReviewTop3Stats } = require("../../modules/trade-review/index");
 
 function formatGrowthDate(value = "") {
   const text = String(value || "").trim();
@@ -186,6 +187,7 @@ Page({
     miniLoopProgress: getMiniLoopProgress(),
     training7View: buildTraining7View(getTraining7State(), {}),
     hasRecords: false,
+    reviewTop3: buildTradeReviewTop3Stats({ records: [] }),
     serverLivingMirrorProfile: buildServerLivingMirrorProfileView(),
     growthSummary: null,
     showMirrorDepth: false
@@ -202,6 +204,7 @@ Page({
     const stats = saveLivingMirrorStatsFromReviews(tradeReviewState);
     const zhixingStability = stats.zhixingStability || {};
     const tripleReflection = stats.tripleReflection || {};
+    const reviewTop3 = buildTradeReviewTop3Stats(tradeReviewState);
     const miniLoopProgress = getMiniLoopProgress();
     const evidenceSummary = getEvidenceSummary({ limit: 6 });
     const latest = (tradeReviewState || {}).latest || {};
@@ -230,7 +233,8 @@ Page({
       evidenceRows: evidenceSummary.rows || [],
       unifiedJourneyView: getUnifiedJourneyView(),
       training7View: buildTraining7View(getTraining7State(), {}),
-      hasRecords: Number(stats.totalReviews || 0) > 0
+      hasRecords: Number(stats.totalReviews || 0) > 0,
+      reviewTop3
     });
   },
 

@@ -11,7 +11,16 @@
       <view class="page-subtitle">看一段历史片段，先记录第一反应；不连接实时数据，不做当下判断。</view>
       <view class="kline-one-thing">
         <text>今日只练</text>
-        <view>{{session.prescription.boundaryPractice}}</view>
+        <view>{{todayTrainingLine}}</view>
+      </view>
+      <view wx:if="{{reviewTrainingFocus.hasPrescription}}" class="targeted-training-card">
+        <view class="targeted-training-head">
+          <text>今日针对训练</text>
+          <view>{{reviewTrainingFocus.mainErrorType}}</view>
+        </view>
+        <view class="targeted-training-summary">{{reviewTrainingFocus.summary}}</view>
+        <view class="targeted-training-focus">{{reviewTrainingFocus.focusText}}</view>
+        <view class="targeted-training-rule">{{reviewTrainingFocus.rule}}</view>
       </view>
 
       <view wx:if="{{false}}" class="hero-meta">
@@ -59,11 +68,12 @@
             </button>
           </view>
           <button
-            class="slice-change-btn {{sliceSwitchLocked || historyLoading ? 'disabled' : ''}}"
-            disabled="{{sliceSwitchLocked || historyLoading}}"
+            class="slice-change-btn {{sliceSwitchExhausted ? 'disabled' : ''}}"
+            disabled="{{sliceSwitchExhausted}}"
             bindtap="switchSlice"
           >
-            换一段
+            <text>换一段</text>
+            <view>{{sliceSwitchRemainingText}}</view>
           </button>
         </view>
         <view class="chart-orientation-note">横屏训练更稳</view>

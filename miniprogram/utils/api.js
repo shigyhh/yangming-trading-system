@@ -66,9 +66,8 @@ function isUnsafeRealDeviceApiBase(value) {
 }
 
 function getApiBase() {
-  if (isReleaseEnv()) return PRODUCTION_API_BASE;
+  if (isReleaseEnv() || isRealDeviceRuntime()) return PRODUCTION_API_BASE;
   const apiBase = wx.getStorageSync(API_BASE_KEY) || DEFAULT_API_BASE;
-  if (isRealDeviceRuntime() && isUnsafeRealDeviceApiBase(apiBase)) return PRODUCTION_API_BASE;
   return apiBase;
 }
 
@@ -270,7 +269,7 @@ function hasConfiguredApiBase() {
 }
 
 function setApiBase(value) {
-  if (isReleaseEnv()) {
+  if (isReleaseEnv() || isRealDeviceRuntime()) {
     wx.setStorageSync(API_BASE_KEY, PRODUCTION_API_BASE);
     wx.setStorageSync(API_BASE_ENABLED_KEY, true);
     return PRODUCTION_API_BASE;

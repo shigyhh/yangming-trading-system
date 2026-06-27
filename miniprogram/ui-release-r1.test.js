@@ -52,6 +52,7 @@ const homeWxss = readPage("home", "index.wxss");
 const klineMindWxss = readPage("kline-mind", "index.wxss");
 const tradeReviewWxss = readPage("trade-review", "index.wxss");
 const trainingWxss = readPage("training", "index.wxss");
+const livingMirrorWxss = readPage("living-mirror", "index.wxss");
 const profileWxss = readPage("profile", "index.wxss");
 
 function sliceBetween(text, startMarker, endMarker) {
@@ -122,6 +123,8 @@ assert.equal(klineMindWxml.includes("数据状态"), false, "kline mind page sho
 assert.equal(klineMindWxml.includes('class="sim-meta"'), false, "kline mind should not render cockpit-style data status blocks");
 assert.ok(klineMindWxml.includes('class="wave-source-line"'), "kline mind should collapse source/rhythm into quiet metadata");
 assert.ok(klineMindWxml.includes("K线盲练"), "kline mind should frame the session as K-line blind practice");
+assert.ok(klineMindWxml.includes("今日针对训练"), "kline mind should surface review-driven targeted training when mistake cards exist");
+assert.ok(klineMindJs.includes("buildReviewTrainingFocus"), "kline mind should read real-review mistake patterns before building the daily training line");
 assert.equal(klineMindWxml.includes("真实历史盲练"), false, "kline mind should not keep a duplicated blind-practice control block above the chart");
 assert.ok(klineMindWxml.includes('wx:if="{{savedRecord && savedRecord.completed}}" class="path-links"'), "kline mind should show cross-page links only after the record is complete");
 assertRuleHas(klineMindWxss, ".wave-board", ["position: relative", "overflow: hidden"], "kline mind wave board should act as a fixed blind viewport");
@@ -148,6 +151,13 @@ assert.ok(livingMirrorWxml.includes('wx:if="{{showMirrorDepth}}" class="stabilit
 assert.ok(livingMirrorWxml.includes('wx:if="{{showMirrorDepth}}" class="triple-card card"'), "living mirror triple reflection detail should be folded by default");
 assert.ok(livingMirrorJs.includes("formatLivingMirrorUpdatedAt(profile.updatedAt)"), "living mirror server profile time should be normalized for readers");
 assert.equal(livingMirrorJs.includes("updatedAt: profile.updatedAt ||"), false, "living mirror should not pass raw server ISO time into the page");
+assert.ok(livingMirrorJs.includes("buildTradeReviewTop3Stats"), "living mirror should compute Top3 mistake statistics from real-review records");
+assert.ok(livingMirrorWxml.includes('class="review-top3-card card"'), "living mirror should surface a compact Top3 card from real reviews");
+assert.ok(livingMirrorWxml.includes("真实复盘 Top3"), "living mirror Top3 card should be named as real-review evidence");
+assert.ok(livingMirrorWxml.includes("最近重复最多的错题"), "living mirror should show repeated mistake patterns");
+assert.ok(livingMirrorWxml.includes("最常见的第一念"), "living mirror should show first-thought frequency");
+assert.ok(livingMirrorWxml.includes("最容易失守的场景"), "living mirror should show trigger-scene frequency");
+assertRuleHas(livingMirrorWxss, ".review-top3-card", ["border: 1rpx solid rgba(216, 183, 111, 0.18)"], "living mirror Top3 card should match the mistake-card visual system");
 
 assert.ok(tradeReviewWxml.includes('wx:if="{{showAdvanced}}" class="record-flow card"'), "trade review flow explainer should be opt-in detail");
 assert.ok(tradeReviewWxml.includes('class="primary-btn upload-primary" bindtap="chooseImage"'), "trade review should make screenshot upload the main path");
@@ -156,18 +166,36 @@ assert.ok(tradeReviewWxml.indexOf("上传交易截图") < tradeReviewWxml.indexO
 assert.ok(tradeReviewWxml.includes('bindtap="showManualAnchor"'), "trade review should support manual code/date anchors as the same review path");
 assert.ok(tradeReviewWxml.includes('class="anchor-card card"'), "trade review should expose one shared anchor confirmation card");
 assert.ok(tradeReviewWxml.includes("确认锚点"), "trade review should make manual and OCR market anchors explicit");
+assert.equal(tradeReviewWxml.includes("数据品类"), false, "trade review should not expose unsupported market categories before they are ready");
+assert.equal(tradeReviewWxml.includes("周期切片"), false, "trade review should default to the daily A-share anchor instead of asking users to choose periods");
+assert.equal(tradeReviewWxml.includes('wx:for="{{markets}}"'), false, "trade review should not render market category chips");
+assert.equal(tradeReviewWxml.includes('wx:for="{{timeframes}}"'), false, "trade review should not render timeframe chips");
+assert.equal(tradeReviewJs.includes("MARKET_PRESETS"), false, "trade review should not import simulator market presets for the real-review anchor");
+assert.equal(tradeReviewJs.includes("TIMEFRAME_PRESETS"), false, "trade review should not import simulator timeframe presets for the real-review anchor");
 assert.ok(tradeReviewJs.includes("fetchTradeReviewMarketContext"), "trade review should prefetch deterministic market context through the shared api helper");
 assert.ok(tradeReviewJs.includes("marketContext: this.data.marketContext || null"), "trade review generation should pass the shared market context into the review model");
 assert.ok(tradeReviewWxml.includes("只回答三件事"), "trade review should communicate the lightweight 60-second path");
 assert.ok(tradeReviewWxml.includes('wx:for="{{firstThoughtOptions}}"'), "trade review should offer first-thought choices instead of requiring typing");
+assert.ok(tradeReviewJs.includes("TRIGGER_SCENE_OPTIONS"), "trade review should offer trigger-scene choices for the mistake-card loop");
+assert.ok(tradeReviewWxml.includes("触发情境"), "trade review should ask what scene triggered the first thought");
 assert.ok(tradeReviewWxml.includes('wx:for="{{positionStates}}"'), "trade review should capture holding/closed/trapped state with choices");
 assert.ok(tradeReviewWxml.includes('wx:for="{{nextActionOptions}}"'), "trade review should offer next-law choices instead of requiring prose");
-["怕错过", "不甘心", "想证明", "怕亏", "想扳回", "持仓中", "已平仓", "被套承压", "计划内", "计划外", "说不清", "停十秒", "只按计划", "不追涨", "不扛单", "先记录"].forEach((label) => {
+assertRuleHas(tradeReviewWxss, ".quick-choice-grid.three", ["repeat(2, minmax(0, 1fr))"], "trade review quick choices should stay readable on true-device narrow screens");
+["怕错过", "不甘心", "想证明", "怕亏", "想扳回", "买少了", "卖飞了", "追高了", "被套了", "想补仓", "放量拉升", "冲高回落", "弱反弹", "刚卖就涨", "持仓中", "已平仓", "被套承压", "计划内", "计划外", "说不清", "停十秒", "只按计划", "不追涨", "不扛单", "先记录"].forEach((label) => {
   assert.ok(tradeReviewWxml.includes(label) || tradeReviewJs.includes(label), `trade review should expose quick choice: ${label}`);
 });
 assert.ok(tradeReviewWxml.includes("可选补充一句"), "trade review text input should be framed as optional supplement");
 assert.ok(tradeReviewWxml.includes('class="primary-stack quick-actions"'), "trade review should make generated review the only dominant action row");
 assert.ok(tradeReviewWxml.includes("你的第一面活镜"), "trade review should explain the missing-material state as a mirror promise");
+assert.ok(tradeReviewWxml.includes("mistake-card"), "trade review result should surface a mistake-card output");
+assert.ok(tradeReviewWxml.includes("mirror-deposit-card"), "trade review result should show living-mirror deposition");
+assert.ok(tradeReviewWxml.includes("prescription-card"), "trade review result should show the next K-line training prescription");
+assert.ok(tradeReviewWxml.includes("mirror-top3-card"), "trade review should surface living-mirror Top3 mistake statistics");
+assert.ok(tradeReviewWxml.includes("最近重复最多的错题"), "trade review Top3 should name repeated mistake patterns");
+assertRuleHas(tradeReviewWxss, ".mirror-top3-card", ["border: 1rpx solid rgba(216, 183, 111, 0.18)"], "trade review Top3 card should match the mirror/prescription visual system");
+["拿不住", "空仓焦虑", "等确认", "破位认错", "盈利按规则拿", "空仓也算守法"].forEach((label) => {
+  assert.ok(tradeReviewWxml.includes(label) || tradeReviewJs.includes(label), `trade review should expose expanded v1 quick choice: ${label}`);
+});
 
 assert.ok(complianceNoticeJs.includes("variant"), "compliance notice should support full/compact/link variants");
 assert.ok(complianceNoticeWxml.includes("resolvedVariant === 'link'"), "compliance notice should render a link-only mode");
@@ -252,6 +280,12 @@ assert.ok(
 );
 assert.ok(klineMindWxml.includes("正在读取历史数据"), "kline empty state should show a loading copy instead of immediately looking broken");
 assert.ok(klineMindJs.includes("historySliceCache"), "kline style switching should use an in-page history slice cache");
+assert.equal(klineMindJs.includes("&& !historySlice.hot_pool"), false, "kline style switching should cache hot-pool slices inside the page instead of changing every time the user returns to a style");
+assert.equal(klineMindJs.includes("&& !historySlice.hotPool"), false, "kline style switching should cache hotPool slices inside the page instead of changing every time the user returns to a style");
+assert.ok(
+  sliceBetween(klineMindJs, "selectTimeframe(e)", "selectChartZoom(e)").includes("if (timeframeKey === currentTimeframeKey) return;"),
+  "kline style switching should not reload or change slice when the selected style is tapped again"
+);
 assert.ok(klineMindJs.includes("prefetchTimeframeSlices"), "kline page should prefetch style slices so switching feels instant");
 assert.ok(klineMindJs.includes("KLINE_TRAINING_WINDOW_SIZE"), "kline page should request the full prewarmed training slice instead of a shorter temporary segment");
 assert.ok(klineMindJs.includes('const CHART_ZOOM_ORDER = ["overview", "wide", "standard", "focus"];'), "kline zoom controls should support one more overview zoom-out step");
@@ -259,6 +293,12 @@ assert.ok(
   sliceBetween(klineMindJs, "switchSlice()", "advanceRuntimeCandle()").includes("this.loadServerHistorySlice(form, { keepCurrentChart: true })"),
   "kline change-slice action should keep the current chart visible while the next slice loads"
 );
+assert.ok(klineMindJs.includes("const SLICE_SWITCH_LIMIT = 9;"), "kline change-slice action should allow a generous nine-switch practice quota");
+assert.equal(klineMindJs.includes("SLICE_SWITCH_COOLDOWN_MS"), false, "kline change-slice action should not grey out for an artificial cooldown after every tap");
+assert.equal(klineMindJs.includes("sliceSwitchLocked"), false, "kline change-slice action should not use a per-tap disabled lock state");
+assert.ok(klineMindJs.includes("sliceSwitchExhausted"), "kline change-slice action should only enter disabled state after the quota is exhausted");
+assert.ok(klineMindWxml.includes("{{sliceSwitchRemainingText}}"), "kline change-slice button should show a quiet remaining-count hint");
+assert.ok(klineMindWxml.includes('disabled="{{sliceSwitchExhausted}}"'), "kline change-slice button should only be disabled when the quota is exhausted");
 assert.ok(appJs.includes("prefetchKlineTrainingSlices"), "miniapp launch should warm real historical K-line slices before the user enters training");
 assert.ok(klineMindJs.includes("prefetchNextSlice"), "kline page should keep the next random history slice warm for the change-slice action");
 assert.equal(klineMindWxml.includes("模拟盈亏"), false, "kline runtime metrics should avoid repeating the simulation caveat in every small label");
@@ -275,9 +315,9 @@ assert.ok(klineMindWxml.includes("lines.rsi"), "kline indicator panel should ren
 assert.ok(klineMindWxml.includes("lines.k"), "kline indicator panel should render KDJ K line");
 assert.ok(klineMindWxml.includes("lines.d"), "kline indicator panel should render KDJ D line");
 assert.ok(klineMindWxml.includes("lines.j"), "kline indicator panel should render KDJ J line");
-assertRuleHas(klineMindWxss, ".chart-toolbar-row", ["grid-template-columns: minmax(0, 1fr) minmax(96rpx, 112rpx)", "width: 100%", "overflow: hidden"], "kline toolbar should keep trading style and change-slice action inside the card");
+assertRuleHas(klineMindWxss, ".chart-toolbar-row", ["grid-template-columns: minmax(0, 1fr) minmax(112rpx, 128rpx)", "width: 100%", "overflow: hidden"], "kline toolbar should keep trading style and change-slice action inside the card");
 assertRuleHas(klineMindWxss, ".chart-period-rail", ["display: flex", "width: 100%", "overflow-x: auto"], "kline timeframe selector should use a compact scrollable toolbar instead of a full-width segmented block");
-assertRuleHas(klineMindWxss, ".slice-change-btn", ["width: 100%", "max-width: 112rpx", "justify-content: center"], "kline change-slice button should not overlap the trading style rail");
+assertRuleHas(klineMindWxss, ".slice-change-btn", ["width: 100%", "max-width: 128rpx", "justify-content: center"], "kline change-slice button should not overlap the trading style rail");
 assertRuleHas(klineMindWxss, ".indicator-strip", ["display: flex", "overflow-x: auto"], "kline indicator selector should be one horizontal row");
 assertRuleHas(klineMindWxss, ".chart-indicator-chip", ["flex: 0 0 auto", "height: 38rpx"], "kline indicator chips should stay compact inside the chart toolbar");
 assertRuleHas(klineMindWxss, ".chart-scroll-inner", ["width: 100%", "min-width: 100%"], "kline chart should fill the visible viewport even at the widest zoom-out");

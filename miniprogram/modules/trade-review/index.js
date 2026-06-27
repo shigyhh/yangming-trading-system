@@ -57,6 +57,85 @@ const THIEF_TRAINING_MAP = {
   疑: "把计划依据写成一句话，减少临场摇摆。"
 };
 
+const POSITION_STATE_LABELS = {
+  holding: "持仓中",
+  closed: "已平仓",
+  trapped: "被套中"
+};
+
+const TRADE_REVIEW_ERROR_PRESCRIPTIONS = {
+  追高冲动: {
+    packId: "chase_high_impulse",
+    title: "追高冲动专项训练",
+    focusText: "假突破 / 冲高回落 / 放量诱多",
+    scene: "放量拉升",
+    rule: "看到第一根快速拉升，先停十秒，只记录第一念，不把波动当成必须行动。"
+  },
+  扛单被套: {
+    packId: "hold_loss_boundary",
+    title: "扛单被套专项训练",
+    focusText: "跌破边界 / 弱反弹 / 连续阴跌",
+    scene: "跌破边界",
+    rule: "边界触发后不临场解释，先回到预案，把认错动作写清楚。"
+  },
+  卖飞懊悔: {
+    packId: "sell_flying_regret",
+    title: "卖飞懊悔专项训练",
+    focusText: "趋势中继 / 洗盘不破 / 规则减仓",
+    scene: "卖出后继续走强",
+    rule: "用规则处理减仓，不用懊悔驱动下一笔动作。"
+  },
+  买少懊悔: {
+    packId: "position_planning",
+    title: "买少懊悔专项训练",
+    focusText: "确认后上涨 / 分批机会 / 计划仓位",
+    scene: "确认后上涨",
+    rule: "先写计划仓位，再执行分批，不用事后懊悔补动作。"
+  },
+  补仓冲动: {
+    packId: "no_loss_averaging",
+    title: "补仓冲动专项训练",
+    focusText: "下跌中继 / 反抽诱多 / 仓位边界",
+    scene: "下跌中继",
+    rule: "亏损里不靠加仓换安心，先确认边界是否仍成立。"
+  },
+  计划外交易: {
+    packId: "no_plan_no_trade",
+    title: "计划外交易专项训练",
+    focusText: "临盘刺激 / 消息刺激 / 群体情绪",
+    scene: "临盘刺激",
+    rule: "没有提前计划，只记录，不把临场刺激当成行动理由。"
+  },
+  盈利拿不住: {
+    packId: "hold_profit_by_rule",
+    title: "盈利拿不住专项训练",
+    focusText: "小盈利震荡 / 回踩不破 / 规则持有",
+    scene: "小盈利震荡",
+    rule: "盈利后按规则观察，不用小波动换即时安全感。"
+  },
+  恐惧止损: {
+    packId: "fear_stop_loss",
+    title: "恐惧止损专项训练",
+    focusText: "正常回撤 / 未破位震荡 / 边界识别",
+    scene: "正常回撤",
+    rule: "先区分破位与正常波动，再决定是否执行预案。"
+  },
+  空仓焦虑: {
+    packId: "empty_position_patience",
+    title: "空仓焦虑专项训练",
+    focusText: "市场普涨 / 手里没票 / 等待训练",
+    scene: "空仓焦虑",
+    rule: "空仓也是守法；没有自己的机会，只记录不追随。"
+  },
+  急于翻本: {
+    packId: "revenge_trade_pause",
+    title: "急于翻本专项训练",
+    focusText: "亏损后再次出手 / 情绪续单 / 停止交易",
+    scene: "亏损后再次出手",
+    rule: "亏损后先复盘，不用下一笔交易修复上一笔情绪。"
+  }
+};
+
 const TRADE_REVIEW_STATUS_STEPS = [
   { key: "pending_confirmation", label: "待确认", detail: "截图、自述与第一念等待确认。" },
   { key: "pending_market_review", label: "待回看", detail: "等待历史位置回看完成。" },
@@ -177,6 +256,7 @@ function matchKeywordMirrorRule(input = {}) {
     input.entryReason,
     input.exitReason,
     input.firstThought,
+    input.triggerScene,
     input.afterReaction,
     input.nextAction,
     input.reviewNote,
@@ -365,6 +445,114 @@ function resolveTradeReviewCurrentStatus({ confirmed, marketReady, mirrored, arc
   return "retested";
 }
 
+function normalizeTextParts(parts = []) {
+  return parts.filter(Boolean).map((item) => String(item || "")).join(" ");
+}
+
+function resolveTradeReviewMainErrorType(input = {}) {
+  const text = normalizeTextParts([
+    input.firstThought,
+    input.triggerScene,
+    input.entryReason,
+    input.exitReason,
+    input.afterReaction,
+    input.nextAction,
+    input.reviewNote,
+    input.planBoundary
+  ]);
+  if (/怕错过|追高|上车|来不及|放量拉升|突然拉升|快速拉升|快速上冲|冲高回落|假突破/.test(text)) return "追高冲动";
+  if (/被套|扛单|不认错|再等等|会回来/.test(text) || input.positionState === "trapped") return "扛单被套";
+  if (/卖飞|怕卖飞/.test(text)) return "卖飞懊悔";
+  if (/买少/.test(text)) return "买少懊悔";
+  if (/补仓|加仓/.test(text)) return "补仓冲动";
+  if (/拿不住|怕回吐/.test(text)) return "盈利拿不住";
+  if (/空仓|没票/.test(text)) return "空仓焦虑";
+  if (/翻本|扳回|不甘/.test(text) || input.actionKey === "compensate") return "急于翻本";
+  if (/怕亏|恐惧/.test(text) || input.emotion === "恐惧") return "恐惧止损";
+  if (input.inPlan === "no" || input.actionKey === "impulse") return "计划外交易";
+  return "计划外交易";
+}
+
+function uniqueTags(tags = []) {
+  return Array.from(new Set(tags.filter(Boolean)));
+}
+
+function resolveTradeReviewSecondaryErrors(input = {}, mainErrorType = "") {
+  const text = normalizeTextParts([
+    input.firstThought,
+    input.triggerScene,
+    input.entryReason,
+    input.exitReason,
+    input.afterReaction,
+    input.nextAction,
+    input.reviewNote,
+    input.planBoundary
+  ]);
+  const tags = [];
+  if (input.inPlan === "no" || input.actionKey === "impulse") tags.push("计划外交易");
+  if (input.positionState === "trapped" || /被套|扛单/.test(text)) tags.push("扛单被套");
+  if (/怕错过|追高|放量拉升|突然拉升|快速拉升|快速上冲|冲高回落|假突破/.test(text)) tags.push("追高冲动");
+  if (/补仓|加仓/.test(text)) tags.push("补仓冲动");
+  if (/买少/.test(text)) tags.push("买少懊悔");
+  if (/卖飞|怕卖飞/.test(text)) tags.push("卖飞懊悔");
+  if (/翻本|扳回|不甘/.test(text) || input.actionKey === "compensate") tags.push("急于翻本");
+  if (/拿不住|怕回吐/.test(text)) tags.push("盈利拿不住");
+  return uniqueTags(tags).filter((tag) => tag !== mainErrorType).slice(0, 3);
+}
+
+function resolveTradeReviewLawResult(input = {}) {
+  if (input.inPlan === "no" || input.changedPlan === "yes" || input.boundaryState === "lost") return "破法";
+  if (input.inPlan === "unclear" || input.boundaryState === "near") return "说不清";
+  return "守法";
+}
+
+function buildTradeReviewMistake(input = {}, reportBase = {}) {
+  const mainErrorType = resolveTradeReviewMainErrorType(input);
+  const secondaryErrorTypes = resolveTradeReviewSecondaryErrors(input, mainErrorType);
+  const prescription = TRADE_REVIEW_ERROR_PRESCRIPTIONS[mainErrorType] || TRADE_REVIEW_ERROR_PRESCRIPTIONS["计划外交易"];
+  const triggerScene = input.triggerScene || prescription.scene;
+  const nextRule = input.nextAction || prescription.rule;
+  const lawResult = resolveTradeReviewLawResult(input);
+  const positionState = input.positionState || "holding";
+  const positionStateLabel = POSITION_STATE_LABELS[positionState] || "待确认";
+  const mistakeCard = {
+    title: "错题卡",
+    mainErrorType,
+    secondaryErrorTypes,
+    firstThought: input.firstThought || "待照见",
+    triggerScene,
+    nextRule,
+    actionLabel: reportBase.actionLabel || "",
+    statusLabel: positionStateLabel,
+    lawResult,
+    mirrorDeposit: {
+      title: "活镜沉淀",
+      line: `本次「${mainErrorType}」已写入活镜；后续同类记录会累计成复发模式。`
+    },
+    trainingPrescription: {
+      title: prescription.title,
+      focusText: prescription.focusText,
+      rule: prescription.rule,
+      packId: prescription.packId
+    }
+  };
+
+  return {
+    mainErrorType,
+    secondaryErrorTypes,
+    triggerScene,
+    brokenRule: lawResult === "破法" ? (input.planBoundary || prescription.rule) : "",
+    lawResult,
+    tradeResult: input.tradeResult || "待验证",
+    positionState,
+    positionStateLabel,
+    trainingPrescription: mistakeCard.trainingPrescription,
+    trainingPackId: prescription.packId,
+    mistakeCard,
+    mirrorDeposit: mistakeCard.mirrorDeposit
+  };
+}
+
 function buildProcessScores(input = {}, type) {
   const action = getOption(ACTION_OPTIONS, input.actionKey);
   const boundary = getOption(BOUNDARY_STATES, input.boundaryState);
@@ -408,6 +596,7 @@ function buildTradeReview(input = {}, context = {}) {
   const scores = buildProcessScores(input, type);
   const action = getOption(ACTION_OPTIONS, input.actionKey);
   const boundary = getOption(BOUNDARY_STATES, input.boundaryState);
+  const mistake = buildTradeReviewMistake(input, { actionLabel: action.label });
   const report = {
     id: input.id || `tr-${Date.now()}`,
     sourceType: "trade_review",
@@ -427,6 +616,8 @@ function buildTradeReview(input = {}, context = {}) {
     inPlan: input.inPlan || "yes",
     changedPlan: input.changedPlan || "no",
     exitPrepared: input.exitPrepared || "yes",
+    positionState: mistake.positionState,
+    positionStateLabel: mistake.positionStateLabel,
     afterReaction: input.afterReaction || "未记录",
     nextAction: input.nextAction || "",
     firstThought: input.firstThought || "未记录",
@@ -444,7 +635,17 @@ function buildTradeReview(input = {}, context = {}) {
     scores,
     oneLine: buildOneLine({ type, input, action, boundary, historicalMatch }),
     verdict: (keywordRule || {}).verdict || buildOneLine({ type, input, action, boundary, historicalMatch }),
-    trainingAction: (keywordRule || {}).trainingAction || buildTrainingAction(type, boundary.key),
+    mainErrorType: mistake.mainErrorType,
+    secondaryErrorTypes: mistake.secondaryErrorTypes,
+    triggerScene: mistake.triggerScene,
+    brokenRule: mistake.brokenRule,
+    lawResult: mistake.lawResult,
+    tradeResult: mistake.tradeResult,
+    trainingPrescription: mistake.trainingPrescription,
+    trainingPackId: mistake.trainingPackId,
+    mistakeCard: mistake.mistakeCard,
+    mirrorDeposit: mistake.mirrorDeposit,
+    trainingAction: mistake.trainingPrescription.rule || (keywordRule || {}).trainingAction || buildTrainingAction(type, boundary.key),
     evidenceChain: buildEvidenceChain({ input, action, boundary, historicalMatch, binding, context }),
     includeInRetest: true,
     compliance: COMPLIANCE_TEXT,
@@ -557,6 +758,86 @@ function buildLiveMirrorReminder(tradeReviewState = {}) {
     primaryActionText: "继续上传真实记录",
     archiveActionText: "进入复盘档案",
     latest
+  };
+}
+
+function isWithinRecentWindow(record = {}, days = 30, now = Date.now()) {
+  const timestamp = Number(record.createdAt || record.updatedAt || 0);
+  if (!timestamp) return true;
+  return now - timestamp <= days * 24 * 60 * 60 * 1000;
+}
+
+function buildTradeReviewTop3Stats(tradeReviewState = {}) {
+  const days = Number(tradeReviewState.days || 30);
+  const records = ((tradeReviewState || {}).records || [])
+    .filter(Boolean)
+    .filter((record) => isWithinRecentWindow(record, days))
+    .slice()
+    .sort((a, b) => Number(b.createdAt || b.updatedAt || 0) - Number(a.createdAt || a.updatedAt || 0));
+  const topErrors = topEntries(countValues(records.map((item) => item.mainErrorType || "")), 3);
+  const topFirstThoughts = topEntries(countValues(records.map((item) => item.firstThought || "")), 3);
+  const topTriggerScenes = topEntries(countValues(records.map((item) => item.triggerScene || "")), 3);
+  const mainErrorType = (topErrors[0] || {}).label || "";
+  const prescription = TRADE_REVIEW_ERROR_PRESCRIPTIONS[mainErrorType] || null;
+
+  return {
+    hasStats: records.length > 0,
+    windowDays: days,
+    total: records.length,
+    topErrors,
+    topFirstThoughts,
+    topTriggerScenes,
+    nextRule: (prescription || {}).rule || "先留下一条真实复盘，再生成下一次守法。",
+    trainingPrescription: prescription,
+    summary: mainErrorType
+      ? `近 ${days} 天最高频错题是「${mainErrorType}」。`
+      : "近 30 天还没有形成稳定错题模式。"
+  };
+}
+
+function buildReviewTrainingFocus(tradeReviewState = {}) {
+  const records = ((tradeReviewState || {}).records || [])
+    .filter(Boolean)
+    .slice()
+    .sort((a, b) => Number(b.createdAt || b.updatedAt || 0) - Number(a.createdAt || a.updatedAt || 0));
+  const recent = records.slice(0, 30);
+  const top3Stats = buildTradeReviewTop3Stats({ records: recent, days: 30 });
+  const topError = top3Stats.topErrors[0];
+  if (!topError) {
+    return {
+      hasPrescription: false,
+      mainErrorType: "",
+      count: 0,
+      summary: "还没有真实复盘错题，先完成一次真实记录。",
+      rule: "先留下一条真实记录，再生成针对训练。",
+      prescription: null,
+      top3Stats
+    };
+  }
+  const matching = recent.filter((item) => item.mainErrorType === topError.label);
+  const firstThought = (topEntries(countValues(matching.map((item) => item.firstThought || "")), 1)[0] || {}).label ||
+    ((top3Stats.topFirstThoughts[0] || {}).label) ||
+    "待照见";
+  const triggerScene = (topEntries(countValues(matching.map((item) => item.triggerScene || "")), 1)[0] || {}).label ||
+    ((top3Stats.topTriggerScenes[0] || {}).label) ||
+    ((TRADE_REVIEW_ERROR_PRESCRIPTIONS[topError.label] || {}).scene || "待定位");
+  const prescription = TRADE_REVIEW_ERROR_PRESCRIPTIONS[topError.label] || TRADE_REVIEW_ERROR_PRESCRIPTIONS["计划外交易"];
+  return {
+    hasPrescription: true,
+    mainErrorType: topError.label,
+    count: topError.count,
+    summary: `根据最近真实复盘，「${topError.label}」出现 ${topError.count} 次。`,
+    firstThought,
+    triggerScene,
+    focusText: prescription.focusText,
+    rule: prescription.rule,
+    prescription,
+    packId: prescription.packId,
+    title: prescription.title,
+    topErrors: top3Stats.topErrors,
+    topFirstThoughts: top3Stats.topFirstThoughts,
+    topTriggerScenes: top3Stats.topTriggerScenes,
+    top3Stats
   };
 }
 
@@ -736,5 +1017,7 @@ module.exports = {
   buildTradeReviewRecordView,
   buildTradeReviewClosure,
   buildLiveMirrorReminder,
+  buildReviewTrainingFocus,
+  buildTradeReviewTop3Stats,
   buildLivingMirrorStats
 };

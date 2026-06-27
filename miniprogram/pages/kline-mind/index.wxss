@@ -91,6 +91,61 @@
   line-height: 1.5;
 }
 
+.targeted-training-card {
+  margin-top: 18rpx;
+  padding: 22rpx;
+  border: 1rpx solid rgba(216, 183, 111, 0.18);
+  border-radius: 22rpx;
+  background:
+    radial-gradient(circle at 88% 0%, rgba(216, 183, 111, 0.12), transparent 42%),
+    rgba(255, 255, 255, 0.04);
+}
+
+.targeted-training-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.targeted-training-head text {
+  color: rgba(95, 214, 194, 0.88);
+  font-size: 21rpx;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.targeted-training-head view {
+  flex-shrink: 0;
+  padding: 8rpx 14rpx;
+  border-radius: 999rpx;
+  color: #10100d;
+  background: linear-gradient(180deg, #f5dc94, #c49b44);
+  font-size: 21rpx;
+  font-weight: 900;
+}
+
+.targeted-training-summary {
+  margin-top: 16rpx;
+  color: rgba(247, 239, 223, 0.78);
+  font-size: 24rpx;
+  line-height: 1.5;
+  font-weight: 800;
+}
+
+.targeted-training-focus,
+.targeted-training-rule {
+  margin-top: 12rpx;
+  color: rgba(247, 239, 223, 0.62);
+  font-size: 23rpx;
+  line-height: 1.55;
+}
+
+.targeted-training-focus {
+  color: rgba(216, 183, 111, 0.78);
+  font-weight: 850;
+}
+
 .hero-meta {
   margin-top: 34rpx;
   display: grid;
@@ -279,7 +334,7 @@
   max-width: 100%;
   min-width: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(96rpx, 112rpx);
+  grid-template-columns: minmax(0, 1fr) minmax(112rpx, 128rpx);
   align-items: center;
   gap: 10rpx;
   overflow: hidden;
@@ -322,12 +377,13 @@
 
 .slice-change-btn {
   width: 100%;
-  max-width: 112rpx;
+  max-width: 128rpx;
   min-width: 0;
   height: 54rpx;
   margin: 0;
   padding: 0;
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   border-radius: 999rpx;
@@ -338,6 +394,18 @@
   font-weight: 900;
   line-height: 1.2;
   box-sizing: border-box;
+}
+
+.slice-change-btn > text {
+  display: block;
+}
+
+.slice-change-btn > view {
+  margin-top: 2rpx;
+  color: rgba(244, 235, 221, 0.46);
+  font-size: 15rpx;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .slice-change-btn.disabled,

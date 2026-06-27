@@ -69,20 +69,10 @@
           </picker>
         </view>
         <view>
-          <text>标的/合约</text>
-          <input value="{{form.symbol}}" bindinput="inputSymbol" placeholder="代码 / 合约 / 币种" />
+          <text>股票代码</text>
+          <input value="{{form.symbol}}" bindinput="inputSymbol" placeholder="例如：600123" />
         </view>
       </view>
-
-      <view class="field-label">数据品类</view>
-      <scroll-view scroll-x class="chip-strip" show-scrollbar="{{false}}">
-        <button wx:for="{{markets}}" wx:key="key" class="{{form.marketKey === item.key ? 'active' : ''}}" data-key="{{item.key}}" bindtap="selectMarket">{{item.label}}</button>
-      </scroll-view>
-
-      <view class="field-label">周期切片</view>
-      <scroll-view scroll-x class="chip-strip" show-scrollbar="{{false}}">
-        <button wx:for="{{timeframes}}" wx:key="key" class="{{form.timeframeKey === item.key ? 'active' : ''}}" data-key="{{item.key}}" bindtap="selectTimeframe">{{item.label}}</button>
-      </scroll-view>
 
       <view wx:if="{{marketContext && marketContext.status === 'ready'}}" class="anchor-meta">
         {{marketContext.marketLabel}} · {{marketContext.timeframeLabel}} · {{marketContext.candleCount}} 根
@@ -105,6 +95,17 @@
       </view>
 
       <view wx:if="{{form.firstThought}}" class="quick-next-step">
+        <view class="quick-label">触发情境是什么？</view>
+        <view class="quick-choice-grid trigger-scene">
+          <button
+            wx:for="{{triggerSceneOptions}}"
+            wx:key="*this"
+            class="quick-choice-pill {{form.triggerScene === item ? 'active' : ''}}"
+            data-value="{{item}}"
+            bindtap="selectTriggerScene"
+          >{{item}}</button>
+        </view>
+
         <view class="quick-label">这笔交易是否在原计划内？</view>
         <view class="quick-choice-grid three">
           <button
@@ -173,16 +174,6 @@
 
     <view wx:if="{{showAdvanced && !manualAnchorVisible && !form.screenshotPath && !form.symbol}}" class="form-card card">
       <text>历史数据锚点</text>
-      <view class="field-label">数据品类</view>
-      <scroll-view scroll-x class="chip-strip" show-scrollbar="{{false}}">
-        <button wx:for="{{markets}}" wx:key="key" class="{{form.marketKey === item.key ? 'active' : ''}}" data-key="{{item.key}}" bindtap="selectMarket">{{item.label}}</button>
-      </scroll-view>
-
-      <view class="field-label">周期切片</view>
-      <scroll-view scroll-x class="chip-strip" show-scrollbar="{{false}}">
-        <button wx:for="{{timeframes}}" wx:key="key" class="{{form.timeframeKey === item.key ? 'active' : ''}}" data-key="{{item.key}}" bindtap="selectTimeframe">{{item.label}}</button>
-      </scroll-view>
-
       <view class="field-grid">
         <view>
           <text>买入/记录日期</text>
@@ -191,8 +182,8 @@
           </picker>
         </view>
         <view>
-          <text>标的/合约</text>
-          <input value="{{form.symbol}}" bindinput="inputSymbol" placeholder="例如：代码、合约、币种" />
+          <text>股票代码</text>
+          <input value="{{form.symbol}}" bindinput="inputSymbol" placeholder="例如：600123" />
         </view>
       </view>
     </view>
@@ -245,8 +236,60 @@
           <view>这一次复盘，已进入你的行为印记。</view>
         </view>
       </view>
-      <text>活镜回响</text>
+      <text>错题卡</text>
       <view class="one-line">{{report.oneLine}}</view>
+      <view wx:if="{{report.mistakeCard}}" class="mistake-card">
+        <view class="mistake-card-head">
+          <text>{{report.mistakeCard.title}}</text>
+          <view>{{report.mainErrorType}}</view>
+        </view>
+        <view class="mistake-card-row">
+          <text>第一念</text>
+          <view>{{report.mistakeCard.firstThought}}</view>
+        </view>
+        <view class="mistake-card-row">
+          <text>触发场景</text>
+          <view>{{report.triggerScene}}</view>
+        </view>
+        <view class="mistake-card-row">
+          <text>下一次守法</text>
+          <view>{{report.mistakeCard.nextRule}}</view>
+        </view>
+      </view>
+      <view wx:if="{{report.mirrorDeposit}}" class="mirror-deposit-card">
+        <text>活镜沉淀</text>
+        <view>{{report.mirrorDeposit.line}}</view>
+      </view>
+      <view wx:if="{{report.trainingPrescription}}" class="prescription-card">
+        <text>修行心证</text>
+        <view>{{report.trainingPrescription.focusText}}</view>
+        <view>{{report.trainingPrescription.rule}}</view>
+      </view>
+      <view wx:if="{{mirrorTop3.hasStats}}" class="mirror-top3-card">
+        <text>活镜 Top3</text>
+        <view class="mirror-top3-section">
+          <view class="mirror-top3-title">最近重复最多的错题</view>
+          <view wx:for="{{mirrorTop3.topErrors}}" wx:key="label" wx:for-item="rankItem" class="mirror-top3-row">
+            <text>{{rankItem.label}}</text>
+            <view>{{rankItem.count}} 次</view>
+          </view>
+        </view>
+        <view class="mirror-top3-section">
+          <view class="mirror-top3-title">最常见的第一念</view>
+          <view wx:for="{{mirrorTop3.topFirstThoughts}}" wx:key="label" wx:for-item="rankItem" class="mirror-top3-row">
+            <text>{{rankItem.label}}</text>
+            <view>{{rankItem.count}} 次</view>
+          </view>
+        </view>
+        <view class="mirror-top3-section">
+          <view class="mirror-top3-title">最容易失守的场景</view>
+          <view wx:for="{{mirrorTop3.topTriggerScenes}}" wx:key="label" wx:for-item="rankItem" class="mirror-top3-row">
+            <text>{{rankItem.label}}</text>
+            <view>{{rankItem.count}} 次</view>
+          </view>
+        </view>
+        <view class="mirror-top3-rule">下一次最该守：{{mirrorTop3.nextRule}}</view>
+      </view>
       <view class="verdict-card">
         <text>判词</text>
         <view>{{report.verdict}}</view>

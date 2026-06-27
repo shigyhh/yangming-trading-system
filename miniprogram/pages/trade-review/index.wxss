@@ -45,7 +45,6 @@
 .quick-label,
 .mini-choice,
 .field-label,
-.chip-strip,
 .field-grid,
 .choice-grid,
 .emotion-grid,
@@ -233,28 +232,27 @@
   margin-top: 12rpx;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12rpx;
+  gap: 16rpx 20rpx;
 }
 
 .quick-choice-grid.thought,
-.quick-choice-grid.next-rule {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
+.quick-choice-grid.next-rule,
+.quick-choice-grid.trigger-scene,
 .quick-choice-grid.three {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .quick-choice-pill {
+  width: 100%;
   min-width: 0;
-  min-height: 68rpx;
+  min-height: 72rpx;
   margin: 0;
-  padding: 0 12rpx;
+  padding: 0 18rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  border-radius: 999rpx;
+  border-radius: 20rpx;
   color: rgba(247, 239, 223, 0.72);
   border: 1rpx solid rgba(247, 239, 223, 0.12);
   background: rgba(255, 255, 255, 0.045);
@@ -262,6 +260,8 @@
   font-weight: 900;
   line-height: 1.2;
   text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .quick-choice-pill.active {
@@ -566,18 +566,13 @@
   letter-spacing: 0.12em;
 }
 
-.chip-strip {
-  margin: 14rpx -8rpx 0;
-  white-space: nowrap;
-}
-
-.chip-strip button,
 .emotion-grid button {
   display: inline-flex;
+  width: auto;
   align-items: center;
   justify-content: center;
   min-height: 58rpx;
-  margin-right: 10rpx;
+  margin: 0 10rpx 0 0;
   padding: 0 20rpx;
   border-radius: 999rpx;
   color: rgba(247, 239, 223, 0.7);
@@ -586,9 +581,14 @@
   font-size: 23rpx;
   font-weight: 800;
   line-height: 1.2;
+  vertical-align: top;
 }
 
-.chip-strip button.active,
+.emotion-grid button::after,
+.choice-grid button::after {
+  display: none;
+}
+
 .emotion-grid button.active,
 .choice-grid button.active {
   color: #11140f;
@@ -696,6 +696,76 @@
   font-weight: 900;
 }
 
+.mistake-card {
+  padding: 24rpx;
+  border-radius: 22rpx;
+  border: 1rpx solid rgba(216, 183, 111, 0.22);
+  background:
+    linear-gradient(135deg, rgba(216, 183, 111, 0.12), rgba(95, 132, 117, 0.06)),
+    rgba(255, 255, 255, 0.035);
+}
+
+.mistake-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18rpx;
+}
+
+.mistake-card-head text {
+  color: #f1d27d;
+  font-size: 23rpx;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.mistake-card-head view {
+  flex-shrink: 0;
+  padding: 8rpx 16rpx;
+  border-radius: 999rpx;
+  color: #12100d;
+  background: linear-gradient(180deg, #f5dc94, #c49b44);
+  font-size: 22rpx;
+  font-weight: 900;
+}
+
+.mistake-card-row {
+  margin-top: 18rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid rgba(216, 183, 111, 0.12);
+}
+
+.mistake-card-row text {
+  display: block;
+  color: rgba(216, 183, 111, 0.7);
+  font-size: 20rpx;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.mistake-card-row view {
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.82);
+  font-size: 25rpx;
+  line-height: 1.55;
+  font-weight: 850;
+}
+
+.mirror-deposit-card,
+.prescription-card {
+  padding: 22rpx;
+  border-radius: 20rpx;
+  border: 1rpx solid rgba(95, 214, 194, 0.16);
+  background: rgba(95, 132, 117, 0.07);
+}
+
+.prescription-card {
+  border-color: rgba(216, 183, 111, 0.18);
+  background:
+    radial-gradient(circle at 92% 0%, rgba(216, 183, 111, 0.13), transparent 42%),
+    rgba(255, 255, 255, 0.035);
+}
+
 .single-action {
   display: grid;
   grid-template-columns: 1fr;
@@ -704,6 +774,10 @@
 
 .match-card,
 .verdict-card,
+.mistake-card,
+.mirror-deposit-card,
+.prescription-card,
+.mirror-top3-card,
 .mirror-grid,
 .score-list,
 .evidence-list,
@@ -744,6 +818,9 @@
 
 .match-card text,
 .verdict-card text,
+.mirror-deposit-card text,
+.prescription-card text,
+.mirror-top3-card > text,
 .training-action text,
 .closure-card > text,
 .evidence-list text,
@@ -756,6 +833,9 @@
 
 .match-card view,
 .verdict-card view,
+.mirror-deposit-card view,
+.prescription-card view,
+.mirror-top3-card view,
 .training-action view,
 .closure-card view,
 .evidence-list view view,
@@ -765,6 +845,62 @@
   font-size: 24rpx;
   line-height: 1.5;
   font-weight: 800;
+}
+
+.mirror-top3-card {
+  padding: 22rpx;
+  border-radius: 20rpx;
+  border: 1rpx solid rgba(216, 183, 111, 0.18);
+  background:
+    radial-gradient(circle at 88% 0%, rgba(95, 214, 194, 0.1), transparent 42%),
+    rgba(255, 255, 255, 0.035);
+}
+
+.mirror-top3-section {
+  margin-top: 18rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid rgba(216, 183, 111, 0.1);
+}
+
+.mirror-top3-title {
+  color: rgba(216, 183, 111, 0.72);
+  font-size: 21rpx;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.mirror-top3-row {
+  margin-top: 10rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18rpx;
+}
+
+.mirror-top3-row text {
+  color: rgba(247, 239, 223, 0.84);
+  font-size: 24rpx;
+  font-weight: 850;
+  letter-spacing: 0;
+}
+
+.mirror-top3-row view {
+  flex-shrink: 0;
+  margin-top: 0;
+  color: rgba(95, 214, 194, 0.72);
+  font-size: 22rpx;
+  font-weight: 900;
+}
+
+.mirror-top3-rule {
+  margin-top: 20rpx;
+  padding: 18rpx;
+  border-radius: 18rpx;
+  color: rgba(247, 239, 223, 0.82);
+  background: rgba(0, 0, 0, 0.18);
+  font-size: 24rpx;
+  line-height: 1.5;
+  font-weight: 850;
 }
 
 .closure-card {
