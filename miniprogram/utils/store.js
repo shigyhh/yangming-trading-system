@@ -1570,6 +1570,20 @@ function normalizeTradeReviewLawResult(value) {
   return text;
 }
 
+function normalizeTradeReviewExecutionResult(record = {}) {
+  const card = record.mistakeCard || {};
+  return normalizeTradeReviewLawResult(pickTradeReviewStorageValue(
+    record.execution_result,
+    record.executionResult,
+    card.execution_result,
+    card.executionResult,
+    record.law_result,
+    record.lawResult,
+    card.law_result,
+    card.lawResult
+  ));
+}
+
 function normalizeTradeReviewMainErrorType(record = {}) {
   const card = record.mistakeCard || {};
   const raw = normalizeTradeReviewText(pickTradeReviewStorageValue(
@@ -1631,7 +1645,7 @@ function normalizeTradeReviewStorageRecord(record = {}) {
   const secondaryErrorTypes = normalizeTradeReviewSecondaryErrorTypes(record, mainErrorType);
   const isPlanned = normalizeTradeReviewPlanValue(pickTradeReviewStorageValue(record.is_planned, record.isPlanned, record.inPlan, record.planState));
   const positionLevel = normalizeTradeReviewText(pickTradeReviewStorageValue(record.position_level, record.positionLevel, record.position, record.positionStateLabel));
-  const lawResult = normalizeTradeReviewLawResult(pickTradeReviewStorageValue(record.law_result, record.lawResult));
+  const executionResult = normalizeTradeReviewExecutionResult(record);
 
   return Object.assign({}, record, {
     mainErrorType,
@@ -1648,8 +1662,10 @@ function normalizeTradeReviewStorageRecord(record = {}) {
     is_planned: isPlanned,
     positionLevel,
     position_level: positionLevel,
-    lawResult,
-    law_result: lawResult,
+    executionResult,
+    execution_result: executionResult,
+    lawResult: executionResult,
+    law_result: executionResult,
     trainingPrescription: prescription,
     training_prescription: prescription
   });

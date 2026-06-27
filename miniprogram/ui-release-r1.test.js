@@ -197,6 +197,8 @@ assert.equal(tradeReviewWxml.includes("下一次守法"), false, "trade review u
   assert.equal(tradeReviewWxml.includes(term), false, `trade review wxml should not expose ${term}`);
   assert.equal(tradeReviewJs.includes(term), false, `trade review page js should not expose ${term}`);
 });
+assert.ok(klineMindWxml.includes("执行一致率"), "kline training result should use execution consistency wording");
+assert.equal(klineMindWxml.includes("按计划执行结果"), false, "kline training result should not use old law-result wording");
 assert.ok(tradeReviewWxml.includes("mirror-deposit-card"), "trade review result should show living-mirror deposition");
 assert.ok(tradeReviewWxml.includes("prescription-card"), "trade review result should show the next K-line training prescription");
 assert.ok(tradeReviewWxml.includes("mirror-top3-card"), "trade review should surface living-mirror Top3 mistake statistics");

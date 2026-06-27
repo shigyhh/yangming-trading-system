@@ -283,7 +283,7 @@ export default function TradeReviewPage() {
             {activeStats ? (
               <div className="mt-5 grid gap-3">
                 <ReviewMeta label="训练完成率" value={`${activeStats.trainingCompletionRate}%`} />
-                <ReviewMeta label="循环复发次数" value={`${activeStats.loopRelapseCount}`} />
+                <ReviewMeta label="旧题复现次数" value={`${activeStats.loopRelapseCount}`} />
                 <ReviewMeta label="良知成长值" value={`${activeStats.conscienceGrowth}`} />
                 <div className="mt-2 grid gap-3">
                   {Object.entries(activeStats.mirrorScores).slice(0, 9).map(([key, value]) => (

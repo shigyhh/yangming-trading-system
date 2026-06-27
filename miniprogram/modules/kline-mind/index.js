@@ -1415,6 +1415,10 @@ function buildKlineTrainingMistakeCard(runtime = {}, options = {}) {
     : "本局暂无明显失守";
   const executionResult = repeatCount > 0 ? "执行偏离" : "本局暂无明显失守";
   const totalActions = Number(trainingResult.totalActions || trainingResult.total_actions || decisions.length || 0);
+  const executionConsistency = totalActions > 0
+    ? Math.max(0, Math.round(((totalActions - repeatCount) / totalActions) * 100))
+    : null;
+  const executionConsistencyText = executionConsistency === null ? "待补充" : `${executionConsistency}%`;
   const pnlResult = Number(trainingResult.pnlResult || trainingResult.pnl_result || 0);
   const sessionId = cleanEventText(runtime.trainingSessionId || runtime.training_session_id || trainingResult.sessionId || trainingResult.session_id || "", 160);
 
@@ -1432,6 +1436,8 @@ function buildKlineTrainingMistakeCard(runtime = {}, options = {}) {
     action_summary: `动作 ${totalActions} 次`,
     executionResult,
     execution_result: executionResult,
+    executionConsistencyText,
+    execution_consistency_text: executionConsistencyText,
     lawResult: executionResult,
     law_result: executionResult,
     repeatCount,

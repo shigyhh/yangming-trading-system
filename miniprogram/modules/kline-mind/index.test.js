@@ -536,6 +536,8 @@ assert.strictEqual(chaseHighCard.trainingType, "追高冲动专项");
 assert.strictEqual(chaseHighCard.repeatCount, 1);
 assert.strictEqual(chaseHighCard.repeat_count, 1);
 assert.strictEqual(chaseHighCard.executionResult, "执行偏离");
+assert.strictEqual(chaseHighCard.executionConsistencyText, "0%");
+assert.strictEqual(chaseHighCard.execution_consistency_text, "0%");
 assert.ok(chaseHighCard.obviousMiss.includes("重仓追高"));
 assert.ok(chaseHighCard.nextAction.includes("第一根放量不追"));
 assert.ok(chaseHighCard.trainingPrescription.includes("追高冲动专项"));
@@ -575,6 +577,7 @@ const cleanCard = buildKlineTrainingMistakeCard({
 assert.strictEqual(cleanCard.repeatCount, 0);
 assert.strictEqual(cleanCard.obviousMiss, "本局暂无明显失守");
 assert.strictEqual(cleanCard.executionResult, "本局暂无明显失守");
+assert.strictEqual(cleanCard.executionConsistencyText, "100%");
 
 const runtimeStep4 = advanceKlineTrainingRuntime(decidedRuntime);
 assert.strictEqual(runtimeStep4.currentIndex, 4);

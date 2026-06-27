@@ -61,6 +61,8 @@ assert.strictEqual(savedRecord.isPlanned, false);
 assert.strictEqual(savedRecord.is_planned, false);
 assert.strictEqual(savedRecord.positionLevel, "半仓");
 assert.strictEqual(savedRecord.position_level, "半仓");
+assert.strictEqual(savedRecord.executionResult, "执行偏离");
+assert.strictEqual(savedRecord.execution_result, "执行偏离");
 assert.strictEqual(savedRecord.lawResult, "执行偏离");
 assert.strictEqual(savedRecord.law_result, "执行偏离");
 assert.strictEqual(savedRecord.trainingPrescription.title, "追高冲动专项训练");

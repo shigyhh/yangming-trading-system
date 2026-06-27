@@ -162,7 +162,11 @@ assert.strictEqual(plannedReview.mainErrorType, "追高冲动");
 assert.strictEqual(plannedReview.main_error_type, "追高冲动");
 assert.strictEqual(plannedReview.lawResult, "按计划执行");
 assert.strictEqual(plannedReview.law_result, "按计划执行");
+assert.strictEqual(plannedReview.executionResult, "按计划执行");
+assert.strictEqual(plannedReview.execution_result, "按计划执行");
 assert.strictEqual(plannedReview.mistakeCard.lawResult, "按计划执行");
+assert.strictEqual(plannedReview.mistakeCard.executionResult, "按计划执行");
+assert.strictEqual(plannedReview.mistakeCard.execution_result, "按计划执行");
 assert.strictEqual(plannedReview.mistakeCard.mainErrorType, "追高冲动");
 
 const legacySnakeRecordView = buildTradeReviewRecordView({
@@ -189,6 +193,8 @@ assert.strictEqual(legacySnakeRecordView.triggerScene, "弱反弹");
 assert.strictEqual(legacySnakeRecordView.trigger_scene, "弱反弹");
 assert.strictEqual(legacySnakeRecordView.nextRule, "不在破位亏损中补仓");
 assert.strictEqual(legacySnakeRecordView.next_rule, "不在破位亏损中补仓");
+assert.strictEqual(legacySnakeRecordView.executionResult, "按计划执行");
+assert.strictEqual(legacySnakeRecordView.execution_result, "按计划执行");
 assert.strictEqual(legacySnakeRecordView.mistakeCard.mainErrorType, "补仓冲动");
 assert.strictEqual(legacySnakeRecordView.mistakeCard.firstThought, "想补仓");
 assert.strictEqual(legacySnakeRecordView.mistakeCard.triggerScene, "弱反弹");

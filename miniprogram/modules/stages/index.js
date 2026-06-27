@@ -65,7 +65,7 @@ const STAGES = [
     goal: "破心中之贼",
     subtitle: "照见贪、急、怕、不甘等惯性。",
     trainingFocus: ["照见主人格", "找到当前心中之贼", "克治主人格"],
-    passingRule: "照见主心贼，并完成30日针对事上练无明显复发。",
+    passingRule: "照见主心贼，并完成30日针对事上练无明显旧题复现。",
     upgradeCondition: "能把冲动、扛单、赌念、不甘等惯性转成具体克治动作。",
     unlockCriteria: "完成人格照见后开启。",
     completionEvidence: ["照见主人格", "克治主人格"],

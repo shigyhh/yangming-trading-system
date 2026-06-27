@@ -605,9 +605,9 @@ function resolveTradeReviewSecondaryErrors(input = {}, mainErrorType = "") {
     .slice(0, 3);
 }
 
-function resolveTradeReviewLawResult(input = {}) {
-  const explicit = pickReviewText(input, ["lawResult", "law_result"]) ||
-    pickReviewText(input.mistakeCard || {}, ["lawResult", "law_result"]);
+function resolveTradeReviewExecutionResult(input = {}) {
+  const explicit = pickReviewText(input, ["executionResult", "execution_result", "lawResult", "law_result"]) ||
+    pickReviewText(input.mistakeCard || {}, ["executionResult", "execution_result", "lawResult", "law_result"]);
   if (/执行偏离|破法/.test(explicit)) return "执行偏离";
   if (/说不清/.test(explicit)) return "说不清";
   if (/按计划|守法/.test(explicit)) return "按计划执行";
@@ -617,6 +617,10 @@ function resolveTradeReviewLawResult(input = {}) {
   return "按计划执行";
 }
 
+function resolveTradeReviewLawResult(input = {}) {
+  return resolveTradeReviewExecutionResult(input);
+}
+
 function buildTradeReviewMistake(input = {}, reportBase = {}) {
   const mainErrorType = normalizeTradeReviewErrorType(resolveTradeReviewMainErrorType(input)) || "计划外交易";
   const secondaryErrorTypes = resolveTradeReviewSecondaryErrors(input, mainErrorType);
@@ -624,7 +628,7 @@ function buildTradeReviewMistake(input = {}, reportBase = {}) {
   const firstThought = getReviewFirstThought(input) || "待补充";
   const triggerScene = getReviewTriggerScene(input) || prescription.scene || "待补充";
   const nextRule = getReviewNextRule(input) || prescription.rule || "待补充";
-  const lawResult = resolveTradeReviewLawResult(input);
+  const executionResult = resolveTradeReviewExecutionResult(input);
   const positionState = input.positionState || "holding";
   const positionStateLabel = getReviewStatusLabel(input);
   const symbol = pickReviewText(input, ["symbol", "symbolMasked", "symbol_masked"]) || "待补充";
@@ -644,7 +648,10 @@ function buildTradeReviewMistake(input = {}, reportBase = {}) {
     nextRule,
     actionLabel,
     statusLabel: positionStateLabel,
-    lawResult,
+    executionResult,
+    execution_result: executionResult,
+    lawResult: executionResult,
+    law_result: executionResult,
     mirrorAttribution,
     mirrorDeposit: {
       title: "活镜沉淀",
@@ -664,8 +671,11 @@ function buildTradeReviewMistake(input = {}, reportBase = {}) {
     mainErrorType,
     secondaryErrorTypes,
     triggerScene,
-    brokenRule: lawResult === "执行偏离" ? (input.planBoundary || prescription.rule) : "",
-    lawResult,
+    brokenRule: executionResult === "执行偏离" ? (input.planBoundary || prescription.rule) : "",
+    executionResult,
+    execution_result: executionResult,
+    lawResult: executionResult,
+    law_result: executionResult,
     tradeResult: input.tradeResult || "待验证",
     positionState,
     positionStateLabel,
@@ -771,8 +781,10 @@ function buildTradeReview(input = {}, context = {}) {
     triggerScene: mistake.triggerScene,
     trigger_scene: mistake.triggerScene,
     brokenRule: mistake.brokenRule,
-    lawResult: mistake.lawResult,
-    law_result: mistake.lawResult,
+    executionResult: mistake.executionResult,
+    execution_result: mistake.executionResult,
+    lawResult: mistake.executionResult,
+    law_result: mistake.executionResult,
     tradeResult: mistake.tradeResult,
     trainingPrescription: mistake.trainingPrescription,
     training_prescription: mistake.trainingPrescription,
@@ -805,7 +817,7 @@ function normalizeTradeReviewRecord(record = {}) {
   const nextRule = getReviewNextRule(record) ||
     pickReviewText(card, ["nextRule", "next_rule", "nextAction", "next_action"]) ||
     "";
-  const lawResult = resolveTradeReviewLawResult(record);
+  const executionResult = resolveTradeReviewExecutionResult(record);
   const trainingPrescription = normalizeTrainingPrescription(
     record.trainingPrescription ||
       record.training_prescription ||
@@ -824,8 +836,10 @@ function normalizeTradeReviewRecord(record = {}) {
     next_rule: nextRule,
     nextAction: nextRule,
     next_action: nextRule,
-    lawResult,
-    law_result: lawResult,
+    executionResult,
+    execution_result: executionResult,
+    lawResult: executionResult,
+    law_result: executionResult,
     trainingPrescription,
     training_prescription: trainingPrescription
   });
@@ -840,7 +854,10 @@ function normalizeTradeReviewRecord(record = {}) {
     firstThought: resolvedFirstThought,
     triggerScene: resolvedTriggerScene,
     nextRule: resolvedNextRule,
-    lawResult: mistake.lawResult,
+    executionResult: mistake.executionResult,
+    execution_result: mistake.executionResult,
+    lawResult: mistake.executionResult,
+    law_result: mistake.executionResult,
     trainingPrescription: mistake.trainingPrescription,
     trainingPrescriptionText: mistake.mistakeCard.trainingPrescriptionText
   });
@@ -858,8 +875,10 @@ function normalizeTradeReviewRecord(record = {}) {
     next_rule: resolvedNextRule,
     nextAction: resolvedNextRule,
     next_action: resolvedNextRule,
-    lawResult: mistake.lawResult,
-    law_result: mistake.lawResult,
+    executionResult: mistake.executionResult,
+    execution_result: mistake.executionResult,
+    lawResult: mistake.executionResult,
+    law_result: mistake.executionResult,
     trainingPrescription: mistake.trainingPrescription,
     training_prescription: mistake.trainingPrescription,
     trainingPackId: mistake.trainingPackId,
