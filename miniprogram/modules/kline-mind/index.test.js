@@ -16,6 +16,7 @@ const {
   startKlineTrainingRuntime,
   advanceKlineTrainingRuntime,
   recordKlineTrainingDecision,
+  finishKlineTrainingRuntime,
   setKlineRuntimeChartZoom,
   setKlineRuntimeViewportPan,
   buildKlineTrainingRecordPatch,
@@ -462,6 +463,49 @@ assert.ok(runtimeRecordPatch.riskHints[0].text.includes("追"));
 assert.ok(runtimeRecordPatch.coachHints[0].text.includes("先停"));
 assert.strictEqual(runtimeRecordPatch.sessionMetrics.positionSize, 1);
 assert.strictEqual(runtimeRecordPatch.positionState.side, "LONG");
+
+const targetedRuntime = startKlineTrainingRuntime(demoSession, {
+  trainingSessionId: "runtime-targeted-001",
+  initialVisibleCount: 2,
+  errorType: "追高冲动"
+});
+const targetedDecisionRuntime = recordKlineTrainingDecision(targetedRuntime, {
+  action: "BUY",
+  positionLevel: "半仓",
+  createdAt: "2026-06-28T10:00:00.000Z"
+});
+const targetedDecision = targetedDecisionRuntime.decisionTimeline[0];
+assert.strictEqual(targetedDecision.sessionId, "runtime-targeted-001");
+assert.strictEqual(targetedDecision.session_id, "runtime-targeted-001");
+assert.strictEqual(targetedDecision.index, targetedRuntime.currentIndex);
+assert.strictEqual(targetedDecision.barIndex, targetedRuntime.currentIndex);
+assert.strictEqual(targetedDecision.bar_index, targetedRuntime.currentIndex);
+assert.strictEqual(targetedDecision.errorType, "追高冲动");
+assert.strictEqual(targetedDecision.error_type, "追高冲动");
+assert.strictEqual(targetedDecision.positionLevel, "半仓");
+assert.strictEqual(targetedDecision.position_level, "半仓");
+assert.strictEqual(targetedDecision.createdAt, "2026-06-28T10:00:00.000Z");
+assert.strictEqual(targetedDecision.created_at, "2026-06-28T10:00:00.000Z");
+assert.strictEqual(targetedDecision.positionSize, 0.5);
+assert.ok(targetedDecision.price > 0);
+
+const finishedTargetedRuntime = finishKlineTrainingRuntime(targetedDecisionRuntime, {
+  completedAt: "2026-06-28T10:01:00.000Z"
+});
+assert.strictEqual(finishedTargetedRuntime.completed, true);
+assert.strictEqual(finishedTargetedRuntime.trainingResult.sessionId, "runtime-targeted-001");
+assert.strictEqual(finishedTargetedRuntime.trainingResult.session_id, "runtime-targeted-001");
+assert.strictEqual(finishedTargetedRuntime.trainingResult.errorType, "追高冲动");
+assert.strictEqual(finishedTargetedRuntime.trainingResult.error_type, "追高冲动");
+assert.strictEqual(finishedTargetedRuntime.trainingResult.totalActions, 1);
+assert.strictEqual(finishedTargetedRuntime.trainingResult.buyCount, 1);
+assert.strictEqual(finishedTargetedRuntime.trainingResult.completedAt, "2026-06-28T10:01:00.000Z");
+assert.strictEqual(finishedTargetedRuntime.trainingResult.completed_at, "2026-06-28T10:01:00.000Z");
+const finishedTargetedPatch = buildKlineTrainingRecordPatch(finishedTargetedRuntime);
+assert.strictEqual(finishedTargetedPatch.completed, true);
+assert.strictEqual(finishedTargetedPatch.errorType, "追高冲动");
+assert.strictEqual(finishedTargetedPatch.error_type, "追高冲动");
+assert.strictEqual(finishedTargetedPatch.trainingResult.totalActions, 1);
 
 const runtimeStep4 = advanceKlineTrainingRuntime(decidedRuntime);
 assert.strictEqual(runtimeStep4.currentIndex, 4);

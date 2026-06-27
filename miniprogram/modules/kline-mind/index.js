@@ -1006,11 +1006,41 @@ function getRuntimePrice(candle = {}) {
   return Number.isFinite(price) && price > 0 ? price : 0;
 }
 
+const POSITION_LEVEL_CATALOG = [
+  { key: "light", label: "轻仓", size: 0.25 },
+  { key: "half", label: "半仓", size: 0.5 },
+  { key: "heavy", label: "重仓", size: 0.75 },
+  { key: "full", label: "满仓", size: 1 }
+];
+
+function clampRuntimePositionSize(size = 0) {
+  const number = Number(size);
+  if (!Number.isFinite(number) || number <= 0) return 0;
+  return Math.max(0, Math.min(1, number));
+}
+
+function normalizePositionLevel(value = "", fallbackSize = 1) {
+  const text = cleanEventText(value, 20);
+  const found = POSITION_LEVEL_CATALOG.find((item) => item.key === text || item.label === text);
+  if (found) return found;
+  const size = clampRuntimePositionSize(fallbackSize);
+  const bySize = POSITION_LEVEL_CATALOG.find((item) => Math.abs(item.size - size) < 0.01);
+  return bySize || POSITION_LEVEL_CATALOG[POSITION_LEVEL_CATALOG.length - 1];
+}
+
 function normalizePositionState(state = {}) {
+  const positionSize = clampRuntimePositionSize(
+    state.positionSize !== undefined ? state.positionSize : (state.size || 0)
+  );
+  const positionLevel = positionSize > 0
+    ? normalizePositionLevel(state.positionLevel || state.position_level, positionSize).label
+    : "";
   return {
     side: state.side === "LONG" ? "LONG" : "FLAT",
     entryPrice: roundMetric(state.entryPrice, 4),
-    positionSize: Number(state.positionSize || state.size || 0) > 0 ? 1 : 0,
+    positionSize,
+    positionLevel,
+    position_level: positionLevel,
     realizedPnl: roundMetric(state.realizedPnl),
     unrealizedPnl: roundMetric(state.unrealizedPnl),
     equity: roundMetric(state.equity || 100),
@@ -1040,13 +1070,16 @@ function executeSimulatedPosition(positionState = {}, decision = {}, candle = {}
   const action = String(decision.action || "HOLD").toUpperCase();
   const price = Number(decision.price || getRuntimePrice(candle));
   const state = markPositionToMarket(positionState, candle);
+  const positionLevel = normalizePositionLevel(decision.positionLevel || decision.position_level);
   if (!Number.isFinite(price) || price <= 0) return state;
 
   if (action === "BUY" && state.side !== "LONG") {
     return markPositionToMarket(Object.assign({}, state, {
       side: "LONG",
       entryPrice: price,
-      positionSize: 1,
+      positionSize: positionLevel.size,
+      positionLevel: positionLevel.label,
+      position_level: positionLevel.label,
       unrealizedPnl: 0
     }), candle);
   }
@@ -1057,6 +1090,8 @@ function executeSimulatedPosition(positionState = {}, decision = {}, candle = {}
       side: "FLAT",
       entryPrice: 0,
       positionSize: 0,
+      positionLevel: "",
+      position_level: "",
       realizedPnl: roundMetric(state.realizedPnl + realizedChange),
       unrealizedPnl: 0
     }), candle);
@@ -1098,7 +1133,8 @@ function buildRuntimeState(baseRuntime = {}, patch = {}) {
   const activeCandle = candles[safeIndex] ? Object.assign({}, candles[safeIndex], { runtimeIndex: safeIndex }) : (visibleCandles[visibleCandles.length - 1] || null);
   const positionState = markPositionToMarket(runtime.positionState || {}, activeCandle || {});
   const hasDecisionForCurrentIndex = Number(runtime.lastDecisionIndex) === safeIndex;
-  const mustDecide = !!runtime.lockedUntilDecision || (!hasDecisionForCurrentIndex && shouldRuntimeRequireDecision(safeIndex, runtime.decisionInterval));
+  const completed = !!runtime.completed;
+  const mustDecide = completed ? false : (!!runtime.lockedUntilDecision || (!hasDecisionForCurrentIndex && shouldRuntimeRequireDecision(safeIndex, runtime.decisionInterval)));
   return Object.assign({}, runtime, {
     currentIndex: safeIndex,
     visibleCandles,
@@ -1111,18 +1147,22 @@ function buildRuntimeState(baseRuntime = {}, patch = {}) {
     indicatorPanel: buildIndicatorPanel(visibleCandles, runtime.indicatorPanelKey || "vol", zoomKey),
     positionState,
     sessionMetrics: buildSessionMetrics(positionState, runtime.decisionTimeline || []),
+    completed,
     mustDecide,
-    lockedUntilDecision: mustDecide
+    lockedUntilDecision: completed ? false : mustDecide
   });
 }
 
 function startKlineTrainingRuntime(session = {}, options = {}) {
   const candles = Array.isArray(session.candles) ? session.candles : [];
   const initialVisibleCount = normalizeInitialVisibleCount(options.initialVisibleCount, candles.length);
+  const errorType = cleanEventText(options.errorType || options.error_type || session.errorType || session.error_type || "", 80);
   return buildRuntimeState({
     trainingSessionId: cleanEventText(options.trainingSessionId || `kline-session-${Date.now()}`, 160),
     simulationMode: "blind_step_replay",
     sliceSeed: cleanEventText(options.sliceSeed || ((session.historySlice || {}).seed) || "", 120),
+    errorType,
+    error_type: errorType,
     marketKey: ((session.market || {}).key) || "",
     timeframeKey: session.timeframeKey || "",
     chartZoomKey: session.chartZoomKey || "wide",
@@ -1226,17 +1266,30 @@ function advanceKlineTrainingRuntime(runtime = {}) {
 
 function recordKlineTrainingDecision(runtime = {}, decision = {}) {
   const activeCandle = runtime.activeCandle || (runtime.candles || [])[runtime.currentIndex] || {};
+  const sessionId = cleanEventText(runtime.trainingSessionId || "", 160);
+  const barIndex = Number(runtime.currentIndex || 0);
+  const errorType = cleanEventText(decision.errorType || decision.error_type || runtime.errorType || runtime.error_type || "", 80);
+  const positionLevel = normalizePositionLevel(decision.positionLevel || decision.position_level);
+  const createdAt = decision.createdAt || decision.created_at || Date.now();
   const safeDecision = {
-    id: `decision-${runtime.trainingSessionId || "local"}-${runtime.currentIndex}-${(runtime.decisionTimeline || []).length + 1}`,
-    sessionId: runtime.trainingSessionId || "",
-    index: Number(runtime.currentIndex || 0),
+    id: `decision-${sessionId || "local"}-${barIndex}-${(runtime.decisionTimeline || []).length + 1}`,
+    sessionId,
+    session_id: sessionId,
+    index: barIndex,
+    barIndex,
+    bar_index: barIndex,
     action: String(decision.action || "HOLD").toUpperCase(),
-    price: Number(activeCandle.close || 0),
+    price: getRuntimePrice(activeCandle),
+    positionLevel: positionLevel.label,
+    position_level: positionLevel.label,
+    errorType,
+    error_type: errorType,
     selectedCandleKey: cleanEventText(decision.selectedCandleKey || activeCandle.key || "", 80),
     reactionDirection: cleanEventText(decision.reactionDirection, 40),
     firstReaction: cleanEventText(decision.firstReaction, 160),
     boundaryChoice: cleanEventText(decision.boundaryChoice, 120),
-    createdAt: decision.createdAt || Date.now()
+    createdAt,
+    created_at: createdAt
   };
   const emotionBadge = buildEmotionBadge(safeDecision);
   const riskHint = buildRiskHint(emotionBadge);
@@ -1260,14 +1313,68 @@ function recordKlineTrainingDecision(runtime = {}, decision = {}) {
   });
 }
 
+function buildKlineTrainingResult(runtime = {}, options = {}) {
+  const decisions = Array.isArray(runtime.decisionTimeline) ? runtime.decisionTimeline : [];
+  const metrics = buildSessionMetrics(runtime.positionState || {}, decisions);
+  const sessionId = cleanEventText(runtime.trainingSessionId || "", 160);
+  const errorType = cleanEventText(runtime.errorType || runtime.error_type || "", 80);
+  const completedAt = options.completedAt || options.completed_at || Date.now();
+  const countByAction = (action) => decisions.filter((item) => String((item || {}).action || "").toUpperCase() === action).length;
+  const lastDecision = decisions[decisions.length - 1] || {};
+  return {
+    sessionId,
+    session_id: sessionId,
+    errorType,
+    error_type: errorType,
+    totalActions: decisions.length,
+    total_actions: decisions.length,
+    buyCount: countByAction("BUY"),
+    buy_count: countByAction("BUY"),
+    sellCount: countByAction("SELL"),
+    sell_count: countByAction("SELL"),
+    holdCount: countByAction("HOLD"),
+    hold_count: countByAction("HOLD"),
+    lastBarIndex: Number(lastDecision.barIndex !== undefined ? lastDecision.barIndex : (lastDecision.index || runtime.currentIndex || 0)),
+    last_bar_index: Number(lastDecision.bar_index !== undefined ? lastDecision.bar_index : (lastDecision.index || runtime.currentIndex || 0)),
+    lastPrice: Number(lastDecision.price || getRuntimePrice(runtime.activeCandle || {})),
+    last_price: Number(lastDecision.price || getRuntimePrice(runtime.activeCandle || {})),
+    pnlResult: metrics.totalPnl,
+    pnl_result: metrics.totalPnl,
+    maxDrawdown: metrics.maxDrawdown,
+    max_drawdown: metrics.maxDrawdown,
+    positionSide: metrics.positionSide,
+    position_side: metrics.positionSide,
+    positionSize: metrics.positionSize,
+    position_size: metrics.positionSize,
+    completedAt,
+    completed_at: completedAt
+  };
+}
+
+function finishKlineTrainingRuntime(runtime = {}, options = {}) {
+  const trainingResult = buildKlineTrainingResult(runtime, options);
+  return buildRuntimeState(runtime, {
+    completed: true,
+    completedAt: trainingResult.completedAt,
+    completed_at: trainingResult.completed_at,
+    trainingResult,
+    mustDecide: false,
+    lockedUntilDecision: false,
+    blockedReason: ""
+  });
+}
+
 function buildKlineTrainingRecordPatch(runtime = {}) {
   const decisions = Array.isArray(runtime.decisionTimeline) ? runtime.decisionTimeline : [];
   const lastDecision = decisions[decisions.length - 1] || {};
   const activeCandle = runtime.activeCandle || (runtime.candles || [])[runtime.currentIndex] || {};
+  const errorType = cleanEventText(runtime.errorType || runtime.error_type || lastDecision.errorType || lastDecision.error_type || "", 80);
   return {
     trainingSessionId: cleanEventText(runtime.trainingSessionId, 160),
     simulationMode: cleanEventText(runtime.simulationMode || "blind_step_replay", 80),
     sliceSeed: cleanEventText(runtime.sliceSeed, 120),
+    errorType,
+    error_type: errorType,
     selectedCandleKey: cleanEventText(lastDecision.selectedCandleKey || activeCandle.key || "", 80),
     reactionDirection: cleanEventText(lastDecision.reactionDirection, 40),
     firstReaction: cleanEventText(lastDecision.firstReaction, 160),
@@ -1277,7 +1384,9 @@ function buildKlineTrainingRecordPatch(runtime = {}) {
     riskHints: Array.isArray(runtime.riskHints) ? runtime.riskHints : [],
     coachHints: Array.isArray(runtime.coachHints) ? runtime.coachHints : [],
     positionState: normalizePositionState(runtime.positionState || {}),
-    sessionMetrics: buildSessionMetrics(runtime.positionState || {}, decisions)
+    sessionMetrics: buildSessionMetrics(runtime.positionState || {}, decisions),
+    completed: !!runtime.completed,
+    trainingResult: runtime.trainingResult || null
   };
 }
 
@@ -1532,6 +1641,7 @@ module.exports = {
   startKlineTrainingRuntime,
   advanceKlineTrainingRuntime,
   recordKlineTrainingDecision,
+  finishKlineTrainingRuntime,
   setKlineRuntimeChartZoom,
   setKlineRuntimeViewportPan,
   setKlineRuntimeIndicator,

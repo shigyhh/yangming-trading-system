@@ -36,6 +36,7 @@ const {
   startKlineTrainingRuntime,
   advanceKlineTrainingRuntime,
   recordKlineTrainingDecision,
+  finishKlineTrainingRuntime,
   setKlineRuntimeChartZoom,
   setKlineRuntimeViewportPan,
   setKlineRuntimeIndicator,
@@ -60,6 +61,13 @@ const DECISION_ACTIONS = [
   { key: "BUY", label: "买入" },
   { key: "SELL", label: "卖出" },
   { key: "HOLD", label: "观望" }
+];
+
+const POSITION_LEVEL_OPTIONS = [
+  { key: "light", label: "轻仓" },
+  { key: "half", label: "半仓" },
+  { key: "heavy", label: "重仓" },
+  { key: "full", label: "满仓" }
 ];
 
 const CHART_ZOOM_ORDER = ["overview", "wide", "standard", "focus"];
@@ -140,6 +148,10 @@ function buildForm(record = {}, session = {}) {
     mainIndicatorKey: record.mainIndicatorKey || session.defaultMainIndicatorKey || "ma",
     historySlice: record.historySlice || null,
     selectedCandleKey: record.selectedCandleKey || session.selectedCandleKey || "",
+    errorType: record.errorType || record.error_type || "",
+    error_type: record.error_type || record.errorType || "",
+    positionLevel: record.positionLevel || record.position_level || "半仓",
+    position_level: record.position_level || record.positionLevel || "半仓",
     reactionDirection: record.reactionDirection || inferReactionDirection(record.firstReaction),
     firstReaction: record.firstReaction || "",
     bodySignal: record.bodySignal || "",
@@ -175,6 +187,7 @@ function buildRuntimeView(runtime = null) {
         bollUpper: [],
         bollLower: []
       },
+      trainingResult: null,
       mustDecide: false,
       isComplete: false
     };
@@ -191,18 +204,29 @@ function buildRuntimeView(runtime = null) {
   const latestRisk = getLastItem(runtime.riskHints || []);
   const latestEmotion = getLastItem(runtime.emotionBadges || []);
   const metrics = runtime.sessionMetrics || {};
-  const isComplete = total > 0 && current >= total;
+  const result = runtime.trainingResult || null;
+  const isComplete = !!runtime.completed || (total > 0 && current >= total);
+  const positionLevel = ((runtime.positionState || {}).positionLevel) || ((runtime.positionState || {}).position_level) || "";
+  const normalizedResult = result ? {
+    totalActions: Number(result.totalActions || result.total_actions || 0),
+    buyCount: Number(result.buyCount || result.buy_count || 0),
+    sellCount: Number(result.sellCount || result.sell_count || 0),
+    holdCount: Number(result.holdCount || result.hold_count || 0),
+    pnlText: `${Number(result.pnlResult || result.pnl_result || 0).toFixed(2)}%`,
+    drawdownText: `${Number(result.maxDrawdown || result.max_drawdown || 0).toFixed(2)}%`,
+    errorType: result.errorType || result.error_type || ""
+  } : null;
 
   return {
     visibleCandles,
     progressText: total ? `第 ${current}/${total} 根` : "等待历史片段",
-    nextButtonText: runtime.mustDecide ? "先做决策" : (isComplete ? "本段已完成" : "下一根"),
-    decisionPrompt: runtime.mustDecide ? "这一根必须先做一次决策。" : "只看当下这一根，不猜后面。",
+    nextButtonText: isComplete ? "已结束" : (runtime.mustDecide ? "先做决策" : "下一根"),
+    decisionPrompt: isComplete ? "本局训练已结束，可以查看结果。" : (runtime.mustDecide ? "这一根必须先做一次决策。" : "只看当下这一根，不猜后面。"),
     latestCoach: (latestCoach || {}).text || "",
     latestRisk: (latestRisk || {}).text || "只做训练记录，不作当下判断。",
     latestEmotion: (latestEmotion || {}).label || "",
     decisionCount: (runtime.decisionTimeline || []).length,
-    positionText: metrics.positionSize ? "持仓" : "空仓",
+    positionText: metrics.positionSize ? (positionLevel || "持仓") : "空仓",
     pnlText: `${Number(metrics.totalPnl || 0).toFixed(2)}%`,
     drawdownText: `${Number(metrics.maxDrawdown || 0).toFixed(2)}%`,
     chartBoardStyle: runtime.chartBoardStyle || "",
@@ -215,6 +239,7 @@ function buildRuntimeView(runtime = null) {
       bollUpper: [],
       bollLower: []
     },
+    trainingResult: normalizedResult,
     mustDecide: !!runtime.mustDecide,
     isComplete
   };
@@ -288,6 +313,7 @@ Page({
     trainingDay: null,
     reactionDirections: REACTION_DIRECTIONS,
     decisionActions: DECISION_ACTIONS,
+    positionLevelOptions: POSITION_LEVEL_OPTIONS,
     session: buildKlineMindSession({}),
     trainingRuntime: null,
     runtimeView: buildRuntimeView(),
@@ -375,7 +401,8 @@ Page({
       initialVisibleCount: getInitialKlineVisibleCount(session),
       initialMainIndicatorKey: this.data.selectedMainIndicatorKey || session.defaultMainIndicatorKey || "ma",
       initialIndicatorKey: this.data.selectedIndicatorKey || session.defaultIndicatorKey || "vol",
-      sliceSeed: record.scenarioId || ((session.historySlice || {}).sliceSeed) || ((session.historySlice || {}).seed) || ""
+      sliceSeed: record.scenarioId || ((session.historySlice || {}).sliceSeed) || ((session.historySlice || {}).seed) || "",
+      errorType: record.errorType || record.error_type || ""
     });
   },
 
@@ -687,6 +714,13 @@ Page({
       });
       return;
     }
+    if (field === "positionLevel") {
+      this.setData({
+        "form.positionLevel": value,
+        "form.position_level": value
+      });
+      return;
+    }
     this.setData({ [`form.${field}`]: value });
   },
 
@@ -764,13 +798,20 @@ Page({
     }
     const action = e.currentTarget.dataset.action || "HOLD";
     const form = this.data.form || {};
-    const nextRuntime = recordKlineTrainingDecision(runtime, {
+    const decidedRuntime = recordKlineTrainingDecision(runtime, {
       action,
       selectedCandleKey: ((runtime.activeCandle || {}).key) || form.selectedCandleKey || "",
+      positionLevel: form.positionLevel || form.position_level || "半仓",
+      errorType: form.errorType || form.error_type || "",
       reactionDirection: form.reactionDirection || "",
       firstReaction: form.firstReaction || "",
       boundaryChoice: form.boundaryChoice || ""
     });
+    const total = Number(decidedRuntime.totalCandles || (decidedRuntime.candles || []).length || 0);
+    const currentIndex = Number(decidedRuntime.currentIndex || 0);
+    const nextRuntime = total && currentIndex >= total - 1
+      ? finishKlineTrainingRuntime(decidedRuntime)
+      : advanceKlineTrainingRuntime(decidedRuntime);
     const runtimePatch = buildKlineTrainingRecordPatch(nextRuntime);
     this.setData({
       trainingRuntime: nextRuntime,
@@ -781,6 +822,25 @@ Page({
     });
     wx.showToast({
       title: action === "HOLD" ? "已记录观望" : "已记录动作",
+      icon: "none"
+    });
+  },
+
+  finishRuntimeTraining() {
+    const runtime = this.data.trainingRuntime;
+    if (!runtime) {
+      wx.showToast({ title: "历史片段载入后再结束", icon: "none" });
+      return;
+    }
+    const nextRuntime = finishKlineTrainingRuntime(runtime);
+    const runtimePatch = buildKlineTrainingRecordPatch(nextRuntime);
+    this.setData({
+      trainingRuntime: nextRuntime,
+      runtimeView: buildRuntimeView(nextRuntime),
+      form: Object.assign({}, this.data.form || {}, runtimePatch)
+    });
+    wx.showToast({
+      title: "训练已结束",
       icon: "none"
     });
   },

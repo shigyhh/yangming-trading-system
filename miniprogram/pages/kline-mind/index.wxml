@@ -202,6 +202,22 @@
         </view>
         <view class="decision-prompt">{{runtimeView.decisionPrompt}}</view>
 
+        <view class="position-level-row">
+          <text>仓位</text>
+          <view class="position-level-options">
+            <view
+              wx:for="{{positionLevelOptions}}"
+              wx:key="key"
+              class="position-level-chip {{form.positionLevel === item.label ? 'active' : ''}}"
+              data-field="positionLevel"
+              data-value="{{item.label}}"
+              bindtap="selectOption"
+            >
+              {{item.label}}
+            </view>
+          </view>
+        </view>
+
         <view class="decision-actions">
           <view
             wx:for="{{decisionActions}}"
@@ -214,9 +230,19 @@
           </view>
         </view>
 
-        <button class="runtime-next {{runtimeView.mustDecide ? 'locked' : ''}}" bindtap="advanceRuntimeCandle">
-          {{runtimeView.nextButtonText}}
-        </button>
+        <view class="runtime-control-row">
+          <button class="runtime-next {{runtimeView.mustDecide ? 'locked' : ''}}" bindtap="advanceRuntimeCandle">
+            {{runtimeView.nextButtonText}}
+          </button>
+          <button class="runtime-finish" bindtap="finishRuntimeTraining">结束</button>
+        </view>
+
+        <view wx:if="{{runtimeView.trainingResult}}" class="runtime-result-card">
+          <text>训练结果</text>
+          <view>动作 {{runtimeView.trainingResult.totalActions}} 次 · 买 {{runtimeView.trainingResult.buyCount}} / 卖 {{runtimeView.trainingResult.sellCount}} / 观望 {{runtimeView.trainingResult.holdCount}}</view>
+          <view>盈亏 {{runtimeView.trainingResult.pnlText}} · 回撤 {{runtimeView.trainingResult.drawdownText}}</view>
+          <view wx:if="{{runtimeView.trainingResult.errorType}}">针对错题：{{runtimeView.trainingResult.errorType}}</view>
+        </view>
       </view>
 
       <view class="slice-playbook">
