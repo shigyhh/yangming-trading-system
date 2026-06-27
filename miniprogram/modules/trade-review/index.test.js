@@ -277,6 +277,62 @@ assert.deepStrictEqual(top3Stats.topFirstThoughts.map((item) => item.label), ["�
 assert.deepStrictEqual(top3Stats.topTriggerScenes.map((item) => item.label), ["放量拉升", "弱反弹", "冲高回落"]);
 assert.ok(top3Stats.nextRule.includes("停十秒"));
 
+const livingMirrorWindowStats = buildTradeReviewTop3Stats({
+  now: Date.parse("2026-06-28T00:00:00+08:00"),
+  days: 30,
+  records: [
+    {
+      id: "window-old-001",
+      date: "2026-04-20",
+      main_error_type: "急于翻本",
+      first_thought: "想翻本",
+      next_rule: "亏损后停止，先复盘"
+    },
+    {
+      id: "window-old-002",
+      created_at: "2026-04-22T10:00:00+08:00",
+      main_error_type: "急于翻本",
+      first_thought: "想翻本",
+      next_rule: "亏损后停止，先复盘"
+    },
+    {
+      id: "window-new-001",
+      tradeDate: "2026-06-20",
+      mainErrorType: "追高冲动",
+      firstThought: "怕错过",
+      nextRule: "第一根放量不追，先停十秒"
+    },
+    {
+      id: "window-new-002",
+      created_at: "2026-06-24T10:00:00+08:00",
+      main_error_type: "追高冲动",
+      first_thought: "怕错过",
+      next_rule: "第一根放量不追，先停十秒"
+    },
+    {
+      id: "window-new-003",
+      date: "2026-06-26",
+      main_error_type: "补仓冲动",
+      first_thought: "想补仓",
+      next_rule: "不在破位亏损中补仓"
+    },
+    {
+      id: "window-missing-fields",
+      createdAt: Date.parse("2026-06-26T12:00:00+08:00")
+    }
+  ]
+});
+assert.strictEqual(livingMirrorWindowStats.hasStats, true);
+assert.strictEqual(livingMirrorWindowStats.total, 4);
+assert.deepStrictEqual(livingMirrorWindowStats.topErrors.map((item) => item.label), ["追高冲动", "补仓冲动", "计划外交易"]);
+assert.deepStrictEqual(livingMirrorWindowStats.topFirstThoughts.map((item) => item.label).slice(0, 2), ["怕错过", "想补仓"]);
+assert.deepStrictEqual(livingMirrorWindowStats.topNextRules.map((item) => item.label).slice(0, 2), ["第一根放量不追，先停十秒", "不在破位亏损中补仓"]);
+assert.ok(livingMirrorWindowStats.nextRule.includes("停十秒"));
+
+const emptyLivingMirrorWindowStats = buildTradeReviewTop3Stats({ records: [], days: 30 });
+assert.strictEqual(emptyLivingMirrorWindowStats.hasStats, false);
+assert.ok(emptyLivingMirrorWindowStats.emptyText.includes("真实复盘"));
+
 const closure = buildTradeReviewClosure(review, reminder);
 assert.strictEqual(closure.title, "本次复盘已入活镜");
 assert.ok(closure.steps.find((item) => item.key === "archived").done);

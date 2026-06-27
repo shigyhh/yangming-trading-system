@@ -153,10 +153,10 @@ assert.ok(livingMirrorJs.includes("formatLivingMirrorUpdatedAt(profile.updatedAt
 assert.equal(livingMirrorJs.includes("updatedAt: profile.updatedAt ||"), false, "living mirror should not pass raw server ISO time into the page");
 assert.ok(livingMirrorJs.includes("buildTradeReviewTop3Stats"), "living mirror should compute Top3 mistake statistics from real-review records");
 assert.ok(livingMirrorWxml.includes('class="review-top3-card card"'), "living mirror should surface a compact Top3 card from real reviews");
-assert.ok(livingMirrorWxml.includes("真实复盘 Top3"), "living mirror Top3 card should be named as real-review evidence");
-assert.ok(livingMirrorWxml.includes("最近重复最多的错题"), "living mirror should show repeated mistake patterns");
-assert.ok(livingMirrorWxml.includes("最常见的第一念"), "living mirror should show first-thought frequency");
-assert.ok(livingMirrorWxml.includes("最容易失守的场景"), "living mirror should show trigger-scene frequency");
+assert.ok(livingMirrorWxml.includes("近 {{reviewTop3.windowDays}} 天活镜"), "living mirror Top3 card should be named as a 30-day mirror");
+assert.ok(livingMirrorWxml.includes("最高频错题"), "living mirror should show repeated mistake patterns");
+assert.ok(livingMirrorWxml.includes("最高频第一念"), "living mirror should show first-thought frequency");
+assert.ok(livingMirrorWxml.includes("下次执行动作"), "living mirror should show the highest-frequency next action");
 assertRuleHas(livingMirrorWxss, ".review-top3-card", ["border: 1rpx solid rgba(216, 183, 111, 0.18)"], "living mirror Top3 card should match the mistake-card visual system");
 
 assert.ok(tradeReviewWxml.includes('wx:if="{{showAdvanced}}" class="record-flow card"'), "trade review flow explainer should be opt-in detail");

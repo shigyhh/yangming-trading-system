@@ -30,36 +30,39 @@
       </view>
     </view>
 
-    <view wx:if="{{hasRecords}}" class="review-top3-card card">
+    <view class="review-top3-card card">
       <view class="card-head">
-        <text>真实复盘 Top3</text>
+        <text>近 {{reviewTop3.windowDays}} 天活镜</text>
         <view>近 {{reviewTop3.windowDays}} 天 · {{reviewTop3.total}} 条</view>
       </view>
-      <view class="review-top3-summary">{{reviewTop3.summary}}</view>
-      <view class="review-top3-grid">
-        <view class="review-top3-section">
-          <view class="review-top3-title">最近重复最多的错题</view>
-          <view wx:for="{{reviewTop3.topErrors}}" wx:key="label" wx:for-item="rankItem" class="review-top3-row">
-            <text>{{rankItem.label}}</text>
-            <view>{{rankItem.count}} 次</view>
+      <block wx:if="{{reviewTop3.hasStats}}">
+        <view class="review-top3-summary">{{reviewTop3.summary}}</view>
+        <view class="review-top3-grid">
+          <view class="review-top3-section">
+            <view class="review-top3-title">最高频错题</view>
+            <view wx:for="{{reviewTop3.topErrors}}" wx:key="label" wx:for-item="rankItem" class="review-top3-row">
+              <text>{{rankItem.label}}</text>
+              <view>{{rankItem.count}} 次</view>
+            </view>
+          </view>
+          <view class="review-top3-section">
+            <view class="review-top3-title">最高频第一念</view>
+            <view wx:for="{{reviewTop3.topFirstThoughts}}" wx:key="label" wx:for-item="rankItem" class="review-top3-row">
+              <text>{{rankItem.label}}</text>
+              <view>{{rankItem.count}} 次</view>
+            </view>
+          </view>
+          <view class="review-top3-section">
+            <view class="review-top3-title">下次执行动作</view>
+            <view wx:for="{{reviewTop3.topNextRules}}" wx:key="label" wx:for-item="rankItem" class="review-top3-row">
+              <text>{{rankItem.label}}</text>
+              <view>{{rankItem.count}} 次</view>
+            </view>
           </view>
         </view>
-        <view class="review-top3-section">
-          <view class="review-top3-title">最常见的第一念</view>
-          <view wx:for="{{reviewTop3.topFirstThoughts}}" wx:key="label" wx:for-item="rankItem" class="review-top3-row">
-            <text>{{rankItem.label}}</text>
-            <view>{{rankItem.count}} 次</view>
-          </view>
-        </view>
-        <view class="review-top3-section">
-          <view class="review-top3-title">最容易失守的场景</view>
-          <view wx:for="{{reviewTop3.topTriggerScenes}}" wx:key="label" wx:for-item="rankItem" class="review-top3-row">
-            <text>{{rankItem.label}}</text>
-            <view>{{rankItem.count}} 次</view>
-          </view>
-        </view>
-      </view>
-      <view class="review-top3-rule">下一次最该守：{{reviewTop3.nextRule}}</view>
+        <view class="review-top3-rule">下次执行动作：{{reviewTop3.nextRule}}</view>
+      </block>
+      <view wx:else class="review-top3-empty">{{reviewTop3.emptyText}}</view>
     </view>
 
     <view wx:if="{{showMirrorDepth}}" class="mirror-bridge card">

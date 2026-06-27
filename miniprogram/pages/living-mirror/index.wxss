@@ -150,6 +150,18 @@
   font-weight: 900;
 }
 
+.review-top3-empty {
+  margin-top: 18rpx;
+  padding: 24rpx;
+  border-radius: 16rpx;
+  border: 1rpx dashed rgba(216, 183, 111, 0.18);
+  color: rgba(247, 239, 223, 0.68);
+  background: rgba(8, 8, 7, 0.2);
+  font-size: 24rpx;
+  line-height: 1.55;
+  font-weight: 800;
+}
+
 .mirror-summary-card {
   display: grid;
   grid-template-columns: 84rpx minmax(0, 1fr);

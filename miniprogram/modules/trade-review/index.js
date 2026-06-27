@@ -976,25 +976,63 @@ function buildLiveMirrorReminder(tradeReviewState = {}) {
   };
 }
 
+function parseReviewTimestamp(value) {
+  if (value === undefined || value === null || value === "") return 0;
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value < 100000000000 ? value * 1000 : value;
+  }
+  const text = String(value || "").trim();
+  if (!text) return 0;
+  if (/^\d+$/.test(text)) {
+    const number = Number(text);
+    return number < 100000000000 ? number * 1000 : number;
+  }
+  const normalizedDate = /^\d{4}-\d{2}-\d{2}$/.test(text) ? `${text}T00:00:00+08:00` : text;
+  const timestamp = Date.parse(normalizedDate);
+  return Number.isNaN(timestamp) ? 0 : timestamp;
+}
+
+function getReviewWindowTimestamp(record = {}) {
+  return parseReviewTimestamp(
+    record.tradeDate ||
+    record.trade_date ||
+    record.date ||
+    record.createdAt ||
+    record.created_at ||
+    record.updatedAt ||
+    record.updated_at
+  );
+}
+
 function isWithinRecentWindow(record = {}, days = 30, now = Date.now()) {
-  const timestamp = Number(record.createdAt || record.updatedAt || 0);
+  const timestamp = getReviewWindowTimestamp(record);
   if (!timestamp) return true;
   return now - timestamp <= days * 24 * 60 * 60 * 1000;
 }
 
+function countMeaningfulValues(values) {
+  return countValues((values || []).filter((value) => {
+    const text = String(value || "").trim();
+    return text && text !== "待补充" && text !== "待照见";
+  }));
+}
+
 function buildTradeReviewTop3Stats(tradeReviewState = {}) {
   const days = Number(tradeReviewState.days || 30);
+  const now = Number(tradeReviewState.now || Date.now());
   const records = ((tradeReviewState || {}).records || [])
     .filter(Boolean)
     .map(normalizeTradeReviewRecord)
-    .filter((record) => isWithinRecentWindow(record, days))
+    .filter((record) => isWithinRecentWindow(record, days, now))
     .slice()
-    .sort((a, b) => Number(b.createdAt || b.updatedAt || 0) - Number(a.createdAt || a.updatedAt || 0));
+    .sort((a, b) => getReviewWindowTimestamp(b) - getReviewWindowTimestamp(a));
   const topErrors = topEntries(countValues(records.map((item) => item.mainErrorType || "")), 3);
-  const topFirstThoughts = topEntries(countValues(records.map((item) => item.firstThought || "")), 3);
-  const topTriggerScenes = topEntries(countValues(records.map((item) => item.triggerScene || "")), 3);
+  const topFirstThoughts = topEntries(countMeaningfulValues(records.map((item) => item.firstThought || "")), 3);
+  const topTriggerScenes = topEntries(countMeaningfulValues(records.map((item) => item.triggerScene || "")), 3);
+  const topNextRules = topEntries(countMeaningfulValues(records.map((item) => item.nextRule || item.nextAction || "")), 3);
   const mainErrorType = (topErrors[0] || {}).label || "";
   const prescription = TRADE_REVIEW_ERROR_PRESCRIPTIONS[mainErrorType] || null;
+  const nextRule = (topNextRules[0] || {}).label || (prescription || {}).rule || "先留下一条真实复盘，再生成下次执行动作。";
 
   return {
     hasStats: records.length > 0,
@@ -1003,8 +1041,11 @@ function buildTradeReviewTop3Stats(tradeReviewState = {}) {
     topErrors,
     topFirstThoughts,
     topTriggerScenes,
-    nextRule: (prescription || {}).rule || "先留下一条真实复盘，再生成下次执行动作。",
+    topNextRules,
+    topNextRule: topNextRules[0] || null,
+    nextRule,
     trainingPrescription: prescription,
+    emptyText: `近 ${days} 天还没有真实复盘错题。完成一次真实复盘后，活镜会开始照见重复模式。`,
     summary: mainErrorType
       ? `近 ${days} 天最高频错题是「${mainErrorType}」。`
       : "近 30 天还没有形成稳定错题模式。"
