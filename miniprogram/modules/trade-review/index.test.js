@@ -261,6 +261,29 @@ assert.ok(focus.rule.includes("停十秒"));
 assert.ok(focus.summary.includes("真实复盘"));
 assert.ok(focus.top3Stats.hasStats);
 
+const oldReviewRecords = Array.from({ length: 30 }, (_, index) => ({
+  id: `focus-old-${index}`,
+  tradeDate: "2026-04-20",
+  main_error_type: "急于翻本",
+  first_thought: "想翻本",
+  next_rule: "亏损后停止，先复盘"
+}));
+const focusFromRecentDatedRecord = buildReviewTrainingFocus({
+  now: Date.parse("2026-06-28T00:00:00+08:00"),
+  records: oldReviewRecords.concat([
+    {
+      id: "focus-recent-001",
+      tradeDate: "2026-06-26",
+      main_error_type: "补仓冲动",
+      first_thought: "想补仓",
+      trigger_scene: "弱反弹",
+      next_rule: "不在破位亏损中补仓"
+    }
+  ])
+});
+assert.strictEqual(focusFromRecentDatedRecord.hasPrescription, true);
+assert.strictEqual(focusFromRecentDatedRecord.mainErrorType, "补仓冲动");
+
 const top3Stats = buildTradeReviewTop3Stats({
   records: [
     Object.assign({}, review, { id: "top3-001", firstThought: "怕错过", triggerScene: "放量拉升", createdAt: review.createdAt + 1 }),

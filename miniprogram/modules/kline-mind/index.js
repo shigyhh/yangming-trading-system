@@ -417,6 +417,51 @@ function getNextKlineMindSliceSeed(currentSeed = "") {
   return KLINE_MIND_SLICE_SEEDS[(index + 1) % KLINE_MIND_SLICE_SEEDS.length];
 }
 
+function splitKlineTrainingFocusTags(text = "") {
+  return String(text || "")
+    .split(/[\/／、,，]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function buildKlineTargetedTrainingEntry(reviewTrainingFocus = {}) {
+  const focus = reviewTrainingFocus || {};
+  if (!focus.hasPrescription || !String(focus.mainErrorType || "").trim()) {
+    return {
+      hasTarget: false,
+      errorType: "",
+      title: "基础盲练",
+      trainingTitle: "基础盲练",
+      summary: "还没有真实复盘错题，先做一段基础盲练。",
+      sceneTags: [],
+      sceneText: "真实历史片段 / 第一反应 / 下一根推进",
+      actionText: "先看事实，再记录第一念。",
+      routeParams: { error_type: "" }
+    };
+  }
+
+  const prescription = focus.prescription || {};
+  const errorType = String(focus.mainErrorType || "").trim();
+  const focusText = String(focus.focusText || prescription.focusText || "").trim();
+  const sceneTags = splitKlineTrainingFocusTags(focusText);
+  const actionText = String(focus.rule || prescription.rule || "先停十秒，只记录第一念。").trim();
+  const title = `${errorType}专项`;
+
+  return {
+    hasTarget: true,
+    errorType,
+    title,
+    trainingTitle: title,
+    summary: `根据你最近真实复盘，系统发现：你最近最高频错题是「${errorType}」。`,
+    sceneTags,
+    sceneText: sceneTags.length ? sceneTags.join(" / ") : "待补充",
+    actionText,
+    packId: focus.packId || prescription.packId || "",
+    count: Number(focus.count || 0),
+    routeParams: { error_type: errorType }
+  };
+}
+
 function pickFiniteNumber(...values) {
   for (const value of values) {
     if (value === "" || value === null || value === undefined) continue;
@@ -1451,7 +1496,11 @@ function buildKlineMindRecord(input = {}, session = {}) {
     "riskHints",
     "coachHints",
     "positionState",
-    "sessionMetrics"
+    "sessionMetrics",
+    "errorType",
+    "error_type",
+    "trainingPackId",
+    "trainingPackTitle"
   ].forEach((key) => {
     if (input[key] !== undefined) extension[key] = input[key];
   });
@@ -1476,6 +1525,7 @@ module.exports = {
   getKlinePrescription,
   getPersonalityKlineDrill,
   getNextKlineMindSliceSeed,
+  buildKlineTargetedTrainingEntry,
   getMarketConfig,
   normalizeHistoryCandles,
   getInitialKlineVisibleCount,

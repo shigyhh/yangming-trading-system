@@ -18,7 +18,8 @@ const {
   recordKlineTrainingDecision,
   setKlineRuntimeChartZoom,
   setKlineRuntimeViewportPan,
-  buildKlineTrainingRecordPatch
+  buildKlineTrainingRecordPatch,
+  buildKlineTargetedTrainingEntry
 } = require("./index");
 
 assert.strictEqual(SIX_GATE_MAP.length, 6);
@@ -32,6 +33,31 @@ assert.ok(getPersonalityKlineDrill("焦虑型").drillAction.includes("固定观�
 assert.strictEqual(getNextKlineMindSliceSeed(""), "scene-fast-001");
 assert.notStrictEqual(getNextKlineMindSliceSeed("scene-fast-001"), "scene-fast-001");
 assert.strictEqual(getNextKlineMindSliceSeed("unknown-seed"), "scene-fast-001");
+
+const targetedTrainingEntry = buildKlineTargetedTrainingEntry({
+  hasPrescription: true,
+  mainErrorType: "追高冲动",
+  count: 5,
+  title: "追高冲动专项训练",
+  focusText: "放量拉升 / 假突破 / 冲高回落",
+  rule: "第一根放量不追，先停十秒",
+  packId: "chase_high_impulse"
+});
+assert.strictEqual(targetedTrainingEntry.hasTarget, true);
+assert.strictEqual(targetedTrainingEntry.errorType, "追高冲动");
+assert.strictEqual(targetedTrainingEntry.title, "追高冲动专项");
+assert.ok(targetedTrainingEntry.summary.includes("你最近最高频错题是「追高冲动」"));
+assert.deepStrictEqual(targetedTrainingEntry.sceneTags, ["放量拉升", "假突破", "冲高回落"]);
+assert.strictEqual(targetedTrainingEntry.sceneText, "放量拉升 / 假突破 / 冲高回落");
+assert.strictEqual(targetedTrainingEntry.actionText, "第一根放量不追，先停十秒");
+assert.strictEqual(targetedTrainingEntry.routeParams.error_type, "追高冲动");
+
+const basicTrainingEntry = buildKlineTargetedTrainingEntry({ hasPrescription: false });
+assert.strictEqual(basicTrainingEntry.hasTarget, false);
+assert.strictEqual(basicTrainingEntry.errorType, "");
+assert.strictEqual(basicTrainingEntry.title, "基础盲练");
+assert.ok(basicTrainingEntry.summary.includes("还没有真实复盘错题"));
+assert.strictEqual(basicTrainingEntry.routeParams.error_type, "");
 
 const historicalSlice = {
   source: "verified_fixture",
@@ -466,11 +492,19 @@ const runtimeRecord = buildKlineMindRecord({
   riskHints: decidedRuntime.riskHints,
   coachHints: decidedRuntime.coachHints,
   positionState: decidedRuntime.positionState,
-  sessionMetrics: decidedRuntime.sessionMetrics
+  sessionMetrics: decidedRuntime.sessionMetrics,
+  errorType: "追高冲动",
+  error_type: "追高冲动",
+  trainingPackId: "chase_high_impulse",
+  trainingPackTitle: "追高冲动专项"
 }, demoSession);
 assert.strictEqual(runtimeRecord.trainingSessionId, "runtime-001");
 assert.strictEqual(runtimeRecord.simulationMode, "blind_step_replay");
 assert.strictEqual(runtimeRecord.sliceSeed, "scene-fast-001");
+assert.strictEqual(runtimeRecord.errorType, "追高冲动");
+assert.strictEqual(runtimeRecord.error_type, "追高冲动");
+assert.strictEqual(runtimeRecord.trainingPackId, "chase_high_impulse");
+assert.strictEqual(runtimeRecord.trainingPackTitle, "追高冲动专项");
 assert.strictEqual(runtimeRecord.decisionTimeline.length, 1);
 assert.strictEqual(runtimeRecord.sessionMetrics.positionSize, 1);
 assert.strictEqual(runtimeRecord.positionState.side, "LONG");

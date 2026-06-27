@@ -101,6 +101,16 @@
     rgba(255, 255, 255, 0.04);
 }
 
+.targeted-training-card:active {
+  transform: translateY(1rpx);
+  opacity: 0.92;
+}
+
+.targeted-training-card.is-basic {
+  border-color: rgba(244, 235, 221, 0.12);
+  background: rgba(255, 255, 255, 0.035);
+}
+
 .targeted-training-head {
   display: flex;
   align-items: center;
@@ -117,12 +127,21 @@
 
 .targeted-training-head view {
   flex-shrink: 0;
+  max-width: 280rpx;
   padding: 8rpx 14rpx;
   border-radius: 999rpx;
   color: #10100d;
   background: linear-gradient(180deg, #f5dc94, #c49b44);
   font-size: 21rpx;
   font-weight: 900;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.targeted-training-card.is-basic .targeted-training-head view {
+  color: rgba(247, 239, 223, 0.72);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .targeted-training-summary {

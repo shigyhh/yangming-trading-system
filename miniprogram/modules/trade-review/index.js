@@ -1053,13 +1053,15 @@ function buildTradeReviewTop3Stats(tradeReviewState = {}) {
 }
 
 function buildReviewTrainingFocus(tradeReviewState = {}) {
+  const now = Number(tradeReviewState.now || Date.now());
   const records = ((tradeReviewState || {}).records || [])
     .filter(Boolean)
     .map(normalizeTradeReviewRecord)
+    .filter((record) => isWithinRecentWindow(record, 30, now))
     .slice()
-    .sort((a, b) => Number(b.createdAt || b.updatedAt || 0) - Number(a.createdAt || a.updatedAt || 0));
+    .sort((a, b) => getReviewWindowTimestamp(b) - getReviewWindowTimestamp(a));
   const recent = records.slice(0, 30);
-  const top3Stats = buildTradeReviewTop3Stats({ records: recent, days: 30 });
+  const top3Stats = buildTradeReviewTop3Stats({ records: recent, days: 30, now });
   const topError = top3Stats.topErrors[0];
   if (!topError) {
     return {

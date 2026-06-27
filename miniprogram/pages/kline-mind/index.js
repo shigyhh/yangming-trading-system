@@ -40,6 +40,7 @@ const {
   setKlineRuntimeViewportPan,
   setKlineRuntimeIndicator,
   setKlineRuntimeMainIndicator,
+  buildKlineTargetedTrainingEntry,
   buildKlineTrainingRecordPatch
 } = require("../../modules/kline-mind/index");
 const {
@@ -299,6 +300,7 @@ Page({
     selectedMainIndicatorKey: "ma",
     selectedIndicatorKey: "vol",
     reviewTrainingFocus: buildReviewTrainingFocus({ records: [] }),
+    targetedTrainingEntry: buildKlineTargetedTrainingEntry(),
     todayTrainingLine: "",
     ...buildSliceSwitchState(0),
     tradeReviewUrl: ""
@@ -330,8 +332,9 @@ Page({
       record: klineMindRecord
     });
     const reviewTrainingFocus = buildReviewTrainingFocus({ records: getTradeReviewRecords() });
-    const todayTrainingLine = reviewTrainingFocus.hasPrescription
-      ? reviewTrainingFocus.rule
+    const targetedTrainingEntry = buildKlineTargetedTrainingEntry(reviewTrainingFocus);
+    const todayTrainingLine = targetedTrainingEntry.hasTarget
+      ? targetedTrainingEntry.actionText
       : (session.prescription || {}).boundaryPractice || "先停十秒，只记录第一念。";
     const form = buildForm(klineMindRecord, session);
     const tradeReviewUrl = resolveTradeReviewUrl(klineMindRecord);
@@ -342,6 +345,7 @@ Page({
       trainingDay,
       session,
       reviewTrainingFocus,
+      targetedTrainingEntry,
       todayTrainingLine,
       trainingRuntime: null,
       runtimeView: buildRuntimeView(),
@@ -539,6 +543,33 @@ Page({
     });
     this.setData({ form });
     this.loadServerHistorySlice(form, { keepCurrentChart: true });
+  },
+
+  startTargetedTraining(e) {
+    const errorType = String((e.currentTarget.dataset || {}).errorType || "").trim();
+    const entry = this.data.targetedTrainingEntry || buildKlineTargetedTrainingEntry();
+    const currentForm = this.data.form || {};
+    const form = Object.assign({}, currentForm, {
+      errorType,
+      error_type: errorType,
+      trainingPackId: entry.packId || "",
+      trainingPackTitle: entry.title || ""
+    });
+    const session = this.buildSession(form);
+    const runtime = this.data.trainingRuntime
+      ? this.data.trainingRuntime
+      : (session.hasHistoricalData ? this.buildTrainingRuntime(session, form) : null);
+    this.setData({
+      form,
+      session,
+      trainingRuntime: runtime,
+      runtimeView: buildRuntimeView(runtime),
+      todayTrainingLine: entry.actionText || this.data.todayTrainingLine
+    });
+    wx.showToast({
+      title: errorType ? "已进入针对训练" : "进入基础盲练",
+      icon: "none"
+    });
   },
 
   selectChartZoom(e) {

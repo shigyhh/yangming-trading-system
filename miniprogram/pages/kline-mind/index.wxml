@@ -13,14 +13,18 @@
         <text>今日只练</text>
         <view>{{todayTrainingLine}}</view>
       </view>
-      <view wx:if="{{reviewTrainingFocus.hasPrescription}}" class="targeted-training-card">
+      <view
+        class="targeted-training-card {{targetedTrainingEntry.hasTarget ? 'is-targeted' : 'is-basic'}}"
+        bindtap="startTargetedTraining"
+        data-error-type="{{targetedTrainingEntry.errorType}}"
+      >
         <view class="targeted-training-head">
-          <text>今日针对训练</text>
-          <view>{{reviewTrainingFocus.mainErrorType}}</view>
+          <text>{{targetedTrainingEntry.hasTarget ? '今日针对训练' : '基础盲练'}}</text>
+          <view>{{targetedTrainingEntry.title}}</view>
         </view>
-        <view class="targeted-training-summary">{{reviewTrainingFocus.summary}}</view>
-        <view class="targeted-training-focus">{{reviewTrainingFocus.focusText}}</view>
-        <view class="targeted-training-rule">{{reviewTrainingFocus.rule}}</view>
+        <view class="targeted-training-summary">{{targetedTrainingEntry.summary}}</view>
+        <view class="targeted-training-focus">训练重点：{{targetedTrainingEntry.sceneText}}</view>
+        <view class="targeted-training-rule">今日执行：{{targetedTrainingEntry.actionText}}</view>
       </view>
 
       <view wx:if="{{false}}" class="hero-meta">
