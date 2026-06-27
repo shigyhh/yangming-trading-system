@@ -2,6 +2,7 @@
 .mirror-bridge,
 .server-profile-card,
 .review-top3-card,
+.execution-consistency-card,
 .mirror-hero,
 .stability-card,
 .triple-card,
@@ -29,6 +30,8 @@
 .server-profile-card view,
 .review-top3-card text,
 .review-top3-card view,
+.execution-consistency-card text,
+.execution-consistency-card view,
 .mirror-hero text,
 .mirror-hero view,
 .stability-card text,
@@ -155,6 +158,84 @@
   padding: 24rpx;
   border-radius: 16rpx;
   border: 1rpx dashed rgba(216, 183, 111, 0.18);
+  color: rgba(247, 239, 223, 0.68);
+  background: rgba(8, 8, 7, 0.2);
+  font-size: 24rpx;
+  line-height: 1.55;
+  font-weight: 800;
+}
+
+.execution-consistency-card {
+  overflow: hidden;
+  border: 1rpx solid rgba(88, 194, 173, 0.16);
+  background:
+    radial-gradient(circle at 88% 4%, rgba(88, 194, 173, 0.11), transparent 40%),
+    radial-gradient(circle at 10% 100%, rgba(216, 183, 111, 0.1), transparent 42%),
+    rgba(255, 255, 255, 0.032);
+}
+
+.execution-consistency-rate {
+  margin-top: 20rpx;
+  padding: 20rpx;
+  border-radius: 18rpx;
+  border: 1rpx solid rgba(241, 210, 125, 0.1);
+  background: rgba(8, 8, 7, 0.24);
+}
+
+.execution-consistency-rate text {
+  display: block;
+  color: #fff6e6;
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", serif;
+  font-size: 52rpx;
+  line-height: 1.05;
+  font-weight: 900;
+}
+
+.execution-consistency-rate view {
+  margin-top: 8rpx;
+  color: rgba(216, 183, 111, 0.74);
+  font-size: 22rpx;
+  line-height: 1.35;
+  font-weight: 900;
+}
+
+.execution-consistency-grid {
+  margin-top: 16rpx;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14rpx;
+}
+
+.execution-consistency-grid > view {
+  min-width: 0;
+  padding: 18rpx;
+  border-radius: 16rpx;
+  border: 1rpx solid rgba(241, 210, 125, 0.08);
+  background: rgba(8, 8, 7, 0.22);
+}
+
+.execution-consistency-grid text {
+  display: block;
+  color: rgba(247, 239, 223, 0.58);
+  font-size: 21rpx;
+  line-height: 1.35;
+  font-weight: 800;
+}
+
+.execution-consistency-grid view {
+  margin-top: 8rpx;
+  color: #73d6bd;
+  font-size: 24rpx;
+  line-height: 1.35;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
+.execution-consistency-empty {
+  margin-top: 18rpx;
+  padding: 24rpx;
+  border-radius: 16rpx;
+  border: 1rpx dashed rgba(88, 194, 173, 0.2);
   color: rgba(247, 239, 223, 0.68);
   background: rgba(8, 8, 7, 0.2);
   font-size: 24rpx;

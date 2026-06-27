@@ -1078,14 +1078,171 @@ function buildLivingMirrorStatsEntity(tradeReviewState) {
   });
 }
 
+function parseExecutionStatsTimestamp(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim()) {
+    const parsed = Date.parse(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return 0;
+}
+
+function isWithinExecutionStatsWindow(record = {}, days, now) {
+  const timestamp = parseExecutionStatsTimestamp(
+    record.tradeDate ||
+    record.trade_date ||
+    record.date ||
+    record.completedAt ||
+    record.completed_at ||
+    record.endTime ||
+    record.end_time ||
+    record.createdAt ||
+    record.created_at ||
+    record.updatedAt ||
+    record.updated_at
+  );
+  if (!timestamp) return false;
+  return timestamp >= now - days * 24 * 60 * 60 * 1000 && timestamp <= now + 24 * 60 * 60 * 1000;
+}
+
+function normalizeExecutionStatsResult(value) {
+  const text = normalizeTradeReviewText(value);
+  if (!text) return "";
+  if (/^aligned$/i.test(text) || text === "按计划执行" || text === "本局暂无明显失守") return "aligned";
+  if (/^deviated$/i.test(text) || text === "执行偏离") return "deviated";
+  if (/^unclear$/i.test(text) || text === "说不清" || text === "样本不足") return "unclear";
+  return "";
+}
+
+function readExecutionResultFromKlineSession(session = {}) {
+  const card = session.trainingMistakeCard || session.training_mistake_card || session.mistakeCard || {};
+  const raw = normalizeExecutionStatsResult(
+    session.execution_result ||
+    session.executionResult ||
+    card.execution_result ||
+    card.executionResult
+  );
+  if (raw) return raw;
+  const repeatCount = Number(card.repeat_count || card.repeatCount || session.repeat_count || session.repeatCount || 0);
+  const totalActions = Number(
+    (session.trainingResult || {}).total_actions ||
+    (session.trainingResult || {}).totalActions ||
+    session.total_actions ||
+    session.totalActions ||
+    0
+  );
+  if (repeatCount > 0) return "deviated";
+  if (totalActions > 0) return "aligned";
+  return "unclear";
+}
+
+function readRepeatCount(value = {}) {
+  const card = value.trainingMistakeCard || value.training_mistake_card || value.mistakeCard || {};
+  const raw = Number(
+    value.repeat_count ||
+    value.repeatCount ||
+    card.repeat_count ||
+    card.repeatCount ||
+    0
+  );
+  if (Number.isFinite(raw) && raw > 0) return raw;
+  return value.is_repeat_error || value.isRepeatError ? 1 : 0;
+}
+
+function countExecutionStatsValues(values) {
+  return (values || []).reduce((counts, value) => {
+    const key = String(value || "").trim();
+    if (!key) return counts;
+    counts[key] = (counts[key] || 0) + 1;
+    return counts;
+  }, {});
+}
+
+function topExecutionStatsEntries(counts, limit) {
+  return Object.keys(counts || {})
+    .map((label) => ({ label, count: counts[label] }))
+    .sort((a, b) => b.count - a.count || String(a.label).localeCompare(String(b.label)))
+    .slice(0, limit);
+}
+
+function buildExecutionConsistencyStats(tradeReviewState, klineSessionState, options = {}) {
+  const days = Number(options.days || 30);
+  const now = Number(options.now || Date.now());
+  const reviewRecords = ((tradeReviewState || {}).records || [])
+    .filter(Boolean)
+    .map(normalizeTradeReviewStorageRecord)
+    .filter((record) => isWithinExecutionStatsWindow(record, days, now))
+    .map((record) => ({
+      source: "review",
+      executionResult: normalizeExecutionStatsResult(record.execution_result || record.executionResult),
+      errorType: record.mainErrorType || record.main_error_type || "",
+      firstThought: record.firstThought || record.first_thought || "",
+      repeatCount: readRepeatCount(record)
+    }));
+  const trainingRecords = ((klineSessionState || {}).records || [])
+    .filter(Boolean)
+    .filter((record) => isWithinExecutionStatsWindow(record, days, now))
+    .map((record) => {
+      const card = record.trainingMistakeCard || record.training_mistake_card || record.mistakeCard || {};
+      return {
+        source: "kline_training",
+        executionResult: readExecutionResultFromKlineSession(record),
+        errorType: record.errorType || record.error_type || card.errorType || card.error_type || "",
+        firstThought: record.firstThought || record.first_thought || card.firstThought || card.first_thought || "",
+        repeatCount: readRepeatCount(record)
+      };
+    });
+  const allRecords = reviewRecords.concat(trainingRecords);
+  const alignedCount = allRecords.filter((record) => record.executionResult === "aligned").length;
+  const deviatedCount = allRecords.filter((record) => record.executionResult === "deviated").length;
+  const unclearCount = allRecords.filter((record) => record.executionResult === "unclear").length;
+  const sampleCount = alignedCount + deviatedCount;
+  const repeatCount = allRecords.reduce((total, record) => total + Number(record.repeatCount || 0), 0);
+  const topDeviationType = topExecutionStatsEntries(countExecutionStatsValues(
+    allRecords
+      .filter((record) => record.executionResult === "deviated")
+      .map((record) => record.errorType)
+  ), 1)[0] || null;
+  const topFirstThought = topExecutionStatsEntries(countExecutionStatsValues(
+    allRecords.map((record) => record.firstThought).filter((value) => value && value !== "待补充")
+  ), 1)[0] || null;
+  const rate = sampleCount > 0 ? Math.round((alignedCount / sampleCount) * 100) : null;
+  const hasStats = sampleCount > 0;
+
+  return {
+    hasStats,
+    windowDays: days,
+    sampleCount,
+    alignedCount,
+    deviatedCount,
+    unclearCount,
+    repeatCount,
+    rate,
+    rateText: hasStats ? `${rate}%` : "样本不足",
+    deviatedCountText: hasStats ? `${deviatedCount} 次` : "样本不足",
+    repeatCountText: repeatCount > 0 ? `${repeatCount} 次` : (hasStats ? "暂无旧题复现" : "样本不足"),
+    topDeviationType,
+    topDeviationTypeText: topDeviationType ? `${topDeviationType.label} ${topDeviationType.count} 次` : "样本不足",
+    topFirstThought,
+    topFirstThoughtText: topFirstThought ? `${topFirstThought.label} ${topFirstThought.count} 次` : "样本不足",
+    summary: hasStats ? `近 ${days} 天知行一致率 ${rate}%` : "样本不足"
+  };
+}
+
 function normalizeLivingMirrorStats(stats, tradeReviewState) {
   const generated = buildLivingMirrorStatsEntity(tradeReviewState || getTradeReviewRecords());
   const current = stats && typeof stats === "object" ? stats : {};
   const serverProfile = current.serverLivingMirrorProfile || current.livingMirrorProfile || null;
   const serverTriple = normalizeServerTripleReflection(serverProfile, current.tripleReflection || generated.tripleReflection);
+  const executionConsistencyStats = buildExecutionConsistencyStats(
+    tradeReviewState || getTradeReviewRecords(),
+    getKlineSessionRecords()
+  );
   return Object.assign({}, generated, current, {
     zhixingStability: current.zhixingStability || generated.zhixingStability,
     tripleReflection: serverTriple,
+    executionConsistencyStats,
+    execution_consistency_stats: executionConsistencyStats,
     serverLivingMirrorProfile: serverProfile,
     livingMirrorProfile: serverProfile,
     latestMarketContext: current.latestMarketContext || (serverProfile || {}).latestMarketContext || null
@@ -1104,8 +1261,9 @@ function getAssistantHandoff() {
 function saveLivingMirrorStatsFromReviews(tradeReviewState) {
   const previous = read(YM_LIVING_MIRROR_STATS, {});
   const serverProfile = (previous || {}).serverLivingMirrorProfile || (previous || {}).livingMirrorProfile || null;
+  const generated = normalizeLivingMirrorStats(null, tradeReviewState || getTradeReviewRecords());
   const stats = write(YM_LIVING_MIRROR_STATS, mergeServerLivingMirrorProfile(
-    buildLivingMirrorStatsEntity(tradeReviewState || getTradeReviewRecords()),
+    generated,
     serverProfile,
     (previous || {}).latestMarketContext || null
   ));

@@ -253,7 +253,7 @@
           </view>
           <view class="runtime-result-line">
             <text>执行一致率</text>
-            <view>{{runtimeView.trainingResult.mistakeCard.executionConsistencyText || '待补充'}} · {{runtimeView.trainingResult.mistakeCard.executionResult || '本局暂无明显失守'}}</view>
+            <view>{{runtimeView.trainingResult.mistakeCard.executionConsistencyText || '样本不足'}} · {{runtimeView.trainingResult.mistakeCard.executionResult || '本局暂无明显失守'}}</view>
           </view>
           <view class="runtime-result-line">
             <text>旧题复现次数</text>

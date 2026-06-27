@@ -1418,7 +1418,7 @@ function buildKlineTrainingMistakeCard(runtime = {}, options = {}) {
   const executionConsistency = totalActions > 0
     ? Math.max(0, Math.round(((totalActions - repeatCount) / totalActions) * 100))
     : null;
-  const executionConsistencyText = executionConsistency === null ? "待补充" : `${executionConsistency}%`;
+  const executionConsistencyText = executionConsistency === null ? "样本不足" : `${executionConsistency}%`;
   const pnlResult = Number(trainingResult.pnlResult || trainingResult.pnl_result || 0);
   const sessionId = cleanEventText(runtime.trainingSessionId || runtime.training_session_id || trainingResult.sessionId || trainingResult.session_id || "", 160);
 

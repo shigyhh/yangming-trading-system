@@ -579,6 +579,18 @@ assert.strictEqual(cleanCard.obviousMiss, "本局暂无明显失守");
 assert.strictEqual(cleanCard.executionResult, "本局暂无明显失守");
 assert.strictEqual(cleanCard.executionConsistencyText, "100%");
 
+const emptyTrainingCard = buildKlineTrainingMistakeCard({
+  trainingSessionId: "runtime-empty-training",
+  errorType: "追高冲动",
+  decisionTimeline: [],
+  trainingResult: {
+    totalActions: 0,
+    total_actions: 0
+  }
+});
+assert.strictEqual(emptyTrainingCard.executionConsistencyText, "样本不足");
+assert.strictEqual(emptyTrainingCard.execution_consistency_text, "样本不足");
+
 const runtimeStep4 = advanceKlineTrainingRuntime(decidedRuntime);
 assert.strictEqual(runtimeStep4.currentIndex, 4);
 assert.ok(Number.isFinite(runtimeStep4.sessionMetrics.unrealizedPnl));

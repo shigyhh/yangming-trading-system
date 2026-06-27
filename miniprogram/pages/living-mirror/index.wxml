@@ -65,6 +65,38 @@
       <view wx:else class="review-top3-empty">{{reviewTop3.emptyText}}</view>
     </view>
 
+    <view class="execution-consistency-card card">
+      <view class="card-head">
+        <text>执行一致性</text>
+        <view>近 {{stats.executionConsistencyStats.windowDays || 30}} 天</view>
+      </view>
+      <block wx:if="{{stats.executionConsistencyStats.hasStats}}">
+        <view class="execution-consistency-rate">
+          <text>{{stats.executionConsistencyStats.rateText}}</text>
+          <view>知行一致率</view>
+        </view>
+        <view class="execution-consistency-grid">
+          <view>
+            <text>执行偏离</text>
+            <view>{{stats.executionConsistencyStats.deviatedCountText}}</view>
+          </view>
+          <view>
+            <text>旧题复现</text>
+            <view>{{stats.executionConsistencyStats.repeatCountText}}</view>
+          </view>
+          <view>
+            <text>最高频执行偏离</text>
+            <view>{{stats.executionConsistencyStats.topDeviationTypeText}}</view>
+          </view>
+          <view>
+            <text>最常见第一念</text>
+            <view>{{stats.executionConsistencyStats.topFirstThoughtText}}</view>
+          </view>
+        </view>
+      </block>
+      <view wx:else class="execution-consistency-empty">样本不足。完成真实复盘或 K线训练后生成执行一致性。</view>
+    </view>
+
     <view wx:if="{{showMirrorDepth}}" class="mirror-bridge card">
       <view class="bridge-line">复盘，是你写下事实。活镜，是系统照见反复出现的念头。</view>
       <view class="journey-progress-grid">
