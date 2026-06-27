@@ -11,6 +11,7 @@ const {
   buildLivingMirrorStats,
   buildReviewTrainingFocus,
   buildTradeReviewTop3Stats,
+  buildTradeReviewRecordView,
   buildTradeReview
 } = require("./index");
 
@@ -146,6 +147,53 @@ assert.strictEqual(fallbackMistakeCard.mistakeCard.symbol, "待补充");
 assert.strictEqual(fallbackMistakeCard.mistakeCard.firstThought, "待补充");
 assert.strictEqual(fallbackMistakeCard.mistakeCard.triggerScene.length > 0, true);
 assert.strictEqual(fallbackMistakeCard.mistakeCard.nextRule.length > 0, true);
+
+const plannedReview = buildTradeReview({
+  marketKey: "cn",
+  timeframeKey: "1d",
+  tradeDate: "2026-06-27",
+  symbol: "300223",
+  action: "买入",
+  firstThought: "怕错过",
+  inPlan: "yes",
+  boundaryState: "kept"
+});
+assert.strictEqual(plannedReview.mainErrorType, "追高冲动");
+assert.strictEqual(plannedReview.main_error_type, "追高冲动");
+assert.strictEqual(plannedReview.lawResult, "按计划执行");
+assert.strictEqual(plannedReview.law_result, "按计划执行");
+assert.strictEqual(plannedReview.mistakeCard.lawResult, "按计划执行");
+assert.strictEqual(plannedReview.mistakeCard.mainErrorType, "追高冲动");
+
+const legacySnakeRecordView = buildTradeReviewRecordView({
+  id: "legacy-snake-001",
+  symbol: "600123",
+  tradeDate: "2026-06-27",
+  actionLabel: "加仓",
+  statusLabel: "被套中",
+  main_error_type: "补仓冲动",
+  first_thought: "想补仓",
+  trigger_scene: "弱反弹",
+  next_rule: "不在破位亏损中补仓",
+  training_prescription: {
+    title: "补仓冲动专项",
+    focusText: "下跌中继 / 反抽诱多",
+    rule: "不在破位亏损中补仓"
+  }
+});
+assert.strictEqual(legacySnakeRecordView.mainErrorType, "补仓冲动");
+assert.strictEqual(legacySnakeRecordView.main_error_type, "补仓冲动");
+assert.strictEqual(legacySnakeRecordView.firstThought, "想补仓");
+assert.strictEqual(legacySnakeRecordView.first_thought, "想补仓");
+assert.strictEqual(legacySnakeRecordView.triggerScene, "弱反弹");
+assert.strictEqual(legacySnakeRecordView.trigger_scene, "弱反弹");
+assert.strictEqual(legacySnakeRecordView.nextRule, "不在破位亏损中补仓");
+assert.strictEqual(legacySnakeRecordView.next_rule, "不在破位亏损中补仓");
+assert.strictEqual(legacySnakeRecordView.mistakeCard.mainErrorType, "补仓冲动");
+assert.strictEqual(legacySnakeRecordView.mistakeCard.firstThought, "想补仓");
+assert.strictEqual(legacySnakeRecordView.mistakeCard.triggerScene, "弱反弹");
+assert.strictEqual(legacySnakeRecordView.mistakeCard.nextRule, "不在破位亏损中补仓");
+assert.ok(legacySnakeRecordView.mistakeCard.trainingPrescriptionText.includes("补仓冲动专项"));
 
 const syncedReview = applyServerTradeReviewResult(review, {
   review: {

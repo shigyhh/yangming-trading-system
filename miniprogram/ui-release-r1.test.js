@@ -181,7 +181,7 @@ assert.ok(tradeReviewWxml.includes("触发情境"), "trade review should ask wha
 assert.ok(tradeReviewWxml.includes('wx:for="{{positionStates}}"'), "trade review should capture holding/closed/trapped state with choices");
 assert.ok(tradeReviewWxml.includes('wx:for="{{nextActionOptions}}"'), "trade review should offer next-law choices instead of requiring prose");
 assertRuleHas(tradeReviewWxss, ".quick-choice-grid.three", ["repeat(2, minmax(0, 1fr))"], "trade review quick choices should stay readable on true-device narrow screens");
-["怕错过", "不甘心", "想证明", "怕亏", "想扳回", "买少了", "卖飞了", "追高了", "被套了", "想补仓", "放量拉升", "冲高回落", "弱反弹", "刚卖就涨", "持仓中", "已平仓", "被套承压", "计划内", "计划外", "说不清", "停十秒", "只按计划", "不追涨", "不扛单", "先记录"].forEach((label) => {
+["怕错过", "不甘心", "想证明", "怕亏", "想扳回", "买少了", "卖飞了", "追高了", "被套了", "想补仓", "放量拉升", "冲高回落", "弱反弹", "刚卖就涨", "持仓中", "已平仓", "被套中", "计划内", "计划外", "说不清", "停十秒", "只按计划", "不追涨", "不扛单", "先记录"].forEach((label) => {
   assert.ok(tradeReviewWxml.includes(label) || tradeReviewJs.includes(label), `trade review should expose quick choice: ${label}`);
 });
 assert.ok(tradeReviewWxml.includes("可选补充一句"), "trade review text input should be framed as optional supplement");
@@ -193,12 +193,16 @@ assert.ok(tradeReviewWxml.includes("活镜归因"), "trade review mistake card s
 assert.ok(tradeReviewWxml.includes("下次执行动作"), "trade review mistake card should use the P1 execution-action wording");
 assert.ok(tradeReviewWxml.includes("训练处方"), "trade review mistake card should show the K-line training prescription");
 assert.equal(tradeReviewWxml.includes("下一次守法"), false, "trade review user-facing result copy should avoid old law wording");
+["守法", "破法", "守法率"].forEach((term) => {
+  assert.equal(tradeReviewWxml.includes(term), false, `trade review wxml should not expose ${term}`);
+  assert.equal(tradeReviewJs.includes(term), false, `trade review page js should not expose ${term}`);
+});
 assert.ok(tradeReviewWxml.includes("mirror-deposit-card"), "trade review result should show living-mirror deposition");
 assert.ok(tradeReviewWxml.includes("prescription-card"), "trade review result should show the next K-line training prescription");
 assert.ok(tradeReviewWxml.includes("mirror-top3-card"), "trade review should surface living-mirror Top3 mistake statistics");
 assert.ok(tradeReviewWxml.includes("最近重复最多的错题"), "trade review Top3 should name repeated mistake patterns");
 assertRuleHas(tradeReviewWxss, ".mirror-top3-card", ["border: 1rpx solid rgba(216, 183, 111, 0.18)"], "trade review Top3 card should match the mirror/prescription visual system");
-["拿不住", "空仓焦虑", "等确认", "破位认错", "盈利按规则拿", "空仓也算守法"].forEach((label) => {
+["拿不住", "空仓焦虑", "等确认", "破位认错", "盈利按规则拿", "空仓也算按计划"].forEach((label) => {
   assert.ok(tradeReviewWxml.includes(label) || tradeReviewJs.includes(label), `trade review should expose expanded v1 quick choice: ${label}`);
 });
 

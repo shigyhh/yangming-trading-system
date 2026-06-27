@@ -65,7 +65,7 @@ const PLAN_STATE_OPTIONS = [
 const POSITION_STATES = [
   { key: "holding", label: "持仓中" },
   { key: "closed", label: "已平仓" },
-  { key: "trapped", label: "被套承压" }
+  { key: "trapped", label: "被套中" }
 ];
 const NEXT_ACTION_OPTIONS = [
   "停十秒",
@@ -76,7 +76,7 @@ const NEXT_ACTION_OPTIONS = [
   "等确认",
   "破位认错",
   "盈利按规则拿",
-  "空仓也算守法"
+  "空仓也算按计划"
 ];
 
 function defaultForm() {
@@ -183,7 +183,7 @@ function buildReviewFlow(form = {}, report = null, marketContext = null) {
       key: "confirm",
       number: "02",
       title: "确认第一念",
-      detail: hasConfirmed ? "第一念与下一次守法已确认" : "选择当时第一念和下一次守法",
+      detail: hasConfirmed ? "第一念与下次执行动作已确认" : "选择当时第一念和下次执行动作",
       done: hasConfirmed,
       current: hasSource && !hasConfirmed
     },

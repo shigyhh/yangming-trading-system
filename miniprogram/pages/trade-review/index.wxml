@@ -81,7 +81,7 @@
 
     <view wx:if="{{form.screenshotPath || manualAnchorVisible || form.symbol}}" class="quick-review-card card">
       <text>60 秒真实复盘</text>
-      <view>只回答三件事：第一念是什么，是否在计划内，下一次守什么。</view>
+      <view>只回答三件事：第一念是什么，是否在计划内，下次怎么执行。</view>
 
       <view class="quick-label">第一念是什么？</view>
       <view class="quick-choice-grid thought">
@@ -128,7 +128,7 @@
           >{{item.label}}</button>
         </view>
 
-        <view class="quick-label">下一次守什么？</view>
+        <view class="quick-label">下次执行动作？</view>
         <view class="quick-choice-grid next-rule">
           <button
             wx:for="{{nextActionOptions}}"
@@ -164,7 +164,7 @@
       记录已留住。下一步，选择当时最强的一念。
     </view>
     <view wx:elif="{{!report && (form.screenshotPath || manualAnchorVisible || form.symbol) && form.firstThought && !form.nextAction}}" class="report-gate-hint">
-      第一念已确认。最后选择下一次守什么。
+      第一念已确认。最后选择下次执行动作。
     </view>
 
     <view wx:if="{{(form.screenshotPath || manualAnchorVisible || form.symbol) && form.firstThought && form.nextAction}}" class="primary-stack quick-actions">
@@ -311,13 +311,13 @@
           </view>
         </view>
         <view class="mirror-top3-section">
-          <view class="mirror-top3-title">最容易失守的场景</view>
+          <view class="mirror-top3-title">最容易执行偏离的场景</view>
           <view wx:for="{{mirrorTop3.topTriggerScenes}}" wx:key="label" wx:for-item="rankItem" class="mirror-top3-row">
             <text>{{rankItem.label}}</text>
             <view>{{rankItem.count}} 次</view>
           </view>
         </view>
-        <view class="mirror-top3-rule">下一次最该守：{{mirrorTop3.nextRule}}</view>
+        <view class="mirror-top3-rule">下次执行动作：{{mirrorTop3.nextRule}}</view>
       </view>
       <view class="verdict-card">
         <text>判词</text>

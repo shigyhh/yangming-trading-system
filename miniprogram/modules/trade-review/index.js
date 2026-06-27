@@ -15,9 +15,9 @@ const ACTION_OPTIONS = [
 const EMOTION_OPTIONS = ["平静", "急躁", "恐惧", "不甘", "想证明", "焦虑", "逃避"];
 
 const BOUNDARY_STATES = [
-  { key: "kept", label: "已守住", score: 88 },
-  { key: "near", label: "差点失守", score: 56 },
-  { key: "lost", label: "已经失守", score: 28 }
+  { key: "kept", label: "已按计划执行", score: 88 },
+  { key: "near", label: "接近执行偏离", score: 56 },
+  { key: "lost", label: "已执行偏离", score: 28 }
 ];
 
 const STAGE_POSITIONS = [
@@ -85,13 +85,6 @@ const TRADE_REVIEW_ERROR_PRESCRIPTIONS = {
     scene: "卖出后继续走强",
     rule: "用规则处理减仓，不用懊悔驱动下一笔动作。"
   },
-  买少懊悔: {
-    packId: "position_planning",
-    title: "买少懊悔专项训练",
-    focusText: "确认后上涨 / 分批机会 / 计划仓位",
-    scene: "确认后上涨",
-    rule: "先写计划仓位，再执行分批，不用事后懊悔补动作。"
-  },
   补仓冲动: {
     packId: "no_loss_averaging",
     title: "补仓冲动专项训练",
@@ -113,19 +106,12 @@ const TRADE_REVIEW_ERROR_PRESCRIPTIONS = {
     scene: "小盈利震荡",
     rule: "盈利后按规则观察，不用小波动换即时安全感。"
   },
-  恐惧止损: {
-    packId: "fear_stop_loss",
-    title: "恐惧止损专项训练",
-    focusText: "正常回撤 / 未破位震荡 / 边界识别",
-    scene: "正常回撤",
-    rule: "先区分破位与正常波动，再决定是否执行预案。"
-  },
   空仓焦虑: {
     packId: "empty_position_patience",
     title: "空仓焦虑专项训练",
     focusText: "市场普涨 / 手里没票 / 等待训练",
     scene: "空仓焦虑",
-    rule: "空仓也是守法；没有自己的机会，只记录不追随。"
+    rule: "空仓也是按计划执行；没有自己的机会，只记录不追随。"
   },
   急于翻本: {
     packId: "revenge_trade_pause",
@@ -135,6 +121,51 @@ const TRADE_REVIEW_ERROR_PRESCRIPTIONS = {
     rule: "亏损后先复盘，不用下一笔交易修复上一笔情绪。"
   }
 };
+
+const TRADE_REVIEW_ERROR_TYPES = [
+  "追高冲动",
+  "扛单被套",
+  "卖飞懊悔",
+  "补仓冲动",
+  "计划外交易",
+  "盈利拿不住",
+  "空仓焦虑",
+  "急于翻本"
+];
+
+const TRADE_REVIEW_ERROR_TYPE_SET = new Set(TRADE_REVIEW_ERROR_TYPES);
+
+function normalizeTradeReviewErrorType(value = "") {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  const normalized = /买少/.test(text) ? "盈利拿不住" : (/恐惧|怕亏/.test(text) ? "扛单被套" : text);
+  return TRADE_REVIEW_ERROR_TYPE_SET.has(normalized) ? normalized : "";
+}
+
+function normalizeTrainingPrescription(value, mainErrorType = "计划外交易") {
+  const fallback = TRADE_REVIEW_ERROR_PRESCRIPTIONS[mainErrorType] || TRADE_REVIEW_ERROR_PRESCRIPTIONS["计划外交易"];
+  if (!value) {
+    return Object.assign({}, fallback, {
+      summary: `${fallback.title}｜${fallback.focusText}`
+    });
+  }
+  if (typeof value === "string") {
+    return Object.assign({}, fallback, {
+      title: value,
+      summary: value
+    });
+  }
+  const title = value.title || fallback.title;
+  const focusText = value.focusText || fallback.focusText;
+  return Object.assign({}, fallback, value, {
+    title,
+    focusText,
+    scene: value.scene || fallback.scene,
+    rule: value.rule || fallback.rule,
+    packId: value.packId || fallback.packId,
+    summary: value.summary || `${title}｜${focusText}`
+  });
+}
 
 const TRADE_REVIEW_STATUS_STEPS = [
   { key: "pending_confirmation", label: "待确认", detail: "截图、自述与第一念等待确认。" },
@@ -498,6 +529,11 @@ function getReviewPlanState(input = {}) {
 }
 
 function resolveTradeReviewMainErrorType(input = {}) {
+  const explicitType = normalizeTradeReviewErrorType(
+    pickReviewText(input, ["mainErrorType", "main_error_type"]) ||
+    pickReviewText(input.mistakeCard || {}, ["mainErrorType", "main_error_type"])
+  );
+  if (explicitType) return explicitType;
   const firstThought = getReviewFirstThought(input);
   const triggerScene = getReviewTriggerScene(input);
   const nextRule = getReviewNextRule(input);
@@ -522,13 +558,13 @@ function resolveTradeReviewMainErrorType(input = {}) {
   if (planState === "no") return "计划外交易";
   if (/怕错过|追高|上车|来不及|放量拉升|突然拉升|快速拉升|快速上冲|冲高回落|假突破/.test(text)) return "追高冲动";
   if (/卖飞|怕卖飞/.test(text)) return "卖飞懊悔";
-  if (/买少/.test(text)) return "买少懊悔";
+  if (/买少/.test(text)) return "盈利拿不住";
   if (/补仓|加仓/.test(text)) return "补仓冲动";
   if (/被套|扛单|不认错|再等等|会回来/.test(text) || input.positionState === "trapped") return "扛单被套";
   if (/拿不住|怕回吐/.test(text)) return "盈利拿不住";
   if (/空仓|没票/.test(text)) return "空仓焦虑";
   if (/翻本|扳回|不甘/.test(text) || input.actionKey === "compensate") return "急于翻本";
-  if (/怕亏|恐惧/.test(text) || input.emotion === "恐惧") return "恐惧止损";
+  if (/怕亏|恐惧/.test(text) || input.emotion === "恐惧") return "扛单被套";
   if (input.actionKey === "impulse") return "计划外交易";
   return "计划外交易";
 }
@@ -559,24 +595,32 @@ function resolveTradeReviewSecondaryErrors(input = {}, mainErrorType = "") {
   if (input.positionState === "trapped" || /被套|扛单/.test(text)) tags.push("扛单被套");
   if (/怕错过|追高|放量拉升|突然拉升|快速拉升|快速上冲|冲高回落|假突破/.test(text)) tags.push("追高冲动");
   if (/补仓|加仓/.test(text)) tags.push("补仓冲动");
-  if (/买少/.test(text)) tags.push("买少懊悔");
+  if (/买少/.test(text)) tags.push("盈利拿不住");
   if (/卖飞|怕卖飞/.test(text)) tags.push("卖飞懊悔");
   if (/翻本|扳回|不甘/.test(text) || input.actionKey === "compensate") tags.push("急于翻本");
   if (/拿不住|怕回吐/.test(text)) tags.push("盈利拿不住");
-  return uniqueTags(tags).filter((tag) => tag !== mainErrorType).slice(0, 3);
+  if (/怕亏|恐惧/.test(text) || input.emotion === "恐惧") tags.push("扛单被套");
+  return uniqueTags(tags.map(normalizeTradeReviewErrorType))
+    .filter((tag) => tag && tag !== mainErrorType)
+    .slice(0, 3);
 }
 
 function resolveTradeReviewLawResult(input = {}) {
+  const explicit = pickReviewText(input, ["lawResult", "law_result"]) ||
+    pickReviewText(input.mistakeCard || {}, ["lawResult", "law_result"]);
+  if (/执行偏离|破法/.test(explicit)) return "执行偏离";
+  if (/说不清/.test(explicit)) return "说不清";
+  if (/按计划|守法/.test(explicit)) return "按计划执行";
   const planState = getReviewPlanState(input);
-  if (planState === "no" || input.changedPlan === "yes" || input.boundaryState === "lost") return "破法";
+  if (planState === "no" || input.changedPlan === "yes" || input.boundaryState === "lost") return "执行偏离";
   if (planState === "unclear" || input.boundaryState === "near") return "说不清";
-  return "守法";
+  return "按计划执行";
 }
 
 function buildTradeReviewMistake(input = {}, reportBase = {}) {
-  const mainErrorType = resolveTradeReviewMainErrorType(input);
+  const mainErrorType = normalizeTradeReviewErrorType(resolveTradeReviewMainErrorType(input)) || "计划外交易";
   const secondaryErrorTypes = resolveTradeReviewSecondaryErrors(input, mainErrorType);
-  const prescription = TRADE_REVIEW_ERROR_PRESCRIPTIONS[mainErrorType] || TRADE_REVIEW_ERROR_PRESCRIPTIONS["计划外交易"];
+  const prescription = normalizeTrainingPrescription(input.trainingPrescription || input.training_prescription, mainErrorType);
   const firstThought = getReviewFirstThought(input) || "待补充";
   const triggerScene = getReviewTriggerScene(input) || prescription.scene || "待补充";
   const nextRule = getReviewNextRule(input) || prescription.rule || "待补充";
@@ -620,7 +664,7 @@ function buildTradeReviewMistake(input = {}, reportBase = {}) {
     mainErrorType,
     secondaryErrorTypes,
     triggerScene,
-    brokenRule: lawResult === "破法" ? (input.planBoundary || prescription.rule) : "",
+    brokenRule: lawResult === "执行偏离" ? (input.planBoundary || prescription.rule) : "",
     lawResult,
     tradeResult: input.tradeResult || "待验证",
     positionState,
@@ -657,7 +701,7 @@ function buildTrainingAction(type, boundaryState) {
   if (type === "偏执型") return "复盘时写一条反向事实，让它照见想证明自己的念头。";
   if (type === "拖延型") return "今天只完成三行复盘：触发、第一念、下一次边界。";
   if (type === "焦虑型") return "把观察窗口固定下来，窗口外只记录心境，不反复确认。";
-  if (boundaryState === "lost") return "先复盘失守前的一念，不急着追求完整解释。";
+  if (boundaryState === "lost") return "先复盘执行偏离前的一念，不急着追求完整解释。";
   return "保持每日小记录，让稳定来自持续省察。";
 }
 
@@ -728,10 +772,12 @@ function buildTradeReview(input = {}, context = {}) {
     trigger_scene: mistake.triggerScene,
     brokenRule: mistake.brokenRule,
     lawResult: mistake.lawResult,
+    law_result: mistake.lawResult,
     tradeResult: mistake.tradeResult,
     trainingPrescription: mistake.trainingPrescription,
     training_prescription: mistake.trainingPrescription,
     trainingPackId: mistake.trainingPackId,
+    nextRule: mistake.mistakeCard.nextRule,
     next_rule: mistake.mistakeCard.nextRule,
     mistakeCard: mistake.mistakeCard,
     mirrorDeposit: mistake.mirrorDeposit,
@@ -744,23 +790,102 @@ function buildTradeReview(input = {}, context = {}) {
   return withTradeReviewCrossEndStatus(report, context);
 }
 
+function normalizeTradeReviewRecord(record = {}) {
+  const card = record.mistakeCard || {};
+  const mainErrorType = normalizeTradeReviewErrorType(
+    pickReviewText(record, ["mainErrorType", "main_error_type"]) ||
+    pickReviewText(card, ["mainErrorType", "main_error_type"])
+  );
+  const firstThought = getReviewFirstThought(record) ||
+    pickReviewText(card, ["firstThought", "first_thought"]) ||
+    "";
+  const triggerScene = getReviewTriggerScene(record) ||
+    pickReviewText(card, ["triggerScene", "trigger_scene"]) ||
+    "";
+  const nextRule = getReviewNextRule(record) ||
+    pickReviewText(card, ["nextRule", "next_rule", "nextAction", "next_action"]) ||
+    "";
+  const lawResult = resolveTradeReviewLawResult(record);
+  const trainingPrescription = normalizeTrainingPrescription(
+    record.trainingPrescription ||
+      record.training_prescription ||
+      card.trainingPrescription ||
+      card.training_prescription,
+    mainErrorType || "计划外交易"
+  );
+  const normalizedInput = Object.assign({}, record, {
+    mainErrorType,
+    main_error_type: mainErrorType,
+    firstThought,
+    first_thought: firstThought,
+    triggerScene,
+    trigger_scene: triggerScene,
+    nextRule,
+    next_rule: nextRule,
+    nextAction: nextRule,
+    next_action: nextRule,
+    lawResult,
+    law_result: lawResult,
+    trainingPrescription,
+    training_prescription: trainingPrescription
+  });
+  const mistake = buildTradeReviewMistake(normalizedInput, {
+    actionLabel: getReviewActionLabel(normalizedInput, record.actionLabel || "")
+  });
+  const resolvedFirstThought = firstThought || mistake.mistakeCard.firstThought || "待补充";
+  const resolvedTriggerScene = triggerScene || mistake.triggerScene || "待补充";
+  const resolvedNextRule = nextRule || mistake.mistakeCard.nextRule || "待补充";
+  const resolvedCard = Object.assign({}, card, mistake.mistakeCard, {
+    mainErrorType: mistake.mainErrorType,
+    firstThought: resolvedFirstThought,
+    triggerScene: resolvedTriggerScene,
+    nextRule: resolvedNextRule,
+    lawResult: mistake.lawResult,
+    trainingPrescription: mistake.trainingPrescription,
+    trainingPrescriptionText: mistake.mistakeCard.trainingPrescriptionText
+  });
+
+  return Object.assign({}, record, normalizedInput, {
+    mainErrorType: mistake.mainErrorType,
+    main_error_type: mistake.mainErrorType,
+    secondaryErrorTypes: mistake.secondaryErrorTypes,
+    secondary_error_types: mistake.secondaryErrorTypes,
+    firstThought: resolvedFirstThought,
+    first_thought: resolvedFirstThought,
+    triggerScene: resolvedTriggerScene,
+    trigger_scene: resolvedTriggerScene,
+    nextRule: resolvedNextRule,
+    next_rule: resolvedNextRule,
+    nextAction: resolvedNextRule,
+    next_action: resolvedNextRule,
+    lawResult: mistake.lawResult,
+    law_result: mistake.lawResult,
+    trainingPrescription: mistake.trainingPrescription,
+    training_prescription: mistake.trainingPrescription,
+    trainingPackId: mistake.trainingPackId,
+    mistakeCard: resolvedCard,
+    mirrorDeposit: mistake.mirrorDeposit
+  });
+}
+
 function buildTradeReviewRecordView(record = {}) {
-  const normalized = withTradeReviewCrossEndStatus(record);
-  const scores = record.scores || {};
-  const heartThieves = record.heartThieves || [];
-  const historicalMatch = record.historicalMatch || {};
+  const normalizedRecord = normalizeTradeReviewRecord(record);
+  const normalized = withTradeReviewCrossEndStatus(normalizedRecord);
+  const scores = normalizedRecord.scores || {};
+  const heartThieves = normalizedRecord.heartThieves || [];
+  const historicalMatch = normalizedRecord.historicalMatch || {};
   return Object.assign({}, normalized, {
-    heartThievesText: heartThieves.length ? heartThieves.join("、") : (record.virtuePractice || "知止、守心、执行"),
+    heartThievesText: heartThieves.length ? heartThieves.join("、") : (normalizedRecord.virtuePractice || "知止、守心、执行"),
     scoreRows: Object.keys(scores).map((key) => ({
       key,
       label: SCORE_LABELS[key] || key,
       value: scores[key],
       displayValue: formatScoreLevel(scores[key])
     })),
-    createdAtText: formatDateTime(record.createdAt || record.updatedAt),
-    archiveTitle: `${record.tradeDate || "未填日期"} · ${record.marketLabel || historicalMatch.marketLabel || "待定位"}`,
-    marketLine: `${record.marketLabel || historicalMatch.marketLabel || "待定位"} · ${record.timeframeLabel || historicalMatch.timeframeLabel || "待周期"} · ${record.symbol || "待补充"}`,
-    stageLine: `${historicalMatch.stagePosition || record.stageGate || "待定位"} · ${record.relatedMirror || "待照见"}`,
+    createdAtText: formatDateTime(normalizedRecord.createdAt || normalizedRecord.updatedAt),
+    archiveTitle: `${normalizedRecord.tradeDate || "未填日期"} · ${normalizedRecord.marketLabel || historicalMatch.marketLabel || "待定位"}`,
+    marketLine: `${normalizedRecord.marketLabel || historicalMatch.marketLabel || "待定位"} · ${normalizedRecord.timeframeLabel || historicalMatch.timeframeLabel || "待周期"} · ${normalizedRecord.symbol || "待补充"}`,
+    stageLine: `${historicalMatch.stagePosition || normalizedRecord.stageGate || "待定位"} · ${normalizedRecord.relatedMirror || "待照见"}`,
     sourceLine: historicalMatch.sourceStatus || "待服务端匹配历史分时",
     statusLine: normalized.crossEndStatusText || "待确认"
   });
@@ -861,6 +986,7 @@ function buildTradeReviewTop3Stats(tradeReviewState = {}) {
   const days = Number(tradeReviewState.days || 30);
   const records = ((tradeReviewState || {}).records || [])
     .filter(Boolean)
+    .map(normalizeTradeReviewRecord)
     .filter((record) => isWithinRecentWindow(record, days))
     .slice()
     .sort((a, b) => Number(b.createdAt || b.updatedAt || 0) - Number(a.createdAt || a.updatedAt || 0));
@@ -888,6 +1014,7 @@ function buildTradeReviewTop3Stats(tradeReviewState = {}) {
 function buildReviewTrainingFocus(tradeReviewState = {}) {
   const records = ((tradeReviewState || {}).records || [])
     .filter(Boolean)
+    .map(normalizeTradeReviewRecord)
     .slice()
     .sort((a, b) => Number(b.createdAt || b.updatedAt || 0) - Number(a.createdAt || a.updatedAt || 0));
   const recent = records.slice(0, 30);
@@ -933,7 +1060,7 @@ function buildReviewTrainingFocus(tradeReviewState = {}) {
 
 function buildOneLine({ type, input, action, boundary, historicalMatch }) {
   if (boundary.key === "lost") {
-    return `这次记录照见：在「${historicalMatch.stagePosition}」里，最先失守的不是规则，而是「${input.firstThought || action.label}」这一念。`;
+    return `这次记录照见：在「${historicalMatch.stagePosition}」里，最先偏离的不是规则，而是「${input.firstThought || action.label}」这一念。`;
   }
   if (type === "平衡型") {
     return `这次记录照见：你能把「${action.label}」带回边界，继续保持复盘。`;
@@ -1103,6 +1230,7 @@ module.exports = {
   applyServerTradeReviewResult,
   buildTradeReviewCrossEndStatus,
   withTradeReviewCrossEndStatus,
+  normalizeTradeReviewRecord,
   buildTradeReview,
   buildTradeReviewRecordView,
   buildTradeReviewClosure,
