@@ -17,13 +17,14 @@ const {
   saveZhixingReminderEvent,
   getExecutionPlanLibrary
 } = require("../../utils/store");
-const { syncLocalState, syncTrainingProgress, requestKlineTrainingSample } = require("../../utils/api");
+const { syncLocalState, syncTrainingProgress, requestKlineTrainingSample, fetchKlineTrainingSlice } = require("../../utils/api");
 const { buildTraining7View } = require("../../modules/training7/index");
 const {
   buildKlineMindSession,
   buildKlineMindRecord,
   listSpecialTrainingPacks,
   buildSpecialTrainingSessionMeta,
+  buildCustomSessionMeta,
   buildKlineSamplingRequest,
   normalizeKlineSamplingResult
 } = require("../../modules/kline-mind/index");
@@ -120,7 +121,40 @@ function buildForm(record = {}, session = {}) {
     fallbackUsed: pickValue(record.fallbackUsed, record.fallback_used, session.fallbackUsed, session.fallback_used, false),
     fallback_used: pickValue(record.fallback_used, record.fallbackUsed, session.fallback_used, session.fallbackUsed, false),
     fallbackReason: record.fallbackReason || record.fallback_reason || session.fallbackReason || session.fallback_reason || "",
-    fallback_reason: record.fallback_reason || record.fallbackReason || session.fallback_reason || session.fallbackReason || ""
+    fallback_reason: record.fallback_reason || record.fallbackReason || session.fallback_reason || session.fallbackReason || "",
+    symbol: record.symbol || session.symbol || "",
+    period: record.period || session.period || record.timeframeKey || session.timeframeKey || "1d",
+    startDate: record.startDate || record.start_date || session.startDate || session.start_date || "",
+    start_date: record.start_date || record.startDate || session.start_date || session.startDate || "",
+    endDate: record.endDate || record.end_date || session.endDate || session.end_date || "",
+    end_date: record.end_date || record.endDate || session.end_date || session.endDate || "",
+    trainingLength: record.trainingLength || record.training_length || session.trainingLength || session.training_length || 60,
+    training_length: record.training_length || record.trainingLength || session.training_length || session.trainingLength || 60,
+    hiddenSymbol: pickValue(record.hiddenSymbol, record.hidden_symbol, session.hiddenSymbol, session.hidden_symbol, true),
+    hidden_symbol: pickValue(record.hidden_symbol, record.hiddenSymbol, session.hidden_symbol, session.hiddenSymbol, true),
+    hiddenDateRange: pickValue(record.hiddenDateRange, record.hidden_date_range, session.hiddenDateRange, session.hidden_date_range, true),
+    hidden_date_range: pickValue(record.hidden_date_range, record.hiddenDateRange, session.hidden_date_range, session.hiddenDateRange, true),
+    customVisibleCount: record.customVisibleCount || record.custom_visible_count || session.customVisibleCount || session.custom_visible_count || 1,
+    custom_visible_count: record.custom_visible_count || record.customVisibleCount || session.custom_visible_count || session.customVisibleCount || 1,
+    customSymbolText: record.customSymbolText || record.custom_symbol_text || session.customSymbolText || session.custom_symbol_text || "",
+    custom_symbol_text: record.custom_symbol_text || record.customSymbolText || session.custom_symbol_text || session.customSymbolText || "",
+    customDateRangeText: record.customDateRangeText || record.custom_date_range_text || session.customDateRangeText || session.custom_date_range_text || "",
+    custom_date_range_text: record.custom_date_range_text || record.customDateRangeText || session.custom_date_range_text || session.customDateRangeText || "",
+    revealedSymbolText: record.revealedSymbolText || record.revealed_symbol_text || session.revealedSymbolText || session.revealed_symbol_text || "",
+    revealed_symbol_text: record.revealed_symbol_text || record.revealedSymbolText || session.revealed_symbol_text || session.revealedSymbolText || "",
+    revealedDateRangeText: record.revealedDateRangeText || record.revealed_date_range_text || session.revealedDateRangeText || session.revealed_date_range_text || "",
+    revealed_date_range_text: record.revealed_date_range_text || record.revealedDateRangeText || session.revealed_date_range_text || session.revealedDateRangeText || ""
+  };
+}
+
+function buildDefaultCustomSessionForm(session = {}, current = {}) {
+  const market = session.market || {};
+  return {
+    symbol: current.symbol || market.defaultSymbol || "000001.SZ",
+    period: current.period || session.timeframeKey || "1d",
+    startDate: current.startDate || "",
+    endDate: current.endDate || "",
+    trainingLength: current.trainingLength || 60
   };
 }
 
@@ -196,7 +230,29 @@ function stripTrainingContext(form = {}) {
     "fallbackUsed",
     "fallback_used",
     "fallbackReason",
-    "fallback_reason"
+    "fallback_reason",
+    "symbol",
+    "period",
+    "startDate",
+    "start_date",
+    "endDate",
+    "end_date",
+    "trainingLength",
+    "training_length",
+    "hiddenSymbol",
+    "hidden_symbol",
+    "hiddenDateRange",
+    "hidden_date_range",
+    "customVisibleCount",
+    "custom_visible_count",
+    "customSymbolText",
+    "custom_symbol_text",
+    "customDateRangeText",
+    "custom_date_range_text",
+    "revealedSymbolText",
+    "revealed_symbol_text",
+    "revealedDateRangeText",
+    "revealed_date_range_text"
   ].forEach((key) => {
     delete cleanForm[key];
   });
@@ -351,6 +407,10 @@ Page({
     form: buildForm(),
     specialTrainingPacks: listSpecialTrainingPacks(),
     activeTrainingMode: "base_blind",
+    customSessionForm: buildDefaultCustomSessionForm(),
+    customSessionStatusText: "",
+    customSessionMessage: "",
+    customSessionError: "",
     samplingStatus: "",
     samplingStatusText: "",
     samplingMessage: "",
@@ -412,6 +472,7 @@ Page({
       form,
       specialTrainingPacks: listSpecialTrainingPacks(),
       activeTrainingMode: sourceType || "base_blind",
+      customSessionForm: buildDefaultCustomSessionForm(session, this.data.customSessionForm),
       samplingStatus: samplingUi.samplingStatus,
       samplingStatusText: samplingUi.samplingStatusText,
       samplingMessage: samplingUi.samplingMessage,
@@ -424,12 +485,16 @@ Page({
   selectCandle(e) {
     const selectedCandleKey = e.currentTarget.dataset.key;
     const form = Object.assign({}, this.data.form, { selectedCandleKey });
+    const isCustomSession = (this.data.session || {}).sourceType === "custom_session" || (this.data.session || {}).source_type === "custom_session";
     const session = buildKlineMindSession({
       assessment: this.data.assessment,
       trainingDay: this.data.trainingDay,
       record: form,
       historyCache: getKlineHistoryCache(),
-      reviewFocus: this.data.reviewFocus
+      reviewFocus: this.data.reviewFocus,
+      customSession: isCustomSession ? Object.assign({}, this.data.session, form, {
+        historySlice: (this.data.session || {}).historySlice
+      }) : null
     });
     this.setData({ form, session });
   },
@@ -586,6 +651,175 @@ Page({
       zhixingReminderShownCount: 0
     });
     wx.showToast({ title: "已进入专项训练", icon: "none" });
+  },
+
+  inputCustomSessionField(e) {
+    const field = ((e.currentTarget || {}).dataset || {}).field;
+    if (!field) return;
+    this.setData({ [`customSessionForm.${field}`]: e.detail.value });
+  },
+
+  selectCustomPeriod(e) {
+    const period = ((e.currentTarget || {}).dataset || {}).period || "1d";
+    this.setData({ "customSessionForm.period": period });
+  },
+
+  normalizeCustomHistorySlice(slice = {}, meta = {}) {
+    const candles = Array.isArray(slice.candles)
+      ? slice.candles
+      : Array.isArray(slice.bars)
+        ? slice.bars
+        : [];
+    const trainingLength = Number(meta.trainingLength || meta.training_length || candles.length || 0);
+    const slicedCandles = trainingLength > 0 ? candles.slice(0, trainingLength) : candles;
+    const dataRange = slice.data_range || {};
+    const instrument = slice.instrument || {};
+    const startDate = dataRange.start || slice.startDate || slice.start_date || slice.start || meta.startDate || meta.start_date || "";
+    const endDate = dataRange.end || slice.endDate || slice.end_date || slice.end || meta.endDate || meta.end_date || "";
+    const symbol = instrument.symbol || slice.symbol || meta.symbol || "";
+    return Object.assign({}, slice, {
+      source: "custom_history_slice",
+      symbol,
+      period: meta.period || slice.period || "1d",
+      start: startDate,
+      startDate,
+      start_date: startDate,
+      end: endDate,
+      endDate,
+      end_date: endDate,
+      data_range: Object.assign({}, slice.data_range || {}, {
+        start: startDate,
+        end: endDate
+      }),
+      candles: slicedCandles
+    });
+  },
+
+  async startCustomBlindTraining() {
+    const customForm = this.data.customSessionForm || {};
+    const symbol = String(customForm.symbol || "").trim();
+    if (!symbol) {
+      wx.showToast({ title: "先填写标的代码", icon: "none" });
+      return;
+    }
+    const trainingLength = Math.max(1, Math.min(300, Number(customForm.trainingLength || 60) || 60));
+    const meta = buildCustomSessionMeta({
+      symbol,
+      period: customForm.period || "1d",
+      startDate: customForm.startDate || "",
+      endDate: customForm.endDate || "",
+      trainingLength,
+      hiddenSymbol: true,
+      hiddenDateRange: true
+    });
+    this.setData({
+      customSessionStatusText: "正在载入自选片段",
+      customSessionMessage: "从历史 K 线服务读取，不在小程序复制行情数据。",
+      customSessionError: ""
+    });
+    try {
+      const result = await fetchKlineTrainingSlice({
+        marketKey: (this.data.form || {}).marketKey || ((this.data.session || {}).market || {}).key || "cn_equity",
+        timeframeKey: meta.period,
+        symbol: meta.symbol,
+        trainingLength: meta.trainingLength,
+        startDate: meta.startDate,
+        endDate: meta.endDate,
+        mode: "blind_mirror",
+        personalityType: (this.data.session || {}).personalityType || "",
+        gateKey: ((this.data.session || {}).stageGate || {}).key || "shi_shang_mo",
+        blind: false,
+        seed: `custom-${meta.symbol}-${meta.period}-${meta.startDate}-${meta.endDate}-${meta.trainingLength}`
+      });
+      const rawSlice = result.slice || result.data || result;
+      const candles = Array.isArray(rawSlice.candles)
+        ? rawSlice.candles
+        : Array.isArray(rawSlice.bars)
+          ? rawSlice.bars
+          : [];
+      if (!candles.length) {
+        this.setData({
+          customSessionStatusText: "该时间段暂无可训练数据",
+          customSessionMessage: "",
+          customSessionError: "未生成训练 session"
+        });
+        wx.showToast({ title: "该时间段暂无可训练数据", icon: "none" });
+        return;
+      }
+      const historySlice = this.normalizeCustomHistorySlice(rawSlice, meta);
+      const resolvedMeta = buildCustomSessionMeta(Object.assign({}, meta, {
+        symbol: historySlice.symbol || meta.symbol,
+        startDate: historySlice.startDate || historySlice.start_date || meta.startDate,
+        endDate: historySlice.endDate || historySlice.end_date || meta.endDate
+      }));
+      const form = Object.assign({}, stripTrainingContext(this.data.form || {}), resolvedMeta, {
+        timeframeKey: resolvedMeta.period,
+        selectedCandleKey: ""
+      });
+      const session = buildKlineMindSession({
+        assessment: this.data.assessment,
+        trainingDay: this.data.trainingDay,
+        record: form,
+        historyCache: getKlineHistoryCache(),
+        customSession: Object.assign({}, resolvedMeta, {
+          historySlice,
+          customVisibleCount: 1,
+          custom_visible_count: 1
+        })
+      });
+      this.setData({
+        form: buildForm(form, session),
+        session,
+        reviewFocus: null,
+        reviewFocusErrorType: "",
+        reviewFocusNextAction: "",
+        activeTrainingMode: "custom_session",
+        customSessionStatusText: "自选盲练片段已载入",
+        customSessionMessage: "训练中默认隐藏真实标的和日期，结束后再揭示。",
+        customSessionError: "",
+        samplingStatus: "",
+        samplingStatusText: "",
+        samplingMessage: "",
+        samplingError: "",
+        zhixingReminderDisabled: false,
+        zhixingReminderShownCount: 0
+      });
+      wx.showToast({ title: "已进入自选盲练", icon: "none" });
+    } catch (error) {
+      this.setData({
+        customSessionStatusText: "自选片段载入失败",
+        customSessionMessage: "",
+        customSessionError: "抽取失败，请稍后重试或调整时间段。"
+      });
+      wx.showToast({ title: "自选片段载入失败", icon: "none" });
+    }
+  },
+
+  advanceCustomSession(e) {
+    const session = this.data.session || {};
+    const sourceType = session.sourceType || session.source_type || "";
+    if (sourceType !== "custom_session") return;
+    const action = ((e.currentTarget || {}).dataset || {}).action || "观望";
+    const candles = session.candles || [];
+    const total = Math.max(1, candles.length || session.customTotalCount || session.custom_total_count || 1);
+    const nextCount = Math.min(total, Number(session.customVisibleCount || session.custom_visible_count || 1) + 1);
+    const selectedCandle = candles[Math.max(0, nextCount - 1)] || candles[candles.length - 1] || {};
+    const form = Object.assign({}, this.data.form || {}, {
+      boundaryChoice: action,
+      selectedCandleKey: selectedCandle.key || (this.data.form || {}).selectedCandleKey || session.selectedCandleKey || "",
+      customVisibleCount: nextCount,
+      custom_visible_count: nextCount
+    });
+    this.setData({
+      form,
+      session: Object.assign({}, session, {
+        selectedCandleKey: form.selectedCandleKey,
+        customVisibleCount: nextCount,
+        custom_visible_count: nextCount,
+        customProgressText: `当前第 ${nextCount} 根 / 共 ${total} 根`,
+        custom_progress_text: `当前第 ${nextCount} 根 / 共 ${total} 根`
+      })
+    });
   },
 
   async fetchTrainingSample(context = {}) {

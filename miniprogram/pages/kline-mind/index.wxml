@@ -66,6 +66,70 @@
           <view class="training-entry-main">只看历史片段，记录第一反应。</view>
           <view class="training-entry-meta">下次执行动作：先看事实，再记录第一念。</view>
         </view>
+
+        <view class="custom-training-section {{activeTrainingMode === 'custom_session' ? 'active' : ''}}">
+          <view class="special-training-title">
+            <text>自选盲练</text>
+            <view>自选标的与时间段</view>
+          </view>
+          <view class="custom-form-grid">
+            <view class="custom-field">
+              <text>标的代码</text>
+              <input
+                value="{{customSessionForm.symbol}}"
+                data-field="symbol"
+                bindinput="inputCustomSessionField"
+                placeholder="例：000001.SZ"
+              />
+            </view>
+            <view class="custom-field">
+              <text>训练长度</text>
+              <input
+                type="number"
+                value="{{customSessionForm.trainingLength}}"
+                data-field="trainingLength"
+                bindinput="inputCustomSessionField"
+                placeholder="60"
+              />
+            </view>
+          </view>
+          <view class="custom-period-rail">
+            <button
+              wx:for="{{session.timeframeOptions}}"
+              wx:key="key"
+              class="{{customSessionForm.period === item.key ? 'active' : ''}}"
+              data-period="{{item.key}}"
+              bindtap="selectCustomPeriod"
+            >
+              {{item.label}}
+            </button>
+          </view>
+          <view class="custom-form-grid">
+            <view class="custom-field">
+              <text>起始日期</text>
+              <input
+                value="{{customSessionForm.startDate}}"
+                data-field="startDate"
+                bindinput="inputCustomSessionField"
+                placeholder="YYYY-MM-DD"
+              />
+            </view>
+            <view class="custom-field">
+              <text>结束日期</text>
+              <input
+                value="{{customSessionForm.endDate}}"
+                data-field="endDate"
+                bindinput="inputCustomSessionField"
+                placeholder="YYYY-MM-DD"
+              />
+            </view>
+          </view>
+          <button class="custom-start-btn" bindtap="startCustomBlindTraining">开始自选盲练</button>
+          <view wx:if="{{customSessionStatusText}}" class="custom-status">
+            <text>{{customSessionStatusText}}</text>
+            <view>{{customSessionMessage || customSessionError}}</view>
+          </view>
+        </view>
       </view>
 
       <view wx:if="{{samplingStatusText}}" class="sampling-status {{samplingStatus}}">
@@ -90,8 +154,8 @@
 
       <view class="slice-switch">
         <view>
-          <text>{{session.market.name}} · {{session.timeframeLabel}}</text>
-          <view>{{session.market.rule}}</view>
+          <text>{{activeTrainingMode === 'custom_session' ? '自选盲练 · ' + session.timeframeLabel : session.market.name + ' · ' + session.timeframeLabel}}</text>
+          <view>{{activeTrainingMode === 'custom_session' ? session.customDateRangeText : session.market.rule}}</view>
         </view>
         <button bindtap="toggleSelectors">{{showSelectors ? '收起' : '切换'}}</button>
       </view>
@@ -133,12 +197,12 @@
 
       <view class="sim-meta">
         <view>
-          <text>市场节奏</text>
-          <view>{{session.market.rhythm}} · {{session.market.rule}}</view>
+          <text>{{activeTrainingMode === 'custom_session' ? '盲练进度' : '市场节奏'}}</text>
+          <view>{{activeTrainingMode === 'custom_session' ? session.customProgressText : session.market.rhythm + ' · ' + session.market.rule}}</view>
         </view>
         <view>
           <text>数据状态</text>
-          <view>{{session.dataStatusText}} · {{session.market.defaultSymbol}}</view>
+          <view>{{activeTrainingMode === 'custom_session' ? session.dataStatusText + ' · ' + session.customSymbolText : session.dataStatusText + ' · ' + session.market.defaultSymbol}}</view>
         </view>
       </view>
 
@@ -165,6 +229,18 @@
         <text>今日观心</text>
         <view>{{session.hasHistoricalData ? session.prompt : session.marketQuestion}}</view>
         <text class="guardrail">{{session.marketGuardrail}}</text>
+      </view>
+
+      <view wx:if="{{activeTrainingMode === 'custom_session' && session.hasHistoricalData}}" class="custom-action-panel">
+        <view>
+          <text>{{session.customProgressText}}</text>
+          <view>训练中隐藏真实标的和日期，只按当前图形记录动作。</view>
+        </view>
+        <view class="custom-action-buttons">
+          <button data-action="买入" bindtap="advanceCustomSession">买入</button>
+          <button data-action="卖出" bindtap="advanceCustomSession">卖出</button>
+          <button data-action="观望" bindtap="advanceCustomSession">观望</button>
+        </view>
       </view>
     </view>
 
@@ -336,6 +412,12 @@
         <view>{{savedRecord.samplingSourceLabel || savedRecord.sampling_source_label || (savedRecord.fallbackUsed || savedRecord.fallback_used ? '兜底片段' : '匹配片段')}}</view>
         <view>场景标签：{{savedRecord.samplingSceneTagsText || savedRecord.sampling_scene_tags_text || savedRecord.sceneTags || savedRecord.scene_tags || '待补充'}}</view>
         <view wx:if="{{savedRecord.fallbackReason || savedRecord.fallback_reason}}">兜底原因：{{savedRecord.fallbackReason || savedRecord.fallback_reason}}</view>
+      </view>
+      <view wx:if="{{savedRecord.sourceType === 'custom_session' || savedRecord.source_type === 'custom_session'}}" class="sampling-summary custom-reveal-summary">
+        <text>自选盲练来源</text>
+        <view>真实标的：{{savedRecord.revealedSymbolText || savedRecord.revealed_symbol_text || savedRecord.symbol || '待揭示'}}</view>
+        <view>真实时间段：{{savedRecord.revealedDateRangeText || savedRecord.revealed_date_range_text || '待揭示'}}</view>
+        <view>片段来源：自选盲练</view>
       </view>
       <text>只记录第一反应、守界动作与复盘完整度，不关联外在结果。</text>
       <view class="completion-actions">

@@ -457,6 +457,9 @@ async function fetchKlineTrainingSlice({
   timeframeKey = "1d",
   symbol = "",
   windowSize = 60,
+  trainingLength = null,
+  startDate = "",
+  endDate = "",
   mode = "firecracker",
   personalityType = "",
   gateKey = "shi_shang_mo",
@@ -465,15 +468,18 @@ async function fetchKlineTrainingSlice({
 } = {}) {
   const market = KLINE_MARKET_MAP[marketKey] || marketKey || "cn_equity";
   const timeframe = KLINE_TIMEFRAME_MAP[timeframeKey] || timeframeKey || "1d";
+  const requestedWindow = trainingLength || windowSize;
   const query = [
     `market=${encodeURIComponent(market)}`,
     symbol ? `symbol=${encodeURIComponent(symbol)}` : "",
     `timeframe=${encodeURIComponent(timeframe)}`,
-    `window=${encodeURIComponent(windowSize)}`,
+    `window=${encodeURIComponent(requestedWindow)}`,
     `mode=${encodeURIComponent(mode)}`,
     personalityType ? `personality_type=${encodeURIComponent(personalityType)}` : "",
     gateKey ? `gate=${encodeURIComponent(gateKey)}` : "",
     `blind=${blind ? "1" : "0"}`,
+    startDate ? `start_date=${encodeURIComponent(startDate)}` : "",
+    endDate ? `end_date=${encodeURIComponent(endDate)}` : "",
     seed ? `seed=${encodeURIComponent(seed)}` : ""
   ].filter(Boolean).join("&");
   try {
