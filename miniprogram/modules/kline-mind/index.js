@@ -505,6 +505,169 @@ function cleanText(value, maxLength = 180) {
   return maxLength > 0 ? text.slice(0, maxLength) : text;
 }
 
+function normalizeBooleanValue(value) {
+  if (value === true || value === false) return value;
+  if (value === "true" || value === "1" || value === 1) return true;
+  if (value === "false" || value === "0" || value === 0) return false;
+  return false;
+}
+
+function pickSamplingPayload(input = {}) {
+  if (!input || typeof input !== "object" || Array.isArray(input)) return null;
+  const candidate = pickValue(
+    input.samplingResult,
+    input.sampling_result,
+    input.sample,
+    input.result,
+    input.data
+  );
+  if (candidate && typeof candidate === "object" && !Array.isArray(candidate)) return candidate;
+  return input;
+}
+
+function buildSamplingMetadata(payload = {}) {
+  const segmentId = cleanText(pickValue(payload.segmentId, payload.segment_id), 100);
+  const trainingPackId = cleanText(pickValue(payload.trainingPackId, payload.training_pack_id), 100);
+  const errorType = cleanText(pickValue(payload.errorType, payload.error_type), 100);
+  const sceneTags = normalizeList(pickValue(payload.sceneTags, payload.scene_tags));
+  const startDate = cleanText(pickValue(payload.startDate, payload.start_date), 40);
+  const endDate = cleanText(pickValue(payload.endDate, payload.end_date), 40);
+  const fallbackUsed = normalizeBooleanValue(pickValue(payload.fallbackUsed, payload.fallback_used, false));
+  const fallbackReason = cleanText(pickValue(payload.fallbackReason, payload.fallback_reason), 160);
+
+  return {
+    segmentId,
+    segment_id: segmentId,
+    trainingPackId,
+    training_pack_id: trainingPackId,
+    errorType,
+    error_type: errorType,
+    sceneTags,
+    scene_tags: sceneTags,
+    symbol: cleanText(payload.symbol, 60),
+    name: cleanText(payload.name, 100),
+    period: cleanText(payload.period || "1d", 40),
+    startDate,
+    start_date: startDate,
+    endDate,
+    end_date: endDate,
+    fallbackUsed,
+    fallback_used: fallbackUsed,
+    fallbackReason,
+    fallback_reason: fallbackReason,
+    source: cleanText(payload.source || (fallbackUsed ? "fallback" : "segment"), 80)
+  };
+}
+
+function normalizeKlineSamplingResult(input = {}) {
+  const payload = pickSamplingPayload(input);
+  if (!payload) return null;
+  const explicitSamplingPayload = !!(
+    input.samplingResult ||
+    input.sampling_result ||
+    input.sample ||
+    input.result ||
+    input.data
+  );
+  const rawBars = Array.isArray(payload.bars)
+    ? payload.bars
+    : Array.isArray(payload.candles)
+      ? payload.candles
+      : [];
+  const hasSamplingIdentity = explicitSamplingPayload ||
+    hasValue(pickValue(payload.segmentId, payload.segment_id)) ||
+    rawBars.length > 0 ||
+    normalizeBooleanValue(pickValue(payload.fallbackUsed, payload.fallback_used, false)) ||
+    hasValue(pickValue(payload.fallbackReason, payload.fallback_reason));
+  if (!hasSamplingIdentity) return null;
+  const metadata = buildSamplingMetadata(payload);
+  const bars = rawBars;
+  const samplingStatus = metadata.fallbackUsed
+    ? "fallback"
+    : metadata.segmentId || bars.length
+      ? "matched"
+      : "";
+
+  return Object.assign({}, metadata, {
+    bars,
+    samplingResult: metadata,
+    sampling_result: metadata,
+    samplingStatus,
+    sampling_status: samplingStatus
+  });
+}
+
+function buildSamplingHistorySlice(samplingResult = {}) {
+  if (!samplingResult || !Array.isArray(samplingResult.bars) || !samplingResult.bars.length) return null;
+  return {
+    source: samplingResult.source || (samplingResult.fallbackUsed ? "fallback" : "segment"),
+    symbol: samplingResult.symbol || "",
+    name: samplingResult.name || "",
+    start: samplingResult.startDate || samplingResult.start_date || "",
+    end: samplingResult.endDate || samplingResult.end_date || "",
+    startDate: samplingResult.startDate || samplingResult.start_date || "",
+    start_date: samplingResult.start_date || samplingResult.startDate || "",
+    endDate: samplingResult.endDate || samplingResult.end_date || "",
+    end_date: samplingResult.end_date || samplingResult.endDate || "",
+    period: samplingResult.period || "1d",
+    data_range: {
+      start: samplingResult.startDate || samplingResult.start_date || "",
+      end: samplingResult.endDate || samplingResult.end_date || ""
+    },
+    candles: samplingResult.bars
+  };
+}
+
+function attachSamplingMetadata(target = {}, input = {}) {
+  const normalized = normalizeKlineSamplingResult(input);
+  if (!normalized) return target;
+  const samplingSourceLabel = normalized.fallbackUsed ? "兜底片段" : "匹配片段";
+  const samplingSceneTagsText = (normalized.sceneTags || normalized.scene_tags || []).join(" / ");
+  return Object.assign({}, target, {
+    segmentId: normalized.segmentId,
+    segment_id: normalized.segment_id,
+    trainingPackId: normalized.trainingPackId || target.trainingPackId || target.training_pack_id || "",
+    training_pack_id: normalized.training_pack_id || target.training_pack_id || target.trainingPackId || "",
+    samplingResult: normalized.samplingResult,
+    sampling_result: normalized.sampling_result,
+    fallbackUsed: normalized.fallbackUsed,
+    fallback_used: normalized.fallback_used,
+    fallbackReason: normalized.fallbackReason,
+    fallback_reason: normalized.fallback_reason,
+    samplingStatus: normalized.samplingStatus,
+    sampling_status: normalized.sampling_status,
+    samplingSourceLabel,
+    sampling_source_label: samplingSourceLabel,
+    samplingSceneTagsText,
+    sampling_scene_tags_text: samplingSceneTagsText
+  });
+}
+
+function buildKlineSamplingRequest(context = {}, options = {}) {
+  const sourceType = cleanText(pickValue(context.sourceType, context.source_type, options.sourceType, options.source_type), 60);
+  const errorType = cleanText(pickValue(context.errorType, context.error_type, options.errorType, options.error_type), 100);
+  const sceneTags = normalizeList(pickValue(context.sceneTags, context.scene_tags, options.sceneTags, options.scene_tags));
+  const trainingPackId = cleanText(pickValue(context.trainingPackId, context.training_pack_id, context.packId, context.pack_id, options.trainingPackId, options.training_pack_id), 100);
+  const period = cleanText(pickValue(options.period, context.period, context.timeframeKey, context.timeframe_key, "1d"), 40);
+  const difficulty = cleanText(pickValue(options.difficulty, context.difficulty), 60);
+  const excludeSegmentIds = normalizeList(pickValue(options.excludeSegmentIds, options.exclude_segment_ids, context.excludeSegmentIds, context.exclude_segment_ids));
+
+  return {
+    sourceType,
+    source_type: sourceType,
+    errorType,
+    error_type: errorType,
+    sceneTags,
+    scene_tags: sceneTags,
+    trainingPackId,
+    training_pack_id: trainingPackId,
+    difficulty,
+    period,
+    excludeSegmentIds,
+    exclude_segment_ids: excludeSegmentIds
+  };
+}
+
 const SPECIAL_TRAINING_PACKS = [
   {
     id: "chase_high_impulse",
@@ -763,10 +926,10 @@ function buildReviewFocusContext(reviewFocus = {}, prescription = {}) {
 function pickSessionContext(session = {}) {
   const sourceType = pickValue(session.sourceType, session.source_type);
   if (sourceType === "special_training") {
-    return buildSpecialTrainingContext(session);
+    return attachSamplingMetadata(buildSpecialTrainingContext(session), session);
   }
   if (sourceType !== "review_focus") return null;
-  return {
+  return attachSamplingMetadata({
     sourceType: "review_focus",
     source_type: "review_focus",
     errorType: pickValue(session.errorType, session.error_type, "待照见"),
@@ -783,7 +946,7 @@ function pickSessionContext(session = {}) {
     execution_plan_id: pickValue(session.executionPlanId, session.execution_plan_id, ""),
     sourceReviewId: pickValue(session.sourceReviewId, session.source_review_id, ""),
     source_review_id: pickValue(session.sourceReviewId, session.source_review_id, "")
-  };
+  }, session);
 }
 
 function buildTrainingMistakeCard(record = {}, context = null) {
@@ -823,7 +986,15 @@ function buildTrainingMistakeCard(record = {}, context = null) {
     trainingPackId: context.trainingPackId || context.training_pack_id || "",
     training_pack_id: context.training_pack_id || context.trainingPackId || "",
     trainingPackTitle: context.trainingPackTitle || context.training_pack_title || "",
-    training_pack_title: context.training_pack_title || context.trainingPackTitle || ""
+    training_pack_title: context.training_pack_title || context.trainingPackTitle || "",
+    segmentId: context.segmentId || context.segment_id || "",
+    segment_id: context.segment_id || context.segmentId || "",
+    samplingResult: context.samplingResult || context.sampling_result || null,
+    sampling_result: context.sampling_result || context.samplingResult || null,
+    fallbackUsed: context.fallbackUsed || context.fallback_used || false,
+    fallback_used: context.fallback_used || context.fallbackUsed || false,
+    fallbackReason: context.fallbackReason || context.fallback_reason || "",
+    fallback_reason: context.fallback_reason || context.fallbackReason || ""
   };
 }
 
@@ -833,7 +1004,8 @@ function buildKlineMindSession({
   record = null,
   historyCache = {},
   reviewFocus = null,
-  specialTraining = null
+  specialTraining = null,
+  samplingResult = null
 } = {}) {
   const day = clampDay((trainingDay || {}).day || (record || {}).day || 1);
   const personalityType = (assessment || {}).primary || "平衡型";
@@ -843,7 +1015,17 @@ function buildKlineMindSession({
   const timeframeKey = (record || {}).timeframeKey || "1d";
   const timeframeMeta = TIMEFRAME_CATALOG.find((item) => item.key === timeframeKey) || TIMEFRAME_CATALOG[4];
   const market = getMarketConfig(marketKey);
-  const historySlice = (record || {}).historySlice || getHistorySlice(historyCache, market.key, timeframeKey);
+  const normalizedSampling = normalizeKlineSamplingResult(pickValue(
+    samplingResult,
+    (record || {}).samplingResult,
+    (record || {}).sampling_result,
+    (reviewFocus || {}).samplingResult,
+    (reviewFocus || {}).sampling_result,
+    (specialTraining || {}).samplingResult,
+    (specialTraining || {}).sampling_result
+  ));
+  const samplingHistorySlice = buildSamplingHistorySlice(normalizedSampling || {});
+  const historySlice = (record || {}).historySlice || samplingHistorySlice || getHistorySlice(historyCache, market.key, timeframeKey);
   const rawCandles = normalizeHistoryCandles(historySlice || {});
   const selectedKey = (record || {}).selectedCandleKey || "";
   const prescription = getKlinePrescription(personalityType);
@@ -868,7 +1050,11 @@ function buildKlineMindSession({
     timeframeOptions: buildTimeframeOptions(timeframeKey),
     historySlice: historySlice || null,
     hasHistoricalData: candles.length > 0,
-    dataStatusText: candles.length ? "真实历史数据已载入" : "等待历史数据同步",
+    dataStatusText: candles.length
+      ? normalizedSampling
+        ? normalizedSampling.fallbackUsed ? "使用基础盲练兜底" : "已匹配训练片段"
+        : "真实历史数据已载入"
+      : "等待历史数据同步",
     marketQuestion: market.mindQuestion,
     marketGuardrail: market.guardrail,
     trainingMethods: KLINE_TRAINING_METHODS,
@@ -888,8 +1074,15 @@ function buildKlineMindSession({
     score: calculateKlineMindScore(record || {})
   };
 
+  const sessionWithSampling = normalizedSampling ? attachSamplingMetadata(Object.assign({}, session, {
+    samplingStatusText: normalizedSampling.fallbackUsed ? "使用基础盲练兜底" : "已匹配片段",
+    sampling_status_text: normalizedSampling.fallbackUsed ? "使用基础盲练兜底" : "已匹配片段",
+    samplingSourceLabel: normalizedSampling.fallbackUsed ? "兜底片段" : "匹配片段",
+    sampling_source_label: normalizedSampling.fallbackUsed ? "兜底片段" : "匹配片段"
+  }), normalizedSampling) : session;
+
   const trainingContext = reviewFocusContext || specialTrainingContext;
-  return trainingContext ? Object.assign({}, session, trainingContext) : session;
+  return trainingContext ? Object.assign({}, sessionWithSampling, attachSamplingMetadata(trainingContext, sessionWithSampling)) : sessionWithSampling;
 }
 
 function calculateKlineMindScore(record = {}) {
@@ -1032,6 +1225,8 @@ module.exports = {
   listSpecialTrainingPacks,
   getSpecialTrainingPack,
   buildSpecialTrainingSessionMeta,
+  buildKlineSamplingRequest,
+  normalizeKlineSamplingResult,
   getMarketConfig,
   normalizeHistoryCandles,
   buildKlineMindSession,
