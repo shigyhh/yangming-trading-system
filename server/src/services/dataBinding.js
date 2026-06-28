@@ -131,9 +131,15 @@ export async function saveKLineRecordBinding({ user = {}, record = {}, source = 
     training_suggestion: cleanText(record.trainingSuggestion || record.training_suggestion || "", 160),
     source
   };
+  const samplingResult = normalizeKLineSamplingResult(readAliasedField(record, "samplingResult", "sampling_result"));
   addAliasedField(klineRecord, "sourceType", "source_type", readAliasedField(record, "sourceType", "source_type", ["kline_training"]), (value) => cleanText(value, 40));
   addAliasedField(klineRecord, "errorType", "error_type", readAliasedField(record, "errorType", "error_type"), (value) => cleanText(value, 80));
   addAliasedField(klineRecord, "sceneTags", "scene_tags", readAliasedField(record, "sceneTags", "scene_tags"), normalizeAliasList);
+  addAliasedField(klineRecord, "trainingPackId", "training_pack_id", readAliasedField(record, "trainingPackId", "training_pack_id", [samplingResult?.trainingPackId, samplingResult?.training_pack_id]), (value) => cleanText(value, 80));
+  addAliasedField(klineRecord, "segmentId", "segment_id", readAliasedField(record, "segmentId", "segment_id", [samplingResult?.segmentId, samplingResult?.segment_id]), (value) => cleanText(value, 80));
+  addAliasedField(klineRecord, "samplingResult", "sampling_result", samplingResult);
+  addAliasedField(klineRecord, "fallbackUsed", "fallback_used", readAliasedField(record, "fallbackUsed", "fallback_used", [samplingResult?.fallbackUsed, samplingResult?.fallback_used]), normalizeAliasBoolean);
+  addAliasedField(klineRecord, "fallbackReason", "fallback_reason", readAliasedField(record, "fallbackReason", "fallback_reason", [samplingResult?.fallbackReason, samplingResult?.fallback_reason]), (value) => cleanText(value, 160));
   addAliasedField(klineRecord, "trainingPrescription", "training_prescription", readAliasedField(record, "trainingPrescription", "training_prescription"), normalizeStructuredField);
   addAliasedField(klineRecord, "executionResult", "execution_result", readAliasedField(record, "executionResult", "execution_result"), (value) => cleanText(value, 120));
   addAliasedField(klineRecord, "repeatCount", "repeat_count", readAliasedField(record, "repeatCount", "repeat_count"), normalizeAliasNumber);
@@ -1151,6 +1157,11 @@ function normalizeAliasNumber(value) {
   return Number.isFinite(number) ? number : undefined;
 }
 
+function normalizeAliasBoolean(value) {
+  const normalized = normalizeOptionalBoolean(value);
+  return normalized === null ? undefined : normalized;
+}
+
 function normalizeAliasList(value) {
   if (!hasFieldValue(value)) return undefined;
   const items = Array.isArray(value) ? value : [value];
@@ -1174,6 +1185,32 @@ function normalizeStructuredField(value) {
     }, {});
   }
   return cleanText(value, 260);
+}
+
+function normalizeKLineSamplingResult(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+
+  const result = {};
+  addAliasedField(result, "segmentId", "segment_id", readAliasedField(value, "segmentId", "segment_id"), (item) => cleanText(item, 80));
+  addAliasedField(result, "trainingPackId", "training_pack_id", readAliasedField(value, "trainingPackId", "training_pack_id"), (item) => cleanText(item, 80));
+  addAliasedField(result, "errorType", "error_type", readAliasedField(value, "errorType", "error_type"), (item) => cleanText(item, 80));
+  addAliasedField(result, "sceneTags", "scene_tags", readAliasedField(value, "sceneTags", "scene_tags"), normalizeAliasList);
+  result.symbol = cleanText(value.symbol || "", 40);
+  result.name = cleanText(value.name || "", 80);
+  result.period = cleanText(value.period || "", 40);
+  addAliasedField(result, "startDate", "start_date", readAliasedField(value, "startDate", "start_date"), (item) => cleanText(item, 40));
+  addAliasedField(result, "endDate", "end_date", readAliasedField(value, "endDate", "end_date"), (item) => cleanText(item, 40));
+  addAliasedField(result, "fallbackUsed", "fallback_used", readAliasedField(value, "fallbackUsed", "fallback_used"), normalizeAliasBoolean);
+  addAliasedField(result, "fallbackReason", "fallback_reason", readAliasedField(value, "fallbackReason", "fallback_reason"), (item) => cleanText(item, 160));
+  result.source = cleanText(value.source || "", 80);
+
+  Object.keys(result).forEach((key) => {
+    if (!hasFieldValue(result[key]) || (Array.isArray(result[key]) && result[key].length === 0)) {
+      delete result[key];
+    }
+  });
+
+  return Object.keys(result).length ? result : undefined;
 }
 
 function normalizeTradeReviewOcrDraft(draft) {

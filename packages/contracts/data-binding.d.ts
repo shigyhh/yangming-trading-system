@@ -119,6 +119,29 @@ export type DataBindingTrainingRecord = {
   cultivationText?: string
 }
 
+export type DataBindingKLineSamplingResult = {
+  segmentId?: string
+  segment_id?: string
+  trainingPackId?: string
+  training_pack_id?: string
+  errorType?: string
+  error_type?: string
+  sceneTags?: string[]
+  scene_tags?: string[]
+  symbol?: string
+  name?: string
+  period?: string
+  startDate?: string
+  start_date?: string
+  endDate?: string
+  end_date?: string
+  fallbackUsed?: boolean
+  fallback_used?: boolean
+  fallbackReason?: string
+  fallback_reason?: string
+  source?: string
+}
+
 export type DataBindingKLineRecord = {
   day?: number
   recordedAt?: string
@@ -130,6 +153,16 @@ export type DataBindingKLineRecord = {
   error_type?: string
   sceneTags?: string[]
   scene_tags?: string[]
+  trainingPackId?: string
+  training_pack_id?: string
+  segmentId?: string
+  segment_id?: string
+  samplingResult?: DataBindingKLineSamplingResult
+  sampling_result?: DataBindingKLineSamplingResult
+  fallbackUsed?: boolean
+  fallback_used?: boolean
+  fallbackReason?: string
+  fallback_reason?: string
   scene: string
   reaction: string
   disciplineAction: string
