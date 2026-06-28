@@ -68,6 +68,79 @@ assert.strictEqual(record.symbol, "000001.SZ");
 assert.ok(record.score >= 80);
 assert.strictEqual(calculateKlineMindScore({}), 28);
 
+const reviewFocus = {
+  sourceType: "review_focus",
+  source_type: "review_focus",
+  errorType: "追涨之镜",
+  error_type: "追涨之镜",
+  trainingPrescription: { action: "停十秒，写下边界。" },
+  training_prescription: { action: "停十秒，写下边界。" },
+  sceneTags: ["放量拉升", "怕错过"],
+  scene_tags: ["放量拉升", "怕错过"],
+  nextAction: "同类场景先停十秒。",
+  next_action: "同类场景先停十秒。",
+  sourceReviewId: "tr-review-focus-001",
+  source_review_id: "tr-review-focus-001"
+};
+const reviewFocusSession = buildKlineMindSession({
+  assessment: { primary: "冲动型" },
+  trainingDay: { day: 3 },
+  record: { marketKey: "cn_equity", timeframeKey: "1d" },
+  historyCache: { cn_equity: { "1d": historicalSlice } },
+  reviewFocus
+});
+
+assert.strictEqual(reviewFocusSession.sourceType, "review_focus");
+assert.strictEqual(reviewFocusSession.source_type, "review_focus");
+assert.strictEqual(reviewFocusSession.errorType, "追涨之镜");
+assert.strictEqual(reviewFocusSession.error_type, "追涨之镜");
+assert.deepStrictEqual(reviewFocusSession.trainingPrescription, { action: "停十秒，写下边界。" });
+assert.deepStrictEqual(reviewFocusSession.training_prescription, { action: "停十秒，写下边界。" });
+assert.deepStrictEqual(reviewFocusSession.sceneTags, ["放量拉升", "怕错过"]);
+assert.deepStrictEqual(reviewFocusSession.scene_tags, ["放量拉升", "怕错过"]);
+assert.strictEqual(reviewFocusSession.nextAction, "同类场景先停十秒。");
+assert.strictEqual(reviewFocusSession.next_action, "同类场景先停十秒。");
+assert.strictEqual(reviewFocusSession.sourceReviewId, "tr-review-focus-001");
+assert.strictEqual(reviewFocusSession.source_review_id, "tr-review-focus-001");
+
+const reviewFocusRecord = buildKlineMindRecord({
+  selectedCandleKey: reviewFocusSession.selectedCandleKey,
+  firstReaction: "怕错过",
+  boundaryChoice: "停十秒",
+  insightLine: "我看见自己被放量拉升牵动。"
+}, reviewFocusSession);
+
+assert.strictEqual(reviewFocusRecord.sourceType, "review_focus");
+assert.strictEqual(reviewFocusRecord.source_type, "review_focus");
+assert.strictEqual(reviewFocusRecord.errorType, "追涨之镜");
+assert.strictEqual(reviewFocusRecord.error_type, "追涨之镜");
+assert.deepStrictEqual(reviewFocusRecord.sceneTags, ["放量拉升", "怕错过"]);
+assert.deepStrictEqual(reviewFocusRecord.scene_tags, ["放量拉升", "怕错过"]);
+assert.deepStrictEqual(reviewFocusRecord.trainingPrescription, { action: "停十秒，写下边界。" });
+assert.deepStrictEqual(reviewFocusRecord.training_prescription, { action: "停十秒，写下边界。" });
+assert.strictEqual(reviewFocusRecord.nextAction, "同类场景先停十秒。");
+assert.strictEqual(reviewFocusRecord.next_action, "同类场景先停十秒。");
+assert.strictEqual(reviewFocusRecord.sourceReviewId, "tr-review-focus-001");
+assert.strictEqual(reviewFocusRecord.source_review_id, "tr-review-focus-001");
+assert.strictEqual(reviewFocusRecord.trainingMistakeCard.title, "最明显执行偏离");
+assert.strictEqual(reviewFocusRecord.training_mistake_card.title, "最明显执行偏离");
+
+const blindSession = buildKlineMindSession({
+  assessment: { primary: "冲动型" },
+  trainingDay: { day: 1 },
+  historyCache: { cn_equity: { "1d": historicalSlice } }
+});
+assert.notStrictEqual(blindSession.sourceType, "review_focus");
+assert.notStrictEqual(blindSession.source_type, "review_focus");
+
+const legacySessionRecord = buildKlineMindRecord({
+  firstReaction: "急躁",
+  boundaryChoice: "停十秒",
+  insightLine: "旧 session 也能完成。"
+}, { day: 1, candles: [] });
+assert.strictEqual(legacySessionRecord.completed, true);
+assert.notStrictEqual(legacySessionRecord.sourceType, "review_focus");
+
 const fallback = buildKlineMindSession({
   assessment: { primary: "未知型" },
   trainingDay: { day: 12 }

@@ -11,6 +11,7 @@ const {
   getKlineHistoryCache,
   getTodayKlineMindRecord,
   saveTodayKlineMindRecord,
+  getTradeReviewRecords,
   saveTradeReviewRecord,
   saveInviteConversionEvent
 } = require("../../utils/store");
@@ -82,18 +83,122 @@ function buildForm(record = {}, session = {}) {
   };
 }
 
+function hasValue(value) {
+  if (value === undefined || value === null) return false;
+  if (typeof value === "string") return value.trim() !== "";
+  if (Array.isArray(value)) return value.length > 0;
+  return true;
+}
+
+function pickValue(...values) {
+  for (let index = 0; index < values.length; index += 1) {
+    if (hasValue(values[index])) return values[index];
+  }
+  return undefined;
+}
+
+function normalizeList(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item || "").trim()).filter(Boolean);
+  }
+  if (typeof value === "string") {
+    return value.split(/[、,，/]/).map((item) => item.trim()).filter(Boolean);
+  }
+  return [];
+}
+
+function uniqueList(values) {
+  const seen = {};
+  return values.filter((item) => {
+    const key = String(item || "").trim();
+    if (!key || seen[key]) return false;
+    seen[key] = true;
+    return true;
+  });
+}
+
+function isReviewFocusEntry(options = {}) {
+  return options.sourceType === "review_focus" ||
+    options.source_type === "review_focus" ||
+    options.from === "review_focus";
+}
+
+function buildReviewFocusFromEntry(options = {}, tradeReviewState = {}) {
+  if (!isReviewFocusEntry(options)) return null;
+  const records = tradeReviewState.records || [];
+  const reviewId = pickValue(options.sourceReviewId, options.source_review_id, options.reviewId, options.id);
+  const latestReview = reviewId
+    ? records.find((item) => item && item.id === reviewId) || tradeReviewState.latest || {}
+    : tradeReviewState.latest || records[records.length - 1] || {};
+  const historicalMatch = latestReview.historicalMatch || {};
+  const errorType = pickValue(
+    options.errorType,
+    options.error_type,
+    latestReview.mainErrorType,
+    latestReview.main_error_type,
+    latestReview.relatedMirror,
+    latestReview.relatedPersonality,
+    latestReview.personalityType
+  );
+  const sceneTags = normalizeList(pickValue(latestReview.sceneTags, latestReview.scene_tags));
+  const fallbackTags = uniqueList([
+    ...normalizeList(pickValue(latestReview.triggerScene, latestReview.trigger_scene)),
+    historicalMatch.stagePosition,
+    latestReview.stageName,
+    latestReview.stageGate,
+    ...(latestReview.heartThieves || []),
+    errorType
+  ].map((item) => String(item || "").trim()).filter(Boolean));
+  const nextAction = pickValue(
+    latestReview.nextAction,
+    latestReview.next_action,
+    latestReview.nextRule,
+    latestReview.next_rule,
+    latestReview.trainingAction,
+    latestReview.training_action
+  );
+  const trainingPrescription = pickValue(
+    latestReview.trainingPrescription,
+    latestReview.training_prescription,
+    latestReview.trainingAction,
+    latestReview.training_action,
+    nextAction
+  );
+  const sourceReviewId = pickValue(reviewId, latestReview.id);
+
+  return {
+    sourceType: "review_focus",
+    source_type: "review_focus",
+    errorType: errorType || "待照见",
+    error_type: errorType || "待照见",
+    trainingPrescription,
+    training_prescription: trainingPrescription,
+    sceneTags: sceneTags.length ? sceneTags : fallbackTags,
+    scene_tags: sceneTags.length ? sceneTags : fallbackTags,
+    nextAction: nextAction || "",
+    next_action: nextAction || "",
+    sourceReviewId: sourceReviewId || "",
+    source_review_id: sourceReviewId || ""
+  };
+}
+
 Page({
   data: {
     assessment: null,
     training7View: buildTraining7View({}, {}),
     trainingDay: null,
     session: buildKlineMindSession({}),
+    reviewFocus: null,
     form: buildForm(),
     savedRecord: null,
     saving: false,
     showSelectors: false,
     showGuide: false,
     showBodySignal: false
+  },
+
+  onLoad(options = {}) {
+    this.entryOptions = options || {};
   },
 
   onShow() {
@@ -113,11 +218,13 @@ Page({
       klineMindRecord
     });
     const trainingDay = training7View.today || {};
+    const reviewFocus = buildReviewFocusFromEntry(this.entryOptions || {}, getTradeReviewRecords());
     const session = buildKlineMindSession({
       assessment,
       trainingDay,
       record: klineMindRecord,
-      historyCache: getKlineHistoryCache()
+      historyCache: getKlineHistoryCache(),
+      reviewFocus
     });
     const form = buildForm(klineMindRecord, session);
 
@@ -126,6 +233,7 @@ Page({
       training7View,
       trainingDay,
       session,
+      reviewFocus,
       form,
       savedRecord: klineMindRecord && klineMindRecord.updatedAt ? klineMindRecord : null,
       showBodySignal: !!form.bodySignal
@@ -139,7 +247,8 @@ Page({
       assessment: this.data.assessment,
       trainingDay: this.data.trainingDay,
       record: form,
-      historyCache: getKlineHistoryCache()
+      historyCache: getKlineHistoryCache(),
+      reviewFocus: this.data.reviewFocus
     });
     this.setData({ form, session });
   },
@@ -154,7 +263,8 @@ Page({
       assessment: this.data.assessment,
       trainingDay: this.data.trainingDay,
       record: form,
-      historyCache: getKlineHistoryCache()
+      historyCache: getKlineHistoryCache(),
+      reviewFocus: this.data.reviewFocus
     });
     this.setData({
       form: Object.assign({}, form, { selectedCandleKey: session.selectedCandleKey }),
@@ -172,7 +282,8 @@ Page({
       assessment: this.data.assessment,
       trainingDay: this.data.trainingDay,
       record: form,
-      historyCache: getKlineHistoryCache()
+      historyCache: getKlineHistoryCache(),
+      reviewFocus: this.data.reviewFocus
     });
     this.setData({
       form: Object.assign({}, form, { selectedCandleKey: session.selectedCandleKey }),

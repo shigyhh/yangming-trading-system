@@ -464,11 +464,161 @@ function markSelectedCandles(candles, selectedKey, fallbackIndex) {
   }));
 }
 
+function hasValue(value) {
+  if (value === undefined || value === null) return false;
+  if (typeof value === "string") return value.trim() !== "";
+  if (Array.isArray(value)) return value.length > 0;
+  return true;
+}
+
+function pickValue(...values) {
+  for (let index = 0; index < values.length; index += 1) {
+    if (hasValue(values[index])) return values[index];
+  }
+  return undefined;
+}
+
+function normalizeList(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item || "").trim()).filter(Boolean);
+  }
+  if (typeof value === "string") {
+    return value.split(/[、,，/]/).map((item) => item.trim()).filter(Boolean);
+  }
+  return [];
+}
+
+function normalizeTrainingPrescription(value, fallbackPrescription = {}) {
+  if (value && typeof value === "object" && !Array.isArray(value)) return value;
+  if (hasValue(value)) return { action: String(value).trim() };
+  return {
+    title: fallbackPrescription.title || "",
+    action: fallbackPrescription.boundaryPractice || "",
+    watchPoint: fallbackPrescription.watchPoint || "",
+    firstQuestion: fallbackPrescription.firstQuestion || ""
+  };
+}
+
+function buildReviewFocusContext(reviewFocus = {}, prescription = {}) {
+  const sourceType = pickValue(reviewFocus.sourceType, reviewFocus.source_type);
+  const errorType = pickValue(
+    reviewFocus.errorType,
+    reviewFocus.error_type,
+    reviewFocus.mainErrorType,
+    reviewFocus.main_error_type,
+    reviewFocus.relatedMirror,
+    reviewFocus.relatedPersonality,
+    reviewFocus.personalityType
+  );
+  const rawSceneTags = normalizeList(pickValue(reviewFocus.sceneTags, reviewFocus.scene_tags));
+  const fallbackSceneTags = normalizeList(pickValue(
+    reviewFocus.triggerScene,
+    reviewFocus.trigger_scene,
+    reviewFocus.stageName,
+    reviewFocus.stageGate,
+    errorType
+  ));
+  const sceneTags = rawSceneTags.length ? rawSceneTags : fallbackSceneTags;
+  const rawTrainingPrescription = pickValue(
+    reviewFocus.trainingPrescription,
+    reviewFocus.training_prescription,
+    reviewFocus.trainingAction,
+    reviewFocus.training_action,
+    reviewFocus.nextRule,
+    reviewFocus.next_rule
+  );
+  const rawNextAction = pickValue(
+    reviewFocus.nextAction,
+    reviewFocus.next_action,
+    reviewFocus.nextRule,
+    reviewFocus.next_rule,
+    reviewFocus.trainingAction,
+    reviewFocus.training_action,
+    rawTrainingPrescription && typeof rawTrainingPrescription === "object" ? rawTrainingPrescription.action : ""
+  );
+  const sourceReviewId = pickValue(
+    reviewFocus.sourceReviewId,
+    reviewFocus.source_review_id,
+    reviewFocus.reviewId,
+    reviewFocus.review_id,
+    reviewFocus.id
+  );
+  const explicitReviewFocus = sourceType === "review_focus";
+
+  if (!explicitReviewFocus && !hasValue(errorType) && !sceneTags.length && !hasValue(rawTrainingPrescription) && !hasValue(rawNextAction) && !hasValue(sourceReviewId)) {
+    return null;
+  }
+
+  const trainingPrescription = normalizeTrainingPrescription(rawTrainingPrescription, prescription);
+  const nextAction = pickValue(rawNextAction, trainingPrescription.action);
+
+  const context = {
+    sourceType: "review_focus",
+    source_type: "review_focus",
+    errorType: errorType || "待照见",
+    error_type: errorType || "待照见",
+    trainingPrescription,
+    training_prescription: trainingPrescription,
+    sceneTags,
+    scene_tags: sceneTags,
+    nextAction: nextAction || "",
+    next_action: nextAction || ""
+  };
+
+  if (sourceReviewId) {
+    context.sourceReviewId = sourceReviewId;
+    context.source_review_id = sourceReviewId;
+  }
+
+  return context;
+}
+
+function pickSessionContext(session = {}) {
+  if (session.sourceType !== "review_focus" && session.source_type !== "review_focus") return null;
+  return {
+    sourceType: "review_focus",
+    source_type: "review_focus",
+    errorType: pickValue(session.errorType, session.error_type, "待照见"),
+    error_type: pickValue(session.errorType, session.error_type, "待照见"),
+    trainingPrescription: pickValue(session.trainingPrescription, session.training_prescription, {}),
+    training_prescription: pickValue(session.trainingPrescription, session.training_prescription, {}),
+    sceneTags: normalizeList(pickValue(session.sceneTags, session.scene_tags)),
+    scene_tags: normalizeList(pickValue(session.sceneTags, session.scene_tags)),
+    nextAction: pickValue(session.nextAction, session.next_action, ""),
+    next_action: pickValue(session.nextAction, session.next_action, ""),
+    sourceReviewId: pickValue(session.sourceReviewId, session.source_review_id, ""),
+    source_review_id: pickValue(session.sourceReviewId, session.source_review_id, "")
+  };
+}
+
+function buildTrainingMistakeCard(record = {}, context = null) {
+  if (!context) return null;
+  const trainingPrescription = context.trainingPrescription || context.training_prescription || {};
+  const sceneTags = context.sceneTags || context.scene_tags || [];
+  return {
+    title: "最明显执行偏离",
+    errorType: context.errorType || context.error_type || "",
+    error_type: context.error_type || context.errorType || "",
+    sceneTags,
+    scene_tags: sceneTags,
+    firstReaction: record.firstReaction || "",
+    boundaryChoice: record.boundaryChoice || "",
+    insightLine: record.insightLine || "",
+    executionResult: record.completed ? "已完成一次边界记录" : "待完成训练记录",
+    execution_result: record.completed ? "已完成一次边界记录" : "待完成训练记录",
+    trainingPrescription,
+    training_prescription: trainingPrescription,
+    nextAction: context.nextAction || context.next_action || "",
+    next_action: context.next_action || context.nextAction || ""
+  };
+}
+
 function buildKlineMindSession({
   assessment = null,
   trainingDay = null,
   record = null,
-  historyCache = {}
+  historyCache = {},
+  reviewFocus = null
 } = {}) {
   const day = clampDay((trainingDay || {}).day || (record || {}).day || 1);
   const personalityType = (assessment || {}).primary || "平衡型";
@@ -485,8 +635,9 @@ function buildKlineMindSession({
   const stageGate = getSixGate(stagePlan.stageKey);
   const candles = markSelectedCandles(rawCandles, selectedKey, scenario.focusIndex);
   const selectedCandleKey = selectedKey || ((candles.find((item) => item.selected) || {}).key) || "";
+  const reviewFocusContext = buildReviewFocusContext(reviewFocus || {}, prescription);
 
-  return {
+  const session = {
     day,
     personalityType,
     secondaryType: (assessment || {}).secondary || "",
@@ -520,6 +671,8 @@ function buildKlineMindSession({
     completed: !!((record || {}).completed),
     score: calculateKlineMindScore(record || {})
   };
+
+  return reviewFocusContext ? Object.assign({}, session, reviewFocusContext) : session;
 }
 
 function calculateKlineMindScore(record = {}) {
@@ -543,6 +696,7 @@ function buildKlineMindRecord(input = {}, session = {}) {
   const bodySignal = String(input.bodySignal || "").trim();
   const boundaryChoice = String(input.boundaryChoice || "").trim();
   const insightLine = String(input.insightLine || "").trim();
+  const sessionContext = pickSessionContext(session);
   const record = {
     day: clampDay(input.day || session.day || 1),
     scenarioId: session.scenarioId || input.scenarioId || "",
@@ -568,8 +722,20 @@ function buildKlineMindRecord(input = {}, session = {}) {
     completed: !!(firstReaction && boundaryChoice && insightLine),
     updatedAt: Date.now()
   };
-  return Object.assign({}, record, {
+  const scoredRecord = Object.assign({}, record, {
     score: calculateKlineMindScore(record)
+  });
+  if (!sessionContext) return scoredRecord;
+
+  const repeatCount = Number(pickValue(input.repeatCount, input.repeat_count, session.repeatCount, session.repeat_count, 1)) || 1;
+  const trainingMistakeCard = buildTrainingMistakeCard(scoredRecord, sessionContext);
+  return Object.assign({}, scoredRecord, sessionContext, {
+    executionResult: trainingMistakeCard.executionResult,
+    execution_result: trainingMistakeCard.execution_result,
+    repeatCount,
+    repeat_count: repeatCount,
+    trainingMistakeCard,
+    training_mistake_card: trainingMistakeCard
   });
 }
 
