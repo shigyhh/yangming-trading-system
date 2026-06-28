@@ -442,6 +442,156 @@ test("data binding preserves P1 field aliases for miniapp review and kline sync"
   await resetDataBindingForTests();
 });
 
+test("data binding preserves kline sampling metadata aliases without storing bars", async () => {
+  await resetDataBindingForTests();
+
+  const user = {
+    userId: "p8-kline-sampling-fields-001",
+    maskedPhone: "137****6601",
+    phoneTail: "6601",
+    inviteSource: "微信小程序MVP"
+  };
+
+  const camelKline = await saveKLineRecordBinding({
+    user,
+    record: {
+      day: 1,
+      recordedAt: "2026-06-04T08:00:00.000Z",
+      scene: "放量拉升",
+      reaction: "怕错过",
+      disciplineAction: "先观察，不立刻行动",
+      trainingPackId: "pack-chasing-surge",
+      segmentId: "segment-fast-rise",
+      samplingResult: {
+        segmentId: "segment-fast-rise",
+        segment_id: "segment-fast-rise",
+        trainingPackId: "pack-chasing-surge",
+        training_pack_id: "pack-chasing-surge",
+        errorType: "追高冲动",
+        error_type: "追高冲动",
+        sceneTags: ["放量拉升", "假突破"],
+        scene_tags: ["放量拉升", "假突破"],
+        symbol: "600000",
+        name: "样例片段",
+        period: "101",
+        startDate: "2026-06-01",
+        start_date: "2026-06-01",
+        endDate: "2026-06-04",
+        end_date: "2026-06-04",
+        fallbackUsed: false,
+        fallback_used: false,
+        fallbackReason: "",
+        fallback_reason: "",
+        source: "segment",
+        bars: [{ date: "2026-06-01", close: 10.2 }]
+      },
+      fallbackUsed: false,
+      fallbackReason: ""
+    },
+    source: "miniprogram"
+  });
+
+  assert.equal(camelKline.record.trainingPackId, "pack-chasing-surge");
+  assert.equal(camelKline.record.training_pack_id, "pack-chasing-surge");
+  assert.equal(camelKline.record.segmentId, "segment-fast-rise");
+  assert.equal(camelKline.record.segment_id, "segment-fast-rise");
+  assert.equal(camelKline.record.fallbackUsed, false);
+  assert.equal(camelKline.record.fallback_used, false);
+  assert.equal(camelKline.record.fallbackReason, undefined);
+  assert.equal(camelKline.record.fallback_reason, undefined);
+  assert.equal(camelKline.record.samplingResult.segmentId, "segment-fast-rise");
+  assert.equal(camelKline.record.sampling_result.segment_id, "segment-fast-rise");
+  assert.equal(camelKline.record.samplingResult.trainingPackId, "pack-chasing-surge");
+  assert.equal(camelKline.record.sampling_result.training_pack_id, "pack-chasing-surge");
+  assert.equal(camelKline.record.samplingResult.source, "segment");
+  assert.equal(camelKline.record.samplingResult.fallbackUsed, false);
+  assert.equal(camelKline.record.sampling_result.fallback_used, false);
+  assert.equal("bars" in camelKline.record.samplingResult, false);
+  assert.equal("bars" in camelKline.record.sampling_result, false);
+
+  const snakeKline = await saveKLineRecordBinding({
+    user,
+    record: {
+      day: 2,
+      recordedAt: "2026-06-05T08:00:00.000Z",
+      scene: "弱反弹",
+      reaction: "想翻本",
+      disciplineAction: "先复盘旧题",
+      training_pack_id: "pack-revenge-trade",
+      segment_id: "segment-fallback",
+      sampling_result: {
+        segment_id: "segment-fallback",
+        training_pack_id: "pack-revenge-trade",
+        error_type: "急于翻本",
+        scene_tags: ["弱反弹"],
+        symbol: "000001",
+        name: "fallback 样例",
+        period: "101",
+        start_date: "2026-06-02",
+        end_date: "2026-06-05",
+        fallback_used: true,
+        fallback_reason: "no_enabled_segment",
+        source: "fallback_catalog_slice",
+        bars: [{ date: "2026-06-02", close: 8.6 }]
+      },
+      fallback_used: true,
+      fallback_reason: "no_enabled_segment"
+    },
+    source: "miniprogram"
+  });
+
+  assert.equal(snakeKline.record.trainingPackId, "pack-revenge-trade");
+  assert.equal(snakeKline.record.training_pack_id, "pack-revenge-trade");
+  assert.equal(snakeKline.record.segmentId, "segment-fallback");
+  assert.equal(snakeKline.record.segment_id, "segment-fallback");
+  assert.equal(snakeKline.record.fallbackUsed, true);
+  assert.equal(snakeKline.record.fallback_used, true);
+  assert.equal(snakeKline.record.fallbackReason, "no_enabled_segment");
+  assert.equal(snakeKline.record.fallback_reason, "no_enabled_segment");
+  assert.equal(snakeKline.record.samplingResult.segmentId, "segment-fallback");
+  assert.equal(snakeKline.record.sampling_result.segment_id, "segment-fallback");
+  assert.equal(snakeKline.record.samplingResult.trainingPackId, "pack-revenge-trade");
+  assert.equal(snakeKline.record.sampling_result.training_pack_id, "pack-revenge-trade");
+  assert.equal(snakeKline.record.samplingResult.source, "fallback_catalog_slice");
+  assert.equal(snakeKline.record.samplingResult.fallbackUsed, true);
+  assert.equal(snakeKline.record.sampling_result.fallback_used, true);
+  assert.equal("bars" in snakeKline.record.samplingResult, false);
+  assert.equal("bars" in snakeKline.record.sampling_result, false);
+
+  await saveKLineRecordBinding({
+    user,
+    record: {
+      day: 3,
+      scene: "旧记录",
+      reaction: "只记录",
+      disciplineAction: "保持原记录可读"
+    },
+    source: "miniprogram"
+  });
+
+  const summary = await getDataBindingUserSummary(user.userId);
+  const camelSummary = summary.kline_records.find((record) => record.segment_id === "segment-fast-rise");
+  const snakeSummary = summary.kline_records.find((record) => record.segmentId === "segment-fallback");
+  const legacySummary = summary.kline_records.find((record) => record.scene === "旧记录");
+
+  assert.equal(camelSummary.training_pack_id, "pack-chasing-surge");
+  assert.equal(camelSummary.sampling_result.source, "segment");
+  assert.equal(camelSummary.sampling_result.fallback_used, false);
+  assert.equal("bars" in camelSummary.sampling_result, false);
+  assert.equal(snakeSummary.trainingPackId, "pack-revenge-trade");
+  assert.equal(snakeSummary.samplingResult.fallbackReason, "no_enabled_segment");
+  assert.equal("bars" in snakeSummary.samplingResult, false);
+  assert.equal(legacySummary.segmentId, undefined);
+  assert.equal(legacySummary.samplingResult, undefined);
+
+  unloadDataBindingForTests();
+  const reloadedSummary = await getDataBindingUserSummary(user.userId);
+  assert.equal(reloadedSummary.kline_records.find((record) => record.segment_id === "segment-fast-rise").trainingPackId, "pack-chasing-surge");
+  assert.equal(reloadedSummary.kline_records.find((record) => record.segment_id === "segment-fallback").fallback_used, true);
+
+  await resetDataBindingForTests();
+});
+
 function makeReport({ createdAt, primary, secondary, impulse, holding }) {
   const primaryPersonality = {
     type: primary,
