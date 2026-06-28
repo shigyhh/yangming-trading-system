@@ -262,9 +262,15 @@
           <view>{{savedRecord.executionResult || savedRecord.execution_result || '说不清'}}</view>
         </view>
         <view>
-          <text>执行一致率</text>
-          <view>{{savedRecord.score || 0}}%</view>
+          <text>本局执行一致率</text>
+          <view>{{savedRecord.executionConsistencyRateText || savedRecord.execution_consistency_rate_text || '样本不足'}}</view>
         </view>
+      </view>
+      <view wx:if="{{savedRecord.trainingMistakeCard || savedRecord.training_mistake_card}}" class="training-mistake-summary">
+        <text>训练错题卡</text>
+        <view>{{savedRecord.trainingMistakeCard.errorType || savedRecord.training_mistake_card.error_type || savedRecord.errorType || savedRecord.error_type || '待照见'}}</view>
+        <view>执行结果：{{savedRecord.trainingMistakeCard.executionResult || savedRecord.training_mistake_card.execution_result || savedRecord.executionResult || savedRecord.execution_result || '说不清'}}</view>
+        <view>本局执行一致率：{{savedRecord.executionConsistencyRateText || savedRecord.execution_consistency_rate_text || '样本不足'}}</view>
       </view>
       <text>只记录第一反应、守界动作与复盘完整度，不关联外在结果。</text>
       <view class="completion-actions">

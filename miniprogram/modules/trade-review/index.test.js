@@ -175,6 +175,40 @@ const emptyTriggerSceneStats = buildLivingMirrorStats({
 assert.deepStrictEqual(emptyTriggerSceneStats.topTriggerScenes, []);
 assert.strictEqual(emptyTriggerSceneStats.triggerSceneEmptyText, "暂无足够触发场景样本。");
 
+const executionConsistencyStats = buildLivingMirrorStats({
+  records: [
+    { id: "exec-review-1", date: recentDateText, execution_result: "aligned", mainErrorType: "补仓冲动", firstThought: "怕错过", repeatCount: 1 },
+    { id: "exec-review-2", createdAt: now - dayMs, law_result: "broken", main_error_type: "追高冲动", first_thought: "怕错过", repeat_count: 2 },
+    { id: "exec-review-old", createdAt: now - dayMs * 45, execution_result: "deviated", main_error_type: "过期偏离", first_thought: "旧念", repeat_count: 9 }
+  ],
+  klineMindRecords: {
+    today: { id: "exec-kline-1", created_at: now - dayMs * 2, executionResult: "deviated", errorType: "追高冲动", repeatCount: 3 },
+    yesterday: { id: "exec-kline-2", updatedAt: now - dayMs * 3, execution_result: "aligned", error_type: "计划外交易", repeat_count: 0 },
+    unclear: { id: "exec-kline-unclear", updated_at: new Date(now - dayMs * 4).toISOString(), execution_result: "unclear", error_type: "说不清旧题", repeat_count: 4 }
+  }
+});
+assert.strictEqual(executionConsistencyStats.executionConsistency.rateText, "50%");
+assert.strictEqual(executionConsistencyStats.executionConsistency.alignedCount, 2);
+assert.strictEqual(executionConsistencyStats.executionConsistency.deviationCount, 2);
+assert.strictEqual(executionConsistencyStats.executionConsistency.denominator, 4);
+assert.strictEqual(executionConsistencyStats.executionConsistency.oldIssueRepeatCount, 10);
+assert.deepStrictEqual(executionConsistencyStats.executionConsistency.topDeviationTypes.slice(0, 1), [
+  { label: "追高冲动", count: 2 }
+]);
+assert.strictEqual(executionConsistencyStats.executionConsistency.topFirstThoughts[0].label, "怕错过");
+assert.strictEqual(executionConsistencyStats.executionConsistencyRateText, "50%");
+assert.strictEqual(executionConsistencyStats.executionDeviationText, "2 次");
+assert.strictEqual(executionConsistencyStats.oldIssueRepeatText, "10 次");
+
+const insufficientExecutionConsistencyStats = buildLivingMirrorStats({
+  records: [
+    { id: "exec-unclear-only", createdAt: now, execution_result: "unclear", mainErrorType: "追高冲动", firstThought: "说不清" }
+  ]
+});
+assert.strictEqual(insufficientExecutionConsistencyStats.executionConsistency.rateText, "样本不足");
+assert.strictEqual(insufficientExecutionConsistencyStats.executionConsistency.isSampleEnough, false);
+assert.strictEqual(insufficientExecutionConsistencyStats.executionConsistency.denominator, 0);
+
 const legacyCompatStats = buildLivingMirrorStats({
   records: [
     { id: "legacy-camel", date: recentDateText, mainErrorType: "追涨", firstThought: "怕错过", triggerScene: "放量拉升", nextRule: "先停十秒" },

@@ -164,6 +164,33 @@
           <view>{{stats.nextActionText || '先记录，再行动'}}</view>
         </view>
       </view>
+      <view class="execution-consistency-block">
+        <view class="execution-consistency-title">执行一致性</view>
+        <view class="execution-consistency-grid">
+          <view>
+            <text>知行一致率</text>
+            <view>{{stats.executionConsistencyRateText || '样本不足'}}</view>
+          </view>
+          <view>
+            <text>执行偏离</text>
+            <view>{{stats.executionDeviationText || '0 次'}}</view>
+          </view>
+          <view>
+            <text>旧题复现</text>
+            <view>{{stats.oldIssueRepeatText || '0 次'}}</view>
+          </view>
+        </view>
+        <view class="execution-consistency-detail">
+          <view>
+            <text>最高频执行偏离</text>
+            <view>{{stats.topDeviationTypeText || '样本不足'}}</view>
+          </view>
+          <view>
+            <text>最常见第一念</text>
+            <view>{{stats.executionConsistency.topFirstThoughtText || stats.topFirstThoughtText || '待记录'}}</view>
+          </view>
+        </view>
+      </view>
       <view class="trigger-scene-block">
         <text>高频触发场景</text>
         <view wx:if="{{stats.topTriggerScenes.length}}" class="trigger-scene-list">

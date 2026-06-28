@@ -128,6 +128,9 @@ assert.strictEqual(reviewFocusRecord.executionResult, "按计划执行");
 assert.strictEqual(reviewFocusRecord.execution_result, "按计划执行");
 assert.strictEqual(reviewFocusRecord.executionLabel, "按计划执行");
 assert.strictEqual(reviewFocusRecord.execution_label, "按计划执行");
+assert.strictEqual(reviewFocusRecord.executionConsistencyRateText, "100%");
+assert.strictEqual(reviewFocusRecord.execution_consistency_rate_text, "100%");
+assert.strictEqual(reviewFocusRecord.executionConsistency.rateText, "100%");
 
 const oldLawResultRecord = buildKlineMindRecord({
   selectedCandleKey: reviewFocusSession.selectedCandleKey,
@@ -142,6 +145,19 @@ assert.strictEqual(oldLawResultRecord.executionLabel, "执行偏离");
 assert.strictEqual(oldLawResultRecord.execution_label, "执行偏离");
 assert.strictEqual(oldLawResultRecord.trainingMistakeCard.executionResult, "执行偏离");
 assert.strictEqual(oldLawResultRecord.training_mistake_card.execution_result, "执行偏离");
+assert.strictEqual(oldLawResultRecord.executionConsistencyRateText, "0%");
+assert.strictEqual(oldLawResultRecord.executionConsistency.deviationCount, 1);
+
+const unclearExecutionRecord = buildKlineMindRecord({
+  selectedCandleKey: reviewFocusSession.selectedCandleKey,
+  firstReaction: "说不清",
+  boundaryChoice: "停十秒",
+  insightLine: "我暂时说不清这一念。",
+  execution_result: "unclear"
+}, reviewFocusSession);
+assert.strictEqual(unclearExecutionRecord.executionResult, "说不清");
+assert.strictEqual(unclearExecutionRecord.executionConsistencyRateText, "样本不足");
+assert.strictEqual(unclearExecutionRecord.executionConsistency.isSampleEnough, false);
 
 const newExecutionResultPriorityRecord = buildKlineMindRecord({
   selectedCandleKey: reviewFocusSession.selectedCandleKey,

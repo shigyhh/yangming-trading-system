@@ -7,7 +7,8 @@ const {
   saveLivingMirrorStatsFromReviews,
   getTrainingPrescription,
   getEvidenceSummary,
-  getUnifiedJourneyView
+  getUnifiedJourneyView,
+  getKlineMindRecords
 } = require("../../utils/store");
 const { pullTrainingPrescription } = require("../../utils/api");
 const { buildTraining7View } = require("../../modules/training7/index");
@@ -25,6 +26,17 @@ Page({
       topMistakeText: "待补充",
       topFirstThoughtText: "待记录",
       nextActionText: "先记录，再行动",
+      executionConsistency: {
+        rateText: "样本不足",
+        deviationCount: 0,
+        oldIssueRepeatCount: 0,
+        topDeviationTypeText: "样本不足",
+        topFirstThoughtText: "待记录"
+      },
+      executionConsistencyRateText: "样本不足",
+      executionDeviationText: "0 次",
+      oldIssueRepeatText: "0 次",
+      topDeviationTypeText: "样本不足",
       zhixingStability: {},
       tripleReflection: {}
     },
@@ -55,7 +67,9 @@ Page({
   },
 
   refreshStats() {
-    const tradeReviewState = getTradeReviewRecords();
+    const tradeReviewState = Object.assign({}, getTradeReviewRecords(), {
+      klineMindRecords: getKlineMindRecords()
+    });
     const stats = saveLivingMirrorStatsFromReviews(tradeReviewState);
     const zhixingStability = stats.zhixingStability || {};
     const tripleReflection = stats.tripleReflection || {};

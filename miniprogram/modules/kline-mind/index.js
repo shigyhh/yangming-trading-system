@@ -701,6 +701,38 @@ function calculateKlineMindScore(record = {}) {
   return Math.max(0, Math.min(100, 28 + filledCount * 10 + boundaryBonus + insightBonus));
 }
 
+function buildSingleExecutionConsistency(executionResult) {
+  const normalized = normalizeExecutionResult(executionResult);
+  if (normalized === "按计划执行") {
+    return {
+      alignedCount: 1,
+      deviationCount: 0,
+      denominator: 1,
+      isSampleEnough: true,
+      rate: 100,
+      rateText: "100%"
+    };
+  }
+  if (normalized === "执行偏离") {
+    return {
+      alignedCount: 0,
+      deviationCount: 1,
+      denominator: 1,
+      isSampleEnough: true,
+      rate: 0,
+      rateText: "0%"
+    };
+  }
+  return {
+    alignedCount: 0,
+    deviationCount: 0,
+    denominator: 0,
+    isSampleEnough: false,
+    rate: null,
+    rateText: "样本不足"
+  };
+}
+
 function buildKlineMindRecord(input = {}, session = {}) {
   const selectedCandleKey = input.selectedCandleKey || session.selectedCandleKey || "";
   const selectedCandle = (session.candles || []).find((item) => item.key === selectedCandleKey) || {};
@@ -743,22 +775,32 @@ function buildKlineMindRecord(input = {}, session = {}) {
     input.law_result,
     record.completed ? "aligned" : "unclear"
   );
+  const recordExecutionConsistency = buildSingleExecutionConsistency(executionResult);
   const scoredRecord = Object.assign({}, record, {
     score: calculateKlineMindScore(record),
     executionResult,
     execution_result: executionResult,
     executionLabel: executionResult,
-    execution_label: executionResult
+    execution_label: executionResult,
+    executionConsistency: recordExecutionConsistency,
+    execution_consistency: recordExecutionConsistency,
+    executionConsistencyRateText: recordExecutionConsistency.rateText,
+    execution_consistency_rate_text: recordExecutionConsistency.rateText
   });
   if (!sessionContext) return scoredRecord;
 
   const repeatCount = Number(pickValue(input.repeatCount, input.repeat_count, session.repeatCount, session.repeat_count, 1)) || 1;
   const trainingMistakeCard = buildTrainingMistakeCard(scoredRecord, sessionContext);
+  const executionConsistency = buildSingleExecutionConsistency(trainingMistakeCard.executionResult);
   return Object.assign({}, scoredRecord, sessionContext, {
     executionResult: trainingMistakeCard.executionResult,
     execution_result: trainingMistakeCard.execution_result,
     executionLabel: trainingMistakeCard.executionLabel,
     execution_label: trainingMistakeCard.execution_label,
+    executionConsistency,
+    execution_consistency: executionConsistency,
+    executionConsistencyRateText: executionConsistency.rateText,
+    execution_consistency_rate_text: executionConsistency.rateText,
     repeatCount,
     repeat_count: repeatCount,
     trainingMistakeCard,
