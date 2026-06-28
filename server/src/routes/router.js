@@ -30,6 +30,7 @@ import { authenticateYmtyAdmin, changeYmtyAdminPassword, getYmtyAdminMe, loginYm
 import { saveYmtyLivecodeUpload } from "../services/ymtyUpload.js";
 import { assertRealPayConfigReady, createH5Order, createJsapiOrder, createWapOrder, isPaymentConfigError, normalizePayChannel, parseAlipayNotify, parseWechatNotify, validateAlipayPayment, validateWechatPayment, verifyAlipayNotify, verifyWechatNotify } from "../services/payments/index.js";
 import { handleKlineSegmentRoute } from "./klineSegments.js";
+import { handleKlineSamplingRoute } from "./klineSampling.js";
 import { handleTrainingPackRoute } from "./trainingPacks.js";
 
 export async function route(req, res) {
@@ -82,6 +83,7 @@ export async function route(req, res) {
         kline_segments: "GET|POST /api/v1/kline-segments",
         kline_segment: "GET|PATCH /api/v1/kline-segments/:id",
         kline_segment_enabled: "PATCH /api/v1/kline-segments/:id/enabled",
+        kline_training_sample: "POST /api/v1/kline-training/sample",
         zhixing_replay_start: "POST /api/v1/zhixing-replay/start",
         zhixing_replay_session: "GET /api/v1/zhixing-replay/:session_id",
         zhixing_replay_decision: "POST /api/v1/zhixing-replay/:session_id/decision",
@@ -138,6 +140,7 @@ export async function route(req, res) {
 
   if (await handleTrainingPackRoute(req, res, { url, pathname })) return;
   if (await handleKlineSegmentRoute(req, res, { url, pathname })) return;
+  if (await handleKlineSamplingRoute(req, res, { url, pathname })) return;
 
   if (req.method === "GET" && pathname === "/api/v1/stats/public") {
     const stats = await getPublicStats();
