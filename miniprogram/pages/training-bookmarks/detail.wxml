@@ -1,0 +1,73 @@
+<view class="page-shell">
+  <view class="page-content">
+    <text class="eyebrow">BOOKMARK REPLAY · 收藏回放</text>
+
+    <view wx:if="{{loading}}" class="state-card card">正在载入收藏详情...</view>
+    <view wx:elif="{{error}}" class="state-card card error">{{error}}</view>
+
+    <block wx:if="{{bookmark}}">
+      <view class="detail-hero card">
+        <view>
+          <text>{{bookmark.title || '训练收藏'}}</text>
+          <view>{{bookmark.sourceType || 'base_blind'}} · {{bookmark.bookmarkType || 'session'}}</view>
+        </view>
+        <button bindtap="deleteBookmark">取消收藏</button>
+      </view>
+
+      <view class="detail-grid">
+        <view class="detail-cell card">
+          <text>错题类型</text>
+          <view>{{bookmark.errorType || '待补充'}}</view>
+        </view>
+        <view class="detail-cell card">
+          <text>执行结果</text>
+          <view>{{bookmark.executionResultText}}</view>
+        </view>
+        <view class="detail-cell card">
+          <text>场景标签</text>
+          <view>{{bookmark.sceneTagsText}}</view>
+        </view>
+        <view class="detail-cell card">
+          <text>片段来源</text>
+          <view>{{bookmark.samplingSource}}</view>
+        </view>
+        <view class="detail-cell card">
+          <text>segmentId</text>
+          <view>{{bookmark.segmentId || '待补充'}}</view>
+        </view>
+        <view class="detail-cell card">
+          <text>trainingPackId</text>
+          <view>{{bookmark.trainingPackId || '待补充'}}</view>
+        </view>
+        <view class="detail-cell card">
+          <text>标的 / 周期</text>
+          <view>{{bookmark.symbol || '待补充'}} · {{bookmark.period || '1d'}}</view>
+        </view>
+        <view class="detail-cell card">
+          <text>时间段</text>
+          <view>{{bookmark.startDate || '待补充'}} 至 {{bookmark.endDate || '待补充'}}</view>
+        </view>
+      </view>
+
+      <view class="replay-card card">
+        <view class="replay-head">
+          <view>
+            <text>只读回放</text>
+            <view>{{replayError || replayStatus || '回放不会修改原训练记录。'}}</view>
+          </view>
+          <text>{{replayBars.length ? replayBars.length + ' 根' : 'metadata'}}</text>
+        </view>
+        <view wx:if="{{replayLoading}}" class="state-inline">正在载入...</view>
+        <view wx:elif="{{replayBars.length}}" class="bar-list">
+          <view wx:for="{{replayBars}}" wx:key="id">
+            <text>{{item.label}}</text>
+            <view>{{item.date || '隐藏日期'}} · {{item.rangeText}}</view>
+          </view>
+        </view>
+        <view wx:else class="state-inline">当前仅展示收藏 metadata。</view>
+      </view>
+    </block>
+
+    <compliance-notice />
+  </view>
+</view>

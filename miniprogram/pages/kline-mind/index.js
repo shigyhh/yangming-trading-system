@@ -17,7 +17,7 @@ const {
   saveZhixingReminderEvent,
   getExecutionPlanLibrary
 } = require("../../utils/store");
-const { syncLocalState, syncTrainingProgress, requestKlineTrainingSample, fetchKlineTrainingSlice } = require("../../utils/api");
+const { syncLocalState, syncTrainingProgress, requestKlineTrainingSample, fetchKlineTrainingSlice, createTrainingBookmark } = require("../../utils/api");
 const { buildTraining7View } = require("../../modules/training7/index");
 const {
   buildKlineMindSession,
@@ -26,7 +26,8 @@ const {
   buildSpecialTrainingSessionMeta,
   buildCustomSessionMeta,
   buildKlineSamplingRequest,
-  normalizeKlineSamplingResult
+  normalizeKlineSamplingResult,
+  buildTrainingBookmark
 } = require("../../modules/kline-mind/index");
 const { resolveExecutionPlanAction } = require("../../modules/execution-plan/index");
 const {
@@ -417,6 +418,9 @@ Page({
     samplingError: "",
     savedRecord: null,
     saving: false,
+    bookmarkSaving: false,
+    bookmarkMessage: "",
+    bookmarkError: "",
     zhixingReminderDisabled: false,
     zhixingReminderShownCount: 0,
     showSelectors: false,
@@ -1088,6 +1092,45 @@ Page({
     wx.showToast({ title: "已写入活镜", icon: "success" });
     this.setData({ savedRecord: saved, saving: false });
     this.load();
+  },
+
+  async saveTrainingBookmark(e) {
+    if (this.data.bookmarkSaving) return;
+    const bookmarkType = (((e.currentTarget || {}).dataset || {}).bookmarkType) || "session";
+    const savedRecord = this.data.savedRecord || {};
+    if (!savedRecord.completed) {
+      wx.showToast({ title: "先完成一局训练", icon: "none" });
+      return;
+    }
+    const bookmark = buildTrainingBookmark({
+      record: savedRecord,
+      session: this.data.session || {},
+      bookmarkType,
+      title: bookmarkType === "mistake_card" ? "训练错题卡收藏" : "训练整局收藏",
+      note: bookmarkType === "mistake_card" ? "回看本局最明显执行偏离。" : "留作训练回放。"
+    });
+    this.setData({
+      bookmarkSaving: true,
+      bookmarkMessage: "",
+      bookmarkError: ""
+    });
+    try {
+      const result = await createTrainingBookmark(bookmark);
+      const remoteBookmark = result.trainingBookmark || result.training_bookmark || bookmark;
+      this.setData({
+        bookmarkSaving: false,
+        bookmarkMessage: `${remoteBookmark.title || bookmark.title} 已收藏，可到我的页训练收藏查看。`,
+        bookmarkError: ""
+      });
+      wx.showToast({ title: "已收藏", icon: "success" });
+    } catch (error) {
+      this.setData({
+        bookmarkSaving: false,
+        bookmarkMessage: "",
+        bookmarkError: "收藏失败，请检查后端连接后重试。"
+      });
+      wx.showToast({ title: "收藏失败", icon: "none" });
+    }
   },
 
   goTraining() {

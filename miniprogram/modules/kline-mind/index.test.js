@@ -14,7 +14,10 @@ const {
   buildSpecialTrainingSessionMeta,
   buildKlineSamplingRequest,
   normalizeKlineSamplingResult,
-  buildCustomSessionMeta
+  buildCustomSessionMeta,
+  buildTrainingBookmark,
+  normalizeTrainingBookmark,
+  buildBookmarkReplaySliceRequest
 } = require("./index");
 
 assert.strictEqual(SIX_GATE_MAP.length, 6);
@@ -421,6 +424,85 @@ assert.strictEqual(customRecord.trainingMistakeCard.errorType, "自选盲练");
 assert.strictEqual(customRecord.training_mistake_card.error_type, "自选盲练");
 assert.strictEqual(customRecord.samplingResult, undefined);
 assert.notStrictEqual(customRecord.fallbackUsed, true);
+
+const sampledBookmark = buildTrainingBookmark({
+  record: sampledRecord,
+  session: reviewFocusSampledSession,
+  bookmarkType: "mistake_card",
+  note: "回看这一局里的追高冲动。"
+});
+assert.strictEqual(sampledBookmark.bookmarkType, "mistake_card");
+assert.strictEqual(sampledBookmark.bookmark_type, "mistake_card");
+assert.strictEqual(sampledBookmark.sourceType, "review_focus");
+assert.strictEqual(sampledBookmark.source_type, "review_focus");
+assert.ok(sampledBookmark.sessionId);
+assert.strictEqual(sampledBookmark.session_id, sampledBookmark.sessionId);
+assert.strictEqual(sampledBookmark.errorType, "追涨之镜");
+assert.strictEqual(sampledBookmark.executionResult, sampledRecord.executionResult);
+assert.strictEqual(sampledBookmark.segmentId, "segment-fast-rise");
+assert.strictEqual(sampledBookmark.segment_id, "segment-fast-rise");
+assert.strictEqual(sampledBookmark.trainingPackId, "pack-chasing-surge");
+assert.strictEqual(sampledBookmark.training_pack_id, "pack-chasing-surge");
+assert.strictEqual(sampledBookmark.samplingResult.source, "segment");
+assert.strictEqual(sampledBookmark.sampling_result.source, "segment");
+assert.strictEqual("bars" in sampledBookmark.samplingResult, false);
+assert.strictEqual("bars" in sampledBookmark.sampling_result, false);
+
+const normalizedBookmark = normalizeTrainingBookmark({
+  bookmark_type: "action",
+  session_id: "session-legacy",
+  action_id: "action-1",
+  bar_index: 3,
+  source_type: "special_training",
+  error_type: "追高冲动",
+  scene_tags: "放量拉升 / 假突破",
+  execution_result: "执行偏离",
+  segment_id: "segment-legacy",
+  training_pack_id: "pack-legacy",
+  sampling_result: {
+    segment_id: "segment-legacy",
+    training_pack_id: "pack-legacy",
+    source: "segment",
+    bars: [{ close: 10.2 }]
+  },
+  title: "第 3 根动作"
+});
+assert.strictEqual(normalizedBookmark.bookmarkType, "action");
+assert.strictEqual(normalizedBookmark.bookmark_type, "action");
+assert.strictEqual(normalizedBookmark.actionId, "action-1");
+assert.strictEqual(normalizedBookmark.action_id, "action-1");
+assert.strictEqual(normalizedBookmark.barIndex, 3);
+assert.strictEqual(normalizedBookmark.bar_index, 3);
+assert.deepStrictEqual(normalizedBookmark.sceneTags, ["放量拉升", "假突破"]);
+assert.strictEqual(normalizedBookmark.samplingResult.segmentId, "segment-legacy");
+assert.strictEqual("bars" in normalizedBookmark.samplingResult, false);
+
+const customBookmark = buildTrainingBookmark({
+  record: customRecord,
+  session: customSession,
+  bookmarkType: "session"
+});
+assert.strictEqual(customBookmark.sourceType, "custom_session");
+assert.strictEqual(customBookmark.source_type, "custom_session");
+assert.strictEqual(customBookmark.symbol, "600519");
+assert.strictEqual(customBookmark.period, "1d");
+assert.strictEqual(customBookmark.startDate, "2024-01-02");
+assert.strictEqual(customBookmark.start_date, "2024-01-02");
+assert.strictEqual(customBookmark.endDate, "2024-01-09");
+assert.strictEqual(customBookmark.end_date, "2024-01-09");
+assert.strictEqual(customBookmark.samplingResult, null);
+assert.strictEqual(customBookmark.sampling_result, null);
+
+const replayRequest = buildBookmarkReplaySliceRequest(customBookmark);
+assert.deepStrictEqual(replayRequest, {
+  symbol: "600519",
+  timeframeKey: "1d",
+  startDate: "2024-01-02",
+  endDate: "2024-01-09",
+  trainingLength: 60,
+  mode: "replay",
+  blind: false
+});
 
 const fallbackSampling = normalizeKlineSamplingResult({
   segmentId: "",

@@ -1,0 +1,119 @@
+.detail-hero,
+.state-card,
+.replay-card {
+  margin-top: 26rpx;
+  padding: 28rpx;
+}
+
+.detail-hero,
+.replay-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 22rpx;
+  align-items: flex-start;
+}
+
+.detail-hero text,
+.replay-head text {
+  display: block;
+  color: #fff6e6;
+  font-family: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", serif;
+  font-size: 34rpx;
+  font-weight: 900;
+}
+
+.detail-hero view view,
+.replay-head view view,
+.state-card,
+.state-inline {
+  margin-top: 10rpx;
+  color: rgba(247, 239, 223, 0.62);
+  font-size: 24rpx;
+  line-height: 1.55;
+}
+
+.detail-hero button {
+  min-height: 68rpx;
+  border-radius: 18rpx;
+  color: rgba(247, 239, 223, 0.76);
+  border: 1rpx solid rgba(216, 183, 111, 0.14);
+  background: rgba(216, 183, 111, 0.08);
+  font-size: 24rpx;
+  font-weight: 900;
+}
+
+.detail-grid {
+  margin-top: 20rpx;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14rpx;
+}
+
+.detail-cell {
+  padding: 20rpx;
+}
+
+.detail-cell text {
+  display: block;
+  color: rgba(216, 183, 111, 0.72);
+  font-size: 21rpx;
+  font-weight: 900;
+}
+
+.detail-cell view {
+  margin-top: 10rpx;
+  color: rgba(247, 239, 223, 0.8);
+  font-size: 24rpx;
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+.replay-head > text {
+  color: rgba(216, 183, 111, 0.72);
+  font-family: inherit;
+  font-size: 22rpx;
+}
+
+.bar-list {
+  margin-top: 20rpx;
+  display: grid;
+  gap: 10rpx;
+}
+
+.bar-list > view {
+  display: flex;
+  justify-content: space-between;
+  gap: 16rpx;
+  padding: 16rpx;
+  border: 1rpx solid rgba(216, 183, 111, 0.1);
+  border-radius: 16rpx;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.bar-list text {
+  color: rgba(216, 183, 111, 0.78);
+  font-size: 22rpx;
+  font-weight: 900;
+}
+
+.bar-list view view {
+  color: rgba(247, 239, 223, 0.76);
+  font-size: 23rpx;
+}
+
+.state-card.error {
+  color: #f1d27d;
+}
+
+@media (max-width: 340px) {
+  .detail-hero,
+  .replay-head,
+  .bar-list > view {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
