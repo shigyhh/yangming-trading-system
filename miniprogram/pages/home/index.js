@@ -17,6 +17,8 @@ const {
   saveTodayReaction,
   getTodayIntradayBoundaryRecord,
   getTodayKlineMindRecord,
+  getKlineMindRecords,
+  getKlineSessionRecords,
   getTraining7State,
   getRetestSnapshotState,
   saveTraining7Task,
@@ -54,7 +56,7 @@ const { buildRetentionState } = require("../../modules/retention/index");
 const { buildTraining7View } = require("../../modules/training7/index");
 const { buildClassroomView } = require("../../modules/classroom/index");
 const { buildLiveMirrorReminder } = require("../../modules/trade-review/index");
-const { buildMiniHomeView } = require("../../modules/mini-loop/index");
+const { buildMiniHomeView, buildTodayNextStepState } = require("../../modules/mini-loop/index");
 
 const ENTRY_STATE_KEY = "zhixing_ritual_entry";
 const REACTION_TAGS = ["恐惧", "贪念", "证明", "后悔", "急躁", "逃避"];
@@ -721,6 +723,21 @@ function buildJourneyResumeView(journeyState = {}) {
 }
 
 function buildHomeFocusView({ primaryAction = {}, miniHomeView = {}, journeyState = {}, completionView = {} } = {}) {
+  const todayState = primaryAction.todayState || null;
+  if (todayState) {
+    return {
+      key: todayState.primaryActionType || primaryAction.key || "trade-review",
+      eyebrow: "当前一步",
+      statusLine: todayState.title || "今日下一步",
+      title: todayState.title || "今日下一步",
+      body: [todayState.mainText, todayState.secondaryText].filter(Boolean).join("\n"),
+      primaryText: todayState.primaryActionText || primaryAction.text || "继续",
+      links: [],
+      showThreeSeals: false,
+      done: false
+    };
+  }
+
   const key = primaryAction.key || miniHomeView.primaryActionKey || journeyState.currentStep || "mind";
   const defaultText = primaryAction.text || miniHomeView.primaryText || journeyState.nextActionText || "照见今日";
   const byKey = {
@@ -791,7 +808,18 @@ function buildHomeFocusView({ primaryAction = {}, miniHomeView = {}, journeyStat
   };
 }
 
-function buildHomePrimaryAction({ unifiedView = {}, mind = null, evidenceSummary = {} } = {}) {
+function buildHomePrimaryAction({ unifiedView = {}, mind = null, evidenceSummary = {}, todayState = null } = {}) {
+  if (todayState && todayState.status) {
+    return {
+      key: todayState.primaryActionType || "trade-review",
+      text: todayState.primaryActionText || "继续",
+      hint: todayState.secondaryText || "",
+      stateLabel: todayState.title || "今日下一步",
+      stateHint: todayState.mainText || "",
+      todayState
+    };
+  }
+
   const todayByType = (evidenceSummary || {}).todayByType || {};
   const hasReview = !!unifiedView.hasReviewToday || Number(todayByType.review_record || 0) > 0;
   const hasSeal = !!unifiedView.hasSeal;
@@ -853,6 +881,7 @@ function buildHomePrimaryAction({ unifiedView = {}, mind = null, evidenceSummary
 }
 
 function applyJourneyToMiniHomeView(miniHomeView = {}, journeyState = {}, completionView = {}, evidenceSummary = {}, unifiedView = {}, primaryAction = {}) {
+  const todayState = primaryAction.todayState || null;
   const noEvidence = !Number((evidenceSummary || {}).total || 0);
   const byType = (evidenceSummary || {}).byType || {};
   const reviewCount = Number((evidenceSummary || {}).reviewCount || 0);
@@ -878,20 +907,23 @@ function applyJourneyToMiniHomeView(miniHomeView = {}, journeyState = {}, comple
       : byType.mind_report
         ? "心镜报告已入档。完成今日落印后，第一枚心证会存入档案。"
         : "心证正在沉淀，下一步先完成今日落印。");
-  const todayOneThought = primaryAction.key === "trade-review"
+  const todayOneThought = todayState
+    ? todayState.mainText || "先记录，再行动"
+    : primaryAction.key === "trade-review"
     ? "上传一条真实记录，先照见一次第一念。"
     : primaryAction.key === "mind"
     ? "先看见今日这一念。"
     : miniHomeView.todayOneThought;
   return Object.assign({}, miniHomeView, {
-    title: unifiedView.title || journeyState.title || miniHomeView.title,
-    stateLabel,
-    stateHint: primaryAction.stateHint || unifiedView.stateHint || stateHintMap[stateLabel],
+    title: todayState ? "今日下一步" : (unifiedView.title || journeyState.title || miniHomeView.title),
+    stateLabel: todayState ? (todayState.title || "今日下一步") : stateLabel,
+    stateHint: todayState ? (todayState.secondaryText || todayState.mainText) : (primaryAction.stateHint || unifiedView.stateHint || stateHintMap[stateLabel]),
     positionText: unifiedView.dayText || journeyState.progressLabel || miniHomeView.positionText,
     progressText: unifiedView.dailyProgressText || miniHomeView.progressText,
-    primaryText: primaryAction.text || unifiedView.nextActionText || journeyState.nextActionText || miniHomeView.primaryText,
-    primaryHint: primaryAction.hint || "",
-    primaryActionKey: primaryAction.key || "",
+    primaryText: todayState ? todayState.primaryActionText : (primaryAction.text || unifiedView.nextActionText || journeyState.nextActionText || miniHomeView.primaryText),
+    primaryHint: todayState ? todayState.secondaryText : (primaryAction.hint || ""),
+    primaryActionKey: todayState ? todayState.primaryActionType : (primaryAction.key || ""),
+    primaryActionUrl: todayState ? todayState.primaryActionUrl : "",
     todayOneThought,
     dayText: unifiedView.dayText || miniHomeView.dayText,
     livingMirrorFeedback: unifiedView.livingMirrorFeedback || (byType.daily_seal ? "本次照见已写入活镜" : miniHomeView.livingMirrorFeedback),
@@ -1061,6 +1093,10 @@ const initialUnifiedJourneyView = getUnifiedJourneyView({
   training7View: initialTraining7View,
   dailyContent: initialDailyContent
 });
+const initialTodayNextStepState = buildTodayNextStepState({
+  todayKey: todayKey(),
+  tradeReviewState: getTradeReviewRecords()
+});
 
 Page({
   data: {
@@ -1111,12 +1147,17 @@ Page({
     liveMirrorReminder: initialLiveMirrorReminder,
     miniLoopProgress: getMiniLoopProgress(),
     miniHomeView: INITIAL_MINI_HOME_VIEW,
+    todayState: initialTodayNextStepState,
     journeyState: getJourneySnapshot({ lastPage: "home" }),
     journeyResumeView: buildJourneyResumeView(getJourneySnapshot({ lastPage: "home" })),
     unifiedJourneyView: initialUnifiedJourneyView,
     completionView: getTodayCompletionState(),
     homeFocusView: buildHomeFocusView({
-      primaryAction: { key: "mind", text: "照见今日" },
+      primaryAction: {
+        key: initialTodayNextStepState.primaryActionType,
+        text: initialTodayNextStepState.primaryActionText,
+        todayState: initialTodayNextStepState
+      },
       miniHomeView: INITIAL_MINI_HOME_VIEW,
       journeyState: getJourneySnapshot({ lastPage: "home" }),
       completionView: getTodayCompletionState()
@@ -1194,6 +1235,8 @@ Page({
     const todayHeartCard = getTodayHeartCard();
     const reactionRecord = getTodayReaction();
     const intradayBoundaryRecord = getTodayIntradayBoundaryRecord();
+    const klineMindRecords = getKlineMindRecords();
+    const klineSessionRecords = getKlineSessionRecords();
     const klineMindRecord = getTodayKlineMindRecord();
     const syncStatus = getSyncStatus();
     const retentionState = getRetentionState();
@@ -1351,10 +1394,18 @@ Page({
       liveMirrorReminder,
       checkedIn: checkedCount > 0
     });
+    const todayState = buildTodayNextStepState({
+      todayKey: currentDay,
+      tradeReviewState,
+      klineMindRecords,
+      klineSessionRecords,
+      todayKlineMindRecord: klineMindRecord
+    });
     const primaryAction = buildHomePrimaryAction({
       unifiedView: unifiedJourneyView,
       mind,
-      evidenceSummary
+      evidenceSummary,
+      todayState
     });
     const miniHomeView = applyJourneyToMiniHomeView(finalRawMiniHomeView, journeyState, completionView, evidenceSummary, unifiedJourneyView, primaryAction);
     const homeFocusView = buildHomeFocusView({
@@ -1404,6 +1455,7 @@ Page({
       liveMirrorReminder,
       miniLoopProgress,
       miniHomeView,
+      todayState,
       homeFocusView,
       journeyState,
       journeyResumeView: buildJourneyResumeView(journeyState),
@@ -1889,6 +1941,11 @@ Page({
     }
     if (actionKey === "trade-review") {
       this.goTradeReview();
+      return;
+    }
+    if (actionKey === "review-focus-training" || actionKey === "training-card") {
+      const actionUrl = (this.data.miniHomeView || {}).primaryActionUrl || (this.data.todayState || {}).primaryActionUrl;
+      wx.redirectTo({ url: actionUrl || "/pages/kline-mind/index?from=review_focus&sourceType=review_focus&source_type=review_focus" });
       return;
     }
     if (actionKey === "seal") {
