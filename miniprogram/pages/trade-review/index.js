@@ -6,6 +6,7 @@ const {
   saveTradeReviewRecord,
   saveTraining7Task,
   saveInviteConversionEvent,
+  saveZhixingReminderEvent,
   todayKey
 } = require("../../utils/store");
 const {
@@ -25,6 +26,11 @@ const {
   syncTradeReviewRecord,
   syncTrainingProgress
 } = require("../../utils/api");
+const {
+  ZHIXING_REMINDER_CHOICES,
+  buildReviewRepeatReminder,
+  createInterventionEvent
+} = require("../../modules/zhixing-reminder/index");
 
 function defaultForm() {
   return {
@@ -364,6 +370,50 @@ Page({
       showResultDetail: false
     });
     wx.showToast({ title: "已写入活镜", icon: "success" });
+    const zhixingReminder = buildReviewRepeatReminder({
+      currentRecord: state.latest,
+      records: state.records
+    });
+    if (zhixingReminder) {
+      setTimeout(() => this.presentReviewRepeatReminder(zhixingReminder), 350);
+    }
+  },
+
+  presentReviewRepeatReminder(reminder) {
+    if (!wx.showModal || !wx.showActionSheet) {
+      this.saveReviewRepeatReminderResponse(reminder, "continue");
+      return;
+    }
+    wx.showModal({
+      title: reminder.title || "旧题复现提醒",
+      content: reminder.message || "",
+      confirmText: "选择动作",
+      cancelText: "稍后再练",
+      success: (modalResult) => {
+        if (!modalResult.confirm) {
+          this.saveReviewRepeatReminderResponse(reminder, "later");
+          return;
+        }
+        wx.showActionSheet({
+          itemList: ZHIXING_REMINDER_CHOICES.map((item) => item.label),
+          success: (actionResult) => {
+            const choice = ZHIXING_REMINDER_CHOICES[actionResult.tapIndex] || ZHIXING_REMINDER_CHOICES[0];
+            this.saveReviewRepeatReminderResponse(reminder, choice.key);
+          },
+          fail: () => {
+            this.saveReviewRepeatReminderResponse(reminder, "later");
+          }
+        });
+      }
+    });
+  },
+
+  saveReviewRepeatReminderResponse(reminder, response) {
+    const event = createInterventionEvent(Object.assign({}, reminder || {}, {
+      userResponse: response
+    }));
+    saveZhixingReminderEvent(event);
+    syncLocalState({ silent: true }).catch(() => {});
   },
 
   resetForm() {

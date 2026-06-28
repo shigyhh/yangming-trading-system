@@ -3,6 +3,8 @@ const fs = require("fs");
 const path = require("path");
 
 const apiSource = fs.readFileSync(path.join(__dirname, "api.js"), "utf8");
+const storeSource = fs.readFileSync(path.join(__dirname, "store.js"), "utf8");
+const storageKeysSource = fs.readFileSync(path.join(__dirname, "../core/storage-keys.js"), "utf8");
 
 assert.ok(apiSource.includes("buildKLineBindingPayload"));
 assert.ok(apiSource.includes("buildTradeReviewBindingPayload"));
@@ -13,6 +15,11 @@ assert.ok(apiSource.includes("/kline-records"));
 assert.ok(apiSource.includes("/trade-reviews"));
 assert.ok(apiSource.includes("data: klinePayload"));
 assert.ok(apiSource.includes("data: payload"));
+assert.ok(storageKeysSource.includes("YM_ZHIXING_REMINDER_EVENTS"));
+assert.ok(storeSource.includes("saveZhixingReminderEvent"));
+assert.ok(storeSource.includes("getZhixingReminderEvents"));
+assert.ok(storeSource.includes("intervention_event"));
+assert.ok(storeSource.includes("intervention_events"));
 
 const forbiddenTerms = ["守法", "破法", "守法率"];
 forbiddenTerms.forEach((term) => {
