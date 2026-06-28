@@ -642,6 +642,8 @@ function buildLivingMirrorStats(tradeReviewState = {}) {
     mirrorScores,
     thiefCounts,
     behaviorTags,
+    oldIssueText: "旧题复现",
+    executionPatternText: "执行偏离",
     topTriggerScenes,
     triggerSceneEmptyText: topTriggerScenes.length ? "" : "暂无足够触发场景样本。",
     topMistakes,

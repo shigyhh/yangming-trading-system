@@ -328,6 +328,55 @@ assert.strictEqual(snakeOnlyKlinePayload.record.repeat_count, 3);
 assert.deepStrictEqual(snakeOnlyKlinePayload.record.trainingMistakeCard, { title: "犹疑旧题" });
 assert.deepStrictEqual(snakeOnlyKlinePayload.record.training_mistake_card, { title: "犹疑旧题" });
 
+const lawResultOnlyKlinePayload = buildKLineBindingPayload({
+  auth,
+  state: Object.assign({}, state, {
+    intraday_boundary_records: {},
+    kline_mind_records: {
+      "2026-06-03": {
+        date: "2026-06-03",
+        day: 3,
+        source_type: "review_focus",
+        error_type: "追涨",
+        law_result: "broken",
+        repeat_count: 1,
+        scenarioTitle: "放量拉升",
+        firstReaction: "怕错过",
+        boundaryChoice: "停十秒",
+        updatedAt: 1764547700000
+      }
+    }
+  })
+});
+assert.strictEqual(lawResultOnlyKlinePayload.record.executionResult, "执行偏离");
+assert.strictEqual(lawResultOnlyKlinePayload.record.execution_result, "执行偏离");
+assert.strictEqual(lawResultOnlyKlinePayload.record.executionLabel, "执行偏离");
+assert.strictEqual(lawResultOnlyKlinePayload.record.execution_label, "执行偏离");
+
+const executionLabelPriorityKlinePayload = buildKLineBindingPayload({
+  auth,
+  state: Object.assign({}, state, {
+    intraday_boundary_records: {},
+    kline_mind_records: {
+      "2026-06-04": {
+        date: "2026-06-04",
+        day: 4,
+        source_type: "review_focus",
+        error_type: "冲高回落",
+        execution_label: "aligned",
+        law_result: "broken",
+        repeat_count: 1,
+        scenarioTitle: "冲高回落",
+        firstReaction: "说不清",
+        boundaryChoice: "只记录",
+        updatedAt: 1764547800000
+      }
+    }
+  })
+});
+assert.strictEqual(executionLabelPriorityKlinePayload.record.executionResult, "按计划执行");
+assert.strictEqual(executionLabelPriorityKlinePayload.record.execution_result, "按计划执行");
+
 const sharePayload = buildShareCardBindingPayload({
   auth,
   state,

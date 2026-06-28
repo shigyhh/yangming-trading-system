@@ -160,6 +160,59 @@ assert.strictEqual(trainingCardState.errorType, "冲高回落");
 assert.strictEqual(trainingCardState.executionResult, "执行偏离");
 assert.ok(trainingCardState.primaryActionUrl.includes("showResult=1"));
 
+const lawResultOnlyTrainingState = buildTodayNextStepState({
+  todayKey: today,
+  tradeReviewState: {
+    records: [
+      {
+        id: "review-law-result",
+        date: today,
+        mainErrorType: "追涨",
+        nextRule: "先停十秒",
+        mistakeCard: { title: "追涨错题" }
+      }
+    ]
+  },
+  klineMindRecords: {
+    [today]: {
+      date: today,
+      source_type: "review_focus",
+      error_type: "追涨",
+      law_result: "broken",
+      training_mistake_card: { title: "最明显执行偏离" }
+    }
+  }
+});
+assert.strictEqual(lawResultOnlyTrainingState.status, "need_review_training_card");
+assert.strictEqual(lawResultOnlyTrainingState.executionResult, "执行偏离");
+assert.ok(lawResultOnlyTrainingState.secondaryText.includes("执行结果：执行偏离"));
+
+const executionResultPriorityState = buildTodayNextStepState({
+  todayKey: today,
+  tradeReviewState: {
+    records: [
+      {
+        id: "review-execution-priority",
+        date: today,
+        mainErrorType: "追涨",
+        nextRule: "先停十秒",
+        mistakeCard: { title: "追涨错题" }
+      }
+    ]
+  },
+  klineMindRecords: {
+    [today]: {
+      date: today,
+      source_type: "review_focus",
+      error_type: "追涨",
+      execution_label: "aligned",
+      law_result: "broken",
+      training_mistake_card: { title: "最明显执行偏离" }
+    }
+  }
+});
+assert.strictEqual(executionResultPriorityState.executionResult, "按计划执行");
+
 const missingExecutionResultState = buildTodayNextStepState({
   todayKey: today,
   tradeReviewState: {
@@ -183,7 +236,7 @@ const missingExecutionResultState = buildTodayNextStepState({
   }
 });
 assert.strictEqual(missingExecutionResultState.status, "need_review_training_card");
-assert.strictEqual(missingExecutionResultState.executionResult, "暂无明确执行结果");
+assert.strictEqual(missingExecutionResultState.executionResult, "说不清");
 
 const singleRecordTrainingState = buildTodayNextStepState({
   todayKey: today,

@@ -256,6 +256,16 @@
         <text>K 线观心已写入活镜</text>
         <view>{{savedRecord.insightLine}}</view>
       </view>
+      <view class="execution-summary">
+        <view>
+          <text>执行结果</text>
+          <view>{{savedRecord.executionResult || savedRecord.execution_result || '说不清'}}</view>
+        </view>
+        <view>
+          <text>执行一致率</text>
+          <view>{{savedRecord.score || 0}}%</view>
+        </view>
+      </view>
       <text>只记录第一反应、守界动作与复盘完整度，不关联外在结果。</text>
       <view class="completion-actions">
         <button class="ghost-btn" bindtap="goHome">回今日</button>

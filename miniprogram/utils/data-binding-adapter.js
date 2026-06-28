@@ -1,4 +1,5 @@
 const { PERSONALITIES, QUESTIONS, TRAINING_PLANS } = require("./content");
+const { normalizeExecutionResult } = require("./execution-terminology");
 
 const SOURCE = "miniprogram";
 const SOURCE_CHANNEL = "微信小程序MVP";
@@ -144,7 +145,16 @@ function buildKLineBindingPayload({ auth = {}, state = {}, progress = null, trai
   attachAliasedField(record, "errorType", "error_type", pickValue(sourceRecord.errorType, sourceRecord.error_type, sourceRecord.mainErrorType, sourceRecord.main_error_type, sourceRecord.relatedPersonality, sourceRecord.personalityType));
   attachAliasedField(record, "sceneTags", "scene_tags", normalizeListValue(pickValue(sourceRecord.sceneTags, sourceRecord.scene_tags)));
   attachAliasedField(record, "trainingPrescription", "training_prescription", pickValue(sourceRecord.trainingPrescription, sourceRecord.training_prescription, sourceRecord.trainingSuggestion));
-  attachAliasedField(record, "executionResult", "execution_result", pickValue(sourceRecord.executionResult, sourceRecord.execution_result));
+  const executionResult = normalizeExecutionResult(
+    sourceRecord.executionResult,
+    sourceRecord.execution_result,
+    sourceRecord.executionLabel,
+    sourceRecord.execution_label,
+    sourceRecord.lawResult,
+    sourceRecord.law_result
+  );
+  attachAliasedField(record, "executionResult", "execution_result", executionResult);
+  attachAliasedField(record, "executionLabel", "execution_label", executionResult);
   attachAliasedField(record, "repeatCount", "repeat_count", normalizeNumberValue(pickValue(sourceRecord.repeatCount, sourceRecord.repeat_count)));
   attachAliasedField(record, "trainingMistakeCard", "training_mistake_card", pickValue(sourceRecord.trainingMistakeCard, sourceRecord.training_mistake_card, sourceRecord.mistakeCard, sourceRecord.mistake_card));
 
