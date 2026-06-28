@@ -182,3 +182,58 @@ Before implementing a phase whose branch already exists:
 ### Added to task template
 
 Yes.
+
+## 008 — Cross-end tasks were planned before auditing existing web/API/repo capabilities
+
+### Problem
+
+A cross-end task was planned in detail before auditing the existing repositories and web content.
+
+The project already had substantial web-side content, API work, contracts, docs, and historical branches. Because the audit did not come first, some later commands risked duplicating existing functionality, misclassifying web/server/packages changes, or treating old cross-end branches as simple pollution.
+
+### Correct handling
+
+For any task involving more than one side, run a read-only cross-end audit before writing implementation commands.
+
+Cross-end sides include:
+
+- mini program
+- real-review / web-next
+- kline-service
+- server
+- packages/contracts
+- data-binding
+- docs / product library
+- existing feature or backup branches
+
+The audit must check:
+
+1. current repository identity
+2. related repositories
+3. existing pages
+4. existing APIs
+5. existing contracts
+6. existing docs / product concepts
+7. existing branches and PRs
+8. what can be reused
+9. what should be extended
+10. what should be rebuilt
+11. what should be deferred
+
+### Future rule
+
+Before any cross-end phase such as P7, P8, P9, or later:
+
+1. Do not start with implementation.
+2. Do not assume the web side is empty.
+3. Do not assume existing branches are unusable.
+4. First run a read-only capability audit.
+5. Reuse existing interfaces and pages whenever safe.
+6. Add adapters or missing fields before adding new APIs.
+7. Add new APIs only when no suitable existing endpoint exists.
+8. Split implementation by repository responsibility.
+9. Do not mix mini program UI, web UI, kline-service, and data-binding changes in one branch unless explicitly approved by the audit.
+
+### Added to task template
+
+Yes.
