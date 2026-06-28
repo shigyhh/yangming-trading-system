@@ -129,19 +129,28 @@ function buildKLineBindingPayload({ auth = {}, state = {}, progress = null, trai
 
   if (!sourceRecord) return null;
 
+  const record = {
+    day: Number((trainingRecord || {}).day || sourceRecord.day || (practiceState.training7_state || {}).currentDay || 1),
+    recordedAt: toIso(sourceRecord.updatedAt || sourceRecord.createdAt || Date.now()),
+    scene: pickText(sourceRecord.scene, sourceRecord.scenarioTitle, sourceRecord.trigger, sourceRecord.currentStatus, sourceRecord.todayRisk, "小程序训练场景"),
+    market: pickText(sourceRecord.marketName, sourceRecord.marketKey, ""),
+    timeframe: pickText(sourceRecord.timeframeKey, ""),
+    symbol: pickText(sourceRecord.symbol, ""),
+    dataSource: pickText(sourceRecord.dataSource, ""),
+    reaction: pickText(sourceRecord.reaction, sourceRecord.firstReaction, sourceRecord.firstThought, sourceRecord.note, "已觉察，未展开"),
+    disciplineAction: pickText(sourceRecord.disciplineAction, sourceRecord.boundaryChoice, sourceRecord.boundary, sourceRecord.action, sourceRecord.nextAction, "先停一息，再复盘")
+  };
+  attachAliasedField(record, "sourceType", "source_type", pickValue(sourceRecord.sourceType, sourceRecord.source_type, "kline_training"));
+  attachAliasedField(record, "errorType", "error_type", pickValue(sourceRecord.errorType, sourceRecord.error_type, sourceRecord.mainErrorType, sourceRecord.main_error_type, sourceRecord.relatedPersonality, sourceRecord.personalityType));
+  attachAliasedField(record, "sceneTags", "scene_tags", normalizeListValue(pickValue(sourceRecord.sceneTags, sourceRecord.scene_tags)));
+  attachAliasedField(record, "trainingPrescription", "training_prescription", pickValue(sourceRecord.trainingPrescription, sourceRecord.training_prescription, sourceRecord.trainingSuggestion));
+  attachAliasedField(record, "executionResult", "execution_result", pickValue(sourceRecord.executionResult, sourceRecord.execution_result));
+  attachAliasedField(record, "repeatCount", "repeat_count", normalizeNumberValue(pickValue(sourceRecord.repeatCount, sourceRecord.repeat_count)));
+  attachAliasedField(record, "trainingMistakeCard", "training_mistake_card", pickValue(sourceRecord.trainingMistakeCard, sourceRecord.training_mistake_card, sourceRecord.mistakeCard, sourceRecord.mistake_card));
+
   return {
     user: buildDataBindingUser(auth, state),
-    record: {
-      day: Number((trainingRecord || {}).day || sourceRecord.day || (practiceState.training7_state || {}).currentDay || 1),
-      recordedAt: toIso(sourceRecord.updatedAt || sourceRecord.createdAt || Date.now()),
-      scene: pickText(sourceRecord.scene, sourceRecord.scenarioTitle, sourceRecord.trigger, sourceRecord.currentStatus, sourceRecord.todayRisk, "小程序训练场景"),
-      market: pickText(sourceRecord.marketName, sourceRecord.marketKey, ""),
-      timeframe: pickText(sourceRecord.timeframeKey, ""),
-      symbol: pickText(sourceRecord.symbol, ""),
-      dataSource: pickText(sourceRecord.dataSource, ""),
-      reaction: pickText(sourceRecord.reaction, sourceRecord.firstReaction, sourceRecord.firstThought, sourceRecord.note, "已觉察，未展开"),
-      disciplineAction: pickText(sourceRecord.disciplineAction, sourceRecord.boundaryChoice, sourceRecord.boundary, sourceRecord.action, sourceRecord.nextAction, "先停一息，再复盘")
-    },
+    record,
     source: SOURCE
   };
 }
@@ -149,33 +158,40 @@ function buildKLineBindingPayload({ auth = {}, state = {}, progress = null, trai
 function buildTradeReviewBindingPayload({ auth = {}, state = {}, review = null } = {}) {
   const sourceReview = review || getLatestTradeReview(state);
   if (!sourceReview) return null;
+  const normalizedReview = {
+    id: String(sourceReview.id || sourceReview.reviewId || sourceReview.review_id || `mp-trade-review-${Date.now()}`),
+    reviewId: String(sourceReview.id || sourceReview.reviewId || sourceReview.review_id || ""),
+    imageUrl: pickText(sourceReview.imageUrl, sourceReview.image_url, sourceReview.screenshotPath, sourceReview.screenshot_path),
+    tradeDate: pickText(sourceReview.tradeDate, sourceReview.trade_date, sourceReview.date, toIso(sourceReview.createdAt || Date.now()).slice(0, 10)),
+    symbol: pickText(sourceReview.symbol, sourceReview.symbolMasked, sourceReview.symbol_masked),
+    marketType: normalizeMarketType(sourceReview.marketType || sourceReview.market_type || sourceReview.marketKey || sourceReview.marketLabel),
+    timeframeKey: pickText(sourceReview.timeframeKey, sourceReview.timeframe_key, sourceReview.period, sourceReview.cycle, "1d"),
+    buyReason: pickText(sourceReview.buyReason, sourceReview.buy_reason, sourceReview.entryReason, sourceReview.actionLabel),
+    sellReason: pickText(sourceReview.sellReason, sourceReview.sell_reason, sourceReview.exitReason, sourceReview.afterReaction, sourceReview.reviewNote),
+    strongestThought: pickText(sourceReview.strongestThought, sourceReview.strongest_thought, sourceReview.firstThought, sourceReview.first_thought, sourceReview.actionLabel),
+    wasPlanned: normalizeBoolean(sourceReview.wasPlanned, sourceReview.was_planned, sourceReview.inPlan === "yes" ? true : sourceReview.inPlan === "no" ? false : null),
+    hadExitRule: normalizeBoolean(sourceReview.hadExitRule, sourceReview.had_exit_rule, sourceReview.exitPrepared === "yes" ? true : sourceReview.exitPrepared === "no" ? false : null),
+    changedPlanDuringTrade: normalizeBoolean(sourceReview.changedPlanDuringTrade, sourceReview.changed_plan_during_trade, sourceReview.changedPlan === "yes" ? true : sourceReview.changedPlan === "no" ? false : null),
+    detectedMirror: pickText(sourceReview.detectedMirror, sourceReview.detected_mirror, sourceReview.relatedMirror),
+    detectedThieves: Array.isArray(sourceReview.detectedThieves || sourceReview.detected_thieves)
+      ? (sourceReview.detectedThieves || sourceReview.detected_thieves)
+      : (sourceReview.heartThieves || []),
+    behaviorTags: buildTradeReviewBehaviorTags(sourceReview),
+    reviewText: pickText(sourceReview.reviewText, sourceReview.review_text, sourceReview.verdict, sourceReview.oneLine, sourceReview.reviewNote, sourceReview.trainingAction),
+    nextAction: pickText(sourceReview.nextAction, sourceReview.next_action, sourceReview.trainingAction),
+    ocrDraft: sourceReview.ocrDraft || sourceReview.ocr_draft || null,
+    createdAt: toIso(sourceReview.createdAt || sourceReview.updatedAt || Date.now())
+  };
+  attachAliasedField(normalizedReview, "mainErrorType", "main_error_type", pickValue(sourceReview.mainErrorType, sourceReview.main_error_type, sourceReview.errorType, sourceReview.error_type, sourceReview.relatedPersonality));
+  attachAliasedField(normalizedReview, "firstThought", "first_thought", pickValue(sourceReview.firstThought, sourceReview.first_thought, sourceReview.strongestThought, sourceReview.strongest_thought, sourceReview.actionLabel));
+  attachAliasedField(normalizedReview, "triggerScene", "trigger_scene", pickValue(sourceReview.triggerScene, sourceReview.trigger_scene, sourceReview.trigger, (sourceReview.historicalMatch || {}).stagePosition, sourceReview.stageGate));
+  attachAliasedField(normalizedReview, "trainingPrescription", "training_prescription", pickValue(sourceReview.trainingPrescription, sourceReview.training_prescription, sourceReview.trainingAction));
+  attachAliasedField(normalizedReview, "nextRule", "next_rule", pickValue(sourceReview.nextRule, sourceReview.next_rule, sourceReview.nextAction, sourceReview.next_action, sourceReview.trainingAction));
+  attachAliasedField(normalizedReview, "mistakeCard", "mistake_card", pickValue(sourceReview.mistakeCard, sourceReview.mistake_card));
 
   return {
     user: buildDataBindingUser(auth, state),
-    review: {
-      id: String(sourceReview.id || sourceReview.reviewId || sourceReview.review_id || `mp-trade-review-${Date.now()}`),
-      reviewId: String(sourceReview.id || sourceReview.reviewId || sourceReview.review_id || ""),
-      imageUrl: pickText(sourceReview.imageUrl, sourceReview.image_url, sourceReview.screenshotPath, sourceReview.screenshot_path),
-      tradeDate: pickText(sourceReview.tradeDate, sourceReview.trade_date, sourceReview.date, toIso(sourceReview.createdAt || Date.now()).slice(0, 10)),
-      symbol: pickText(sourceReview.symbol, sourceReview.symbolMasked, sourceReview.symbol_masked),
-      marketType: normalizeMarketType(sourceReview.marketType || sourceReview.market_type || sourceReview.marketKey || sourceReview.marketLabel),
-      timeframeKey: pickText(sourceReview.timeframeKey, sourceReview.timeframe_key, sourceReview.period, sourceReview.cycle, "1d"),
-      buyReason: pickText(sourceReview.buyReason, sourceReview.buy_reason, sourceReview.entryReason, sourceReview.actionLabel),
-      sellReason: pickText(sourceReview.sellReason, sourceReview.sell_reason, sourceReview.exitReason, sourceReview.afterReaction, sourceReview.reviewNote),
-      strongestThought: pickText(sourceReview.strongestThought, sourceReview.strongest_thought, sourceReview.firstThought, sourceReview.actionLabel),
-      wasPlanned: normalizeBoolean(sourceReview.wasPlanned, sourceReview.was_planned, sourceReview.inPlan === "yes" ? true : sourceReview.inPlan === "no" ? false : null),
-      hadExitRule: normalizeBoolean(sourceReview.hadExitRule, sourceReview.had_exit_rule, sourceReview.exitPrepared === "yes" ? true : sourceReview.exitPrepared === "no" ? false : null),
-      changedPlanDuringTrade: normalizeBoolean(sourceReview.changedPlanDuringTrade, sourceReview.changed_plan_during_trade, sourceReview.changedPlan === "yes" ? true : sourceReview.changedPlan === "no" ? false : null),
-      detectedMirror: pickText(sourceReview.detectedMirror, sourceReview.detected_mirror, sourceReview.relatedMirror),
-      detectedThieves: Array.isArray(sourceReview.detectedThieves || sourceReview.detected_thieves)
-        ? (sourceReview.detectedThieves || sourceReview.detected_thieves)
-        : (sourceReview.heartThieves || []),
-      behaviorTags: buildTradeReviewBehaviorTags(sourceReview),
-      reviewText: pickText(sourceReview.reviewText, sourceReview.review_text, sourceReview.verdict, sourceReview.oneLine, sourceReview.reviewNote, sourceReview.trainingAction),
-      nextAction: pickText(sourceReview.nextAction, sourceReview.trainingAction),
-      ocrDraft: sourceReview.ocrDraft || sourceReview.ocr_draft || null,
-      createdAt: toIso(sourceReview.createdAt || sourceReview.updatedAt || Date.now())
-    },
+    review: normalizedReview,
     source: SOURCE
   };
 }
@@ -521,6 +537,37 @@ function pickText() {
     if (value) return String(value);
   }
   return "";
+}
+
+function hasBindingValue(value) {
+  return value !== undefined && value !== null && !(typeof value === "string" && value === "");
+}
+
+function pickValue() {
+  for (let index = 0; index < arguments.length; index += 1) {
+    const value = arguments[index];
+    if (hasBindingValue(value)) return value;
+  }
+  return undefined;
+}
+
+function attachAliasedField(target, camelKey, snakeKey, value) {
+  if (!hasBindingValue(value)) return target;
+  target[camelKey] = value;
+  target[snakeKey] = value;
+  return target;
+}
+
+function normalizeListValue(value) {
+  if (!hasBindingValue(value)) return undefined;
+  if (Array.isArray(value)) return value;
+  return [String(value)];
+}
+
+function normalizeNumberValue(value) {
+  if (!hasBindingValue(value)) return undefined;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : undefined;
 }
 
 function getPhoneTail(rawPhone, maskedPhone) {
