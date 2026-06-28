@@ -19,7 +19,9 @@ const { syncLocalState, syncTrainingProgress } = require("../../utils/api");
 const { buildTraining7View } = require("../../modules/training7/index");
 const {
   buildKlineMindSession,
-  buildKlineMindRecord
+  buildKlineMindRecord,
+  listSpecialTrainingPacks,
+  buildSpecialTrainingSessionMeta
 } = require("../../modules/kline-mind/index");
 const { buildKlineTradeReviewRecord: buildKlineMirrorRecord } = require("../../modules/kline-simulator/index");
 
@@ -79,7 +81,27 @@ function buildForm(record = {}, session = {}) {
     firstReaction: record.firstReaction || "",
     bodySignal: record.bodySignal || "",
     boundaryChoice: record.boundaryChoice || "",
-    insightLine: record.insightLine || ""
+    insightLine: record.insightLine || "",
+    sourceType: record.sourceType || record.source_type || session.sourceType || session.source_type || "",
+    source_type: record.source_type || record.sourceType || session.source_type || session.sourceType || "",
+    errorType: record.errorType || record.error_type || session.errorType || session.error_type || "",
+    error_type: record.error_type || record.errorType || session.error_type || session.errorType || "",
+    sceneTags: record.sceneTags || record.scene_tags || session.sceneTags || session.scene_tags || [],
+    scene_tags: record.scene_tags || record.sceneTags || session.scene_tags || session.sceneTags || [],
+    trainingGoal: record.trainingGoal || record.training_goal || session.trainingGoal || session.training_goal || "",
+    training_goal: record.training_goal || record.trainingGoal || session.training_goal || session.trainingGoal || "",
+    expectedAction: record.expectedAction || record.expected_action || session.expectedAction || session.expected_action || "",
+    expected_action: record.expected_action || record.expectedAction || session.expected_action || session.expectedAction || "",
+    nextAction: record.nextAction || record.next_action || session.nextAction || session.next_action || "",
+    next_action: record.next_action || record.nextAction || session.next_action || session.nextAction || "",
+    defaultPrompt: record.defaultPrompt || record.default_prompt || session.defaultPrompt || session.default_prompt || "",
+    default_prompt: record.default_prompt || record.defaultPrompt || session.default_prompt || session.defaultPrompt || "",
+    trainingPrescription: record.trainingPrescription || record.training_prescription || session.trainingPrescription || session.training_prescription || "",
+    training_prescription: record.training_prescription || record.trainingPrescription || session.training_prescription || session.trainingPrescription || "",
+    trainingPackId: record.trainingPackId || record.training_pack_id || session.trainingPackId || session.training_pack_id || "",
+    training_pack_id: record.training_pack_id || record.trainingPackId || session.training_pack_id || session.trainingPackId || "",
+    trainingPackTitle: record.trainingPackTitle || record.training_pack_title || session.trainingPackTitle || session.training_pack_title || "",
+    training_pack_title: record.training_pack_title || record.trainingPackTitle || session.training_pack_title || session.trainingPackTitle || ""
   };
 }
 
@@ -121,6 +143,37 @@ function isReviewFocusEntry(options = {}) {
   return options.sourceType === "review_focus" ||
     options.source_type === "review_focus" ||
     options.from === "review_focus";
+}
+
+function stripTrainingContext(form = {}) {
+  const cleanForm = Object.assign({}, form);
+  [
+    "sourceType",
+    "source_type",
+    "errorType",
+    "error_type",
+    "sceneTags",
+    "scene_tags",
+    "trainingGoal",
+    "training_goal",
+    "expectedAction",
+    "expected_action",
+    "nextAction",
+    "next_action",
+    "defaultPrompt",
+    "default_prompt",
+    "trainingPrescription",
+    "training_prescription",
+    "trainingPackId",
+    "training_pack_id",
+    "trainingPackTitle",
+    "training_pack_title",
+    "sourceReviewId",
+    "source_review_id"
+  ].forEach((key) => {
+    delete cleanForm[key];
+  });
+  return cleanForm;
 }
 
 function buildReviewFocusFromEntry(options = {}, tradeReviewState = {}) {
@@ -189,7 +242,11 @@ Page({
     trainingDay: null,
     session: buildKlineMindSession({}),
     reviewFocus: null,
+    reviewFocusErrorType: "",
+    reviewFocusNextAction: "",
     form: buildForm(),
+    specialTrainingPacks: listSpecialTrainingPacks(),
+    activeTrainingMode: "base_blind",
     savedRecord: null,
     saving: false,
     showSelectors: false,
@@ -227,6 +284,7 @@ Page({
       reviewFocus
     });
     const form = buildForm(klineMindRecord, session);
+    const sourceType = session.sourceType || session.source_type || "";
 
     this.setData({
       assessment,
@@ -234,7 +292,11 @@ Page({
       trainingDay,
       session,
       reviewFocus,
+      reviewFocusErrorType: (reviewFocus && (reviewFocus.errorType || reviewFocus.error_type)) || "",
+      reviewFocusNextAction: (reviewFocus && (reviewFocus.nextAction || reviewFocus.next_action)) || "",
       form,
+      specialTrainingPacks: listSpecialTrainingPacks(),
+      activeTrainingMode: sourceType || "base_blind",
       savedRecord: klineMindRecord && klineMindRecord.updatedAt ? klineMindRecord : null,
       showBodySignal: !!form.bodySignal
     });
@@ -312,6 +374,74 @@ Page({
 
   toggleBodySignal() {
     this.setData({ showBodySignal: !this.data.showBodySignal });
+  },
+
+  startReviewFocusTraining() {
+    if (!this.data.reviewFocus) {
+      wx.showToast({ title: "先从复盘错题进入今日针对训练", icon: "none" });
+      return;
+    }
+    const form = stripTrainingContext(this.data.form || {});
+    const session = buildKlineMindSession({
+      assessment: this.data.assessment,
+      trainingDay: this.data.trainingDay,
+      record: form,
+      historyCache: getKlineHistoryCache(),
+      reviewFocus: this.data.reviewFocus
+    });
+    this.setData({
+      form: buildForm(form, session),
+      session,
+      reviewFocusErrorType: (this.data.reviewFocus && (this.data.reviewFocus.errorType || this.data.reviewFocus.error_type)) || "",
+      reviewFocusNextAction: (this.data.reviewFocus && (this.data.reviewFocus.nextAction || this.data.reviewFocus.next_action)) || "",
+      activeTrainingMode: "review_focus"
+    });
+    wx.showToast({ title: "已进入今日针对训练", icon: "none" });
+  },
+
+  startSpecialTraining(e) {
+    const packId = String(((e.currentTarget || {}).dataset || {}).packId || "").trim();
+    const meta = buildSpecialTrainingSessionMeta(packId);
+    if (!meta.errorType) {
+      wx.showToast({ title: "专项训练暂不可用", icon: "none" });
+      return;
+    }
+    const form = Object.assign({}, stripTrainingContext(this.data.form || {}), meta);
+    const session = buildKlineMindSession({
+      assessment: this.data.assessment,
+      trainingDay: this.data.trainingDay,
+      record: form,
+      historyCache: getKlineHistoryCache(),
+      specialTraining: meta
+    });
+    this.setData({
+      form: buildForm(form, session),
+      session,
+      reviewFocus: null,
+      reviewFocusErrorType: "",
+      reviewFocusNextAction: "",
+      activeTrainingMode: "special_training"
+    });
+    wx.showToast({ title: "已进入专项训练", icon: "none" });
+  },
+
+  startBaseBlindTraining() {
+    const form = stripTrainingContext(this.data.form || {});
+    const session = buildKlineMindSession({
+      assessment: this.data.assessment,
+      trainingDay: this.data.trainingDay,
+      record: form,
+      historyCache: getKlineHistoryCache()
+    });
+    this.setData({
+      form: buildForm(form, session),
+      session,
+      reviewFocus: null,
+      reviewFocusErrorType: "",
+      reviewFocusNextAction: "",
+      activeTrainingMode: "base_blind"
+    });
+    wx.showToast({ title: "已进入基础盲练", icon: "none" });
   },
 
   saveRecord() {
