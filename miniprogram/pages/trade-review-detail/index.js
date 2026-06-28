@@ -44,6 +44,10 @@ Page({
   },
 
   goKlineTraining() {
-    wx.navigateTo({ url: "/pages/kline-mind/index" });
+    const reviewId = this.data.reviewId || ((this.data.record || {}).id) || "";
+    const reviewQuery = reviewId
+      ? `&sourceReviewId=${encodeURIComponent(reviewId)}&source_review_id=${encodeURIComponent(reviewId)}`
+      : "";
+    wx.navigateTo({ url: `/pages/kline-mind/index?sourceType=review_focus&source_type=review_focus${reviewQuery}` });
   }
 });
