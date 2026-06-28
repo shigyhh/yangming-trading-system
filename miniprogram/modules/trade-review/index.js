@@ -1,4 +1,5 @@
 const { getMirrorBinding } = require("../../utils/content");
+const { normalizeExecutionResult } = require("../../utils/execution-terminology");
 const { MARKET_PRESETS, TIMEFRAME_PRESETS } = require("../kline-simulator/index");
 
 const COMPLIANCE_TEXT = "本系统用于交易心理觉察与训练，不提供投资建议，不预测行情，不构成任何操作依据。";
@@ -615,6 +616,12 @@ function buildLivingMirrorStats(tradeReviewState = {}) {
     .filter(Boolean)
     .slice()
     .sort((a, b) => Number(a.createdAt || a.updatedAt || 0) - Number(b.createdAt || b.updatedAt || 0));
+  const klineRecords = normalizeRecordCollection(
+    tradeReviewState.klineMindRecords ||
+    tradeReviewState.kline_mind_records ||
+    tradeReviewState.klineRecords ||
+    tradeReviewState.trainingRecords
+  );
   const recent = records.slice(-14).reverse();
   const recentThirty = records.filter((item) => isWithinRecentDays(item, 30));
   const lastSeven = records.slice(-7);
@@ -631,6 +638,10 @@ function buildLivingMirrorStats(tradeReviewState = {}) {
   const topThieves = topEntries(thiefCounts, 2);
   const topThievesText = topThieves.length ? topThieves.map((item) => item.label).join(" / ") : "待照见";
   const reminder = buildLiveMirrorReminder(tradeReviewState);
+  const executionConsistency = buildExecutionConsistencyStats({
+    records,
+    klineRecords
+  });
 
   return {
     updatedAt: Date.now(),
@@ -651,6 +662,11 @@ function buildLivingMirrorStats(tradeReviewState = {}) {
     topFirstThoughts,
     topFirstThoughtText: formatTopEntry(topFirstThoughts[0], "待记录"),
     nextActionText,
+    executionConsistency,
+    executionConsistencyRateText: executionConsistency.rateText,
+    executionDeviationText: `${executionConsistency.deviationCount} 次`,
+    oldIssueRepeatText: `${executionConsistency.oldIssueRepeatCount} 次`,
+    topDeviationTypeText: formatTopEntry(executionConsistency.topDeviationTypes[0], "样本不足"),
     mirrorTrendRows,
     reviewHistory: recent.slice(0, 20).map((item) => ({
       id: item.id,
@@ -672,6 +688,67 @@ function buildLivingMirrorStats(tradeReviewState = {}) {
   };
 }
 
+function buildExecutionConsistencyStats({ records = [], klineRecords = [], days = 30 } = {}) {
+  const recent = records.concat(klineRecords)
+    .filter(Boolean)
+    .filter((item) => isWithinRecentDays(item, days));
+  let alignedCount = 0;
+  let deviationCount = 0;
+  let unclearCount = 0;
+  let oldIssueRepeatCount = 0;
+  const deviationTypes = [];
+  const firstThoughts = [];
+
+  recent.forEach((item) => {
+    const result = normalizeExecutionResult(
+      item.executionResult,
+      item.execution_result,
+      item.executionLabel,
+      item.execution_label,
+      item.lawResult,
+      item.law_result
+    );
+    if (result === "按计划执行") {
+      alignedCount += 1;
+    } else if (result === "执行偏离") {
+      deviationCount += 1;
+      const type = pickRecordValue(item, "mainErrorType", "main_error_type", "errorType", "error_type");
+      if (type) deviationTypes.push(type);
+    } else {
+      unclearCount += 1;
+    }
+
+    const repeatCount = Number(pickRawRecordValue(item, "repeatCount", "repeat_count") || 0);
+    if (Number.isFinite(repeatCount) && repeatCount > 0) oldIssueRepeatCount += repeatCount;
+
+    const firstThought = pickRecordValue(item, "firstThought", "first_thought");
+    if (firstThought) firstThoughts.push(firstThought);
+  });
+
+  const denominator = alignedCount + deviationCount;
+  const rate = denominator ? Math.round((alignedCount / denominator) * 100) : null;
+  const topDeviationTypes = topEntries(countValues(deviationTypes), 3);
+  const topFirstThoughts = topEntries(countValues(firstThoughts), 3);
+
+  return {
+    days,
+    alignedCount,
+    deviationCount,
+    deviatedCount: deviationCount,
+    unclearCount,
+    denominator,
+    isSampleEnough: denominator > 0,
+    rate,
+    rateText: denominator ? `${rate}%` : "样本不足",
+    oldIssueRepeatCount,
+    oldIssueRepeatText: `${oldIssueRepeatCount} 次`,
+    topDeviationTypes,
+    topDeviationTypeText: formatTopEntry(topDeviationTypes[0], "样本不足"),
+    topFirstThoughts,
+    topFirstThoughtText: formatTopEntry(topFirstThoughts[0], "待记录")
+  };
+}
+
 function pickRecordValue(record = {}, ...fields) {
   for (let index = 0; index < fields.length; index += 1) {
     const value = record[fields[index]];
@@ -684,6 +761,26 @@ function pickRecordValue(record = {}, ...fields) {
     if (text) return text;
   }
   return "";
+}
+
+function pickRawRecordValue(record = {}, ...fields) {
+  for (let index = 0; index < fields.length; index += 1) {
+    const value = record[fields[index]];
+    if (value !== undefined && value !== null && value !== "") return value;
+  }
+  return undefined;
+}
+
+function normalizeRecordCollection(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.filter(Boolean);
+  if (Array.isArray(value.records)) return value.records.filter(Boolean);
+  if (typeof value === "object") {
+    return Object.keys(value)
+      .map((key) => value[key])
+      .filter((item) => item && typeof item === "object");
+  }
+  return [];
 }
 
 function pickLatestRecordValue(records = [], ...fields) {
@@ -818,5 +915,6 @@ module.exports = {
   buildTradeReviewRecordView,
   buildTradeReviewClosure,
   buildLiveMirrorReminder,
-  buildLivingMirrorStats
+  buildLivingMirrorStats,
+  buildExecutionConsistencyStats
 };

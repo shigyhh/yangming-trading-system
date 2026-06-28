@@ -626,6 +626,65 @@
   font-weight: 900;
 }
 
+.execution-consistency-block {
+  margin-top: 24rpx;
+  padding: 20rpx;
+  border-radius: 18rpx;
+  border: 1rpx solid rgba(115, 214, 189, 0.14);
+  background: rgba(115, 214, 189, 0.045);
+}
+
+.execution-consistency-title {
+  color: rgba(216, 183, 111, 0.82);
+  font-size: 22rpx;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.execution-consistency-grid {
+  margin-top: 16rpx;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12rpx;
+}
+
+.execution-consistency-grid > view,
+.execution-consistency-detail > view {
+  padding: 16rpx;
+  border-radius: 14rpx;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.execution-consistency-grid text,
+.execution-consistency-detail text {
+  display: block;
+  color: rgba(247, 239, 223, 0.5);
+  font-size: 20rpx;
+  line-height: 1.35;
+}
+
+.execution-consistency-grid view view {
+  margin-top: 8rpx;
+  color: #73d6bd;
+  font-size: 28rpx;
+  font-weight: 900;
+}
+
+.execution-consistency-detail {
+  margin-top: 12rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12rpx;
+}
+
+.execution-consistency-detail view view {
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.86);
+  font-size: 25rpx;
+  font-weight: 900;
+  line-height: 1.4;
+}
+
 .trigger-scene-block {
   margin-top: 24rpx;
 }
