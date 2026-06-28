@@ -5,6 +5,7 @@ const {
   buildMiniHomeView,
   buildMiniLoopProgress,
   buildMiniProgramBinding,
+  buildTodayNextStepState,
   normalizeThoughtType
 } = require("./index");
 
@@ -82,5 +83,148 @@ const tree = buildLivingMirrorTree({
 });
 assert.strictEqual(tree.trunk, "追涨之镜");
 assert.ok(tree.loopLine.includes("追涨之镜"));
+
+const today = "2026-06-28";
+const yesterday = "2026-06-27";
+
+const needReviewState = buildTodayNextStepState({
+  todayKey: today,
+  tradeReviewState: { records: [] },
+  klineMindRecords: {}
+});
+assert.strictEqual(needReviewState.status, "need_review");
+assert.strictEqual(needReviewState.primaryActionText, "上传真实记录");
+assert.strictEqual(needReviewState.primaryActionUrl, "/pages/trade-review/index");
+
+const needTrainingState = buildTodayNextStepState({
+  todayKey: today,
+  tradeReviewState: {
+    records: [
+      {
+        id: "review-camel",
+        date: today,
+        mainErrorType: "追涨",
+        firstThought: "怕错过",
+        triggerScene: "放量拉升",
+        nextRule: "先停十秒",
+        mistakeCard: { title: "追涨错题" }
+      }
+    ]
+  },
+  klineMindRecords: {
+    [today]: { date: today, sourceType: "base_blind", completed: true }
+  }
+});
+assert.strictEqual(needTrainingState.status, "need_training");
+assert.strictEqual(needTrainingState.primaryActionText, "开始今日针对训练");
+assert.strictEqual(needTrainingState.mainErrorType, "追涨");
+assert.strictEqual(needTrainingState.secondaryText, "根据你最近真实复盘，今日训练：追涨专项");
+assert.ok(needTrainingState.primaryActionUrl.includes("sourceType=review_focus"));
+assert.ok(needTrainingState.primaryActionUrl.includes("source_type=review_focus"));
+assert.ok(needTrainingState.primaryActionUrl.includes("sourceReviewId=review-camel"));
+
+const trainingCardState = buildTodayNextStepState({
+  todayKey: today,
+  tradeReviewState: {
+    records: [
+      {
+        id: "review-snake",
+        created_at: `${today}T10:00:00.000Z`,
+        main_error_type: "冲高回落",
+        first_thought: "还会涨",
+        trigger_scene: "冲高回落",
+        next_action: "先写第一念",
+        mistake_card: { title: "冲高回落错题" }
+      }
+    ]
+  },
+  klineMindRecords: {
+    [today]: {
+      date: today,
+      source_type: "review_focus",
+      error_type: "冲高回落",
+      execution_result: "执行偏离",
+      training_mistake_card: { title: "最明显执行偏离" }
+    },
+    [yesterday]: {
+      date: yesterday,
+      sourceType: "review_focus",
+      errorType: "旧题",
+      executionResult: "按计划执行"
+    }
+  }
+});
+assert.strictEqual(trainingCardState.status, "need_review_training_card");
+assert.strictEqual(trainingCardState.primaryActionText, "查看训练错题卡");
+assert.strictEqual(trainingCardState.errorType, "冲高回落");
+assert.strictEqual(trainingCardState.executionResult, "执行偏离");
+assert.ok(trainingCardState.primaryActionUrl.includes("showResult=1"));
+
+const singleRecordTrainingState = buildTodayNextStepState({
+  todayKey: today,
+  tradeReviewState: {
+    records: [
+      {
+        id: "review-single",
+        date: today,
+        mainErrorType: "追涨",
+        mistakeCard: { title: "追涨错题" }
+      }
+    ]
+  },
+  todayKlineMindRecord: {
+    date: today,
+    sourceType: "review_focus",
+    errorType: "追涨",
+    executionResult: "按计划执行"
+  }
+});
+assert.strictEqual(singleRecordTrainingState.status, "need_review_training_card");
+
+const completedState = buildTodayNextStepState({
+  todayKey: today,
+  tradeReviewState: {
+    records: [
+      {
+        id: "review-complete",
+        date: today,
+        mainErrorType: "追涨",
+        nextRule: "先记录，再行动",
+        mistakeCard: { title: "追涨错题" }
+      }
+    ]
+  },
+  klineMindRecords: {
+    [today]: {
+      date: today,
+      sourceType: "review_focus",
+      errorType: "追涨",
+      executionResult: "按计划执行",
+      trainingMistakeCard: { title: "最明显执行偏离" },
+      trainingMistakeCardViewed: true
+    }
+  }
+});
+assert.strictEqual(completedState.status, "completed");
+assert.strictEqual(completedState.primaryActionText, "查看今日活镜");
+assert.strictEqual(completedState.primaryActionUrl, "/pages/living-mirror/index");
+assert.ok(completedState.secondaryText.includes("今日错题：追涨"));
+assert.ok(completedState.secondaryText.includes("下次执行动作：先记录，再行动"));
+
+const oldReviewState = buildTodayNextStepState({
+  todayKey: today,
+  tradeReviewState: {
+    records: [
+      {
+        id: "old-review",
+        date: yesterday,
+        mainErrorType: "追涨",
+        mistakeCard: { title: "旧题" }
+      }
+    ]
+  },
+  klineMindRecords: {}
+});
+assert.strictEqual(oldReviewState.status, "need_review");
 
 console.log("mini-loop module tests passed");
