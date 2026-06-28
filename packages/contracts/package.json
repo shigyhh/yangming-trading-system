@@ -15,6 +15,9 @@
     "./living-mirror": {
       "types": "./living-mirror.d.ts"
     },
+    "./kline-segment": {
+      "types": "./kline-segment.d.ts"
+    },
     "./training-pack": {
       "types": "./training-pack.d.ts"
     }
