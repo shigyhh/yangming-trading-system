@@ -13,7 +13,8 @@ const {
   saveTodayKlineMindRecord,
   getTradeReviewRecords,
   saveTradeReviewRecord,
-  saveInviteConversionEvent
+  saveInviteConversionEvent,
+  saveZhixingReminderEvent
 } = require("../../utils/store");
 const { syncLocalState, syncTrainingProgress } = require("../../utils/api");
 const { buildTraining7View } = require("../../modules/training7/index");
@@ -23,6 +24,12 @@ const {
   listSpecialTrainingPacks,
   buildSpecialTrainingSessionMeta
 } = require("../../modules/kline-mind/index");
+const {
+  ZHIXING_REMINDER_CHOICES,
+  buildTrainingPreReminder,
+  buildTrainingSceneReminder,
+  createInterventionEvent
+} = require("../../modules/zhixing-reminder/index");
 const { buildKlineTradeReviewRecord: buildKlineMirrorRecord } = require("../../modules/kline-simulator/index");
 
 function inferHeartThieves(text) {
@@ -249,6 +256,8 @@ Page({
     activeTrainingMode: "base_blind",
     savedRecord: null,
     saving: false,
+    zhixingReminderDisabled: false,
+    zhixingReminderShownCount: 0,
     showSelectors: false,
     showGuide: false,
     showBodySignal: false
@@ -381,6 +390,20 @@ Page({
       wx.showToast({ title: "先从复盘错题进入今日针对训练", icon: "none" });
       return;
     }
+    const reminder = buildTrainingPreReminder(this.buildZhixingReminderContext());
+    if (reminder && !this.data.zhixingReminderDisabled) {
+      this.presentZhixingReminder(reminder, {
+        onContinue: () => this.enterReviewFocusTraining(),
+        onHold: () => wx.showToast({ title: "已记录观望，本次先不训练", icon: "none" }),
+        onLater: () => wx.showToast({ title: "已记录稍后再练", icon: "none" }),
+        onMute: () => this.enterReviewFocusTraining({ disableReminders: true })
+      });
+      return;
+    }
+    this.enterReviewFocusTraining();
+  },
+
+  enterReviewFocusTraining(options = {}) {
     const form = stripTrainingContext(this.data.form || {});
     const session = buildKlineMindSession({
       assessment: this.data.assessment,
@@ -394,7 +417,9 @@ Page({
       session,
       reviewFocusErrorType: (this.data.reviewFocus && (this.data.reviewFocus.errorType || this.data.reviewFocus.error_type)) || "",
       reviewFocusNextAction: (this.data.reviewFocus && (this.data.reviewFocus.nextAction || this.data.reviewFocus.next_action)) || "",
-      activeTrainingMode: "review_focus"
+      activeTrainingMode: "review_focus",
+      zhixingReminderDisabled: options.disableReminders ? true : this.data.zhixingReminderDisabled,
+      zhixingReminderShownCount: 0
     });
     wx.showToast({ title: "已进入今日针对训练", icon: "none" });
   },
@@ -420,7 +445,9 @@ Page({
       reviewFocus: null,
       reviewFocusErrorType: "",
       reviewFocusNextAction: "",
-      activeTrainingMode: "special_training"
+      activeTrainingMode: "special_training",
+      zhixingReminderDisabled: false,
+      zhixingReminderShownCount: 0
     });
     wx.showToast({ title: "已进入专项训练", icon: "none" });
   },
@@ -439,9 +466,146 @@ Page({
       reviewFocus: null,
       reviewFocusErrorType: "",
       reviewFocusNextAction: "",
-      activeTrainingMode: "base_blind"
+      activeTrainingMode: "base_blind",
+      zhixingReminderDisabled: false,
+      zhixingReminderShownCount: 0
     });
     wx.showToast({ title: "已进入基础盲练", icon: "none" });
+  },
+
+  buildZhixingReminderContext() {
+    const form = this.data.form || {};
+    const session = this.data.session || {};
+    const reviewFocus = this.data.reviewFocus || {};
+    const sceneTags = normalizeList(pickValue(
+      form.sceneTags,
+      form.scene_tags,
+      session.sceneTags,
+      session.scene_tags,
+      reviewFocus.sceneTags,
+      reviewFocus.scene_tags
+    ));
+    return {
+      errorType: pickValue(
+        form.errorType,
+        form.error_type,
+        session.errorType,
+        session.error_type,
+        reviewFocus.errorType,
+        reviewFocus.error_type
+      ),
+      error_type: pickValue(
+        form.error_type,
+        form.errorType,
+        session.error_type,
+        session.errorType,
+        reviewFocus.error_type,
+        reviewFocus.errorType
+      ),
+      sceneTag: sceneTags[0] || "",
+      scene_tag: sceneTags[0] || "",
+      sceneTags,
+      scene_tags: sceneTags,
+      nextAction: pickValue(
+        form.nextAction,
+        form.next_action,
+        session.nextAction,
+        session.next_action,
+        reviewFocus.nextAction,
+        reviewFocus.next_action
+      ),
+      next_action: pickValue(
+        form.next_action,
+        form.nextAction,
+        session.next_action,
+        session.nextAction,
+        reviewFocus.next_action,
+        reviewFocus.nextAction
+      ),
+      trainingPrescription: pickValue(
+        form.trainingPrescription,
+        form.training_prescription,
+        session.trainingPrescription,
+        session.training_prescription,
+        reviewFocus.trainingPrescription,
+        reviewFocus.training_prescription
+      ),
+      training_prescription: pickValue(
+        form.training_prescription,
+        form.trainingPrescription,
+        session.training_prescription,
+        session.trainingPrescription,
+        reviewFocus.training_prescription,
+        reviewFocus.trainingPrescription
+      )
+    };
+  },
+
+  presentZhixingReminder(reminder, handlers = {}) {
+    if (!wx.showModal || !wx.showActionSheet) {
+      this.saveZhixingReminderResponse(reminder, "continue");
+      if (handlers.onContinue) handlers.onContinue();
+      return;
+    }
+    wx.showModal({
+      title: reminder.title || "知行提醒",
+      content: reminder.message || "",
+      confirmText: "选择动作",
+      cancelText: "稍后再练",
+      success: (modalResult) => {
+        if (!modalResult.confirm) {
+          this.saveZhixingReminderResponse(reminder, "later");
+          if (handlers.onLater) handlers.onLater();
+          return;
+        }
+        wx.showActionSheet({
+          itemList: ZHIXING_REMINDER_CHOICES.map((item) => item.label),
+          success: (actionResult) => {
+            const choice = ZHIXING_REMINDER_CHOICES[actionResult.tapIndex] || ZHIXING_REMINDER_CHOICES[0];
+            this.handleZhixingReminderResponse(reminder, choice.key, handlers);
+          },
+          fail: () => {
+            this.saveZhixingReminderResponse(reminder, "later");
+            if (handlers.onLater) handlers.onLater();
+          }
+        });
+      }
+    });
+  },
+
+  handleZhixingReminderResponse(reminder, response, handlers = {}) {
+    this.saveZhixingReminderResponse(reminder, response);
+    if (response === "mute_session") {
+      this.setData({ zhixingReminderDisabled: true });
+      if (handlers.onMute) handlers.onMute();
+      else if (handlers.onContinue) handlers.onContinue();
+      return;
+    }
+    if (response === "change_to_hold") {
+      if (handlers.onHold) handlers.onHold();
+      return;
+    }
+    if (response === "later") {
+      if (handlers.onLater) handlers.onLater();
+      return;
+    }
+    if (handlers.onContinue) handlers.onContinue();
+  },
+
+  saveZhixingReminderResponse(reminder, response) {
+    const event = createInterventionEvent(Object.assign({}, reminder || {}, {
+      userResponse: response
+    }));
+    saveZhixingReminderEvent(event);
+    if ((reminder || {}).triggerType === "during_training") {
+      this.setData({
+        zhixingReminderShownCount: Math.min(
+          2,
+          Number(this.data.zhixingReminderShownCount || 0) + 1
+        )
+      });
+    }
+    syncLocalState({ silent: true }).catch(() => {});
   },
 
   saveRecord() {
@@ -464,6 +628,28 @@ Page({
       return;
     }
 
+    const reminder = buildTrainingSceneReminder(Object.assign({}, this.buildZhixingReminderContext(), {
+      shownCount: this.data.zhixingReminderShownCount,
+      muted: this.data.zhixingReminderDisabled
+    }));
+    if (reminder) {
+      this.presentZhixingReminder(reminder, {
+        onContinue: () => this.persistKlineMindRecord(),
+        onHold: () => this.persistKlineMindRecord({ forceHold: true }),
+        onLater: () => wx.showToast({ title: "已记录稍后再练", icon: "none" }),
+        onMute: () => this.persistKlineMindRecord()
+      });
+      return;
+    }
+    this.persistKlineMindRecord();
+  },
+
+  persistKlineMindRecord(options = {}) {
+    let form = this.data.form || {};
+    if (options.forceHold) {
+      form = Object.assign({}, form, { boundaryChoice: "改为观望" });
+      this.setData({ form });
+    }
     this.setData({ saving: true });
     const record = buildKlineMindRecord(form, this.data.session);
     const saved = saveTodayKlineMindRecord(record);
