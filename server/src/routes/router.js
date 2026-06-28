@@ -29,6 +29,7 @@ import { approveYmtyRefund, createYmtyRefund, executeYmtyRefund, getYmtyRefund, 
 import { authenticateYmtyAdmin, changeYmtyAdminPassword, getYmtyAdminMe, loginYmtyAdmin, logoutYmtyAdmin } from "../services/adminAuth.js";
 import { saveYmtyLivecodeUpload } from "../services/ymtyUpload.js";
 import { assertRealPayConfigReady, createH5Order, createJsapiOrder, createWapOrder, isPaymentConfigError, normalizePayChannel, parseAlipayNotify, parseWechatNotify, validateAlipayPayment, validateWechatPayment, verifyAlipayNotify, verifyWechatNotify } from "../services/payments/index.js";
+import { handleTrainingPackRoute } from "./trainingPacks.js";
 
 export async function route(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
@@ -83,6 +84,9 @@ export async function route(req, res) {
         zhixing_replay_next: "POST /api/v1/zhixing-replay/:session_id/next",
         zhixing_replay_finish: "POST /api/v1/zhixing-replay/:session_id/finish",
         zhixing_replay_results: "GET /api/v1/users/:user_id/zhixing-replay/results",
+        training_packs: "GET|POST /api/v1/training-packs",
+        training_pack: "PATCH /api/v1/training-packs/:id",
+        training_pack_enabled: "PATCH /api/v1/training-packs/:id/enabled",
         forum_posts: "GET /api/v1/forum/posts?category=&q=",
         forum_create_post: "POST /api/v1/forum/posts",
         forum_post: "GET /api/v1/forum/posts/:post_id",
@@ -127,6 +131,8 @@ export async function route(req, res) {
       time: new Date().toISOString()
     });
   }
+
+  if (await handleTrainingPackRoute(req, res, { url, pathname })) return;
 
   if (req.method === "GET" && pathname === "/api/v1/stats/public") {
     const stats = await getPublicStats();

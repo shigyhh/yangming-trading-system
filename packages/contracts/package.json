@@ -14,6 +14,9 @@
     },
     "./living-mirror": {
       "types": "./living-mirror.d.ts"
+    },
+    "./training-pack": {
+      "types": "./training-pack.d.ts"
     }
   }
 }
