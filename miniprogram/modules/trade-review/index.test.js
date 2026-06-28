@@ -12,6 +12,10 @@ const {
   buildWeeklyLivingMirrorReport,
   buildTradeReview
 } = require("./index");
+const {
+  buildExecutionPlanLibrary,
+  createExecutionPlan
+} = require("../execution-plan/index");
 
 assert.ok(ACTION_OPTIONS.length >= 6);
 assert.ok(BOUNDARY_STATES.length >= 3);
@@ -258,6 +262,37 @@ assert.ok(p1SmokeReview.trainingPrescription.action);
 assert.strictEqual(p1SmokeReview.nextRule, p1SmokeReview.next_rule);
 assert.ok(p1SmokeReview.nextRule);
 assert.deepStrictEqual(p1SmokeReview.mistakeCard, p1SmokeReview.mistake_card);
+
+const customExecutionPlanLibrary = buildExecutionPlanLibrary({
+  records: [
+    createExecutionPlan({
+      title: "追高冲动自定义执行计划",
+      errorType: "追高冲动",
+      expectedAction: "先观察两根确认",
+      nextAction: "先观察两根确认",
+      trainingPrescription: "追高冲动专项强化"
+    }, { id: "plan-review-custom" })
+  ]
+});
+const plannedReview = buildTradeReview({
+  marketKey: "cn",
+  timeframeKey: "1d",
+  tradeDate: recentDateText,
+  actionKey: "impulse",
+  emotion: "急躁",
+  firstThought: "怕错过",
+  boundaryState: "lost",
+  reviewNote: "这次又被拉升牵动。"
+}, {
+  executionPlanLibrary: customExecutionPlanLibrary
+});
+assert.strictEqual(plannedReview.nextRule, "先观察两根确认");
+assert.strictEqual(plannedReview.next_rule, "先观察两根确认");
+assert.strictEqual(plannedReview.nextAction, "先观察两根确认");
+assert.strictEqual(plannedReview.next_action, "先观察两根确认");
+assert.strictEqual(plannedReview.mistakeCard.nextRule, "先观察两根确认");
+assert.strictEqual(plannedReview.mistake_card.plan_id, "plan-review-custom");
+assert.strictEqual(plannedReview.trainingPrescription.action, "追高冲动专项强化");
 assert.ok(p1SmokeReview.mistakeCard.title);
 
 const p1SmokeStats = buildLivingMirrorStats({ records: [p1SmokeReview] });

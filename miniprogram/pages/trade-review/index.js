@@ -7,6 +7,7 @@ const {
   saveTraining7Task,
   saveInviteConversionEvent,
   saveZhixingReminderEvent,
+  getExecutionPlanLibrary,
   todayKey
 } = require("../../utils/store");
 const {
@@ -331,7 +332,8 @@ Page({
       ocrDraft: this.data.ocrDraft || null
     });
     const report = buildTradeReview(formForReview, {
-      assessment: getAssessmentResult()
+      assessment: getAssessmentResult(),
+      executionPlanLibrary: getExecutionPlanLibrary()
     });
     const state = saveTradeReviewRecord(report);
     const day = (getTraining7State() || {}).currentDay || 1;
@@ -372,7 +374,8 @@ Page({
     wx.showToast({ title: "已写入活镜", icon: "success" });
     const zhixingReminder = buildReviewRepeatReminder({
       currentRecord: state.latest,
-      records: state.records
+      records: state.records,
+      executionPlanLibrary: getExecutionPlanLibrary()
     });
     if (zhixingReminder) {
       setTimeout(() => this.presentReviewRepeatReminder(zhixingReminder), 350);

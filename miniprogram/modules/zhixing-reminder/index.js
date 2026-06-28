@@ -1,6 +1,7 @@
 const DAY_MS = 24 * 60 * 60 * 1000;
 const DEFAULT_WINDOW_DAYS = 30;
 const DEFAULT_MAX_SESSION_REMINDERS = 2;
+const { resolveExecutionPlanAction } = require("../execution-plan/index");
 
 const ZHIXING_REMINDER_CHOICES = [
   { key: "continue", label: "继续" },
@@ -148,7 +149,12 @@ function withSnakeAliases(reminder = {}) {
 function buildTrainingPreReminder(input = {}) {
   const errorType = readErrorType(input) || "高频旧题";
   const plan = getActionPlan(errorType);
-  const nextAction = readNextAction(input) || plan.action;
+  const executionPlanAction = resolveExecutionPlanAction(errorType, pickValue(
+    input.executionPlanLibrary,
+    input.execution_plan,
+    input.executionPlan
+  ));
+  const nextAction = (executionPlanAction || {}).nextAction || readNextAction(input) || plan.action;
   const sceneTag = readSceneTag(input) || plan.sceneTags[0] || "";
   return withSnakeAliases({
     triggerType: "before_training",
@@ -171,7 +177,12 @@ function buildTrainingSceneReminder(input = {}) {
   const plan = getActionPlan(errorType);
   const sceneTag = readSceneTag(input);
   if (sceneTag && plan.sceneTags.length && !plan.sceneTags.includes(sceneTag)) return null;
-  const nextAction = readNextAction(input) || plan.action;
+  const executionPlanAction = resolveExecutionPlanAction(errorType, pickValue(
+    input.executionPlanLibrary,
+    input.execution_plan,
+    input.executionPlan
+  ));
+  const nextAction = (executionPlanAction || {}).nextAction || readNextAction(input) || plan.action;
   return withSnakeAliases({
     triggerType: "during_training",
     title: "暂停一下",
@@ -204,7 +215,12 @@ function buildReviewRepeatReminder(input = {}) {
   }).length;
   if (repeatCount < threshold) return null;
   const plan = getActionPlan(errorType);
-  const nextAction = readNextAction(currentRecord) || plan.action;
+  const executionPlanAction = resolveExecutionPlanAction(errorType, pickValue(
+    input.executionPlanLibrary,
+    input.execution_plan,
+    input.executionPlan
+  ));
+  const nextAction = (executionPlanAction || {}).nextAction || readNextAction(currentRecord) || plan.action;
   const sceneTag = readSceneTag(currentRecord) || plan.sceneTags[0] || "";
   return withSnakeAliases({
     triggerType: "after_review",

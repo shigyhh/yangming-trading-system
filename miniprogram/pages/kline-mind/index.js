@@ -14,7 +14,8 @@ const {
   getTradeReviewRecords,
   saveTradeReviewRecord,
   saveInviteConversionEvent,
-  saveZhixingReminderEvent
+  saveZhixingReminderEvent,
+  getExecutionPlanLibrary
 } = require("../../utils/store");
 const { syncLocalState, syncTrainingProgress } = require("../../utils/api");
 const { buildTraining7View } = require("../../modules/training7/index");
@@ -24,6 +25,7 @@ const {
   listSpecialTrainingPacks,
   buildSpecialTrainingSessionMeta
 } = require("../../modules/kline-mind/index");
+const { resolveExecutionPlanAction } = require("../../modules/execution-plan/index");
 const {
   ZHIXING_REMINDER_CHOICES,
   buildTrainingPreReminder,
@@ -242,6 +244,25 @@ function buildReviewFocusFromEntry(options = {}, tradeReviewState = {}) {
   };
 }
 
+function applyExecutionPlanToReviewFocus(reviewFocus, executionPlanLibrary) {
+  if (!reviewFocus) return reviewFocus;
+  const errorType = pickValue(reviewFocus.errorType, reviewFocus.error_type);
+  const executionPlanAction = resolveExecutionPlanAction(errorType, executionPlanLibrary);
+  if (!executionPlanAction) return reviewFocus;
+  const nextAction = executionPlanAction.nextAction || reviewFocus.nextAction || reviewFocus.next_action || "";
+  const trainingPrescription = executionPlanAction.trainingPrescription || reviewFocus.trainingPrescription || reviewFocus.training_prescription || "";
+  return Object.assign({}, reviewFocus, {
+    executionPlanId: executionPlanAction.planId,
+    execution_plan_id: executionPlanAction.plan_id,
+    expectedAction: executionPlanAction.expectedAction,
+    expected_action: executionPlanAction.expected_action,
+    nextAction,
+    next_action: nextAction,
+    trainingPrescription,
+    training_prescription: trainingPrescription
+  });
+}
+
 Page({
   data: {
     assessment: null,
@@ -284,7 +305,11 @@ Page({
       klineMindRecord
     });
     const trainingDay = training7View.today || {};
-    const reviewFocus = buildReviewFocusFromEntry(this.entryOptions || {}, getTradeReviewRecords());
+    const executionPlanLibrary = getExecutionPlanLibrary();
+    const reviewFocus = applyExecutionPlanToReviewFocus(
+      buildReviewFocusFromEntry(this.entryOptions || {}, getTradeReviewRecords()),
+      executionPlanLibrary
+    );
     const session = buildKlineMindSession({
       assessment,
       trainingDay,
@@ -537,7 +562,8 @@ Page({
         session.trainingPrescription,
         reviewFocus.training_prescription,
         reviewFocus.trainingPrescription
-      )
+      ),
+      executionPlanLibrary
     };
   },
 

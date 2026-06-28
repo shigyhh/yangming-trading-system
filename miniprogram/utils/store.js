@@ -46,7 +46,8 @@ const {
   YM_DEMO_MODE,
   YM_DEBUG_MODE,
   YM_TRAINING_PRESCRIPTION,
-  YM_ZHIXING_REMINDER_EVENTS
+  YM_ZHIXING_REMINDER_EVENTS,
+  YM_EXECUTION_PLAN_LIBRARY
 } = require("../core/storage-keys");
 const REVIEW_KEY = YM_CLOSING_REVIEW;
 const MIND_KEY = YM_OPENING_CHECK;
@@ -64,6 +65,12 @@ const {
   buildTripleReflection
 } = require("../modules/zhixing-stability/index");
 const { buildTraining7View } = require("../modules/training7/index");
+const {
+  buildExecutionPlanLibrary,
+  createExecutionPlan,
+  updateExecutionPlan,
+  deleteExecutionPlan
+} = require("../modules/execution-plan/index");
 const {
   buildMiniProgramBinding,
   buildMiniLoopProgress,
@@ -894,6 +901,37 @@ function saveZhixingReminderEvent(event = {}) {
     latest: record,
     records
   });
+}
+
+function getExecutionPlanLibrary() {
+  return buildExecutionPlanLibrary(read(YM_EXECUTION_PLAN_LIBRARY, {
+    latest: null,
+    records: []
+  }));
+}
+
+function saveExecutionPlanLibrary(library) {
+  return write(YM_EXECUTION_PLAN_LIBRARY, buildExecutionPlanLibrary(library || {}));
+}
+
+function saveExecutionPlan(input = {}) {
+  const library = getExecutionPlanLibrary();
+  const userId = input.userId || input.user_id || buildSharedUserId(getUserBinding());
+  const plan = createExecutionPlan(input, { userId });
+  const records = (library.records || []).filter((item) => item.id !== plan.id).concat(plan);
+  return saveExecutionPlanLibrary({
+    latest: plan,
+    records,
+    updatedAt: Date.now()
+  });
+}
+
+function updateExecutionPlanRecord(id, patch = {}) {
+  return saveExecutionPlanLibrary(updateExecutionPlan(getExecutionPlanLibrary(), id, patch));
+}
+
+function deleteExecutionPlanRecord(id) {
+  return saveExecutionPlanLibrary(deleteExecutionPlan(getExecutionPlanLibrary(), id));
 }
 
 function getKlineReviewReports() {
@@ -2090,6 +2128,7 @@ function collectLocalState() {
   const assistantHandoff = getAssistantHandoff();
   const trainingPrescription = getTrainingPrescription();
   const interventionEvents = getZhixingReminderEvents();
+  const executionPlanLibrary = getExecutionPlanLibrary();
   return {
     profile,
     user_id: userId,
@@ -2121,6 +2160,10 @@ function collectLocalState() {
     intervention_events: interventionEvents,
     interventionEvents,
     interventionEvent: interventionEvents,
+    execution_plan: executionPlanLibrary,
+    execution_plans: executionPlanLibrary,
+    executionPlan: executionPlanLibrary,
+    executionPlans: executionPlanLibrary,
     mini_program_binding: getMiniProgramBinding(),
     mini_loop_progress: getMiniLoopProgress(),
     mini_daily_practice: getMiniDailyPractice(),
@@ -2163,6 +2206,7 @@ function collectLocalState() {
       AssistantHandoff: assistantHandoff,
       TrainingPrescription: trainingPrescription,
       InterventionEvent: interventionEvents,
+      ExecutionPlan: executionPlanLibrary,
       MiniProgramBinding: getMiniProgramBinding(),
       MiniLoopProgress: getMiniLoopProgress(),
       MiniHeartProof: getMiniHeartProofState(),
@@ -2189,6 +2233,7 @@ function applyRemoteState(remoteState = {}) {
   if (sharedEntities.AssistantHandoff && typeof sharedEntities.AssistantHandoff === "object") write(YM_ASSISTANT_HANDOFF, sharedEntities.AssistantHandoff);
   if (sharedEntities.TrainingPrescription && typeof sharedEntities.TrainingPrescription === "object") applyTrainingPrescriptionDispatch(sharedEntities.TrainingPrescription);
   if (sharedEntities.InterventionEvent && typeof sharedEntities.InterventionEvent === "object") write(YM_ZHIXING_REMINDER_EVENTS, sharedEntities.InterventionEvent);
+  if (sharedEntities.ExecutionPlan && typeof sharedEntities.ExecutionPlan === "object") saveExecutionPlanLibrary(sharedEntities.ExecutionPlan);
   if (sharedEntities.MiniProgramBinding && typeof sharedEntities.MiniProgramBinding === "object") write(YM_MINI_PROGRAM_BINDING, sharedEntities.MiniProgramBinding);
   if (sharedEntities.MiniLoopProgress && typeof sharedEntities.MiniLoopProgress === "object") write(YM_MINI_LOOP_PROGRESS, sharedEntities.MiniLoopProgress);
   if (sharedEntities.MiniHeartProof && typeof sharedEntities.MiniHeartProof === "object") write(YM_MINI_HEART_PROOFS, sharedEntities.MiniHeartProof);
@@ -2227,6 +2272,10 @@ function applyRemoteState(remoteState = {}) {
   if (remoteState.intervention_events && typeof remoteState.intervention_events === "object") write(YM_ZHIXING_REMINDER_EVENTS, remoteState.intervention_events);
   if (remoteState.interventionEvent && typeof remoteState.interventionEvent === "object") write(YM_ZHIXING_REMINDER_EVENTS, remoteState.interventionEvent);
   if (remoteState.interventionEvents && typeof remoteState.interventionEvents === "object") write(YM_ZHIXING_REMINDER_EVENTS, remoteState.interventionEvents);
+  if (remoteState.execution_plan && typeof remoteState.execution_plan === "object") saveExecutionPlanLibrary(remoteState.execution_plan);
+  if (remoteState.execution_plans && typeof remoteState.execution_plans === "object") saveExecutionPlanLibrary(remoteState.execution_plans);
+  if (remoteState.executionPlan && typeof remoteState.executionPlan === "object") saveExecutionPlanLibrary(remoteState.executionPlan);
+  if (remoteState.executionPlans && typeof remoteState.executionPlans === "object") saveExecutionPlanLibrary(remoteState.executionPlans);
   if (remoteState.mini_program_binding && typeof remoteState.mini_program_binding === "object") write(YM_MINI_PROGRAM_BINDING, remoteState.mini_program_binding);
   if (remoteState.mini_loop_progress && typeof remoteState.mini_loop_progress === "object") write(YM_MINI_LOOP_PROGRESS, remoteState.mini_loop_progress);
   if (remoteState.mini_heart_proofs && typeof remoteState.mini_heart_proofs === "object") write(YM_MINI_HEART_PROOFS, remoteState.mini_heart_proofs);
@@ -2339,6 +2388,11 @@ module.exports = {
   saveKlineSessionRecord,
   getZhixingReminderEvents,
   saveZhixingReminderEvent,
+  getExecutionPlanLibrary,
+  saveExecutionPlanLibrary,
+  saveExecutionPlan,
+  updateExecutionPlanRecord,
+  deleteExecutionPlanRecord,
   getKlineReviewReports,
   saveKlineReviewReport,
   getKlineMirrorChallenges,

@@ -1,5 +1,6 @@
 const { getMirrorBinding } = require("../../utils/content");
 const { normalizeExecutionResult } = require("../../utils/execution-terminology");
+const { resolveExecutionPlanAction } = require("../execution-plan/index");
 const { MARKET_PRESETS, TIMEFRAME_PRESETS } = require("../kline-simulator/index");
 
 const COMPLIANCE_TEXT = "本系统用于交易心理觉察与训练，不提供投资建议，不预测行情，不构成任何操作依据。";
@@ -185,6 +186,20 @@ function getTimeframeLabel(key) {
 
 function getOption(list, key, fallbackIndex = 0) {
   return list.find((item) => item.key === key) || list[fallbackIndex];
+}
+
+function hasValue(value) {
+  if (value === undefined || value === null) return false;
+  if (typeof value === "string") return value.trim() !== "";
+  if (Array.isArray(value)) return value.length > 0;
+  return true;
+}
+
+function pickValue(...values) {
+  for (let index = 0; index < values.length; index += 1) {
+    if (hasValue(values[index])) return values[index];
+  }
+  return "";
 }
 
 function inferType(input = {}) {
@@ -433,13 +448,23 @@ function buildTradeReview(input = {}, context = {}) {
   const firstThought = input.firstThought || "未记录";
   const triggerScene = input.triggerScene || input.trigger_scene || historicalMatch.stagePosition || historicalMatch.stageGate || "";
   const mainErrorType = input.mainErrorType || input.main_error_type || (keywordRule || {}).mirrorName || binding.mirrorName || type;
-  const trainingAction = (keywordRule || {}).trainingAction || buildTrainingAction(type, boundary.key);
-  const trainingPrescription = input.trainingPrescription || input.training_prescription || {
+  const executionPlanAction = resolveExecutionPlanAction(mainErrorType, pickValue(
+    context.executionPlanLibrary,
+    context.execution_plan,
+    context.executionPlan,
+    input.executionPlanLibrary,
+    input.execution_plan,
+    input.executionPlan
+  ));
+  const trainingAction = (executionPlanAction || {}).nextAction || (keywordRule || {}).trainingAction || buildTrainingAction(type, boundary.key);
+  const trainingPrescription = input.trainingPrescription || input.training_prescription || (executionPlanAction || {}).trainingPrescription || {
     action: trainingAction,
     errorType: mainErrorType,
-    triggerScene
+    triggerScene,
+    planId: (executionPlanAction || {}).planId || "",
+    plan_id: (executionPlanAction || {}).plan_id || ""
   };
-  const nextRule = input.nextRule || input.next_rule || input.nextAction || trainingAction;
+  const nextRule = input.nextRule || input.next_rule || input.nextAction || (executionPlanAction || {}).nextAction || trainingAction;
   const mistakeCard = input.mistakeCard || input.mistake_card || {
     title: `${mainErrorType}错题卡`,
     mainErrorType,
@@ -449,7 +474,9 @@ function buildTradeReview(input = {}, context = {}) {
     triggerScene,
     trigger_scene: triggerScene,
     nextRule,
-    next_rule: nextRule
+    next_rule: nextRule,
+    planId: (executionPlanAction || {}).planId || "",
+    plan_id: (executionPlanAction || {}).plan_id || ""
   };
   const report = {
     id: input.id || `tr-${Date.now()}`,
@@ -471,7 +498,10 @@ function buildTradeReview(input = {}, context = {}) {
     changedPlan: input.changedPlan || "no",
     exitPrepared: input.exitPrepared || "yes",
     afterReaction: input.afterReaction || "未记录",
-    nextAction: input.nextAction || "",
+    nextAction: input.nextAction || (executionPlanAction || {}).nextAction || "",
+    next_action: input.next_action || input.nextAction || (executionPlanAction || {}).next_action || "",
+    executionPlanId: (executionPlanAction || {}).planId || "",
+    execution_plan_id: (executionPlanAction || {}).plan_id || "",
     mainErrorType,
     main_error_type: mainErrorType,
     firstThought,
