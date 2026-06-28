@@ -1882,7 +1882,7 @@ Page({
   },
 
   goProfile() {
-    wx.navigateTo({ url: "/pages/profile/index" });
+    wx.switchTab({ url: "/pages/profile/index" });
   },
 
   goZhixingIndex() {
@@ -1894,7 +1894,7 @@ Page({
   },
 
   goTradeReview() {
-    wx.navigateTo({ url: "/pages/trade-review/index" });
+    wx.switchTab({ url: "/pages/trade-review/index" });
   },
 
   goTradeReviewArchive() {
@@ -1906,7 +1906,7 @@ Page({
       lastPage: "mirror-scroll",
       pendingAction: "等待七日复测"
     });
-    wx.redirectTo({ url: "/pages/living-mirror/index" });
+    wx.switchTab({ url: "/pages/living-mirror/index" });
   },
 
   handleHomeFocusLink(e) {
