@@ -23,6 +23,7 @@ const YM_KLINE_REVIEW_REPORTS = "ym_kline_review_reports";
 const YM_KLINE_MIRROR_CHALLENGES = "ym_kline_mirror_challenges";
 const YM_ANONYMOUS_REACTION_STATS = "ym_anonymous_reaction_stats";
 const YM_TRADE_REVIEW_RECORDS = "ym_trade_review_records";
+const YM_INTERVENTION_EVENTS = "ym_intervention_events";
 const YM_LIVING_MIRROR_STATS = "ym_living_mirror_stats";
 const YM_ASSISTANT_HANDOFF = "ym_assistant_handoff";
 const YM_MINI_PROGRAM_BINDING = "ym_mini_program_binding";
@@ -60,6 +61,7 @@ module.exports = {
   YM_KLINE_MIRROR_CHALLENGES,
   YM_ANONYMOUS_REACTION_STATS,
   YM_TRADE_REVIEW_RECORDS,
+  YM_INTERVENTION_EVENTS,
   YM_LIVING_MIRROR_STATS,
   YM_ASSISTANT_HANDOFF,
   YM_MINI_PROGRAM_BINDING,

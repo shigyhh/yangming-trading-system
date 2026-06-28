@@ -5,6 +5,7 @@ const {
   getUserBinding,
   applyTradeReviewBindingResult,
   saveTradeReviewRecord,
+  saveInterventionEvent,
   saveTraining7Task,
   saveInviteConversionEvent,
   todayKey
@@ -20,6 +21,10 @@ const {
   buildTradeReviewRecordView,
   buildTradeReviewTop3Stats
 } = require("../../modules/trade-review/index");
+const {
+  buildReviewRepeatReminder,
+  createInterventionEvent
+} = require("../../modules/zhixing-reminder/index");
 const {
   buildTradeReviewUrl,
   fetchTradeReviewMarketContext,
@@ -588,6 +593,33 @@ Page({
       showResultDetail: false
     });
     wx.showToast({ title: "已写入活镜", icon: "success" });
+    const repeatReminder = buildReviewRepeatReminder({
+      records: state.records || [],
+      currentRecord: state.latest || report
+    });
+    if (repeatReminder) {
+      setTimeout(() => this.presentReviewRepeatReminder(repeatReminder), 350);
+    }
+  },
+
+  presentReviewRepeatReminder(reminder = {}) {
+    if (!reminder || !reminder.message) return;
+    wx.showModal({
+      title: "旧题复现提醒",
+      content: reminder.message,
+      confirmText: "继续",
+      cancelText: "稍后再练",
+      success: (res) => {
+        const userResponse = res.confirm ? "继续" : "稍后再练";
+        saveInterventionEvent(createInterventionEvent({
+          triggerType: reminder.triggerType || reminder.trigger_type || "review_repeat",
+          errorType: reminder.errorType || reminder.error_type || "",
+          sceneTag: reminder.sceneTag || reminder.scene_tag || "",
+          message: reminder.message,
+          userResponse
+        }));
+      }
+    });
   },
 
   resetForm() {

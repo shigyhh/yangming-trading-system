@@ -36,6 +36,7 @@ const {
   YM_KLINE_MIRROR_CHALLENGES,
   YM_ANONYMOUS_REACTION_STATS,
   YM_TRADE_REVIEW_RECORDS,
+  YM_INTERVENTION_EVENTS,
   YM_LIVING_MIRROR_STATS,
   YM_ASSISTANT_HANDOFF,
   YM_MINI_PROGRAM_BINDING,
@@ -941,6 +942,32 @@ function saveKlineSessionRecord(session) {
   }));
   const records = (state.records || []).filter((item) => item.id !== record.id).concat(record).slice(-30);
   return write(YM_KLINE_SESSION_RECORDS, {
+    latest: record,
+    records
+  });
+}
+
+function getInterventionEvents() {
+  return read(YM_INTERVENTION_EVENTS, {
+    latest: null,
+    records: []
+  });
+}
+
+function saveInterventionEvent(event) {
+  const state = getInterventionEvents();
+  const createdAt = event.createdAt || event.created_at || Date.now();
+  const record = withUserBinding(Object.assign({}, event || {}, {
+    id: event.id || `intervention-${createdAt.toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+    createdAt,
+    created_at: createdAt,
+    updatedAt: Date.now()
+  }));
+  const records = (state.records || [])
+    .filter((item) => item.id !== record.id)
+    .concat(record)
+    .slice(-120);
+  return write(YM_INTERVENTION_EVENTS, {
     latest: record,
     records
   });
@@ -2732,6 +2759,8 @@ module.exports = {
   saveKlineScenarioState,
   getKlineSessionRecords,
   saveKlineSessionRecord,
+  getInterventionEvents,
+  saveInterventionEvent,
   getKlineReviewReports,
   saveKlineReviewReport,
   saveKlineReviewSyncStatus,

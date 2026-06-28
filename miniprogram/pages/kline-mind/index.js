@@ -10,6 +10,7 @@ const {
   saveTraining7Task,
   getTodayKlineMindRecord,
   getTradeReviewRecords,
+  saveInterventionEvent,
   saveTodayKlineMindRecord,
   saveTradeReviewRecord,
   saveInviteConversionEvent,
@@ -52,6 +53,11 @@ const {
 const {
   buildReviewTrainingFocus
 } = require("../../modules/trade-review/index");
+const {
+  buildTrainingPreReminder,
+  buildTrainingSceneReminder,
+  createInterventionEvent
+} = require("../../modules/zhixing-reminder/index");
 
 const REACTION_DIRECTIONS = [
   { key: "act", label: "想立刻做", detail: "追、急、想证明" },
@@ -348,6 +354,8 @@ Page({
     targetedTrainingEntry: buildKlineTargetedTrainingEntry(),
     specialTrainingPacks: listSpecialTrainingPacks(),
     todayTrainingLine: "",
+    zhixingReminderDisabled: false,
+    zhixingReminderShownCount: 0,
     ...buildSliceSwitchState(0),
     tradeReviewUrl: ""
   },
@@ -600,10 +608,29 @@ Page({
   },
 
   startTargetedTraining(e) {
-    const dataset = e.currentTarget.dataset || {};
-    const errorType = String(dataset.errorType || "").trim();
-    const packId = String(dataset.packId || "").trim();
+    const dataset = ((e.currentTarget || {}).dataset) || {};
     const entry = this.data.targetedTrainingEntry || buildKlineTargetedTrainingEntry();
+    const errorType = String(dataset.errorType || entry.mainErrorType || entry.errorType || "").trim();
+    const reminder = buildTrainingPreReminder({
+      errorType,
+      sceneTag: entry.triggerScene || entry.trigger_scene || ""
+    });
+    if (reminder) {
+      this.presentZhixingReminder(reminder, {
+        onContinue: () => this.enterTargetedTraining(dataset),
+        onHold: () => this.enterTargetedTraining(dataset),
+        onLater: () => {},
+        onDisable: () => this.enterTargetedTraining(dataset, { disableReminders: true })
+      });
+      return;
+    }
+    this.enterTargetedTraining(dataset);
+  },
+
+  enterTargetedTraining(dataset = {}, options = {}) {
+    const entry = this.data.targetedTrainingEntry || buildKlineTargetedTrainingEntry();
+    const errorType = String(dataset.errorType || entry.mainErrorType || entry.errorType || "").trim();
+    const packId = String(dataset.packId || entry.packId || entry.trainingPackId || "").trim();
     const meta = buildSpecialTrainingSessionMeta(packId || errorType);
     const currentForm = this.data.form || {};
     const form = Object.assign({}, currentForm, meta, {
@@ -627,7 +654,9 @@ Page({
       session,
       trainingRuntime: runtime,
       runtimeView: buildRuntimeView(runtime),
-      todayTrainingLine: form.expectedAction || entry.actionText || this.data.todayTrainingLine
+      todayTrainingLine: form.expectedAction || entry.actionText || this.data.todayTrainingLine,
+      zhixingReminderDisabled: !!options.disableReminders,
+      zhixingReminderShownCount: 0
     });
     wx.showToast({
       title: form.errorType ? "已进入针对训练" : "进入基础盲练",
@@ -850,12 +879,33 @@ Page({
   },
 
   recordRuntimeDecision(e) {
+    const action = ((e.currentTarget || {}).dataset || {}).action || "HOLD";
+    const form = this.data.form || {};
+    const reminder = buildTrainingSceneReminder({
+      errorType: form.errorType || form.error_type || "",
+      sceneTag: form.sceneTag || form.scene_tag || (this.data.targetedTrainingEntry || {}).triggerScene || "",
+      shownCount: this.data.zhixingReminderShownCount,
+      disabled: this.data.zhixingReminderDisabled,
+      maxPerSession: 2
+    });
+    if (reminder) {
+      this.presentZhixingReminder(reminder, {
+        onContinue: () => this.applyRuntimeDecision(action),
+        onHold: () => this.applyRuntimeDecision("HOLD"),
+        onLater: () => {},
+        onDisable: () => this.setData({ zhixingReminderDisabled: true })
+      });
+      return;
+    }
+    this.applyRuntimeDecision(action);
+  },
+
+  applyRuntimeDecision(action = "HOLD") {
     const runtime = this.data.trainingRuntime;
     if (!runtime) {
       wx.showToast({ title: "历史片段载入后再记录", icon: "none" });
       return;
     }
-    const action = e.currentTarget.dataset.action || "HOLD";
     const form = this.data.form || {};
     const decidedRuntime = recordKlineTrainingDecision(runtime, {
       action,
@@ -883,6 +933,55 @@ Page({
     wx.showToast({
       title: action === "HOLD" ? "已记录观望" : "已记录动作",
       icon: "none"
+    });
+  },
+
+  saveZhixingReminderResponse(reminder = {}, userResponse = "") {
+    const triggerType = reminder.triggerType || reminder.trigger_type || "";
+    if (triggerType === "training_scene") {
+      this.setData({
+        zhixingReminderShownCount: Number(this.data.zhixingReminderShownCount || 0) + 1
+      });
+    }
+    saveInterventionEvent(createInterventionEvent({
+      triggerType,
+      errorType: reminder.errorType || reminder.error_type || "",
+      sceneTag: reminder.sceneTag || reminder.scene_tag || "",
+      message: reminder.message || "",
+      userResponse
+    }));
+  },
+
+  presentZhixingReminder(reminder = {}, handlers = {}) {
+    if (!reminder || !reminder.message) return;
+    wx.showModal({
+      title: reminder.title || "知行提醒",
+      content: reminder.message,
+      confirmText: "继续",
+      cancelText: "更多选择",
+      success: (res) => {
+        if (res.confirm) {
+          this.saveZhixingReminderResponse(reminder, "继续");
+          if (handlers.onContinue) handlers.onContinue();
+          return;
+        }
+        wx.showActionSheet({
+          itemList: ["改为观望", "稍后再练", "本局不再提醒"],
+          success: (actionRes) => {
+            const choice = ["改为观望", "稍后再练", "本局不再提醒"][actionRes.tapIndex] || "稍后再练";
+            this.saveZhixingReminderResponse(reminder, choice);
+            if (choice === "改为观望") {
+              if (handlers.onHold) handlers.onHold();
+              return;
+            }
+            if (choice === "本局不再提醒") {
+              if (handlers.onDisable) handlers.onDisable();
+              return;
+            }
+            if (handlers.onLater) handlers.onLater();
+          }
+        });
+      }
     });
   },
 
