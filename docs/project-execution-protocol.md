@@ -81,6 +81,46 @@ If the target branch already exists:
 3. If the diff contains files outside the task scope, stop and report.
 4. Do not overwrite existing work.
 
+## Overscope branch cleanup
+
+If a target branch already exists but its diff is outside the current task scope:
+
+1. Stop and report.
+2. Do not continue on that branch.
+3. Create a backup branch from the existing branch.
+4. Confirm the backup exists.
+5. Optionally push the backup branch.
+6. Delete and recreate the target branch from latest `origin/main` only after backup.
+7. Do not migrate old changes unless a separate extraction task is explicitly requested.
+
+A target branch with overscope diff must not be treated as a valid resume-mode branch.
+
+## Reuse audit before rebuild
+
+If a later-stage branch already exists, do not rebuild by default.
+
+First classify the branch:
+
+- `merged`
+- `clean-empty`
+- `reusable-clean`
+- `reusable-needs-rebase`
+- `reusable-partial`
+- `overscope-rebuild`
+- `stale`
+- `missing`
+
+Then choose the next action:
+
+- `merged` -> no further work for that phase
+- `clean-empty` -> can be reused or recreated
+- `reusable-clean` -> validate and merge after tests
+- `reusable-needs-rebase` -> sync with latest `origin/main`, then validate
+- `reusable-partial` -> back up and deliberately extract useful work
+- `overscope-rebuild` -> back up and rebuild from latest `origin/main`
+- `stale` -> preserve as backup, do not continue
+- `missing` -> create from latest `origin/main`
+
 ## 测试 Gate 规则
 
 每个任务以用户指定 gate 为准。没有指定时，至少运行与改动范围相关的单元测试、同步契约测试或构建检查。

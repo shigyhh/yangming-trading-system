@@ -99,3 +99,86 @@ All future Codex commands must distinguish:
 ### Added to task template
 
 Yes.
+
+## 005 — Existing target branch had overscope diff and could not be resumed
+
+### Problem
+
+A target branch already existed locally, but the current branch was `main`, not the target branch.
+The existing target branch had a large diff outside the current task scope, including files such as `web-next/`, `server/`, `packages/`, docs assets, or unrelated feature files.
+
+Treating that branch as a normal continuation would risk merging unrelated work into the current phase.
+
+### Correct handling
+
+Do not force checkout.
+Do not overwrite the branch.
+Do not continue implementation on the overscope branch.
+
+The correct process is:
+
+1. Stop and report the overscope branch.
+2. Inspect the diff against `origin/main`.
+3. Create a backup branch from the old branch.
+4. Optionally push the backup branch if the environment allows it.
+5. Delete the polluted local target branch only after backup is confirmed.
+6. Recreate a clean target branch from latest `origin/main`.
+7. Re-run the current task from the clean branch.
+8. If the old branch contains useful work, migrate it deliberately with a separate cherry-pick or manual extraction task.
+
+### Future rule
+
+When a target branch already exists:
+
+1. If the current branch is the target branch and diff is inside the allowed scope, continue in resume mode.
+2. If the current branch is not the target branch, stop and report.
+3. If the existing branch diff is overscope, do not continue on it.
+4. Back up the overscope branch before deleting or rebuilding.
+5. Rebuild from latest `origin/main` only after backup.
+6. Do not silently reuse overscope branches.
+
+### Added to task template
+
+Yes.
+
+## 006 — Existing later-stage branches were treated as if they should be rebuilt by default
+
+### Problem
+
+Later-stage branches such as P3, P4, and P5 already existed from previous work.
+A new command sequence assumed a clean sequential rebuild, which created confusion and risked duplicating work that might already be reusable.
+
+Branch existence does not mean the feature is complete, but it also does not mean the branch should be discarded or rebuilt by default.
+
+### Correct handling
+
+When a later-stage branch already exists, first run a reuse audit before deciding what to do.
+
+The audit should classify each branch as one of:
+
+- `merged`: already merged into `origin/main`
+- `clean-empty`: exists but has no diff from `origin/main`
+- `reusable-clean`: diff is inside the phase scope and can be continued or validated
+- `reusable-needs-rebase`: mostly valid but needs syncing with latest `origin/main`
+- `reusable-partial`: contains useful work but also overscope changes; extract useful work deliberately
+- `overscope-rebuild`: too polluted; back up and rebuild from latest `origin/main`
+- `stale`: old attempt, do not continue
+- `missing`: branch does not exist
+
+### Future rule
+
+Before implementing a phase whose branch already exists:
+
+1. Do not immediately rebuild.
+2. Do not immediately continue.
+3. Run a reuse audit against current `origin/main`.
+4. Check whether the branch has already entered `origin/main`.
+5. Check diff scope against the phase boundary.
+6. Reuse clean work when safe.
+7. Extract useful partial work deliberately when needed.
+8. Rebuild only after the branch is classified as overscope or stale.
+9. Keep backup branches for old attempts.
+
+### Added to task template
+
+Yes.

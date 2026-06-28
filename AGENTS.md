@@ -9,6 +9,8 @@
 
 目标分支已存在时，必须区分新建模式、停止报告和续作模式：当前就在目标分支且 diff 只包含本任务允许文件时，可以续作；否则按协议停止报告，不覆盖已有工作。
 
+Existing target branches must not be blindly reused. If an existing branch has overscope diff, stop, report, back it up, and rebuild from latest `origin/main`. Later-stage branches must be reuse-audited before rebuilding or reimplementing; reuse clean work when safe, and rebuild only after audit.
+
 ## 项目原则
 
 - 不新增平行系统。
