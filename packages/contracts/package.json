@@ -18,6 +18,9 @@
     "./kline-segment": {
       "types": "./kline-segment.d.ts"
     },
+    "./kline-sampling": {
+      "types": "./kline-sampling.d.ts"
+    },
     "./training-pack": {
       "types": "./training-pack.d.ts"
     }

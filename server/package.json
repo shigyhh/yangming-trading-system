@@ -24,6 +24,7 @@
     "test:i18n": "node --test scripts/i18n-contract-test.mjs",
     "test:training-packs": "node --test scripts/training-packs-test.mjs",
     "test:kline-segments": "node --test scripts/kline-segments-test.mjs",
+    "test:sampling": "node --test scripts/kline-sampling-test.mjs",
     "test:kline-history": "node --test scripts/historical-kline-contract-test.mjs",
     "test:ymty": "SKIP_LOCAL_ENV=true node --test --test-concurrency=1 scripts/ymty-admin-auth-test.mjs && SKIP_LOCAL_ENV=true node --test --test-concurrency=1 scripts/ymty-payment-contract-test.mjs && SKIP_LOCAL_ENV=true node --test --test-concurrency=1 scripts/ymty-payment-precheck-test.mjs && SKIP_LOCAL_ENV=true node --test --test-concurrency=1 scripts/ymty-real-payment-create-test.mjs && SKIP_LOCAL_ENV=true node --test --test-concurrency=1 scripts/ymty-real-payment-notify-test.mjs && SKIP_LOCAL_ENV=true node --test --test-concurrency=1 scripts/ymty-mock-payment.test.mjs",
     "test:ymty-h5": "SKIP_LOCAL_ENV=true node --test scripts/ymty-h5-static-test.mjs",
