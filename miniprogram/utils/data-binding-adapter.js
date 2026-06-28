@@ -141,7 +141,14 @@ function buildKLineBindingPayload({ auth = {}, state = {}, progress = null, trai
     reaction: pickText(sourceRecord.reaction, sourceRecord.firstReaction, sourceRecord.firstThought, sourceRecord.note, "已觉察，未展开"),
     disciplineAction: pickText(sourceRecord.disciplineAction, sourceRecord.boundaryChoice, sourceRecord.boundary, sourceRecord.action, sourceRecord.nextAction, "先停一息，再复盘")
   };
+  const period = pickText(sourceRecord.period, sourceRecord.timeframeKey, sourceRecord.timeframe_key);
+  if (period) record.period = period;
   attachAliasedField(record, "sourceType", "source_type", pickValue(sourceRecord.sourceType, sourceRecord.source_type, "kline_training"));
+  attachAliasedField(record, "startDate", "start_date", pickValue(sourceRecord.startDate, sourceRecord.start_date, sourceRecord.dataStart, sourceRecord.data_start));
+  attachAliasedField(record, "endDate", "end_date", pickValue(sourceRecord.endDate, sourceRecord.end_date, sourceRecord.dataEnd, sourceRecord.data_end));
+  attachAliasedField(record, "trainingLength", "training_length", normalizeNumberValue(pickValue(sourceRecord.trainingLength, sourceRecord.training_length)));
+  attachAliasedField(record, "hiddenSymbol", "hidden_symbol", normalizeBooleanValue(pickValue(sourceRecord.hiddenSymbol, sourceRecord.hidden_symbol)));
+  attachAliasedField(record, "hiddenDateRange", "hidden_date_range", normalizeBooleanValue(pickValue(sourceRecord.hiddenDateRange, sourceRecord.hidden_date_range)));
   attachAliasedField(record, "errorType", "error_type", pickValue(sourceRecord.errorType, sourceRecord.error_type, sourceRecord.mainErrorType, sourceRecord.main_error_type, sourceRecord.relatedPersonality, sourceRecord.personalityType));
   attachAliasedField(record, "sceneTags", "scene_tags", normalizeListValue(pickValue(sourceRecord.sceneTags, sourceRecord.scene_tags)));
   attachAliasedField(record, "trainingPrescription", "training_prescription", pickValue(sourceRecord.trainingPrescription, sourceRecord.training_prescription, sourceRecord.trainingSuggestion));

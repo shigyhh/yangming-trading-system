@@ -420,6 +420,58 @@ assert.strictEqual(lawResultOnlyKlinePayload.record.execution_result, "执行偏
 assert.strictEqual(lawResultOnlyKlinePayload.record.executionLabel, "执行偏离");
 assert.strictEqual(lawResultOnlyKlinePayload.record.execution_label, "执行偏离");
 
+const customSessionKlinePayload = buildKLineBindingPayload({
+  auth,
+  state: Object.assign({}, state, {
+    intraday_boundary_records: {},
+    kline_mind_records: {
+      "2026-06-05": {
+        date: "2026-06-05",
+        day: 5,
+        sourceType: "custom_session",
+        source_type: "custom_session",
+        symbol: "600519",
+        period: "1d",
+        startDate: "2024-01-02",
+        start_date: "2024-01-02",
+        endDate: "2024-01-09",
+        end_date: "2024-01-09",
+        trainingLength: 60,
+        training_length: 60,
+        hiddenSymbol: true,
+        hidden_symbol: true,
+        hiddenDateRange: true,
+        hidden_date_range: true,
+        scenarioTitle: "自选盲练",
+        firstReaction: "怕错过",
+        boundaryChoice: "观望",
+        insightLine: "自选盲练只记录第一念。",
+        historySlice: {
+          candles: [{ close: 10.2 }]
+        },
+        completed: true,
+        updatedAt: 1764547900000
+      }
+    }
+  })
+});
+assert.strictEqual(customSessionKlinePayload.record.sourceType, "custom_session");
+assert.strictEqual(customSessionKlinePayload.record.source_type, "custom_session");
+assert.strictEqual(customSessionKlinePayload.record.symbol, "600519");
+assert.strictEqual(customSessionKlinePayload.record.period, "1d");
+assert.strictEqual(customSessionKlinePayload.record.startDate, "2024-01-02");
+assert.strictEqual(customSessionKlinePayload.record.start_date, "2024-01-02");
+assert.strictEqual(customSessionKlinePayload.record.endDate, "2024-01-09");
+assert.strictEqual(customSessionKlinePayload.record.end_date, "2024-01-09");
+assert.strictEqual(customSessionKlinePayload.record.trainingLength, 60);
+assert.strictEqual(customSessionKlinePayload.record.training_length, 60);
+assert.strictEqual(customSessionKlinePayload.record.hiddenSymbol, true);
+assert.strictEqual(customSessionKlinePayload.record.hidden_symbol, true);
+assert.strictEqual(customSessionKlinePayload.record.hiddenDateRange, true);
+assert.strictEqual(customSessionKlinePayload.record.hidden_date_range, true);
+assert.strictEqual("bars" in customSessionKlinePayload.record, false);
+assert.strictEqual("historySlice" in customSessionKlinePayload.record, false);
+
 const executionLabelPriorityKlinePayload = buildKLineBindingPayload({
   auth,
   state: Object.assign({}, state, {

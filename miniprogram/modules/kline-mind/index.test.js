@@ -13,7 +13,8 @@ const {
   getSpecialTrainingPack,
   buildSpecialTrainingSessionMeta,
   buildKlineSamplingRequest,
-  normalizeKlineSamplingResult
+  normalizeKlineSamplingResult,
+  buildCustomSessionMeta
 } = require("./index");
 
 assert.strictEqual(SIX_GATE_MAP.length, 6);
@@ -338,6 +339,88 @@ assert.notStrictEqual(blindSession.sourceType, "special_training");
 assert.notStrictEqual(blindSession.source_type, "special_training");
 assert.strictEqual(blindSession.segmentId, undefined);
 assert.strictEqual(blindSession.samplingResult, undefined);
+
+const customHistorySlice = Object.assign({}, historicalSlice, {
+  source: "custom_history_slice",
+  symbol: "600519",
+  name: "贵州茅台",
+  start: "2024-01-02",
+  startDate: "2024-01-02",
+  start_date: "2024-01-02",
+  end: "2024-01-09",
+  endDate: "2024-01-09",
+  end_date: "2024-01-09",
+  period: "1d",
+  candles: historicalSlice.candles.slice(0, 4)
+});
+const customMeta = buildCustomSessionMeta({
+  symbol: "600519",
+  period: "1d",
+  startDate: "2024-01-02",
+  endDate: "2024-01-09",
+  trainingLength: "4"
+});
+assert.strictEqual(customMeta.sourceType, "custom_session");
+assert.strictEqual(customMeta.source_type, "custom_session");
+assert.strictEqual(customMeta.symbol, "600519");
+assert.strictEqual(customMeta.period, "1d");
+assert.strictEqual(customMeta.startDate, "2024-01-02");
+assert.strictEqual(customMeta.start_date, "2024-01-02");
+assert.strictEqual(customMeta.endDate, "2024-01-09");
+assert.strictEqual(customMeta.end_date, "2024-01-09");
+assert.strictEqual(customMeta.trainingLength, 4);
+assert.strictEqual(customMeta.training_length, 4);
+assert.strictEqual(customMeta.hiddenSymbol, true);
+assert.strictEqual(customMeta.hidden_symbol, true);
+assert.strictEqual(customMeta.hiddenDateRange, true);
+assert.strictEqual(customMeta.hidden_date_range, true);
+
+const customSession = buildKlineMindSession({
+  assessment: { primary: "冲动型" },
+  trainingDay: { day: 1 },
+  record: Object.assign({ marketKey: "cn_equity", timeframeKey: "1d", historySlice: customHistorySlice }, customMeta),
+  customSession: Object.assign({}, customMeta, { historySlice: customHistorySlice })
+});
+assert.strictEqual(customSession.sourceType, "custom_session");
+assert.strictEqual(customSession.source_type, "custom_session");
+assert.strictEqual(customSession.hasHistoricalData, true);
+assert.strictEqual(customSession.symbol, "600519");
+assert.strictEqual(customSession.hiddenSymbol, true);
+assert.strictEqual(customSession.hidden_symbol, true);
+assert.strictEqual(customSession.hiddenDateRange, true);
+assert.strictEqual(customSession.hidden_date_range, true);
+assert.strictEqual(customSession.trainingLength, 4);
+assert.strictEqual(customSession.training_length, 4);
+assert.strictEqual(customSession.customSymbolText, "隐藏标的");
+assert.strictEqual(customSession.customDateRangeText, "隐藏真实日期");
+assert.strictEqual(customSession.revealedSymbolText, "600519");
+assert.strictEqual(customSession.revealedDateRangeText, "2024-01-02 至 2024-01-09");
+assert.strictEqual(customSession.samplingResult, undefined);
+
+const customRecord = buildKlineMindRecord({
+  selectedCandleKey: customSession.selectedCandleKey,
+  firstReaction: "怕错过",
+  boundaryChoice: "观望",
+  insightLine: "自选盲练中我先记录，不被标的名字牵动。"
+}, customSession);
+assert.strictEqual(customRecord.sourceType, "custom_session");
+assert.strictEqual(customRecord.source_type, "custom_session");
+assert.strictEqual(customRecord.symbol, "600519");
+assert.strictEqual(customRecord.period, "1d");
+assert.strictEqual(customRecord.startDate, "2024-01-02");
+assert.strictEqual(customRecord.start_date, "2024-01-02");
+assert.strictEqual(customRecord.endDate, "2024-01-09");
+assert.strictEqual(customRecord.end_date, "2024-01-09");
+assert.strictEqual(customRecord.trainingLength, 4);
+assert.strictEqual(customRecord.training_length, 4);
+assert.strictEqual(customRecord.hiddenSymbol, true);
+assert.strictEqual(customRecord.hidden_symbol, true);
+assert.strictEqual(customRecord.hiddenDateRange, true);
+assert.strictEqual(customRecord.hidden_date_range, true);
+assert.strictEqual(customRecord.trainingMistakeCard.errorType, "自选盲练");
+assert.strictEqual(customRecord.training_mistake_card.error_type, "自选盲练");
+assert.strictEqual(customRecord.samplingResult, undefined);
+assert.notStrictEqual(customRecord.fallbackUsed, true);
 
 const fallbackSampling = normalizeKlineSamplingResult({
   segmentId: "",

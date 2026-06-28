@@ -668,6 +668,76 @@ function buildKlineSamplingRequest(context = {}, options = {}) {
   };
 }
 
+function normalizeTrainingLength(value, fallback = 60) {
+  const number = Number(value);
+  if (!Number.isFinite(number) || number <= 0) return fallback;
+  return Math.max(1, Math.min(300, Math.floor(number)));
+}
+
+function formatDateRangeText(startDate = "", endDate = "") {
+  if (startDate && endDate) return `${startDate} 至 ${endDate}`;
+  return startDate || endDate || "待揭示";
+}
+
+function buildCustomSessionMeta(input = {}) {
+  const symbol = cleanText(pickValue(input.symbol, input.code, input.instrument), 60);
+  const period = cleanText(pickValue(input.period, input.timeframeKey, input.timeframe_key, "1d"), 40);
+  const startDate = cleanText(pickValue(input.startDate, input.start_date, input.start), 40);
+  const endDate = cleanText(pickValue(input.endDate, input.end_date, input.end), 40);
+  const trainingLength = normalizeTrainingLength(pickValue(input.trainingLength, input.training_length, input.windowSize, input.window_size, input.limit), 60);
+  const customVisibleCount = normalizeTrainingLength(pickValue(input.customVisibleCount, input.custom_visible_count, 1), 1);
+  const hiddenSymbolInput = pickValue(input.hiddenSymbol, input.hidden_symbol);
+  const hiddenDateRangeInput = pickValue(input.hiddenDateRange, input.hidden_date_range);
+  const hiddenSymbol = hiddenSymbolInput === undefined ? true : normalizeBooleanValue(hiddenSymbolInput);
+  const hiddenDateRange = hiddenDateRangeInput === undefined ? true : normalizeBooleanValue(hiddenDateRangeInput);
+  const revealedDateRangeText = formatDateRangeText(startDate, endDate);
+  const nextAction = "先看事实，再记录第一念。";
+  const sceneTags = ["自选盲练"];
+  const trainingPrescription = {
+    title: "自选盲练",
+    action: nextAction
+  };
+
+  return {
+    sourceType: "custom_session",
+    source_type: "custom_session",
+    errorType: "自选盲练",
+    error_type: "自选盲练",
+    sceneTags,
+    scene_tags: sceneTags,
+    trainingPrescription,
+    training_prescription: trainingPrescription,
+    nextAction,
+    next_action: nextAction,
+    expectedAction: nextAction,
+    expected_action: nextAction,
+    symbol,
+    period,
+    startDate,
+    start_date: startDate,
+    endDate,
+    end_date: endDate,
+    trainingLength,
+    training_length: trainingLength,
+    hiddenSymbol,
+    hidden_symbol: hiddenSymbol,
+    hiddenDateRange,
+    hidden_date_range: hiddenDateRange,
+    customVisibleCount,
+    custom_visible_count: customVisibleCount,
+    customSourceLabel: "自选盲练",
+    custom_source_label: "自选盲练",
+    customSymbolText: hiddenSymbol ? "隐藏标的" : symbol || "待选择标的",
+    custom_symbol_text: hiddenSymbol ? "隐藏标的" : symbol || "待选择标的",
+    customDateRangeText: hiddenDateRange ? "隐藏真实日期" : revealedDateRangeText,
+    custom_date_range_text: hiddenDateRange ? "隐藏真实日期" : revealedDateRangeText,
+    revealedSymbolText: symbol || "待揭示",
+    revealed_symbol_text: symbol || "待揭示",
+    revealedDateRangeText,
+    revealed_date_range_text: revealedDateRangeText
+  };
+}
+
 const SPECIAL_TRAINING_PACKS = [
   {
     id: "chase_high_impulse",
@@ -830,6 +900,17 @@ function buildSpecialTrainingContext(specialTraining = {}) {
   });
 }
 
+function buildCustomSessionContext(customSession = {}) {
+  const sourceType = pickValue(customSession.sourceType, customSession.source_type);
+  const hasCustomInput = sourceType === "custom_session" ||
+    hasValue(pickValue(customSession.symbol, customSession.code, customSession.instrument)) ||
+    hasValue(pickValue(customSession.startDate, customSession.start_date, customSession.start)) ||
+    hasValue(pickValue(customSession.endDate, customSession.end_date, customSession.end)) ||
+    hasValue(pickValue(customSession.trainingLength, customSession.training_length));
+  if (!hasCustomInput) return null;
+  return buildCustomSessionMeta(customSession);
+}
+
 function buildReviewFocusContext(reviewFocus = {}, prescription = {}) {
   const sourceType = pickValue(reviewFocus.sourceType, reviewFocus.source_type);
   const errorType = pickValue(
@@ -925,6 +1006,9 @@ function buildReviewFocusContext(reviewFocus = {}, prescription = {}) {
 
 function pickSessionContext(session = {}) {
   const sourceType = pickValue(session.sourceType, session.source_type);
+  if (sourceType === "custom_session") {
+    return buildCustomSessionContext(session);
+  }
   if (sourceType === "special_training") {
     return attachSamplingMetadata(buildSpecialTrainingContext(session), session);
   }
@@ -1005,6 +1089,7 @@ function buildKlineMindSession({
   historyCache = {},
   reviewFocus = null,
   specialTraining = null,
+  customSession = null,
   samplingResult = null
 } = {}) {
   const day = clampDay((trainingDay || {}).day || (record || {}).day || 1);
@@ -1015,6 +1100,8 @@ function buildKlineMindSession({
   const timeframeKey = (record || {}).timeframeKey || "1d";
   const timeframeMeta = TIMEFRAME_CATALOG.find((item) => item.key === timeframeKey) || TIMEFRAME_CATALOG[4];
   const market = getMarketConfig(marketKey);
+  const customSessionSource = customSession || (pickValue((record || {}).sourceType, (record || {}).source_type) === "custom_session" ? record : null);
+  const customSessionContext = buildCustomSessionContext(customSessionSource || {});
   const normalizedSampling = normalizeKlineSamplingResult(pickValue(
     samplingResult,
     (record || {}).samplingResult,
@@ -1025,7 +1112,8 @@ function buildKlineMindSession({
     (specialTraining || {}).sampling_result
   ));
   const samplingHistorySlice = buildSamplingHistorySlice(normalizedSampling || {});
-  const historySlice = (record || {}).historySlice || samplingHistorySlice || getHistorySlice(historyCache, market.key, timeframeKey);
+  const customHistorySlice = (customSessionSource || {}).historySlice || (customSessionSource || {}).slice;
+  const historySlice = customHistorySlice || (record || {}).historySlice || samplingHistorySlice || getHistorySlice(historyCache, market.key, timeframeKey);
   const rawCandles = normalizeHistoryCandles(historySlice || {});
   const selectedKey = (record || {}).selectedCandleKey || "";
   const prescription = getKlinePrescription(personalityType);
@@ -1081,7 +1169,23 @@ function buildKlineMindSession({
     sampling_source_label: normalizedSampling.fallbackUsed ? "兜底片段" : "匹配片段"
   }), normalizedSampling) : session;
 
-  const trainingContext = reviewFocusContext || specialTrainingContext;
+  const trainingContext = reviewFocusContext || specialTrainingContext || customSessionContext;
+  if (customSessionContext && trainingContext === customSessionContext) {
+    const customTotal = Math.max(1, candles.length || customSessionContext.trainingLength || customSessionContext.training_length || 1);
+    const customVisibleCount = Math.max(
+      1,
+      Math.min(customTotal, Number(customSessionContext.customVisibleCount || customSessionContext.custom_visible_count || 1) || 1)
+    );
+    return Object.assign({}, sessionWithSampling, customSessionContext, {
+      dataStatusText: candles.length ? "自选盲练片段已载入" : sessionWithSampling.dataStatusText,
+      customTotalCount: customTotal,
+      custom_total_count: customTotal,
+      customVisibleCount,
+      custom_visible_count: customVisibleCount,
+      customProgressText: `当前第 ${customVisibleCount} 根 / 共 ${customTotal} 根`,
+      custom_progress_text: `当前第 ${customVisibleCount} 根 / 共 ${customTotal} 根`
+    });
+  }
   return trainingContext ? Object.assign({}, sessionWithSampling, attachSamplingMetadata(trainingContext, sessionWithSampling)) : sessionWithSampling;
 }
 
@@ -1225,6 +1329,7 @@ module.exports = {
   listSpecialTrainingPacks,
   getSpecialTrainingPack,
   buildSpecialTrainingSessionMeta,
+  buildCustomSessionMeta,
   buildKlineSamplingRequest,
   normalizeKlineSamplingResult,
   getMarketConfig,
