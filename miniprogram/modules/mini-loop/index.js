@@ -1,3 +1,5 @@
+const { normalizeExecutionResult } = require("../../utils/execution-terminology");
+
 const LOOP_NODES = [
   { key: "enter_reflection", label: "入照心" },
   { key: "nine_mirrors", label: "九镜显影" },
@@ -191,7 +193,9 @@ function buildTodayNextStepState(context = {}) {
   }
 
   const errorType = pickText(focusRecord, "errorType", "error_type") || mainErrorType || "待补充";
-  const executionResult = pickText(focusRecord, "executionResult", "execution_result") || "暂无明确执行结果";
+  const executionResult = normalizeExecutionResult(
+    pickRaw(focusRecord, "executionResult", "execution_result", "executionLabel", "execution_label", "lawResult", "law_result")
+  );
   const sessionId = pickText(focusRecord, "id", "sessionId", "session_id");
 
   if (isTrainingCardViewed(focusRecord)) {
@@ -482,7 +486,7 @@ function pickSceneTags(review = {}) {
 function hasTrainingResult(record = {}) {
   if (!record) return false;
   return hasValue(pickRaw(record, "trainingMistakeCard", "training_mistake_card")) ||
-    !!pickText(record, "executionResult", "execution_result") ||
+    !!pickText(record, "executionResult", "execution_result", "executionLabel", "execution_label", "lawResult", "law_result") ||
     !!record.completed;
 }
 

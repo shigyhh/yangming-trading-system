@@ -141,6 +141,8 @@ assert.ok(stats.mirrorScores["追涨之镜"] >= 1);
 assert.ok(stats.thiefCounts["贪"] >= 1);
 assert.ok(stats.reviewHistory.length >= 2);
 assert.ok(stats.assistantHandoff.currentMirror);
+assert.strictEqual(stats.oldIssueText, "旧题复现");
+assert.strictEqual(stats.executionPatternText, "执行偏离");
 
 const now = Date.now();
 const dayMs = 24 * 60 * 60 * 1000;

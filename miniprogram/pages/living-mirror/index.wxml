@@ -148,7 +148,7 @@
     <view class="change-card card">
       <view class="card-head">
         <text>近 30 天活镜</text>
-        <view>只看执行偏离模式</view>
+        <view>{{stats.oldIssueText || '旧题复现'}} · {{stats.executionPatternText || '执行偏离'}}</view>
       </view>
       <view class="pattern-summary">
         <view class="pattern-row">

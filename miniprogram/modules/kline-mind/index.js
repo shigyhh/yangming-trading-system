@@ -1,4 +1,5 @@
 const { getPersonalityStagePlan } = require("../../core/personality-stage-map");
+const { normalizeExecutionResult } = require("../../utils/execution-terminology");
 
 const SIX_GATE_MAP = [
   {
@@ -595,6 +596,15 @@ function buildTrainingMistakeCard(record = {}, context = null) {
   if (!context) return null;
   const trainingPrescription = context.trainingPrescription || context.training_prescription || {};
   const sceneTags = context.sceneTags || context.scene_tags || [];
+  const executionResult = normalizeExecutionResult(
+    record.executionResult,
+    record.execution_result,
+    record.executionLabel,
+    record.execution_label,
+    record.lawResult,
+    record.law_result,
+    record.completed ? "aligned" : "unclear"
+  );
   return {
     title: "最明显执行偏离",
     errorType: context.errorType || context.error_type || "",
@@ -604,8 +614,10 @@ function buildTrainingMistakeCard(record = {}, context = null) {
     firstReaction: record.firstReaction || "",
     boundaryChoice: record.boundaryChoice || "",
     insightLine: record.insightLine || "",
-    executionResult: record.completed ? "已完成一次边界记录" : "待完成训练记录",
-    execution_result: record.completed ? "已完成一次边界记录" : "待完成训练记录",
+    executionResult,
+    execution_result: executionResult,
+    executionLabel: executionResult,
+    execution_label: executionResult,
     trainingPrescription,
     training_prescription: trainingPrescription,
     nextAction: context.nextAction || context.next_action || "",
@@ -722,8 +734,21 @@ function buildKlineMindRecord(input = {}, session = {}) {
     completed: !!(firstReaction && boundaryChoice && insightLine),
     updatedAt: Date.now()
   };
+  const executionResult = normalizeExecutionResult(
+    input.executionResult,
+    input.execution_result,
+    input.executionLabel,
+    input.execution_label,
+    input.lawResult,
+    input.law_result,
+    record.completed ? "aligned" : "unclear"
+  );
   const scoredRecord = Object.assign({}, record, {
-    score: calculateKlineMindScore(record)
+    score: calculateKlineMindScore(record),
+    executionResult,
+    execution_result: executionResult,
+    executionLabel: executionResult,
+    execution_label: executionResult
   });
   if (!sessionContext) return scoredRecord;
 
@@ -732,6 +757,8 @@ function buildKlineMindRecord(input = {}, session = {}) {
   return Object.assign({}, scoredRecord, sessionContext, {
     executionResult: trainingMistakeCard.executionResult,
     execution_result: trainingMistakeCard.execution_result,
+    executionLabel: trainingMistakeCard.executionLabel,
+    execution_label: trainingMistakeCard.execution_label,
     repeatCount,
     repeat_count: repeatCount,
     trainingMistakeCard,

@@ -124,6 +124,35 @@ assert.strictEqual(reviewFocusRecord.sourceReviewId, "tr-review-focus-001");
 assert.strictEqual(reviewFocusRecord.source_review_id, "tr-review-focus-001");
 assert.strictEqual(reviewFocusRecord.trainingMistakeCard.title, "最明显执行偏离");
 assert.strictEqual(reviewFocusRecord.training_mistake_card.title, "最明显执行偏离");
+assert.strictEqual(reviewFocusRecord.executionResult, "按计划执行");
+assert.strictEqual(reviewFocusRecord.execution_result, "按计划执行");
+assert.strictEqual(reviewFocusRecord.executionLabel, "按计划执行");
+assert.strictEqual(reviewFocusRecord.execution_label, "按计划执行");
+
+const oldLawResultRecord = buildKlineMindRecord({
+  selectedCandleKey: reviewFocusSession.selectedCandleKey,
+  firstReaction: "怕错过",
+  boundaryChoice: "停十秒",
+  insightLine: "我看见自己被放量拉升牵动。",
+  lawResult: "broken"
+}, reviewFocusSession);
+assert.strictEqual(oldLawResultRecord.executionResult, "执行偏离");
+assert.strictEqual(oldLawResultRecord.execution_result, "执行偏离");
+assert.strictEqual(oldLawResultRecord.executionLabel, "执行偏离");
+assert.strictEqual(oldLawResultRecord.execution_label, "执行偏离");
+assert.strictEqual(oldLawResultRecord.trainingMistakeCard.executionResult, "执行偏离");
+assert.strictEqual(oldLawResultRecord.training_mistake_card.execution_result, "执行偏离");
+
+const newExecutionResultPriorityRecord = buildKlineMindRecord({
+  selectedCandleKey: reviewFocusSession.selectedCandleKey,
+  firstReaction: "怕错过",
+  boundaryChoice: "停十秒",
+  insightLine: "我看见自己被放量拉升牵动。",
+  execution_result: "aligned",
+  law_result: "broken"
+}, reviewFocusSession);
+assert.strictEqual(newExecutionResultPriorityRecord.executionResult, "按计划执行");
+assert.strictEqual(newExecutionResultPriorityRecord.execution_result, "按计划执行");
 
 const blindSession = buildKlineMindSession({
   assessment: { primary: "冲动型" },
@@ -221,6 +250,7 @@ assert.strictEqual(sparseReviewFocusRecord.repeatCount, 1);
 assert.strictEqual(sparseReviewFocusRecord.repeat_count, 1);
 assert.ok(sparseReviewFocusRecord.executionResult);
 assert.strictEqual(sparseReviewFocusRecord.executionResult, sparseReviewFocusRecord.execution_result);
+assert.strictEqual(sparseReviewFocusRecord.executionResult, "按计划执行");
 assert.strictEqual(sparseReviewFocusRecord.trainingMistakeCard.title, "最明显执行偏离");
 assert.strictEqual(sparseReviewFocusRecord.training_mistake_card.title, "最明显执行偏离");
 assert.strictEqual(JSON.stringify(sparseReviewFocusRecord).includes("最明显失守"), false);
