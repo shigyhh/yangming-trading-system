@@ -375,6 +375,63 @@ async function syncShareAttribution(event = null) {
   }
 }
 
+function normalizeApiList(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item || "").trim()).filter(Boolean);
+  }
+  if (typeof value === "string") {
+    return value.split(/[、,，/]/).map((item) => item.trim()).filter(Boolean);
+  }
+  return [];
+}
+
+function pickApiValue() {
+  for (let index = 0; index < arguments.length; index += 1) {
+    const value = arguments[index];
+    if (value === undefined || value === null) continue;
+    if (typeof value === "string" && value.trim() === "") continue;
+    if (Array.isArray(value) && value.length === 0) continue;
+    return value;
+  }
+  return undefined;
+}
+
+function buildKlineSamplingPayload(input = {}) {
+  const sourceType = String(pickApiValue(input.sourceType, input.source_type) || "").trim();
+  const errorType = String(pickApiValue(input.errorType, input.error_type) || "").trim();
+  const sceneTags = normalizeApiList(pickApiValue(input.sceneTags, input.scene_tags));
+  const trainingPackId = String(pickApiValue(input.trainingPackId, input.training_pack_id) || "").trim();
+  const excludeSegmentIds = normalizeApiList(pickApiValue(input.excludeSegmentIds, input.exclude_segment_ids));
+
+  return {
+    sourceType,
+    source_type: sourceType,
+    errorType,
+    error_type: errorType,
+    sceneTags,
+    scene_tags: sceneTags,
+    trainingPackId,
+    training_pack_id: trainingPackId,
+    difficulty: String(input.difficulty || "").trim(),
+    period: String(input.period || "1d").trim(),
+    excludeSegmentIds,
+    exclude_segment_ids: excludeSegmentIds
+  };
+}
+
+async function requestKlineTrainingSample(input = {}) {
+  try {
+    return await request({
+      path: "/api/v1/kline-training/sample",
+      method: "POST",
+      data: buildKlineSamplingPayload(input)
+    });
+  } catch (error) {
+    saveConnectionFallback(error, "抽题服务暂未连接");
+    throw error;
+  }
+}
+
 const KLINE_MARKET_MAP = {
   cn: "cn_equity",
   hk: "hk_equity",
@@ -442,5 +499,6 @@ module.exports = {
   requestTradeReviewOcrDraft,
   pullTrainingPrescription,
   syncShareAttribution,
+  requestKlineTrainingSample,
   fetchKlineTrainingSlice
 };

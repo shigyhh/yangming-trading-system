@@ -156,6 +156,12 @@ function buildKLineBindingPayload({ auth = {}, state = {}, progress = null, trai
   attachAliasedField(record, "executionResult", "execution_result", executionResult);
   attachAliasedField(record, "executionLabel", "execution_label", executionResult);
   attachAliasedField(record, "repeatCount", "repeat_count", normalizeNumberValue(pickValue(sourceRecord.repeatCount, sourceRecord.repeat_count)));
+  const samplingResult = normalizeKLineSamplingResultForBinding(pickValue(sourceRecord.samplingResult, sourceRecord.sampling_result));
+  attachAliasedField(record, "trainingPackId", "training_pack_id", pickValue(sourceRecord.trainingPackId, sourceRecord.training_pack_id, samplingResult && (samplingResult.trainingPackId || samplingResult.training_pack_id)));
+  attachAliasedField(record, "segmentId", "segment_id", pickValue(sourceRecord.segmentId, sourceRecord.segment_id, samplingResult && (samplingResult.segmentId || samplingResult.segment_id)));
+  attachAliasedField(record, "samplingResult", "sampling_result", samplingResult);
+  attachAliasedField(record, "fallbackUsed", "fallback_used", pickValue(sourceRecord.fallbackUsed, sourceRecord.fallback_used, samplingResult && (samplingResult.fallbackUsed || samplingResult.fallback_used)));
+  attachAliasedField(record, "fallbackReason", "fallback_reason", pickValue(sourceRecord.fallbackReason, sourceRecord.fallback_reason, samplingResult && (samplingResult.fallbackReason || samplingResult.fallback_reason)));
   attachAliasedField(record, "trainingMistakeCard", "training_mistake_card", pickValue(sourceRecord.trainingMistakeCard, sourceRecord.training_mistake_card, sourceRecord.mistakeCard, sourceRecord.mistake_card));
 
   return {
@@ -578,6 +584,43 @@ function normalizeNumberValue(value) {
   if (!hasBindingValue(value)) return undefined;
   const number = Number(value);
   return Number.isFinite(number) ? number : undefined;
+}
+
+function normalizeBooleanValue(value) {
+  if (value === true || value === false) return value;
+  if (value === "true" || value === "1" || value === 1) return true;
+  if (value === "false" || value === "0" || value === 0) return false;
+  return undefined;
+}
+
+function normalizeKLineSamplingResultForBinding(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const result = {};
+  attachAliasedField(result, "segmentId", "segment_id", pickValue(value.segmentId, value.segment_id));
+  attachAliasedField(result, "trainingPackId", "training_pack_id", pickValue(value.trainingPackId, value.training_pack_id));
+  attachAliasedField(result, "errorType", "error_type", pickValue(value.errorType, value.error_type));
+  attachAliasedField(result, "sceneTags", "scene_tags", normalizeListValue(pickValue(value.sceneTags, value.scene_tags)));
+  const symbol = pickText(value.symbol);
+  if (symbol) result.symbol = symbol;
+  const name = pickText(value.name);
+  if (name) result.name = name;
+  const period = pickText(value.period);
+  if (period) result.period = period;
+  attachAliasedField(result, "startDate", "start_date", pickValue(value.startDate, value.start_date));
+  attachAliasedField(result, "endDate", "end_date", pickValue(value.endDate, value.end_date));
+  attachAliasedField(result, "fallbackUsed", "fallback_used", normalizeBooleanValue(pickValue(value.fallbackUsed, value.fallback_used)));
+  attachAliasedField(result, "fallbackReason", "fallback_reason", pickValue(value.fallbackReason, value.fallback_reason));
+  const source = pickText(value.source);
+  if (source) result.source = source;
+
+  Object.keys(result).forEach((key) => {
+    const fieldValue = result[key];
+    if (!hasBindingValue(fieldValue) || (Array.isArray(fieldValue) && fieldValue.length === 0)) {
+      delete result[key];
+    }
+  });
+
+  return Object.keys(result).length ? result : undefined;
 }
 
 function getPhoneTail(rawPhone, maskedPhone) {

@@ -11,7 +11,9 @@ const {
   getPersonalityKlineDrill,
   listSpecialTrainingPacks,
   getSpecialTrainingPack,
-  buildSpecialTrainingSessionMeta
+  buildSpecialTrainingSessionMeta,
+  buildKlineSamplingRequest,
+  normalizeKlineSamplingResult
 } = require("./index");
 
 assert.strictEqual(SIX_GATE_MAP.length, 6);
@@ -147,6 +149,82 @@ assert.strictEqual(reviewFocusRecord.executionConsistencyRateText, "100%");
 assert.strictEqual(reviewFocusRecord.execution_consistency_rate_text, "100%");
 assert.strictEqual(reviewFocusRecord.executionConsistency.rateText, "100%");
 
+const samplingResponse = {
+  sampling_result: {
+    segment_id: "segment-fast-rise",
+    training_pack_id: "pack-chasing-surge",
+    error_type: "追涨之镜",
+    scene_tags: ["放量拉升", "怕错过"],
+    symbol: "000001.SZ",
+    name: "训练片段",
+    period: "1d",
+    start_date: "2026-05-01",
+    end_date: "2026-05-16",
+    bars: historicalSlice.candles,
+    fallback_used: false,
+    source: "segment"
+  }
+};
+const normalizedSampling = normalizeKlineSamplingResult(samplingResponse);
+assert.strictEqual(normalizedSampling.segmentId, "segment-fast-rise");
+assert.strictEqual(normalizedSampling.segment_id, "segment-fast-rise");
+assert.strictEqual(normalizedSampling.trainingPackId, "pack-chasing-surge");
+assert.strictEqual(normalizedSampling.training_pack_id, "pack-chasing-surge");
+assert.strictEqual(normalizedSampling.fallbackUsed, false);
+assert.strictEqual(normalizedSampling.fallback_used, false);
+assert.strictEqual(normalizedSampling.bars.length, historicalSlice.candles.length);
+assert.strictEqual("bars" in normalizedSampling.samplingResult, false);
+assert.strictEqual("bars" in normalizedSampling.sampling_result, false);
+
+const reviewFocusSamplingRequest = buildKlineSamplingRequest(reviewFocus, {
+  period: "1d",
+  difficulty: "normal",
+  excludeSegmentIds: ["segment-old"]
+});
+assert.strictEqual(reviewFocusSamplingRequest.sourceType, "review_focus");
+assert.strictEqual(reviewFocusSamplingRequest.source_type, "review_focus");
+assert.strictEqual(reviewFocusSamplingRequest.errorType, "追涨之镜");
+assert.strictEqual(reviewFocusSamplingRequest.error_type, "追涨之镜");
+assert.deepStrictEqual(reviewFocusSamplingRequest.sceneTags, ["放量拉升", "怕错过"]);
+assert.deepStrictEqual(reviewFocusSamplingRequest.scene_tags, ["放量拉升", "怕错过"]);
+assert.deepStrictEqual(reviewFocusSamplingRequest.excludeSegmentIds, ["segment-old"]);
+assert.deepStrictEqual(reviewFocusSamplingRequest.exclude_segment_ids, ["segment-old"]);
+
+const reviewFocusSampledSession = buildKlineMindSession({
+  assessment: { primary: "冲动型" },
+  trainingDay: { day: 3 },
+  record: { marketKey: "cn_equity", timeframeKey: "1d" },
+  historyCache: {},
+  reviewFocus,
+  samplingResult: samplingResponse
+});
+assert.strictEqual(reviewFocusSampledSession.sourceType, "review_focus");
+assert.strictEqual(reviewFocusSampledSession.segmentId, "segment-fast-rise");
+assert.strictEqual(reviewFocusSampledSession.segment_id, "segment-fast-rise");
+assert.strictEqual(reviewFocusSampledSession.trainingPackId, "pack-chasing-surge");
+assert.strictEqual(reviewFocusSampledSession.training_pack_id, "pack-chasing-surge");
+assert.strictEqual(reviewFocusSampledSession.samplingStatus, "matched");
+assert.strictEqual(reviewFocusSampledSession.sampling_status, "matched");
+assert.strictEqual(reviewFocusSampledSession.hasHistoricalData, true);
+assert.strictEqual(reviewFocusSampledSession.historySlice.source, "segment");
+assert.strictEqual("bars" in reviewFocusSampledSession.samplingResult, false);
+assert.strictEqual("bars" in reviewFocusSampledSession.sampling_result, false);
+
+const sampledRecord = buildKlineMindRecord({
+  selectedCandleKey: reviewFocusSampledSession.selectedCandleKey,
+  firstReaction: "怕错过",
+  boundaryChoice: "停十秒",
+  insightLine: "抽题片段也能写入训练记录。"
+}, reviewFocusSampledSession);
+assert.strictEqual(sampledRecord.segmentId, "segment-fast-rise");
+assert.strictEqual(sampledRecord.segment_id, "segment-fast-rise");
+assert.strictEqual(sampledRecord.trainingPackId, "pack-chasing-surge");
+assert.strictEqual(sampledRecord.training_pack_id, "pack-chasing-surge");
+assert.strictEqual(sampledRecord.fallbackUsed, false);
+assert.strictEqual(sampledRecord.fallback_used, false);
+assert.strictEqual("bars" in sampledRecord.samplingResult, false);
+assert.strictEqual("bars" in sampledRecord.sampling_result, false);
+
 const specialTrainingPacks = listSpecialTrainingPacks();
 assert.deepStrictEqual(specialTrainingPacks.map((item) => item.errorType), [
   "追高冲动",
@@ -169,6 +247,16 @@ assert.deepStrictEqual(specialMeta.sceneTags, ["放量拉升", "假突破", "冲
 assert.deepStrictEqual(specialMeta.scene_tags, ["放量拉升", "假突破", "冲高回落"]);
 assert.strictEqual(specialMeta.trainingPackId, "chase_high_impulse");
 assert.strictEqual(specialMeta.training_pack_title, "追高冲动专项");
+
+const specialSamplingRequest = buildKlineSamplingRequest(specialMeta, {
+  period: "1d"
+});
+assert.strictEqual(specialSamplingRequest.sourceType, "special_training");
+assert.strictEqual(specialSamplingRequest.source_type, "special_training");
+assert.strictEqual(specialSamplingRequest.errorType, "追高冲动");
+assert.strictEqual(specialSamplingRequest.error_type, "追高冲动");
+assert.strictEqual(specialSamplingRequest.trainingPackId, "chase_high_impulse");
+assert.strictEqual(specialSamplingRequest.training_pack_id, "chase_high_impulse");
 
 const specialSession = buildKlineMindSession({
   assessment: { primary: "冲动型" },
@@ -248,6 +336,26 @@ assert.notStrictEqual(blindSession.sourceType, "review_focus");
 assert.notStrictEqual(blindSession.source_type, "review_focus");
 assert.notStrictEqual(blindSession.sourceType, "special_training");
 assert.notStrictEqual(blindSession.source_type, "special_training");
+assert.strictEqual(blindSession.segmentId, undefined);
+assert.strictEqual(blindSession.samplingResult, undefined);
+
+const fallbackSampling = normalizeKlineSamplingResult({
+  segmentId: "",
+  trainingPackId: "pack-chasing-surge",
+  errorType: "追涨之镜",
+  sceneTags: ["放量拉升"],
+  symbol: "000001.SZ",
+  period: "1d",
+  bars: historicalSlice.candles,
+  fallbackUsed: true,
+  fallbackReason: "sampling_api_failed",
+  source: "base_blind_fallback"
+});
+assert.strictEqual(fallbackSampling.fallbackUsed, true);
+assert.strictEqual(fallbackSampling.fallback_used, true);
+assert.strictEqual(fallbackSampling.fallbackReason, "sampling_api_failed");
+assert.strictEqual(fallbackSampling.fallback_reason, "sampling_api_failed");
+assert.strictEqual("bars" in fallbackSampling.samplingResult, false);
 
 const legacySessionRecord = buildKlineMindRecord({
   firstReaction: "急躁",

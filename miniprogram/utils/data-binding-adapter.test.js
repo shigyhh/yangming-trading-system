@@ -122,6 +122,33 @@ const state = {
       },
       executionResult: "执行偏离",
       repeatCount: 2,
+      segmentId: "segment-fast-rise",
+      segment_id: "segment-fast-rise",
+      trainingPackId: "pack-chasing-surge",
+      training_pack_id: "pack-chasing-surge",
+      samplingResult: {
+        segmentId: "segment-fast-rise",
+        segment_id: "segment-fast-rise",
+        trainingPackId: "pack-chasing-surge",
+        training_pack_id: "pack-chasing-surge",
+        errorType: "chasing",
+        error_type: "chasing",
+        sceneTags: ["急拉", "边界触碰"],
+        scene_tags: ["急拉", "边界触碰"],
+        source: "segment",
+        fallbackUsed: false,
+        fallback_used: false,
+        bars: [{ close: 10.2 }]
+      },
+      sampling_result: {
+        segment_id: "segment-fast-rise",
+        training_pack_id: "pack-chasing-surge",
+        source: "segment",
+        fallback_used: false,
+        bars: [{ close: 10.2 }]
+      },
+      fallbackUsed: false,
+      fallback_used: false,
       trainingMistakeCard: {
         title: "急拉旧题"
       },
@@ -228,6 +255,22 @@ assert.strictEqual(klinePayload.record.executionResult, "执行偏离");
 assert.strictEqual(klinePayload.record.execution_result, "执行偏离");
 assert.strictEqual(klinePayload.record.repeatCount, 2);
 assert.strictEqual(klinePayload.record.repeat_count, 2);
+assert.strictEqual(klinePayload.record.segmentId, "segment-fast-rise");
+assert.strictEqual(klinePayload.record.segment_id, "segment-fast-rise");
+assert.strictEqual(klinePayload.record.trainingPackId, "pack-chasing-surge");
+assert.strictEqual(klinePayload.record.training_pack_id, "pack-chasing-surge");
+assert.strictEqual(klinePayload.record.fallbackUsed, false);
+assert.strictEqual(klinePayload.record.fallback_used, false);
+assert.strictEqual(klinePayload.record.samplingResult.segmentId, "segment-fast-rise");
+assert.strictEqual(klinePayload.record.sampling_result.segment_id, "segment-fast-rise");
+assert.strictEqual(klinePayload.record.samplingResult.trainingPackId, "pack-chasing-surge");
+assert.strictEqual(klinePayload.record.sampling_result.training_pack_id, "pack-chasing-surge");
+assert.strictEqual(klinePayload.record.samplingResult.source, "segment");
+assert.strictEqual(klinePayload.record.sampling_result.source, "segment");
+assert.strictEqual(klinePayload.record.samplingResult.fallbackUsed, false);
+assert.strictEqual(klinePayload.record.sampling_result.fallback_used, false);
+assert.strictEqual("bars" in klinePayload.record.samplingResult, false);
+assert.strictEqual("bars" in klinePayload.record.sampling_result, false);
 assert.deepStrictEqual(klinePayload.record.trainingMistakeCard, { title: "急拉旧题" });
 assert.deepStrictEqual(klinePayload.record.training_mistake_card, { title: "急拉旧题" });
 
@@ -304,6 +347,18 @@ const snakeOnlyKlinePayload = buildKLineBindingPayload({
         training_prescription: { action: "固定观察窗口。" },
         execution_result: "按计划执行",
         repeat_count: 3,
+        training_pack_id: "pack-snake-only",
+        segment_id: "segment-snake-only",
+        sampling_result: {
+          segment_id: "segment-snake-only",
+          training_pack_id: "pack-snake-only",
+          source: "fallback_catalog_slice",
+          fallback_used: true,
+          fallback_reason: "no_matching_segment",
+          bars: [{ close: 9.8 }]
+        },
+        fallback_used: true,
+        fallback_reason: "no_matching_segment",
         training_mistake_card: { title: "犹疑旧题" },
         scenarioTitle: "横盘犹疑",
         firstReaction: "想等确认",
@@ -325,6 +380,18 @@ assert.strictEqual(snakeOnlyKlinePayload.record.executionResult, "按计划执�
 assert.strictEqual(snakeOnlyKlinePayload.record.execution_result, "按计划执行");
 assert.strictEqual(snakeOnlyKlinePayload.record.repeatCount, 3);
 assert.strictEqual(snakeOnlyKlinePayload.record.repeat_count, 3);
+assert.strictEqual(snakeOnlyKlinePayload.record.trainingPackId, "pack-snake-only");
+assert.strictEqual(snakeOnlyKlinePayload.record.training_pack_id, "pack-snake-only");
+assert.strictEqual(snakeOnlyKlinePayload.record.segmentId, "segment-snake-only");
+assert.strictEqual(snakeOnlyKlinePayload.record.segment_id, "segment-snake-only");
+assert.strictEqual(snakeOnlyKlinePayload.record.fallbackUsed, true);
+assert.strictEqual(snakeOnlyKlinePayload.record.fallback_used, true);
+assert.strictEqual(snakeOnlyKlinePayload.record.fallbackReason, "no_matching_segment");
+assert.strictEqual(snakeOnlyKlinePayload.record.fallback_reason, "no_matching_segment");
+assert.strictEqual(snakeOnlyKlinePayload.record.samplingResult.segmentId, "segment-snake-only");
+assert.strictEqual(snakeOnlyKlinePayload.record.sampling_result.segment_id, "segment-snake-only");
+assert.strictEqual("bars" in snakeOnlyKlinePayload.record.samplingResult, false);
+assert.strictEqual("bars" in snakeOnlyKlinePayload.record.sampling_result, false);
 assert.deepStrictEqual(snakeOnlyKlinePayload.record.trainingMistakeCard, { title: "犹疑旧题" });
 assert.deepStrictEqual(snakeOnlyKlinePayload.record.training_mistake_card, { title: "犹疑旧题" });
 

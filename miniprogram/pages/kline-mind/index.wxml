@@ -68,6 +68,11 @@
         </view>
       </view>
 
+      <view wx:if="{{samplingStatusText}}" class="sampling-status {{samplingStatus}}">
+        <text>{{samplingStatusText}}</text>
+        <view>{{samplingMessage || samplingError}}</view>
+      </view>
+
       <view wx:if="{{false}}" class="hero-meta">
         <view>
           <text>今日</text>
@@ -325,6 +330,12 @@
         <view>{{savedRecord.trainingMistakeCard.errorType || savedRecord.training_mistake_card.error_type || savedRecord.errorType || savedRecord.error_type || '待照见'}}</view>
         <view>执行结果：{{savedRecord.trainingMistakeCard.executionResult || savedRecord.training_mistake_card.execution_result || savedRecord.executionResult || savedRecord.execution_result || '说不清'}}</view>
         <view>本局执行一致率：{{savedRecord.executionConsistencyRateText || savedRecord.execution_consistency_rate_text || '样本不足'}}</view>
+      </view>
+      <view wx:if="{{savedRecord.samplingResult || savedRecord.sampling_result || savedRecord.segmentId || savedRecord.segment_id}}" class="sampling-summary">
+        <text>训练片段来源</text>
+        <view>{{savedRecord.samplingSourceLabel || savedRecord.sampling_source_label || (savedRecord.fallbackUsed || savedRecord.fallback_used ? '兜底片段' : '匹配片段')}}</view>
+        <view>场景标签：{{savedRecord.samplingSceneTagsText || savedRecord.sampling_scene_tags_text || savedRecord.sceneTags || savedRecord.scene_tags || '待补充'}}</view>
+        <view wx:if="{{savedRecord.fallbackReason || savedRecord.fallback_reason}}">兜底原因：{{savedRecord.fallbackReason || savedRecord.fallback_reason}}</view>
       </view>
       <text>只记录第一反应、守界动作与复盘完整度，不关联外在结果。</text>
       <view class="completion-actions">

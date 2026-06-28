@@ -17,13 +17,15 @@ const {
   saveZhixingReminderEvent,
   getExecutionPlanLibrary
 } = require("../../utils/store");
-const { syncLocalState, syncTrainingProgress } = require("../../utils/api");
+const { syncLocalState, syncTrainingProgress, requestKlineTrainingSample } = require("../../utils/api");
 const { buildTraining7View } = require("../../modules/training7/index");
 const {
   buildKlineMindSession,
   buildKlineMindRecord,
   listSpecialTrainingPacks,
-  buildSpecialTrainingSessionMeta
+  buildSpecialTrainingSessionMeta,
+  buildKlineSamplingRequest,
+  normalizeKlineSamplingResult
 } = require("../../modules/kline-mind/index");
 const { resolveExecutionPlanAction } = require("../../modules/execution-plan/index");
 const {
@@ -110,7 +112,15 @@ function buildForm(record = {}, session = {}) {
     trainingPackId: record.trainingPackId || record.training_pack_id || session.trainingPackId || session.training_pack_id || "",
     training_pack_id: record.training_pack_id || record.trainingPackId || session.training_pack_id || session.trainingPackId || "",
     trainingPackTitle: record.trainingPackTitle || record.training_pack_title || session.trainingPackTitle || session.training_pack_title || "",
-    training_pack_title: record.training_pack_title || record.trainingPackTitle || session.training_pack_title || session.trainingPackTitle || ""
+    training_pack_title: record.training_pack_title || record.trainingPackTitle || session.training_pack_title || session.trainingPackTitle || "",
+    segmentId: record.segmentId || record.segment_id || session.segmentId || session.segment_id || "",
+    segment_id: record.segment_id || record.segmentId || session.segment_id || session.segmentId || "",
+    samplingResult: record.samplingResult || record.sampling_result || session.samplingResult || session.sampling_result || null,
+    sampling_result: record.sampling_result || record.samplingResult || session.sampling_result || session.samplingResult || null,
+    fallbackUsed: pickValue(record.fallbackUsed, record.fallback_used, session.fallbackUsed, session.fallback_used, false),
+    fallback_used: pickValue(record.fallback_used, record.fallbackUsed, session.fallback_used, session.fallbackUsed, false),
+    fallbackReason: record.fallbackReason || record.fallback_reason || session.fallbackReason || session.fallback_reason || "",
+    fallback_reason: record.fallback_reason || record.fallbackReason || session.fallback_reason || session.fallbackReason || ""
   };
 }
 
@@ -178,11 +188,77 @@ function stripTrainingContext(form = {}) {
     "trainingPackTitle",
     "training_pack_title",
     "sourceReviewId",
-    "source_review_id"
+    "source_review_id",
+    "segmentId",
+    "segment_id",
+    "samplingResult",
+    "sampling_result",
+    "fallbackUsed",
+    "fallback_used",
+    "fallbackReason",
+    "fallback_reason"
   ].forEach((key) => {
     delete cleanForm[key];
   });
   return cleanForm;
+}
+
+function stripSamplingContext(form = {}) {
+  const cleanForm = Object.assign({}, form);
+  [
+    "segmentId",
+    "segment_id",
+    "samplingResult",
+    "sampling_result",
+    "fallbackUsed",
+    "fallback_used",
+    "fallbackReason",
+    "fallback_reason"
+  ].forEach((key) => {
+    delete cleanForm[key];
+  });
+  return cleanForm;
+}
+
+function getFallbackReasonLabel(reason = "") {
+  const labels = {
+    no_matching_segment: "暂无匹配片段",
+    excluded_all_segments: "已排除近期片段",
+    segment_slice_unavailable: "片段数据暂不可用",
+    no_enabled_segment: "暂无启用片段",
+    sampling_api_failed: "抽题服务暂未连接",
+    empty_sampling_result: "抽题结果为空"
+  };
+  return labels[reason] || reason || "";
+}
+
+function buildSamplingUi(status = "", message = "", error = "") {
+  const titleMap = {
+    loading: "正在抽取训练片段",
+    matched: "已匹配片段",
+    fallback: "使用基础盲练兜底",
+    error: "抽题失败，请稍后重试"
+  };
+  return {
+    samplingStatus: status,
+    samplingStatusText: titleMap[status] || "",
+    samplingMessage: message,
+    samplingError: error
+  };
+}
+
+function buildSamplingUiFromSession(session = {}) {
+  const status = session.samplingStatus || session.sampling_status || "";
+  if (!status) return buildSamplingUi();
+  const fallbackReason = getFallbackReasonLabel(session.fallbackReason || session.fallback_reason || "");
+  const sceneTags = normalizeList(session.sceneTags || session.scene_tags).join(" / ");
+  const sourceLabel = session.samplingSourceLabel || session.sampling_source_label || (session.fallbackUsed || session.fallback_used ? "兜底片段" : "匹配片段");
+  const message = [
+    `训练片段来源：${sourceLabel}`,
+    sceneTags ? `场景标签：${sceneTags}` : "",
+    fallbackReason ? `原因：${fallbackReason}` : ""
+  ].filter(Boolean).join("；");
+  return buildSamplingUi(status, message);
 }
 
 function buildReviewFocusFromEntry(options = {}, tradeReviewState = {}) {
@@ -275,6 +351,10 @@ Page({
     form: buildForm(),
     specialTrainingPacks: listSpecialTrainingPacks(),
     activeTrainingMode: "base_blind",
+    samplingStatus: "",
+    samplingStatusText: "",
+    samplingMessage: "",
+    samplingError: "",
     savedRecord: null,
     saving: false,
     zhixingReminderDisabled: false,
@@ -319,6 +399,7 @@ Page({
     });
     const form = buildForm(klineMindRecord, session);
     const sourceType = session.sourceType || session.source_type || "";
+    const samplingUi = buildSamplingUiFromSession(session);
 
     this.setData({
       assessment,
@@ -331,6 +412,10 @@ Page({
       form,
       specialTrainingPacks: listSpecialTrainingPacks(),
       activeTrainingMode: sourceType || "base_blind",
+      samplingStatus: samplingUi.samplingStatus,
+      samplingStatusText: samplingUi.samplingStatusText,
+      samplingMessage: samplingUi.samplingMessage,
+      samplingError: samplingUi.samplingError,
       savedRecord: klineMindRecord && klineMindRecord.updatedAt ? klineMindRecord : null,
       showBodySignal: !!form.bodySignal
     });
@@ -351,7 +436,7 @@ Page({
 
   selectMarket(e) {
     const marketKey = e.currentTarget.dataset.market;
-    const form = Object.assign({}, this.data.form, {
+    const form = Object.assign({}, stripSamplingContext(this.data.form || {}), {
       marketKey,
       selectedCandleKey: ""
     });
@@ -364,13 +449,17 @@ Page({
     });
     this.setData({
       form: Object.assign({}, form, { selectedCandleKey: session.selectedCandleKey }),
-      session
+      session,
+      samplingStatus: "",
+      samplingStatusText: "",
+      samplingMessage: "",
+      samplingError: ""
     });
   },
 
   selectTimeframe(e) {
     const timeframeKey = e.currentTarget.dataset.timeframe;
-    const form = Object.assign({}, this.data.form, {
+    const form = Object.assign({}, stripSamplingContext(this.data.form || {}), {
       timeframeKey,
       selectedCandleKey: ""
     });
@@ -383,7 +472,11 @@ Page({
     });
     this.setData({
       form: Object.assign({}, form, { selectedCandleKey: session.selectedCandleKey }),
-      session
+      session,
+      samplingStatus: "",
+      samplingStatusText: "",
+      samplingMessage: "",
+      samplingError: ""
     });
   },
 
@@ -428,28 +521,37 @@ Page({
     this.enterReviewFocusTraining();
   },
 
-  enterReviewFocusTraining(options = {}) {
+  async enterReviewFocusTraining(options = {}) {
     const form = stripTrainingContext(this.data.form || {});
+    const samplingAttempt = await this.fetchTrainingSample(this.data.reviewFocus || {});
     const session = buildKlineMindSession({
       assessment: this.data.assessment,
       trainingDay: this.data.trainingDay,
       record: form,
       historyCache: getKlineHistoryCache(),
-      reviewFocus: this.data.reviewFocus
+      reviewFocus: this.data.reviewFocus,
+      samplingResult: samplingAttempt.samplingResult
     });
+    const samplingUi = samplingAttempt.failed
+      ? buildSamplingUi("fallback", "抽题失败，已切换基础盲练", getFallbackReasonLabel(samplingAttempt.fallbackReason))
+      : buildSamplingUiFromSession(session);
     this.setData({
       form: buildForm(form, session),
       session,
       reviewFocusErrorType: (this.data.reviewFocus && (this.data.reviewFocus.errorType || this.data.reviewFocus.error_type)) || "",
       reviewFocusNextAction: (this.data.reviewFocus && (this.data.reviewFocus.nextAction || this.data.reviewFocus.next_action)) || "",
       activeTrainingMode: "review_focus",
+      samplingStatus: samplingUi.samplingStatus,
+      samplingStatusText: samplingUi.samplingStatusText,
+      samplingMessage: samplingUi.samplingMessage,
+      samplingError: samplingUi.samplingError,
       zhixingReminderDisabled: options.disableReminders ? true : this.data.zhixingReminderDisabled,
       zhixingReminderShownCount: 0
     });
     wx.showToast({ title: "已进入今日针对训练", icon: "none" });
   },
 
-  startSpecialTraining(e) {
+  async startSpecialTraining(e) {
     const packId = String(((e.currentTarget || {}).dataset || {}).packId || "").trim();
     const meta = buildSpecialTrainingSessionMeta(packId);
     if (!meta.errorType) {
@@ -457,13 +559,18 @@ Page({
       return;
     }
     const form = Object.assign({}, stripTrainingContext(this.data.form || {}), meta);
+    const samplingAttempt = await this.fetchTrainingSample(meta);
     const session = buildKlineMindSession({
       assessment: this.data.assessment,
       trainingDay: this.data.trainingDay,
       record: form,
       historyCache: getKlineHistoryCache(),
-      specialTraining: meta
+      specialTraining: meta,
+      samplingResult: samplingAttempt.samplingResult
     });
+    const samplingUi = samplingAttempt.failed
+      ? buildSamplingUi("fallback", "抽题失败，已切换基础盲练", getFallbackReasonLabel(samplingAttempt.fallbackReason))
+      : buildSamplingUiFromSession(session);
     this.setData({
       form: buildForm(form, session),
       session,
@@ -471,10 +578,48 @@ Page({
       reviewFocusErrorType: "",
       reviewFocusNextAction: "",
       activeTrainingMode: "special_training",
+      samplingStatus: samplingUi.samplingStatus,
+      samplingStatusText: samplingUi.samplingStatusText,
+      samplingMessage: samplingUi.samplingMessage,
+      samplingError: samplingUi.samplingError,
       zhixingReminderDisabled: false,
       zhixingReminderShownCount: 0
     });
     wx.showToast({ title: "已进入专项训练", icon: "none" });
+  },
+
+  async fetchTrainingSample(context = {}) {
+    const requestPayload = buildKlineSamplingRequest(context, {
+      period: (this.data.form || {}).timeframeKey || (this.data.session || {}).timeframeKey || "1d"
+    });
+    this.setData(buildSamplingUi("loading", "正在抽取训练片段"));
+    try {
+      const result = await requestKlineTrainingSample(requestPayload);
+      const samplingResult = normalizeKlineSamplingResult(result);
+      if (!samplingResult || !Array.isArray(samplingResult.bars) || !samplingResult.bars.length) {
+        throw new Error("empty_sampling_result");
+      }
+      return {
+        samplingResult,
+        failed: false,
+        fallbackReason: samplingResult.fallbackReason || samplingResult.fallback_reason || ""
+      };
+    } catch (error) {
+      const fallbackReason = error && error.message === "empty_sampling_result"
+        ? "empty_sampling_result"
+        : "sampling_api_failed";
+      return {
+        samplingResult: normalizeKlineSamplingResult(Object.assign({}, requestPayload, {
+          fallbackUsed: true,
+          fallback_used: true,
+          fallbackReason,
+          fallback_reason: fallbackReason,
+          source: "base_blind_fallback"
+        })),
+        failed: true,
+        fallbackReason
+      };
+    }
   },
 
   startBaseBlindTraining() {
@@ -492,6 +637,10 @@ Page({
       reviewFocusErrorType: "",
       reviewFocusNextAction: "",
       activeTrainingMode: "base_blind",
+      samplingStatus: "",
+      samplingStatusText: "",
+      samplingMessage: "",
+      samplingError: "",
       zhixingReminderDisabled: false,
       zhixingReminderShownCount: 0
     });
@@ -563,7 +712,7 @@ Page({
         reviewFocus.training_prescription,
         reviewFocus.trainingPrescription
       ),
-      executionPlanLibrary
+      executionPlanLibrary: getExecutionPlanLibrary()
     };
   },
 
