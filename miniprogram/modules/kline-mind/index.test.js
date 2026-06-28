@@ -8,7 +8,10 @@ const {
   MARKET_CATALOG,
   TIMEFRAME_CATALOG,
   KLINE_TRAINING_METHODS,
-  getPersonalityKlineDrill
+  getPersonalityKlineDrill,
+  listSpecialTrainingPacks,
+  getSpecialTrainingPack,
+  buildSpecialTrainingSessionMeta
 } = require("./index");
 
 assert.strictEqual(SIX_GATE_MAP.length, 6);
@@ -132,6 +135,60 @@ assert.strictEqual(reviewFocusRecord.executionConsistencyRateText, "100%");
 assert.strictEqual(reviewFocusRecord.execution_consistency_rate_text, "100%");
 assert.strictEqual(reviewFocusRecord.executionConsistency.rateText, "100%");
 
+const specialTrainingPacks = listSpecialTrainingPacks();
+assert.deepStrictEqual(specialTrainingPacks.map((item) => item.errorType), [
+  "追高冲动",
+  "补仓冲动",
+  "卖飞懊悔",
+  "计划外交易"
+]);
+const chaseHighPack = getSpecialTrainingPack("追高冲动");
+assert.strictEqual(chaseHighPack.title, "追高冲动专项");
+assert.deepStrictEqual(chaseHighPack.scene_tags, ["放量拉升", "假突破", "冲高回落"]);
+assert.ok(chaseHighPack.trainingGoal.includes("快速上涨"));
+assert.strictEqual(chaseHighPack.expected_action, "第一根放量不追，先观察");
+assert.ok(chaseHighPack.trainingPrescription.action.includes("先观察"));
+const specialMeta = buildSpecialTrainingSessionMeta("chase_high_impulse");
+assert.strictEqual(specialMeta.sourceType, "special_training");
+assert.strictEqual(specialMeta.source_type, "special_training");
+assert.strictEqual(specialMeta.errorType, "追高冲动");
+assert.strictEqual(specialMeta.error_type, "追高冲动");
+assert.deepStrictEqual(specialMeta.sceneTags, ["放量拉升", "假突破", "冲高回落"]);
+assert.deepStrictEqual(specialMeta.scene_tags, ["放量拉升", "假突破", "冲高回落"]);
+assert.strictEqual(specialMeta.trainingPackId, "chase_high_impulse");
+assert.strictEqual(specialMeta.training_pack_title, "追高冲动专项");
+
+const specialSession = buildKlineMindSession({
+  assessment: { primary: "冲动型" },
+  trainingDay: { day: 3 },
+  record: Object.assign({ marketKey: "cn_equity", timeframeKey: "1d" }, specialMeta),
+  historyCache: { cn_equity: { "1d": historicalSlice } }
+});
+assert.strictEqual(specialSession.sourceType, "special_training");
+assert.strictEqual(specialSession.source_type, "special_training");
+assert.strictEqual(specialSession.errorType, "追高冲动");
+assert.strictEqual(specialSession.error_type, "追高冲动");
+assert.deepStrictEqual(specialSession.sceneTags, ["放量拉升", "假突破", "冲高回落"]);
+assert.strictEqual(specialSession.expectedAction, "第一根放量不追，先观察");
+assert.strictEqual(specialSession.nextAction, "第一根放量不追，先观察");
+assert.strictEqual(specialSession.trainingPrescription.action, "第一根放量不追，先观察");
+
+const specialRecord = buildKlineMindRecord({
+  selectedCandleKey: specialSession.selectedCandleKey,
+  firstReaction: "怕错过",
+  boundaryChoice: "先观察",
+  insightLine: "我看见自己想追第一根放量。"
+}, specialSession);
+assert.strictEqual(specialRecord.sourceType, "special_training");
+assert.strictEqual(specialRecord.source_type, "special_training");
+assert.strictEqual(specialRecord.errorType, "追高冲动");
+assert.strictEqual(specialRecord.error_type, "追高冲动");
+assert.strictEqual(specialRecord.trainingPackTitle, "追高冲动专项");
+assert.strictEqual(specialRecord.training_pack_title, "追高冲动专项");
+assert.strictEqual(specialRecord.nextAction, "第一根放量不追，先观察");
+assert.strictEqual(specialRecord.trainingMistakeCard.errorType, "追高冲动");
+assert.strictEqual(specialRecord.training_mistake_card.trainingPackTitle, "追高冲动专项");
+
 const oldLawResultRecord = buildKlineMindRecord({
   selectedCandleKey: reviewFocusSession.selectedCandleKey,
   firstReaction: "怕错过",
@@ -177,6 +234,8 @@ const blindSession = buildKlineMindSession({
 });
 assert.notStrictEqual(blindSession.sourceType, "review_focus");
 assert.notStrictEqual(blindSession.source_type, "review_focus");
+assert.notStrictEqual(blindSession.sourceType, "special_training");
+assert.notStrictEqual(blindSession.source_type, "special_training");
 
 const legacySessionRecord = buildKlineMindRecord({
   firstReaction: "急躁",

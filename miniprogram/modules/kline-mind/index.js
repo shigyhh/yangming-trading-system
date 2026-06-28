@@ -500,6 +500,173 @@ function normalizeTrainingPrescription(value, fallbackPrescription = {}) {
   };
 }
 
+function cleanText(value, maxLength = 180) {
+  const text = String(value || "").trim();
+  return maxLength > 0 ? text.slice(0, maxLength) : text;
+}
+
+const SPECIAL_TRAINING_PACKS = [
+  {
+    id: "chase_high_impulse",
+    error_type: "追高冲动",
+    title: "追高冲动专项",
+    scene_tags: ["放量拉升", "假突破", "冲高回落"],
+    training_goal: "看到快速上涨时，不被“怕错过”牵动。",
+    expected_action: "第一根放量不追，先观察",
+    default_prompt: "先看事实：这是结构确认，还是怕错过在催你动？"
+  },
+  {
+    id: "average_down_impulse",
+    error_type: "补仓冲动",
+    title: "补仓冲动专项",
+    scene_tags: ["下跌中继", "反抽诱多"],
+    training_goal: "亏损中不靠补仓证明自己。",
+    expected_action: "不在破位亏损中补仓",
+    default_prompt: "先看事实：这是修复，还是下跌中的反抽？"
+  },
+  {
+    id: "sell_fly_regret",
+    error_type: "卖飞懊悔",
+    title: "卖飞懊悔专项",
+    scene_tags: ["洗盘后走强", "趋势中继"],
+    training_goal: "卖出后不因懊悔追回。",
+    expected_action: "按规则处理，不追回情绪单",
+    default_prompt: "先看事实：你是在重新确认规则，还是被懊悔牵回？"
+  },
+  {
+    id: "unplanned_trade",
+    error_type: "计划外交易",
+    title: "计划外交易专项",
+    scene_tags: ["横盘噪音", "突然异动"],
+    training_goal: "无计划时不动手。",
+    expected_action: "无计划不交易",
+    default_prompt: "先看事实：这一步是否已经写进计划？"
+  }
+];
+
+function normalizeSpecialTrainingPack(pack = {}) {
+  const id = cleanText(pickValue(pack.id, pack.packId, pack.pack_id, pack.trainingPackId, pack.training_pack_id), 100);
+  const errorType = cleanText(pickValue(pack.errorType, pack.error_type), 80);
+  const title = cleanText(pack.title, 100) || (errorType ? `${errorType}专项` : "专项训练");
+  const sceneTags = normalizeList(pickValue(pack.sceneTags, pack.scene_tags, pack.sceneText, pack.scene_text));
+  const trainingGoal = cleanText(pickValue(pack.trainingGoal, pack.training_goal), 180);
+  const expectedAction = cleanText(pickValue(pack.expectedAction, pack.expected_action, pack.nextAction, pack.next_action), 160);
+  const defaultPrompt = cleanText(pickValue(pack.defaultPrompt, pack.default_prompt), 180);
+  const trainingPrescription = normalizeTrainingPrescription(
+    pickValue(pack.trainingPrescription, pack.training_prescription),
+    {
+      title,
+      boundaryPractice: expectedAction,
+      watchPoint: sceneTags.join(" / "),
+      firstQuestion: defaultPrompt
+    }
+  );
+
+  return {
+    id,
+    packId: id,
+    pack_id: id,
+    trainingPackId: id,
+    training_pack_id: id,
+    title,
+    trainingPackTitle: title,
+    training_pack_title: title,
+    errorType,
+    error_type: errorType,
+    sceneTags,
+    scene_tags: sceneTags,
+    sceneText: sceneTags.length ? sceneTags.join(" / ") : "待补充",
+    scene_text: sceneTags.length ? sceneTags.join(" / ") : "待补充",
+    trainingGoal,
+    training_goal: trainingGoal,
+    expectedAction,
+    expected_action: expectedAction,
+    nextAction: expectedAction,
+    next_action: expectedAction,
+    defaultPrompt,
+    default_prompt: defaultPrompt,
+    trainingPrescription,
+    training_prescription: trainingPrescription
+  };
+}
+
+function listSpecialTrainingPacks() {
+  return SPECIAL_TRAINING_PACKS.map((pack) => normalizeSpecialTrainingPack(pack));
+}
+
+function getSpecialTrainingPack(value = "") {
+  const key = cleanText(value && (value.errorType || value.error_type || value.id || value.packId || value.pack_id || value.trainingPackId || value.training_pack_id || value), 120);
+  if (!key) return null;
+  return listSpecialTrainingPacks().find((pack) => (
+    pack.id === key ||
+    pack.packId === key ||
+    pack.trainingPackId === key ||
+    pack.errorType === key ||
+    pack.error_type === key ||
+    pack.title === key
+  )) || null;
+}
+
+function buildSpecialTrainingSessionMeta(value = {}) {
+  const pack = getSpecialTrainingPack(value);
+  const fallbackErrorType = cleanText(value && (value.errorType || value.error_type || value), 80);
+  const normalized = pack || normalizeSpecialTrainingPack({
+    error_type: fallbackErrorType,
+    title: fallbackErrorType ? `${fallbackErrorType}专项` : "",
+    scene_tags: normalizeList(value && (value.sceneTags || value.scene_tags)),
+    training_goal: value && (value.trainingGoal || value.training_goal),
+    expected_action: value && (value.expectedAction || value.expected_action || value.nextAction || value.next_action),
+    default_prompt: value && (value.defaultPrompt || value.default_prompt),
+    training_prescription: value && (value.trainingPrescription || value.training_prescription)
+  });
+
+  return {
+    sourceType: "special_training",
+    source_type: "special_training",
+    errorType: normalized.errorType,
+    error_type: normalized.error_type,
+    sceneTags: normalized.sceneTags,
+    scene_tags: normalized.scene_tags,
+    trainingGoal: normalized.trainingGoal,
+    training_goal: normalized.training_goal,
+    expectedAction: normalized.expectedAction,
+    expected_action: normalized.expected_action,
+    nextAction: normalized.nextAction,
+    next_action: normalized.next_action,
+    defaultPrompt: normalized.defaultPrompt,
+    default_prompt: normalized.default_prompt,
+    trainingPrescription: normalized.trainingPrescription,
+    training_prescription: normalized.training_prescription,
+    trainingPackId: normalized.trainingPackId,
+    training_pack_id: normalized.training_pack_id,
+    trainingPackTitle: normalized.trainingPackTitle,
+    training_pack_title: normalized.training_pack_title
+  };
+}
+
+function buildSpecialTrainingContext(specialTraining = {}) {
+  const sourceType = pickValue(specialTraining.sourceType, specialTraining.source_type);
+  if (sourceType !== "special_training") return null;
+  const meta = buildSpecialTrainingSessionMeta(specialTraining);
+  const sceneTags = normalizeList(pickValue(specialTraining.sceneTags, specialTraining.scene_tags, meta.sceneTags));
+  const expectedAction = cleanText(pickValue(specialTraining.expectedAction, specialTraining.expected_action, specialTraining.nextAction, specialTraining.next_action, meta.expectedAction), 160);
+  const trainingPrescription = normalizeTrainingPrescription(
+    pickValue(specialTraining.trainingPrescription, specialTraining.training_prescription, meta.trainingPrescription),
+    { title: meta.trainingPackTitle, boundaryPractice: expectedAction }
+  );
+
+  return Object.assign({}, meta, {
+    sceneTags,
+    scene_tags: sceneTags,
+    expectedAction,
+    expected_action: expectedAction,
+    nextAction: expectedAction,
+    next_action: expectedAction,
+    trainingPrescription,
+    training_prescription: trainingPrescription
+  });
+}
+
 function buildReviewFocusContext(reviewFocus = {}, prescription = {}) {
   const sourceType = pickValue(reviewFocus.sourceType, reviewFocus.source_type);
   const errorType = pickValue(
@@ -575,7 +742,11 @@ function buildReviewFocusContext(reviewFocus = {}, prescription = {}) {
 }
 
 function pickSessionContext(session = {}) {
-  if (session.sourceType !== "review_focus" && session.source_type !== "review_focus") return null;
+  const sourceType = pickValue(session.sourceType, session.source_type);
+  if (sourceType === "special_training") {
+    return buildSpecialTrainingContext(session);
+  }
+  if (sourceType !== "review_focus") return null;
   return {
     sourceType: "review_focus",
     source_type: "review_focus",
@@ -621,7 +792,15 @@ function buildTrainingMistakeCard(record = {}, context = null) {
     trainingPrescription,
     training_prescription: trainingPrescription,
     nextAction: context.nextAction || context.next_action || "",
-    next_action: context.next_action || context.nextAction || ""
+    next_action: context.next_action || context.nextAction || "",
+    trainingGoal: context.trainingGoal || context.training_goal || "",
+    training_goal: context.training_goal || context.trainingGoal || "",
+    expectedAction: context.expectedAction || context.expected_action || context.nextAction || context.next_action || "",
+    expected_action: context.expected_action || context.expectedAction || context.next_action || context.nextAction || "",
+    trainingPackId: context.trainingPackId || context.training_pack_id || "",
+    training_pack_id: context.training_pack_id || context.trainingPackId || "",
+    trainingPackTitle: context.trainingPackTitle || context.training_pack_title || "",
+    training_pack_title: context.training_pack_title || context.trainingPackTitle || ""
   };
 }
 
@@ -630,7 +809,8 @@ function buildKlineMindSession({
   trainingDay = null,
   record = null,
   historyCache = {},
-  reviewFocus = null
+  reviewFocus = null,
+  specialTraining = null
 } = {}) {
   const day = clampDay((trainingDay || {}).day || (record || {}).day || 1);
   const personalityType = (assessment || {}).primary || "平衡型";
@@ -648,6 +828,7 @@ function buildKlineMindSession({
   const candles = markSelectedCandles(rawCandles, selectedKey, scenario.focusIndex);
   const selectedCandleKey = selectedKey || ((candles.find((item) => item.selected) || {}).key) || "";
   const reviewFocusContext = buildReviewFocusContext(reviewFocus || {}, prescription);
+  const specialTrainingContext = buildSpecialTrainingContext(specialTraining || record || {});
 
   const session = {
     day,
@@ -684,7 +865,8 @@ function buildKlineMindSession({
     score: calculateKlineMindScore(record || {})
   };
 
-  return reviewFocusContext ? Object.assign({}, session, reviewFocusContext) : session;
+  const trainingContext = reviewFocusContext || specialTrainingContext;
+  return trainingContext ? Object.assign({}, session, trainingContext) : session;
 }
 
 function calculateKlineMindScore(record = {}) {
@@ -820,9 +1002,13 @@ module.exports = {
   REACTION_OPTIONS,
   BODY_OPTIONS,
   BOUNDARY_OPTIONS,
+  SPECIAL_TRAINING_PACKS,
   getSixGate,
   getKlinePrescription,
   getPersonalityKlineDrill,
+  listSpecialTrainingPacks,
+  getSpecialTrainingPack,
+  buildSpecialTrainingSessionMeta,
   getMarketConfig,
   normalizeHistoryCandles,
   buildKlineMindSession,

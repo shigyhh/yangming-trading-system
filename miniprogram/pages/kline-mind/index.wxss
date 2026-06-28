@@ -91,6 +91,123 @@
   line-height: 1.5;
 }
 
+.training-entry-panel {
+  margin-top: 22rpx;
+  display: grid;
+  gap: 16rpx;
+}
+
+.training-entry-card,
+.special-training-section {
+  padding: 20rpx;
+  border: 1rpx solid rgba(244, 235, 221, 0.1);
+  border-radius: 22rpx;
+  background:
+    radial-gradient(circle at 88% 0%, rgba(216, 183, 111, 0.08), transparent 38%),
+    rgba(255, 255, 255, 0.036);
+}
+
+.training-entry-card.active,
+.special-training-pack.active {
+  border-color: rgba(216, 183, 111, 0.34);
+  background:
+    radial-gradient(circle at 88% 0%, rgba(216, 183, 111, 0.14), transparent 40%),
+    rgba(216, 183, 111, 0.065);
+}
+
+.training-entry-card.base {
+  background:
+    radial-gradient(circle at 90% 0%, rgba(95, 132, 117, 0.1), transparent 40%),
+    rgba(255, 255, 255, 0.032);
+}
+
+.training-entry-head,
+.special-training-title,
+.special-pack-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.training-entry-head text,
+.special-training-title text {
+  color: rgba(216, 183, 111, 0.82);
+  font-size: 22rpx;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.training-entry-head view,
+.special-training-title view {
+  color: rgba(244, 235, 221, 0.48);
+  font-size: 21rpx;
+  font-weight: 800;
+}
+
+.training-entry-main {
+  margin-top: 12rpx;
+  color: rgba(244, 235, 221, 0.88);
+  font-size: 28rpx;
+  font-weight: 900;
+  line-height: 1.36;
+}
+
+.training-entry-meta,
+.special-pack-meta {
+  margin-top: 8rpx;
+  color: rgba(216, 183, 111, 0.72);
+  font-size: 21rpx;
+  line-height: 1.45;
+  font-weight: 820;
+}
+
+.special-training-list {
+  margin-top: 16rpx;
+  display: grid;
+  gap: 14rpx;
+}
+
+.special-training-pack {
+  padding: 18rpx;
+  border: 1rpx solid rgba(244, 235, 221, 0.1);
+  border-radius: 20rpx;
+  background: rgba(8, 16, 14, 0.46);
+}
+
+.special-pack-head text {
+  color: rgba(244, 235, 221, 0.88);
+  font-size: 25rpx;
+  font-weight: 900;
+}
+
+.special-pack-start {
+  flex-shrink: 0;
+  min-width: 132rpx;
+  min-height: 56rpx;
+  margin: 0;
+  padding: 0 18rpx;
+  border: 1rpx solid rgba(216, 183, 111, 0.22);
+  border-radius: 999rpx;
+  color: #19150d;
+  background: linear-gradient(180deg, #f3d98b, #c19a48);
+  font-size: 22rpx;
+  font-weight: 900;
+  line-height: 56rpx;
+}
+
+.special-pack-start::after {
+  border: 0;
+}
+
+.special-pack-goal {
+  margin-top: 12rpx;
+  color: rgba(244, 235, 221, 0.68);
+  font-size: 23rpx;
+  line-height: 1.55;
+  font-weight: 760;
+}
+
 .slice-switch {
   margin-top: 20rpx;
   padding: 18rpx 20rpx;

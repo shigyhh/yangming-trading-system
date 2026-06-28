@@ -14,6 +14,60 @@
         <view>{{session.prescription.boundaryPractice}}</view>
       </view>
 
+      <view class="training-entry-panel">
+        <view
+          class="training-entry-card {{activeTrainingMode === 'review_focus' ? 'active' : ''}}"
+          bindtap="startReviewFocusTraining"
+        >
+          <view class="training-entry-head">
+            <text>今日针对训练</text>
+            <view>{{reviewFocus ? '已关联复盘错题' : '从复盘错题进入'}}</view>
+          </view>
+          <view class="training-entry-main">{{reviewFocusErrorType || '根据真实复盘生成'}}</view>
+          <view class="training-entry-meta">下次执行动作：{{reviewFocusNextAction || '先记录，再行动'}}</view>
+        </view>
+
+        <view class="special-training-section">
+          <view class="special-training-title">
+            <text>专项训练</text>
+            <view>按错题练，不按品种练</view>
+          </view>
+          <view class="special-training-list">
+            <view
+              wx:for="{{specialTrainingPacks}}"
+              wx:key="id"
+              class="special-training-pack {{activeTrainingMode === 'special_training' && session.trainingPackId === item.id ? 'active' : ''}}"
+            >
+              <view class="special-pack-head">
+                <text>{{item.title}}</text>
+                <button
+                  class="special-pack-start"
+                  catchtap="startSpecialTraining"
+                  data-pack-id="{{item.id}}"
+                >
+                  开始训练
+                </button>
+              </view>
+              <view class="special-pack-goal">{{item.trainingGoal}}</view>
+              <view class="special-pack-meta">重点场景：{{item.sceneText}}</view>
+              <view class="special-pack-meta">下次执行动作：{{item.expectedAction}}</view>
+            </view>
+          </view>
+        </view>
+
+        <view
+          class="training-entry-card base {{activeTrainingMode === 'base_blind' ? 'active' : ''}}"
+          bindtap="startBaseBlindTraining"
+        >
+          <view class="training-entry-head">
+            <text>基础盲练</text>
+            <view>不带复盘标签</view>
+          </view>
+          <view class="training-entry-main">只看历史片段，记录第一反应。</view>
+          <view class="training-entry-meta">下次执行动作：先看事实，再记录第一念。</view>
+        </view>
+      </view>
+
       <view wx:if="{{false}}" class="hero-meta">
         <view>
           <text>今日</text>
