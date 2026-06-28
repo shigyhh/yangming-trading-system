@@ -32,6 +32,7 @@ import { assertRealPayConfigReady, createH5Order, createJsapiOrder, createWapOrd
 import { handleKlineSegmentRoute } from "./klineSegments.js";
 import { handleKlineSamplingRoute } from "./klineSampling.js";
 import { handleTrainingPackRoute } from "./trainingPacks.js";
+import { handleDataBindingRoute } from "./dataBinding.js";
 
 export async function route(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
@@ -102,6 +103,8 @@ export async function route(req, res) {
         data_binding_user_report: "GET /api/v1/data-binding/users/:user_id/report",
         data_binding_training_record: "POST /api/v1/data-binding/users/:user_id/training-records",
         data_binding_kline_record: "POST /api/v1/data-binding/users/:user_id/kline-records",
+        data_binding_training_bookmarks: "GET|POST /api/v1/data-binding/users/:user_id/training-bookmarks",
+        data_binding_training_bookmark: "PATCH|DELETE /api/v1/data-binding/users/:user_id/training-bookmarks/:id",
         data_binding_trade_review: "GET|POST /api/v1/data-binding/users/:user_id/trade-reviews",
         data_binding_trade_review_ocr: "POST /api/v1/data-binding/users/:user_id/trade-review-ocr",
         data_binding_retest: "POST /api/v1/data-binding/users/:user_id/retests",
@@ -141,6 +144,7 @@ export async function route(req, res) {
   if (await handleTrainingPackRoute(req, res, { url, pathname })) return;
   if (await handleKlineSegmentRoute(req, res, { url, pathname })) return;
   if (await handleKlineSamplingRoute(req, res, { url, pathname })) return;
+  if (await handleDataBindingRoute(req, res, { url, pathname })) return;
 
   if (req.method === "GET" && pathname === "/api/v1/stats/public") {
     const stats = await getPublicStats();

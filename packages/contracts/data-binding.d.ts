@@ -187,6 +187,92 @@ export type DataBindingKLineRecord = {
   training_mistake_card?: unknown
 }
 
+export type DataBindingTrainingBookmarkType = "session" | "action" | "mistake_card" | string
+
+export type DataBindingTrainingBookmarkSourceType =
+  | "review_focus"
+  | "special_training"
+  | "custom_session"
+  | "basic_blind"
+  | string
+
+export type DataBindingTrainingBookmark = {
+  id: string
+  userId: string
+  user_id: string
+  bookmarkType: DataBindingTrainingBookmarkType
+  bookmark_type: DataBindingTrainingBookmarkType
+  sessionId?: string
+  session_id?: string
+  actionId?: string
+  action_id?: string
+  barIndex?: number
+  bar_index?: number
+  sourceType?: DataBindingTrainingBookmarkSourceType
+  source_type?: DataBindingTrainingBookmarkSourceType
+  errorType?: string
+  error_type?: string
+  sceneTags?: string[]
+  scene_tags?: string[]
+  executionResult?: string
+  execution_result?: string
+  segmentId?: string
+  segment_id?: string
+  trainingPackId?: string
+  training_pack_id?: string
+  samplingResult?: DataBindingKLineSamplingResult
+  sampling_result?: DataBindingKLineSamplingResult
+  symbol?: string
+  period?: string
+  startDate?: string
+  start_date?: string
+  endDate?: string
+  end_date?: string
+  title: string
+  note?: string
+  enabled: boolean
+  createdAt: string
+  created_at: string
+  updatedAt: string
+  updated_at: string
+}
+
+export type DataBindingTrainingBookmarkPayload = {
+  id?: string
+  user?: DataBindingUserProfile
+  bookmarkType?: DataBindingTrainingBookmarkType
+  bookmark_type?: DataBindingTrainingBookmarkType
+  sessionId?: string
+  session_id?: string
+  actionId?: string
+  action_id?: string
+  barIndex?: number
+  bar_index?: number
+  sourceType?: DataBindingTrainingBookmarkSourceType
+  source_type?: DataBindingTrainingBookmarkSourceType
+  errorType?: string
+  error_type?: string
+  sceneTags?: string[]
+  scene_tags?: string[]
+  executionResult?: string
+  execution_result?: string
+  segmentId?: string
+  segment_id?: string
+  trainingPackId?: string
+  training_pack_id?: string
+  samplingResult?: DataBindingKLineSamplingResult
+  sampling_result?: DataBindingKLineSamplingResult
+  symbol?: string
+  period?: string
+  startDate?: string
+  start_date?: string
+  endDate?: string
+  end_date?: string
+  title?: string
+  note?: string
+  enabled?: boolean
+}
+
 export type DataBindingRetestComparison = {
   key: string
   label: string
@@ -289,6 +375,13 @@ export type DataBindingKLinePayload = {
   source?: "web-next" | "miniprogram" | "admin" | string
 }
 
+export type DataBindingTrainingBookmarkRequest = {
+  user?: DataBindingUserProfile
+  bookmark?: DataBindingTrainingBookmarkPayload
+  trainingBookmark?: DataBindingTrainingBookmarkPayload
+  training_bookmark?: DataBindingTrainingBookmarkPayload
+} & DataBindingTrainingBookmarkPayload
+
 export type DataBindingRetestPayload = {
   user: DataBindingUserProfile
   report: DataBindingAssessmentReport
@@ -333,6 +426,21 @@ export type DataBindingKLineResponse = {
   admin_user: DataBindingAdminUser
 }
 
+export type DataBindingTrainingBookmarkResponse = {
+  user: DataBindingPublicUser
+  training_bookmark: DataBindingTrainingBookmark
+  trainingBookmark: DataBindingTrainingBookmark
+}
+
+export type DataBindingTrainingBookmarkListResponse = {
+  user: DataBindingPublicUser
+  training_bookmarks: DataBindingTrainingBookmark[]
+  trainingBookmarks: DataBindingTrainingBookmark[]
+  count: number
+  include_disabled: boolean
+  includeDisabled: boolean
+}
+
 export type DataBindingRetestResponse = {
   user: DataBindingPublicUser
   retest: {
@@ -361,6 +469,8 @@ export type DataBindingUserSummaryResponse = {
   mirror_report: MirrorReport | null
   training_records: DataBindingTrainingRecord[]
   kline_records: DataBindingKLineRecord[]
+  training_bookmarks: DataBindingTrainingBookmark[]
+  trainingBookmarks: DataBindingTrainingBookmark[]
   trade_reviews: TradeReview[]
   living_mirror_stats: LivingMirrorStats | null
   living_mirror_profile: LivingMirrorProfile | null
