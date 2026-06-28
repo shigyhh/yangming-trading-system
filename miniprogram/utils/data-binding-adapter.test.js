@@ -114,6 +114,17 @@ const state = {
     "2026-06-01": {
       date: "2026-06-01",
       day: 1,
+      sourceType: "kline_training",
+      errorType: "chasing",
+      sceneTags: ["急拉", "边界触碰"],
+      trainingPrescription: {
+        action: "停十秒，写下边界。"
+      },
+      executionResult: "执行偏离",
+      repeatCount: 2,
+      trainingMistakeCard: {
+        title: "急拉旧题"
+      },
       scenarioTitle: "边界触碰",
       firstReaction: "急躁",
       boundaryChoice: "停十秒",
@@ -146,6 +157,15 @@ const state = {
       exitPrepared: "no",
       relatedMirror: "追涨之镜",
       heartThieves: ["贪", "急"],
+      mainErrorType: "chasing",
+      triggerScene: "急拉时怕错过",
+      trainingPrescription: {
+        action: "停十秒，写第一念。"
+      },
+      nextRule: "下次先写边界",
+      mistakeCard: {
+        title: "怕错过错题卡"
+      },
       actionLabel: "计划外动作",
       emotion: "急躁",
       verdict: "这次复盘照见的是怕错过带动动作。",
@@ -196,6 +216,20 @@ assert.strictEqual(klinePayload.record.day, 1);
 assert.ok(klinePayload.record.scene.includes("边界触碰"));
 assert.strictEqual(klinePayload.record.reaction, "急躁");
 assert.strictEqual(klinePayload.record.disciplineAction, "停十秒");
+assert.strictEqual(klinePayload.record.sourceType, "kline_training");
+assert.strictEqual(klinePayload.record.source_type, "kline_training");
+assert.strictEqual(klinePayload.record.errorType, "chasing");
+assert.strictEqual(klinePayload.record.error_type, "chasing");
+assert.deepStrictEqual(klinePayload.record.sceneTags, ["急拉", "边界触碰"]);
+assert.deepStrictEqual(klinePayload.record.scene_tags, ["急拉", "边界触碰"]);
+assert.deepStrictEqual(klinePayload.record.trainingPrescription, { action: "停十秒，写下边界。" });
+assert.deepStrictEqual(klinePayload.record.training_prescription, { action: "停十秒，写下边界。" });
+assert.strictEqual(klinePayload.record.executionResult, "执行偏离");
+assert.strictEqual(klinePayload.record.execution_result, "执行偏离");
+assert.strictEqual(klinePayload.record.repeatCount, 2);
+assert.strictEqual(klinePayload.record.repeat_count, 2);
+assert.deepStrictEqual(klinePayload.record.trainingMistakeCard, { title: "急拉旧题" });
+assert.deepStrictEqual(klinePayload.record.training_mistake_card, { title: "急拉旧题" });
 
 const tradeReviewPayload = buildTradeReviewBindingPayload({ auth, state });
 assert.ok(tradeReviewPayload);
@@ -210,6 +244,77 @@ assert.strictEqual(tradeReviewPayload.review.wasPlanned, false);
 assert.strictEqual(tradeReviewPayload.review.hadExitRule, false);
 assert.strictEqual(tradeReviewPayload.review.changedPlanDuringTrade, true);
 assert.strictEqual(tradeReviewPayload.review.ocrDraft.status, "provider_not_configured");
+assert.strictEqual(tradeReviewPayload.review.mainErrorType, "chasing");
+assert.strictEqual(tradeReviewPayload.review.main_error_type, "chasing");
+assert.strictEqual(tradeReviewPayload.review.firstThought, "怕错过");
+assert.strictEqual(tradeReviewPayload.review.first_thought, "怕错过");
+assert.strictEqual(tradeReviewPayload.review.triggerScene, "急拉时怕错过");
+assert.strictEqual(tradeReviewPayload.review.trigger_scene, "急拉时怕错过");
+assert.deepStrictEqual(tradeReviewPayload.review.trainingPrescription, { action: "停十秒，写第一念。" });
+assert.deepStrictEqual(tradeReviewPayload.review.training_prescription, { action: "停十秒，写第一念。" });
+assert.strictEqual(tradeReviewPayload.review.nextRule, "下次先写边界");
+assert.strictEqual(tradeReviewPayload.review.next_rule, "下次先写边界");
+assert.deepStrictEqual(tradeReviewPayload.review.mistakeCard, { title: "怕错过错题卡" });
+assert.deepStrictEqual(tradeReviewPayload.review.mistake_card, { title: "怕错过错题卡" });
+
+const snakeOnlyTradeReviewPayload = buildTradeReviewBindingPayload({
+  auth,
+  state: Object.assign({}, state, {
+    trade_review_records: {
+      latest: {
+        id: "tr-snake-001",
+        trade_date: "2026-06-02",
+        market_type: "cn",
+        first_thought: "又想追",
+        main_error_type: "impulse",
+        trigger_scene: "放量突破",
+        training_prescription: { action: "只记录，不行动。" },
+        next_rule: "下次看见放量先停十秒",
+        mistake_card: { title: "追涨旧题复现" },
+        createdAt: 1764547500000
+      },
+      records: []
+    }
+  })
+});
+assert.strictEqual(snakeOnlyTradeReviewPayload.review.mainErrorType, "impulse");
+assert.strictEqual(snakeOnlyTradeReviewPayload.review.main_error_type, "impulse");
+assert.strictEqual(snakeOnlyTradeReviewPayload.review.firstThought, "又想追");
+assert.strictEqual(snakeOnlyTradeReviewPayload.review.first_thought, "又想追");
+assert.deepStrictEqual(snakeOnlyTradeReviewPayload.review.trainingPrescription, { action: "只记录，不行动。" });
+assert.deepStrictEqual(snakeOnlyTradeReviewPayload.review.training_prescription, { action: "只记录，不行动。" });
+
+const snakeOnlyKlinePayload = buildKLineBindingPayload({
+  auth,
+  state: Object.assign({}, state, {
+    intraday_boundary_records: {},
+    kline_mind_records: {
+      "2026-06-02": {
+        date: "2026-06-02",
+        day: 2,
+        source_type: "kline_training",
+        error_type: "hesitation",
+        scene_tags: ["横盘", "犹疑"],
+        training_prescription: { action: "固定观察窗口。" },
+        execution_result: "按计划执行",
+        repeat_count: 3,
+        training_mistake_card: { title: "犹疑旧题" },
+        scenarioTitle: "横盘犹疑",
+        firstReaction: "想等确认",
+        boundaryChoice: "固定观察窗口",
+        updatedAt: 1764547600000
+      }
+    }
+  })
+});
+assert.strictEqual(snakeOnlyKlinePayload.record.errorType, "hesitation");
+assert.strictEqual(snakeOnlyKlinePayload.record.error_type, "hesitation");
+assert.deepStrictEqual(snakeOnlyKlinePayload.record.sceneTags, ["横盘", "犹疑"]);
+assert.deepStrictEqual(snakeOnlyKlinePayload.record.scene_tags, ["横盘", "犹疑"]);
+assert.strictEqual(snakeOnlyKlinePayload.record.executionResult, "按计划执行");
+assert.strictEqual(snakeOnlyKlinePayload.record.execution_result, "按计划执行");
+assert.strictEqual(snakeOnlyKlinePayload.record.repeatCount, 3);
+assert.strictEqual(snakeOnlyKlinePayload.record.repeat_count, 3);
 
 const sharePayload = buildShareCardBindingPayload({
   auth,

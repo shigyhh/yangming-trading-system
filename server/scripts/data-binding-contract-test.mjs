@@ -289,6 +289,93 @@ test("data binding service stores assessment, training, kline and retest in runt
   await resetDataBindingForTests();
 });
 
+test("data binding preserves P1 field aliases for miniapp review and kline sync", async () => {
+  await resetDataBindingForTests();
+
+  const user = {
+    userId: "p1-field-contract-001",
+    maskedPhone: "136****7788",
+    phoneTail: "7788",
+    inviteSource: "微信小程序MVP"
+  };
+
+  const kline = await saveKLineRecordBinding({
+    user,
+    record: {
+      day: 2,
+      recordedAt: "2026-06-02T08:00:00.000Z",
+      scene: "急拉",
+      reaction: "想追",
+      disciplineAction: "先停十秒，再复核计划",
+      sourceType: "kline_training",
+      errorType: "chasing",
+      sceneTags: ["急拉", "边界触碰"],
+      trainingPrescription: { action: "停十秒，写下边界。" },
+      executionResult: "执行偏离",
+      repeatCount: 2,
+      trainingMistakeCard: { title: "急拉旧题" }
+    },
+    source: "miniprogram"
+  });
+
+  assert.equal(kline.record.sourceType, "kline_training");
+  assert.equal(kline.record.source_type, "kline_training");
+  assert.equal(kline.record.errorType, "chasing");
+  assert.equal(kline.record.error_type, "chasing");
+  assert.deepEqual(kline.record.sceneTags, ["急拉", "边界触碰"]);
+  assert.deepEqual(kline.record.scene_tags, ["急拉", "边界触碰"]);
+  assert.deepEqual(kline.record.trainingPrescription, { action: "停十秒，写下边界。" });
+  assert.deepEqual(kline.record.training_prescription, { action: "停十秒，写下边界。" });
+  assert.equal(kline.record.executionResult, "执行偏离");
+  assert.equal(kline.record.execution_result, "执行偏离");
+  assert.equal(kline.record.repeatCount, 2);
+  assert.equal(kline.record.repeat_count, 2);
+  assert.deepEqual(kline.record.trainingMistakeCard, { title: "急拉旧题" });
+  assert.deepEqual(kline.record.training_mistake_card, { title: "急拉旧题" });
+
+  const tradeReview = await saveTradeReviewBinding({
+    user,
+    review: {
+      id: "tr-p1-snake-only",
+      image_url: "/uploads/reviews/review-p1.png",
+      trade_date: "2026-06-02",
+      market_type: "a_share",
+      timeframe_key: "1d",
+      buy_reason: "看到快速拉升，担心错过机会。",
+      sell_reason: "回看后发现边界没有提前写清。",
+      strongest_thought: "怕错过",
+      main_error_type: "impulse",
+      first_thought: "又想追",
+      trigger_scene: "放量突破",
+      training_prescription: { action: "只记录，不行动。" },
+      next_rule: "下次看见放量先停十秒",
+      mistake_card: { title: "追涨旧题复现" }
+    },
+    source: "miniprogram"
+  });
+
+  assert.equal(tradeReview.review.mainErrorType, "impulse");
+  assert.equal(tradeReview.review.main_error_type, "impulse");
+  assert.equal(tradeReview.review.firstThought, "又想追");
+  assert.equal(tradeReview.review.first_thought, "又想追");
+  assert.equal(tradeReview.review.triggerScene, "放量突破");
+  assert.equal(tradeReview.review.trigger_scene, "放量突破");
+  assert.deepEqual(tradeReview.review.trainingPrescription, { action: "只记录，不行动。" });
+  assert.deepEqual(tradeReview.review.training_prescription, { action: "只记录，不行动。" });
+  assert.equal(tradeReview.review.nextRule, "下次看见放量先停十秒");
+  assert.equal(tradeReview.review.next_rule, "下次看见放量先停十秒");
+  assert.deepEqual(tradeReview.review.mistakeCard, { title: "追涨旧题复现" });
+  assert.deepEqual(tradeReview.review.mistake_card, { title: "追涨旧题复现" });
+
+  const summary = await getDataBindingUserSummary(user.userId);
+  assert.equal(summary.kline_records[0].execution_result, "执行偏离");
+  assert.equal(summary.kline_records[0].repeat_count, 2);
+  assert.equal(summary.trade_reviews[0].main_error_type, "impulse");
+  assert.equal(summary.trade_reviews[0].first_thought, "又想追");
+
+  await resetDataBindingForTests();
+});
+
 function makeReport({ createdAt, primary, secondary, impulse, holding }) {
   const primaryPersonality = {
     type: primary,

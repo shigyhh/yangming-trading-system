@@ -131,6 +131,13 @@ export async function saveKLineRecordBinding({ user = {}, record = {}, source = 
     training_suggestion: cleanText(record.trainingSuggestion || record.training_suggestion || "", 160),
     source
   };
+  addAliasedField(klineRecord, "sourceType", "source_type", readAliasedField(record, "sourceType", "source_type", ["kline_training"]), (value) => cleanText(value, 40));
+  addAliasedField(klineRecord, "errorType", "error_type", readAliasedField(record, "errorType", "error_type"), (value) => cleanText(value, 80));
+  addAliasedField(klineRecord, "sceneTags", "scene_tags", readAliasedField(record, "sceneTags", "scene_tags"), normalizeAliasList);
+  addAliasedField(klineRecord, "trainingPrescription", "training_prescription", readAliasedField(record, "trainingPrescription", "training_prescription"), normalizeStructuredField);
+  addAliasedField(klineRecord, "executionResult", "execution_result", readAliasedField(record, "executionResult", "execution_result"), (value) => cleanText(value, 120));
+  addAliasedField(klineRecord, "repeatCount", "repeat_count", readAliasedField(record, "repeatCount", "repeat_count"), normalizeAliasNumber);
+  addAliasedField(klineRecord, "trainingMistakeCard", "training_mistake_card", readAliasedField(record, "trainingMistakeCard", "training_mistake_card"), normalizeStructuredField);
 
   userRecord.kline_records.push(klineRecord);
   refreshLivingMirrorState(userRecord);
@@ -887,6 +894,12 @@ async function normalizeTradeReview(review, userRecord, fallbackTime, source) {
     createdAt: review.createdAt || review.created_at || fallbackTime,
     source
   };
+  addAliasedField(normalized, "mainErrorType", "main_error_type", readAliasedField(review, "mainErrorType", "main_error_type", [review.errorType, review.error_type, detectedMirror]), (value) => cleanText(value, 80));
+  addAliasedField(normalized, "firstThought", "first_thought", readAliasedField(review, "firstThought", "first_thought", [strongestThought]), (value) => cleanText(value, 180));
+  addAliasedField(normalized, "triggerScene", "trigger_scene", readAliasedField(review, "triggerScene", "trigger_scene", [review.trigger, review.scene, marketContext.positionLabel]), (value) => cleanText(value, 180));
+  addAliasedField(normalized, "trainingPrescription", "training_prescription", readAliasedField(review, "trainingPrescription", "training_prescription", [review.trainingAction, review.training_action]), normalizeStructuredField);
+  addAliasedField(normalized, "nextRule", "next_rule", readAliasedField(review, "nextRule", "next_rule", [review.nextAction, review.next_action]), (value) => cleanText(value, 180));
+  addAliasedField(normalized, "mistakeCard", "mistake_card", readAliasedField(review, "mistakeCard", "mistake_card"), normalizeStructuredField);
   return withTradeReviewCrossEndStatus(normalized, userRecord);
 }
 
@@ -1107,6 +1120,60 @@ function normalizeOptionalBoolean(value) {
   if (value === "true" || value === "yes") return true;
   if (value === "false" || value === "no") return false;
   return null;
+}
+
+function hasFieldValue(value) {
+  return value !== undefined && value !== null && !(typeof value === "string" && value === "");
+}
+
+function firstPresent() {
+  for (let index = 0; index < arguments.length; index += 1) {
+    const value = arguments[index];
+    if (hasFieldValue(value)) return value;
+  }
+  return undefined;
+}
+
+function readAliasedField(record = {}, camelKey, snakeKey, fallbackValues = []) {
+  return firstPresent(record[camelKey], record[snakeKey], ...fallbackValues);
+}
+
+function addAliasedField(target, camelKey, snakeKey, value, normalize = (item) => item) {
+  const normalized = normalize(value);
+  if (!hasFieldValue(normalized)) return target;
+  target[camelKey] = normalized;
+  target[snakeKey] = normalized;
+  return target;
+}
+
+function normalizeAliasNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : undefined;
+}
+
+function normalizeAliasList(value) {
+  if (!hasFieldValue(value)) return undefined;
+  const items = Array.isArray(value) ? value : [value];
+  return items
+    .map((item) => cleanText(item, 80))
+    .filter(Boolean)
+    .slice(0, 12);
+}
+
+function normalizeStructuredField(value) {
+  if (!hasFieldValue(value)) return undefined;
+  if (Array.isArray(value)) {
+    return value.map(normalizeStructuredField).filter(hasFieldValue).slice(0, 20);
+  }
+  if (typeof value === "number" || typeof value === "boolean") return value;
+  if (typeof value === "object") {
+    return Object.keys(value).slice(0, 30).reduce((normalized, key) => {
+      const nextValue = normalizeStructuredField(value[key]);
+      if (hasFieldValue(nextValue)) normalized[cleanText(key, 60)] = nextValue;
+      return normalized;
+    }, {});
+  }
+  return cleanText(value, 260);
 }
 
 function normalizeTradeReviewOcrDraft(draft) {

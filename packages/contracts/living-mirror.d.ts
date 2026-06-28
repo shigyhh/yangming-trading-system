@@ -280,6 +280,18 @@ export type TradeReview = {
   buyReason: string
   sellReason: string
   strongestThought: string
+  mainErrorType?: string
+  main_error_type?: string
+  firstThought?: string
+  first_thought?: string
+  triggerScene?: string
+  trigger_scene?: string
+  trainingPrescription?: unknown
+  training_prescription?: unknown
+  nextRule?: string
+  next_rule?: string
+  mistakeCard?: unknown
+  mistake_card?: unknown
   emotionIntensity?: number
   hadExitRule?: boolean | null
   changedPlanDuringTrade?: boolean | null

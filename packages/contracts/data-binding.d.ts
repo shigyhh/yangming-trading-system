@@ -124,6 +124,12 @@ export type DataBindingKLineRecord = {
   recordedAt?: string
   sceneKey?: string
   reactionKey?: string
+  sourceType?: string
+  source_type?: string
+  errorType?: string
+  error_type?: string
+  sceneTags?: string[]
+  scene_tags?: string[]
   scene: string
   reaction: string
   disciplineAction: string
@@ -138,6 +144,14 @@ export type DataBindingKLineRecord = {
   }
   processInsight?: string
   trainingSuggestion?: string
+  trainingPrescription?: unknown
+  training_prescription?: unknown
+  executionResult?: string
+  execution_result?: string
+  repeatCount?: number
+  repeat_count?: number
+  trainingMistakeCard?: unknown
+  training_mistake_card?: unknown
 }
 
 export type DataBindingRetestComparison = {
