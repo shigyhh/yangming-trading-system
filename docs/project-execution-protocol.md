@@ -36,7 +36,7 @@
 
 1. 前置分支检查：读取任务要求，确认是否存在前置分支、前置提交或前置合并要求。
 2. 前置合并检查：有前置分支时，必须先确认其已合并到 `main`。
-3. 当前分支存在性检查：创建目标分支前，先检查目标分支是否已存在。
+3. 当前分支存在性检查：创建目标分支前，先检查目标分支是否已存在，并判断新建模式、续作模式或停止报告。
 4. 当前分支创建：只在工作区干净、`main` 已快进、前置已合并、目标分支不存在时，从 `main` 创建新分支。
 5. 当前任务边界：明确本次目标、允许改动文件、验收标准和输出要求。
 6. 禁止范围：确认不做用户明确禁止的页面、业务、测试、后续阶段或架构扩展。
@@ -70,7 +70,16 @@ git log --oneline --decorate --all --grep='<前置分支提交标题>' || true
 git branch --list <目标分支名>
 ```
 
-如果目标分支已存在，停止并报告该分支当前 diff，不覆盖、不重建、不强行切换开发。
+如果目标分支已存在，不得直接覆盖。必须按 Resume mode 判断是否续作或停止报告。
+
+## Resume mode
+
+If the target branch already exists:
+
+1. If the current branch is the target branch and the diff only contains files allowed by the current task, continue the task in resume mode.
+2. If the current branch is not the target branch, stop and report the existing branch.
+3. If the diff contains files outside the task scope, stop and report.
+4. Do not overwrite existing work.
 
 ## 测试 Gate 规则
 

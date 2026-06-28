@@ -69,3 +69,33 @@ ui-release-r1.test.js 在当前 main 中不存在，本次 gate 标记为 N/A。
 ### 是否已纳入命令模板
 
 已纳入。后续命令模板必须包含缺失测试 N/A 判定规则。
+
+## 003 — Target branch already exists and current branch is the target branch
+
+### Problem
+
+A docs task was resumed while already on `docs/project-execution-protocol`.
+The working tree contained allowed staged documentation changes.
+A strict “target branch exists → stop” rule would block legitimate continuation work.
+
+### Correct handling
+
+If the target branch already exists:
+
+1. If the current branch is the target branch and the diff only contains files allowed by the current task, continue in resume mode.
+2. If the current branch is not the target branch, stop and report the existing branch.
+3. If the diff contains files outside the current task scope, stop and report.
+4. Do not overwrite existing work.
+
+### Future rule
+
+All future Codex commands must distinguish:
+
+1. Target branch does not exist → create it from latest main.
+2. Target branch exists and current branch is the target branch, with diff inside allowed scope → continue in resume mode.
+3. Target branch exists but current branch is different → stop and report.
+4. Diff exceeds allowed scope → stop and report.
+
+### Added to task template
+
+Yes.
