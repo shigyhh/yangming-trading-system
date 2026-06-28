@@ -1,0 +1,115 @@
+.bookmark-hero,
+.bookmark-card,
+.state-card {
+  margin-top: 26rpx;
+  padding: 28rpx;
+}
+
+.bookmark-hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 24rpx;
+  align-items: flex-start;
+}
+
+.bookmark-hero text,
+.bookmark-head text {
+  display: block;
+  color: #fff6e6;
+  font-family: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", serif;
+  font-size: 34rpx;
+  font-weight: 900;
+}
+
+.bookmark-hero view view,
+.bookmark-head view view,
+.state-card {
+  margin-top: 10rpx;
+  color: rgba(247, 239, 223, 0.62);
+  font-size: 24rpx;
+  line-height: 1.55;
+}
+
+.bookmark-hero button,
+.bookmark-actions button {
+  min-height: 68rpx;
+  border-radius: 18rpx;
+  color: #11130d;
+  background: linear-gradient(180deg, #ead089, #c69846);
+  font-size: 24rpx;
+  font-weight: 900;
+}
+
+.bookmark-list {
+  display: grid;
+  gap: 18rpx;
+}
+
+.bookmark-head,
+.bookmark-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18rpx;
+}
+
+.bookmark-head > text {
+  font-size: 22rpx;
+  color: rgba(216, 183, 111, 0.72);
+  font-family: inherit;
+}
+
+.bookmark-grid {
+  margin-top: 22rpx;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14rpx;
+}
+
+.bookmark-grid > view {
+  padding: 16rpx;
+  border: 1rpx solid rgba(216, 183, 111, 0.12);
+  border-radius: 18rpx;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.bookmark-grid text {
+  display: block;
+  color: rgba(216, 183, 111, 0.72);
+  font-size: 21rpx;
+  font-weight: 900;
+}
+
+.bookmark-grid view view {
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.78);
+  font-size: 24rpx;
+  line-height: 1.45;
+}
+
+.bookmark-actions {
+  margin-top: 22rpx;
+}
+
+.bookmark-actions button:last-child {
+  color: rgba(247, 239, 223, 0.76);
+  border: 1rpx solid rgba(216, 183, 111, 0.14);
+  background: rgba(216, 183, 111, 0.08);
+}
+
+.state-card.error {
+  color: #f1d27d;
+}
+
+@media (max-width: 340px) {
+  .bookmark-hero,
+  .bookmark-head,
+  .bookmark-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .bookmark-grid {
+    grid-template-columns: 1fr;
+  }
+}

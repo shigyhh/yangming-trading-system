@@ -375,6 +375,77 @@ async function syncShareAttribution(event = null) {
   }
 }
 
+function buildQuery(params = {}) {
+  return Object.keys(params)
+    .map((key) => {
+      const value = params[key];
+      if (value === undefined || value === null || value === "") return "";
+      return `${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+    })
+    .filter(Boolean)
+    .join("&");
+}
+
+async function listTrainingBookmarks(filters = {}) {
+  try {
+    const auth = await ensureAuth();
+    const state = collectLocalState();
+    const user = buildDataBindingUser(auth, state);
+    const query = buildQuery({
+      bookmark_type: pickApiValue(filters.bookmarkType, filters.bookmark_type),
+      source_type: pickApiValue(filters.sourceType, filters.source_type),
+      training_pack_id: pickApiValue(filters.trainingPackId, filters.training_pack_id),
+      include_disabled: filters.includeDisabled || filters.include_disabled ? "true" : ""
+    });
+    return request({
+      path: `/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/training-bookmarks${query ? `?${query}` : ""}`,
+      method: "GET",
+      token: auth.access_token
+    });
+  } catch (error) {
+    saveConnectionFallback(error, "训练收藏同步：暂未连接");
+    throw error;
+  }
+}
+
+async function createTrainingBookmark(bookmark = {}) {
+  try {
+    const auth = await ensureAuth();
+    const state = collectLocalState();
+    const user = buildDataBindingUser(auth, state);
+    return request({
+      path: `/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/training-bookmarks`,
+      method: "POST",
+      token: auth.access_token,
+      data: {
+        user,
+        training_bookmark: bookmark,
+        trainingBookmark: bookmark,
+        source: "miniprogram"
+      }
+    });
+  } catch (error) {
+    saveConnectionFallback(error, "训练收藏同步：暂未连接");
+    throw error;
+  }
+}
+
+async function deleteTrainingBookmark(bookmarkId = "") {
+  try {
+    const auth = await ensureAuth();
+    const state = collectLocalState();
+    const user = buildDataBindingUser(auth, state);
+    return request({
+      path: `/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/training-bookmarks/${encodeURIComponent(String(bookmarkId || ""))}`,
+      method: "DELETE",
+      token: auth.access_token
+    });
+  } catch (error) {
+    saveConnectionFallback(error, "训练收藏同步：暂未连接");
+    throw error;
+  }
+}
+
 function normalizeApiList(value) {
   if (Array.isArray(value)) {
     return value.map((item) => String(item || "").trim()).filter(Boolean);
@@ -505,6 +576,9 @@ module.exports = {
   requestTradeReviewOcrDraft,
   pullTrainingPrescription,
   syncShareAttribution,
+  listTrainingBookmarks,
+  createTrainingBookmark,
+  deleteTrainingBookmark,
   requestKlineTrainingSample,
   fetchKlineTrainingSlice
 };

@@ -1310,6 +1310,147 @@ function buildKlineMindRecord(input = {}, session = {}) {
   });
 }
 
+function normalizeBookmarkType(value = "") {
+  const type = cleanText(value, 40);
+  if (["session", "action", "mistake_card"].includes(type)) return type;
+  return "session";
+}
+
+function normalizeBarIndex(value) {
+  if (value === undefined || value === null || value === "") return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.max(0, Math.floor(number)) : null;
+}
+
+function buildBookmarkId(prefix = "bookmark") {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function normalizeTrainingBookmark(input = {}) {
+  const bookmarkType = normalizeBookmarkType(pickValue(input.bookmarkType, input.bookmark_type));
+  const sourceType = cleanText(pickValue(input.sourceType, input.source_type), 80);
+  const sampling = normalizeKlineSamplingResult(pickValue(input.samplingResult, input.sampling_result));
+  const samplingMetadata = sampling ? sampling.samplingResult || sampling.sampling_result : null;
+  const sceneTags = normalizeList(pickValue(input.sceneTags, input.scene_tags));
+  const startDate = cleanText(pickValue(input.startDate, input.start_date, samplingMetadata && (samplingMetadata.startDate || samplingMetadata.start_date)), 40);
+  const endDate = cleanText(pickValue(input.endDate, input.end_date, samplingMetadata && (samplingMetadata.endDate || samplingMetadata.end_date)), 40);
+  const segmentId = cleanText(pickValue(input.segmentId, input.segment_id, samplingMetadata && (samplingMetadata.segmentId || samplingMetadata.segment_id)), 100);
+  const trainingPackId = cleanText(pickValue(input.trainingPackId, input.training_pack_id, samplingMetadata && (samplingMetadata.trainingPackId || samplingMetadata.training_pack_id)), 100);
+  const errorType = cleanText(pickValue(input.errorType, input.error_type, samplingMetadata && (samplingMetadata.errorType || samplingMetadata.error_type)), 100);
+  const executionResult = normalizeExecutionResult(
+    input.executionResult,
+    input.execution_result,
+    input.executionLabel,
+    input.execution_label,
+    input.lawResult,
+    input.law_result
+  );
+  const sessionId = cleanText(pickValue(
+    input.sessionId,
+    input.session_id,
+    input.recordId,
+    input.record_id,
+    input.id,
+    input.date,
+    input.updatedAt,
+    input.updated_at,
+    buildBookmarkId("session")
+  ), 120);
+  const id = cleanText(pickValue(input.id, buildBookmarkId("bookmark")), 120);
+  const createdAt = pickValue(input.createdAt, input.created_at, Date.now());
+  const updatedAt = pickValue(input.updatedAt, input.updated_at, createdAt);
+  const enabledInput = pickValue(input.enabled);
+  const enabled = enabledInput === undefined ? true : normalizeBooleanValue(enabledInput);
+  const title = cleanText(
+    pickValue(
+      input.title,
+      bookmarkType === "mistake_card" ? "训练错题卡收藏" : "",
+      bookmarkType === "action" ? "训练动作收藏" : "",
+      "训练整局收藏"
+    ),
+    120
+  );
+
+  return {
+    id,
+    userId: cleanText(pickValue(input.userId, input.user_id), 120),
+    user_id: cleanText(pickValue(input.user_id, input.userId), 120),
+    bookmarkType,
+    bookmark_type: bookmarkType,
+    sessionId,
+    session_id: sessionId,
+    actionId: cleanText(pickValue(input.actionId, input.action_id), 120),
+    action_id: cleanText(pickValue(input.action_id, input.actionId), 120),
+    barIndex: normalizeBarIndex(pickValue(input.barIndex, input.bar_index)),
+    bar_index: normalizeBarIndex(pickValue(input.bar_index, input.barIndex)),
+    sourceType,
+    source_type: sourceType,
+    errorType,
+    error_type: errorType,
+    sceneTags,
+    scene_tags: sceneTags,
+    executionResult,
+    execution_result: executionResult,
+    segmentId,
+    segment_id: segmentId,
+    trainingPackId,
+    training_pack_id: trainingPackId,
+    samplingResult: samplingMetadata,
+    sampling_result: samplingMetadata,
+    symbol: cleanText(pickValue(input.symbol, samplingMetadata && samplingMetadata.symbol), 80),
+    period: cleanText(pickValue(input.period, input.timeframeKey, input.timeframe_key, samplingMetadata && samplingMetadata.period, "1d"), 40),
+    startDate,
+    start_date: startDate,
+    endDate,
+    end_date: endDate,
+    title,
+    note: cleanText(input.note, 280),
+    enabled,
+    createdAt,
+    created_at: createdAt,
+    updatedAt,
+    updated_at: updatedAt
+  };
+}
+
+function buildTrainingBookmark({ record = {}, session = {}, bookmarkType = "session", actionId = "", barIndex = null, title = "", note = "" } = {}) {
+  const mistakeCard = record.trainingMistakeCard || record.training_mistake_card || {};
+  return normalizeTrainingBookmark({
+    id: buildBookmarkId("bookmark"),
+    bookmarkType,
+    sessionId: pickValue(record.sessionId, record.session_id, record.id, record.date, record.updatedAt, record.updated_at),
+    actionId,
+    barIndex,
+    sourceType: pickValue(record.sourceType, record.source_type, session.sourceType, session.source_type),
+    errorType: pickValue(mistakeCard.errorType, mistakeCard.error_type, record.errorType, record.error_type, session.errorType, session.error_type),
+    sceneTags: pickValue(mistakeCard.sceneTags, mistakeCard.scene_tags, record.sceneTags, record.scene_tags, session.sceneTags, session.scene_tags),
+    executionResult: pickValue(mistakeCard.executionResult, mistakeCard.execution_result, record.executionResult, record.execution_result),
+    segmentId: pickValue(record.segmentId, record.segment_id, session.segmentId, session.segment_id),
+    trainingPackId: pickValue(record.trainingPackId, record.training_pack_id, session.trainingPackId, session.training_pack_id),
+    samplingResult: pickValue(record.samplingResult, record.sampling_result, session.samplingResult, session.sampling_result),
+    symbol: pickValue(record.symbol, session.symbol, (record.historySlice || {}).symbol, (session.historySlice || {}).symbol),
+    period: pickValue(record.period, session.period, record.timeframeKey, session.timeframeKey),
+    startDate: pickValue(record.startDate, record.start_date, record.dataStart, session.startDate, session.start_date, (session.historySlice || {}).startDate, (session.historySlice || {}).start_date, (session.historySlice || {}).start),
+    endDate: pickValue(record.endDate, record.end_date, record.dataEnd, session.endDate, session.end_date, (session.historySlice || {}).endDate, (session.historySlice || {}).end_date, (session.historySlice || {}).end),
+    title: title || (bookmarkType === "mistake_card" ? "训练错题卡收藏" : "训练整局收藏"),
+    note
+  });
+}
+
+function buildBookmarkReplaySliceRequest(bookmark = {}) {
+  const normalized = normalizeTrainingBookmark(bookmark);
+  if (!normalized.symbol || !normalized.period || !normalized.startDate || !normalized.endDate) return null;
+  return {
+    symbol: normalized.symbol,
+    timeframeKey: normalized.period,
+    startDate: normalized.startDate,
+    endDate: normalized.endDate,
+    trainingLength: 60,
+    mode: "replay",
+    blind: false
+  };
+}
+
 module.exports = {
   SIX_GATE_MAP,
   PERSONALITY_KLINE_PRESCRIPTIONS,
@@ -1332,6 +1473,9 @@ module.exports = {
   buildCustomSessionMeta,
   buildKlineSamplingRequest,
   normalizeKlineSamplingResult,
+  buildTrainingBookmark,
+  normalizeTrainingBookmark,
+  buildBookmarkReplaySliceRequest,
   getMarketConfig,
   normalizeHistoryCandles,
   buildKlineMindSession,
