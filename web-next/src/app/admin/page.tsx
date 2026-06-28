@@ -80,6 +80,12 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               训练包管理
             </Link>
             <Link
+              href="/admin/kline-segments"
+              className="inline-flex h-10 w-fit items-center justify-center rounded-lg border border-[rgba(217,189,122,.18)] bg-white/[.035] px-4 font-function text-sm text-[rgba(244,235,221,.78)] transition hover:border-[rgba(216,183,111,.38)] hover:text-[#F4EBDD]"
+            >
+              K线片段标注
+            </Link>
+            <Link
               href="/"
               className="inline-flex h-10 w-fit items-center justify-center rounded-lg border border-[rgba(217,189,122,.12)] px-4 font-function text-sm text-[rgba(244,235,221,.58)] transition hover:border-[rgba(216,183,111,.32)] hover:text-[#F4EBDD]"
             >
