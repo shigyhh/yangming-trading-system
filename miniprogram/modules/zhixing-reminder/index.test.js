@@ -7,6 +7,10 @@ const {
   createInterventionEvent,
   normalizeZhixingReminderResponse
 } = require("./index");
+const {
+  buildExecutionPlanLibrary,
+  createExecutionPlan
+} = require("../execution-plan/index");
 
 assert.deepStrictEqual(ZHIXING_REMINDER_CHOICES.map((item) => item.label), [
   "继续",
@@ -23,7 +27,25 @@ assert.strictEqual(preReminder.triggerType, "before_training");
 assert.strictEqual(preReminder.trigger_type, "before_training");
 assert.strictEqual(preReminder.errorType, "追高冲动");
 assert.strictEqual(preReminder.message.includes("这是你的高频旧题：追高冲动"), true);
-assert.strictEqual(preReminder.message.includes("第一根放量不追，先观察"), true);
+assert.strictEqual(preReminder.message.includes("先观察，等回踩确认"), true);
+
+const planLibrary = buildExecutionPlanLibrary({
+  records: [
+    createExecutionPlan({
+      errorType: "追高冲动",
+      expectedAction: "先观察两根确认",
+      nextAction: "先观察两根确认"
+    }, { id: "plan-reminder-custom" })
+  ]
+});
+const planReminder = buildTrainingPreReminder({
+  errorType: "追高冲动",
+  nextAction: "旧动作不应优先",
+  executionPlanLibrary: planLibrary
+});
+assert.strictEqual(planReminder.nextAction, "先观察两根确认");
+assert.strictEqual(planReminder.next_action, "先观察两根确认");
+assert.strictEqual(planReminder.message.includes("先观察两根确认"), true);
 
 const sceneReminder = buildTrainingSceneReminder({
   errorType: "追高冲动",

@@ -1,0 +1,95 @@
+<view class="page-shell">
+  <view class="page-content">
+    <text class="eyebrow">EXECUTION PLAN · 我的执行计划</text>
+    <view class="plan-hero card">
+      <view>
+        <text>我的执行计划</text>
+        <view>把高频旧题写成下一次可执行的动作。</view>
+      </view>
+      <button bindtap="startCreate">新增计划</button>
+    </view>
+
+    <view class="plan-tabs">
+      <button
+        wx:for="{{errorTypeTabs}}"
+        wx:key="key"
+        class="{{activeErrorType === item.key ? 'active' : ''}}"
+        data-key="{{item.key}}"
+        bindtap="selectErrorType"
+      >
+        {{item.label}}
+      </button>
+    </view>
+
+    <view wx:if="{{showForm}}" class="plan-form card">
+      <view class="form-head">
+        <text>{{formMode === 'edit' ? '编辑执行计划' : '新增执行计划'}}</text>
+        <button bindtap="cancelEdit">收起</button>
+      </view>
+      <label>标题</label>
+      <input value="{{form.title}}" data-field="title" bindinput="inputField" placeholder="例：追高冲动执行计划" />
+      <label>对应错题</label>
+      <input value="{{form.errorType}}" data-field="errorType" bindinput="inputField" placeholder="例：追高冲动" />
+      <label>触发场景</label>
+      <textarea value="{{form.sceneTags}}" data-field="sceneTags" bindinput="inputField" placeholder="用 / 分隔，例如：放量拉升 / 假突破" />
+      <label>容易出现的第一念</label>
+      <textarea value="{{form.firstThoughts}}" data-field="firstThoughts" bindinput="inputField" placeholder="例：怕错过 / 来不及" />
+      <label>禁止动作</label>
+      <textarea value="{{form.forbiddenActions}}" data-field="forbiddenActions" bindinput="inputField" placeholder="例：第一根放量不追" />
+      <label>执行动作</label>
+      <textarea value="{{form.expectedAction}}" data-field="expectedAction" bindinput="inputField" placeholder="例：先观察，等回踩确认" />
+      <label>下次执行动作</label>
+      <textarea value="{{form.nextAction}}" data-field="nextAction" bindinput="inputField" placeholder="例：先记录，不下单" />
+      <label>训练处方</label>
+      <input value="{{form.trainingPrescription}}" data-field="trainingPrescription" bindinput="inputField" placeholder="例：追高冲动专项" />
+      <button class="save-btn" bindtap="savePlan">{{formMode === 'edit' ? '保存修改' : '保存计划'}}</button>
+    </view>
+
+    <view class="plan-list">
+      <view wx:for="{{filteredPlans}}" wx:key="id" class="plan-card card">
+        <view class="plan-card-head">
+          <view>
+            <text>{{item.title}}</text>
+            <view>{{item.sourceText}} · {{item.enabledText}}</view>
+          </view>
+          <text>{{item.errorType}}</text>
+        </view>
+        <view class="plan-row">
+          <text>触发场景</text>
+          <view>{{item.sceneTagsText}}</view>
+        </view>
+        <view class="plan-row">
+          <text>第一念</text>
+          <view>{{item.firstThoughtsText}}</view>
+        </view>
+        <view class="plan-row">
+          <text>禁止动作</text>
+          <view>{{item.forbiddenActionsText}}</view>
+        </view>
+        <view class="plan-row strong">
+          <text>执行动作</text>
+          <view>{{item.expectedActionText}}</view>
+        </view>
+        <view class="plan-row strong">
+          <text>下次执行动作</text>
+          <view>{{item.nextActionText}}</view>
+        </view>
+        <view class="plan-row">
+          <text>训练处方</text>
+          <view>{{item.trainingPrescriptionText}}</view>
+        </view>
+        <view class="plan-actions">
+          <button data-id="{{item.id}}" bindtap="startEdit">编辑</button>
+          <button data-id="{{item.id}}" bindtap="togglePlan">{{item.enabled ? '停用' : '启用'}}</button>
+          <button data-id="{{item.id}}" bindtap="deletePlan">{{item.source === 'default' ? '停用模板' : '删除'}}</button>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{!filteredPlans.length}}" class="empty-card card">
+      暂无对应执行计划，可先新增一张计划卡。
+    </view>
+
+    <compliance-notice />
+  </view>
+</view>

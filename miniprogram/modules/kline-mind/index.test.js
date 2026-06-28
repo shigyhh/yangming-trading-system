@@ -74,6 +74,8 @@ assert.strictEqual(calculateKlineMindScore({}), 28);
 const reviewFocus = {
   sourceType: "review_focus",
   source_type: "review_focus",
+  executionPlanId: "plan-review-focus-001",
+  execution_plan_id: "plan-review-focus-001",
   errorType: "追涨之镜",
   error_type: "追涨之镜",
   trainingPrescription: { action: "停十秒，写下边界。" },
@@ -82,6 +84,8 @@ const reviewFocus = {
   scene_tags: ["放量拉升", "怕错过"],
   nextAction: "同类场景先停十秒。",
   next_action: "同类场景先停十秒。",
+  expectedAction: "同类场景先停十秒。",
+  expected_action: "同类场景先停十秒。",
   sourceReviewId: "tr-review-focus-001",
   source_review_id: "tr-review-focus-001"
 };
@@ -103,6 +107,10 @@ assert.deepStrictEqual(reviewFocusSession.sceneTags, ["放量拉升", "怕错过
 assert.deepStrictEqual(reviewFocusSession.scene_tags, ["放量拉升", "怕错过"]);
 assert.strictEqual(reviewFocusSession.nextAction, "同类场景先停十秒。");
 assert.strictEqual(reviewFocusSession.next_action, "同类场景先停十秒。");
+assert.strictEqual(reviewFocusSession.expectedAction, "同类场景先停十秒。");
+assert.strictEqual(reviewFocusSession.expected_action, "同类场景先停十秒。");
+assert.strictEqual(reviewFocusSession.executionPlanId, "plan-review-focus-001");
+assert.strictEqual(reviewFocusSession.execution_plan_id, "plan-review-focus-001");
 assert.strictEqual(reviewFocusSession.sourceReviewId, "tr-review-focus-001");
 assert.strictEqual(reviewFocusSession.source_review_id, "tr-review-focus-001");
 
@@ -123,6 +131,10 @@ assert.deepStrictEqual(reviewFocusRecord.trainingPrescription, { action: "停十
 assert.deepStrictEqual(reviewFocusRecord.training_prescription, { action: "停十秒，写下边界。" });
 assert.strictEqual(reviewFocusRecord.nextAction, "同类场景先停十秒。");
 assert.strictEqual(reviewFocusRecord.next_action, "同类场景先停十秒。");
+assert.strictEqual(reviewFocusRecord.expectedAction, "同类场景先停十秒。");
+assert.strictEqual(reviewFocusRecord.expected_action, "同类场景先停十秒。");
+assert.strictEqual(reviewFocusRecord.executionPlanId, "plan-review-focus-001");
+assert.strictEqual(reviewFocusRecord.execution_plan_id, "plan-review-focus-001");
 assert.strictEqual(reviewFocusRecord.sourceReviewId, "tr-review-focus-001");
 assert.strictEqual(reviewFocusRecord.source_review_id, "tr-review-focus-001");
 assert.strictEqual(reviewFocusRecord.trainingMistakeCard.title, "最明显执行偏离");

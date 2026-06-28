@@ -34,6 +34,7 @@ const {
   getUnifiedJourneyView,
   getDebugMode,
   clearLocalMvpState,
+  getExecutionPlanLibrary,
   todayKey
 } = require("../../utils/store");
 const { getApiBase, setApiBase, getAuthSession, pullRemoteState, syncLocalState } = require("../../utils/api");
@@ -173,6 +174,8 @@ Page({
     const dailyContent = getTodayContent();
     const livingMirrorStats = getLivingMirrorStats();
     const evidenceSummary = getEvidenceSummary({ limit: 6 });
+    const executionPlanLibrary = getExecutionPlanLibrary();
+    const enabledExecutionPlanCount = (executionPlanLibrary.records || []).filter((item) => item.enabled).length;
     const retentionState = getRetentionState();
     const loopState = getDailyLoopState();
     const syncStatus = getSyncStatus();
@@ -251,6 +254,7 @@ Page({
         { key: "dojo", title: "修行道场", subtitle: "同修、观心助手、排行榜" },
         { key: "training", title: "今日事上练记录", subtitle: `${trainingDone}/3 步已完成` },
         { key: "cards", title: "我的心证卡册", subtitle: `${getShareCardAlbum().length} 张照见卡` },
+        { key: "executionPlan", title: "我的执行计划", subtitle: `${enabledExecutionPlanCount} 个计划动作` },
         { key: "classroom", title: "知行讲堂预约", subtitle: `${Object.keys(getLessonReservations()).length} 条课程记录` },
         { key: "resource", title: "省察表资料", subtitle: profile.resourceUnlocked ? "领取口令已保存" : "复制资料领取口令" },
         { key: "assistant", title: "修行营助理", subtitle: "复制助理暗号，便于私域承接" },
@@ -392,6 +396,10 @@ Page({
     }
     if (key === "cards") {
       wx.navigateTo({ url: "/pages/share-card/index?type=daily_mantra" });
+      return;
+    }
+    if (key === "executionPlan") {
+      wx.navigateTo({ url: "/pages/execution-plan/index" });
       return;
     }
     if (key === "classroom") {

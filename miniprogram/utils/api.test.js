@@ -20,6 +20,11 @@ assert.ok(storeSource.includes("saveZhixingReminderEvent"));
 assert.ok(storeSource.includes("getZhixingReminderEvents"));
 assert.ok(storeSource.includes("intervention_event"));
 assert.ok(storeSource.includes("intervention_events"));
+assert.ok(storageKeysSource.includes("YM_EXECUTION_PLAN_LIBRARY"));
+assert.ok(storeSource.includes("getExecutionPlanLibrary"));
+assert.ok(storeSource.includes("saveExecutionPlanLibrary"));
+assert.ok(storeSource.includes("execution_plan"));
+assert.ok(storeSource.includes("executionPlan"));
 
 const forbiddenTerms = ["守法", "破法", "守法率"];
 forbiddenTerms.forEach((term) => {

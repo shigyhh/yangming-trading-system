@@ -704,6 +704,17 @@ function buildReviewFocusContext(reviewFocus = {}, prescription = {}) {
     reviewFocus.training_action,
     rawTrainingPrescription && typeof rawTrainingPrescription === "object" ? rawTrainingPrescription.action : ""
   );
+  const rawExpectedAction = pickValue(
+    reviewFocus.expectedAction,
+    reviewFocus.expected_action,
+    rawNextAction
+  );
+  const executionPlanId = pickValue(
+    reviewFocus.executionPlanId,
+    reviewFocus.execution_plan_id,
+    reviewFocus.planId,
+    reviewFocus.plan_id
+  );
   const sourceReviewId = pickValue(
     reviewFocus.sourceReviewId,
     reviewFocus.source_review_id,
@@ -719,6 +730,7 @@ function buildReviewFocusContext(reviewFocus = {}, prescription = {}) {
 
   const trainingPrescription = normalizeTrainingPrescription(rawTrainingPrescription, prescription);
   const nextAction = pickValue(rawNextAction, trainingPrescription.action);
+  const expectedAction = pickValue(rawExpectedAction, nextAction);
 
   const context = {
     sourceType: "review_focus",
@@ -730,8 +742,15 @@ function buildReviewFocusContext(reviewFocus = {}, prescription = {}) {
     sceneTags,
     scene_tags: sceneTags,
     nextAction: nextAction || "",
-    next_action: nextAction || ""
+    next_action: nextAction || "",
+    expectedAction: expectedAction || "",
+    expected_action: expectedAction || ""
   };
+
+  if (executionPlanId) {
+    context.executionPlanId = executionPlanId;
+    context.execution_plan_id = executionPlanId;
+  }
 
   if (sourceReviewId) {
     context.sourceReviewId = sourceReviewId;
@@ -758,6 +777,10 @@ function pickSessionContext(session = {}) {
     scene_tags: normalizeList(pickValue(session.sceneTags, session.scene_tags)),
     nextAction: pickValue(session.nextAction, session.next_action, ""),
     next_action: pickValue(session.nextAction, session.next_action, ""),
+    expectedAction: pickValue(session.expectedAction, session.expected_action, session.nextAction, session.next_action, ""),
+    expected_action: pickValue(session.expectedAction, session.expected_action, session.nextAction, session.next_action, ""),
+    executionPlanId: pickValue(session.executionPlanId, session.execution_plan_id, ""),
+    execution_plan_id: pickValue(session.executionPlanId, session.execution_plan_id, ""),
     sourceReviewId: pickValue(session.sourceReviewId, session.source_review_id, ""),
     source_review_id: pickValue(session.sourceReviewId, session.source_review_id, "")
   };
