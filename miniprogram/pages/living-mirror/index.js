@@ -20,6 +20,11 @@ Page({
       assistantHandoff: {},
       mirrorTrendRows: [],
       recentThree: [],
+      topTriggerScenes: [],
+      triggerSceneEmptyText: "暂无足够触发场景样本。",
+      topMistakeText: "待补充",
+      topFirstThoughtText: "待记录",
+      nextActionText: "先记录，再行动",
       zhixingStability: {},
       tripleReflection: {}
     },

@@ -584,11 +584,16 @@ function buildLivingMirrorStats(tradeReviewState = {}) {
     .slice()
     .sort((a, b) => Number(a.createdAt || a.updatedAt || 0) - Number(b.createdAt || b.updatedAt || 0));
   const recent = records.slice(-14).reverse();
+  const recentThirty = records.filter((item) => isWithinRecentDays(item, 30));
   const lastSeven = records.slice(-7);
   const prevSeven = records.slice(-14, -7);
   const mirrorScores = countValues(records.map((item) => item.relatedMirror || "待照见"));
   const thiefCounts = countValues(records.flatMap((item) => item.heartThieves || []));
   const behaviorTags = countValues(records.map((item) => item.actionLabel || "待记录"));
+  const topTriggerScenes = topEntries(countValues(recentThirty.map((item) => pickRecordValue(item, "triggerScene", "trigger_scene"))), 3);
+  const topMistakes = topEntries(countValues(recentThirty.map((item) => pickRecordValue(item, "mainErrorType", "main_error_type"))), 3);
+  const topFirstThoughts = topEntries(countValues(recentThirty.map((item) => pickRecordValue(item, "firstThought", "first_thought"))), 3);
+  const nextActionText = pickLatestRecordValue(recentThirty, "nextAction", "next_action", "nextRule", "next_rule") || "先记录，再行动";
   const mirrorTrendRows = buildMirrorTrendRows(lastSeven, prevSeven);
   const currentMirror = topEntries(mirrorScores, 1)[0] || { label: "活镜未点亮", count: 0 };
   const topThieves = topEntries(thiefCounts, 2);
@@ -605,12 +610,19 @@ function buildLivingMirrorStats(tradeReviewState = {}) {
     mirrorScores,
     thiefCounts,
     behaviorTags,
+    topTriggerScenes,
+    triggerSceneEmptyText: topTriggerScenes.length ? "" : "暂无足够触发场景样本。",
+    topMistakes,
+    topMistakeText: formatTopEntry(topMistakes[0], "待补充"),
+    topFirstThoughts,
+    topFirstThoughtText: formatTopEntry(topFirstThoughts[0], "待记录"),
+    nextActionText,
     mirrorTrendRows,
     reviewHistory: recent.slice(0, 20).map((item) => ({
       id: item.id,
       date: item.tradeDate || formatDateTime(item.createdAt || item.updatedAt).slice(0, 10),
-      mirror: item.relatedMirror || "待照见",
-      thought: item.firstThought || item.actionLabel || "待记录",
+      mirror: item.relatedMirror || pickRecordValue(item, "mainErrorType", "main_error_type") || "待照见",
+      thought: pickRecordValue(item, "firstThought", "first_thought") || item.actionLabel || "待记录",
       marketLabel: item.marketLabel || "",
       timeframeLabel: item.timeframeLabel || "",
       symbol: item.symbol || ""
@@ -624,6 +636,50 @@ function buildLivingMirrorStats(tradeReviewState = {}) {
     assistantHandoff: buildAssistantHandoff({ records, stats: { currentMirror: currentMirror.label, topThievesText, reminder } }),
     compliance: COMPLIANCE_TEXT
   };
+}
+
+function pickRecordValue(record = {}, ...fields) {
+  for (let index = 0; index < fields.length; index += 1) {
+    const value = record[fields[index]];
+    if (Array.isArray(value)) {
+      const first = value.map((item) => String(item || "").trim()).find(Boolean);
+      if (first) return first;
+      continue;
+    }
+    const text = String(value || "").trim();
+    if (text) return text;
+  }
+  return "";
+}
+
+function pickLatestRecordValue(records = [], ...fields) {
+  return records
+    .slice()
+    .sort((a, b) => getRecordTimestamp(b) - getRecordTimestamp(a))
+    .map((item) => pickRecordValue(item, ...fields))
+    .find(Boolean) || "";
+}
+
+function formatTopEntry(entry, fallback) {
+  if (!entry || !entry.label) return fallback;
+  return `${entry.label} ${entry.count} 次`;
+}
+
+function isWithinRecentDays(record = {}, days = 30) {
+  const timestamp = getRecordTimestamp(record);
+  if (!timestamp) return false;
+  const now = Date.now();
+  const start = now - Number(days || 30) * 24 * 60 * 60 * 1000;
+  return timestamp >= start && timestamp <= now;
+}
+
+function getRecordTimestamp(record = {}) {
+  const rawDate = record.date || record.tradeDate || record.createdAt || record.created_at || record.updatedAt || record.updated_at;
+  if (!rawDate) return 0;
+  if (typeof rawDate === "number") return rawDate;
+  if (/^\d+$/.test(String(rawDate))) return Number(rawDate);
+  const timestamp = new Date(rawDate).getTime();
+  return Number.isNaN(timestamp) ? 0 : timestamp;
 }
 
 function clamp(value, min, max) {

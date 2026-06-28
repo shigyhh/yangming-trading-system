@@ -594,6 +594,69 @@
   color: #f1d27d;
 }
 
+.pattern-summary {
+  margin-top: 22rpx;
+  display: grid;
+  gap: 12rpx;
+}
+
+.pattern-row,
+.trigger-scene-row {
+  padding: 18rpx;
+  border-radius: 18rpx;
+  border: 1rpx solid rgba(241, 210, 125, 0.1);
+  background: rgba(255, 255, 255, 0.032);
+}
+
+.pattern-row text,
+.trigger-scene-block > text,
+.trigger-scene-row text {
+  display: block;
+  color: rgba(216, 183, 111, 0.78);
+  font-size: 21rpx;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.pattern-row view {
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.86);
+  font-size: 27rpx;
+  line-height: 1.42;
+  font-weight: 900;
+}
+
+.trigger-scene-block {
+  margin-top: 24rpx;
+}
+
+.trigger-scene-list {
+  margin-top: 12rpx;
+  display: grid;
+  gap: 10rpx;
+}
+
+.trigger-scene-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18rpx;
+}
+
+.trigger-scene-row text {
+  flex: 1;
+  color: rgba(247, 239, 223, 0.84);
+  font-size: 25rpx;
+  letter-spacing: 0;
+}
+
+.trigger-scene-row view {
+  color: #f1d27d;
+  font-size: 24rpx;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
 .retest-line {
   margin-top: 18rpx;
   color: #fff6e6;
