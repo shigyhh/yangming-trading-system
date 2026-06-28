@@ -1,6 +1,7 @@
 .mirror-summary-card,
 .mirror-bridge,
 .server-profile-card,
+.weekly-report-card,
 .review-top3-card,
 .execution-consistency-card,
 .mirror-hero,
@@ -28,6 +29,8 @@
 .mirror-bridge view,
 .server-profile-card text,
 .server-profile-card view,
+.weekly-report-card text,
+.weekly-report-card view,
 .review-top3-card text,
 .review-top3-card view,
 .execution-consistency-card text,
@@ -158,6 +161,87 @@
   padding: 24rpx;
   border-radius: 16rpx;
   border: 1rpx dashed rgba(216, 183, 111, 0.18);
+  color: rgba(247, 239, 223, 0.68);
+  background: rgba(8, 8, 7, 0.2);
+  font-size: 24rpx;
+  line-height: 1.55;
+  font-weight: 800;
+}
+
+.weekly-report-card {
+  overflow: hidden;
+  border: 1rpx solid rgba(88, 194, 173, 0.16);
+  background:
+    radial-gradient(circle at 92% 0%, rgba(88, 194, 173, 0.12), transparent 42%),
+    radial-gradient(circle at 10% 100%, rgba(216, 183, 111, 0.1), transparent 44%),
+    rgba(255, 255, 255, 0.034);
+}
+
+.weekly-report-grid {
+  margin-top: 20rpx;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14rpx;
+}
+
+.weekly-report-item,
+.weekly-report-progress,
+.weekly-plan-item {
+  min-width: 0;
+  padding: 18rpx;
+  border-radius: 16rpx;
+  border: 1rpx solid rgba(241, 210, 125, 0.08);
+  background: rgba(8, 8, 7, 0.22);
+}
+
+.weekly-report-item text,
+.weekly-report-progress text,
+.weekly-report-title {
+  display: block;
+  color: rgba(216, 183, 111, 0.72);
+  font-size: 21rpx;
+  line-height: 1.35;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+
+.weekly-report-item view,
+.weekly-report-progress view,
+.weekly-plan-item view {
+  margin-top: 8rpx;
+  color: #fff6e6;
+  font-size: 25rpx;
+  line-height: 1.35;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
+.weekly-report-progress {
+  margin-top: 16rpx;
+  border-left: 4rpx solid rgba(88, 194, 173, 0.48);
+}
+
+.weekly-report-plan {
+  margin-top: 18rpx;
+  display: grid;
+  gap: 12rpx;
+}
+
+.weekly-plan-item text {
+  display: block;
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.68);
+  font-size: 22rpx;
+  line-height: 1.45;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.weekly-report-empty {
+  margin-top: 18rpx;
+  padding: 24rpx;
+  border-radius: 16rpx;
+  border: 1rpx dashed rgba(88, 194, 173, 0.2);
   color: rgba(247, 239, 223, 0.68);
   background: rgba(8, 8, 7, 0.2);
   font-size: 24rpx;

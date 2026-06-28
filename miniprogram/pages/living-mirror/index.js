@@ -1,6 +1,7 @@
 const {
   getTraining7State,
   getKlineReviewReports,
+  getKlineSessionRecords,
   getAssessmentResult,
   getMiniLoopProgress,
   getTradeReviewRecords,
@@ -15,6 +16,7 @@ const { buildTraining7View } = require("../../modules/training7/index");
 const { buildKlineDayRetestComparison, getKlineRecommendationForMirror } = require("../../modules/kline-simulator/index");
 const { buildLivingMirrorTree } = require("../../modules/mini-loop/index");
 const { buildTradeReviewTop3Stats } = require("../../modules/trade-review/index");
+const { buildWeeklyLivingMirrorReport } = require("../../modules/living-mirror-weekly/index");
 
 function formatGrowthDate(value = "") {
   const text = String(value || "").trim();
@@ -187,6 +189,11 @@ Page({
     miniLoopProgress: getMiniLoopProgress(),
     training7View: buildTraining7View(getTraining7State(), {}),
     hasRecords: false,
+    weeklyReport: buildWeeklyLivingMirrorReport({
+      tradeReviewState: { records: [] },
+      klineReviewReports: { records: [] },
+      klineSessionState: { records: [] }
+    }),
     reviewTop3: buildTradeReviewTop3Stats({ records: [] }),
     serverLivingMirrorProfile: buildServerLivingMirrorProfileView(),
     growthSummary: null,
@@ -201,10 +208,17 @@ Page({
 
   refreshStats() {
     const tradeReviewState = getTradeReviewRecords();
+    const klineReviewReports = getKlineReviewReports();
+    const klineSessionState = getKlineSessionRecords();
     const stats = saveLivingMirrorStatsFromReviews(tradeReviewState);
     const zhixingStability = stats.zhixingStability || {};
     const tripleReflection = stats.tripleReflection || {};
     const reviewTop3 = buildTradeReviewTop3Stats(tradeReviewState);
+    const weeklyReport = buildWeeklyLivingMirrorReport({
+      tradeReviewState,
+      klineReviewReports,
+      klineSessionState
+    });
     const miniLoopProgress = getMiniLoopProgress();
     const evidenceSummary = getEvidenceSummary({ limit: 6 });
     const latest = (tradeReviewState || {}).latest || {};
@@ -220,7 +234,7 @@ Page({
       serverPrescription: getTrainingPrescription() || {},
       prescriptionStatusText: this.getPrescriptionStatusText(getTrainingPrescription()),
       klineRecommendation,
-      klineDayRetest: buildKlineDayRetestComparison(getKlineReviewReports()),
+      klineDayRetest: buildKlineDayRetestComparison(klineReviewReports),
       miniLoopProgress,
       mirrorTree: buildLivingMirrorTree({
         assessment: getAssessmentResult(),
@@ -234,6 +248,7 @@ Page({
       unifiedJourneyView: getUnifiedJourneyView(),
       training7View: buildTraining7View(getTraining7State(), {}),
       hasRecords: Number(stats.totalReviews || 0) > 0,
+      weeklyReport,
       reviewTop3
     });
   },

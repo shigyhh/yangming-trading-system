@@ -30,6 +30,47 @@
       </view>
     </view>
 
+    <view class="weekly-report-card card">
+      <view class="card-head">
+        <text>本周活镜</text>
+        <view>{{weeklyReport.weekRangeText}} · {{weeklyReport.total}} 条</view>
+      </view>
+      <block wx:if="{{weeklyReport.hasStats}}">
+        <view class="weekly-report-grid">
+          <view class="weekly-report-item">
+            <text>本周最高频错题</text>
+            <view>{{weeklyReport.topError.text}}</view>
+          </view>
+          <view class="weekly-report-item">
+            <text>本周最常见第一念</text>
+            <view>{{weeklyReport.topFirstThought.text}}</view>
+          </view>
+          <view class="weekly-report-item">
+            <text>本周执行一致率</text>
+            <view>{{weeklyReport.executionConsistency.rateText}}</view>
+          </view>
+          <view class="weekly-report-item">
+            <text>本周旧题复现</text>
+            <view>{{weeklyReport.oldQuestionRepeat.text}}</view>
+          </view>
+        </view>
+        <view class="weekly-report-progress">
+          <text>本周进步</text>
+          <view>{{weeklyReport.progress.text}}</view>
+        </view>
+        <view wx:if="{{weeklyReport.nextWeekPlans.length}}" class="weekly-report-plan">
+          <view class="weekly-report-title">下周训练安排</view>
+          <view wx:for="{{weeklyReport.nextWeekPlans}}" wx:key="errorType" wx:for-item="planItem" class="weekly-plan-item">
+            <view>{{planItem.title}}</view>
+            <text>{{planItem.focus}}</text>
+            <text>下次执行动作：{{planItem.action}}</text>
+          </view>
+        </view>
+        <view wx:else class="weekly-report-empty">下周训练安排待生成。</view>
+      </block>
+      <view wx:else class="weekly-report-empty">{{weeklyReport.emptyText}}</view>
+    </view>
+
     <view class="review-top3-card card">
       <view class="card-head">
         <text>近 {{reviewTop3.windowDays}} 天活镜</text>
