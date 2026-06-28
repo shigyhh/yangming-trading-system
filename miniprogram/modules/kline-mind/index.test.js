@@ -141,6 +141,90 @@ const legacySessionRecord = buildKlineMindRecord({
 assert.strictEqual(legacySessionRecord.completed, true);
 assert.notStrictEqual(legacySessionRecord.sourceType, "review_focus");
 
+const camelOnlyFocusSession = buildKlineMindSession({
+  assessment: { primary: "冲动型" },
+  trainingDay: { day: 4 },
+  historyCache: { cn_equity: { "1d": historicalSlice } },
+  reviewFocus: {
+    sourceType: "review_focus",
+    errorType: "计划外追涨",
+    trainingPrescription: "停十秒，写下第一念。",
+    sceneTags: "放量拉升,怕错过",
+    nextAction: "先复盘再行动",
+    sourceReviewId: "review-camel-only"
+  }
+});
+assert.strictEqual(camelOnlyFocusSession.sourceType, "review_focus");
+assert.strictEqual(camelOnlyFocusSession.source_type, "review_focus");
+assert.strictEqual(camelOnlyFocusSession.errorType, "计划外追涨");
+assert.strictEqual(camelOnlyFocusSession.error_type, "计划外追涨");
+assert.deepStrictEqual(camelOnlyFocusSession.trainingPrescription, { action: "停十秒，写下第一念。" });
+assert.deepStrictEqual(camelOnlyFocusSession.training_prescription, { action: "停十秒，写下第一念。" });
+assert.deepStrictEqual(camelOnlyFocusSession.sceneTags, ["放量拉升", "怕错过"]);
+assert.deepStrictEqual(camelOnlyFocusSession.scene_tags, ["放量拉升", "怕错过"]);
+assert.strictEqual(camelOnlyFocusSession.sourceReviewId, "review-camel-only");
+assert.strictEqual(camelOnlyFocusSession.source_review_id, "review-camel-only");
+
+const snakeOnlyFocusSession = buildKlineMindSession({
+  assessment: { primary: "焦虑型" },
+  trainingDay: { day: 5 },
+  historyCache: { cn_equity: { "1d": historicalSlice } },
+  reviewFocus: {
+    source_type: "review_focus",
+    error_type: "冲高回落",
+    training_prescription: { action: "固定观察窗口。" },
+    scene_tags: ["冲高回落"],
+    next_action: "只记录，不追动",
+    source_review_id: "review-snake-only"
+  }
+});
+assert.strictEqual(snakeOnlyFocusSession.sourceType, "review_focus");
+assert.strictEqual(snakeOnlyFocusSession.source_type, "review_focus");
+assert.strictEqual(snakeOnlyFocusSession.errorType, "冲高回落");
+assert.strictEqual(snakeOnlyFocusSession.error_type, "冲高回落");
+assert.deepStrictEqual(snakeOnlyFocusSession.sceneTags, ["冲高回落"]);
+assert.deepStrictEqual(snakeOnlyFocusSession.scene_tags, ["冲高回落"]);
+
+const missingSourceTypeSession = buildKlineMindSession({
+  assessment: { primary: "冲动型" },
+  trainingDay: { day: 2 },
+  historyCache: { cn_equity: { "1d": historicalSlice } },
+  reviewFocus: {
+    sourceType: "base_blind",
+    source_type: "base_blind"
+  }
+});
+assert.notStrictEqual(missingSourceTypeSession.sourceType, "review_focus");
+assert.notStrictEqual(missingSourceTypeSession.source_type, "review_focus");
+
+const sparseReviewFocusRecord = buildKlineMindRecord({
+  selectedCandleKey: reviewFocusSession.selectedCandleKey,
+  firstReaction: "说不清",
+  boundaryChoice: "先停十秒",
+  insightLine: "旧 session 缺字段也能生成训练错题卡。"
+}, {
+  day: 2,
+  source_type: "review_focus",
+  error_type: "旧题复现",
+  candles: reviewFocusSession.candles,
+  selectedCandleKey: reviewFocusSession.selectedCandleKey
+});
+assert.strictEqual(sparseReviewFocusRecord.sourceType, "review_focus");
+assert.strictEqual(sparseReviewFocusRecord.source_type, "review_focus");
+assert.strictEqual(sparseReviewFocusRecord.errorType, "旧题复现");
+assert.strictEqual(sparseReviewFocusRecord.error_type, "旧题复现");
+assert.deepStrictEqual(sparseReviewFocusRecord.trainingPrescription, {});
+assert.deepStrictEqual(sparseReviewFocusRecord.training_prescription, {});
+assert.deepStrictEqual(sparseReviewFocusRecord.sceneTags, []);
+assert.deepStrictEqual(sparseReviewFocusRecord.scene_tags, []);
+assert.strictEqual(sparseReviewFocusRecord.repeatCount, 1);
+assert.strictEqual(sparseReviewFocusRecord.repeat_count, 1);
+assert.ok(sparseReviewFocusRecord.executionResult);
+assert.strictEqual(sparseReviewFocusRecord.executionResult, sparseReviewFocusRecord.execution_result);
+assert.strictEqual(sparseReviewFocusRecord.trainingMistakeCard.title, "最明显执行偏离");
+assert.strictEqual(sparseReviewFocusRecord.training_mistake_card.title, "最明显执行偏离");
+assert.strictEqual(JSON.stringify(sparseReviewFocusRecord).includes("最明显失守"), false);
+
 const fallback = buildKlineMindSession({
   assessment: { primary: "未知型" },
   trainingDay: { day: 12 }

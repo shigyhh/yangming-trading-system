@@ -400,6 +400,27 @@ function buildTradeReview(input = {}, context = {}) {
   const scores = buildProcessScores(input, type);
   const action = getOption(ACTION_OPTIONS, input.actionKey);
   const boundary = getOption(BOUNDARY_STATES, input.boundaryState);
+  const firstThought = input.firstThought || "未记录";
+  const triggerScene = input.triggerScene || input.trigger_scene || historicalMatch.stagePosition || historicalMatch.stageGate || "";
+  const mainErrorType = input.mainErrorType || input.main_error_type || (keywordRule || {}).mirrorName || binding.mirrorName || type;
+  const trainingAction = (keywordRule || {}).trainingAction || buildTrainingAction(type, boundary.key);
+  const trainingPrescription = input.trainingPrescription || input.training_prescription || {
+    action: trainingAction,
+    errorType: mainErrorType,
+    triggerScene
+  };
+  const nextRule = input.nextRule || input.next_rule || input.nextAction || trainingAction;
+  const mistakeCard = input.mistakeCard || input.mistake_card || {
+    title: `${mainErrorType}错题卡`,
+    mainErrorType,
+    main_error_type: mainErrorType,
+    firstThought,
+    first_thought: firstThought,
+    triggerScene,
+    trigger_scene: triggerScene,
+    nextRule,
+    next_rule: nextRule
+  };
   const report = {
     id: input.id || `tr-${Date.now()}`,
     sourceType: "trade_review",
@@ -421,7 +442,18 @@ function buildTradeReview(input = {}, context = {}) {
     exitPrepared: input.exitPrepared || "yes",
     afterReaction: input.afterReaction || "未记录",
     nextAction: input.nextAction || "",
-    firstThought: input.firstThought || "未记录",
+    mainErrorType,
+    main_error_type: mainErrorType,
+    firstThought,
+    first_thought: firstThought,
+    triggerScene,
+    trigger_scene: triggerScene,
+    trainingPrescription,
+    training_prescription: trainingPrescription,
+    nextRule,
+    next_rule: nextRule,
+    mistakeCard,
+    mistake_card: mistakeCard,
     planBoundary: input.planBoundary || "未记录",
     boundaryState: boundary.key,
     boundaryStateLabel: boundary.label,
@@ -436,7 +468,7 @@ function buildTradeReview(input = {}, context = {}) {
     scores,
     oneLine: buildOneLine({ type, input, action, boundary, historicalMatch }),
     verdict: (keywordRule || {}).verdict || buildOneLine({ type, input, action, boundary, historicalMatch }),
-    trainingAction: (keywordRule || {}).trainingAction || buildTrainingAction(type, boundary.key),
+    trainingAction,
     evidenceChain: buildEvidenceChain({ input, action, boundary, historicalMatch, binding, context }),
     includeInRetest: true,
     compliance: COMPLIANCE_TEXT,
