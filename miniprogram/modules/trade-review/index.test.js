@@ -142,4 +142,35 @@ assert.ok(stats.thiefCounts["贪"] >= 1);
 assert.ok(stats.reviewHistory.length >= 2);
 assert.ok(stats.assistantHandoff.currentMirror);
 
+const now = Date.now();
+const dayMs = 24 * 60 * 60 * 1000;
+const recentDateText = new Date(now - dayMs * 4).toISOString().slice(0, 10);
+const triggerSceneStats = buildLivingMirrorStats({
+  records: [
+    { id: "scene-1", date: recentDateText, mainErrorType: "追涨", firstThought: "怕错过", triggerScene: "放量拉升", nextAction: "先停十秒" },
+    { id: "scene-2", createdAt: now - dayMs, main_error_type: "追涨", first_thought: "来不及", trigger_scene: "放量拉升", next_rule: "先写第一念" },
+    { id: "scene-3", created_at: now - dayMs * 2, mainErrorType: "回落", firstThought: "想证明", triggerScene: "冲高回落", next_action: "只记录" },
+    { id: "scene-4", createdAt: now - dayMs * 3, mainErrorType: "犹疑", firstThought: "再等等", trigger_scene: "横盘磨人", nextAction: "先复盘" },
+    { id: "scene-old", createdAt: now - dayMs * 35, mainErrorType: "旧题", firstThought: "旧念", triggerScene: "放量拉升", nextAction: "旧动作" }
+  ]
+});
+
+assert.deepStrictEqual(triggerSceneStats.topTriggerScenes.map((item) => `${item.label}:${item.count}`), [
+  "放量拉升:2",
+  "冲高回落:1",
+  "横盘磨人:1"
+]);
+assert.strictEqual(triggerSceneStats.triggerSceneEmptyText, "");
+assert.strictEqual(triggerSceneStats.topMistakes[0].label, "追涨");
+assert.ok(triggerSceneStats.topFirstThoughts.some((item) => item.label === "怕错过"));
+assert.strictEqual(triggerSceneStats.nextActionText, "先写第一念");
+
+const emptyTriggerSceneStats = buildLivingMirrorStats({
+  records: [
+    { id: "no-scene", createdAt: now, mainErrorType: "追涨", firstThought: "怕错过", nextAction: "先停十秒" }
+  ]
+});
+assert.deepStrictEqual(emptyTriggerSceneStats.topTriggerScenes, []);
+assert.strictEqual(emptyTriggerSceneStats.triggerSceneEmptyText, "暂无足够触发场景样本。");
+
 console.log("trade-review module tests passed");

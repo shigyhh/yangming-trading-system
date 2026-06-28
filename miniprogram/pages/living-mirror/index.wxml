@@ -147,8 +147,32 @@
 
     <view class="change-card card">
       <view class="card-head">
-        <text>7 天印记变化</text>
-        <view>只看反应模式，不绑定结果</view>
+        <text>近 30 天活镜</text>
+        <view>只看执行偏离模式</view>
+      </view>
+      <view class="pattern-summary">
+        <view class="pattern-row">
+          <text>最高频错题</text>
+          <view>{{stats.topMistakeText || '待补充'}}</view>
+        </view>
+        <view class="pattern-row">
+          <text>最常见第一念</text>
+          <view>{{stats.topFirstThoughtText || '待记录'}}</view>
+        </view>
+        <view class="pattern-row">
+          <text>下次执行动作</text>
+          <view>{{stats.nextActionText || '先记录，再行动'}}</view>
+        </view>
+      </view>
+      <view class="trigger-scene-block">
+        <text>高频触发场景</text>
+        <view wx:if="{{stats.topTriggerScenes.length}}" class="trigger-scene-list">
+          <view wx:for="{{stats.topTriggerScenes}}" wx:key="label" class="trigger-scene-row">
+            <text>{{index + 1}}. {{item.label}}</text>
+            <view>{{item.count}} 次</view>
+          </view>
+        </view>
+        <view wx:else class="empty-text">{{stats.triggerSceneEmptyText || '暂无足够触发场景样本。'}}</view>
       </view>
       <view class="change-row" wx:for="{{stats.mirrorTrendRows}}" wx:key="mirror">
         <text>{{item.mirror}}</text>
