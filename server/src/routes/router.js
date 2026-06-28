@@ -29,6 +29,7 @@ import { approveYmtyRefund, createYmtyRefund, executeYmtyRefund, getYmtyRefund, 
 import { authenticateYmtyAdmin, changeYmtyAdminPassword, getYmtyAdminMe, loginYmtyAdmin, logoutYmtyAdmin } from "../services/adminAuth.js";
 import { saveYmtyLivecodeUpload } from "../services/ymtyUpload.js";
 import { assertRealPayConfigReady, createH5Order, createJsapiOrder, createWapOrder, isPaymentConfigError, normalizePayChannel, parseAlipayNotify, parseWechatNotify, validateAlipayPayment, validateWechatPayment, verifyAlipayNotify, verifyWechatNotify } from "../services/payments/index.js";
+import { handleKlineSegmentRoute } from "./klineSegments.js";
 import { handleTrainingPackRoute } from "./trainingPacks.js";
 
 export async function route(req, res) {
@@ -78,6 +79,9 @@ export async function route(req, res) {
         kline_history_slice: "GET /api/v1/kline-history/slice?market=cn_equity&symbol=600519&timeframe=1d&blind=1",
         kline_history_reveal: "GET /api/v1/kline-history/reveal?token=xxx",
         kline_history_download: "POST /api/v1/kline-history/download",
+        kline_segments: "GET|POST /api/v1/kline-segments",
+        kline_segment: "GET|PATCH /api/v1/kline-segments/:id",
+        kline_segment_enabled: "PATCH /api/v1/kline-segments/:id/enabled",
         zhixing_replay_start: "POST /api/v1/zhixing-replay/start",
         zhixing_replay_session: "GET /api/v1/zhixing-replay/:session_id",
         zhixing_replay_decision: "POST /api/v1/zhixing-replay/:session_id/decision",
@@ -133,6 +137,7 @@ export async function route(req, res) {
   }
 
   if (await handleTrainingPackRoute(req, res, { url, pathname })) return;
+  if (await handleKlineSegmentRoute(req, res, { url, pathname })) return;
 
   if (req.method === "GET" && pathname === "/api/v1/stats/public") {
     const stats = await getPublicStats();
