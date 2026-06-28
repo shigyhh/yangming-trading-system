@@ -145,6 +145,49 @@
       <view wx:else class="empty-text">完成今日落印后，第一枚心证会长成活镜树的一片叶。</view>
     </view>
 
+    <view class="weekly-report-card card">
+      <view class="card-head">
+        <text>本周活镜</text>
+        <view>{{stats.weeklyReport.weekRangeText || '本周'}} · {{stats.weeklyReport.total || 0}} 条</view>
+      </view>
+      <block wx:if="{{stats.weeklyReport.hasStats}}">
+        <view class="weekly-report-grid">
+          <view>
+            <text>本周最高频错题</text>
+            <view>{{stats.weeklyReport.topMistakeText || '样本不足'}}</view>
+          </view>
+          <view>
+            <text>本周最常见第一念</text>
+            <view>{{stats.weeklyReport.topFirstThoughtText || '样本不足'}}</view>
+          </view>
+          <view>
+            <text>本周执行一致率</text>
+            <view>{{stats.weeklyReport.executionConsistencyRateText || '样本不足'}}</view>
+          </view>
+          <view>
+            <text>本周旧题复现</text>
+            <view>{{stats.weeklyReport.oldIssueRepeatText || '样本不足'}}</view>
+          </view>
+        </view>
+        <view class="weekly-progress">
+          <text>本周进步</text>
+          <view>{{stats.weeklyReport.progressText || '样本不足'}}</view>
+        </view>
+        <view class="weekly-plan-block">
+          <view class="weekly-plan-title">下周训练安排</view>
+          <view wx:if="{{stats.weeklyReport.nextWeekPlans.length}}" class="weekly-plan-list">
+            <view wx:for="{{stats.weeklyReport.nextWeekPlans}}" wx:key="errorType" class="weekly-plan-row">
+              <view>{{item.text}}</view>
+              <text>{{item.focus}}</text>
+              <text>下次执行动作：{{item.action}}</text>
+            </view>
+          </view>
+          <view wx:else class="empty-text">{{stats.weeklyReport.nextWeekPlanEmptyText || '样本不足，先完成一次真实复盘和一次针对训练。'}}</view>
+        </view>
+      </block>
+      <view wx:else class="empty-text">{{stats.weeklyReport.emptyText || '样本不足，先完成一次真实复盘和一次针对训练。'}}</view>
+    </view>
+
     <view class="change-card card">
       <view class="card-head">
         <text>近 30 天活镜</text>
