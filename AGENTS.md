@@ -11,6 +11,8 @@
 
 Existing target branches must not be blindly reused. If an existing branch has overscope diff, stop, report, back it up, and rebuild from latest `origin/main`. Later-stage branches must be reuse-audited before rebuilding or reimplementing; reuse clean work when safe, and rebuild only after audit.
 
+Cross-end tasks must start with a read-only capability audit. Do not assume web/admin is empty; reuse existing pages, APIs, contracts, and docs before creating new ones. For P7/P8/P9 and later, audit related repos before generating implementation commands. Data must be shared across mini program and web, while UI entry points and repository responsibilities stay separate.
+
 ## 项目原则
 
 - 不新增平行系统。

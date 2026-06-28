@@ -121,6 +121,43 @@ Then choose the next action:
 - `stale` -> preserve as backup, do not continue
 - `missing` -> create from latest `origin/main`
 
+## Cross-end audit gate
+
+Any task that touches or depends on more than one end must start with a read-only audit.
+
+This applies to work involving:
+
+- mini program
+- web-next / real-review
+- kline-service
+- server
+- packages/contracts
+- data-binding
+- docs/product library
+- existing branches or PRs
+
+Before implementation, the audit must answer:
+
+1. Which repository owns the task?
+2. Which repositories are related?
+3. What already exists?
+4. Which APIs can be reused?
+5. Which contracts already exist?
+6. Which pages already exist?
+7. Which docs or product concepts already exist?
+8. Which old branches contain reusable work?
+9. Which data must be shared across mini program and web?
+10. What should be implemented now, deferred, or split into another repository?
+
+Default rule:
+
+- Existing API first.
+- Existing page first.
+- Existing contract first.
+- Adapter or field patch second.
+- New API only if necessary.
+- New page only if no existing page can carry it.
+
 ## 测试 Gate 规则
 
 每个任务以用户指定 gate 为准。没有指定时，至少运行与改动范围相关的单元测试、同步契约测试或构建检查。
