@@ -1,0 +1,151 @@
+# 项目执行协议
+
+本协议用于后续 Codex 任务执行。目标是让思考充分、执行顺序稳定、验收可复现。
+
+## 核心原则
+
+- 思考可以慢，执行必须顺。
+- 不新增平行系统。
+- 不新建第二套入口。
+- 每个分支只解决当前任务定义的问题。
+- 不把后续阶段功能提前塞进当前分支。
+- 不为通过验收而新增空测试、跳过关键校验或弱化断言。
+
+## 五个用户入口分工
+
+- 今日页：总调度，判断用户今天下一步该做什么。
+- 复盘页：真实复盘错题卡，沉淀真实记录、第一念、触发场景和下次执行动作。
+- 训练页：承接今日针对训练、基础盲练和后续专项训练。
+- 活镜页：近 30 天模式统计，展示错题、第一念、触发场景、旧题复现和执行一致性变化。
+- 我的页：后续执行计划库、个人资料和长期记录。
+
+任何新能力都必须挂回这五个入口之一。除非产品明确批准，不新增第六入口。
+
+## 网页端互补分工
+
+- 训练包管理。
+- K线片段标注。
+- 数据看板。
+- 报告后台。
+- 提醒规则配置。
+- 默认执行计划模板。
+
+网页端用于管理、配置、标注、看板和后台承接，不替代小程序主闭环，不另造一套用户主流程。
+
+## Codex 任务标准流程
+
+1. 前置分支检查：读取任务要求，确认是否存在前置分支、前置提交或前置合并要求。
+2. 前置合并检查：有前置分支时，必须先确认其已合并到 `main`。
+3. 当前分支存在性检查：创建目标分支前，先检查目标分支是否已存在，并判断新建模式、续作模式或停止报告。
+4. 当前分支创建：只在工作区干净、`main` 已快进、前置已合并、目标分支不存在时，从 `main` 创建新分支。
+5. 当前任务边界：明确本次目标、允许改动文件、验收标准和输出要求。
+6. 禁止范围：确认不做用户明确禁止的页面、业务、测试、后续阶段或架构扩展。
+7. 测试 gate：运行用户指定或与改动范围匹配的测试、同步契约测试、`git diff --check`。
+8. 缺失测试 N/A 规则：测试文件缺失时先查 `main`，`main` 中也不存在才标记 `N/A`。
+9. 合并前验收：检查 diff 范围、测试结果、术语、功能边界、是否新增入口或平行系统。
+10. 是否可以进入下一步：只有当前任务已完成、测试 gate 通过、验收结论明确时，才可以判断是否进入下一阶段。
+
+## 前置分支合并检查
+
+有前置分支时，必须先确认其已合并到 `main`，常用命令：
+
+```bash
+git branch --merged main | grep '<前置分支名>' || true
+git log --oneline --decorate --all --grep='<前置分支提交标题>' || true
+```
+
+如果前置分支未合并，必须停止并报告：
+
+```text
+前置分支 <branch> 尚未合并，不能创建当前分支。
+```
+
+不得自行绕过前置条件，不得在未合并前置分支的情况下创建后续分支。
+
+## 当前分支存在性检查
+
+创建目标分支前，必须检查：
+
+```bash
+git branch --list <目标分支名>
+```
+
+如果目标分支已存在，不得直接覆盖。必须按 Resume mode 判断是否续作或停止报告。
+
+## Resume mode
+
+If the target branch already exists:
+
+1. If the current branch is the target branch and the diff only contains files allowed by the current task, continue the task in resume mode.
+2. If the current branch is not the target branch, stop and report the existing branch.
+3. If the diff contains files outside the task scope, stop and report.
+4. Do not overwrite existing work.
+
+## 测试 Gate 规则
+
+每个任务以用户指定 gate 为准。没有指定时，至少运行与改动范围相关的单元测试、同步契约测试或构建检查。
+
+常见 gate：
+
+```bash
+node miniprogram/modules/kline-mind/index.test.js
+node miniprogram/modules/trade-review/index.test.js
+node miniprogram/utils/api.test.js
+node miniprogram/utils/data-binding-adapter.test.js
+npm run test:data-binding --prefix server
+git diff --check main..<当前分支>
+```
+
+文档-only 分支无需运行业务测试，但必须确认：
+
+```bash
+git diff --name-only main..<当前分支>
+```
+
+输出只能包含允许的文档路径。
+
+## 缺失测试 N/A 规则
+
+如果验收命令包含当前仓库不存在的测试文件，必须先确认 `main` 中是否也不存在：
+
+```bash
+git ls-files | grep '<测试文件路径>' || true
+git ls-tree -r --name-only main -- '<测试文件路径>'
+find <目录> -name '*release*test*.js'
+```
+
+处理规则：
+
+- 如果 `main` 中存在该测试，但当前分支不存在：停止并报告，先查明原因。
+- 如果 `main` 中也不存在该测试：标记为 `N/A`，不作为阻塞项。
+- 不得为了通过 gate 新增空测试文件。
+
+## 合并前验收规则
+
+合并前必须重新确认：
+
+- 工作区干净或只有本任务允许改动。
+- 前置分支已合并。
+- 当前分支 diff 符合任务范围。
+- 测试 gate 通过，缺失测试按 N/A 规则处理。
+- 没有页面 UI 改动，除非任务明确要求。
+- 没有业务代码改动，除非任务明确要求。
+- 没有测试代码改动，除非任务明确要求。
+- 没有引入 P1/P2/P3/P4/P5 或其它未来功能。
+- 没有新建平行系统或第二套入口。
+
+合并后必须在 `main` 上重新跑关键 gate。若发生 merge conflict，停止并报告冲突文件，不自行乱解。
+
+## 不二过原则
+
+同一个流程错误不得重复发生。
+
+每次发生流程问题，必须登记到 `docs/non-repeat-error-register.md`，至少包含：
+
+- 编号。
+- 问题。
+- 正确处理。
+- 后续规则。
+- 是否已纳入命令模板。
+
+后续任务模板必须吸收已登记规则。执行前先看规则，执行中按规则停顿检查，执行后在验收输出中说明相关规则是否满足。
