@@ -160,6 +160,31 @@ assert.strictEqual(trainingCardState.errorType, "冲高回落");
 assert.strictEqual(trainingCardState.executionResult, "执行偏离");
 assert.ok(trainingCardState.primaryActionUrl.includes("showResult=1"));
 
+const missingExecutionResultState = buildTodayNextStepState({
+  todayKey: today,
+  tradeReviewState: {
+    records: [
+      {
+        id: "review-no-execution",
+        updated_at: `${today}T11:00:00.000Z`,
+        main_error_type: "放量拉升",
+        next_rule: "先停十秒",
+        mistake_card: { title: "放量拉升错题" }
+      }
+    ]
+  },
+  klineMindRecords: {
+    [today]: {
+      date: today,
+      sourceType: "review_focus",
+      errorType: "放量拉升",
+      trainingMistakeCard: { title: "最明显执行偏离" }
+    }
+  }
+});
+assert.strictEqual(missingExecutionResultState.status, "need_review_training_card");
+assert.strictEqual(missingExecutionResultState.executionResult, "暂无明确执行结果");
+
 const singleRecordTrainingState = buildTodayNextStepState({
   todayKey: today,
   tradeReviewState: {

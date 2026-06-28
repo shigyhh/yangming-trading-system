@@ -333,6 +333,39 @@ test("data binding preserves P1 field aliases for miniapp review and kline sync"
   assert.deepEqual(kline.record.trainingMistakeCard, { title: "急拉旧题" });
   assert.deepEqual(kline.record.training_mistake_card, { title: "急拉旧题" });
 
+  const snakeOnlyKline = await saveKLineRecordBinding({
+    user,
+    record: {
+      day: 3,
+      recordedAt: "2026-06-03T08:00:00.000Z",
+      scene: "横盘磨人",
+      reaction: "想等确认",
+      disciplineAction: "固定观察窗口",
+      source_type: "review_focus",
+      error_type: "hesitation",
+      scene_tags: ["横盘", "犹疑"],
+      training_prescription: { action: "固定观察窗口。" },
+      execution_result: "暂无明确执行结果",
+      repeat_count: 0,
+      training_mistake_card: { title: "最明显执行偏离" }
+    },
+    source: "miniprogram"
+  });
+  assert.equal(snakeOnlyKline.record.sourceType, "review_focus");
+  assert.equal(snakeOnlyKline.record.source_type, "review_focus");
+  assert.equal(snakeOnlyKline.record.errorType, "hesitation");
+  assert.equal(snakeOnlyKline.record.error_type, "hesitation");
+  assert.deepEqual(snakeOnlyKline.record.sceneTags, ["横盘", "犹疑"]);
+  assert.deepEqual(snakeOnlyKline.record.scene_tags, ["横盘", "犹疑"]);
+  assert.deepEqual(snakeOnlyKline.record.trainingPrescription, { action: "固定观察窗口。" });
+  assert.deepEqual(snakeOnlyKline.record.training_prescription, { action: "固定观察窗口。" });
+  assert.equal(snakeOnlyKline.record.executionResult, "暂无明确执行结果");
+  assert.equal(snakeOnlyKline.record.execution_result, "暂无明确执行结果");
+  assert.equal(snakeOnlyKline.record.repeatCount, 0);
+  assert.equal(snakeOnlyKline.record.repeat_count, 0);
+  assert.deepEqual(snakeOnlyKline.record.trainingMistakeCard, { title: "最明显执行偏离" });
+  assert.deepEqual(snakeOnlyKline.record.training_mistake_card, { title: "最明显执行偏离" });
+
   const tradeReview = await saveTradeReviewBinding({
     user,
     review: {
@@ -366,6 +399,39 @@ test("data binding preserves P1 field aliases for miniapp review and kline sync"
   assert.equal(tradeReview.review.next_rule, "下次看见放量先停十秒");
   assert.deepEqual(tradeReview.review.mistakeCard, { title: "追涨旧题复现" });
   assert.deepEqual(tradeReview.review.mistake_card, { title: "追涨旧题复现" });
+
+  const camelOnlyTradeReview = await saveTradeReviewBinding({
+    user,
+    review: {
+      id: "tr-p1-camel-only",
+      imageUrl: "/uploads/reviews/review-p1-camel.png",
+      tradeDate: "2026-06-03",
+      marketType: "a_share",
+      timeframeKey: "1d",
+      buyReason: "看到放量拉升，怕错过。",
+      sellReason: "回看后发现没有按计划。",
+      strongestThought: "怕错过",
+      mainErrorType: "chasing",
+      firstThought: "怕错过",
+      triggerScene: "放量拉升",
+      trainingPrescription: { action: "停十秒，写第一念。" },
+      nextRule: "下次看见放量先停十秒",
+      mistakeCard: { title: "追涨旧题复现" }
+    },
+    source: "miniprogram"
+  });
+  assert.equal(camelOnlyTradeReview.review.mainErrorType, "chasing");
+  assert.equal(camelOnlyTradeReview.review.main_error_type, "chasing");
+  assert.equal(camelOnlyTradeReview.review.firstThought, "怕错过");
+  assert.equal(camelOnlyTradeReview.review.first_thought, "怕错过");
+  assert.equal(camelOnlyTradeReview.review.triggerScene, "放量拉升");
+  assert.equal(camelOnlyTradeReview.review.trigger_scene, "放量拉升");
+  assert.deepEqual(camelOnlyTradeReview.review.trainingPrescription, { action: "停十秒，写第一念。" });
+  assert.deepEqual(camelOnlyTradeReview.review.training_prescription, { action: "停十秒，写第一念。" });
+  assert.equal(camelOnlyTradeReview.review.nextRule, "下次看见放量先停十秒");
+  assert.equal(camelOnlyTradeReview.review.next_rule, "下次看见放量先停十秒");
+  assert.deepEqual(camelOnlyTradeReview.review.mistakeCard, { title: "追涨旧题复现" });
+  assert.deepEqual(camelOnlyTradeReview.review.mistake_card, { title: "追涨旧题复现" });
 
   const summary = await getDataBindingUserSummary(user.userId);
   assert.equal(summary.kline_records[0].execution_result, "执行偏离");

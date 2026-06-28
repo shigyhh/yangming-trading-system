@@ -281,8 +281,14 @@ assert.strictEqual(snakeOnlyTradeReviewPayload.review.mainErrorType, "impulse");
 assert.strictEqual(snakeOnlyTradeReviewPayload.review.main_error_type, "impulse");
 assert.strictEqual(snakeOnlyTradeReviewPayload.review.firstThought, "又想追");
 assert.strictEqual(snakeOnlyTradeReviewPayload.review.first_thought, "又想追");
+assert.strictEqual(snakeOnlyTradeReviewPayload.review.triggerScene, "放量突破");
+assert.strictEqual(snakeOnlyTradeReviewPayload.review.trigger_scene, "放量突破");
 assert.deepStrictEqual(snakeOnlyTradeReviewPayload.review.trainingPrescription, { action: "只记录，不行动。" });
 assert.deepStrictEqual(snakeOnlyTradeReviewPayload.review.training_prescription, { action: "只记录，不行动。" });
+assert.strictEqual(snakeOnlyTradeReviewPayload.review.nextRule, "下次看见放量先停十秒");
+assert.strictEqual(snakeOnlyTradeReviewPayload.review.next_rule, "下次看见放量先停十秒");
+assert.deepStrictEqual(snakeOnlyTradeReviewPayload.review.mistakeCard, { title: "追涨旧题复现" });
+assert.deepStrictEqual(snakeOnlyTradeReviewPayload.review.mistake_card, { title: "追涨旧题复现" });
 
 const snakeOnlyKlinePayload = buildKLineBindingPayload({
   auth,
@@ -307,14 +313,20 @@ const snakeOnlyKlinePayload = buildKLineBindingPayload({
     }
   })
 });
+assert.strictEqual(snakeOnlyKlinePayload.record.sourceType, "kline_training");
+assert.strictEqual(snakeOnlyKlinePayload.record.source_type, "kline_training");
 assert.strictEqual(snakeOnlyKlinePayload.record.errorType, "hesitation");
 assert.strictEqual(snakeOnlyKlinePayload.record.error_type, "hesitation");
 assert.deepStrictEqual(snakeOnlyKlinePayload.record.sceneTags, ["横盘", "犹疑"]);
 assert.deepStrictEqual(snakeOnlyKlinePayload.record.scene_tags, ["横盘", "犹疑"]);
+assert.deepStrictEqual(snakeOnlyKlinePayload.record.trainingPrescription, { action: "固定观察窗口。" });
+assert.deepStrictEqual(snakeOnlyKlinePayload.record.training_prescription, { action: "固定观察窗口。" });
 assert.strictEqual(snakeOnlyKlinePayload.record.executionResult, "按计划执行");
 assert.strictEqual(snakeOnlyKlinePayload.record.execution_result, "按计划执行");
 assert.strictEqual(snakeOnlyKlinePayload.record.repeatCount, 3);
 assert.strictEqual(snakeOnlyKlinePayload.record.repeat_count, 3);
+assert.deepStrictEqual(snakeOnlyKlinePayload.record.trainingMistakeCard, { title: "犹疑旧题" });
+assert.deepStrictEqual(snakeOnlyKlinePayload.record.training_mistake_card, { title: "犹疑旧题" });
 
 const sharePayload = buildShareCardBindingPayload({
   auth,

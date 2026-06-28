@@ -173,4 +173,60 @@ const emptyTriggerSceneStats = buildLivingMirrorStats({
 assert.deepStrictEqual(emptyTriggerSceneStats.topTriggerScenes, []);
 assert.strictEqual(emptyTriggerSceneStats.triggerSceneEmptyText, "暂无足够触发场景样本。");
 
+const legacyCompatStats = buildLivingMirrorStats({
+  records: [
+    { id: "legacy-camel", date: recentDateText, mainErrorType: "追涨", firstThought: "怕错过", triggerScene: "放量拉升", nextRule: "先停十秒" },
+    { id: "legacy-snake", createdAt: now - dayMs * 2, main_error_type: "冲高回落", first_thought: "还会涨", trigger_scene: "冲高回落", next_action: "写下第一念" },
+    { id: "legacy-created-at-snake", created_at: new Date(now - dayMs * 3).toISOString(), main_error_type: "横盘犹疑", firstThought: "再等等", triggerScene: "横盘磨人" },
+    { id: "legacy-updated", updatedAt: now - dayMs * 4, mainErrorType: "计划外动作", first_thought: "想证明", trigger_scene: "计划外拉升", nextRule: "只记录不行动" },
+    { id: "legacy-updated-snake", updated_at: new Date(now - dayMs).toISOString(), main_error_type: "尾盘冲动", first_thought: "最后一把", next_rule: "收盘前不追" },
+    { id: "legacy-missing-scene", createdAt: now - dayMs * 5, mainErrorType: "无触发场景", firstThought: "待补充" },
+    { id: "legacy-no-time", mainErrorType: "无时间旧题", firstThought: "旧念", triggerScene: "不纳入近 30 天" },
+    { id: "legacy-old", createdAt: now - dayMs * 40, main_error_type: "过期旧题", first_thought: "旧念", trigger_scene: "过期触发" }
+  ]
+});
+assert.deepStrictEqual(legacyCompatStats.topTriggerScenes.map((item) => item.label), [
+  "冲高回落",
+  "放量拉升",
+  "横盘磨人"
+]);
+assert.ok(legacyCompatStats.topMistakes.some((item) => item.label === "尾盘冲动"));
+assert.ok(legacyCompatStats.reviewHistory.some((item) => item.thought === "还会涨"));
+assert.strictEqual(legacyCompatStats.nextActionText, "收盘前不追");
+assert.strictEqual(legacyCompatStats.topTriggerScenes.some((item) => item.label === "不纳入近 30 天"), false);
+assert.strictEqual(legacyCompatStats.topTriggerScenes.some((item) => item.label === "过期触发"), false);
+
+const p1SmokeReview = buildTradeReview({
+  marketKey: "cn",
+  timeframeKey: "1d",
+  tradeDate: recentDateText,
+  symbol: "示例标的",
+  actionKey: "impulse",
+  emotion: "急躁",
+  firstThought: "怕错过",
+  inPlan: "no",
+  triggerScene: "放量拉升",
+  nextAction: "先停十秒再写第一念",
+  boundaryState: "lost",
+  reviewNote: "计划外买入后回看第一念。"
+});
+assert.strictEqual(p1SmokeReview.mainErrorType, p1SmokeReview.main_error_type);
+assert.ok(p1SmokeReview.mainErrorType);
+assert.strictEqual(p1SmokeReview.firstThought, "怕错过");
+assert.strictEqual(p1SmokeReview.first_thought, "怕错过");
+assert.strictEqual(p1SmokeReview.triggerScene, "放量拉升");
+assert.strictEqual(p1SmokeReview.trigger_scene, "放量拉升");
+assert.deepStrictEqual(p1SmokeReview.trainingPrescription, p1SmokeReview.training_prescription);
+assert.ok(p1SmokeReview.trainingPrescription.action);
+assert.strictEqual(p1SmokeReview.nextRule, p1SmokeReview.next_rule);
+assert.ok(p1SmokeReview.nextRule);
+assert.deepStrictEqual(p1SmokeReview.mistakeCard, p1SmokeReview.mistake_card);
+assert.ok(p1SmokeReview.mistakeCard.title);
+
+const p1SmokeStats = buildLivingMirrorStats({ records: [p1SmokeReview] });
+assert.strictEqual(p1SmokeStats.topMistakes[0].label, p1SmokeReview.mainErrorType);
+assert.strictEqual(p1SmokeStats.topFirstThoughts[0].label, "怕错过");
+assert.strictEqual(p1SmokeStats.topTriggerScenes[0].label, "放量拉升");
+assert.strictEqual(p1SmokeStats.nextActionText, p1SmokeReview.nextRule);
+
 console.log("trade-review module tests passed");
