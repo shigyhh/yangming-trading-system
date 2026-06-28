@@ -9,6 +9,7 @@ const {
   buildTradeReviewClosure,
   buildLiveMirrorReminder,
   buildLivingMirrorStats,
+  buildWeeklyLivingMirrorReport,
   buildTradeReview
 } = require("./index");
 
@@ -264,5 +265,81 @@ assert.strictEqual(p1SmokeStats.topMistakes[0].label, p1SmokeReview.mainErrorTyp
 assert.strictEqual(p1SmokeStats.topFirstThoughts[0].label, "怕错过");
 assert.strictEqual(p1SmokeStats.topTriggerScenes[0].label, "放量拉升");
 assert.strictEqual(p1SmokeStats.nextActionText, p1SmokeReview.nextRule);
+
+const weeklyReport = buildWeeklyLivingMirrorReport({
+  now: "2026-06-28T12:00:00+08:00",
+  records: [
+    {
+      id: "weekly-review-1",
+      createdAt: "2026-06-24T10:00:00+08:00",
+      mainErrorType: "追高冲动",
+      firstThought: "怕错过",
+      execution_result: "aligned"
+    },
+    {
+      id: "weekly-review-2",
+      created_at: "2026-06-25T10:00:00+08:00",
+      main_error_type: "追高冲动",
+      first_thought: "怕错过",
+      law_result: "broken",
+      repeat_count: 1
+    },
+    {
+      id: "weekly-review-previous",
+      createdAt: "2026-06-18T10:00:00+08:00",
+      mainErrorType: "追高冲动",
+      firstThought: "怕错过",
+      execution_result: "deviated"
+    },
+    {
+      id: "weekly-review-old",
+      createdAt: "2026-06-08T10:00:00+08:00",
+      mainErrorType: "过期旧题",
+      firstThought: "旧念",
+      execution_result: "deviated",
+      repeatCount: 8
+    }
+  ],
+  klineRecords: {
+    today: {
+      id: "weekly-kline-1",
+      createdAt: "2026-06-26T10:00:00+08:00",
+      errorType: "计划外交易",
+      firstThought: "想证明",
+      executionResult: "aligned",
+      repeatCount: 2
+    }
+  }
+});
+assert.strictEqual(weeklyReport.hasStats, true);
+assert.strictEqual(weeklyReport.total, 3);
+assert.strictEqual(weeklyReport.topMistakes[0].label, "追高冲动");
+assert.strictEqual(weeklyReport.topMistakeText, "追高冲动 2 次");
+assert.strictEqual(weeklyReport.topFirstThoughtText, "怕错过 2 次");
+assert.strictEqual(weeklyReport.executionConsistencyRateText, "67%");
+assert.strictEqual(weeklyReport.oldIssueRepeatText, "3 次");
+assert.ok(weeklyReport.progressText.includes("提升"));
+assert.ok(weeklyReport.nextWeekPlans.length >= 1);
+assert.strictEqual(weeklyReport.nextWeekPlans[0].title, "追高冲动专项");
+
+const weeklyEmptyReport = buildWeeklyLivingMirrorReport({
+  now: "2026-06-28T12:00:00+08:00",
+  records: []
+});
+assert.strictEqual(weeklyEmptyReport.hasStats, false);
+assert.strictEqual(weeklyEmptyReport.topMistakeText, "样本不足");
+assert.strictEqual(weeklyEmptyReport.executionConsistencyRateText, "样本不足");
+assert.deepStrictEqual(weeklyEmptyReport.nextWeekPlans, []);
+
+const statsWithWeeklyReport = buildLivingMirrorStats({
+  records: [
+    { id: "stats-weekly-1", createdAt: Date.now(), mainErrorType: "补仓冲动", firstThought: "不甘心", execution_result: "aligned" }
+  ],
+  klineMindRecords: {
+    one: { id: "stats-weekly-kline", createdAt: Date.now(), errorType: "补仓冲动", execution_result: "deviated" }
+  }
+});
+assert.ok(statsWithWeeklyReport.weeklyReport);
+assert.ok(statsWithWeeklyReport.weeklyReport.hasStats);
 
 console.log("trade-review module tests passed");

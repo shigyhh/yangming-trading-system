@@ -8,7 +8,8 @@ const {
   getTrainingPrescription,
   getEvidenceSummary,
   getUnifiedJourneyView,
-  getKlineMindRecords
+  getKlineMindRecords,
+  getKlineSessionRecords
 } = require("../../utils/store");
 const { pullTrainingPrescription } = require("../../utils/api");
 const { buildTraining7View } = require("../../modules/training7/index");
@@ -37,6 +38,19 @@ Page({
       executionDeviationText: "0 次",
       oldIssueRepeatText: "0 次",
       topDeviationTypeText: "样本不足",
+      weeklyReport: {
+        hasStats: false,
+        weekRangeText: "",
+        total: 0,
+        topMistakeText: "样本不足",
+        topFirstThoughtText: "样本不足",
+        executionConsistencyRateText: "样本不足",
+        oldIssueRepeatText: "样本不足",
+        progressText: "样本不足",
+        nextWeekPlans: [],
+        emptyText: "样本不足，先完成一次真实复盘和一次针对训练。",
+        nextWeekPlanEmptyText: "样本不足，先完成一次真实复盘和一次针对训练。"
+      },
       zhixingStability: {},
       tripleReflection: {}
     },
@@ -67,8 +81,11 @@ Page({
   },
 
   refreshStats() {
+    const klineReviewReports = getKlineReviewReports();
     const tradeReviewState = Object.assign({}, getTradeReviewRecords(), {
-      klineMindRecords: getKlineMindRecords()
+      klineMindRecords: getKlineMindRecords(),
+      klineSessionRecords: getKlineSessionRecords(),
+      klineReviewReports
     });
     const stats = saveLivingMirrorStatsFromReviews(tradeReviewState);
     const zhixingStability = stats.zhixingStability || {};
@@ -88,7 +105,7 @@ Page({
       serverPrescription: getTrainingPrescription() || {},
       prescriptionStatusText: this.getPrescriptionStatusText(getTrainingPrescription()),
       klineRecommendation,
-      klineDayRetest: buildKlineDayRetestComparison(getKlineReviewReports()),
+      klineDayRetest: buildKlineDayRetestComparison(klineReviewReports),
       miniLoopProgress,
       mirrorTree: buildLivingMirrorTree({
         assessment: getAssessmentResult(),
