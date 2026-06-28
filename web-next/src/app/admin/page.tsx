@@ -72,12 +72,20 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               查看测评用户、人格报告、训练状态与助教承接信息。优先读取 server 数据绑定 API，未启动时回退本地 mock；不包含投资建议、盘面判断或操作指令。
             </p>
           </div>
-          <Link
-            href="/"
-            className="inline-flex h-10 w-fit items-center justify-center rounded-lg border border-[rgba(217,189,122,.18)] bg-white/[.035] px-4 font-function text-sm text-[rgba(244,235,221,.78)] transition hover:border-[rgba(216,183,111,.38)] hover:text-[#F4EBDD]"
-          >
-            返回首页
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/admin/training-packs"
+              className="inline-flex h-10 w-fit items-center justify-center rounded-lg border border-[rgba(217,189,122,.18)] bg-white/[.035] px-4 font-function text-sm text-[rgba(244,235,221,.78)] transition hover:border-[rgba(216,183,111,.38)] hover:text-[#F4EBDD]"
+            >
+              训练包管理
+            </Link>
+            <Link
+              href="/"
+              className="inline-flex h-10 w-fit items-center justify-center rounded-lg border border-[rgba(217,189,122,.12)] px-4 font-function text-sm text-[rgba(244,235,221,.58)] transition hover:border-[rgba(216,183,111,.32)] hover:text-[#F4EBDD]"
+            >
+              返回首页
+            </Link>
+          </div>
         </header>
 
         <section className="grid gap-3 md:grid-cols-4">
