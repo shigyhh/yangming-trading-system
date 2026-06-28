@@ -2,10 +2,13 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  createTrainingBookmarkBinding,
+  deleteTrainingBookmarkBinding,
   generateShareCardBinding,
   getDataBindingUserSummary,
   getInviteSourceStatsBinding,
   listTradeReviewBindings,
+  listTrainingBookmarkBindings,
   getRetestComparisonBinding,
   getShareCardBinding,
   getTrainingPrescriptionBinding,
@@ -18,6 +21,7 @@ import {
   saveTrainingRecordBinding,
   dispatchTrainingPrescriptionBinding,
   syncAssistantSummaryToFeishuBinding,
+  updateTrainingBookmarkBinding,
   unloadDataBindingForTests,
   updateAssistantHandoffBinding
 } from "../src/services/dataBinding.js";
@@ -588,6 +592,131 @@ test("data binding preserves kline sampling metadata aliases without storing bar
   const reloadedSummary = await getDataBindingUserSummary(user.userId);
   assert.equal(reloadedSummary.kline_records.find((record) => record.segment_id === "segment-fast-rise").trainingPackId, "pack-chasing-surge");
   assert.equal(reloadedSummary.kline_records.find((record) => record.segment_id === "segment-fallback").fallback_used, true);
+
+  await resetDataBindingForTests();
+});
+
+test("data binding stores training bookmarks with aliases and stripped sampling metadata", async () => {
+  await resetDataBindingForTests();
+
+  const user = {
+    userId: "p8-training-bookmark-001",
+    maskedPhone: "138****1133",
+    phoneTail: "1133",
+    inviteSource: "微信小程序MVP"
+  };
+
+  const sessionBookmark = await createTrainingBookmarkBinding(user.userId, {
+    user,
+    bookmarkType: "session",
+    sessionId: "session-001",
+    sourceType: "custom_session",
+    title: "自选盲练整局",
+    note: "收藏整局，后续回放。"
+  });
+  const actionBookmark = await createTrainingBookmarkBinding(user.userId, {
+    user,
+    bookmark_type: "action",
+    session_id: "session-001",
+    action_id: "action-002",
+    bar_index: 7,
+    source_type: "special_training",
+    error_type: "追高冲动",
+    scene_tags: ["放量拉升", "假突破"],
+    execution_result: "执行偏离",
+    segment_id: "segment-fast-rise",
+    training_pack_id: "pack-chasing-surge",
+    sampling_result: {
+      segment_id: "segment-fast-rise",
+      training_pack_id: "pack-chasing-surge",
+      error_type: "追高冲动",
+      scene_tags: ["放量拉升", "假突破"],
+      symbol: "600000",
+      name: "样例片段",
+      period: "101",
+      start_date: "2026-06-01",
+      end_date: "2026-06-04",
+      fallback_used: false,
+      fallback_reason: "",
+      source: "segment",
+      bars: [{ date: "2026-06-01", close: 10.2 }]
+    },
+    symbol: "600000",
+    period: "101",
+    start_date: "2026-06-01",
+    end_date: "2026-06-04",
+    title: "第 7 根动作",
+    note: "这根 K 线前，先看见怕错过。"
+  });
+  const mistakeCardBookmark = await createTrainingBookmarkBinding(user.userId, {
+    user,
+    bookmarkType: "mistake_card",
+    sessionId: "session-001",
+    sourceType: "review_focus",
+    errorType: "急于翻本",
+    title: "错题卡收藏"
+  });
+
+  assert.equal(sessionBookmark.training_bookmark.bookmarkType, "session");
+  assert.equal(sessionBookmark.training_bookmark.bookmark_type, "session");
+  assert.equal(sessionBookmark.training_bookmark.sessionId, "session-001");
+  assert.equal(sessionBookmark.training_bookmark.session_id, "session-001");
+  assert.equal(actionBookmark.training_bookmark.bookmarkType, "action");
+  assert.equal(actionBookmark.training_bookmark.bookmark_type, "action");
+  assert.equal(actionBookmark.training_bookmark.actionId, "action-002");
+  assert.equal(actionBookmark.training_bookmark.action_id, "action-002");
+  assert.equal(actionBookmark.training_bookmark.barIndex, 7);
+  assert.equal(actionBookmark.training_bookmark.bar_index, 7);
+  assert.equal(actionBookmark.training_bookmark.segmentId, "segment-fast-rise");
+  assert.equal(actionBookmark.training_bookmark.segment_id, "segment-fast-rise");
+  assert.equal(actionBookmark.training_bookmark.trainingPackId, "pack-chasing-surge");
+  assert.equal(actionBookmark.training_bookmark.training_pack_id, "pack-chasing-surge");
+  assert.equal(actionBookmark.training_bookmark.samplingResult.source, "segment");
+  assert.equal(actionBookmark.training_bookmark.sampling_result.source, "segment");
+  assert.equal("bars" in actionBookmark.training_bookmark.samplingResult, false);
+  assert.equal("bars" in actionBookmark.training_bookmark.sampling_result, false);
+  assert.equal(mistakeCardBookmark.training_bookmark.bookmarkType, "mistake_card");
+
+  const enabledList = await listTrainingBookmarkBindings(user.userId);
+  assert.equal(enabledList.training_bookmarks.length, 3);
+  assert.equal(enabledList.trainingBookmarks.length, 3);
+
+  const actionList = await listTrainingBookmarkBindings(user.userId, { bookmark_type: "action" });
+  assert.deepEqual(actionList.training_bookmarks.map((bookmark) => bookmark.id), [actionBookmark.training_bookmark.id]);
+
+  const trainingPackList = await listTrainingBookmarkBindings(user.userId, { training_pack_id: "pack-chasing-surge" });
+  assert.deepEqual(trainingPackList.trainingBookmarks.map((bookmark) => bookmark.id), [actionBookmark.training_bookmark.id]);
+
+  const updated = await updateTrainingBookmarkBinding(user.userId, actionBookmark.training_bookmark.id, {
+    title: "第 7 根动作复看",
+    note: "先停十秒，再写下第一念。",
+    enabled: false
+  });
+  assert.equal(updated.training_bookmark.title, "第 7 根动作复看");
+  assert.equal(updated.training_bookmark.note, "先停十秒，再写下第一念。");
+  assert.equal(updated.training_bookmark.enabled, false);
+
+  const defaultAfterDisable = await listTrainingBookmarkBindings(user.userId);
+  assert.equal(defaultAfterDisable.training_bookmarks.length, 2);
+
+  const includeDisabled = await listTrainingBookmarkBindings(user.userId, { include_disabled: true });
+  assert.equal(includeDisabled.training_bookmarks.length, 3);
+
+  const deleted = await deleteTrainingBookmarkBinding(user.userId, mistakeCardBookmark.training_bookmark.id);
+  assert.equal(deleted.training_bookmark.enabled, false);
+
+  const summary = await getDataBindingUserSummary(user.userId);
+  assert.equal(summary.training_bookmarks.length, 3);
+  assert.equal(summary.trainingBookmarks.length, 3);
+  assert.equal(summary.training_bookmarks.find((bookmark) => bookmark.id === sessionBookmark.training_bookmark.id).segmentId, undefined);
+  assert.equal(summary.training_bookmarks.find((bookmark) => bookmark.id === actionBookmark.training_bookmark.id).sampling_result.source, "segment");
+  assert.equal("bars" in summary.training_bookmarks.find((bookmark) => bookmark.id === actionBookmark.training_bookmark.id).sampling_result, false);
+
+  unloadDataBindingForTests();
+  const reloadedSummary = await getDataBindingUserSummary(user.userId);
+  assert.equal(reloadedSummary.training_bookmarks.length, 3);
+  assert.equal(reloadedSummary.training_bookmarks.find((bookmark) => bookmark.id === actionBookmark.training_bookmark.id).trainingPackId, "pack-chasing-surge");
+  assert.equal(reloadedSummary.training_bookmarks.find((bookmark) => bookmark.id === mistakeCardBookmark.training_bookmark.id).enabled, false);
 
   await resetDataBindingForTests();
 });

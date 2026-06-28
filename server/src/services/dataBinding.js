@@ -160,6 +160,103 @@ export async function saveKLineRecordBinding({ user = {}, record = {}, source = 
   };
 }
 
+export async function listTrainingBookmarkBindings(userId, options = {}) {
+  await ensureDataBindingLoaded();
+  const record = findUserRecord(userId);
+  if (!record) return null;
+
+  const includeDisabled = parseBooleanOption(options.includeDisabled ?? options.include_disabled);
+  const trainingBookmarks = filterTrainingBookmarks(record.training_bookmarks || [], {
+    ...options,
+    includeDisabled
+  });
+
+  return {
+    user: publicUser(record),
+    training_bookmarks: trainingBookmarks,
+    trainingBookmarks,
+    count: trainingBookmarks.length,
+    include_disabled: includeDisabled,
+    includeDisabled
+  };
+}
+
+export async function getTrainingBookmarkBinding(userId, id) {
+  await ensureDataBindingLoaded();
+  const record = findUserRecord(userId);
+  if (!record) return null;
+  const bookmark = (record.training_bookmarks || []).find((item) => item.id === String(id || ""));
+  if (!bookmark) return null;
+
+  return {
+    user: publicUser(record),
+    training_bookmark: bookmark,
+    trainingBookmark: bookmark
+  };
+}
+
+export async function createTrainingBookmarkBinding(userId, input = {}) {
+  await ensureDataBindingLoaded();
+  const profile = normalizeUserProfile({ ...(input.user || {}), userId });
+  const record = ensureUser(profile);
+  const now = new Date().toISOString();
+  const bookmark = normalizeTrainingBookmark(input, {
+    userId: record.id,
+    now
+  });
+
+  record.training_bookmarks = mergeById(record.training_bookmarks || [], [bookmark]);
+  record.updated_at = now;
+  await persistDataBindingUsers();
+
+  return {
+    user: publicUser(record),
+    training_bookmark: bookmark,
+    trainingBookmark: bookmark
+  };
+}
+
+export async function updateTrainingBookmarkBinding(userId, id, patch = {}) {
+  await ensureDataBindingLoaded();
+  const record = findUserRecord(userId);
+  if (!record) return null;
+
+  const bookmarkId = String(id || "");
+  const existing = (record.training_bookmarks || []).find((item) => item.id === bookmarkId);
+  if (!existing) return null;
+
+  const now = new Date().toISOString();
+  const bookmark = normalizeTrainingBookmark(
+    {
+      ...existing,
+      ...patch,
+      id: existing.id,
+      userId: existing.userId || existing.user_id || record.id,
+      user_id: existing.user_id || existing.userId || record.id,
+      createdAt: existing.createdAt || existing.created_at,
+      created_at: existing.created_at || existing.createdAt
+    },
+    {
+      userId: record.id,
+      now,
+      existing
+    }
+  );
+  record.training_bookmarks = (record.training_bookmarks || []).map((item) => (item.id === bookmarkId ? bookmark : item));
+  record.updated_at = now;
+  await persistDataBindingUsers();
+
+  return {
+    user: publicUser(record),
+    training_bookmark: bookmark,
+    trainingBookmark: bookmark
+  };
+}
+
+export async function deleteTrainingBookmarkBinding(userId, id) {
+  return updateTrainingBookmarkBinding(userId, id, { enabled: false });
+}
+
 export async function saveRetestResultBinding({ user = {}, report = {}, comparison = [], source = "api" }) {
   await ensureDataBindingLoaded();
   const profile = normalizeUserProfile(user);
@@ -245,6 +342,8 @@ export async function getDataBindingUserSummary(userId) {
     mirror_report: record.mirror_report || null,
     training_records: record.training_records,
     kline_records: record.kline_records,
+    training_bookmarks: record.training_bookmarks || [],
+    trainingBookmarks: record.training_bookmarks || [],
     trade_reviews: record.trade_reviews || [],
     living_mirror_stats: record.living_mirror_stats || null,
     living_mirror_profile: record.living_mirror_profile || buildLivingMirrorProfile(record),
@@ -505,6 +604,13 @@ function normalizePersistedUserRecord(record) {
     baseline_report: record?.baseline_report || record?.assessment?.report || null,
     training_records: Array.isArray(record?.training_records) ? record.training_records : [],
     kline_records: Array.isArray(record?.kline_records) ? record.kline_records : [],
+    training_bookmarks: Array.isArray(record?.training_bookmarks)
+      ? record.training_bookmarks.map((item) => normalizeTrainingBookmark(item, {
+        userId: String(record?.id || ""),
+        now,
+        requireReference: false
+      })).filter(Boolean)
+      : [],
     retests: Array.isArray(record?.retests) ? record.retests : [],
     mirror_report: record?.mirror_report || null,
     trade_reviews: Array.isArray(record?.trade_reviews) ? record.trade_reviews : [],
@@ -585,6 +691,7 @@ function ensureUser(profile) {
     baseline_report: null,
     training_records: [],
     kline_records: [],
+    training_bookmarks: [],
     retests: [],
     mirror_report: null,
     trade_reviews: [],
@@ -632,6 +739,7 @@ function mergeUserRecords(canonical, incoming) {
   canonical.baseline_report = chooseEarliestReport(canonical.baseline_report, incoming.baseline_report);
   canonical.training_records = mergeTrainingRecords(canonical.training_records, incoming.training_records);
   canonical.kline_records = mergeById(canonical.kline_records, incoming.kline_records);
+  canonical.training_bookmarks = mergeById(canonical.training_bookmarks, incoming.training_bookmarks);
   canonical.retests = mergeById(canonical.retests, incoming.retests)
     .sort((a, b) => new Date(a.saved_at || 0).getTime() - new Date(b.saved_at || 0).getTime());
   canonical.mirror_report = chooseLatestByTime(canonical.mirror_report, incoming.mirror_report, "createdAt");
@@ -1211,6 +1319,85 @@ function normalizeKLineSamplingResult(value) {
   });
 
   return Object.keys(result).length ? result : undefined;
+}
+
+function normalizeTrainingBookmark(record = {}, { userId = "", now = new Date().toISOString(), existing = null, requireReference = true } = {}) {
+  if (!record || typeof record !== "object" || Array.isArray(record)) return null;
+
+  const samplingResult = normalizeKLineSamplingResult(readAliasedField(record, "samplingResult", "sampling_result", [existing?.samplingResult, existing?.sampling_result]));
+  const resolvedUserId = cleanText(readAliasedField(record, "userId", "user_id", [existing?.userId, existing?.user_id, userId]), 80);
+  const sessionId = cleanText(readAliasedField(record, "sessionId", "session_id", [existing?.sessionId, existing?.session_id]), 120);
+  const bookmarkType = cleanText(readAliasedField(record, "bookmarkType", "bookmark_type", [existing?.bookmarkType, existing?.bookmark_type, sessionId ? "session" : ""]), 40);
+
+  if (requireReference && !bookmarkType && !sessionId) {
+    const error = new Error("训练收藏至少需要 bookmarkType 或 sessionId");
+    error.statusCode = 400;
+    throw error;
+  }
+  if (!bookmarkType && !sessionId) return null;
+
+  const createdAt = cleanText(readAliasedField(record, "createdAt", "created_at", [existing?.createdAt, existing?.created_at, now]), 40);
+  const updatedAt = cleanText(readAliasedField(record, "updatedAt", "updated_at", [now]), 40);
+  const enabled = normalizeAliasBoolean(readAliasedField(record, "enabled", "enabled", [existing?.enabled, true]));
+  const bookmark = {
+    id: cleanText(record.id || existing?.id || crypto.randomUUID(), 120),
+    userId: resolvedUserId,
+    user_id: resolvedUserId,
+    bookmarkType: bookmarkType || "session",
+    bookmark_type: bookmarkType || "session",
+    title: cleanText(record.title || existing?.title || "训练收藏", 100),
+    enabled: enabled === undefined ? true : enabled,
+    createdAt,
+    created_at: createdAt,
+    updatedAt,
+    updated_at: updatedAt
+  };
+
+  addAliasedField(bookmark, "sessionId", "session_id", sessionId, (value) => cleanText(value, 120));
+  addAliasedField(bookmark, "actionId", "action_id", readAliasedField(record, "actionId", "action_id", [existing?.actionId, existing?.action_id]), (value) => cleanText(value, 120));
+  addAliasedField(bookmark, "barIndex", "bar_index", readAliasedField(record, "barIndex", "bar_index", [existing?.barIndex, existing?.bar_index]), normalizeAliasNumber);
+  addAliasedField(bookmark, "sourceType", "source_type", readAliasedField(record, "sourceType", "source_type", [existing?.sourceType, existing?.source_type]), (value) => cleanText(value, 60));
+  addAliasedField(bookmark, "errorType", "error_type", readAliasedField(record, "errorType", "error_type", [existing?.errorType, existing?.error_type, samplingResult?.errorType, samplingResult?.error_type]), (value) => cleanText(value, 80));
+  addAliasedField(bookmark, "sceneTags", "scene_tags", readAliasedField(record, "sceneTags", "scene_tags", [existing?.sceneTags, existing?.scene_tags, samplingResult?.sceneTags, samplingResult?.scene_tags]), normalizeAliasList);
+  addAliasedField(bookmark, "executionResult", "execution_result", readAliasedField(record, "executionResult", "execution_result", [existing?.executionResult, existing?.execution_result]), (value) => cleanText(value, 120));
+  addAliasedField(bookmark, "segmentId", "segment_id", readAliasedField(record, "segmentId", "segment_id", [existing?.segmentId, existing?.segment_id, samplingResult?.segmentId, samplingResult?.segment_id]), (value) => cleanText(value, 100));
+  addAliasedField(bookmark, "trainingPackId", "training_pack_id", readAliasedField(record, "trainingPackId", "training_pack_id", [existing?.trainingPackId, existing?.training_pack_id, samplingResult?.trainingPackId, samplingResult?.training_pack_id]), (value) => cleanText(value, 100));
+  addAliasedField(bookmark, "samplingResult", "sampling_result", samplingResult);
+  bookmark.symbol = cleanText(record.symbol || existing?.symbol || samplingResult?.symbol || "", 40);
+  bookmark.period = cleanText(record.period || existing?.period || samplingResult?.period || "", 40);
+  addAliasedField(bookmark, "startDate", "start_date", readAliasedField(record, "startDate", "start_date", [existing?.startDate, existing?.start_date, samplingResult?.startDate, samplingResult?.start_date]), (value) => cleanText(value, 40));
+  addAliasedField(bookmark, "endDate", "end_date", readAliasedField(record, "endDate", "end_date", [existing?.endDate, existing?.end_date, samplingResult?.endDate, samplingResult?.end_date]), (value) => cleanText(value, 40));
+  bookmark.note = cleanText(record.note || existing?.note || "", 240);
+
+  Object.keys(bookmark).forEach((key) => {
+    if (!hasFieldValue(bookmark[key]) || (Array.isArray(bookmark[key]) && bookmark[key].length === 0)) {
+      delete bookmark[key];
+    }
+  });
+
+  return bookmark;
+}
+
+function filterTrainingBookmarks(bookmarks = [], options = {}) {
+  const includeDisabled = parseBooleanOption(options.includeDisabled ?? options.include_disabled);
+  const bookmarkType = cleanText(readAliasedField(options, "bookmarkType", "bookmark_type"), 40);
+  const sourceType = cleanText(readAliasedField(options, "sourceType", "source_type"), 60);
+  const errorType = cleanText(readAliasedField(options, "errorType", "error_type"), 80);
+  const segmentId = cleanText(readAliasedField(options, "segmentId", "segment_id"), 100);
+  const trainingPackId = cleanText(readAliasedField(options, "trainingPackId", "training_pack_id"), 100);
+
+  return bookmarks
+    .filter((bookmark) => includeDisabled || bookmark.enabled !== false)
+    .filter((bookmark) => !bookmarkType || bookmark.bookmarkType === bookmarkType || bookmark.bookmark_type === bookmarkType)
+    .filter((bookmark) => !sourceType || bookmark.sourceType === sourceType || bookmark.source_type === sourceType)
+    .filter((bookmark) => !errorType || bookmark.errorType === errorType || bookmark.error_type === errorType)
+    .filter((bookmark) => !segmentId || bookmark.segmentId === segmentId || bookmark.segment_id === segmentId)
+    .filter((bookmark) => !trainingPackId || bookmark.trainingPackId === trainingPackId || bookmark.training_pack_id === trainingPackId)
+    .sort((a, b) => new Date(b.updatedAt || b.updated_at || b.createdAt || b.created_at || 0).getTime() - new Date(a.updatedAt || a.updated_at || a.createdAt || a.created_at || 0).getTime());
+}
+
+function parseBooleanOption(value) {
+  return value === true || value === "true" || value === "1";
 }
 
 function normalizeTradeReviewOcrDraft(draft) {
