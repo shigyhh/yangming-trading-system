@@ -12,6 +12,7 @@
     "test:admin": "node --test src/features/admin/admin-data.test.mjs src/features/admin/assistant-candidate-dry-run.test.mjs src/features/admin/assistant-candidate-export.test.mjs src/features/admin/assistant-candidate-list.test.mjs src/features/admin/training-pack-admin.test.mjs src/features/admin/kline-segment-admin.test.mjs",
     "test:report-schema": "node --test ../packages/contracts/assessment-report-schema.test.mjs",
     "test:living-mirror-contract": "node --test ../packages/contracts/living-mirror-contract.test.mjs",
+    "test:living-mirror-center": "node --test src/app/living-mirror-center/page.test.mjs",
     "test:reflection-domain": "node --test ../packages/contracts/reflection-domain-contract.test.mjs",
     "test:personality": "node --test ../packages/personality/index.test.mjs",
     "test:report-adapter": "node --test src/features/assessment/report-adapter.test.mjs",
