@@ -427,6 +427,30 @@ test("living mirror growth page prefers server projection while keeping local fa
   })
 })
 
+test("living mirror growth page declares unified data source and visible fallback states", async () => {
+  const pageSource = await readFile(pageUrl, "utf8")
+
+  ;[
+    "fetchDashboardSummary",
+    "fetchDashboardWeeklySummary",
+    "fetchMirrorArchiveBinding",
+    "GrowthDataSourceKey",
+    "server_projection",
+    "dashboard_archive_fallback",
+    "legacy_local_recompute",
+    "unavailable",
+    "数据来源",
+    "数据来自服务器成长谱投影。",
+    "成长谱服务暂不可用，当前使用数据看板与档案馆信息生成辅助视图。",
+    "成长谱服务暂不可用，当前使用旧版本地计算结果，仅供参考。",
+    "暂无足够数据生成成长谱。完成真实复盘和K线训练后再查看。",
+    "/living-mirror-center",
+    "/mirror-archive",
+  ].forEach((marker) => {
+    assert.equal(pageSource.includes(marker), true, `growth unified source missing ${marker}`)
+  })
+})
+
 test("living mirror growth adapter maps server projection field names into the page profile", async () => {
   const { toGrowthProfileFromProjection } = await loadGrowthProjectionAdapter()
   const fallbackProfile = makeGrowthProfileFallback()
@@ -480,6 +504,43 @@ test("living mirror growth adapter maps server projection field names into the p
   assert.equal(fallbackOnly.nextCycleFocus.nextActionText, fallbackProfile.nextCycleFocus.nextActionText)
 })
 
+test("living mirror growth dashboard archive fallback is marked and keeps data gaps", async () => {
+  const { toDashboardArchiveGrowthFallback, mergeGrowthDataGaps } = await loadGrowthProjectionAdapter()
+  const fallbackProfile = makeGrowthProfileFallback()
+  const dashboard = makeDashboardSummary()
+  const weekly = makeWeeklySummary()
+  const archive = makeMirrorArchiveBinding()
+  const profile = toDashboardArchiveGrowthFallback({
+    dashboard,
+    weekly,
+    archive,
+    fallbackProfile,
+  })
+
+  assert.equal(profile.growth_profile_id, "dashboard_archive_growth_profile")
+  assert.equal(profile.highFrequencyThoughts[0].label, "怕错过")
+  assert.equal(profile.repeatedBehaviors[0].label, "追高冲动")
+  assert.equal(profile.affectedDimensions[0].label, "放量拉升")
+  assert.equal(profile.trainingContinuity.completedGrowthDays, 5)
+  assert.equal(profile.trainingContinuity.trainingConsistencyScore, 60)
+  assert.equal(profile.mirrorLifeStage.label, "证据成谱")
+  assert.equal(profile.nextCycleFocus.nextActionText, "下周先守一次停十秒")
+  assert.equal(profile.sourceSummary.tradeReviewCount, 4)
+  assert.equal(profile.sourceSummary.dailyGrowthCount, 3)
+  assert.equal(profile.sourceSummary.heartProofCount, 2)
+
+  const gaps = mergeGrowthDataGaps({
+    projectionGaps: [{ type: "missing_trade_review", message: "投影缺真实复盘" }],
+    dashboardGaps: dashboard.dataGaps,
+    weeklyGaps: weekly.dataGaps,
+    fallbackGaps: fallbackProfile.dataGaps,
+  })
+
+  assert.equal(gaps.some((gap) => gap.type === "missingBookmarks"), true)
+  assert.equal(gaps.some((gap) => gap.type === "missingExecutionPlans"), true)
+  assert.equal(gaps.some((gap) => gap.type === "missing_trade_review"), true)
+})
+
 async function loadGrowthProjectionAdapter() {
   const source = await readFile(pageUrl, "utf8")
   const start = source.indexOf("function hasGrowthProjectionData")
@@ -488,7 +549,7 @@ async function loadGrowthProjectionAdapter() {
   assert.ok(start >= 0, "page should expose growth projection adapter helpers")
   assert.ok(end > start, "page should keep adapter helpers before SummaryMetric")
 
-  const adapterSource = `${source.slice(start, end)}\nmodule.exports = { toGrowthProfileFromProjection, hasGrowthProjectionData }`
+  const adapterSource = `${source.slice(start, end)}\nmodule.exports = { toGrowthProfileFromProjection, hasGrowthProjectionData, toDashboardArchiveGrowthFallback, mergeGrowthDataGaps }`
   const compiled = ts.transpileModule(adapterSource, {
     compilerOptions: {
       module: ts.ModuleKind.CommonJS,
@@ -498,10 +559,94 @@ async function loadGrowthProjectionAdapter() {
   }).outputText
   const cjsModule = { exports: {} }
   const exports = cjsModule.exports
-  const module = cjsModule
+  const cjsRuntimeModule = cjsModule
 
-  new Function("module", "exports", compiled)(module, exports)
+  new Function("module", "exports", compiled)(cjsRuntimeModule, exports)
   return cjsModule.exports
+}
+
+function makeDashboardSummary() {
+  return {
+    overview: {
+      tradeReviewCount: 4,
+      trade_review_count: 4,
+      klineTrainingCount: 3,
+      kline_training_count: 3,
+      trainingBookmarkCount: 2,
+      training_bookmark_count: 2,
+      activeDays: 5,
+      active_days: 5,
+    },
+    execution: {
+      consistencyRate: 60,
+      consistency_rate: 60,
+    },
+    mistakes: {
+      topErrorTypes: [{ key: "chase", label: "追高冲动", count: 3 }],
+      top_error_types: [{ key: "chase", label: "追高冲动", count: 3 }],
+    },
+    firstThoughts: {
+      topFirstThoughts: [{ key: "fomo", label: "怕错过", count: 5 }],
+      top_first_thoughts: [{ key: "fomo", label: "怕错过", count: 5 }],
+    },
+    triggerScenes: {
+      topTriggerScenes: [{ key: "volume_up", label: "放量拉升", count: 2 }],
+      top_trigger_scenes: [{ key: "volume_up", label: "放量拉升", count: 2 }],
+    },
+    training: {
+      bySourceType: [{ key: "sampling", label: "抽题训练", count: 3 }],
+      by_source_type: [{ key: "sampling", label: "抽题训练", count: 3 }],
+    },
+    bookmarks: {
+      totalCount: 2,
+      total_count: 2,
+    },
+    archive: {
+      totalCount: 9,
+      total_count: 9,
+    },
+    dataGaps: [{ type: "missingBookmarks", label: "训练收藏样本不足", message: "训练收藏样本不足" }],
+    data_gaps: [{ type: "missingBookmarks", label: "训练收藏样本不足", message: "训练收藏样本不足" }],
+    generatedAt: "2026-06-29T08:00:00.000Z",
+  }
+}
+
+function makeWeeklySummary() {
+  return {
+    topErrorTypes: [{ key: "chase", label: "追高冲动", count: 2 }],
+    top_error_types: [{ key: "chase", label: "追高冲动", count: 2 }],
+    topFirstThoughts: [{ key: "fomo", label: "怕错过", count: 4 }],
+    top_first_thoughts: [{ key: "fomo", label: "怕错过", count: 4 }],
+    topTriggerScenes: [{ key: "volume_up", label: "放量拉升", count: 2 }],
+    top_trigger_scenes: [{ key: "volume_up", label: "放量拉升", count: 2 }],
+    nextWeekTrainingPlan: ["下周先守一次停十秒"],
+    next_week_training_plan: ["下周先守一次停十秒"],
+    dataGaps: [{ type: "missingExecutionPlans", label: "缺少执行计划数据", message: "缺少执行计划数据" }],
+    data_gaps: [{ type: "missingExecutionPlans", label: "缺少执行计划数据", message: "缺少执行计划数据" }],
+    generatedAt: "2026-06-29T08:00:00.000Z",
+  }
+}
+
+function makeMirrorArchiveBinding() {
+  return {
+    archiveIndex: {
+      totalCount: 9,
+      total_count: 9,
+      latestItems: [
+        { id: "archive_1", type: "training_bookmark", title: "训练收藏", summary: "收藏了一次停十秒训练", createdAt: "2026-06-28T08:00:00.000Z", updatedAt: "2026-06-28T08:00:00.000Z" },
+      ],
+      latest_items: [
+        { id: "archive_1", type: "training_bookmark", title: "训练收藏", summary: "收藏了一次停十秒训练", createdAt: "2026-06-28T08:00:00.000Z", updatedAt: "2026-06-28T08:00:00.000Z" },
+      ],
+    },
+    mirrorArchive: {
+      archiveIndex: {
+        totalCount: 9,
+        total_count: 9,
+      },
+      items: [],
+    },
+  }
 }
 
 function makeGrowthProfileFallback() {

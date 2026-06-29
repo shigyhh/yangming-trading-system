@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import type { ReactNode } from "react"
+import type { DashboardSummary, WeeklyMirrorSummary } from "@yangming/contracts/data-binding"
 import type { LivingMirrorGrowthProjection } from "@yangming/contracts/living-mirror"
 
 import {
@@ -13,8 +14,12 @@ import {
   StatusPill,
 } from "@/features/assessment/components"
 import {
+  fetchDashboardSummary,
+  fetchDashboardWeeklySummary,
+  fetchMirrorArchiveBinding,
   fetchLivingMirrorGrowthProjection,
   getCurrentDataBindingUserId,
+  type MirrorArchiveBindingResponse,
 } from "@/features/data-binding/api-client"
 import { recomputeAndSaveGrowthProfile } from "@/features/living-mirror-growth/growthProfileStorage"
 import type {
@@ -29,38 +34,114 @@ import type {
 
 const complianceText = "本系统仅用于交易心理训练与行为复盘，不预测行情，不提供买卖建议，不构成任何投资建议。"
 
+type GrowthDataSourceKey =
+  | "server_projection"
+  | "dashboard_archive_fallback"
+  | "legacy_local_recompute"
+  | "unavailable"
+
+type GrowthDataSourceState = {
+  key: GrowthDataSourceKey
+  label: string
+  message: string
+}
+
+type DashboardArchiveFallbackPayload = {
+  dashboard?: DashboardSummary | null
+  weekly?: WeeklyMirrorSummary | null
+  archive?: MirrorArchiveBindingResponse | null
+  fallbackProfile: GrowthProfile
+}
+
+function getGrowthDataSourceState(key: GrowthDataSourceKey): GrowthDataSourceState {
+  const states: Record<GrowthDataSourceKey, GrowthDataSourceState> = {
+    server_projection: {
+      key,
+      label: "server_projection",
+      message: "数据来自服务器成长谱投影。",
+    },
+    dashboard_archive_fallback: {
+      key,
+      label: "dashboard_archive_fallback",
+      message: "成长谱服务暂不可用，当前使用数据看板与档案馆信息生成辅助视图。",
+    },
+    legacy_local_recompute: {
+      key,
+      label: "legacy_local_recompute",
+      message: "成长谱服务暂不可用，当前使用旧版本地计算结果，仅供参考。",
+    },
+    unavailable: {
+      key,
+      label: "unavailable",
+      message: "暂无足够数据生成成长谱。完成真实复盘和K线训练后再查看。",
+    },
+  }
+
+  return states[key]
+}
+
 export default function LivingMirrorGrowthPage() {
   const [profile, setProfile] = useState<GrowthProfile | null>(null)
+  const [dataSource, setDataSource] = useState<GrowthDataSourceState>(getGrowthDataSourceState("unavailable"))
+  const [dataGaps, setDataGaps] = useState<GrowthProfileDataGap[]>([])
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
     let isActive = true
 
     async function loadGrowthProfile() {
-      const fallbackProfile = recomputeAndSaveGrowthProfile().growthProfile
       const userId = getCurrentDataBindingUserId()
+      const projectionFallbackProfile = createUnavailableGrowthProfile(userId)
 
-      if (!userId) {
-        applyGrowthProfile(fallbackProfile)
+      if (userId) {
+        try {
+          const result = await fetchLivingMirrorGrowthProjection(userId)
+          if (result.ok && hasGrowthProjectionData(result.data)) {
+            const projectionProfile = toGrowthProfileFromProjection(result.data, projectionFallbackProfile)
+            applyGrowthProfile(projectionProfile, "server_projection", mergeGrowthDataGaps({
+              projectionGaps: projectionProfile.dataGaps,
+            }))
+            return
+          }
+        } catch {
+          // Keep loading through dashboard/archive and local fallback paths.
+        }
+      }
+
+      const dashboardArchiveFallback = await loadDashboardArchiveFallback(projectionFallbackProfile)
+      if (dashboardArchiveFallback) {
+        applyGrowthProfile(
+          dashboardArchiveFallback.profile,
+          "dashboard_archive_fallback",
+          dashboardArchiveFallback.dataGaps,
+        )
         return
       }
 
       try {
-        const result = await fetchLivingMirrorGrowthProjection(userId)
-        if (result.ok && hasGrowthProjectionData(result.data)) {
-          applyGrowthProfile(toGrowthProfileFromProjection(result.data, fallbackProfile))
+        const legacyProfile = recomputeAndSaveGrowthProfile().growthProfile
+        if (hasGrowthProfileEvidence(legacyProfile)) {
+          applyGrowthProfile(legacyProfile, "legacy_local_recompute", mergeGrowthDataGaps({
+            fallbackGaps: legacyProfile.dataGaps,
+          }))
           return
         }
       } catch {
-        // Quietly keep the existing local growth profile fallback.
+        // Keep the final empty state quiet; the page will show a gentle data gap.
       }
 
-      applyGrowthProfile(fallbackProfile)
+      applyGrowthProfile(projectionFallbackProfile, "unavailable", projectionFallbackProfile.dataGaps)
     }
 
-    function applyGrowthProfile(nextProfile: GrowthProfile) {
+    function applyGrowthProfile(
+      nextProfile: GrowthProfile,
+      sourceKey: GrowthDataSourceKey,
+      nextDataGaps: GrowthProfileDataGap[] = nextProfile.dataGaps,
+    ) {
       if (!isActive) return
       setProfile(nextProfile)
+      setDataSource(getGrowthDataSourceState(sourceKey))
+      setDataGaps(nextDataGaps)
       setLoaded(true)
     }
 
@@ -93,6 +174,9 @@ export default function LivingMirrorGrowthPage() {
         <section className="growth-hero">
           <div className="min-w-0">
             <StatusPill>活镜成长谱</StatusPill>
+            <div className="mt-4">
+              <DataSourceBadge dataSource={dataSource} />
+            </div>
             <h1 className="mt-7 font-story text-[clamp(2.6rem,6vw,5.8rem)] font-light leading-[1.12] tracking-[.08em] text-[rgba(244,235,221,.94)]">
               活镜成长谱
             </h1>
@@ -111,6 +195,8 @@ export default function LivingMirrorGrowthPage() {
             </p>
           </GlassPanel>
         </section>
+
+        <DataSourceNotice dataSource={dataSource} />
 
         <section className="mt-6">
           <GlassPanel className="growth-summary-card">
@@ -134,6 +220,8 @@ export default function LivingMirrorGrowthPage() {
             </div>
           </GlassPanel>
         </section>
+
+        <DataGapsPanel dataGaps={dataGaps.length ? dataGaps : profile.dataGaps} />
 
         <section className="growth-grid mt-5">
           <InsightSection
@@ -212,9 +300,12 @@ export default function LivingMirrorGrowthPage() {
           </GlassPanel>
         </section>
 
-        <div className="mt-6 grid gap-3 md:grid-cols-3">
+        <div className="mt-6 grid gap-3 md:grid-cols-4">
           <SecondaryLink href="/practice-change?preview=1" className="w-full">
             继续今日修行
+          </SecondaryLink>
+          <SecondaryLink href="/living-mirror-center" className="w-full">
+            回到心镜数据中枢
           </SecondaryLink>
           <SecondaryLink href="/mirror-archive" className="w-full">
             回到心镜档案
@@ -306,6 +397,278 @@ function hasGrowthProjectionData(projection: LivingMirrorGrowthProjection | null
     projection.trainingContinuity ||
     projection.nextCycleFocus?.title ||
     projection.nextCycleFocus?.action,
+  )
+}
+
+async function loadDashboardArchiveFallback(fallbackProfile: GrowthProfile) {
+  const [dashboardResult, weeklyResult, archiveResult] = await Promise.allSettled([
+    fetchDashboardSummary("30d"),
+    fetchDashboardWeeklySummary("current"),
+    fetchMirrorArchiveBinding(),
+  ])
+
+  const dashboard = getFulfilledBindingData<DashboardSummary>(dashboardResult)
+  const weekly = getFulfilledBindingData<WeeklyMirrorSummary>(weeklyResult)
+  const archive = getFulfilledBindingData<MirrorArchiveBindingResponse>(archiveResult)
+
+  if (!hasDashboardArchiveFallbackData(dashboard, weekly, archive)) return null
+
+  const profile = toDashboardArchiveGrowthFallback({
+    dashboard,
+    weekly,
+    archive,
+    fallbackProfile,
+  })
+
+  return {
+    profile,
+    dataGaps: mergeGrowthDataGaps({
+      dashboardGaps: getDashboardGaps(dashboard),
+      weeklyGaps: getDashboardGaps(weekly),
+      fallbackGaps: profile.dataGaps,
+    }),
+  }
+}
+
+function getFulfilledBindingData<T>(result: PromiseSettledResult<{ ok: true; data: T } | { ok: false; error: string }>) {
+  if (result.status !== "fulfilled" || !result.value.ok) return null
+  return result.value.data
+}
+
+function toDashboardArchiveGrowthFallback({
+  dashboard,
+  weekly,
+  archive,
+  fallbackProfile,
+}: DashboardArchiveFallbackPayload): GrowthProfile {
+  const dashboardRecord = toRecord(dashboard)
+  const weeklyRecord = toRecord(weekly)
+  const overview = toRecord(dashboardRecord.overview)
+  const execution = toRecord(dashboardRecord.execution)
+  const mistakeItems = pickCountItems(
+    toRecord(dashboardRecord.mistakes).topErrorTypes,
+    toRecord(dashboardRecord.mistakes).top_error_types,
+    weeklyRecord.topErrorTypes,
+    weeklyRecord.top_error_types,
+  )
+  const thoughtItems = pickCountItems(
+    toRecord(dashboardRecord.firstThoughts).topFirstThoughts,
+    toRecord(dashboardRecord.first_thoughts).top_first_thoughts,
+    weeklyRecord.topFirstThoughts,
+    weeklyRecord.top_first_thoughts,
+  )
+  const sceneItems = pickCountItems(
+    toRecord(dashboardRecord.triggerScenes).topTriggerScenes,
+    toRecord(dashboardRecord.trigger_scenes).top_trigger_scenes,
+    weeklyRecord.topTriggerScenes,
+    weeklyRecord.top_trigger_scenes,
+  )
+  const nextWeekPlan = stringArray(weeklyRecord.nextWeekTrainingPlan).length
+    ? stringArray(weeklyRecord.nextWeekTrainingPlan)
+    : stringArray(weeklyRecord.next_week_training_plan)
+
+  const tradeReviewCount = numberValue(overview.tradeReviewCount ?? overview.trade_review_count, fallbackProfile.tradeReviewCount)
+  const klineTrainingCount = numberValue(overview.klineTrainingCount ?? overview.kline_training_count, fallbackProfile.dailyGrowthCount)
+  const trainingBookmarkCount = numberValue(overview.trainingBookmarkCount ?? overview.training_bookmark_count, fallbackProfile.heartProofCount)
+  const activeDays = numberValue(overview.activeDays ?? overview.active_days, fallbackProfile.trainingContinuity.completedGrowthDays)
+  const consistencyRate = numberValue(execution.consistencyRate ?? execution.consistency_rate, fallbackProfile.trainingContinuity.trainingConsistencyScore)
+  const archiveCount = getArchiveTotalCount(archive)
+  const updatedAt = stringValue(dashboardRecord.generatedAt) || stringValue(dashboardRecord.generated_at) || stringValue(weeklyRecord.generatedAt) || stringValue(weeklyRecord.generated_at) || fallbackProfile.updatedAt
+
+  return {
+    ...fallbackProfile,
+    growth_profile_id: "dashboard_archive_growth_profile",
+    growthProfileId: "dashboard_archive_growth_profile",
+    highFrequencyThoughts: toGrowthThoughts(thoughtItems, fallbackProfile.highFrequencyThoughts),
+    repeatedBehaviors: toGrowthBehaviors(mistakeItems, fallbackProfile.repeatedBehaviors),
+    affectedDimensions: toGrowthDimensions(sceneItems, fallbackProfile.affectedDimensions),
+    trainingContinuity: {
+      ...fallbackProfile.trainingContinuity,
+      completedGrowthDays: activeDays,
+      currentStreak: activeDays,
+      longestStreak: Math.max(activeDays, fallbackProfile.trainingContinuity.longestStreak),
+      trainingConsistencyScore: consistencyRate,
+    },
+    mirrorLifeStage: {
+      stage: "guarding_action",
+      label: "证据成谱",
+      description: "成长谱服务暂不可用，当前以数据看板与档案馆证据生成辅助视图。",
+    },
+    nextCycleFocus: {
+      ...fallbackProfile.nextCycleFocus,
+      title: nextWeekPlan[0] ? "本周照见重点" : fallbackProfile.nextCycleFocus.title,
+      reason: archiveCount > 0
+        ? `已从 ${archiveCount} 条档案证据中整理辅助视图。`
+        : "数据看板已有部分证据，先按本周摘要继续观察。",
+      nextActionText: nextWeekPlan[0] || fallbackProfile.nextCycleFocus.nextActionText,
+      relatedDimensions: sceneItems.length ? sceneItems.slice(0, 3).map((item) => item.label) : fallbackProfile.nextCycleFocus.relatedDimensions,
+      sourceType: "training",
+      sourceId: "dashboard_archive_fallback",
+    },
+    dataGaps: mergeGrowthDataGaps({
+      dashboardGaps: getDashboardGaps(dashboard),
+      weeklyGaps: getDashboardGaps(weekly),
+      fallbackGaps: fallbackProfile.dataGaps,
+    }),
+    topBehaviorLoopIds: fallbackProfile.topBehaviorLoopIds,
+    sourceSummary: {
+      ...fallbackProfile.sourceSummary,
+      dailyGrowthCount: klineTrainingCount,
+      heartProofCount: trainingBookmarkCount,
+      tradeReviewCount,
+      behaviorLoopCount: Math.max(fallbackProfile.sourceSummary.behaviorLoopCount, mistakeItems.length),
+    },
+    dailyGrowthCount: klineTrainingCount,
+    heartProofCount: trainingBookmarkCount,
+    tradeReviewCount,
+    behaviorLoopCount: Math.max(fallbackProfile.behaviorLoopCount, mistakeItems.length),
+    computedAt: updatedAt,
+    computedAtHistory: mergeComputedHistory(updatedAt, fallbackProfile.computedAtHistory),
+    updatedAt,
+  }
+}
+
+function mergeGrowthDataGaps({
+  projectionGaps = [],
+  dashboardGaps = [],
+  weeklyGaps = [],
+  fallbackGaps = [],
+}: {
+  projectionGaps?: unknown[]
+  dashboardGaps?: unknown[]
+  weeklyGaps?: unknown[]
+  fallbackGaps?: unknown[]
+}): GrowthProfileDataGap[] {
+  const merged = [
+    ...projectionGaps,
+    ...dashboardGaps,
+    ...weeklyGaps,
+    ...fallbackGaps,
+  ]
+    .map(toGrowthDataGap)
+    .filter((gap): gap is GrowthProfileDataGap => Boolean(gap))
+
+  const seen = new Set<string>()
+  return merged.filter((gap) => {
+    const key = `${gap.type}:${gap.message}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
+function createUnavailableGrowthProfile(userId?: string): GrowthProfile {
+  const now = new Date().toISOString()
+  return {
+    schemaVersion: "growth_profile_v1",
+    growth_profile_id: "growth_profile_unavailable",
+    growthProfileId: "growth_profile_unavailable",
+    status: "active",
+    userId,
+    anonymousId: "web-next-anonymous",
+    primaryPersona: "待照见",
+    secondaryPersona: "待照见",
+    sevenDayPrescription: [],
+    recommendedCamp: "",
+    highFrequencyThoughts: [],
+    trainingContinuity: {
+      completedGrowthDays: 0,
+      currentStreak: 0,
+      longestStreak: 0,
+      missedDays: 0,
+      trainingConsistencyScore: 0,
+    },
+    affectedDimensions: [],
+    repeatedBehaviors: [],
+    topBehaviorLoopIds: [],
+    mirrorLifeStage: {
+      stage: "initial_reflection",
+      label: "待成谱",
+      description: "暂无足够数据形成稳定成长谱。",
+    },
+    nextCycleFocus: {
+      title: "先累积证据",
+      reason: "完成真实复盘和K线训练后，系统会开始形成成长谱。",
+      nextActionText: "完成一次真实复盘或K线训练。",
+      relatedDimensions: [],
+      sourceType: "training",
+      sourceId: "unavailable",
+    },
+    dataGaps: [
+      {
+        type: "missing_trade_review",
+        message: "暂无足够数据生成成长谱。完成真实复盘和K线训练后再查看。",
+      },
+    ],
+    retestTrend: {
+      retestCount: 0,
+      improvedDimensions: [],
+      declinedDimensions: [],
+    },
+    retestSummary: {
+      retestCount: 0,
+      baselineScores: {},
+      currentScores: {},
+      deltaScores: {},
+      improvedDimensions: [],
+      declinedDimensions: [],
+      stableDimensions: [],
+      trainingEvidenceSummary: "",
+      highFrequencyThoughtChange: "",
+      repeatedBehaviorChange: "",
+      nextCycleFocus: {
+        title: "先累积证据",
+        reason: "完成真实复盘和K线训练后，系统会开始形成成长谱。",
+        nextActionText: "完成一次真实复盘或K线训练。",
+        relatedDimensions: [],
+      },
+      conclusionText: "",
+    },
+    sourceSummary: {
+      mirrorReportCount: 0,
+      dailyGrowthCount: 0,
+      heartProofCount: 0,
+      tradeReviewCount: 0,
+      behaviorLoopCount: 0,
+      retestChangeCount: 0,
+    },
+    dailyGrowthCount: 0,
+    heartProofCount: 0,
+    tradeReviewCount: 0,
+    behaviorLoopCount: 0,
+    retestChangeCount: 0,
+    complianceText: "本成长谱仅用于交易心理觉察、复盘训练与行为管理，不构成投资建议。",
+    computedAt: now,
+    computedAtHistory: [now],
+    updatedAt: now,
+  }
+}
+
+function hasDashboardArchiveFallbackData(
+  dashboard: DashboardSummary | null,
+  weekly: WeeklyMirrorSummary | null,
+  archive: MirrorArchiveBindingResponse | null,
+) {
+  return Boolean(
+    getArchiveTotalCount(archive) ||
+    pickCountItems(toRecord(toRecord(dashboard).firstThoughts).topFirstThoughts, toRecord(toRecord(dashboard).first_thoughts).top_first_thoughts).length ||
+    pickCountItems(toRecord(toRecord(dashboard).mistakes).topErrorTypes, toRecord(toRecord(dashboard).mistakes).top_error_types).length ||
+    pickCountItems(toRecord(toRecord(dashboard).triggerScenes).topTriggerScenes, toRecord(toRecord(dashboard).trigger_scenes).top_trigger_scenes).length ||
+    pickCountItems(toRecord(weekly).topFirstThoughts, toRecord(weekly).top_first_thoughts).length ||
+    getDashboardGaps(dashboard).length ||
+    getDashboardGaps(weekly).length,
+  )
+}
+
+function hasGrowthProfileEvidence(profile: GrowthProfile) {
+  return Boolean(
+    profile.highFrequencyThoughts.length ||
+    profile.repeatedBehaviors.length ||
+    profile.affectedDimensions.length ||
+    profile.sourceSummary.tradeReviewCount ||
+    profile.sourceSummary.dailyGrowthCount ||
+    profile.sourceSummary.heartProofCount ||
+    profile.trainingContinuity.completedGrowthDays,
   )
 }
 
@@ -500,6 +863,103 @@ function normalizeProjectionSourceSummary(
   }
 }
 
+function getDashboardGaps(source: unknown) {
+  const record = toRecord(source)
+  const gaps = Array.isArray(record.dataGaps) ? record.dataGaps : record.data_gaps
+  return Array.isArray(gaps) ? gaps : []
+}
+
+function toGrowthDataGap(gap: unknown): GrowthProfileDataGap | null {
+  const record = toRecord(gap)
+  const type = stringValue(record.type) || stringValue(record.key)
+  const message = stringValue(record.message) || stringValue(record.label)
+  if (!type && !message) return null
+
+  return {
+    type: (type || "growth_data_gap") as GrowthProfileDataGap["type"],
+    message: message || "当前成长谱数据仍在累积。",
+  }
+}
+
+function pickCountItems(...sources: unknown[]) {
+  for (const source of sources) {
+    if (!Array.isArray(source) || !source.length) continue
+    const items = source
+      .map(toCountItem)
+      .filter((item): item is { key: string; label: string; count: number } => Boolean(item))
+    if (items.length) return items
+  }
+  return []
+}
+
+function toCountItem(item: unknown) {
+  const record = toRecord(item)
+  const label = stringValue(record.label) || stringValue(record.name) || stringValue(record.key)
+  if (!label) return null
+
+  return {
+    key: stringValue(record.key) || label,
+    label,
+    count: numberValue(record.count, 1),
+  }
+}
+
+function toGrowthThoughts(
+  items: { key: string; label: string; count: number }[],
+  fallbackThoughts: GrowthProfileThought[],
+): GrowthProfileThought[] {
+  if (!items.length) return fallbackThoughts
+  return items.map((item, index) => ({
+    thoughtType: item.key || `dashboard_thought_${index + 1}`,
+    label: item.label,
+    count: item.count,
+    weight: item.count,
+    evidenceIds: [],
+  }))
+}
+
+function toGrowthBehaviors(
+  items: { key: string; label: string; count: number }[],
+  fallbackBehaviors: GrowthProfileRepeatedBehavior[],
+): GrowthProfileRepeatedBehavior[] {
+  if (!items.length) return fallbackBehaviors
+  return items.map((item, index) => ({
+    behaviorType: item.key || `dashboard_behavior_${index + 1}`,
+    label: item.label,
+    count: item.count,
+    evidenceIds: [],
+  }))
+}
+
+function toGrowthDimensions(
+  items: { key: string; label: string; count: number }[],
+  fallbackDimensions: GrowthProfileAffectedDimension[],
+): GrowthProfileAffectedDimension[] {
+  if (!items.length) return fallbackDimensions
+  return items.map((item) => ({
+    label: item.label,
+    weight: item.count,
+    sourceTypes: ["trade_review"],
+    evidenceIds: [],
+  }))
+}
+
+function getArchiveTotalCount(archive: MirrorArchiveBindingResponse | null | undefined) {
+  const archiveRecord = toRecord(archive)
+  const archiveIndex = toRecord(archiveRecord.archiveIndex || archiveRecord.archive_index)
+  const mirrorArchive = toRecord(archiveRecord.mirrorArchive || archiveRecord.mirror_archive)
+  const mirrorArchiveIndex = toRecord(mirrorArchive.archiveIndex || mirrorArchive.archive_index)
+
+  return numberValue(
+    archiveIndex.totalCount ?? archiveIndex.total_count ?? mirrorArchiveIndex.totalCount ?? mirrorArchiveIndex.total_count,
+    0,
+  )
+}
+
+function toRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" ? value as Record<string, unknown> : {}
+}
+
 function getContinuityScoreFromEvents(record: Record<string, unknown>) {
   const totalEvents = numberValue(record.totalEvents, 0)
   const activeDays = numberValue(record.activeDays, 0)
@@ -659,5 +1119,62 @@ function TagRow({ labels }: { labels: string[] }) {
         </span>
       ))}
     </div>
+  )
+}
+
+function DataSourceBadge({ dataSource }: { dataSource: GrowthDataSourceState }) {
+  return (
+    <span className="inline-flex max-w-full items-center gap-2 rounded-full border border-[rgba(217,189,122,.16)] bg-[rgba(216,183,111,.055)] px-3 py-1.5 font-function text-xs font-semibold tracking-[.12em] text-[rgba(216,183,111,.82)]">
+      <span>数据来源</span>
+      <span className="truncate text-[rgba(244,235,221,.68)]">{dataSource.label}</span>
+    </span>
+  )
+}
+
+function DataSourceNotice({ dataSource }: { dataSource: GrowthDataSourceState }) {
+  if (dataSource.key === "server_projection") {
+    return (
+      <div className="mt-5 rounded-[8px] border border-[rgba(95,132,117,.2)] bg-[rgba(95,132,117,.07)] px-4 py-3">
+        <p className="font-function text-sm leading-7 text-[rgba(220,212,195,.66)]">{dataSource.message}</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="mt-5 rounded-[8px] border border-[rgba(216,183,111,.18)] bg-[rgba(216,183,111,.055)] px-4 py-3">
+      <p className="font-function text-sm leading-7 text-[rgba(244,235,221,.72)]">{dataSource.message}</p>
+    </div>
+  )
+}
+
+function DataGapsPanel({ dataGaps }: { dataGaps: GrowthProfileDataGap[] }) {
+  return (
+    <section className="mt-5">
+      <GlassPanel className="min-w-[240px]">
+        <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="font-function text-xs font-semibold tracking-[.18em] text-[#d8b76f]">dataGaps</p>
+            <h2 className="mt-3 font-story text-3xl font-light tracking-[.08em] text-[rgba(244,235,221,.88)]">数据缺口</h2>
+          </div>
+          <p className="font-function text-xs leading-6 text-[rgba(220,212,195,.42)]">
+            缺口不是错误，只是提醒哪些证据还在累积。
+          </p>
+        </div>
+        {dataGaps.length ? (
+          <div className="mt-5 grid gap-3 md:grid-cols-2">
+            {dataGaps.slice(0, 6).map((gap) => (
+              <div key={`${gap.type}-${gap.message}`} className="rounded-[8px] border border-[rgba(217,189,122,.12)] bg-white/[.025] p-4">
+                <p className="font-function text-xs font-semibold tracking-[.14em] text-[rgba(216,183,111,.72)]">{gap.type}</p>
+                <p className="mt-2 font-function text-sm leading-7 text-[rgba(220,212,195,.6)]">{gap.message}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="mt-5 font-function text-sm leading-7 text-[rgba(220,212,195,.56)]">
+            暂无明确数据缺口。后续知行提醒、执行计划与训练收藏会逐步进入成长谱。
+          </p>
+        )}
+      </GlassPanel>
+    </section>
   )
 }
