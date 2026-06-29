@@ -44,7 +44,7 @@ const historicalSlice = {
 
 const session = buildKlineMindSession({
   assessment: { primary: "冲动型", secondary: "焦虑型" },
-  trainingDay: { day: 2, title: "观止损抗拒" },
+  trainingDay: { day: 2, title: "观风险处理抗拒" },
   record: { marketKey: "cn_equity", timeframeKey: "1d" },
   historyCache: { cn_equity: { "1d": historicalSlice } }
 });

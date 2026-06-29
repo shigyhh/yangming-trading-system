@@ -17,7 +17,7 @@ const CLASSROOM_CONTENT = [
     title: "训练营直播预约",
     subtitle: "今晚 20:30 · 事上练心",
     startTime: "20:30",
-    relatedDay: "观止损抗拒",
+    relatedDay: "观风险处理抗拒",
     duration: "预约中",
     status: "占位预约",
     description: "直播先做预约占位，后续可接入正式课程与助教承接。",

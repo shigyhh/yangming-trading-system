@@ -24,7 +24,7 @@ const REVIEW_FIELDS = [
   { key: "chased", label: "是否追高" },
   { key: "held", label: "是否扛单" },
   { key: "changedPlan", label: "是否临盘改计划" },
-  { key: "executedStop", label: "是否知行合一止损" },
+  { key: "executedStop", label: "是否按计划处理风险" },
   { key: "revenge", label: "是否报复性交易" }
 ];
 
