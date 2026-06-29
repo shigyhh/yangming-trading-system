@@ -193,7 +193,7 @@ export const sealDefinitions: SealDefinition[] = [
   },
   {
     id: "stop-loss",
-    name: "止损印",
+    name: "风险处理印",
     description: "认错不是失败，是让心回到规则。",
     practiceAction: "今日只守一件事：先按规则处理错误。",
     unlockCondition: "识别扛镜或赌镜后解锁。",
@@ -318,7 +318,7 @@ export const mirrorDefinitions: MirrorDefinition[] = [
   {
     id: "hold",
     name: "扛镜",
-    description: "跌破规则还幻想，止损变成祈祷。",
+    description: "规则已破还幻想，动作就会变成祈祷。",
     typicalThoughts: ["再等等会回来的。", "现在认错太难受。"],
     behaviorRisks: ["把希望当系统", "延迟认错", "让小错拖成长痛"],
     correctionPractice: "先承认规则是否已破，再写下一步。",
