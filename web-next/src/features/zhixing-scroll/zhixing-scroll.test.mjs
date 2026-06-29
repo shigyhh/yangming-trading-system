@@ -89,7 +89,7 @@ test("zhixing scroll keeps the daily practice loop as the primary route", async 
     assert.ok(definitions.includes(`name: "${mirrorName}"`), `missing mirror definition: ${mirrorName}`)
   })
 
-  ;["不追印", "不扛印", "轻仓印", "等待印", "止损印", "复盘印", "休市印", "认错印", "减频印", "守规印", "静观印", "知行印"].forEach((sealName) => {
+  ;["不追印", "不扛印", "轻仓印", "等待印", "风险处理印", "复盘印", "休市印", "认错印", "减频印", "守规印", "静观印", "知行印"].forEach((sealName) => {
     assert.ok(definitions.includes(`name: "${sealName}"`), `missing seal definition: ${sealName}`)
   })
 
@@ -132,7 +132,22 @@ test("zhixing scroll avoids forbidden investment and cheap scroll visuals", asyn
   ;[
     "推荐买入",
     "推荐卖出",
+    "止盈",
+    "止损",
+    "仓位上限",
+    "建议买入",
+    "建议卖出",
+    "现在可以买",
+    "现在该卖",
     "目标价",
+    "止损建议",
+    "明日看涨",
+    "明日看跌",
+    "预测涨跌",
+    "买入信号",
+    "卖出信号",
+    "收益提升",
+    "胜率提升",
     "稳赚",
     "翻倍",
     "保本",
