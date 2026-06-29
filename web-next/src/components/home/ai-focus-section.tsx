@@ -68,7 +68,7 @@ const loopPresets = [
     title: "扛单之镜",
     stages: [
       { stage: "触发", shortText: "跌破计划。", longText: "价格跌破原本计划的位置。" },
-      { stage: "念头", shortText: "再等等，\n也许会回来。", longText: "明知该止损，却还在等反弹。" },
+      { stage: "念头", shortText: "再等等，\n也许会回来。", longText: "明知该按计划处理，却还在等反弹。" },
       { stage: "动作", shortText: "补一笔，\n摊低成本。", longText: "用补仓降低成本，试图证明自己没错。" },
       { stage: "结果", shortText: "仓更重，\n心更乱。", longText: "补仓之后，仓位更重，心也更乱。" },
       { stage: "再次触发", shortText: "再跌一点，\n还想证明。", longText: "只要继续下跌，又想继续证明自己。" },
@@ -109,7 +109,7 @@ const loopPresets = [
   },
   {
     key: "early_profit",
-    title: "止盈过早之镜",
+    title: "盈利后提前退出之镜",
     stages: [
       { stage: "触发", shortText: "刚有浮盈。", longText: "刚有一点浮盈，心里开始紧。" },
       { stage: "念头", shortText: "先落袋，\n别亏回去。", longText: "先落袋吧，别再亏回去。" },

@@ -5,7 +5,7 @@ import type { MirrorReport, MirrorReportRiskRadar } from "./mirrorReportTypes"
 const headlineByPersona: Record<string, string> = {
   fomo_chaser: "你不是没有系统，而是急拉升时怕错过会先接管你。",
   panic_runner: "你不是胆小，而是亏损后的记忆让你不敢执行下一笔正确交易。",
-  hold_and_hope: "你不是不会止损，而是不甘心在替你扛单。",
+  hold_and_hope: "你不是不会风险处理，而是不甘心在替你扛单。",
   prove_self: "你不是想赢过市场，而是想证明自己没有错。",
   revenge_rescuer: "你不是缺机会，而是不甘心会把下一次动作推快。",
   hesitant_watcher: "你不是没有判断力，而是群消息会临时夺走你的主心。",

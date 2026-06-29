@@ -63,7 +63,7 @@ export function buildRetestChangeFromComparisons(
 
 function getRetestDirection(key: string, label: string, delta: number): RetestDimensionChange["direction"] {
   if (delta === 0) return "flat"
-  const higherBetter = /zhixing|knowing|execution|review|consistency|control|judgment|知行|止损执行|复盘|一致性|风险边界|独立判断/.test(`${key} ${label}`)
+  const higherBetter = /zhixing|knowing|execution|review|consistency|control|judgment|知行|风险处理执行|复盘|一致性|风险边界|独立判断/.test(`${key} ${label}`)
   if (higherBetter) return delta > 0 ? "improved" : "declined"
   return delta < 0 ? "improved" : "declined"
 }

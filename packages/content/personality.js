@@ -40,7 +40,7 @@ export const personalityProfiles = {
     poeticName: "抱亏者",
     summary: "你最容易被“它会回来”带动。",
     risk: "容易和亏损谈判，拖延执行失效条件。",
-    training: "把止损条件提前写下，触发后只执行不解释。",
+    training: "把风险处理条件提前写下，触发后只执行不解释。",
     trigger: {
       key: "unwilling_to_accept",
       label: "不甘认错",

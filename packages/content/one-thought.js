@@ -6,7 +6,7 @@ export const oneThoughtScenes = [
   { key: "missed", label: "踏空后", x: 20, y: 49, drift: 0.05, delay: 340 },
   { key: "floatingGain", label: "浮盈时", x: 79, y: 49, drift: -0.04, delay: 520 },
   { key: "floatingLoss", label: "浮亏时", x: 24, y: 64, drift: -0.03, delay: 660 },
-  { key: "beforeStop", label: "止损前", x: 75, y: 64, drift: 0.04, delay: 820 },
+  { key: "beforeStop", label: "风险处理前", x: 75, y: 64, drift: 0.04, delay: 820 },
   { key: "lossStreak", label: "连续亏损后", x: 28, y: 76, drift: 0.06, delay: 980 },
   { key: "winStreak", label: "连续盈利后", x: 72, y: 76, drift: -0.05, delay: 1140 },
   { key: "crowdNoise", label: "别人都在说时", x: 34, y: 87, drift: -0.04, delay: 1320 },
@@ -129,7 +129,7 @@ const baseMirrorContent = {
   hold: {
     reflection: ["你扛的不是仓位。", "你扛的是不愿承认，", "自己这一次已经看错了。"],
     evidence: "我看见自己不是在等反弹，\n是在等市场替我证明“我没错”。",
-    practice: "下一次触发止损时，先执行，再复盘。\n不在盘中和亏损讲道理。",
+    practice: "下一次触发风险处理时，先执行，再复盘。\n不在盘中和亏损讲道理。",
   },
   fantasy: {
     reflection: ["你等的不是机会。", "你等的是一个，", "可以不用面对错误的理由。"],
@@ -206,7 +206,7 @@ const sceneMirrorContent = {
       default: {
         reflection: ["你迟疑的不是动作。", "你迟疑的是承认，", "这一次该到此为止。"],
         evidence: "我看见自己不是不懂规则，\n是不愿在盘中承认规则已经触发。",
-        practice: "下一次止损前，先执行，再写心情。\n不让心情替规则延迟。",
+        practice: "下一次风险处理前，先执行，再写心情。\n不让心情替规则延迟。",
       },
     },
   },

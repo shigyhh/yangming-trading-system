@@ -123,7 +123,7 @@ export function deriveBehaviorLoops(input: BehaviorLoopDeriveInput): BehaviorLoo
         evidence: [{
           ...baseEvidence,
           thoughtType: "fear",
-          affectedDimensions: ["止损执行", "风险边界"],
+          affectedDimensions: ["风险处理执行", "风险边界"],
         }],
         hasRetest: retestChanges.length > 0,
       }), now))
@@ -305,7 +305,7 @@ function getLoopPattern(candidate: LoopCandidate) {
   if (candidate.patternKey === "revenge") {
     return {
       sourceMirror: "执念之镜",
-      trigger: "上一笔亏损或止损后",
+      trigger: "上一笔亏损或风险处理后",
       thoughtLabel: "想翻本",
       action: "急着用下一笔证明自己",
       result: "风险边界扩大，容易连续失守",
@@ -350,7 +350,7 @@ function getLoopPattern(candidate: LoopCandidate) {
       result: "回撤时开始和自己谈判",
       selfStory: "到时候看情况",
       breakAction: "进场前必须写下离场条件",
-      affectedDimensions: ["止损执行", "风险边界"],
+      affectedDimensions: ["风险处理执行", "风险边界"],
     }
   }
 
@@ -405,7 +405,7 @@ export function getThoughtDimensions(thoughtType?: string | null) {
   if (thoughtType === "ask_others") return ["独立判断", "从众依赖"]
   if (thoughtType === "abandon_plan") return ["系统一致性", "临盘改计划"]
   if (thoughtType === "revenge") return ["不甘执念", "翻本冲动"]
-  if (thoughtType === "fear") return ["恐惧牵动", "止损执行"]
+  if (thoughtType === "fear") return ["恐惧牵动", "风险处理执行"]
   if (thoughtType === "ego") return ["证明执念", "风险边界"]
   return []
 }

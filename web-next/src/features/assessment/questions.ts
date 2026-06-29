@@ -87,7 +87,7 @@ export const assessmentQuestions: AssessmentQuestion[] = [
       { id: "q6_a", text: "“先落袋为安，别又亏回去。”", tags: ["panic_runner"], weight: 2 },
       { id: "q6_b", text: "“再拿一下，可能还有更大空间。”", tags: ["hold_and_hope"], weight: 1 },
       { id: "q6_c", text: "“我这次一定要拿出一个漂亮结果。”", tags: ["prove_self"], weight: 2 },
-      { id: "q6_d", text: "“按计划移动止损或分批处理。”", tags: ["disciplined_observer"], weight: 1 },
+      { id: "q6_d", text: "“按计划调整风险处理或分批处理。”", tags: ["disciplined_observer"], weight: 1 },
     ],
   },
   {
@@ -104,12 +104,12 @@ export const assessmentQuestions: AssessmentQuestion[] = [
   },
   {
     id: "q8",
-    scene: "场景 08 · 止损",
-    title: "当计划已经提示该止损，但你心里还想再等等时，你更像哪一种？",
-    desc: "止损条件已经出现，你也看见了。可手没有动，心里先开始替这笔交易找理由。",
+    scene: "场景 08 · 风险处理",
+    title: "当计划已经提示该执行风险处理，但你心里还想再等等时，你更像哪一种？",
+    desc: "风险处理条件已经出现，你也看见了。可手没有动，心里先开始替这笔交易找理由。",
     options: [
       { id: "q8_a", text: "“再给它一点空间，也许会回来。”", tags: ["hold_and_hope"], weight: 2 },
-      { id: "q8_b", text: "“这次止损就证明我错了。”", tags: ["prove_self"], weight: 2 },
+      { id: "q8_b", text: "“这次风险处理就证明我错了。”", tags: ["prove_self"], weight: 2 },
       { id: "q8_c", text: "“我会很慌，直接乱点掉。”", tags: ["panic_runner"], weight: 2 },
       { id: "q8_d", text: "“到了失效条件就执行，不和亏损谈判。”", tags: ["disciplined_observer"], weight: 1 },
     ],

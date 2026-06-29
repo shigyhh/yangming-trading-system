@@ -19,7 +19,7 @@ const personalityMomentPool: JourneyMoment[] = [
   },
   {
     kind: "reflection",
-    scene: ["明知该止损，", "却还在等反弹。"],
+    scene: ["明知该按计划处理，", "却还在等反弹。"],
     emotion: ["执念"],
     lines: ["扛单型交易人格"],
   },
