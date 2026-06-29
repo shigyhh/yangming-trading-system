@@ -275,6 +275,198 @@ export type DataBindingTrainingBookmarkPayload = {
   enabled?: boolean
 }
 
+export type DataBindingInterventionTriggerType =
+  | "before_training"
+  | "during_training"
+  | "after_review"
+  | "weekly_plan"
+  | "repeated_mistake"
+  | "execution_deviation"
+  | string
+
+export type DataBindingInterventionUserResponse =
+  | "continue"
+  | "change_to_hold"
+  | "later"
+  | "mute_session"
+  | "followed_plan"
+  | "deviated_again"
+  | "unclear"
+  | string
+
+export type DataBindingInterventionExecutionResult = "aligned" | "deviated" | "unclear" | string
+
+export type DataBindingInterventionEvent = {
+  id: string
+  userId: string
+  user_id: string
+  triggerType: DataBindingInterventionTriggerType
+  trigger_type: DataBindingInterventionTriggerType
+  sourceType?: string
+  source_type?: string
+  sessionId?: string
+  session_id?: string
+  reviewId?: string
+  review_id?: string
+  planId?: string
+  plan_id?: string
+  errorType?: string
+  error_type?: string
+  firstThought?: string
+  first_thought?: string
+  sceneTags?: string[]
+  scene_tags?: string[]
+  triggerScene?: string
+  trigger_scene?: string
+  message: string
+  suggestedAction?: string
+  suggested_action?: string
+  expectedAction?: string
+  expected_action?: string
+  userResponse?: DataBindingInterventionUserResponse
+  user_response?: DataBindingInterventionUserResponse
+  executionResult?: DataBindingInterventionExecutionResult
+  execution_result?: DataBindingInterventionExecutionResult
+  metadata?: Record<string, unknown>
+  enabled: boolean
+  createdAt: string
+  created_at: string
+  updatedAt: string
+  updated_at: string
+}
+
+export type DataBindingInterventionEventPayload = {
+  id?: string
+  user?: DataBindingUserProfile
+  triggerType?: DataBindingInterventionTriggerType
+  trigger_type?: DataBindingInterventionTriggerType
+  sourceType?: string
+  source_type?: string
+  sessionId?: string
+  session_id?: string
+  reviewId?: string
+  review_id?: string
+  planId?: string
+  plan_id?: string
+  errorType?: string
+  error_type?: string
+  firstThought?: string
+  first_thought?: string
+  sceneTags?: string[]
+  scene_tags?: string[]
+  triggerScene?: string
+  trigger_scene?: string
+  message?: string
+  suggestedAction?: string
+  suggested_action?: string
+  expectedAction?: string
+  expected_action?: string
+  userResponse?: DataBindingInterventionUserResponse
+  user_response?: DataBindingInterventionUserResponse
+  executionResult?: DataBindingInterventionExecutionResult
+  execution_result?: DataBindingInterventionExecutionResult
+  metadata?: Record<string, unknown>
+  enabled?: boolean
+}
+
+export type DataBindingInterventionRule = {
+  id: string
+  userId?: string
+  user_id?: string
+  title: string
+  triggerType: DataBindingInterventionTriggerType
+  trigger_type: DataBindingInterventionTriggerType
+  errorType?: string
+  error_type?: string
+  sceneTags?: string[]
+  scene_tags?: string[]
+  messageTemplate: string
+  message_template: string
+  expectedAction?: string
+  expected_action?: string
+  enabled: boolean
+  priority: number
+  maxPerSession?: number
+  max_per_session?: number
+  cooldownMinutes?: number
+  cooldown_minutes?: number
+  createdAt: string
+  created_at: string
+  updatedAt: string
+  updated_at: string
+}
+
+export type DataBindingInterventionRulePayload = {
+  id?: string
+  user?: DataBindingUserProfile
+  userId?: string
+  user_id?: string
+  title?: string
+  triggerType?: DataBindingInterventionTriggerType
+  trigger_type?: DataBindingInterventionTriggerType
+  errorType?: string
+  error_type?: string
+  sceneTags?: string[]
+  scene_tags?: string[]
+  messageTemplate?: string
+  message_template?: string
+  expectedAction?: string
+  expected_action?: string
+  enabled?: boolean
+  priority?: number
+  maxPerSession?: number
+  max_per_session?: number
+  cooldownMinutes?: number
+  cooldown_minutes?: number
+}
+
+export type DataBindingExecutionPlan = {
+  id: string
+  userId: string
+  user_id: string
+  title: string
+  errorType?: string
+  error_type?: string
+  sceneTags?: string[]
+  scene_tags?: string[]
+  firstThoughts?: string[]
+  first_thoughts?: string[]
+  forbiddenActions?: string[]
+  forbidden_actions?: string[]
+  expectedAction?: string
+  expected_action?: string
+  nextAction?: string
+  next_action?: string
+  trainingPrescription?: string
+  training_prescription?: string
+  enabled: boolean
+  createdAt: string
+  created_at: string
+  updatedAt: string
+  updated_at: string
+}
+
+export type DataBindingExecutionPlanPayload = {
+  id?: string
+  user?: DataBindingUserProfile
+  title?: string
+  errorType?: string
+  error_type?: string
+  sceneTags?: string[]
+  scene_tags?: string[]
+  firstThoughts?: string[]
+  first_thoughts?: string[]
+  forbiddenActions?: string[]
+  forbidden_actions?: string[]
+  expectedAction?: string
+  expected_action?: string
+  nextAction?: string
+  next_action?: string
+  trainingPrescription?: string
+  training_prescription?: string
+  enabled?: boolean
+}
+
 export type DataBindingRetestComparison = {
   key: string
   label: string
@@ -384,6 +576,27 @@ export type DataBindingTrainingBookmarkRequest = {
   training_bookmark?: DataBindingTrainingBookmarkPayload
 } & DataBindingTrainingBookmarkPayload
 
+export type DataBindingInterventionEventRequest = {
+  user?: DataBindingUserProfile
+  event?: DataBindingInterventionEventPayload
+  interventionEvent?: DataBindingInterventionEventPayload
+  intervention_event?: DataBindingInterventionEventPayload
+} & DataBindingInterventionEventPayload
+
+export type DataBindingInterventionRuleRequest = {
+  user?: DataBindingUserProfile
+  rule?: DataBindingInterventionRulePayload
+  interventionRule?: DataBindingInterventionRulePayload
+  intervention_rule?: DataBindingInterventionRulePayload
+} & DataBindingInterventionRulePayload
+
+export type DataBindingExecutionPlanRequest = {
+  user?: DataBindingUserProfile
+  plan?: DataBindingExecutionPlanPayload
+  executionPlan?: DataBindingExecutionPlanPayload
+  execution_plan?: DataBindingExecutionPlanPayload
+} & DataBindingExecutionPlanPayload
+
 export type DataBindingRetestPayload = {
   user: DataBindingUserProfile
   report: DataBindingAssessmentReport
@@ -438,6 +651,51 @@ export type DataBindingTrainingBookmarkListResponse = {
   user: DataBindingPublicUser
   training_bookmarks: DataBindingTrainingBookmark[]
   trainingBookmarks: DataBindingTrainingBookmark[]
+  count: number
+  include_disabled: boolean
+  includeDisabled: boolean
+}
+
+export type DataBindingInterventionEventResponse = {
+  user: DataBindingPublicUser
+  intervention_event: DataBindingInterventionEvent
+  interventionEvent: DataBindingInterventionEvent
+}
+
+export type DataBindingInterventionEventListResponse = {
+  user: DataBindingPublicUser
+  intervention_events: DataBindingInterventionEvent[]
+  interventionEvents: DataBindingInterventionEvent[]
+  count: number
+  include_disabled: boolean
+  includeDisabled: boolean
+}
+
+export type DataBindingInterventionRuleResponse = {
+  user: DataBindingPublicUser
+  intervention_rule: DataBindingInterventionRule
+  interventionRule: DataBindingInterventionRule
+}
+
+export type DataBindingInterventionRuleListResponse = {
+  user: DataBindingPublicUser
+  intervention_rules: DataBindingInterventionRule[]
+  interventionRules: DataBindingInterventionRule[]
+  count: number
+  include_disabled: boolean
+  includeDisabled: boolean
+}
+
+export type DataBindingExecutionPlanResponse = {
+  user: DataBindingPublicUser
+  execution_plan: DataBindingExecutionPlan
+  executionPlan: DataBindingExecutionPlan
+}
+
+export type DataBindingExecutionPlanListResponse = {
+  user: DataBindingPublicUser
+  execution_plans: DataBindingExecutionPlan[]
+  executionPlans: DataBindingExecutionPlan[]
   count: number
   include_disabled: boolean
   includeDisabled: boolean

@@ -11,6 +11,61 @@ let dataBindingLoaded = false;
 let dataBindingLoading = null;
 
 const forbiddenPhrases = ["推荐买入", "推荐卖出", "必赚", "稳赚", "收益保证", "喊单", "抄底", "逃顶"];
+const interventionForbiddenPhrases = [
+  "建议买入",
+  "建议卖出",
+  "现在可以买",
+  "现在该卖",
+  "目标价",
+  "止盈",
+  "止损建议",
+  "明日看涨",
+  "明日看跌",
+  "预测涨跌",
+  "买入信号",
+  "卖出信号"
+];
+const interventionEventAliasPairs = [
+  ["triggerType", "trigger_type"],
+  ["sourceType", "source_type"],
+  ["sessionId", "session_id"],
+  ["reviewId", "review_id"],
+  ["planId", "plan_id"],
+  ["errorType", "error_type"],
+  ["firstThought", "first_thought"],
+  ["sceneTags", "scene_tags"],
+  ["triggerScene", "trigger_scene"],
+  ["suggestedAction", "suggested_action"],
+  ["expectedAction", "expected_action"],
+  ["userResponse", "user_response"],
+  ["executionResult", "execution_result"],
+  ["createdAt", "created_at"],
+  ["updatedAt", "updated_at"]
+];
+const interventionRuleAliasPairs = [
+  ["userId", "user_id"],
+  ["triggerType", "trigger_type"],
+  ["errorType", "error_type"],
+  ["sceneTags", "scene_tags"],
+  ["messageTemplate", "message_template"],
+  ["expectedAction", "expected_action"],
+  ["maxPerSession", "max_per_session"],
+  ["cooldownMinutes", "cooldown_minutes"],
+  ["createdAt", "created_at"],
+  ["updatedAt", "updated_at"]
+];
+const executionPlanAliasPairs = [
+  ["userId", "user_id"],
+  ["errorType", "error_type"],
+  ["sceneTags", "scene_tags"],
+  ["firstThoughts", "first_thoughts"],
+  ["forbiddenActions", "forbidden_actions"],
+  ["expectedAction", "expected_action"],
+  ["nextAction", "next_action"],
+  ["trainingPrescription", "training_prescription"],
+  ["createdAt", "created_at"],
+  ["updatedAt", "updated_at"]
+];
 const assistantStatuses = new Set(["待承接", "已承接", "待复盘", "已完成"]);
 const livingMirrorSchemaVersion = "living_mirror_v1";
 const mirrorNames = ["追涨之镜", "扛单之镜", "幻想之镜", "执念之镜", "从众之镜", "犹疑之镜", "拖延之镜", "焦虑之镜", "良知之镜"];
@@ -257,6 +312,255 @@ export async function deleteTrainingBookmarkBinding(userId, id) {
   return updateTrainingBookmarkBinding(userId, id, { enabled: false });
 }
 
+export async function listInterventionEventBindings(userId, options = {}) {
+  await ensureDataBindingLoaded();
+  const record = findUserRecord(userId);
+  if (!record) return null;
+
+  const includeDisabled = parseBooleanOption(options.includeDisabled ?? options.include_disabled);
+  const interventionEvents = filterInterventionEvents(record.intervention_events || [], {
+    ...options,
+    includeDisabled
+  });
+
+  return {
+    user: publicUser(record),
+    intervention_events: interventionEvents,
+    interventionEvents,
+    count: interventionEvents.length,
+    include_disabled: includeDisabled,
+    includeDisabled
+  };
+}
+
+export async function createInterventionEventBinding(userId, input = {}) {
+  await ensureDataBindingLoaded();
+  const profile = normalizeUserProfile({ ...(input.user || {}), userId });
+  const record = ensureUser(profile);
+  const now = new Date().toISOString();
+  const interventionEvent = normalizeInterventionEvent(input, {
+    userId: record.id,
+    now
+  });
+
+  record.intervention_events = mergeById(record.intervention_events || [], [interventionEvent]);
+  record.updated_at = now;
+  await persistDataBindingUsers();
+
+  return {
+    user: publicUser(record),
+    intervention_event: interventionEvent,
+    interventionEvent
+  };
+}
+
+export async function updateInterventionEventBinding(userId, id, patch = {}) {
+  await ensureDataBindingLoaded();
+  const record = findUserRecord(userId);
+  if (!record) return null;
+
+  const eventId = String(id || "");
+  const existing = (record.intervention_events || []).find((item) => item.id === eventId);
+  if (!existing) return null;
+
+  const now = new Date().toISOString();
+  const interventionEvent = normalizeInterventionEvent(
+    mergeAliasedPatch({
+      ...existing,
+      ...patch,
+      id: existing.id,
+      userId: existing.userId || existing.user_id || record.id,
+      user_id: existing.user_id || existing.userId || record.id,
+      createdAt: existing.createdAt || existing.created_at,
+      created_at: existing.created_at || existing.createdAt
+    }, patch, interventionEventAliasPairs),
+    {
+      userId: record.id,
+      now,
+      existing
+    }
+  );
+  record.intervention_events = (record.intervention_events || []).map((item) => (item.id === eventId ? interventionEvent : item));
+  record.updated_at = now;
+  await persistDataBindingUsers();
+
+  return {
+    user: publicUser(record),
+    intervention_event: interventionEvent,
+    interventionEvent
+  };
+}
+
+export async function deleteInterventionEventBinding(userId, id) {
+  return updateInterventionEventBinding(userId, id, { enabled: false });
+}
+
+export async function listInterventionRuleBindings(userId, options = {}) {
+  await ensureDataBindingLoaded();
+  const record = findUserRecord(userId);
+  if (!record) return null;
+
+  const includeDisabled = parseBooleanOption(options.includeDisabled ?? options.include_disabled);
+  const interventionRules = filterInterventionRules(record.intervention_rules || [], {
+    ...options,
+    includeDisabled
+  });
+
+  return {
+    user: publicUser(record),
+    intervention_rules: interventionRules,
+    interventionRules,
+    count: interventionRules.length,
+    include_disabled: includeDisabled,
+    includeDisabled
+  };
+}
+
+export async function createInterventionRuleBinding(userId, input = {}) {
+  await ensureDataBindingLoaded();
+  const profile = normalizeUserProfile({ ...(input.user || {}), userId });
+  const record = ensureUser(profile);
+  const now = new Date().toISOString();
+  const interventionRule = normalizeInterventionRule(input, {
+    userId: record.id,
+    now
+  });
+
+  record.intervention_rules = mergeById(record.intervention_rules || [], [interventionRule]);
+  record.updated_at = now;
+  await persistDataBindingUsers();
+
+  return {
+    user: publicUser(record),
+    intervention_rule: interventionRule,
+    interventionRule
+  };
+}
+
+export async function updateInterventionRuleBinding(userId, id, patch = {}) {
+  await ensureDataBindingLoaded();
+  const record = findUserRecord(userId);
+  if (!record) return null;
+
+  const ruleId = String(id || "");
+  const existing = (record.intervention_rules || []).find((item) => item.id === ruleId);
+  if (!existing) return null;
+
+  const now = new Date().toISOString();
+  const interventionRule = normalizeInterventionRule(
+    mergeAliasedPatch({
+      ...existing,
+      ...patch,
+      id: existing.id,
+      userId: existing.userId || existing.user_id || record.id,
+      user_id: existing.user_id || existing.userId || record.id,
+      createdAt: existing.createdAt || existing.created_at,
+      created_at: existing.created_at || existing.createdAt
+    }, patch, interventionRuleAliasPairs),
+    {
+      userId: record.id,
+      now,
+      existing
+    }
+  );
+  record.intervention_rules = (record.intervention_rules || []).map((item) => (item.id === ruleId ? interventionRule : item));
+  record.updated_at = now;
+  await persistDataBindingUsers();
+
+  return {
+    user: publicUser(record),
+    intervention_rule: interventionRule,
+    interventionRule
+  };
+}
+
+export async function deleteInterventionRuleBinding(userId, id) {
+  return updateInterventionRuleBinding(userId, id, { enabled: false });
+}
+
+export async function listExecutionPlanBindings(userId, options = {}) {
+  await ensureDataBindingLoaded();
+  const record = findUserRecord(userId);
+  if (!record) return null;
+
+  const includeDisabled = parseBooleanOption(options.includeDisabled ?? options.include_disabled);
+  const executionPlans = filterExecutionPlans(record.execution_plans || [], {
+    ...options,
+    includeDisabled
+  });
+
+  return {
+    user: publicUser(record),
+    execution_plans: executionPlans,
+    executionPlans,
+    count: executionPlans.length,
+    include_disabled: includeDisabled,
+    includeDisabled
+  };
+}
+
+export async function createExecutionPlanBinding(userId, input = {}) {
+  await ensureDataBindingLoaded();
+  const profile = normalizeUserProfile({ ...(input.user || {}), userId });
+  const record = ensureUser(profile);
+  const now = new Date().toISOString();
+  const executionPlan = normalizeExecutionPlan(input, {
+    userId: record.id,
+    now
+  });
+
+  record.execution_plans = mergeById(record.execution_plans || [], [executionPlan]);
+  record.updated_at = now;
+  await persistDataBindingUsers();
+
+  return {
+    user: publicUser(record),
+    execution_plan: executionPlan,
+    executionPlan
+  };
+}
+
+export async function updateExecutionPlanBinding(userId, id, patch = {}) {
+  await ensureDataBindingLoaded();
+  const record = findUserRecord(userId);
+  if (!record) return null;
+
+  const planId = String(id || "");
+  const existing = (record.execution_plans || []).find((item) => item.id === planId);
+  if (!existing) return null;
+
+  const now = new Date().toISOString();
+  const executionPlan = normalizeExecutionPlan(
+    mergeAliasedPatch({
+      ...existing,
+      ...patch,
+      id: existing.id,
+      userId: existing.userId || existing.user_id || record.id,
+      user_id: existing.user_id || existing.userId || record.id,
+      createdAt: existing.createdAt || existing.created_at,
+      created_at: existing.created_at || existing.createdAt
+    }, patch, executionPlanAliasPairs),
+    {
+      userId: record.id,
+      now,
+      existing
+    }
+  );
+  record.execution_plans = (record.execution_plans || []).map((item) => (item.id === planId ? executionPlan : item));
+  record.updated_at = now;
+  await persistDataBindingUsers();
+
+  return {
+    user: publicUser(record),
+    execution_plan: executionPlan,
+    executionPlan
+  };
+}
+
+export async function deleteExecutionPlanBinding(userId, id) {
+  return updateExecutionPlanBinding(userId, id, { enabled: false });
+}
+
 export async function saveRetestResultBinding({ user = {}, report = {}, comparison = [], source = "api" }) {
   await ensureDataBindingLoaded();
   const profile = normalizeUserProfile(user);
@@ -346,6 +650,12 @@ export async function getDataBindingUserSummary(userId) {
     kline_records: record.kline_records,
     training_bookmarks: record.training_bookmarks || [],
     trainingBookmarks: record.training_bookmarks || [],
+    intervention_events: record.intervention_events || [],
+    interventionEvents: record.intervention_events || [],
+    intervention_rules: record.intervention_rules || [],
+    interventionRules: record.intervention_rules || [],
+    execution_plans: record.execution_plans || [],
+    executionPlans: record.execution_plans || [],
     trade_reviews: record.trade_reviews || [],
     living_mirror_stats: record.living_mirror_stats || null,
     living_mirror_profile: record.living_mirror_profile || buildLivingMirrorProfile(record),
@@ -671,6 +981,30 @@ function normalizePersistedUserRecord(record) {
         requireReference: false
       })).filter(Boolean)
       : [],
+    intervention_events: Array.isArray(record?.intervention_events || record?.interventionEvents)
+      ? (record?.intervention_events || record?.interventionEvents).map((item) => normalizeInterventionEvent(item, {
+        userId: String(record?.id || ""),
+        now,
+        existing: item,
+        requireTrigger: false
+      })).filter(Boolean)
+      : [],
+    intervention_rules: Array.isArray(record?.intervention_rules || record?.interventionRules)
+      ? (record?.intervention_rules || record?.interventionRules).map((item) => normalizeInterventionRule(item, {
+        userId: String(record?.id || ""),
+        now,
+        existing: item,
+        requireTrigger: false
+      })).filter(Boolean)
+      : [],
+    execution_plans: Array.isArray(record?.execution_plans || record?.executionPlans)
+      ? (record?.execution_plans || record?.executionPlans).map((item) => normalizeExecutionPlan(item, {
+        userId: String(record?.id || ""),
+        now,
+        existing: item,
+        requireTitle: false
+      })).filter(Boolean)
+      : [],
     retests: Array.isArray(record?.retests) ? record.retests : [],
     mirror_report: record?.mirror_report || null,
     trade_reviews: Array.isArray(record?.trade_reviews) ? record.trade_reviews : [],
@@ -752,6 +1086,9 @@ function ensureUser(profile) {
     training_records: [],
     kline_records: [],
     training_bookmarks: [],
+    intervention_events: [],
+    intervention_rules: [],
+    execution_plans: [],
     retests: [],
     mirror_report: null,
     trade_reviews: [],
@@ -800,6 +1137,9 @@ function mergeUserRecords(canonical, incoming) {
   canonical.training_records = mergeTrainingRecords(canonical.training_records, incoming.training_records);
   canonical.kline_records = mergeById(canonical.kline_records, incoming.kline_records);
   canonical.training_bookmarks = mergeById(canonical.training_bookmarks, incoming.training_bookmarks);
+  canonical.intervention_events = mergeById(canonical.intervention_events, incoming.intervention_events);
+  canonical.intervention_rules = mergeById(canonical.intervention_rules, incoming.intervention_rules);
+  canonical.execution_plans = mergeById(canonical.execution_plans, incoming.execution_plans);
   canonical.retests = mergeById(canonical.retests, incoming.retests)
     .sort((a, b) => new Date(a.saved_at || 0).getTime() - new Date(b.saved_at || 0).getTime());
   canonical.mirror_report = chooseLatestByTime(canonical.mirror_report, incoming.mirror_report, "createdAt");
@@ -1320,6 +1660,18 @@ function addAliasedField(target, camelKey, snakeKey, value, normalize = (item) =
   return target;
 }
 
+function mergeAliasedPatch(target = {}, patch = {}, pairs = []) {
+  pairs.forEach(([camelKey, snakeKey]) => {
+    if (hasFieldValue(patch[camelKey])) {
+      target[snakeKey] = patch[camelKey];
+    }
+    if (hasFieldValue(patch[snakeKey])) {
+      target[camelKey] = patch[snakeKey];
+    }
+  });
+  return target;
+}
+
 function normalizeAliasNumber(value) {
   const number = Number(value);
   return Number.isFinite(number) ? number : undefined;
@@ -1454,6 +1806,216 @@ function filterTrainingBookmarks(bookmarks = [], options = {}) {
     .filter((bookmark) => !segmentId || bookmark.segmentId === segmentId || bookmark.segment_id === segmentId)
     .filter((bookmark) => !trainingPackId || bookmark.trainingPackId === trainingPackId || bookmark.training_pack_id === trainingPackId)
     .sort((a, b) => new Date(b.updatedAt || b.updated_at || b.createdAt || b.created_at || 0).getTime() - new Date(a.updatedAt || a.updated_at || a.createdAt || a.created_at || 0).getTime());
+}
+
+function normalizeInterventionEvent(record = {}, { userId = "", now = new Date().toISOString(), existing = null, requireTrigger = true } = {}) {
+  if (!record || typeof record !== "object" || Array.isArray(record)) return null;
+
+  assertNoInterventionAdvisoryLanguage(record, ["message", "suggestedAction", "suggested_action", "expectedAction", "expected_action"]);
+
+  const resolvedUserId = cleanText(readAliasedField(record, "userId", "user_id", [existing?.userId, existing?.user_id, userId]), 80);
+  const triggerType = cleanText(readAliasedField(record, "triggerType", "trigger_type", [existing?.triggerType, existing?.trigger_type]), 80);
+  const message = cleanText(record.message || existing?.message || "先停一下，回到你的执行计划。", 220);
+
+  if (requireTrigger && !triggerType && !message) {
+    const error = new Error("知行提醒事件至少需要 triggerType 或 message");
+    error.statusCode = 400;
+    throw error;
+  }
+  if (!triggerType && !message) return null;
+
+  const createdAt = cleanText(readAliasedField(record, "createdAt", "created_at", [existing?.createdAt, existing?.created_at, now]), 40);
+  const updatedAt = cleanText(readAliasedField(record, "updatedAt", "updated_at", [now]), 40);
+  const enabled = normalizeAliasBoolean(readAliasedField(record, "enabled", "enabled", [existing?.enabled, true]));
+  const interventionEvent = {
+    id: cleanText(record.id || existing?.id || crypto.randomUUID(), 120),
+    userId: resolvedUserId,
+    user_id: resolvedUserId,
+    triggerType: triggerType || "before_training",
+    trigger_type: triggerType || "before_training",
+    message,
+    enabled: enabled === undefined ? true : enabled,
+    createdAt,
+    created_at: createdAt,
+    updatedAt,
+    updated_at: updatedAt
+  };
+
+  addAliasedField(interventionEvent, "sourceType", "source_type", readAliasedField(record, "sourceType", "source_type", [existing?.sourceType, existing?.source_type]), (value) => cleanText(value, 80));
+  addAliasedField(interventionEvent, "sessionId", "session_id", readAliasedField(record, "sessionId", "session_id", [existing?.sessionId, existing?.session_id]), (value) => cleanText(value, 120));
+  addAliasedField(interventionEvent, "reviewId", "review_id", readAliasedField(record, "reviewId", "review_id", [existing?.reviewId, existing?.review_id]), (value) => cleanText(value, 120));
+  addAliasedField(interventionEvent, "planId", "plan_id", readAliasedField(record, "planId", "plan_id", [existing?.planId, existing?.plan_id]), (value) => cleanText(value, 120));
+  addAliasedField(interventionEvent, "errorType", "error_type", readAliasedField(record, "errorType", "error_type", [existing?.errorType, existing?.error_type]), (value) => cleanText(value, 80));
+  addAliasedField(interventionEvent, "firstThought", "first_thought", readAliasedField(record, "firstThought", "first_thought", [existing?.firstThought, existing?.first_thought]), (value) => cleanText(value, 180));
+  addAliasedField(interventionEvent, "sceneTags", "scene_tags", readAliasedField(record, "sceneTags", "scene_tags", [existing?.sceneTags, existing?.scene_tags]), normalizeAliasList);
+  addAliasedField(interventionEvent, "triggerScene", "trigger_scene", readAliasedField(record, "triggerScene", "trigger_scene", [existing?.triggerScene, existing?.trigger_scene]), (value) => cleanText(value, 120));
+  addAliasedField(interventionEvent, "suggestedAction", "suggested_action", readAliasedField(record, "suggestedAction", "suggested_action", [existing?.suggestedAction, existing?.suggested_action]), (value) => cleanText(value, 180));
+  addAliasedField(interventionEvent, "expectedAction", "expected_action", readAliasedField(record, "expectedAction", "expected_action", [existing?.expectedAction, existing?.expected_action]), (value) => cleanText(value, 180));
+  addAliasedField(interventionEvent, "userResponse", "user_response", readAliasedField(record, "userResponse", "user_response", [existing?.userResponse, existing?.user_response]), (value) => cleanText(value, 80));
+  addAliasedField(interventionEvent, "executionResult", "execution_result", readAliasedField(record, "executionResult", "execution_result", [existing?.executionResult, existing?.execution_result]), (value) => cleanText(value, 80));
+  interventionEvent.metadata = normalizeStructuredField(record.metadata || existing?.metadata || {});
+
+  Object.keys(interventionEvent).forEach((key) => {
+    if (!hasFieldValue(interventionEvent[key]) || (Array.isArray(interventionEvent[key]) && interventionEvent[key].length === 0)) {
+      delete interventionEvent[key];
+    }
+  });
+
+  return interventionEvent;
+}
+
+function filterInterventionEvents(events = [], options = {}) {
+  const includeDisabled = parseBooleanOption(options.includeDisabled ?? options.include_disabled);
+  const triggerType = cleanText(readAliasedField(options, "triggerType", "trigger_type"), 80);
+  const sourceType = cleanText(readAliasedField(options, "sourceType", "source_type"), 80);
+  const errorType = cleanText(readAliasedField(options, "errorType", "error_type"), 80);
+  const sessionId = cleanText(readAliasedField(options, "sessionId", "session_id"), 120);
+  const reviewId = cleanText(readAliasedField(options, "reviewId", "review_id"), 120);
+  const planId = cleanText(readAliasedField(options, "planId", "plan_id"), 120);
+
+  return events
+    .filter((event) => includeDisabled || event.enabled !== false)
+    .filter((event) => !triggerType || event.triggerType === triggerType || event.trigger_type === triggerType)
+    .filter((event) => !sourceType || event.sourceType === sourceType || event.source_type === sourceType)
+    .filter((event) => !errorType || event.errorType === errorType || event.error_type === errorType)
+    .filter((event) => !sessionId || event.sessionId === sessionId || event.session_id === sessionId)
+    .filter((event) => !reviewId || event.reviewId === reviewId || event.review_id === reviewId)
+    .filter((event) => !planId || event.planId === planId || event.plan_id === planId)
+    .sort((a, b) => new Date(b.updatedAt || b.updated_at || b.createdAt || b.created_at || 0).getTime() - new Date(a.updatedAt || a.updated_at || a.createdAt || a.created_at || 0).getTime());
+}
+
+function normalizeInterventionRule(record = {}, { userId = "", now = new Date().toISOString(), existing = null, requireTrigger = true } = {}) {
+  if (!record || typeof record !== "object" || Array.isArray(record)) return null;
+
+  assertNoInterventionAdvisoryLanguage(record, ["messageTemplate", "message_template", "expectedAction", "expected_action"]);
+
+  const triggerType = cleanText(readAliasedField(record, "triggerType", "trigger_type", [existing?.triggerType, existing?.trigger_type]), 80);
+  const messageTemplate = cleanText(readAliasedField(record, "messageTemplate", "message_template", [existing?.messageTemplate, existing?.message_template, "先停一下，回到你的执行计划。"]), 220);
+  if (requireTrigger && !triggerType && !messageTemplate) {
+    const error = new Error("知行提醒规则至少需要 triggerType 或 messageTemplate");
+    error.statusCode = 400;
+    throw error;
+  }
+  if (!triggerType && !messageTemplate) return null;
+
+  const createdAt = cleanText(readAliasedField(record, "createdAt", "created_at", [existing?.createdAt, existing?.created_at, now]), 40);
+  const updatedAt = cleanText(readAliasedField(record, "updatedAt", "updated_at", [now]), 40);
+  const enabled = normalizeAliasBoolean(readAliasedField(record, "enabled", "enabled", [existing?.enabled, true]));
+  const resolvedUserId = cleanText(readAliasedField(record, "userId", "user_id", [existing?.userId, existing?.user_id, userId]), 80);
+  const interventionRule = {
+    id: cleanText(record.id || existing?.id || crypto.randomUUID(), 120),
+    title: cleanText(record.title || existing?.title || "知行提醒规则", 100),
+    triggerType: triggerType || "before_training",
+    trigger_type: triggerType || "before_training",
+    messageTemplate,
+    message_template: messageTemplate,
+    enabled: enabled === undefined ? true : enabled,
+    priority: normalizeAliasNumber(record.priority ?? existing?.priority) || 0,
+    createdAt,
+    created_at: createdAt,
+    updatedAt,
+    updated_at: updatedAt
+  };
+
+  if (resolvedUserId) {
+    interventionRule.userId = resolvedUserId;
+    interventionRule.user_id = resolvedUserId;
+  }
+  addAliasedField(interventionRule, "errorType", "error_type", readAliasedField(record, "errorType", "error_type", [existing?.errorType, existing?.error_type]), (value) => cleanText(value, 80));
+  addAliasedField(interventionRule, "sceneTags", "scene_tags", readAliasedField(record, "sceneTags", "scene_tags", [existing?.sceneTags, existing?.scene_tags]), normalizeAliasList);
+  addAliasedField(interventionRule, "expectedAction", "expected_action", readAliasedField(record, "expectedAction", "expected_action", [existing?.expectedAction, existing?.expected_action]), (value) => cleanText(value, 180));
+  addAliasedField(interventionRule, "maxPerSession", "max_per_session", readAliasedField(record, "maxPerSession", "max_per_session", [existing?.maxPerSession, existing?.max_per_session]), normalizeAliasNumber);
+  addAliasedField(interventionRule, "cooldownMinutes", "cooldown_minutes", readAliasedField(record, "cooldownMinutes", "cooldown_minutes", [existing?.cooldownMinutes, existing?.cooldown_minutes]), normalizeAliasNumber);
+
+  Object.keys(interventionRule).forEach((key) => {
+    if (!hasFieldValue(interventionRule[key]) || (Array.isArray(interventionRule[key]) && interventionRule[key].length === 0)) {
+      delete interventionRule[key];
+    }
+  });
+
+  return interventionRule;
+}
+
+function filterInterventionRules(rules = [], options = {}) {
+  const includeDisabled = parseBooleanOption(options.includeDisabled ?? options.include_disabled);
+  const triggerType = cleanText(readAliasedField(options, "triggerType", "trigger_type"), 80);
+  const errorType = cleanText(readAliasedField(options, "errorType", "error_type"), 80);
+
+  return rules
+    .filter((rule) => includeDisabled || rule.enabled !== false)
+    .filter((rule) => !triggerType || rule.triggerType === triggerType || rule.trigger_type === triggerType)
+    .filter((rule) => !errorType || rule.errorType === errorType || rule.error_type === errorType)
+    .sort((a, b) => Number(b.priority || 0) - Number(a.priority || 0) || new Date(b.updatedAt || b.updated_at || b.createdAt || b.created_at || 0).getTime() - new Date(a.updatedAt || a.updated_at || a.createdAt || a.created_at || 0).getTime());
+}
+
+function normalizeExecutionPlan(record = {}, { userId = "", now = new Date().toISOString(), existing = null, requireTitle = true } = {}) {
+  if (!record || typeof record !== "object" || Array.isArray(record)) return null;
+
+  assertNoInterventionAdvisoryLanguage(record, ["expectedAction", "expected_action", "nextAction", "next_action"]);
+
+  const title = cleanText(record.title || existing?.title || "", 100);
+  if (requireTitle && !title) {
+    const error = new Error("执行计划至少需要 title");
+    error.statusCode = 400;
+    throw error;
+  }
+  if (!title) return null;
+
+  const resolvedUserId = cleanText(readAliasedField(record, "userId", "user_id", [existing?.userId, existing?.user_id, userId]), 80);
+  const createdAt = cleanText(readAliasedField(record, "createdAt", "created_at", [existing?.createdAt, existing?.created_at, now]), 40);
+  const updatedAt = cleanText(readAliasedField(record, "updatedAt", "updated_at", [now]), 40);
+  const enabled = normalizeAliasBoolean(readAliasedField(record, "enabled", "enabled", [existing?.enabled, true]));
+  const executionPlan = {
+    id: cleanText(record.id || existing?.id || crypto.randomUUID(), 120),
+    userId: resolvedUserId,
+    user_id: resolvedUserId,
+    title,
+    enabled: enabled === undefined ? true : enabled,
+    createdAt,
+    created_at: createdAt,
+    updatedAt,
+    updated_at: updatedAt
+  };
+
+  addAliasedField(executionPlan, "errorType", "error_type", readAliasedField(record, "errorType", "error_type", [existing?.errorType, existing?.error_type]), (value) => cleanText(value, 80));
+  addAliasedField(executionPlan, "sceneTags", "scene_tags", readAliasedField(record, "sceneTags", "scene_tags", [existing?.sceneTags, existing?.scene_tags]), normalizeAliasList);
+  addAliasedField(executionPlan, "firstThoughts", "first_thoughts", readAliasedField(record, "firstThoughts", "first_thoughts", [existing?.firstThoughts, existing?.first_thoughts]), normalizeAliasList);
+  addAliasedField(executionPlan, "forbiddenActions", "forbidden_actions", readAliasedField(record, "forbiddenActions", "forbidden_actions", [existing?.forbiddenActions, existing?.forbidden_actions]), normalizeAliasList);
+  addAliasedField(executionPlan, "expectedAction", "expected_action", readAliasedField(record, "expectedAction", "expected_action", [existing?.expectedAction, existing?.expected_action]), (value) => cleanText(value, 180));
+  addAliasedField(executionPlan, "nextAction", "next_action", readAliasedField(record, "nextAction", "next_action", [existing?.nextAction, existing?.next_action]), (value) => cleanText(value, 180));
+  addAliasedField(executionPlan, "trainingPrescription", "training_prescription", readAliasedField(record, "trainingPrescription", "training_prescription", [existing?.trainingPrescription, existing?.training_prescription]), (value) => cleanText(value, 180));
+
+  Object.keys(executionPlan).forEach((key) => {
+    if (!hasFieldValue(executionPlan[key]) || (Array.isArray(executionPlan[key]) && executionPlan[key].length === 0)) {
+      delete executionPlan[key];
+    }
+  });
+
+  return executionPlan;
+}
+
+function filterExecutionPlans(plans = [], options = {}) {
+  const includeDisabled = parseBooleanOption(options.includeDisabled ?? options.include_disabled);
+  const errorType = cleanText(readAliasedField(options, "errorType", "error_type"), 80);
+
+  return plans
+    .filter((plan) => includeDisabled || plan.enabled !== false)
+    .filter((plan) => !errorType || plan.errorType === errorType || plan.error_type === errorType)
+    .sort((a, b) => new Date(b.updatedAt || b.updated_at || b.createdAt || b.created_at || 0).getTime() - new Date(a.updatedAt || a.updated_at || a.createdAt || a.created_at || 0).getTime());
+}
+
+function assertNoInterventionAdvisoryLanguage(record = {}, keys = []) {
+  const text = keys
+    .map((key) => record[key])
+    .filter(hasFieldValue)
+    .map((value) => typeof value === "string" ? value : JSON.stringify(value))
+    .join("\n");
+  const forbidden = interventionForbiddenPhrases.find((phrase) => text.includes(phrase));
+  if (forbidden) {
+    const error = new Error(`知行提醒文案不能包含交易建议、买卖信号或行情预测：${forbidden}`);
+    error.statusCode = 400;
+    throw error;
+  }
 }
 
 function parseBooleanOption(value) {
@@ -2125,6 +2687,62 @@ function buildArchiveIndex(record) {
         startDate: bookmark.startDate || bookmark.start_date,
         endDate: bookmark.endDate || bookmark.end_date,
         samplingResult
+      }
+    }));
+  });
+
+  (record.intervention_events || []).forEach((event) => {
+    const eventId = cleanText(event.id || crypto.randomUUID(), 120);
+    const errorType = readAliasedField(event, "errorType", "error_type");
+    const sceneTags = normalizeAliasList(readAliasedField(event, "sceneTags", "scene_tags"));
+    const createdAt = cleanText(readAliasedField(event, "createdAt", "created_at", [record.updated_at]), 40);
+    items.push(createArchiveItem({
+      type: "intervention_event",
+      sourceId: eventId,
+      title: cleanText(`知行提醒 · ${event.triggerType || event.trigger_type || "一次提醒"}`, 100),
+      summary: cleanText(event.message || event.expectedAction || event.expected_action || "一次知行提醒事件。", 180),
+      errorType,
+      firstThought: readAliasedField(event, "firstThought", "first_thought"),
+      sceneTags,
+      executionResult: readAliasedField(event, "executionResult", "execution_result"),
+      trainingPackId: readAliasedField(event, "trainingPackId", "training_pack_id"),
+      createdAt,
+      updatedAt: readAliasedField(event, "updatedAt", "updated_at", [createdAt]),
+      metadata: {
+        triggerType: event.triggerType || event.trigger_type,
+        sourceType: event.sourceType || event.source_type,
+        sessionId: event.sessionId || event.session_id,
+        reviewId: event.reviewId || event.review_id,
+        planId: event.planId || event.plan_id,
+        userResponse: event.userResponse || event.user_response,
+        suggestedAction: event.suggestedAction || event.suggested_action,
+        expectedAction: event.expectedAction || event.expected_action
+      }
+    }));
+  });
+
+  (record.execution_plans || []).forEach((plan) => {
+    const planId = cleanText(plan.id || crypto.randomUUID(), 120);
+    const errorType = readAliasedField(plan, "errorType", "error_type");
+    const sceneTags = normalizeAliasList(readAliasedField(plan, "sceneTags", "scene_tags"));
+    const createdAt = cleanText(readAliasedField(plan, "createdAt", "created_at", [record.updated_at]), 40);
+    items.push(createArchiveItem({
+      type: "execution_plan",
+      sourceId: planId,
+      title: cleanText(plan.title || "执行计划", 100),
+      summary: cleanText(plan.expectedAction || plan.expected_action || plan.nextAction || plan.next_action || "一条执行计划。", 180),
+      errorType,
+      firstThought: normalizeAliasList(readAliasedField(plan, "firstThoughts", "first_thoughts"))?.join(" / "),
+      sceneTags,
+      trainingPackId: readAliasedField(plan, "trainingPackId", "training_pack_id"),
+      createdAt,
+      updatedAt: readAliasedField(plan, "updatedAt", "updated_at", [createdAt]),
+      metadata: {
+        enabled: plan.enabled !== false,
+        forbiddenActions: plan.forbiddenActions || plan.forbidden_actions,
+        expectedAction: plan.expectedAction || plan.expected_action,
+        nextAction: plan.nextAction || plan.next_action,
+        trainingPrescription: plan.trainingPrescription || plan.training_prescription
       }
     }));
   });
