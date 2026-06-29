@@ -10,7 +10,7 @@ const { promptShareMoment } = require("../../utils/share-moments");
 
 const TRIGGER_OPTIONS = ["边界被触碰", "念头变急", "不甘出现", "想证明", "计划松动", "情绪升高"];
 const REACTION_OPTIONS = ["停十秒", "先记录", "回到计划", "离开屏幕", "延后判断", "请助教复盘"];
-const BOUNDARY_OPTIONS = ["仓位边界", "止损边界", "次数边界", "时间边界", "情绪边界", "计划边界"];
+const BOUNDARY_OPTIONS = ["计划投入边界", "风险边界", "次数边界", "时间边界", "情绪边界", "计划边界"];
 
 Page({
   data: {

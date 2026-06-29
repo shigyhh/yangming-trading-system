@@ -29,7 +29,7 @@ const PERSONALITY_ARCHIVES = {
     root: "怕承认评判偏离，怕面对损失后的自我否定。",
     xinxue: "良知已经提醒，私欲却让自己继续解释。",
     dailyAction: "今日只练：触发边界后，十秒内按预案知行合一。",
-    discipline: "触发止损，不移动。",
+    discipline: "触发风险边界，不移动。",
     practiceWay: "适合修“知止”和“省察”，把边界写在行动之前。"
   },
   "完美型": {

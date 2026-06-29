@@ -110,7 +110,7 @@ const unified = buildUnifiedJourneyView({
     today: { day: 3, title: "观亏损后的证明欲" },
     days: [
       { day: 1, title: "观入场冲动" },
-      { day: 2, title: "观止损抗拒" },
+      { day: 2, title: "观风险处理抗拒" },
       { day: 3, title: "观亏损后的证明欲" }
     ]
   }
@@ -130,7 +130,7 @@ assert.strictEqual(unified.closureEvidenceChain.steps[1].current, true);
 assert.strictEqual(unified.yearlySubtitle, "全年修行：153 / 365");
 assert.strictEqual(unified.dayText, "今日训练：Day 2 · 全年修行：153 / 365");
 assert.strictEqual(unified.currentTrainingText, "今日训练：Day 2");
-assert.strictEqual(unified.currentTrainingTitle, "观止损抗拒");
+assert.strictEqual(unified.currentTrainingTitle, "观风险处理抗拒");
 
 const unifiedWithReview = buildUnifiedJourneyView({
   ledger: reviewLedger,
