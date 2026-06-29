@@ -11,9 +11,16 @@ import {
   SecondaryLink,
   StatusPill,
 } from "@/features/assessment/components"
+import { fetchDataBindingSummary, fetchMirrorArchiveBinding } from "@/features/data-binding/api-client"
 import {
+  archiveTypeFilters,
+  filterArchiveItems,
   formatArchiveTime,
+  getArchiveTypeLabel,
   loadMirrorArchiveData,
+  mapServerMirrorArchiveData,
+  mapSummaryMirrorArchiveData,
+  type ArchiveTypeFilter,
 } from "@/features/mirror-archive/archiveEngine"
 import type { ArchiveItem, MirrorArchiveData } from "@/features/mirror-archive/archiveTypes"
 import type { BehaviorLoop } from "@/features/living-mirror-growth/behaviorLoopTypes"
@@ -30,18 +37,61 @@ export default function MirrorArchivePage() {
   const [growthProfile, setGrowthProfile] = useState<GrowthProfile | null>(null)
   const [behaviorLoops, setBehaviorLoops] = useState<BehaviorLoop[]>([])
   const [loaded, setLoaded] = useState(false)
+  const [loadError, setLoadError] = useState("")
+  const [archiveSource, setArchiveSource] = useState<"server-api" | "summary-fallback" | "local-fallback">("local-fallback")
+  const [selectedArchiveType, setSelectedArchiveType] = useState<ArchiveTypeFilter>("all")
 
   useEffect(() => {
+    let active = true
     const timer = window.setTimeout(() => {
-      const growthResult = recomputeAndSaveGrowthProfile()
-
-      setGrowthProfile(growthResult.growthProfile)
-      setBehaviorLoops(growthResult.behaviorLoops)
-      setArchiveData(loadMirrorArchiveData())
-      setLoaded(true)
+      void loadArchive()
     }, 0)
 
-    return () => window.clearTimeout(timer)
+    async function loadArchive() {
+      const growthResult = recomputeAndSaveGrowthProfile()
+      const localArchiveData = loadMirrorArchiveData()
+      let nextArchiveData = localArchiveData
+      let nextArchiveSource: "server-api" | "summary-fallback" | "local-fallback" = "local-fallback"
+      let nextError = ""
+
+      const archiveResult = await fetchMirrorArchiveBinding()
+      if (archiveResult.ok) {
+        const mappedArchive = mapServerMirrorArchiveData(archiveResult.data)
+        if (mappedArchive) {
+          nextArchiveData = mappedArchive
+          nextArchiveSource = "server-api"
+        } else {
+          nextError = "档案加载失败，请稍后重试。"
+        }
+      } else {
+        const summaryResult = await fetchDataBindingSummary()
+        if (summaryResult.ok) {
+          const mappedSummary = mapSummaryMirrorArchiveData(summaryResult.data)
+          if (mappedSummary) {
+            nextArchiveData = mappedSummary
+            nextArchiveSource = "summary-fallback"
+            nextError = archiveResult.error ? "档案加载失败，请稍后重试。" : ""
+          } else {
+            nextError = "档案加载失败，请稍后重试。"
+          }
+        } else {
+          nextError = "档案加载失败，请稍后重试。"
+        }
+      }
+
+      if (!active) return
+      setGrowthProfile(growthResult.growthProfile)
+      setBehaviorLoops(growthResult.behaviorLoops)
+      setArchiveData(nextArchiveData)
+      setArchiveSource(nextArchiveSource)
+      setLoadError(nextError)
+      setLoaded(true)
+    }
+
+    return () => {
+      active = false
+      window.clearTimeout(timer)
+    }
   }, [])
 
   if (!loaded || !archiveData) {
@@ -54,34 +104,46 @@ export default function MirrorArchivePage() {
 
   const { summary, sections } = archiveData
   const loopNodes = getLivingMirrorLoopStatus(buildLivingMirrorLoopInputFromArchive(archiveData))
+  const filteredItems = filterArchiveItems(archiveData.allItems, selectedArchiveType)
+  const latestUpdatedAt = summary.updatedAt || archiveData.allItems[0]?.updatedAt || archiveData.allItems[0]?.createdAt || ""
 
   return (
     <AssessmentShell className="py-5 md:py-7" contentWidth="wide">
       <div className="mirror-archive-page mx-auto w-full max-w-[1440px]">
+        <span className="sr-only">ArchiveIndex ArchiveItem</span>
         <section className="mirror-archive-hero">
           <div>
             <StatusPill>心镜档案 · 归档中心</StatusPill>
             <h1 className="mt-8 font-story text-[clamp(3rem,7.4vw,7rem)] font-light leading-[1.12] tracking-[.08em]">
-              心镜档案
+              心镜档案馆
             </h1>
             <p className="mt-6 max-w-[42rem] font-story text-xl font-light leading-10 tracking-[.05em] text-[rgba(220,212,195,.62)]">
-              报告、心证、修行、复盘、复测，全部归档。
+              真实复盘、K线训练、训练收藏、心镜报告和成长痕迹的归档中心。
             </p>
             <p className="mt-5 max-w-[46rem] font-function text-sm leading-7 text-[rgba(220,212,195,.48)]">
-              日课路线和真实复盘路线的证据都会留在这里；系统底层会把它们送入循环识别，反向生成更针对性的训练。绑定手机号后可长期保存心镜档案；未绑定时，先保存在本设备，不阻断继续训练。
+              报告、心证、修行、复盘、复测，全部归档。日课路线和真实复盘路线的证据都会留在这里；系统底层会把它们送入循环识别，反向生成更针对性的训练。
+              绑定手机号后可长期保存心镜档案；未绑定时，先保存在本设备，不阻断继续训练。
             </p>
           </div>
 
           <GlassPanel className="mirror-archive-profile">
             <p className="font-function text-xs font-semibold tracking-[.18em] text-[#b49d5d]">当前档案</p>
             <div className="mt-5 grid gap-3">
+              <ArchiveMeta label="数据来源" value={getArchiveSourceLabel(archiveSource)} />
+              <ArchiveMeta label="档案总数" value={`${summary.totalCount ?? archiveData.allItems.length} 条`} />
               <ArchiveMeta label="当前人格" value={summary.currentPersona} />
-              <ArchiveMeta label="训练天数" value={`${summary.completedDays} 日`} />
-              <ArchiveMeta label="心证数量" value={`${summary.heartProofCount} 枚`} />
               <ArchiveMeta label="最近复测状态" value={summary.retestStatus} />
+              <ArchiveMeta label="最近更新时间" value={latestUpdatedAt ? formatArchiveTime(latestUpdatedAt) : "等待归档"} />
             </div>
           </GlassPanel>
         </section>
+
+        {loadError ? (
+          <GlassPanel className="mt-6 border-[rgba(120,60,45,.28)] bg-[rgba(120,60,45,.08)]">
+            <p className="font-function text-sm leading-7 text-[rgba(242,235,220,.74)]">{loadError}</p>
+            <p className="mt-2 font-function text-xs leading-6 text-[rgba(220,212,195,.48)]">已保留本地档案 fallback，不影响继续查看。</p>
+          </GlassPanel>
+        ) : null}
 
         <section className="mt-6">
           <LivingMirrorLoopDiagram nodes={loopNodes} />
@@ -94,14 +156,60 @@ export default function MirrorArchivePage() {
         </section>
 
         <section className="mt-6 grid gap-3 md:grid-cols-3">
+          <ArchiveStat label="档案总数" value={`${summary.totalCount ?? archiveData.allItems.length}`} />
           <ArchiveStat label="心镜报告数量" value={`${summary.reportCount}`} />
+          <ArchiveStat label="K线训练记录数量" value={`${summary.klineRecordCount || 0}`} />
+          <ArchiveStat label="训练收藏数量" value={`${summary.trainingBookmarkCount || 0}`} />
           <ArchiveStat label="成长谱数量" value={`${summary.growthProfileCount}`} />
           <ArchiveStat label="已训练天数" value={`${summary.completedDays}`} />
           <ArchiveStat label="心证数量" value={`${summary.heartProofCount}`} />
           <ArchiveStat label="一念记录数" value={`${summary.oneThoughtRecordCount}`} />
           <ArchiveStat label="真实复盘数量" value={`${summary.tradeReviewCount}`} />
           <ArchiveStat label="循环识别数" value={`${summary.behaviorLoopCount}`} />
+          <ArchiveStat label="最近更新时间" value={latestUpdatedAt ? formatArchiveTime(latestUpdatedAt).slice(0, 10) : "待归档"} />
         </section>
+
+        <GlassPanel className="mt-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="font-function text-xs font-semibold tracking-[.18em] text-[#b49d5d]">正式档案索引</p>
+              <h2 className="mt-3 font-story text-4xl font-light tracking-[.08em] text-[rgba(242,235,220,.88)]">档案列表</h2>
+            </div>
+            <p className="font-function text-sm leading-7 text-[rgba(220,212,195,.52)]">按档案类型筛选，展开后可查看 sourceId、sourceType 与 metadata 摘要。</p>
+          </div>
+          <div
+            className="mt-5 flex flex-wrap gap-2"
+            aria-label="档案类型筛选：全部、真实复盘、错题卡、K线训练、训练收藏、心镜报告、成长谱、知行提醒、执行计划"
+          >
+            {archiveTypeFilters.map((filter) => (
+              <button
+                key={filter.key}
+                type="button"
+                onClick={() => setSelectedArchiveType(filter.key)}
+                className={[
+                  "rounded-full border px-3 py-2 font-function text-xs tracking-[.08em] transition",
+                  selectedArchiveType === filter.key
+                    ? "border-[rgba(216,183,111,.46)] bg-[rgba(216,183,111,.13)] text-[rgba(242,235,220,.9)]"
+                    : "border-[rgba(180,157,93,.14)] bg-white/[.025] text-[rgba(220,212,195,.52)] hover:border-[rgba(216,183,111,.36)] hover:text-[rgba(242,235,220,.76)]",
+                ].join(" ")}
+              >
+                {filter.label}
+              </button>
+            ))}
+          </div>
+
+          {filteredItems.length ? (
+            <div className="mt-5 grid gap-3">
+              {filteredItems.map((item) => (
+                <ArchiveRecordCard key={item.archiveItemId} item={item} />
+              ))}
+            </div>
+          ) : (
+            <p className="mt-5 rounded-[8px] border border-[rgba(172,146,83,.1)] bg-white/[.025] px-4 py-3 font-function text-sm leading-7 text-[rgba(220,212,195,.52)]">
+              暂无档案。完成一次真实复盘或 K线训练后，这里会形成你的心镜证据。
+            </p>
+          )}
+        </GlassPanel>
 
         <section className="mirror-archive-sections mt-6">
           <ArchiveSection title="我的心镜报告" items={sections.reports} emptyText="完成入照心后，心镜报告会留在这里。" />
@@ -119,10 +227,10 @@ export default function MirrorArchivePage() {
             展开心镜长卷 →
           </PrimaryLink>
           <SecondaryLink href="/living-mirror-growth" className="w-full">
-            查看成长谱 →
+            心镜成长谱 →
           </SecondaryLink>
-          <SecondaryLink href="/trade-review" className="w-full">
-            真实交易复盘 →
+          <SecondaryLink href="/living-mirror-center" className="w-full">
+            活镜中枢 →
           </SecondaryLink>
         </div>
 
@@ -335,13 +443,14 @@ function ArchiveRecordCard({ item }: { item: ArchiveItem }) {
   const href = item.detailHref || "/mirror-archive"
 
   return (
-    <Link href={href} className="block rounded-[8px] border border-[rgba(172,146,83,.12)] bg-white/[.025] px-4 py-3 transition hover:border-[rgba(216,183,111,.36)] hover:bg-white/[.04]">
+    <article className="rounded-[8px] border border-[rgba(172,146,83,.12)] bg-white/[.025] px-4 py-3 transition hover:border-[rgba(216,183,111,.36)] hover:bg-white/[.04]">
       <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
         <div>
+          <p className="mb-2 font-function text-xs tracking-[.12em] text-[rgba(180,157,93,.66)]">{getArchiveTypeLabel(item.type)}</p>
           <h2 className="font-story text-xl font-light tracking-[.06em] text-[rgba(242,235,220,.82)]">{item.title}</h2>
           <p className="mt-2 font-function text-sm leading-7 text-[rgba(220,212,195,.58)]">{item.summary}</p>
         </div>
-        <time className="shrink-0 font-function text-xs leading-6 text-[rgba(180,157,93,.62)]">{formatArchiveTime(item.createdAt)}</time>
+        <time className="shrink-0 font-function text-xs leading-6 text-[rgba(180,157,93,.62)]">{formatArchiveTime(item.updatedAt || item.createdAt)}</time>
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
         {item.tags.map((tag) => (
@@ -350,7 +459,32 @@ function ArchiveRecordCard({ item }: { item: ArchiveItem }) {
           </span>
         ))}
       </div>
-    </Link>
+      <details className="mt-3 rounded-[8px] border border-[rgba(172,146,83,.1)] bg-black/[.08] px-3 py-2 font-function text-xs leading-6 text-[rgba(220,212,195,.54)]">
+        <summary className="cursor-pointer text-[rgba(216,183,111,.78)]">展开档案来源</summary>
+        <div className="mt-3 grid gap-2 md:grid-cols-2">
+          <ArchiveMeta label="sourceId" value={item.sourceId} />
+          <ArchiveMeta label="sourceType" value={item.sourceType || item.type} />
+          <ArchiveMeta label="errorType" value={item.errorType || "未标注"} />
+          <ArchiveMeta label="firstThought" value={item.firstThought || "未记录"} />
+          <ArchiveMeta label="executionResult" value={item.executionResult || "未记录"} />
+          <ArchiveMeta label="sceneTags" value={item.sceneTags?.join("、") || "未标注"} />
+        </div>
+        {item.segmentId || item.trainingPackId ? (
+          <div className="mt-3 grid gap-2 md:grid-cols-2">
+            <ArchiveMeta label="segmentId" value={item.segmentId || "未绑定"} />
+            <ArchiveMeta label="trainingPackId" value={item.trainingPackId || "未绑定"} />
+          </div>
+        ) : null}
+        {item.metadata && Object.keys(item.metadata).length ? (
+          <p className="mt-3 break-words rounded-[8px] border border-[rgba(172,146,83,.1)] bg-white/[.025] px-3 py-2">
+            metadata：{Object.keys(item.metadata).slice(0, 6).join("、")}
+          </p>
+        ) : null}
+        <Link href={href} className="mt-3 inline-flex text-[rgba(216,183,111,.86)] transition hover:text-[rgba(242,235,220,.9)]">
+          查看来源 →
+        </Link>
+      </details>
+    </article>
   )
 }
 
@@ -361,4 +495,10 @@ function ArchiveMeta({ label, value }: { label: string; value: string }) {
       <span className="min-w-0 break-words text-left font-function text-sm text-[rgba(242,235,220,.72)] sm:text-right">{value}</span>
     </div>
   )
+}
+
+function getArchiveSourceLabel(source: "server-api" | "summary-fallback" | "local-fallback") {
+  if (source === "server-api") return "Archive API"
+  if (source === "summary-fallback") return "summary fallback"
+  return "本地 fallback"
 }

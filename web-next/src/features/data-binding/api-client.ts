@@ -19,8 +19,10 @@ import type {
 } from "@yangming/contracts/data-binding"
 
 import type {
+  ArchiveIndex,
   LivingMirrorGrowthProjection,
   LivingMirrorProfile,
+  MirrorArchive,
   RiskPatternSummary,
   TodayState,
   TradeReview,
@@ -35,6 +37,14 @@ type BindingClientResult<T> =
   | { ok: false; error: string }
 
 export type DataBindingSummaryResponse = DataBindingUserSummaryResponse
+
+export type MirrorArchiveBindingResponse = {
+  user?: unknown
+  archive_index?: ArchiveIndex
+  archiveIndex?: ArchiveIndex
+  mirror_archive?: MirrorArchive
+  mirrorArchive?: MirrorArchive
+}
 
 const defaultApiBaseUrl = process.env.NEXT_PUBLIC_YM_API_BASE_URL || "http://127.0.0.1:8787"
 
@@ -172,6 +182,11 @@ export async function syncTradeReviewBinding(review: Partial<TradeReview>) {
 export async function fetchDataBindingSummary() {
   const user = getDataBindingUserProfile()
   return requestGetJson<DataBindingSummaryResponse>(`/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/summary`)
+}
+
+export async function fetchMirrorArchiveBinding() {
+  const user = getDataBindingUserProfile()
+  return requestGetJson<MirrorArchiveBindingResponse>(`/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/mirror-archive`)
 }
 
 export async function fetchLivingMirrorGrowthProjection(userId: string) {
