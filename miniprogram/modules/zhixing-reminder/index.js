@@ -1,14 +1,17 @@
 const DAY_MS = 24 * 60 * 60 * 1000;
 const DEFAULT_WINDOW_DAYS = 30;
 const DEFAULT_MAX_SESSION_REMINDERS = 2;
-const { resolveExecutionPlanAction } = require("../execution-plan/index");
+const { buildExecutionPlanLibrary, resolveExecutionPlanAction } = require("../execution-plan/index");
+const {
+  INTERVENTION_RESPONSE_CHOICES,
+  buildInterventionContext,
+  buildInterventionEventPayload,
+  buildInterventionReminder,
+  normalizeInterventionResources,
+  normalizeInterventionResponse
+} = require("../intervention-engine/index");
 
-const ZHIXING_REMINDER_CHOICES = [
-  { key: "continue", label: "继续" },
-  { key: "change_to_hold", label: "改为观望" },
-  { key: "later", label: "稍后再练" },
-  { key: "mute_session", label: "本局不再提醒" }
-];
+const ZHIXING_REMINDER_CHOICES = INTERVENTION_RESPONSE_CHOICES;
 
 const ERROR_ACTION_MAP = [
   {
@@ -136,6 +139,52 @@ function buildMessage(errorType, action) {
   return `这是你的高频旧题：${safeErrorType}。\n本次只练一个动作：${safeAction}。`;
 }
 
+function readInterventionPlans(input = {}) {
+  const remotePlans = pickValue(
+    input.interventionPlans,
+    input.intervention_plans,
+    input.executionPlans,
+    input.execution_plans,
+    input.remoteExecutionPlans,
+    input.remote_execution_plans
+  );
+  if (Array.isArray(remotePlans)) return remotePlans;
+  const library = buildExecutionPlanLibrary(pickValue(
+    input.executionPlanLibrary,
+    input.execution_plan,
+    input.executionPlan
+  ) || {});
+  return library.records || [];
+}
+
+function readInterventionRules(input = {}) {
+  return pickValue(
+    input.interventionRules,
+    input.intervention_rules,
+    input.rules
+  ) || [];
+}
+
+function buildEngineReminder(input = {}, triggerType = "before_training") {
+  const context = buildInterventionContext(Object.assign({}, input, {
+    triggerType,
+    trigger_type: triggerType
+  }));
+  const resources = normalizeInterventionResources({
+    rulesResult: { intervention_rules: readInterventionRules(input) },
+    plansResult: { execution_plans: readInterventionPlans(input) },
+    dashboardResult: pickValue(input.dashboardSummary, input.dashboard_summary, input.p9DashboardSummary, input.p9_dashboard_summary),
+    weeklyResult: pickValue(input.weeklySummary, input.weekly_summary)
+  });
+  return buildInterventionReminder({
+    context,
+    rules: resources.rules,
+    plans: resources.plans,
+    dashboardSummary: resources.dashboardSummary,
+    weeklySummary: resources.weeklySummary
+  });
+}
+
 function withSnakeAliases(reminder = {}) {
   return Object.assign({}, reminder, {
     trigger_type: reminder.triggerType,
@@ -147,20 +196,16 @@ function withSnakeAliases(reminder = {}) {
 }
 
 function buildTrainingPreReminder(input = {}) {
+  const reminder = buildEngineReminder(input, "before_training");
+  if (reminder) return withSnakeAliases(Object.assign({ repeatCount: 0 }, reminder));
   const errorType = readErrorType(input) || "高频旧题";
   const plan = getActionPlan(errorType);
-  const executionPlanAction = resolveExecutionPlanAction(errorType, pickValue(
-    input.executionPlanLibrary,
-    input.execution_plan,
-    input.executionPlan
-  ));
-  const nextAction = (executionPlanAction || {}).nextAction || readNextAction(input) || plan.action;
-  const sceneTag = readSceneTag(input) || plan.sceneTags[0] || "";
+  const nextAction = readNextAction(input) || plan.action;
   return withSnakeAliases({
     triggerType: "before_training",
     title: "知行提醒",
     errorType,
-    sceneTag,
+    sceneTag: readSceneTag(input) || plan.sceneTags[0] || "",
     nextAction,
     repeatCount: 0,
     message: buildMessage(errorType, nextAction),
@@ -177,6 +222,12 @@ function buildTrainingSceneReminder(input = {}) {
   const plan = getActionPlan(errorType);
   const sceneTag = readSceneTag(input);
   if (sceneTag && plan.sceneTags.length && !plan.sceneTags.includes(sceneTag)) return null;
+  const reminder = buildEngineReminder(input, "during_training");
+  if (reminder) {
+    return withSnakeAliases(Object.assign({
+      repeatCount: shownCount + 1
+    }, reminder));
+  }
   const executionPlanAction = resolveExecutionPlanAction(errorType, pickValue(
     input.executionPlanLibrary,
     input.execution_plan,
@@ -222,7 +273,17 @@ function buildReviewRepeatReminder(input = {}) {
   ));
   const nextAction = (executionPlanAction || {}).nextAction || readNextAction(currentRecord) || plan.action;
   const sceneTag = readSceneTag(currentRecord) || plan.sceneTags[0] || "";
-  return withSnakeAliases({
+  const reminder = buildEngineReminder(Object.assign({}, currentRecord, input, {
+    triggerType: "after_review",
+    trigger_type: "after_review",
+    errorType,
+    error_type: errorType,
+    sceneTag,
+    scene_tag: sceneTag,
+    nextAction,
+    next_action: nextAction
+  }), "after_review");
+  return withSnakeAliases(Object.assign({
     triggerType: "after_review",
     title: "旧题复现提醒",
     errorType,
@@ -231,39 +292,29 @@ function buildReviewRepeatReminder(input = {}) {
     repeatCount,
     message: `旧题复现提醒：近 ${DEFAULT_WINDOW_DAYS} 天，${errorType} 已出现 ${repeatCount} 次。\n下次执行动作：${nextAction}。`,
     choices: ZHIXING_REMINDER_CHOICES
-  });
+  }, reminder || {}));
 }
 
 function normalizeZhixingReminderResponse(response) {
-  const value = String(response || "").trim();
-  const match = ZHIXING_REMINDER_CHOICES.find((item) => item.key === value || item.label === value);
-  return match ? match.key : value;
+  return normalizeInterventionResponse(response);
 }
 
 function createInterventionEvent(input = {}) {
   const createdAt = input.createdAt || input.created_at || new Date().toISOString();
   const id = input.id || `intervention-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const userId = input.userId || input.user_id || "";
-  const triggerType = input.triggerType || input.trigger_type || "";
-  const errorType = input.errorType || input.error_type || "";
-  const sceneTag = input.sceneTag || input.scene_tag || "";
-  const userResponse = normalizeZhixingReminderResponse(input.userResponse || input.user_response || "");
-  return {
-    id,
+  const event = buildInterventionEventPayload({
+    reminder: input,
+    context: input,
     userId,
-    user_id: userId,
-    triggerType,
-    trigger_type: triggerType,
-    errorType,
-    error_type: errorType,
-    sceneTag,
-    scene_tag: sceneTag,
-    message: input.message || "",
-    userResponse,
-    user_response: userResponse,
+    userResponse: input.userResponse || input.user_response || "",
     createdAt,
-    created_at: createdAt
-  };
+    id
+  });
+  const sceneTag = input.sceneTag || input.scene_tag || input.triggerScene || input.trigger_scene || "";
+  event.sceneTag = sceneTag;
+  event.scene_tag = sceneTag;
+  return event;
 }
 
 module.exports = {
