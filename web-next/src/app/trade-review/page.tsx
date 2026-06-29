@@ -477,7 +477,7 @@ function ReviewPageContent() {
       brokeRule ? "破戒" : "未破戒",
       changedPlanIntraday ? "临盘改计划" : "",
       addedPosition ? "临盘加仓" : "",
-      movedStopLoss ? "移动止损" : "",
+      movedStopLoss ? "调整风险处理" : "",
       emotionDrivenEntry ? "情绪推动入场" : "",
     ].filter(Boolean)
 
@@ -1026,7 +1026,7 @@ function ReviewPageContent() {
                 </label>
                 <label>
                   <input type="checkbox" checked={movedStopLoss} onChange={(event) => setMovedStopLoss(event.target.checked)} />
-                  移动止损
+                  调整风险处理
                 </label>
                 <label>
                   <input type="checkbox" checked={emotionDrivenEntry} onChange={(event) => setEmotionDrivenEntry(event.target.checked)} />

@@ -219,7 +219,7 @@ function getRetestDirection(key: string, label: string, delta: number): RetestDi
 }
 
 function isHigherBetterRetestDimension(key: string, label: string) {
-  return /zhixing|knowing|execution|review|consistency|control|judgment|知行|止损执行|复盘|一致性|风险边界|独立判断/.test(`${key} ${label}`)
+  return /zhixing|knowing|execution|review|consistency|control|judgment|知行|风险处理执行|复盘|一致性|风险边界|独立判断/.test(`${key} ${label}`)
 }
 
 function getGrowthProfileOwner(
@@ -668,11 +668,11 @@ function getDimensionFocus(label: string, thought?: GrowthProfileThought) {
     }
   }
 
-  if (/止损|风险边界|离场/.test(label)) {
+  if (/风险处理|风险边界|离场/.test(label)) {
     return {
       title: "下一轮重点：进场前写清离场条件",
       nextActionText: "进场前必须写下离场条件。",
-      relatedDimensions: ["止损执行", "风险边界"],
+      relatedDimensions: ["风险处理执行", "风险边界"],
     }
   }
 
@@ -1062,7 +1062,7 @@ function getRiskRadarDimensions(riskRadar: unknown) {
     impulse: "追涨冲动",
     fear: "恐惧牵动",
     ego: "证明执念",
-    stopLossExecution: "止损执行",
+    stopLossExecution: "风险处理执行",
     reviewAbility: "复盘能力",
     systemConsistency: "系统一致性",
     riskControl: "风险边界",

@@ -326,7 +326,7 @@ function inferAffectedDimensionsFromText(text: string) {
   if (/怕错过|错过|上车|拉升|追/.test(text)) return ["追涨冲动", "临盘改计划"]
   if (/翻本|不甘|报复|赌/.test(text)) return ["赌性冲动", "知行合一"]
   if (/问别人|群|大家|外部|消息/.test(text)) return ["独立判断", "知行合一"]
-  if (/害怕|恐惧|怕回吐|焦虑|空仓/.test(text)) return ["空仓焦虑", "止损执行"]
+  if (/害怕|恐惧|怕回吐|焦虑|空仓/.test(text)) return ["空仓焦虑", "风险处理执行"]
   if (/证明|面子|自我/.test(text)) return ["自我证明", "临盘改计划"]
   if (/犹豫|等待|回撤|不确定/.test(text)) return ["犹疑拖延", "计划一致性"]
   return ["觉察能力"]

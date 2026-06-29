@@ -5,7 +5,7 @@ import {
   createLivingMirrorGrowthRecord,
   getMirrorSceneReflection,
   getOneThoughtForScene,
-  getSceneMirrorCandidates,
+  getSceneDrivenMirror,
   oneThoughtScenes,
 } from "./one-thought.js";
 
@@ -35,7 +35,7 @@ test("one thought library exposes the ten floating scene tags", () => {
       "踏空后",
       "浮盈时",
       "浮亏时",
-      "止损前",
+      "风险处理前",
       "连续亏损后",
       "连续盈利后",
       "别人都在说时",
@@ -62,28 +62,16 @@ test("one thought library selects the first thought from scene and intensity bef
   }
 });
 
-test("one thought library recommends related mirrors from scene without selecting one", () => {
-  assert.deepEqual(
-    getSceneMirrorCandidates({ sceneKey: "surge", intensity: 3 }).mirrorKeys,
-    ["chase", "gamble", "herd"],
-  );
-  assert.deepEqual(
-    getSceneMirrorCandidates({ sceneKey: "floatingLoss", intensity: 3 }).mirrorKeys,
-    ["hold", "fantasy", "hesitate"],
-  );
-  assert.deepEqual(
-    getSceneMirrorCandidates({ sceneKey: "crowdNoise", intensity: 3 }).mirrorKeys,
-    ["herd", "chase", "anxiety"],
-  );
-  assert.deepEqual(
-    getSceneMirrorCandidates({ sceneKey: "review", intensity: 3 }).mirrorKeys,
-    ["delay", "liangzhi", "fantasy"],
-  );
+test("one thought library recommends the primary mirror from scene", () => {
+  assert.equal(getSceneDrivenMirror({ sceneKey: "surge", intensity: 3 }).mirrorKey, "chase");
+  assert.equal(getSceneDrivenMirror({ sceneKey: "floatingLoss", intensity: 3 }).mirrorKey, "hold");
+  assert.equal(getSceneDrivenMirror({ sceneKey: "crowdNoise", intensity: 3 }).mirrorKey, "herd");
+  assert.equal(getSceneDrivenMirror({ sceneKey: "review", intensity: 3 }).mirrorKey, "delay");
 
-  const fallback = getSceneMirrorCandidates({ sceneKey: "unknown", intensity: 9 });
+  const fallback = getSceneDrivenMirror({ sceneKey: "unknown", intensity: 9 });
 
   assert.equal(fallback.sceneKey, "surge");
-  assert.deepEqual(fallback.mirrorKeys, ["chase", "gamble", "herd"]);
+  assert.equal(fallback.mirrorKey, "chase");
   assert.equal(forbidden.test(JSON.stringify(fallback)), false);
 });
 

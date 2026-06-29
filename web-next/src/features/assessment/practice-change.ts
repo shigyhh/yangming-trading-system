@@ -106,7 +106,7 @@ const dayPractices: PracticeDay[] = [
     actions: ["开盘前写下可以空仓的理由。", "盘中没有触发条件时，不临时找机会。", "收盘后记录：我有没有把空仓看成落后？"],
   },
   {
-    title: "止损不解释",
+    title: "风险处理不解释",
     note: "今日只练一件事：规则触发，不与自己辩论。",
     actions: ["开盘前写下失效条件。", "条件触发时，只执行，不补理由。", "收盘后记录：我有没有和亏损谈判？"],
   },
@@ -135,7 +135,7 @@ const mirrorFirstPractices: Record<BehaviorMirrorId, PracticeDay> = {
   },
   holdingLoss: {
     title: "失效不解释",
-    note: "今日只练一件事：止损条件出现，不把希望当判断。",
+    note: "今日只练一件事：风险处理条件出现，不把希望当判断。",
     actions: ["开盘前写下这笔交易的失效条件。", "价格触发失效时，只执行，不补故事。", "收盘后记录：我有没有和亏损谈判？"],
   },
   fantasy: {
@@ -166,7 +166,7 @@ const mirrorFirstPractices: Record<BehaviorMirrorId, PracticeDay> = {
   anxiety: {
     title: "浮盈守规则",
     note: "今日只练一件事：浮盈未破规则，不提前离场。",
-    actions: ["开盘前写下止盈/持仓规则。", "盘中只看规则，不看情绪。", "收盘后记录：我有没有因为害怕回吐提前卖？"],
+    actions: ["开盘前写下盈利后的退出动作与持仓规则。", "盘中只看规则，不看情绪。", "收盘后记录：我有没有因为害怕回吐提前卖？"],
   },
   conscience: {
     title: "看见再行动",
@@ -243,7 +243,7 @@ export function createPracticeChange(report: AssessmentReport): PracticeChangeSt
     },
     {
       key: "stopLossExecution",
-      label: "止损执行",
+      label: "风险处理执行",
       before: clampScore(100 - (holding + proving) / 2),
       current: clampScore(100 - (holding + proving) / 2),
       direction: "up",
