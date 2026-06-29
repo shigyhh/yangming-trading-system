@@ -13,36 +13,84 @@ import {
 } from "@/features/assessment/components"
 import {
   dispatchTrainingPrescriptionBinding,
+  fetchDashboardSummary,
+  fetchDashboardWeeklySummary,
   fetchDataBindingSummary,
   type DataBindingSummaryResponse,
 } from "@/features/data-binding/api-client"
-import type { DataBindingKLineRecord } from "@yangming/contracts/data-binding"
+import type { DashboardCountItem, DashboardSummary, DataBindingKLineRecord, WeeklyMirrorSummary } from "@yangming/contracts/data-binding"
 import type { LivingMirrorProfile, TradeReview, TrainingPrescriptionDispatch } from "@yangming/contracts/living-mirror"
 
 const complianceText = "本中枢仅用于交易心理觉察、复盘训练与行为管理，不预测行情，不构成投资建议。"
+type DashboardRange = "7d" | "30d" | "90d"
+
+const dashboardRanges: Array<{ label: string; value: DashboardRange }> = [
+  { label: "7 天", value: "7d" },
+  { label: "30 天", value: "30d" },
+  { label: "90 天", value: "90d" },
+]
 
 export default function LivingMirrorCenterPage() {
   const [summary, setSummary] = useState<DataBindingSummaryResponse | null>(null)
+  const [dashboardSummary, setDashboardSummary] = useState<DashboardSummary | null>(null)
+  const [weeklySummary, setWeeklySummary] = useState<WeeklyMirrorSummary | null>(null)
+  const [range, setRange] = useState<DashboardRange>("30d")
+  const [dashboardNotice, setDashboardNotice] = useState("")
   const [error, setError] = useState("")
   const [loaded, setLoaded] = useState(false)
   const [isDispatching, setIsDispatching] = useState(false)
   const [dispatchMessage, setDispatchMessage] = useState("")
 
   useEffect(() => {
+    let cancelled = false
+
     const timer = window.setTimeout(() => {
-      void fetchDataBindingSummary().then((result) => {
-        if (result.ok) {
-          setSummary(result.data)
+      void Promise.all([
+        fetchDashboardSummary(range),
+        fetchDashboardWeeklySummary(),
+        fetchDataBindingSummary(),
+      ]).then(([dashboardResult, weeklyResult, summaryResult]) => {
+        if (cancelled) return
+
+        if (dashboardResult.ok) {
+          setDashboardSummary(dashboardResult.data)
+        } else {
+          setDashboardSummary(null)
+        }
+
+        if (weeklyResult.ok) {
+          setWeeklySummary(weeklyResult.data)
+        } else {
+          setWeeklySummary(null)
+        }
+
+        if (summaryResult.ok) {
+          setSummary(summaryResult.data)
+        } else {
+          setSummary(null)
+        }
+
+        const notices = [
+          dashboardResult.ok ? "" : `已使用旧版汇总数据：${dashboardResult.error}`,
+          weeklyResult.ok ? "" : `本周活镜摘要暂未更新：${weeklyResult.error}`,
+          summaryResult.ok || !dashboardResult.ok ? "" : `旧版活镜资料暂未读取：${summaryResult.error}`,
+        ].filter(Boolean)
+        setDashboardNotice(notices.join("；"))
+
+        if (dashboardResult.ok || summaryResult.ok) {
           setError("")
         } else {
-          setError(result.error)
+          setError(`${dashboardResult.error}；${summaryResult.error}`)
         }
         setLoaded(true)
       })
     }, 0)
 
-    return () => window.clearTimeout(timer)
-  }, [])
+    return () => {
+      cancelled = true
+      window.clearTimeout(timer)
+    }
+  }, [range])
 
   const profile = summary?.living_mirror_profile || null
   const tradeReviews = useMemo(() => (summary?.trade_reviews || []).slice().reverse(), [summary])
@@ -123,6 +171,39 @@ export default function LivingMirrorCenterPage() {
           </GlassPanel>
         ) : null}
 
+        <DashboardRangeSwitcher range={range} onRangeChange={setRange} />
+        <DashboardSourceNotice notice={dashboardNotice} />
+
+        <section className="mirror-center-grid mt-6" data-api="dashboard-summary dashboard-weekly" data-contract="DashboardSummary WeeklyMirrorSummary">
+          <DashboardOverviewPanel dashboard={dashboardSummary} summary={summary} range={range} />
+          <ExecutionDashboardPanel dashboard={dashboardSummary} />
+          <DashboardListPanel
+            className="lg:col-span-4"
+            eyebrow="高频错题"
+            title="topErrorTypes"
+            emptyText="暂无高频错题。完成真实复盘或训练错题卡后，这里会开始聚合。"
+            items={dashboardSummary?.mistakes?.topErrorTypes || dashboardSummary?.mistakes?.top_error_types || []}
+          />
+          <DashboardListPanel
+            className="lg:col-span-4"
+            eyebrow="第一念"
+            title="topFirstThoughts"
+            emptyText="暂无第一念样本。记录临盘第一念后，这里会显示高频念头。"
+            items={dashboardSummary?.firstThoughts?.topFirstThoughts || dashboardSummary?.first_thoughts?.top_first_thoughts || []}
+          />
+          <DashboardListPanel
+            className="lg:col-span-4"
+            eyebrow="高频触发场景"
+            title="topTriggerScenes"
+            emptyText="暂无触发场景样本。完成更多复盘后，这里会显示高频场景。"
+            items={dashboardSummary?.triggerScenes?.topTriggerScenes || dashboardSummary?.trigger_scenes?.top_trigger_scenes || []}
+          />
+          <TrainingDashboardPanel dashboard={dashboardSummary} />
+          <BookmarkDashboardPanel dashboard={dashboardSummary} />
+          <WeeklyMirrorDashboardPanel weekly={weeklySummary} />
+          <DashboardDataGapsPanel dashboard={dashboardSummary} weekly={weeklySummary} />
+        </section>
+
         <section className="mirror-center-grid mt-6">
           <OverviewPanel profile={profile} zhixingText={zhixing ? `${zhixing.totalText || zhixing.total} · ${zhixing.level}` : "待生成"} />
           <TripleReflectionPanel profile={profile} />
@@ -137,7 +218,7 @@ export default function LivingMirrorCenterPage() {
           <AssistantWorkbench assistant={assistant} />
         </section>
 
-        <div className="mt-6 grid gap-3 md:grid-cols-4">
+        <div className="mt-6 grid gap-3 md:grid-cols-3 lg:grid-cols-6">
           <PrimaryLink href="/trade-review" className="w-full">
             上传真实记录
           </PrimaryLink>
@@ -149,6 +230,12 @@ export default function LivingMirrorCenterPage() {
           </SecondaryLink>
           <SecondaryLink href="/mirror-archive" className="w-full">
             回到心镜档案
+          </SecondaryLink>
+          <SecondaryLink href="/admin/training-packs" className="w-full">
+            训练包管理
+          </SecondaryLink>
+          <SecondaryLink href="/admin/kline-segments" className="w-full">
+            K线片段标注
           </SecondaryLink>
         </div>
 
@@ -231,6 +318,232 @@ function OverviewPanel({ profile, zhixingText }: { profile: LivingMirrorProfile 
       <p className="mt-5 rounded-[8px] border border-[rgba(95,132,117,.18)] bg-[rgba(95,132,117,.055)] px-4 py-3 font-function text-sm leading-7 text-[rgba(220,212,195,.62)]">
         {profile?.trainingFocus || "先留下第一条真实记录，活镜中枢会开始形成训练方向。"}
       </p>
+    </CenterPanel>
+  )
+}
+
+function DashboardRangeSwitcher({
+  range,
+  onRangeChange,
+}: {
+  range: DashboardRange
+  onRangeChange: (range: DashboardRange) => void
+}) {
+  return (
+    <div className="mt-6 flex flex-wrap items-center gap-2">
+      {dashboardRanges.map((item) => (
+        <button
+          key={item.value}
+          type="button"
+          onClick={() => onRangeChange(item.value)}
+          className={`rounded-full border px-4 py-2 font-function text-xs font-semibold tracking-[.14em] transition ${
+            range === item.value
+              ? "border-[rgba(216,183,111,.34)] bg-[rgba(216,183,111,.12)] text-[rgba(244,235,221,.9)]"
+              : "border-[rgba(217,189,122,.12)] bg-white/[.025] text-[rgba(220,212,195,.48)] hover:border-[rgba(216,183,111,.24)] hover:text-[rgba(244,235,221,.76)]"
+          }`}
+        >
+          {item.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function DashboardSourceNotice({ notice }: { notice: string }) {
+  if (!notice) return null
+
+  return (
+    <GlassPanel className="mt-5">
+      <p className="font-function text-sm leading-7 text-[rgba(216,183,111,.76)]">{notice}</p>
+    </GlassPanel>
+  )
+}
+
+function DashboardOverviewPanel({
+  dashboard,
+  summary,
+  range,
+}: {
+  dashboard: DashboardSummary | null
+  summary: DataBindingSummaryResponse | null
+  range: DashboardRange
+}) {
+  const overview = dashboard?.overview
+  const generatedAt = dashboard?.generatedAt || dashboard?.generated_at || summary?.archive_index?.updatedAt || summary?.archive_index?.updated_at || ""
+
+  return (
+    <CenterPanel className="lg:col-span-6">
+      <PanelHeader eyebrow="DashboardSummary · overview" title="心镜数据中枢" />
+      <p className="mt-4 font-function text-sm leading-7 text-[rgba(220,212,195,.62)]">
+        汇总真实复盘、K线训练、训练收藏和执行变化，查看自己的知行轨迹。
+      </p>
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <CenterMetric label="真实复盘次数" value={numberText(overview?.tradeReviewCount ?? overview?.trade_review_count ?? summary?.trade_reviews?.length)} />
+        <CenterMetric label="K线训练次数" value={numberText(overview?.klineTrainingCount ?? overview?.kline_training_count ?? summary?.kline_records?.length)} />
+        <CenterMetric label="训练收藏次数" value={numberText(overview?.trainingBookmarkCount ?? overview?.training_bookmark_count ?? summary?.training_bookmarks?.length)} />
+        <CenterMetric label="活跃天数" value={numberText(overview?.activeDays ?? overview?.active_days)} />
+      </div>
+      <p className="mt-5 rounded-[8px] border border-[rgba(95,132,117,.18)] bg-[rgba(95,132,117,.055)] px-4 py-3 font-function text-sm leading-7 text-[rgba(220,212,195,.62)]">
+        当前窗口：{rangeLabel(range)} · 最近更新：{dateText(generatedAt)}
+      </p>
+    </CenterPanel>
+  )
+}
+
+function ExecutionDashboardPanel({ dashboard }: { dashboard: DashboardSummary | null }) {
+  const execution = dashboard?.execution
+  const sampleCount = execution?.sampleCount ?? execution?.sample_count ?? 0
+
+  return (
+    <CenterPanel className="lg:col-span-6">
+      <PanelHeader eyebrow="执行一致性" title={execution?.label || "样本不足"} />
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <CenterMetric label="执行一致率" value={formatRate(execution?.consistencyRate ?? execution?.consistency_rate)} />
+        <CenterMetric label="按计划执行" value={numberText(execution?.alignedCount ?? execution?.aligned_count)} />
+        <CenterMetric label="执行偏离" value={numberText(execution?.deviatedCount ?? execution?.deviated_count)} />
+        <CenterMetric label="说不清 / 样本不足" value={numberText((execution?.unclearCount ?? execution?.unclear_count ?? 0) + (sampleCount ? 0 : 1))} />
+      </div>
+      <p className="mt-5 font-function text-sm leading-7 text-[rgba(220,212,195,.58)]">
+        Dashboard 只呈现复盘和训练口径，用于行为训练与复盘趋势观察。
+      </p>
+    </CenterPanel>
+  )
+}
+
+function DashboardListPanel({
+  eyebrow,
+  title,
+  items,
+  emptyText,
+  className,
+}: {
+  eyebrow: string
+  title: string
+  items: DashboardCountItem[]
+  emptyText: string
+  className?: string
+}) {
+  return (
+    <CenterPanel className={className}>
+      <PanelHeader eyebrow={eyebrow} title={title} />
+      <CountList items={items} emptyText={emptyText} />
+    </CenterPanel>
+  )
+}
+
+function TrainingDashboardPanel({ dashboard }: { dashboard: DashboardSummary | null }) {
+  const training = dashboard?.training
+  const bySourceType = training?.bySourceType || training?.by_source_type || []
+  const byTrainingPack = training?.byTrainingPack || training?.by_training_pack || []
+  const bySegment = training?.bySegment || training?.by_segment || []
+
+  return (
+    <CenterPanel className="lg:col-span-7">
+      <PanelHeader eyebrow="训练统计" title="训练包 / 片段 / 来源" />
+      <div className="mt-5 grid gap-3 md:grid-cols-3">
+        <CenterMetric label="Sampling 次数" value={numberText(training?.samplingCount ?? training?.sampling_count)} />
+        <CenterMetric label="Custom Session" value={numberText(training?.customSessionCount ?? training?.custom_session_count)} />
+        <CenterMetric label="Fallback 次数" value={numberText(training?.fallbackCount ?? training?.fallback_count)} />
+      </div>
+      <div className="mt-5 grid gap-4 lg:grid-cols-3">
+        <MiniCountBlock title="sourceType 分布" items={bySourceType} emptyText="暂无训练来源分布。" />
+        <MiniCountBlock title="trainingPack 分布" items={byTrainingPack} emptyText="暂无训练包分布。" />
+        <MiniCountBlock title="segment 使用" items={bySegment} emptyText="暂无 K线片段使用记录。" />
+      </div>
+    </CenterPanel>
+  )
+}
+
+function BookmarkDashboardPanel({ dashboard }: { dashboard: DashboardSummary | null }) {
+  const bookmarks = dashboard?.bookmarks
+  const latestItems = bookmarks?.latestItems || bookmarks?.latest_items || []
+
+  return (
+    <CenterPanel className="lg:col-span-5">
+      <PanelHeader eyebrow="训练收藏" title={`${bookmarks?.totalCount ?? bookmarks?.total_count ?? 0} 条收藏`} />
+      <CountList items={bookmarks?.byType || bookmarks?.by_type || []} emptyText="暂无收藏类型分布。" />
+      <div className="mt-5 grid gap-3">
+        {latestItems.length ? (
+          latestItems.slice(0, 3).map((item) => (
+            <div key={item.id} className="rounded-[8px] border border-[rgba(217,189,122,.12)] bg-white/[.025] p-4">
+              <p className="font-function text-xs font-semibold tracking-[.14em] text-[rgba(216,183,111,.7)]">{item.sourceType || item.source_type || item.type}</p>
+              <p className="mt-2 line-clamp-2 font-function text-sm leading-7 text-[rgba(220,212,195,.62)]">{item.title || item.summary || "未命名收藏"}</p>
+            </div>
+          ))
+        ) : (
+          <EmptyText>收藏训练片段后，这里会出现最近收藏。</EmptyText>
+        )}
+      </div>
+    </CenterPanel>
+  )
+}
+
+function WeeklyMirrorDashboardPanel({ weekly }: { weekly: WeeklyMirrorSummary | null }) {
+  const execution = weekly?.executionConsistency || weekly?.execution_consistency || null
+  const nextWeekTrainingPlan = weekly?.nextWeekTrainingPlan || weekly?.next_week_training_plan || []
+
+  return (
+    <CenterPanel className="lg:col-span-7">
+      <PanelHeader eyebrow="WeeklyMirrorSummary · 本周活镜摘要" title={`${dateText(weekly?.weekStart || weekly?.week_start || "")} - ${dateText(weekly?.weekEnd || weekly?.week_end || "")}`} />
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <CenterMetric label="真实复盘" value={numberText(weekly?.tradeReviewCount ?? weekly?.trade_review_count)} />
+        <CenterMetric label="K线训练" value={numberText(weekly?.trainingCount ?? weekly?.training_count)} />
+        <CenterMetric label="训练收藏" value={numberText(weekly?.bookmarkCount ?? weekly?.bookmark_count)} />
+        <CenterMetric label="旧题复现" value={numberText(weekly?.repeatCount ?? weekly?.repeat_count)} />
+      </div>
+      <p className="mt-5 rounded-[8px] border border-[rgba(95,132,117,.18)] bg-[rgba(95,132,117,.055)] px-4 py-3 font-function text-sm leading-7 text-[rgba(220,212,195,.62)]">
+        本周执行一致率：{formatRate(execution?.consistencyRate ?? execution?.consistency_rate)}
+      </p>
+      <div className="mt-5 grid gap-4 lg:grid-cols-3">
+        <MiniCountBlock title="本周高频错题" items={weekly?.topErrorTypes || weekly?.top_error_types || []} emptyText="暂无错题样本。" />
+        <MiniCountBlock title="本周第一念" items={weekly?.topFirstThoughts || weekly?.top_first_thoughts || []} emptyText="暂无第一念样本。" />
+        <MiniCountBlock title="本周触发场景" items={weekly?.topTriggerScenes || weekly?.top_trigger_scenes || []} emptyText="暂无触发场景。" />
+      </div>
+      <div className="mt-5">
+        <p className="font-function text-xs font-semibold tracking-[.14em] text-[rgba(216,183,111,.7)]">nextWeekTrainingPlan</p>
+        {nextWeekTrainingPlan.length ? (
+          <ul className="mt-3 grid gap-2">
+            {nextWeekTrainingPlan.slice(0, 4).map((item) => (
+              <li key={item} className="rounded-[8px] border border-[rgba(217,189,122,.1)] bg-white/[.02] px-4 py-3 font-function text-sm leading-7 text-[rgba(220,212,195,.58)]">
+                {item}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <EmptyText>样本不足时，下一周训练计划会先保持空白。</EmptyText>
+        )}
+      </div>
+    </CenterPanel>
+  )
+}
+
+function DashboardDataGapsPanel({
+  dashboard,
+  weekly,
+}: {
+  dashboard: DashboardSummary | null
+  weekly: WeeklyMirrorSummary | null
+}) {
+  const dataGaps = [
+    ...(dashboard?.dataGaps || dashboard?.data_gaps || []),
+    ...(weekly?.dataGaps || weekly?.data_gaps || []),
+  ]
+
+  return (
+    <CenterPanel className="lg:col-span-5">
+      <PanelHeader eyebrow="dataGaps" title="数据缺口" />
+      {dataGaps.length ? (
+        <div className="mt-5 grid gap-3">
+          {dataGaps.slice(0, 6).map((gap) => (
+            <div key={`${gap.type}-${gap.label}`} className="rounded-[8px] border border-[rgba(217,189,122,.12)] bg-white/[.025] p-4">
+              <p className="font-function text-xs font-semibold tracking-[.14em] text-[rgba(216,183,111,.7)]">{gap.label}</p>
+              <p className="mt-2 font-function text-sm leading-7 text-[rgba(220,212,195,.58)]">{gap.message}</p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <EmptyText>暂无明确数据缺口。后续知行提醒、执行计划等数据会逐步接入。</EmptyText>
+      )}
     </CenterPanel>
   )
 }
@@ -463,6 +776,51 @@ function EmptyText({ children }: { children: ReactNode }) {
       {children}
     </p>
   )
+}
+
+function CountList({ items, emptyText }: { items: DashboardCountItem[]; emptyText: string }) {
+  if (!items.length) return <EmptyText>{emptyText}</EmptyText>
+
+  return (
+    <div className="mt-5 grid gap-3">
+      {items.slice(0, 5).map((item) => (
+        <div key={`${item.key}-${item.label}`} className="flex items-center justify-between gap-3 rounded-[8px] border border-[rgba(217,189,122,.12)] bg-white/[.025] px-4 py-3">
+          <span className="min-w-0 truncate font-function text-sm text-[rgba(220,212,195,.66)]">{item.label || item.key}</span>
+          <span className="shrink-0 font-story text-xl font-light tracking-[.06em] text-[rgba(244,235,221,.86)]">{item.count}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function MiniCountBlock({ title, items, emptyText }: { title: string; items: DashboardCountItem[]; emptyText: string }) {
+  return (
+    <div className="rounded-[8px] border border-[rgba(217,189,122,.1)] bg-white/[.02] p-4">
+      <p className="font-function text-xs font-semibold tracking-[.14em] text-[rgba(216,183,111,.7)]">{title}</p>
+      <div className="mt-3">
+        <CountList items={items.slice(0, 3)} emptyText={emptyText} />
+      </div>
+    </div>
+  )
+}
+
+function numberText(value: number | null | undefined) {
+  if (typeof value !== "number" || Number.isNaN(value)) return "0"
+  return `${value}`
+}
+
+function formatRate(value: number | null | undefined) {
+  if (typeof value !== "number" || Number.isNaN(value)) return "样本不足"
+  return `${Math.round(value * 100)}%`
+}
+
+function dateText(value: string | undefined) {
+  if (!value) return "待生成"
+  return value.slice(0, 10)
+}
+
+function rangeLabel(range: DashboardRange) {
+  return dashboardRanges.find((item) => item.value === range)?.label || "30 天"
 }
 
 function contextStatusText(status: string) {

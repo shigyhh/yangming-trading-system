@@ -16,6 +16,10 @@ import type {
   DataBindingTrainingResponse,
   DataBindingUserProfile,
   DataBindingUserSummaryResponse,
+  DashboardSummary,
+  DashboardSummaryResponse,
+  WeeklyMirrorSummary,
+  WeeklyMirrorSummaryResponse,
 } from "@yangming/contracts/data-binding"
 
 import type {
@@ -182,6 +186,34 @@ export async function syncTradeReviewBinding(review: Partial<TradeReview>) {
 export async function fetchDataBindingSummary() {
   const user = getDataBindingUserProfile()
   return requestGetJson<DataBindingSummaryResponse>(`/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/summary`)
+}
+
+export async function fetchDashboardSummary(range: "7d" | "30d" | "90d" = "30d") {
+  const user = getDataBindingUserProfile()
+  const params = new URLSearchParams({ range })
+  const result = await requestGetJson<DashboardSummaryResponse>(
+    `/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/dashboard-summary?${params.toString()}`,
+  )
+  if (!result.ok) return result
+
+  return {
+    ok: true as const,
+    data: result.data.dashboardSummary || result.data.dashboard_summary,
+  } satisfies BindingClientResult<DashboardSummary>
+}
+
+export async function fetchDashboardWeeklySummary(week = "current") {
+  const user = getDataBindingUserProfile()
+  const params = new URLSearchParams({ week })
+  const result = await requestGetJson<WeeklyMirrorSummaryResponse>(
+    `/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/dashboard-weekly?${params.toString()}`,
+  )
+  if (!result.ok) return result
+
+  return {
+    ok: true as const,
+    data: result.data.weeklyMirrorSummary || result.data.weekly_mirror_summary,
+  } satisfies BindingClientResult<WeeklyMirrorSummary>
 }
 
 export async function fetchMirrorArchiveBinding() {
