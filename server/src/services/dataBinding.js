@@ -362,6 +362,32 @@ export async function getDataBindingUserSummary(userId) {
   };
 }
 
+export async function getDashboardSummaryBinding(userId, options = {}) {
+  await ensureDataBindingLoaded();
+  const record = findUserRecord(userId);
+  if (!record) return null;
+
+  const dashboardSummary = buildDashboardSummary(record, options);
+  return {
+    user: publicUser(record),
+    dashboard_summary: dashboardSummary,
+    dashboardSummary
+  };
+}
+
+export async function getWeeklyMirrorSummaryBinding(userId, options = {}) {
+  await ensureDataBindingLoaded();
+  const record = findUserRecord(userId);
+  if (!record) return null;
+
+  const weeklyMirrorSummary = buildWeeklyMirrorSummary(record, options);
+  return {
+    user: publicUser(record),
+    weekly_mirror_summary: weeklyMirrorSummary,
+    weeklyMirrorSummary
+  };
+}
+
 export async function getMirrorArchiveBinding(userId) {
   await ensureDataBindingLoaded();
   const record = findUserRecord(userId);
@@ -2258,6 +2284,582 @@ function buildMirrorArchive(record, archiveIndex = buildArchiveIndex(record)) {
         }
       : null
   };
+}
+
+function buildDashboardSummary(record, options = {}) {
+  const window = resolveDashboardWindow(options);
+  const generatedAt = new Date().toISOString();
+  const archiveIndex = buildArchiveIndex(record);
+  const evidence = collectDashboardEvidence(record, window);
+  const allEvidence = [...evidence.tradeReviews, ...evidence.klineRecords, ...evidence.bookmarks];
+  const execution = buildDashboardExecution(evidence);
+  const topErrorTypes = topCountItems(allEvidence.flatMap((item) => item.errorType ? [item.errorType] : []));
+  const topFirstThoughts = topCountItems(evidence.tradeReviews.flatMap((item) => item.firstThought ? [item.firstThought] : []));
+  const topTriggerScenes = topCountItems(allEvidence.flatMap((item) => item.sceneTags));
+  const bySourceType = topCountItems([...evidence.klineRecords, ...evidence.bookmarks].flatMap((item) => item.sourceType ? [item.sourceType] : []));
+  const byTrainingPack = topCountItems([...evidence.klineRecords, ...evidence.bookmarks].flatMap((item) => item.trainingPackId ? [item.trainingPackId] : []));
+  const bySegment = topCountItems([...evidence.klineRecords, ...evidence.bookmarks].flatMap((item) => item.segmentId ? [item.segmentId] : []));
+  const byBookmarkType = topCountItems(evidence.bookmarks.flatMap((item) => item.bookmarkType ? [item.bookmarkType] : []));
+  const interventions = evidence.interventions || [];
+  const executionPlans = evidence.executionPlans || [];
+  const dataGaps = buildDashboardDataGaps({ evidence, execution, topErrorTypes, interventions, executionPlans });
+  const overview = buildDashboardOverview({ evidence, interventions, executionPlans });
+  const firstThoughts = {
+    topFirstThoughts,
+    top_first_thoughts: topFirstThoughts
+  };
+  const triggerScenes = {
+    topTriggerScenes,
+    top_trigger_scenes: topTriggerScenes
+  };
+  const training = {
+    bySourceType,
+    by_source_type: bySourceType,
+    byTrainingPack,
+    by_training_pack: byTrainingPack,
+    bySegment,
+    by_segment: bySegment,
+    fallbackCount: evidence.klineRecords.concat(evidence.bookmarks).filter((item) => item.fallbackUsed === true).length,
+    fallback_count: evidence.klineRecords.concat(evidence.bookmarks).filter((item) => item.fallbackUsed === true).length,
+    samplingCount: evidence.klineRecords.filter((item) => Boolean(item.samplingResult)).length,
+    sampling_count: evidence.klineRecords.filter((item) => Boolean(item.samplingResult)).length,
+    customSessionCount: [...evidence.klineRecords, ...evidence.bookmarks].filter((item) => item.sourceType === "custom_session").length,
+    custom_session_count: [...evidence.klineRecords, ...evidence.bookmarks].filter((item) => item.sourceType === "custom_session").length
+  };
+  const bookmarkLatestItems = archiveIndex.latestItems
+    .filter((item) => item.type === "training_bookmark")
+    .slice(0, 8);
+  const bookmarks = {
+    totalCount: evidence.bookmarks.length,
+    total_count: evidence.bookmarks.length,
+    byType: byBookmarkType,
+    by_type: byBookmarkType,
+    latestItems: bookmarkLatestItems,
+    latest_items: bookmarkLatestItems
+  };
+  const interventionSummary = {
+    totalCount: interventions.length,
+    total_count: interventions.length,
+    byTriggerType: topCountItems(interventions.flatMap((item) => item.triggerType ? [item.triggerType] : [])),
+    by_trigger_type: topCountItems(interventions.flatMap((item) => item.triggerType ? [item.triggerType] : [])),
+    byUserResponse: topCountItems(interventions.flatMap((item) => item.userResponse ? [item.userResponse] : [])),
+    by_user_response: topCountItems(interventions.flatMap((item) => item.userResponse ? [item.userResponse] : []))
+  };
+  const planSummary = {
+    totalCount: executionPlans.length,
+    total_count: executionPlans.length,
+    enabledCount: executionPlans.filter((item) => item.enabled !== false).length,
+    enabled_count: executionPlans.filter((item) => item.enabled !== false).length,
+    byErrorType: topCountItems(executionPlans.flatMap((item) => item.errorType ? [item.errorType] : [])),
+    by_error_type: topCountItems(executionPlans.flatMap((item) => item.errorType ? [item.errorType] : []))
+  };
+  const archive = {
+    totalCount: archiveIndex.totalCount,
+    total_count: archiveIndex.total_count,
+    byType: archiveIndex.byType,
+    by_type: archiveIndex.by_type
+  };
+  const trends = buildDashboardTrends({ evidence, window });
+  const mistakes = {
+    topErrorTypes,
+    top_error_types: topErrorTypes,
+    totalMistakeCount: topErrorTypes.reduce((sum, item) => sum + item.count, 0),
+    total_mistake_count: topErrorTypes.reduce((sum, item) => sum + item.count, 0)
+  };
+
+  return {
+    schemaVersion: "dashboard_summary_v1",
+    schema_version: "dashboard_summary_v1",
+    userId: record.id,
+    user_id: record.id,
+    range: window.range,
+    dateFrom: window.dateFromKey,
+    date_from: window.dateFromKey,
+    dateTo: window.dateToKey,
+    date_to: window.dateToKey,
+    generatedAt,
+    generated_at: generatedAt,
+    overview,
+    execution,
+    mistakes,
+    firstThoughts,
+    first_thoughts: firstThoughts,
+    triggerScenes,
+    trigger_scenes: triggerScenes,
+    training,
+    bookmarks,
+    interventions: interventionSummary,
+    executionPlans: planSummary,
+    execution_plans: planSummary,
+    archive,
+    trends,
+    dataGaps,
+    data_gaps: dataGaps
+  };
+}
+
+function buildWeeklyMirrorSummary(record, options = {}) {
+  const weekWindow = resolveWeeklyWindow(options);
+  const dashboard = buildDashboardSummary(record, {
+    range: "7d",
+    dateFrom: weekWindow.weekStart,
+    dateTo: weekWindow.weekEnd
+  });
+  const generatedAt = new Date().toISOString();
+  const progressHighlights = buildWeeklyProgressHighlights(dashboard);
+  const nextWeekTrainingPlan = buildNextWeekTrainingPlan(dashboard);
+
+  return {
+    schemaVersion: "weekly_mirror_summary_v1",
+    schema_version: "weekly_mirror_summary_v1",
+    userId: record.id,
+    user_id: record.id,
+    weekStart: weekWindow.weekStart,
+    week_start: weekWindow.weekStart,
+    weekEnd: weekWindow.weekEnd,
+    week_end: weekWindow.weekEnd,
+    generatedAt,
+    generated_at: generatedAt,
+    topErrorTypes: dashboard.mistakes.topErrorTypes,
+    top_error_types: dashboard.mistakes.top_error_types,
+    topFirstThoughts: dashboard.firstThoughts.topFirstThoughts,
+    top_first_thoughts: dashboard.firstThoughts.top_first_thoughts,
+    topTriggerScenes: dashboard.triggerScenes.topTriggerScenes,
+    top_trigger_scenes: dashboard.triggerScenes.top_trigger_scenes,
+    executionConsistency: dashboard.execution,
+    execution_consistency: dashboard.execution,
+    repeatCount: dashboard.mistakes.totalMistakeCount,
+    repeat_count: dashboard.mistakes.total_mistake_count,
+    trainingCount: dashboard.overview.klineTrainingCount,
+    training_count: dashboard.overview.kline_training_count,
+    tradeReviewCount: dashboard.overview.tradeReviewCount,
+    trade_review_count: dashboard.overview.trade_review_count,
+    bookmarkCount: dashboard.overview.trainingBookmarkCount,
+    bookmark_count: dashboard.overview.training_bookmark_count,
+    progressHighlights,
+    progress_highlights: progressHighlights,
+    nextWeekTrainingPlan,
+    next_week_training_plan: nextWeekTrainingPlan,
+    dataGaps: dashboard.dataGaps,
+    data_gaps: dashboard.data_gaps
+  };
+}
+
+function collectDashboardEvidence(record, window) {
+  const tradeReviews = (record.trade_reviews || [])
+    .map((item) => normalizeDashboardTradeReview(item, record))
+    .filter((item) => isWithinDashboardWindow(item, window));
+  const klineRecords = (record.kline_records || [])
+    .map((item) => normalizeDashboardKLineRecord(item, record))
+    .filter((item) => isWithinDashboardWindow(item, window));
+  const bookmarks = (record.training_bookmarks || [])
+    .filter((item) => item.enabled !== false)
+    .map((item) => normalizeDashboardBookmark(item, record))
+    .filter((item) => isWithinDashboardWindow(item, window));
+  const interventions = normalizeDashboardRawList(record.intervention_events || record.interventionEvents || [], record)
+    .map((item) => ({
+      ...item,
+      triggerType: cleanText(readAliasedField(item.raw, "triggerType", "trigger_type"), 80),
+      userResponse: cleanText(readAliasedField(item.raw, "userResponse", "user_response"), 80)
+    }))
+    .filter((item) => isWithinDashboardWindow(item, window));
+  const executionPlans = normalizeDashboardRawList(record.execution_plans || record.executionPlans || [], record)
+    .map((item) => ({
+      ...item,
+      errorType: cleanText(readAliasedField(item.raw, "errorType", "error_type"), 80),
+      enabled: item.raw.enabled !== false
+    }))
+    .filter((item) => isWithinDashboardWindow(item, window));
+
+  return {
+    tradeReviews,
+    klineRecords,
+    bookmarks,
+    interventions,
+    executionPlans
+  };
+}
+
+function normalizeDashboardTradeReview(review = {}, record = {}) {
+  const errorType = cleanText(readAliasedField(review, "mainErrorType", "main_error_type", [review.errorType, review.error_type]), 80);
+  const firstThought = cleanText(readAliasedField(review, "firstThought", "first_thought", [review.strongestThought, review.strongest_thought]), 180);
+  const triggerScene = cleanText(readAliasedField(review, "triggerScene", "trigger_scene"), 120);
+  const sceneTags = normalizeAliasList(readAliasedField(review, "sceneTags", "scene_tags", [review.behaviorTags, review.behavior_tags, triggerScene])) || [];
+  const dateValue = resolveDashboardRecordDate(review, [review.tradeDate, review.trade_date, record.updated_at]);
+  return {
+    id: cleanText(review.id || review.reviewId || review.review_id || crypto.randomUUID(), 120),
+    sourceKind: "trade_review",
+    dateValue,
+    dateKey: dateValue ? formatDateKey(dateValue) : "",
+    errorType,
+    firstThought,
+    sceneTags,
+    executionResult: cleanText(readAliasedField(review, "executionResult", "execution_result", [review.lawResult, review.law_result]), 120),
+    trainingPackId: cleanText(readAliasedField(review, "trainingPackId", "training_pack_id"), 100),
+    segmentId: cleanText(readAliasedField(review, "segmentId", "segment_id"), 100),
+    repeatCount: normalizeAliasNumber(readAliasedField(review, "repeatCount", "repeat_count")) || 0
+  };
+}
+
+function normalizeDashboardKLineRecord(record = {}, userRecord = {}) {
+  const samplingResult = normalizeKLineSamplingResult(readAliasedField(record, "samplingResult", "sampling_result"));
+  const sourceType = cleanText(readAliasedField(record, "sourceType", "source_type", [record.source, "kline_training"]), 80);
+  const dateValue = resolveDashboardRecordDate(record, [record.recordedAt, record.recorded_at, record.date, userRecord.updated_at]);
+  return {
+    id: cleanText(record.id || crypto.randomUUID(), 120),
+    sourceKind: "kline_record",
+    sourceType,
+    dateValue,
+    dateKey: dateValue ? formatDateKey(dateValue) : "",
+    errorType: cleanText(readAliasedField(record, "errorType", "error_type", [samplingResult?.errorType, samplingResult?.error_type]), 80),
+    firstThought: cleanText(readAliasedField(record, "firstThought", "first_thought", [record.reaction]), 180),
+    sceneTags: normalizeAliasList(readAliasedField(record, "sceneTags", "scene_tags", [samplingResult?.sceneTags, samplingResult?.scene_tags, record.scene])) || [],
+    executionResult: cleanText(readAliasedField(record, "executionResult", "execution_result", [record.lawResult, record.law_result]), 120),
+    trainingPackId: cleanText(readAliasedField(record, "trainingPackId", "training_pack_id", [samplingResult?.trainingPackId, samplingResult?.training_pack_id]), 100),
+    segmentId: cleanText(readAliasedField(record, "segmentId", "segment_id", [samplingResult?.segmentId, samplingResult?.segment_id]), 100),
+    repeatCount: normalizeAliasNumber(readAliasedField(record, "repeatCount", "repeat_count")) || 0,
+    fallbackUsed: normalizeAliasBoolean(readAliasedField(record, "fallbackUsed", "fallback_used", [samplingResult?.fallbackUsed, samplingResult?.fallback_used])) === true,
+    fallbackReason: cleanText(readAliasedField(record, "fallbackReason", "fallback_reason", [samplingResult?.fallbackReason, samplingResult?.fallback_reason]), 160),
+    samplingResult
+  };
+}
+
+function normalizeDashboardBookmark(bookmark = {}, record = {}) {
+  const samplingResult = normalizeKLineSamplingResult(readAliasedField(bookmark, "samplingResult", "sampling_result"));
+  const sourceType = cleanText(readAliasedField(bookmark, "sourceType", "source_type", ["training_bookmark"]), 80);
+  const dateValue = resolveDashboardRecordDate(bookmark, [bookmark.createdAt, bookmark.created_at, record.updated_at]);
+  return {
+    id: cleanText(bookmark.id || crypto.randomUUID(), 120),
+    sourceKind: "training_bookmark",
+    sourceType,
+    bookmarkType: cleanText(readAliasedField(bookmark, "bookmarkType", "bookmark_type"), 60),
+    dateValue,
+    dateKey: dateValue ? formatDateKey(dateValue) : "",
+    errorType: cleanText(readAliasedField(bookmark, "errorType", "error_type", [samplingResult?.errorType, samplingResult?.error_type]), 80),
+    firstThought: cleanText(readAliasedField(bookmark, "firstThought", "first_thought"), 180),
+    sceneTags: normalizeAliasList(readAliasedField(bookmark, "sceneTags", "scene_tags", [samplingResult?.sceneTags, samplingResult?.scene_tags])) || [],
+    executionResult: cleanText(readAliasedField(bookmark, "executionResult", "execution_result", [bookmark.lawResult, bookmark.law_result]), 120),
+    trainingPackId: cleanText(readAliasedField(bookmark, "trainingPackId", "training_pack_id", [samplingResult?.trainingPackId, samplingResult?.training_pack_id]), 100),
+    segmentId: cleanText(readAliasedField(bookmark, "segmentId", "segment_id", [samplingResult?.segmentId, samplingResult?.segment_id]), 100),
+    repeatCount: normalizeAliasNumber(readAliasedField(bookmark, "repeatCount", "repeat_count")) || 0,
+    fallbackUsed: normalizeAliasBoolean(readAliasedField(bookmark, "fallbackUsed", "fallback_used", [samplingResult?.fallbackUsed, samplingResult?.fallback_used])) === true,
+    fallbackReason: cleanText(readAliasedField(bookmark, "fallbackReason", "fallback_reason", [samplingResult?.fallbackReason, samplingResult?.fallback_reason]), 160),
+    samplingResult
+  };
+}
+
+function normalizeDashboardRawList(rows = [], record = {}) {
+  return (Array.isArray(rows) ? rows : []).map((raw) => {
+    const dateValue = resolveDashboardRecordDate(raw, [record.updated_at]);
+    return {
+      raw,
+      dateValue,
+      dateKey: dateValue ? formatDateKey(dateValue) : ""
+    };
+  });
+}
+
+function buildDashboardOverview({ evidence, interventions, executionPlans }) {
+  const allDated = [
+    ...evidence.tradeReviews,
+    ...evidence.klineRecords,
+    ...evidence.bookmarks,
+    ...interventions,
+    ...executionPlans
+  ].map((item) => item.dateKey).filter(Boolean);
+  const activeDays = new Set(allDated).size;
+  return {
+    tradeReviewCount: evidence.tradeReviews.length,
+    trade_review_count: evidence.tradeReviews.length,
+    klineTrainingCount: evidence.klineRecords.length,
+    kline_training_count: evidence.klineRecords.length,
+    trainingBookmarkCount: evidence.bookmarks.length,
+    training_bookmark_count: evidence.bookmarks.length,
+    interventionEventCount: interventions.length,
+    intervention_event_count: interventions.length,
+    executionPlanCount: executionPlans.length,
+    execution_plan_count: executionPlans.length,
+    activeDays,
+    active_days: activeDays
+  };
+}
+
+function buildDashboardExecution(evidence) {
+  const rows = [...evidence.tradeReviews, ...evidence.klineRecords, ...evidence.bookmarks]
+    .map((item) => normalizeDashboardExecutionResult(item.executionResult));
+  const alignedCount = rows.filter((item) => item === "aligned").length;
+  const deviatedCount = rows.filter((item) => item === "deviated").length;
+  const unclearCount = rows.filter((item) => item === "unclear").length;
+  const sampleCount = alignedCount + deviatedCount;
+  const consistencyRate = sampleCount ? alignedCount / sampleCount : null;
+  const label = sampleCount ? `执行一致率 ${Math.round(consistencyRate * 100)}%` : "样本不足";
+  return {
+    alignedCount,
+    aligned_count: alignedCount,
+    deviatedCount,
+    deviated_count: deviatedCount,
+    unclearCount,
+    unclear_count: unclearCount,
+    sampleCount,
+    sample_count: sampleCount,
+    consistencyRate,
+    consistency_rate: consistencyRate,
+    label
+  };
+}
+
+function normalizeDashboardExecutionResult(value) {
+  const text = cleanText(value, 80).toLowerCase();
+  if (!text) return "missing";
+  if (["aligned", "followed", "consistent", "按计划执行", "执行一致", "守法"].includes(text)) return "aligned";
+  if (["deviated", "deviation", "broken", "执行偏离", "偏离计划", "破法"].includes(text)) return "deviated";
+  if (["unclear", "unknown", "不清楚", "待确认", "未判断"].includes(text)) return "unclear";
+  return "unclear";
+}
+
+function topCountItems(values = [], limit = 8) {
+  const counts = new Map();
+  values
+    .map((value) => cleanText(value, 100))
+    .filter(Boolean)
+    .forEach((value) => {
+      counts.set(value, (counts.get(value) || 0) + 1);
+    });
+  return Array.from(counts.entries())
+    .map(([key, count]) => ({ key, label: key, count }))
+    .sort((left, right) => right.count - left.count || left.label.localeCompare(right.label, "zh-Hans-CN"))
+    .slice(0, limit);
+}
+
+function buildDashboardTrends({ evidence, window }) {
+  const allEvidence = [...evidence.tradeReviews, ...evidence.klineRecords, ...evidence.bookmarks];
+  const byDate = groupEvidenceByDate(allEvidence, window);
+  const daily = Array.from(byDate.entries()).map(([date, rows]) => buildDashboardTrendBucket(date, rows));
+  const byWeek = new Map();
+  allEvidence.forEach((item) => {
+    if (!item.dateValue) return;
+    const weekStart = formatDateKey(startOfWeek(item.dateValue));
+    const rows = byWeek.get(weekStart) || [];
+    rows.push(item);
+    byWeek.set(weekStart, rows);
+  });
+  const weekly = Array.from(byWeek.entries())
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([weekStart, rows]) => ({
+      ...buildDashboardTrendBucket(weekStart, rows),
+      weekStart,
+      week_start: weekStart
+    }));
+  const mistakeTrend = topCountItems(allEvidence.flatMap((item) => item.errorType ? [item.errorType] : []));
+  const trainingTrend = topCountItems(evidence.klineRecords.flatMap((item) => item.sourceType ? [item.sourceType] : []));
+  return {
+    daily,
+    weekly,
+    executionConsistencyTrend: daily,
+    execution_consistency_trend: daily,
+    mistakeTrend,
+    mistake_trend: mistakeTrend,
+    trainingTrend,
+    training_trend: trainingTrend
+  };
+}
+
+function groupEvidenceByDate(rows = [], window) {
+  const days = new Map();
+  let cursor = new Date(window.dateFrom);
+  while (cursor.getTime() <= window.dateTo.getTime()) {
+    days.set(formatDateKey(cursor), []);
+    cursor = new Date(cursor.getTime() + 24 * 60 * 60 * 1000);
+  }
+  rows.forEach((item) => {
+    if (!item.dateKey) return;
+    if (!days.has(item.dateKey)) days.set(item.dateKey, []);
+    days.get(item.dateKey).push(item);
+  });
+  return new Map(Array.from(days.entries()).sort(([left], [right]) => left.localeCompare(right)));
+}
+
+function buildDashboardTrendBucket(key, rows = []) {
+  const tradeReviewCount = rows.filter((item) => item.sourceKind === "trade_review").length;
+  const klineTrainingCount = rows.filter((item) => item.sourceKind === "kline_record").length;
+  const trainingBookmarkCount = rows.filter((item) => item.sourceKind === "training_bookmark").length;
+  const execution = buildDashboardExecution({
+    tradeReviews: rows.filter((item) => item.sourceKind === "trade_review"),
+    klineRecords: rows.filter((item) => item.sourceKind === "kline_record"),
+    bookmarks: rows.filter((item) => item.sourceKind === "training_bookmark")
+  });
+  return {
+    key,
+    date: key,
+    tradeReviewCount,
+    trade_review_count: tradeReviewCount,
+    klineTrainingCount,
+    kline_training_count: klineTrainingCount,
+    trainingBookmarkCount,
+    training_bookmark_count: trainingBookmarkCount,
+    executionSampleCount: execution.sampleCount,
+    execution_sample_count: execution.sample_count,
+    consistencyRate: execution.consistencyRate,
+    consistency_rate: execution.consistency_rate
+  };
+}
+
+function buildDashboardDataGaps({ evidence, execution, topErrorTypes, interventions, executionPlans }) {
+  const allEvidence = [...evidence.tradeReviews, ...evidence.klineRecords, ...evidence.bookmarks];
+  const gaps = [];
+  if (!execution.sampleCount || allEvidence.some((item) => !item.executionResult)) {
+    gaps.push(buildDashboardDataGap("missingExecutionResult", "执行结果缺口", "部分复盘、训练或收藏还没有 executionResult，执行一致率样本可能偏少。"));
+  }
+  if (!topErrorTypes.length || allEvidence.some((item) => !item.errorType)) {
+    gaps.push(buildDashboardDataGap("missingErrorType", "错题类型缺口", "部分记录还没有 errorType，最高频错题统计可能偏少。"));
+  }
+  if (allEvidence.some((item) => !item.dateValue)) {
+    gaps.push(buildDashboardDataGap("missingDate", "时间字段缺口", "部分证据没有可识别时间，只能进入总量统计。"));
+  }
+  if (evidence.bookmarks.some((item) => !item.segmentId && !item.trainingPackId && !item.samplingResult)) {
+    gaps.push(buildDashboardDataGap("missingBookmarkMetadata", "收藏元数据缺口", "部分训练收藏缺少片段或训练包引用。"));
+  }
+  if (!interventions.length) {
+    gaps.push(buildDashboardDataGap("missingInterventionEvents", "知行提醒缺口", "当前没有 interventionEvent 数据，知行提醒效果暂不计入看板。"));
+  }
+  if (!executionPlans.length) {
+    gaps.push(buildDashboardDataGap("missingExecutionPlans", "执行计划缺口", "当前没有 executionPlan 数据，执行计划完成情况暂不计入看板。"));
+  }
+  return gaps;
+}
+
+function buildDashboardDataGap(type, label, message) {
+  return {
+    type,
+    key: type,
+    label,
+    message
+  };
+}
+
+function buildWeeklyProgressHighlights(dashboard) {
+  const highlights = [];
+  if (dashboard.overview.tradeReviewCount || dashboard.overview.klineTrainingCount) {
+    highlights.push(`本周沉淀 ${dashboard.overview.tradeReviewCount} 次真实复盘、${dashboard.overview.klineTrainingCount} 次 K线训练。`);
+  }
+  if (dashboard.execution.sampleCount) {
+    highlights.push(`本周执行一致率为 ${Math.round(dashboard.execution.consistencyRate * 100)}%，继续以记录和复盘校准。`);
+  }
+  if (dashboard.bookmarks.totalCount) {
+    highlights.push(`本周新增 ${dashboard.bookmarks.totalCount} 条训练收藏，可作为后续回放证据。`);
+  }
+  return highlights.length ? highlights : ["本周样本不足，先完成复盘或训练再观察。"];
+}
+
+function buildNextWeekTrainingPlan(dashboard) {
+  const primaryError = dashboard.mistakes.topErrorTypes[0]?.label;
+  const primaryScene = dashboard.triggerScenes.topTriggerScenes[0]?.label;
+  const plan = [];
+  if (primaryError) {
+    plan.push(`下一周继续围绕「${primaryError}」做复盘和专项训练。`);
+  }
+  if (primaryScene) {
+    plan.push(`遇到「${primaryScene}」时，先停十秒，再记录第一念和下一次执行动作。`);
+  }
+  if (!plan.length) {
+    plan.push("下一周先补足真实复盘和 K线训练样本，再观察高频模式。");
+  }
+  return plan;
+}
+
+function resolveDashboardWindow(options = {}) {
+  const range = normalizeDashboardRange(options.range);
+  const dateTo = parseDashboardDate(readAliasedField(options, "dateTo", "date_to")) || endOfDay(new Date());
+  const days = range === "7d" ? 7 : range === "90d" ? 90 : 30;
+  const fallbackFrom = startOfDay(new Date(dateTo.getTime() - (days - 1) * 24 * 60 * 60 * 1000));
+  const dateFrom = parseDashboardDate(readAliasedField(options, "dateFrom", "date_from")) || fallbackFrom;
+  return {
+    range,
+    dateFrom: startOfDay(dateFrom),
+    dateTo: endOfDay(dateTo),
+    dateFromKey: formatDateKey(dateFrom),
+    dateToKey: formatDateKey(dateTo)
+  };
+}
+
+function normalizeDashboardRange(range) {
+  const text = cleanText(range || "30d", 12);
+  return ["7d", "30d", "90d"].includes(text) ? text : "30d";
+}
+
+function resolveWeeklyWindow(options = {}) {
+  const start = parseDashboardDate(readAliasedField(options, "weekStart", "week_start"));
+  const end = parseDashboardDate(readAliasedField(options, "weekEnd", "week_end"));
+  if (start && end) {
+    return {
+      weekStart: formatDateKey(start),
+      weekEnd: formatDateKey(end)
+    };
+  }
+  const base = options.week === "previous"
+    ? new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    : new Date();
+  const weekStart = startOfWeek(base);
+  const weekEnd = new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
+  return {
+    weekStart: formatDateKey(weekStart),
+    weekEnd: formatDateKey(weekEnd)
+  };
+}
+
+function resolveDashboardRecordDate(record = {}, fallbackValues = []) {
+  return parseDashboardDate(firstPresent(
+    record.recordedAt,
+    record.recorded_at,
+    record.tradeDate,
+    record.trade_date,
+    record.savedAt,
+    record.saved_at,
+    record.date,
+    record.dateKey,
+    record.date_key,
+    record.createdAt,
+    record.created_at,
+    record.updatedAt,
+    record.updated_at,
+    ...fallbackValues
+  ));
+}
+
+function parseDashboardDate(value) {
+  if (!hasFieldValue(value)) return null;
+  const text = String(value);
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(text) ? new Date(`${text}T00:00:00.000Z`) : new Date(text);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function isWithinDashboardWindow(item, window) {
+  if (!item.dateValue) return true;
+  const time = item.dateValue.getTime();
+  return time >= window.dateFrom.getTime() && time <= window.dateTo.getTime();
+}
+
+function formatDateKey(date) {
+  return new Date(date).toISOString().slice(0, 10);
+}
+
+function startOfDay(date) {
+  const next = new Date(date);
+  next.setUTCHours(0, 0, 0, 0);
+  return next;
+}
+
+function endOfDay(date) {
+  const next = new Date(date);
+  next.setUTCHours(23, 59, 59, 999);
+  return next;
+}
+
+function startOfWeek(date) {
+  const next = startOfDay(date);
+  const day = next.getUTCDay() || 7;
+  next.setUTCDate(next.getUTCDate() - day + 1);
+  return next;
 }
 
 function inferSecondaryMirror(report, mainMirror) {
