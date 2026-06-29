@@ -103,6 +103,8 @@ export async function route(req, res) {
         data_binding_user_report: "GET /api/v1/data-binding/users/:user_id/report",
         data_binding_training_record: "POST /api/v1/data-binding/users/:user_id/training-records",
         data_binding_kline_record: "POST /api/v1/data-binding/users/:user_id/kline-records",
+        data_binding_mirror_archive: "GET /api/v1/data-binding/users/:user_id/mirror-archive",
+        data_binding_mirror_archive_item: "GET /api/v1/data-binding/users/:user_id/mirror-archive/:item_id",
         data_binding_training_bookmarks: "GET|POST /api/v1/data-binding/users/:user_id/training-bookmarks",
         data_binding_training_bookmark: "PATCH|DELETE /api/v1/data-binding/users/:user_id/training-bookmarks/:id",
         data_binding_trade_review: "GET|POST /api/v1/data-binding/users/:user_id/trade-reviews",

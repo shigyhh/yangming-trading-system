@@ -336,6 +336,8 @@ export async function getDataBindingUserSummary(userId) {
   const record = findUserRecord(userId);
   if (!record) return null;
 
+  const archiveIndex = buildArchiveIndex(record);
+
   return {
     user: publicUser(record),
     report: record.assessment?.report || null,
@@ -354,7 +356,39 @@ export async function getDataBindingUserSummary(userId) {
     feishu_sync: record.feishu_sync || null,
     share_card: record.share_card || null,
     admin_user: toAdminUser(record),
-    mirror_archive: buildMirrorArchive(record)
+    archive_index: archiveIndex,
+    archiveIndex,
+    mirror_archive: buildMirrorArchive(record, archiveIndex)
+  };
+}
+
+export async function getMirrorArchiveBinding(userId) {
+  await ensureDataBindingLoaded();
+  const record = findUserRecord(userId);
+  if (!record) return null;
+
+  const archiveIndex = buildArchiveIndex(record);
+  return {
+    user: publicUser(record),
+    archive_index: archiveIndex,
+    archiveIndex,
+    mirror_archive: buildMirrorArchive(record, archiveIndex)
+  };
+}
+
+export async function getMirrorArchiveItemBinding(userId, itemId) {
+  await ensureDataBindingLoaded();
+  const record = findUserRecord(userId);
+  if (!record) return null;
+
+  const archiveIndex = buildArchiveIndex(record);
+  const item = archiveIndex.latestItems.find((entry) => entry.id === itemId || entry.sourceId === itemId);
+  if (!item) return null;
+
+  return {
+    user: publicUser(record),
+    archive_item: item,
+    archiveItem: item
   };
 }
 
@@ -1944,7 +1978,239 @@ function buildThiefCounts(record) {
   return counts;
 }
 
-function buildMirrorArchive(record) {
+function buildArchiveIndex(record) {
+  const items = [];
+  const mirrorReport = record.mirror_report || (record.assessment?.report ? buildMirrorReportFromAssessment(record.assessment.report, record) : null);
+
+  if (mirrorReport) {
+    items.push(createArchiveItem({
+      type: "mirror_report",
+      sourceId: mirrorReport.id || record.assessment?.id || record.id,
+      title: "心镜报告",
+      summary: mirrorReport.conclusion || mirrorReport.summary || mirrorReport.mainMirror || "一次心镜照见报告。",
+      createdAt: mirrorReport.createdAt || record.assessment?.saved_at || record.created_at,
+      updatedAt: mirrorReport.updatedAt || record.updated_at,
+      metadata: {
+        mainMirror: mirrorReport.mainMirror,
+        subMirror: mirrorReport.subMirror,
+        riskRadar: mirrorReport.riskRadar
+      }
+    }));
+  }
+
+  (record.trade_reviews || []).forEach((review) => {
+    const reviewId = cleanText(review.id || review.reviewId || review.review_id || crypto.randomUUID(), 120);
+    const errorType = readAliasedField(review, "mainErrorType", "main_error_type", [review.errorType, review.error_type]);
+    const firstThought = readAliasedField(review, "firstThought", "first_thought", [review.strongestThought, review.strongest_thought]);
+    const sceneTags = normalizeAliasList(readAliasedField(review, "sceneTags", "scene_tags", [review.behaviorTags, review.behavior_tags, review.triggerScene, review.trigger_scene]));
+    const createdAt = cleanText(readAliasedField(review, "createdAt", "created_at", [review.tradeDate, review.trade_date, review.saved_at, record.updated_at]), 40);
+    items.push(createArchiveItem({
+      type: "trade_review",
+      sourceId: reviewId,
+      title: cleanText(review.title || `真实复盘 · ${errorType || "一次照见"}`, 100),
+      summary: cleanText(review.reviewText || review.review_text || review.nextRule || review.next_rule || firstThought || "已记录一次真实复盘。", 180),
+      errorType,
+      firstThought,
+      sceneTags,
+      executionResult: readAliasedField(review, "executionResult", "execution_result"),
+      segmentId: readAliasedField(review, "segmentId", "segment_id"),
+      trainingPackId: readAliasedField(review, "trainingPackId", "training_pack_id"),
+      createdAt,
+      updatedAt: readAliasedField(review, "updatedAt", "updated_at", [createdAt, record.updated_at]),
+      metadata: {
+        triggerScene: review.triggerScene || review.trigger_scene,
+        detectedMirror: review.detectedMirror || review.detected_mirror,
+        nextAction: review.nextRule || review.next_rule,
+        trainingPrescription: review.trainingPrescription || review.training_prescription
+      }
+    }));
+
+    const mistakeCard = review.mistakeCard || review.mistake_card;
+    if (mistakeCard && typeof mistakeCard === "object" && !Array.isArray(mistakeCard)) {
+      items.push(createArchiveItem({
+        type: "mistake_card",
+        sourceId: `${reviewId}-mistake-card`,
+        title: cleanText(mistakeCard.title || `错题卡 · ${errorType || "复盘"}`, 100),
+        summary: cleanText(mistakeCard.summary || mistakeCard.note || "从一次复盘中沉淀的错题卡。", 180),
+        errorType,
+        firstThought,
+        sceneTags,
+        createdAt,
+        updatedAt: readAliasedField(review, "updatedAt", "updated_at", [createdAt, record.updated_at]),
+        metadata: mistakeCard
+      }));
+    }
+  });
+
+  (record.kline_records || []).forEach((klineRecord) => {
+    const klineId = cleanText(klineRecord.id || crypto.randomUUID(), 120);
+    const samplingResult = normalizeKLineSamplingResult(readAliasedField(klineRecord, "samplingResult", "sampling_result"));
+    const errorType = readAliasedField(klineRecord, "errorType", "error_type", [samplingResult?.errorType, samplingResult?.error_type]);
+    const sceneTags = normalizeAliasList(readAliasedField(klineRecord, "sceneTags", "scene_tags", [samplingResult?.sceneTags, samplingResult?.scene_tags, klineRecord.scene]));
+    const createdAt = cleanText(klineRecord.recorded_at || klineRecord.recordedAt || record.updated_at, 40);
+    items.push(createArchiveItem({
+      type: "kline_record",
+      sourceId: klineId,
+      title: cleanText(`K线训练 · ${klineRecord.scene || errorType || "一次练习"}`, 100),
+      summary: cleanText(klineRecord.process_insight || klineRecord.processInsight || klineRecord.reaction || "已沉淀一次 K线训练记录。", 180),
+      errorType,
+      sceneTags,
+      executionResult: readAliasedField(klineRecord, "executionResult", "execution_result"),
+      segmentId: readAliasedField(klineRecord, "segmentId", "segment_id", [samplingResult?.segmentId, samplingResult?.segment_id]),
+      trainingPackId: readAliasedField(klineRecord, "trainingPackId", "training_pack_id", [samplingResult?.trainingPackId, samplingResult?.training_pack_id]),
+      createdAt,
+      updatedAt: readAliasedField(klineRecord, "updatedAt", "updated_at", [createdAt]),
+      metadata: {
+        day: klineRecord.day,
+        scene: klineRecord.scene,
+        reaction: klineRecord.reaction,
+        sourceType: klineRecord.sourceType || klineRecord.source_type,
+        samplingResult
+      }
+    }));
+  });
+
+  (record.training_bookmarks || []).forEach((bookmark) => {
+    const bookmarkId = cleanText(bookmark.id || crypto.randomUUID(), 120);
+    const samplingResult = normalizeKLineSamplingResult(readAliasedField(bookmark, "samplingResult", "sampling_result"));
+    const errorType = readAliasedField(bookmark, "errorType", "error_type", [samplingResult?.errorType, samplingResult?.error_type]);
+    const sceneTags = normalizeAliasList(readAliasedField(bookmark, "sceneTags", "scene_tags", [samplingResult?.sceneTags, samplingResult?.scene_tags]));
+    const createdAt = cleanText(readAliasedField(bookmark, "createdAt", "created_at", [record.updated_at]), 40);
+    items.push(createArchiveItem({
+      type: "training_bookmark",
+      sourceId: bookmarkId,
+      title: cleanText(bookmark.title || "训练收藏", 100),
+      summary: cleanText(bookmark.note || bookmark.bookmarkType || bookmark.bookmark_type || "一次训练收藏。", 180),
+      errorType,
+      sceneTags,
+      executionResult: readAliasedField(bookmark, "executionResult", "execution_result"),
+      segmentId: readAliasedField(bookmark, "segmentId", "segment_id", [samplingResult?.segmentId, samplingResult?.segment_id]),
+      trainingPackId: readAliasedField(bookmark, "trainingPackId", "training_pack_id", [samplingResult?.trainingPackId, samplingResult?.training_pack_id]),
+      createdAt,
+      updatedAt: readAliasedField(bookmark, "updatedAt", "updated_at", [createdAt]),
+      metadata: {
+        bookmarkType: bookmark.bookmarkType || bookmark.bookmark_type,
+        sourceType: bookmark.sourceType || bookmark.source_type,
+        sessionId: bookmark.sessionId || bookmark.session_id,
+        actionId: bookmark.actionId || bookmark.action_id,
+        barIndex: bookmark.barIndex || bookmark.bar_index,
+        symbol: bookmark.symbol,
+        period: bookmark.period,
+        startDate: bookmark.startDate || bookmark.start_date,
+        endDate: bookmark.endDate || bookmark.end_date,
+        samplingResult
+      }
+    }));
+  });
+
+  const livingMirrorProfile = record.living_mirror_profile;
+  if (livingMirrorProfile) {
+    items.push(createArchiveItem({
+      type: "growth_projection",
+      sourceId: `${record.id}-living-mirror-profile`,
+      title: "活镜成长谱摘要",
+      summary: livingMirrorProfile.nextAction || livingMirrorProfile.status || "当前活镜成长摘要。",
+      createdAt: livingMirrorProfile.updatedAt || livingMirrorProfile.updated_at || record.updated_at || record.created_at,
+      updatedAt: livingMirrorProfile.updatedAt || livingMirrorProfile.updated_at || record.updated_at,
+      metadata: {
+        status: livingMirrorProfile.status,
+        progress: livingMirrorProfile.progress,
+        nextAction: livingMirrorProfile.nextAction,
+        dominantReaction: livingMirrorProfile.dominantReaction,
+        latestMirrorType: livingMirrorProfile.latestMirrorType
+      }
+    }));
+  }
+
+  const sortedItems = items
+    .filter(Boolean)
+    .sort((left, right) => Date.parse(right.updatedAt || right.createdAt || "") - Date.parse(left.updatedAt || left.createdAt || ""));
+  const byType = sortedItems.reduce((counts, item) => {
+    counts[item.type] = (counts[item.type] || 0) + 1;
+    return counts;
+  }, {});
+  const updatedAt = sortedItems[0]?.updatedAt || record.updated_at || record.created_at || new Date().toISOString();
+
+  return {
+    schemaVersion: "mirror_archive_index_v1",
+    userId: record.id,
+    user_id: record.id,
+    totalCount: sortedItems.length,
+    total_count: sortedItems.length,
+    byType,
+    by_type: byType,
+    latestItems: sortedItems,
+    latest_items: sortedItems,
+    updatedAt,
+    updated_at: updatedAt
+  };
+}
+
+function createArchiveItem({
+  type,
+  sourceId,
+  title,
+  summary,
+  errorType,
+  firstThought,
+  sceneTags,
+  executionResult,
+  segmentId,
+  trainingPackId,
+  createdAt,
+  updatedAt,
+  metadata = {}
+}) {
+  const normalizedType = cleanText(type || "note", 60) || "note";
+  const normalizedSourceId = cleanText(sourceId || crypto.randomUUID(), 120);
+  const normalizedCreatedAt = cleanText(createdAt || updatedAt || new Date().toISOString(), 40);
+  const normalizedUpdatedAt = cleanText(updatedAt || normalizedCreatedAt, 40);
+  const item = {
+    id: buildArchiveItemId(normalizedType, normalizedSourceId),
+    type: normalizedType,
+    title: cleanText(title || "心镜档案", 100),
+    summary: cleanText(summary || "一次可回溯的心镜记录。", 180),
+    sourceId: normalizedSourceId,
+    source_id: normalizedSourceId,
+    sourceType: normalizedType,
+    source_type: normalizedType,
+    createdAt: normalizedCreatedAt,
+    created_at: normalizedCreatedAt,
+    updatedAt: normalizedUpdatedAt,
+    updated_at: normalizedUpdatedAt,
+    metadata: stripArchiveHeavyPayload(metadata)
+  };
+
+  addAliasedField(item, "errorType", "error_type", errorType, (value) => cleanText(value, 80));
+  addAliasedField(item, "firstThought", "first_thought", firstThought, (value) => cleanText(value, 180));
+  addAliasedField(item, "sceneTags", "scene_tags", sceneTags, normalizeAliasList);
+  addAliasedField(item, "executionResult", "execution_result", executionResult, (value) => cleanText(value, 120));
+  addAliasedField(item, "segmentId", "segment_id", segmentId, (value) => cleanText(value, 100));
+  addAliasedField(item, "trainingPackId", "training_pack_id", trainingPackId, (value) => cleanText(value, 100));
+
+  return item;
+}
+
+function buildArchiveItemId(type, sourceId) {
+  return `archive_${type}_${sourceId}`.replace(/[^a-zA-Z0-9_-]/g, "_");
+}
+
+function stripArchiveHeavyPayload(value) {
+  if (!hasFieldValue(value)) return {};
+  if (Array.isArray(value)) {
+    return value.map(stripArchiveHeavyPayload).filter(hasFieldValue).slice(0, 20);
+  }
+  if (typeof value !== "object") return value;
+  return Object.entries(value).reduce((result, [key, item]) => {
+    if (["bars", "bar", "candles", "ohlc", "rawBars", "raw_bars"].includes(key)) return result;
+    const normalizedKey = cleanText(key, 60);
+    const normalizedValue = stripArchiveHeavyPayload(item);
+    if (normalizedKey && hasFieldValue(normalizedValue)) result[normalizedKey] = normalizedValue;
+    return result;
+  }, {});
+}
+
+function buildMirrorArchive(record, archiveIndex = buildArchiveIndex(record)) {
   const mirrorReport = record.mirror_report || (record.assessment?.report ? buildMirrorReportFromAssessment(record.assessment.report, record) : null);
   return {
     user: {
@@ -1954,6 +2220,9 @@ function buildMirrorArchive(record) {
       inviteCode: record.invite_source,
       channel: record.source_channel
     },
+    archiveIndex,
+    archive_index: archiveIndex,
+    items: archiveIndex.latestItems,
     reports: mirrorReport ? [mirrorReport] : [],
     trainingRecords: (record.training_records || []).map((item) => ({
       id: item.id,

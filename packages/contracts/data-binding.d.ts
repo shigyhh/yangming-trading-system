@@ -1,4 +1,5 @@
 import type {
+  ArchiveIndex,
   AssistantHandoff,
   DailyHeartWitness,
   LivingMirrorClosedLoop,
@@ -493,6 +494,8 @@ export type DataBindingUserSummaryResponse = {
   share_cards?: ShareCardSnapshot[]
   admin_user?: DataBindingAdminUser
   mirror_archive?: MirrorArchive
+  archive_index?: ArchiveIndex
+  archiveIndex?: ArchiveIndex
 }
 
 export type DataBindingFeishuSyncResponse = {
