@@ -5,6 +5,7 @@ import test from "node:test"
 const typeUrl = new URL("./archiveTypes.ts", import.meta.url)
 const engineUrl = new URL("./archiveEngine.ts", import.meta.url)
 const pageUrl = new URL("../../app/mirror-archive/page.tsx", import.meta.url)
+const dataBindingClientUrl = new URL("../data-binding/api-client.ts", import.meta.url)
 const forbiddenPhrases = ["推荐买入", "推荐卖出", "必赚", "稳赚", "收益保证", "喊单", "抄底", "逃顶"]
 
 test("mirror archive loads local report growth review and heart proof records", async () => {
@@ -49,6 +50,46 @@ test("mirror archive loads local report growth review and heart proof records", 
     "破环动作",
   ].forEach((token) => {
     assert.equal(source.includes(token), true, `mirror archive engine missing ${token}`)
+  })
+})
+
+test("mirror archive reads official Archive API with summary and local fallback", async () => {
+  const clientSource = await readFile(dataBindingClientUrl, "utf8")
+  const engineSource = await readFile(engineUrl, "utf8")
+  const pageSource = await readFile(pageUrl, "utf8")
+
+  ;[
+    "fetchMirrorArchiveBinding",
+    "/api/v1/data-binding/users/",
+    "/mirror-archive",
+    "MirrorArchiveBindingResponse",
+  ].forEach((token) => {
+    assert.equal(clientSource.includes(token), true, `data-binding client missing ${token}`)
+  })
+
+  ;[
+    "mapServerMirrorArchiveData",
+    "mapSummaryMirrorArchiveData",
+    "ArchiveIndex",
+    "ArchiveItem",
+    "archive_index",
+    "latest_items",
+    "source_id",
+    "execution_result",
+    "training_bookmark",
+    "kline_record",
+  ].forEach((token) => {
+    assert.equal(engineSource.includes(token), true, `mirror archive mapper missing ${token}`)
+  })
+
+  ;[
+    "fetchMirrorArchiveBinding",
+    "fetchDataBindingSummary",
+    "loadMirrorArchiveData",
+    "mapServerMirrorArchiveData",
+    "mapSummaryMirrorArchiveData",
+  ].forEach((token) => {
+    assert.equal(pageSource.includes(token), true, `mirror archive page missing ${token}`)
   })
 })
 
@@ -104,6 +145,47 @@ test("mirror archive page exposes Sprint 11 MVP sections", async () => {
     "detailHref",
   ].forEach((token) => {
     assert.equal(source.includes(token), true, `mirror archive page missing ${token}`)
+  })
+
+  forbiddenPhrases.forEach((phrase) => {
+    assert.equal(source.includes(phrase), false, `mirror archive contains forbidden phrase ${phrase}`)
+  })
+})
+
+test("mirror archive page exposes P9A archive center structure", async () => {
+  const source = await readFile(pageUrl, "utf8")
+
+  ;[
+    "心镜档案馆",
+    "真实复盘、K线训练、训练收藏、心镜报告和成长痕迹的归档中心",
+    "ArchiveIndex",
+    "ArchiveItem",
+    "selectedArchiveType",
+    "archiveTypeFilters",
+    "档案总数",
+    "K线训练记录数量",
+    "训练收藏数量",
+    "最近更新时间",
+    "全部",
+    "真实复盘",
+    "错题卡",
+    "K线训练",
+    "训练收藏",
+    "心镜报告",
+    "成长谱",
+    "知行提醒",
+    "执行计划",
+    "暂无档案。完成一次真实复盘或 K线训练后，这里会形成你的心镜证据。",
+    "档案加载失败，请稍后重试。",
+    "sourceId",
+    "sourceType",
+    "errorType",
+    "firstThought",
+    "executionResult",
+    "sceneTags",
+    "metadata",
+  ].forEach((token) => {
+    assert.equal(source.includes(token), true, `P9A mirror archive page missing ${token}`)
   })
 
   forbiddenPhrases.forEach((phrase) => {

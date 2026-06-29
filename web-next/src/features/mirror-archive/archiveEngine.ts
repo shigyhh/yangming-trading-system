@@ -9,11 +9,231 @@ import { buildLivingMirrorGrowthProfileFromLocal, loadGrowthProfileArchiveItems,
 import type { GrowthProfile, LivingMirrorGrowthProfile } from "@/features/living-mirror-growth/growthProfileTypes"
 import { loadMirrorReport } from "@/features/mirror-report/mirrorReportStorage"
 import { tradeReviewLastResultStorageKey } from "@/features/trade-review/trade-review"
-import type { TradeReview } from "../../../../packages/contracts/living-mirror"
+import type { DataBindingUserSummaryResponse } from "../../../../packages/contracts/data-binding"
+import type {
+  ArchiveIndex as ServerArchiveIndex,
+  ArchiveItem as ServerArchiveItem,
+  MirrorArchive as ServerMirrorArchive,
+  TradeReview,
+} from "../../../../packages/contracts/living-mirror"
 
 import type { ArchiveItem, MirrorArchiveData } from "./archiveTypes"
 
 export const mirrorArchiveSource = "localStorage"
+
+type MirrorArchiveApiPayload = {
+  archiveIndex?: ServerArchiveIndex | null
+  archive_index?: ServerArchiveIndex | null
+  mirrorArchive?: ServerMirrorArchive | null
+  mirror_archive?: ServerMirrorArchive | null
+}
+
+export type ArchiveTypeFilter =
+  | "all"
+  | "trade_review"
+  | "mistake_card"
+  | "kline_record"
+  | "training_bookmark"
+  | "mirror_report"
+  | "growth_projection"
+  | "intervention_event"
+  | "execution_plan"
+
+export const archiveTypeFilters: Array<{ key: ArchiveTypeFilter; label: string }> = [
+  { key: "all", label: "全部" },
+  { key: "trade_review", label: "真实复盘" },
+  { key: "mistake_card", label: "错题卡" },
+  { key: "kline_record", label: "K线训练" },
+  { key: "training_bookmark", label: "训练收藏" },
+  { key: "mirror_report", label: "心镜报告" },
+  { key: "growth_projection", label: "成长谱" },
+  { key: "intervention_event", label: "知行提醒" },
+  { key: "execution_plan", label: "执行计划" },
+]
+
+export function mapServerMirrorArchiveData(payload: MirrorArchiveApiPayload | null | undefined): MirrorArchiveData | null {
+  if (!payload) return null
+
+  const mirrorArchive = payload.mirrorArchive || payload.mirror_archive
+  const archiveIndex = payload.archiveIndex || payload.archive_index || mirrorArchive?.archiveIndex || mirrorArchive?.archive_index || null
+  const rawItems = archiveIndex?.latestItems || archiveIndex?.latest_items || mirrorArchive?.items || []
+  if (!archiveIndex && rawItems.length === 0) return null
+
+  return buildMirrorArchiveDataFromServerItems(rawItems, archiveIndex)
+}
+
+export function mapSummaryMirrorArchiveData(summary: DataBindingUserSummaryResponse | null | undefined): MirrorArchiveData | null {
+  if (!summary) return null
+  return mapServerMirrorArchiveData({
+    archiveIndex: summary.archiveIndex,
+    archive_index: summary.archive_index,
+    mirror_archive: summary.mirror_archive,
+  })
+}
+
+export function filterArchiveItems(items: ArchiveItem[], selectedArchiveType: ArchiveTypeFilter) {
+  if (selectedArchiveType === "all") return items
+  if (selectedArchiveType === "growth_projection") {
+    return items.filter((item) => item.type === "growth_projection" || item.type === "growth_profile")
+  }
+  return items.filter((item) => item.type === selectedArchiveType)
+}
+
+export function getArchiveTypeLabel(type: string) {
+  if (type === "trade_review") return "真实复盘"
+  if (type === "mistake_card") return "错题卡"
+  if (type === "kline_record") return "K线训练"
+  if (type === "training_bookmark") return "训练收藏"
+  if (type === "mirror_report") return "心镜报告"
+  if (type === "growth_projection" || type === "growth_profile") return "成长谱"
+  if (type === "intervention_event") return "知行提醒"
+  if (type === "execution_plan") return "执行计划"
+  if (type === "weekly_mirror") return "本周活镜"
+  if (type === "growth_record") return "成长记录"
+  if (type === "heart_proof") return "心证"
+  if (type === "one_thought_record") return "一念记录"
+  if (type === "retest") return "复测变化"
+  if (type === "behavior_loop") return "循环识别"
+  return "档案"
+}
+
+function buildMirrorArchiveDataFromServerItems(rawItems: ServerArchiveItem[], archiveIndex: ServerArchiveIndex | null): MirrorArchiveData {
+  const allItems = rawItems
+    .map(toServerArchiveItem)
+    .sort((left, right) => new Date(right.updatedAt || right.createdAt).getTime() - new Date(left.updatedAt || left.createdAt).getTime())
+  const byType = archiveIndex?.byType || archiveIndex?.by_type || countItemsByType(allItems)
+  const updatedAt = archiveIndex?.updatedAt || archiveIndex?.updated_at || allItems[0]?.updatedAt || allItems[0]?.createdAt
+
+  return {
+    summary: {
+      totalCount: archiveIndex?.totalCount ?? archiveIndex?.total_count ?? allItems.length,
+      byType,
+      reportCount: byType.mirror_report || 0,
+      mirrorReportCount: byType.mirror_report || 0,
+      completedDays: 0,
+      heartProofCount: byType.heart_proof || 0,
+      oneThoughtRecordCount: byType.one_thought_record || 0,
+      tradeReviewCount: byType.trade_review || 0,
+      mistakeCardCount: byType.mistake_card || 0,
+      klineRecordCount: byType.kline_record || 0,
+      trainingBookmarkCount: byType.training_bookmark || 0,
+      growthProjectionCount: (byType.growth_projection || 0) + (byType.growth_profile || 0),
+      growthProfileCount: (byType.growth_projection || 0) + (byType.growth_profile || 0),
+      interventionEventCount: byType.intervention_event || 0,
+      executionPlanCount: byType.execution_plan || 0,
+      retestCount: byType.retest || 0,
+      behaviorLoopCount: byType.behavior_loop || 0,
+      currentPersona: "正式档案",
+      retestStatus: byType.retest ? "已完成复测" : "待复测",
+      updatedAt,
+    },
+    sections: {
+      reports: allItems.filter((item) => item.type === "mirror_report"),
+      growthProfiles: allItems.filter((item) => item.type === "growth_projection" || item.type === "growth_profile"),
+      growthRecords: allItems.filter((item) => item.type === "growth_record"),
+      tradeReviews: allItems.filter((item) => item.type === "trade_review"),
+      heartProofs: allItems.filter((item) => item.type === "heart_proof"),
+      oneThoughtRecords: allItems.filter((item) => item.type === "one_thought_record"),
+      retests: allItems.filter((item) => item.type === "retest"),
+      behaviorLoops: allItems.filter((item) => item.type === "behavior_loop"),
+      mistakeCards: allItems.filter((item) => item.type === "mistake_card"),
+      klineRecords: allItems.filter((item) => item.type === "kline_record"),
+      trainingBookmarks: allItems.filter((item) => item.type === "training_bookmark"),
+      mirrorReports: allItems.filter((item) => item.type === "mirror_report"),
+      growthProjections: allItems.filter((item) => item.type === "growth_projection"),
+      interventionEvents: allItems.filter((item) => item.type === "intervention_event"),
+      executionPlans: allItems.filter((item) => item.type === "execution_plan"),
+    },
+    allItems,
+  }
+}
+
+function toServerArchiveItem(item: ServerArchiveItem): ArchiveItem {
+  const record = item as unknown as Record<string, unknown>
+  const type = readString(record, ["type"], "note")
+  const sourceId = readString(record, ["sourceId", "source_id"], item.id || "unknown-source")
+  const sourceType = readString(record, ["sourceType", "source_type"], type)
+  const sceneTags = readStringArray(record, ["sceneTags", "scene_tags"])
+  const errorType = readOptionalString(record, ["errorType", "error_type"])
+  const firstThought = readOptionalString(record, ["firstThought", "first_thought"])
+  const executionResult = readOptionalString(record, ["executionResult", "execution_result"])
+  const segmentId = readOptionalString(record, ["segmentId", "segment_id"])
+  const trainingPackId = readOptionalString(record, ["trainingPackId", "training_pack_id"])
+  const createdAt = readString(record, ["createdAt", "created_at"], new Date().toISOString())
+  const updatedAt = readString(record, ["updatedAt", "updated_at"], createdAt)
+
+  return {
+    archiveItemId: readString(record, ["id"], `archive_${type}_${sourceId}`),
+    userId: readOptionalString(record, ["userId", "user_id"]),
+    anonymousId: "server-archive",
+    type,
+    sourceId,
+    sourceType,
+    detailHref: getArchiveDetailHref(type),
+    title: readString(record, ["title"], getArchiveTypeLabel(type)),
+    summary: readString(record, ["summary"], "一次可回溯的心镜记录。"),
+    tags: [
+      getArchiveTypeLabel(type),
+      errorType,
+      firstThought,
+      executionResult,
+      ...sceneTags,
+    ].filter(Boolean).slice(0, 6) as string[],
+    errorType,
+    firstThought,
+    sceneTags,
+    executionResult,
+    segmentId,
+    trainingPackId,
+    createdAt,
+    updatedAt,
+    metadata: normalizeRecord(record.metadata),
+  }
+}
+
+function countItemsByType(items: ArchiveItem[]) {
+  return items.reduce<Record<string, number>>((counts, item) => {
+    counts[item.type] = (counts[item.type] || 0) + 1
+    return counts
+  }, {})
+}
+
+function getArchiveDetailHref(type: string) {
+  if (type === "trade_review" || type === "mistake_card") return "/trade-review"
+  if (type === "growth_projection" || type === "growth_profile") return "/living-mirror-growth"
+  if (type === "mirror_report") return "/assessment-result"
+  return "/mirror-archive"
+}
+
+function readOptionalString(record: Record<string, unknown>, keys: string[]) {
+  const value = readString(record, keys, "")
+  return value || undefined
+}
+
+function readString(record: Record<string, unknown>, keys: string[], fallback: string) {
+  for (const key of keys) {
+    const value = record[key]
+    if (typeof value === "string" && value.trim()) return value.trim()
+    if (typeof value === "number" && Number.isFinite(value)) return String(value)
+  }
+  return fallback
+}
+
+function readStringArray(record: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    const value = record[key]
+    if (Array.isArray(value)) return value.map((item) => String(item).trim()).filter(Boolean)
+    if (typeof value === "string" && value.trim()) {
+      return value.split(/[,，/]/).map((item) => item.trim()).filter(Boolean)
+    }
+  }
+  return []
+}
+
+function normalizeRecord(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {}
+  return value as Record<string, unknown>
+}
 
 export function loadMirrorArchiveData(): MirrorArchiveData {
   const report = loadMirrorReport()
