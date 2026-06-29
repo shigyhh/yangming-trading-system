@@ -6,6 +6,7 @@ const {
   saveTradeReviewRecord,
   saveTraining7Task,
   saveInviteConversionEvent,
+  getZhixingReminderEvents,
   saveZhixingReminderEvent,
   getExecutionPlanLibrary,
   todayKey
@@ -33,9 +34,11 @@ const {
   syncTrainingProgress
 } = require("../../utils/api");
 const {
-  ZHIXING_REMINDER_CHOICES,
+  AFTER_REVIEW_RESPONSE_CHOICES,
   buildReviewRepeatReminder,
-  createInterventionEvent
+  createInterventionEvent,
+  normalizeZhixingReminderResponse,
+  shouldShowAfterReviewRepeatReminder
 } = require("../../modules/zhixing-reminder/index");
 const { normalizeInterventionResources } = require("../../modules/intervention-engine/index");
 
@@ -147,6 +150,9 @@ Page({
     dashboardSummary: null,
     weeklySummary: null,
     interventionResourceFallbacks: [],
+    reviewRepeatReminder: null,
+    reviewRepeatReminderState: "idle",
+    reviewRepeatReminderMuted: false,
     ocrStatus: {
       state: "idle",
       text: "截图字段以手动确认为准。"
@@ -364,6 +370,11 @@ Page({
       wx.showToast({ title: "写下下一次动作", icon: "none" });
       return;
     }
+    this.setData({
+      reviewRepeatReminder: null,
+      reviewRepeatReminderState: "idle",
+      reviewRepeatReminderMuted: false
+    });
     const formForReview = Object.assign({}, form, {
       actionKey: form.inPlan === "no" ? "impulse" : form.actionKey,
       boundaryState: form.changedPlan === "yes" || form.exitPrepared === "no" ? "near" : form.boundaryState,
@@ -423,7 +434,17 @@ Page({
       dashboardSummary: this.data.dashboardSummary,
       weeklySummary: this.data.weeklySummary
     });
-    if (zhixingReminder) {
+    const reminderGate = zhixingReminder ? shouldShowAfterReviewRepeatReminder({
+      reminder: zhixingReminder,
+      existingEvents: (getZhixingReminderEvents().records || []),
+      muted: this.data.reviewRepeatReminderMuted,
+      now: Date.now()
+    }) : { show: false };
+    if (zhixingReminder && reminderGate.show) {
+      this.setData({
+        reviewRepeatReminder: zhixingReminder,
+        reviewRepeatReminderState: "ready"
+      });
       setTimeout(() => this.presentReviewRepeatReminder(zhixingReminder), 350);
     }
   },
@@ -444,10 +465,11 @@ Page({
           return;
         }
         wx.showActionSheet({
-          itemList: ZHIXING_REMINDER_CHOICES.map((item) => item.label),
+          itemList: AFTER_REVIEW_RESPONSE_CHOICES.map((item) => item.label),
           success: (actionResult) => {
-            const choice = ZHIXING_REMINDER_CHOICES[actionResult.tapIndex] || ZHIXING_REMINDER_CHOICES[0];
+            const choice = AFTER_REVIEW_RESPONSE_CHOICES[actionResult.tapIndex] || AFTER_REVIEW_RESPONSE_CHOICES[0];
             this.saveReviewRepeatReminderResponse(reminder, choice.key);
+            if (choice.key === "review_to_training") this.goKlineTraining();
           },
           fail: () => {
             this.saveReviewRepeatReminderResponse(reminder, "later");
@@ -458,12 +480,24 @@ Page({
   },
 
   saveReviewRepeatReminderResponse(reminder, response) {
+    const normalizedResponse = response === "review_to_training"
+      ? "continue"
+      : normalizeZhixingReminderResponse(response);
+    const metadata = Object.assign({}, (reminder || {}).metadata || {}, response === "review_to_training" ? {
+      action: "review_to_training"
+    } : {});
     const event = createInterventionEvent(Object.assign({}, reminder || {}, {
-      userResponse: response
+      userResponse: normalizedResponse,
+      metadata
     }));
     saveZhixingReminderEvent(event);
     createRemoteInterventionEvent(event).catch(() => {});
     syncLocalState({ silent: true }).catch(() => {});
+    this.setData({
+      reviewRepeatReminder: reminder || null,
+      reviewRepeatReminderState: normalizedResponse === "mute_session" ? "muted" : "responded",
+      reviewRepeatReminderMuted: normalizedResponse === "mute_session"
+    });
   },
 
   resetForm() {
@@ -473,6 +507,9 @@ Page({
       report: null,
       closure: null,
       latestReviewId: "",
+      reviewRepeatReminder: null,
+      reviewRepeatReminderState: "idle",
+      reviewRepeatReminderMuted: false,
       reviewFlow: buildReviewFlow(form, null)
     });
   },
