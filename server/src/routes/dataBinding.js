@@ -2,11 +2,44 @@ import { readJson, sendJson, notFound } from "../lib/http.js";
 import {
   createTrainingBookmarkBinding,
   deleteTrainingBookmarkBinding,
+  getMirrorArchiveBinding,
+  getMirrorArchiveItemBinding,
   listTrainingBookmarkBindings,
   updateTrainingBookmarkBinding
 } from "../services/dataBinding.js";
 
 export async function handleDataBindingRoute(req, res, { url, pathname }) {
+  const mirrorArchiveMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/mirror-archive$/);
+  if (req.method === "GET" && mirrorArchiveMatch) {
+    const result = await getMirrorArchiveBinding(decodeURIComponent(mirrorArchiveMatch[1]));
+    if (!result) {
+      notFound(res);
+      return true;
+    }
+    sendJson(res, 200, {
+      ok: true,
+      ...result
+    });
+    return true;
+  }
+
+  const mirrorArchiveItemMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/mirror-archive\/([^/]+)$/);
+  if (req.method === "GET" && mirrorArchiveItemMatch) {
+    const result = await getMirrorArchiveItemBinding(
+      decodeURIComponent(mirrorArchiveItemMatch[1]),
+      decodeURIComponent(mirrorArchiveItemMatch[2])
+    );
+    if (!result) {
+      notFound(res);
+      return true;
+    }
+    sendJson(res, 200, {
+      ok: true,
+      ...result
+    });
+    return true;
+  }
+
   const trainingBookmarksMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/training-bookmarks$/);
   if (req.method === "GET" && trainingBookmarksMatch) {
     const includeDisabled = parseBooleanQuery(url.searchParams.get("include_disabled") || url.searchParams.get("includeDisabled"));

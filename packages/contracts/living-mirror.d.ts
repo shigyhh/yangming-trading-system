@@ -813,8 +813,71 @@ export type AssistantHandoff = {
   createdAt: string
 }
 
+export type ArchiveItemType =
+  | "trade_review"
+  | "mistake_card"
+  | "kline_record"
+  | "training_bookmark"
+  | "intervention_event"
+  | "execution_plan"
+  | "mirror_report"
+  | "growth_projection"
+  | "weekly_mirror"
+  | "note"
+  | string
+
+export type ArchiveItem = {
+  id: string
+  type: ArchiveItemType
+  title: string
+  summary: string
+  sourceId: string
+  source_id: string
+  sourceType: ArchiveItemType | string
+  source_type: ArchiveItemType | string
+  errorType?: string
+  error_type?: string
+  firstThought?: string
+  first_thought?: string
+  sceneTags?: string[]
+  scene_tags?: string[]
+  executionResult?: string
+  execution_result?: string
+  segmentId?: string
+  segment_id?: string
+  trainingPackId?: string
+  training_pack_id?: string
+  createdAt: string
+  created_at: string
+  updatedAt: string
+  updated_at: string
+  metadata: Record<string, unknown>
+}
+
+export type ArchiveIndex = {
+  schemaVersion: "mirror_archive_index_v1" | string
+  userId: string
+  user_id: string
+  totalCount: number
+  total_count: number
+  byType: Record<string, number>
+  by_type: Record<string, number>
+  latestItems: ArchiveItem[]
+  latest_items: ArchiveItem[]
+  updatedAt: string
+  updated_at: string
+}
+
+export type ArchiveItemResponse = {
+  archive_item: ArchiveItem
+  archiveItem: ArchiveItem
+}
+
 export type MirrorArchive = {
   user: User
+  archiveIndex?: ArchiveIndex
+  archive_index?: ArchiveIndex
+  items?: ArchiveItem[]
   reports: MirrorReport[]
   trainingRecords: TrainingRecord[]
   tradeReviews: TradeReview[]
