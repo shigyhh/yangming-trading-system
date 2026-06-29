@@ -23,6 +23,8 @@
     "test:dashboard-summary": "node --test scripts/dashboard-summary-test.mjs",
     "test:mirror-archive": "node --test scripts/mirror-archive-test.mjs",
     "test:training-bookmarks": "node --test scripts/training-bookmarks-test.mjs",
+    "test:interventions": "node --test scripts/interventions-test.mjs",
+    "test:execution-plans": "node --test scripts/execution-plans-test.mjs",
     "test:global-reflection": "node --test scripts/global-reflection-test.mjs",
     "test:i18n": "node --test scripts/i18n-contract-test.mjs",
     "test:training-packs": "node --test scripts/training-packs-test.mjs",
