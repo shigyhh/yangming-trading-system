@@ -4,6 +4,8 @@ import test from "node:test";
 
 const { handleDataBindingRoute } = await import("../src/routes/dataBinding.js");
 const {
+  createExecutionPlanBinding,
+  createInterventionEventBinding,
   createTrainingBookmarkBinding,
   getDashboardSummaryBinding,
   getWeeklyMirrorSummaryBinding,
@@ -144,6 +146,227 @@ test("dashboard summary aggregates data-binding evidence without dropping aliase
 
   const searchable = JSON.stringify(summary);
   assert.equal(searchable.includes("bars"), false);
+
+  await resetDataBindingForTests();
+});
+
+test("dashboard summary analyzes intervention outcomes and execution plan coverage", async () => {
+  await resetDataBindingForTests();
+
+  const user = {
+    userId: "p10-dashboard-analysis",
+    maskedPhone: "137****9010",
+    phoneTail: "9010",
+    inviteSource: "P10"
+  };
+
+  await saveTradeReviewBinding({
+    user,
+    review: {
+      id: "review-p10-analysis-001",
+      tradeDate: "2026-06-10",
+      mainErrorType: "计划外交易",
+      firstThought: "这次不一样",
+      triggerScene: "突然异动",
+      executionResult: "deviated",
+      reviewText: "记录一次计划外交易旧题。"
+    },
+    source: "test"
+  });
+
+  await saveKLineRecordBinding({
+    user,
+    record: {
+      day: 1,
+      recordedAt: "2026-06-11T09:00:00.000Z",
+      scene: "放量拉升",
+      reaction: "想追",
+      sourceType: "special_training",
+      errorType: "追高冲动",
+      sceneTags: ["放量拉升"],
+      executionResult: "aligned",
+      trainingPackId: "pack-chasing",
+      segmentId: "segment-rise"
+    },
+    source: "test"
+  });
+
+  await createInterventionEventBinding(user.userId, {
+    user,
+    triggerType: "before_training",
+    sourceType: "special_training",
+    sessionId: "session-p10-001",
+    errorType: "追高冲动",
+    sceneTags: ["放量拉升"],
+    message: "先停一下，是否仍按计划？",
+    expectedAction: "按你的执行计划处理",
+    userResponse: "followed_plan",
+    executionResult: "aligned",
+    createdAt: "2026-06-12T09:00:00.000Z"
+  });
+
+  await createInterventionEventBinding(user.userId, {
+    user,
+    trigger_type: "after_review",
+    source_type: "trade_review",
+    review_id: "review-p10-analysis-001",
+    error_type: "计划外交易",
+    scene_tags: ["突然异动"],
+    message: "这可能是你的高频旧题，先记录，再行动。",
+    expected_action: "无计划不行动",
+    user_response: "deviated_again",
+    execution_result: "deviated",
+    created_at: "2026-06-13T09:00:00.000Z"
+  });
+
+  await createInterventionEventBinding(user.userId, {
+    user,
+    triggerType: "during_training",
+    sourceType: "custom_session",
+    errorType: "追高冲动",
+    message: "本次只练一个动作。",
+    userResponse: "later",
+    executionResult: "unclear",
+    createdAt: "2026-06-14T09:00:00.000Z"
+  });
+
+  await createInterventionEventBinding(user.userId, {
+    user,
+    triggerType: "weekly_plan",
+    sourceType: "review_focus",
+    errorType: "急于翻本",
+    message: "先回到本周训练重点。",
+    userResponse: "followed_plan",
+    executionResult: "aligned",
+    createdAt: "2026-03-01T09:00:00.000Z"
+  });
+
+  await createExecutionPlanBinding(user.userId, {
+    user,
+    title: "追高前停十秒",
+    errorType: "追高冲动",
+    expectedAction: "先停十秒，再记录第一念",
+    nextAction: "按计划处理",
+    enabled: true,
+    createdAt: "2026-06-12T09:00:00.000Z"
+  });
+
+  await createExecutionPlanBinding(user.userId, {
+    user,
+    title: "计划外交易复位",
+    error_type: "计划外交易",
+    expected_action: "无计划不行动",
+    next_action: "稍后再练",
+    enabled: false,
+    created_at: "2026-06-12T09:00:00.000Z"
+  });
+
+  const summary30d = await getDashboardSummaryBinding(user.userId, {
+    range: "30d",
+    dateFrom: "2026-06-01",
+    dateTo: "2026-06-30"
+  });
+
+  const interventions = summary30d.dashboard_summary.interventions;
+  assert.equal(interventions.totalCount, 3);
+  assert.equal(interventions.total_count, 3);
+  assert.equal(interventions.byTriggerType.find((item) => item.key === "before_training").count, 1);
+  assert.equal(interventions.by_trigger_type.find((item) => item.key === "after_review").count, 1);
+  assert.equal(interventions.byUserResponse.find((item) => item.key === "followed_plan").count, 1);
+  assert.equal(interventions.by_user_response.find((item) => item.key === "deviated_again").count, 1);
+  assert.equal(interventions.byErrorType.find((item) => item.key === "追高冲动").count, 2);
+  assert.equal(interventions.by_error_type.find((item) => item.key === "计划外交易").count, 1);
+  assert.equal(interventions.bySourceType.find((item) => item.key === "special_training").count, 1);
+  assert.equal(interventions.by_source_type.find((item) => item.key === "trade_review").count, 1);
+  assert.equal(interventions.responseSummary.followedPlanCount, 1);
+  assert.equal(interventions.response_summary.followed_plan_count, 1);
+  assert.equal(interventions.responseSummary.deviatedAgainCount, 1);
+  assert.equal(interventions.response_summary.deviated_again_count, 1);
+  assert.equal(interventions.responseSummary.laterCount, 1);
+  assert.equal(interventions.response_summary.later_count, 1);
+  assert.equal(interventions.outcome.sampleCount, 2);
+  assert.equal(interventions.outcome.sample_count, 2);
+  assert.equal(interventions.outcome.followedPlanRate, 0.5);
+  assert.equal(interventions.outcome.followed_plan_rate, 0.5);
+  assert.equal(interventions.outcome.deviatedAgainRate, 0.5);
+  assert.equal(interventions.outcome.deviated_again_rate, 0.5);
+  assert.equal(interventions.outcome.label.includes("执行反馈"), true);
+  assert.equal(interventions.latestItems.length, 3);
+  assert.equal(interventions.latest_items.length, 3);
+  assert.equal(interventions.dataGaps.some((gap) => gap.type === "missing_intervention_events"), false);
+  assert.equal(interventions.data_gaps.some((gap) => gap.type === "insufficient_outcome_samples"), false);
+
+  const executionPlans = summary30d.dashboard_summary.executionPlans;
+  assert.equal(executionPlans.totalCount, 2);
+  assert.equal(executionPlans.total_count, 2);
+  assert.equal(executionPlans.enabledCount, 1);
+  assert.equal(executionPlans.enabled_count, 1);
+  assert.equal(executionPlans.disabledCount, 1);
+  assert.equal(executionPlans.disabled_count, 1);
+  assert.equal(executionPlans.byErrorType.find((item) => item.key === "追高冲动").count, 1);
+  assert.equal(executionPlans.by_error_type.find((item) => item.key === "计划外交易").count, 1);
+  assert.equal(executionPlans.coverage.errorTypesWithPlan.some((item) => item.key === "追高冲动"), true);
+  assert.equal(executionPlans.coverage.error_types_with_plan.some((item) => item.key === "追高冲动"), true);
+  assert.equal(executionPlans.coverage.topMissingErrorTypes.some((item) => item.key === "计划外交易"), true);
+  assert.equal(executionPlans.coverage.top_missing_error_types.some((item) => item.key === "计划外交易"), true);
+  assert.equal(executionPlans.dataGaps.some((gap) => gap.type === "missing_execution_plan_coverage"), true);
+  assert.equal(executionPlans.data_gaps.some((gap) => gap.type === "missing_execution_plan_coverage"), true);
+
+  const weekly = await getWeeklyMirrorSummaryBinding(user.userId, {
+    weekStart: "2026-06-08",
+    weekEnd: "2026-06-14"
+  });
+  assert.equal(weekly.weekly_mirror_summary.interventionCount, 3);
+  assert.equal(weekly.weekly_mirror_summary.intervention_count, 3);
+  assert.equal(weekly.weekly_mirror_summary.topInterventionTriggers.find((item) => item.key === "before_training").count, 1);
+  assert.equal(weekly.weekly_mirror_summary.top_user_responses.find((item) => item.key === "deviated_again").count, 1);
+  assert.equal(weekly.weekly_mirror_summary.followedPlanCount, 1);
+  assert.equal(weekly.weekly_mirror_summary.followed_plan_count, 1);
+  assert.equal(weekly.weekly_mirror_summary.deviatedAgainCount, 1);
+  assert.equal(weekly.weekly_mirror_summary.deviated_again_count, 1);
+  assert.equal(Array.isArray(weekly.weekly_mirror_summary.interventionDataGaps), true);
+
+  const summary7d = await getDashboardSummaryBinding(user.userId, {
+    range: "7d",
+    dateFrom: "2026-06-10",
+    dateTo: "2026-06-16"
+  });
+  assert.equal(summary7d.dashboard_summary.interventions.totalCount, 3);
+
+  const summary90d = await getDashboardSummaryBinding(user.userId, {
+    range: "90d",
+    dateFrom: "2026-03-01",
+    dateTo: "2026-06-30"
+  });
+  assert.equal(summary90d.dashboard_summary.interventions.totalCount, 4);
+
+  const emptyUser = {
+    userId: "p10-dashboard-empty",
+    maskedPhone: "137****9011",
+    phoneTail: "9011",
+    inviteSource: "P10"
+  };
+  await saveKLineRecordBinding({
+    user: emptyUser,
+    record: {
+      day: 1,
+      recordedAt: "2026-06-12T09:00:00.000Z",
+      scene: "横盘噪音",
+      reaction: "想动手",
+      executionResult: "unclear"
+    },
+    source: "test"
+  });
+  const emptySummary = await getDashboardSummaryBinding(emptyUser.userId, {
+    range: "30d",
+    dateFrom: "2026-06-01",
+    dateTo: "2026-06-30"
+  });
+  assert.equal(emptySummary.dashboard_summary.interventions.totalCount, 0);
+  assert.equal(emptySummary.dashboard_summary.interventions.outcome.label, "样本不足");
+  assert.equal(emptySummary.dashboard_summary.interventions.dataGaps.some((gap) => gap.type === "missing_intervention_events"), true);
+  assert.equal(emptySummary.dashboard_summary.executionPlans.totalCount, 0);
+  assert.equal(emptySummary.dashboard_summary.executionPlans.dataGaps.some((gap) => gap.type === "missing_execution_plans"), true);
 
   await resetDataBindingForTests();
 });

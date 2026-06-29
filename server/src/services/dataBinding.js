@@ -2955,22 +2955,8 @@ function buildDashboardSummary(record, options = {}) {
     latestItems: bookmarkLatestItems,
     latest_items: bookmarkLatestItems
   };
-  const interventionSummary = {
-    totalCount: interventions.length,
-    total_count: interventions.length,
-    byTriggerType: topCountItems(interventions.flatMap((item) => item.triggerType ? [item.triggerType] : [])),
-    by_trigger_type: topCountItems(interventions.flatMap((item) => item.triggerType ? [item.triggerType] : [])),
-    byUserResponse: topCountItems(interventions.flatMap((item) => item.userResponse ? [item.userResponse] : [])),
-    by_user_response: topCountItems(interventions.flatMap((item) => item.userResponse ? [item.userResponse] : []))
-  };
-  const planSummary = {
-    totalCount: executionPlans.length,
-    total_count: executionPlans.length,
-    enabledCount: executionPlans.filter((item) => item.enabled !== false).length,
-    enabled_count: executionPlans.filter((item) => item.enabled !== false).length,
-    byErrorType: topCountItems(executionPlans.flatMap((item) => item.errorType ? [item.errorType] : [])),
-    by_error_type: topCountItems(executionPlans.flatMap((item) => item.errorType ? [item.errorType] : []))
-  };
+  const interventionSummary = buildDashboardInterventionSummary(interventions);
+  const planSummary = buildDashboardExecutionPlanSummary(executionPlans, topErrorTypes);
   const archive = {
     totalCount: archiveIndex.totalCount,
     total_count: archiveIndex.total_count,
@@ -3054,6 +3040,18 @@ function buildWeeklyMirrorSummary(record, options = {}) {
     trade_review_count: dashboard.overview.trade_review_count,
     bookmarkCount: dashboard.overview.trainingBookmarkCount,
     bookmark_count: dashboard.overview.training_bookmark_count,
+    interventionCount: dashboard.interventions.totalCount,
+    intervention_count: dashboard.interventions.total_count,
+    topInterventionTriggers: dashboard.interventions.byTriggerType,
+    top_intervention_triggers: dashboard.interventions.by_trigger_type,
+    topUserResponses: dashboard.interventions.byUserResponse,
+    top_user_responses: dashboard.interventions.by_user_response,
+    followedPlanCount: dashboard.interventions.responseSummary.followedPlanCount,
+    followed_plan_count: dashboard.interventions.response_summary.followed_plan_count,
+    deviatedAgainCount: dashboard.interventions.responseSummary.deviatedAgainCount,
+    deviated_again_count: dashboard.interventions.response_summary.deviated_again_count,
+    interventionDataGaps: dashboard.interventions.dataGaps,
+    intervention_data_gaps: dashboard.interventions.data_gaps,
     progressHighlights,
     progress_highlights: progressHighlights,
     nextWeekTrainingPlan,
@@ -3075,17 +3073,31 @@ function collectDashboardEvidence(record, window) {
     .map((item) => normalizeDashboardBookmark(item, record))
     .filter((item) => isWithinDashboardWindow(item, window));
   const interventions = normalizeDashboardRawList(record.intervention_events || record.interventionEvents || [], record)
+    .filter((item) => item.raw.enabled !== false)
     .map((item) => ({
       ...item,
+      id: cleanText(item.raw.id || crypto.randomUUID(), 120),
+      sourceKind: "intervention_event",
       triggerType: cleanText(readAliasedField(item.raw, "triggerType", "trigger_type"), 80),
-      userResponse: cleanText(readAliasedField(item.raw, "userResponse", "user_response"), 80)
+      userResponse: cleanText(readAliasedField(item.raw, "userResponse", "user_response"), 80),
+      sourceType: cleanText(readAliasedField(item.raw, "sourceType", "source_type", ["intervention_event"]), 80),
+      errorType: cleanText(readAliasedField(item.raw, "errorType", "error_type"), 80),
+      sceneTags: normalizeAliasList(readAliasedField(item.raw, "sceneTags", "scene_tags")) || [],
+      executionResult: cleanText(readAliasedField(item.raw, "executionResult", "execution_result"), 80),
+      expectedAction: cleanText(readAliasedField(item.raw, "expectedAction", "expected_action"), 180),
+      updatedAt: cleanText(readAliasedField(item.raw, "updatedAt", "updated_at"), 40),
+      createdAt: cleanText(readAliasedField(item.raw, "createdAt", "created_at"), 40)
     }))
     .filter((item) => isWithinDashboardWindow(item, window));
   const executionPlans = normalizeDashboardRawList(record.execution_plans || record.executionPlans || [], record)
     .map((item) => ({
       ...item,
+      id: cleanText(item.raw.id || crypto.randomUUID(), 120),
       errorType: cleanText(readAliasedField(item.raw, "errorType", "error_type"), 80),
-      enabled: item.raw.enabled !== false
+      title: cleanText(item.raw.title || "执行计划", 100),
+      enabled: item.raw.enabled !== false,
+      updatedAt: cleanText(readAliasedField(item.raw, "updatedAt", "updated_at"), 40),
+      createdAt: cleanText(readAliasedField(item.raw, "createdAt", "created_at"), 40)
     }))
     .filter((item) => isWithinDashboardWindow(item, window));
 
@@ -3200,6 +3212,206 @@ function buildDashboardOverview({ evidence, interventions, executionPlans }) {
     activeDays,
     active_days: activeDays
   };
+}
+
+function buildDashboardInterventionSummary(interventions = []) {
+  const byTriggerType = topCountItems(interventions.flatMap((item) => item.triggerType ? [item.triggerType] : []));
+  const byUserResponse = topCountItems(interventions.flatMap((item) => item.userResponse ? [item.userResponse] : []));
+  const byErrorType = topCountItems(interventions.flatMap((item) => item.errorType ? [item.errorType] : []));
+  const bySourceType = topCountItems(interventions.flatMap((item) => item.sourceType ? [item.sourceType] : []));
+  const responseSummary = buildDashboardInterventionResponseSummary(interventions);
+  const outcome = buildDashboardInterventionOutcome(responseSummary);
+  const latestItems = buildDashboardInterventionLatestItems(interventions);
+  const dataGaps = buildDashboardInterventionDataGaps({ interventions, responseSummary });
+
+  return {
+    totalCount: interventions.length,
+    total_count: interventions.length,
+    byTriggerType,
+    by_trigger_type: byTriggerType,
+    byUserResponse,
+    by_user_response: byUserResponse,
+    byErrorType,
+    by_error_type: byErrorType,
+    bySourceType,
+    by_source_type: bySourceType,
+    responseSummary,
+    response_summary: responseSummary,
+    outcome,
+    latestItems,
+    latest_items: latestItems,
+    dataGaps,
+    data_gaps: dataGaps
+  };
+}
+
+function buildDashboardInterventionResponseSummary(interventions = []) {
+  const responseValues = interventions.map((item) => cleanText(item.userResponse, 80));
+  const count = (value) => responseValues.filter((item) => item === value).length;
+  const continuedCount = count("continue");
+  const changeToHoldCount = count("change_to_hold");
+  const laterCount = count("later");
+  const mutedCount = count("mute_session");
+  const followedPlanCount = count("followed_plan");
+  const deviatedAgainCount = count("deviated_again");
+  const unclearCount = count("unclear") + responseValues.filter((item) => !item).length;
+  return {
+    continuedCount,
+    continued_count: continuedCount,
+    changeToHoldCount,
+    change_to_hold_count: changeToHoldCount,
+    laterCount,
+    later_count: laterCount,
+    mutedCount,
+    muted_count: mutedCount,
+    followedPlanCount,
+    followed_plan_count: followedPlanCount,
+    deviatedAgainCount,
+    deviated_again_count: deviatedAgainCount,
+    unclearCount,
+    unclear_count: unclearCount
+  };
+}
+
+function buildDashboardInterventionOutcome(responseSummary) {
+  const followedPlanCount = responseSummary.followedPlanCount || 0;
+  const deviatedAgainCount = responseSummary.deviatedAgainCount || 0;
+  const sampleCount = followedPlanCount + deviatedAgainCount;
+  const followedPlanRate = sampleCount ? followedPlanCount / sampleCount : null;
+  const deviatedAgainRate = sampleCount ? deviatedAgainCount / sampleCount : null;
+  const label = sampleCount ? `执行反馈：${Math.round(followedPlanRate * 100)}% 按计划执行` : "样本不足";
+  return {
+    sampleCount,
+    sample_count: sampleCount,
+    followedPlanRate,
+    followed_plan_rate: followedPlanRate,
+    deviatedAgainRate,
+    deviated_again_rate: deviatedAgainRate,
+    label
+  };
+}
+
+function buildDashboardInterventionLatestItems(interventions = []) {
+  return interventions
+    .slice()
+    .sort((left, right) => Number(right.dateValue?.getTime?.() || 0) - Number(left.dateValue?.getTime?.() || 0))
+    .slice(0, 8)
+    .map((item) => {
+      const createdAt = item.createdAt || item.raw.createdAt || item.raw.created_at || item.dateKey || "";
+      const updatedAt = item.updatedAt || item.raw.updatedAt || item.raw.updated_at || createdAt;
+      return {
+        id: item.id,
+        type: "intervention_event",
+        title: interventionTriggerLabel(item.triggerType),
+        summary: item.userResponse ? `用户响应：${interventionUserResponseLabel(item.userResponse)}` : "等待用户响应",
+        sourceId: item.id,
+        source_id: item.id,
+        sourceType: item.sourceType || "intervention_event",
+        source_type: item.sourceType || "intervention_event",
+        errorType: item.errorType,
+        error_type: item.errorType,
+        sceneTags: item.sceneTags || [],
+        scene_tags: item.sceneTags || [],
+        executionResult: item.executionResult,
+        execution_result: item.executionResult,
+        createdAt,
+        created_at: createdAt,
+        updatedAt,
+        updated_at: updatedAt,
+        metadata: {
+          triggerType: item.triggerType,
+          trigger_type: item.triggerType,
+          userResponse: item.userResponse,
+          user_response: item.userResponse
+        }
+      };
+    });
+}
+
+function buildDashboardInterventionDataGaps({ interventions = [], responseSummary }) {
+  const gaps = [];
+  if (!interventions.length) {
+    gaps.push(buildDashboardDataGap("missing_intervention_events", "知行提醒样本不足", "还没有 interventionEvent 数据，暂时无法分析提醒后的执行反馈。"));
+  }
+  if (interventions.some((item) => !item.userResponse)) {
+    gaps.push(buildDashboardDataGap("missing_user_response", "用户响应缺口", "部分知行提醒还没有 userResponse，响应分布可能偏少。"));
+  }
+  if (interventions.some((item) => !item.errorType)) {
+    gaps.push(buildDashboardDataGap("missing_error_type", "错题类型缺口", "部分知行提醒缺少 errorType，错题覆盖统计可能偏少。"));
+  }
+  const outcomeSamples = (responseSummary.followedPlanCount || 0) + (responseSummary.deviatedAgainCount || 0);
+  if (outcomeSamples < 2) {
+    gaps.push(buildDashboardDataGap("insufficient_outcome_samples", "执行反馈样本不足", "已按计划执行和仍然偏离的样本还偏少，先不做强结论。"));
+  }
+  return gaps;
+}
+
+function buildDashboardExecutionPlanSummary(executionPlans = [], topErrorTypes = []) {
+  const enabledPlans = executionPlans.filter((item) => item.enabled !== false);
+  const disabledCount = executionPlans.length - enabledPlans.length;
+  const byErrorType = topCountItems(executionPlans.flatMap((item) => item.errorType ? [item.errorType] : []));
+  const activePlanErrorTypes = new Set(enabledPlans.map((item) => cleanText(item.errorType, 80)).filter(Boolean));
+  const errorTypesWithPlan = topCountItems(enabledPlans.flatMap((item) => item.errorType ? [item.errorType] : []));
+  const topMissingErrorTypes = topErrorTypes
+    .filter((item) => item.key && !activePlanErrorTypes.has(item.key))
+    .slice(0, 5);
+  const coverage = {
+    errorTypesWithPlan,
+    error_types_with_plan: errorTypesWithPlan,
+    topMissingErrorTypes,
+    top_missing_error_types: topMissingErrorTypes
+  };
+  const dataGaps = buildDashboardExecutionPlanDataGaps({ executionPlans, topMissingErrorTypes });
+
+  return {
+    totalCount: executionPlans.length,
+    total_count: executionPlans.length,
+    enabledCount: enabledPlans.length,
+    enabled_count: enabledPlans.length,
+    disabledCount,
+    disabled_count: disabledCount,
+    byErrorType,
+    by_error_type: byErrorType,
+    coverage,
+    dataGaps,
+    data_gaps: dataGaps
+  };
+}
+
+function buildDashboardExecutionPlanDataGaps({ executionPlans = [], topMissingErrorTypes = [] }) {
+  const gaps = [];
+  if (!executionPlans.length) {
+    gaps.push(buildDashboardDataGap("missing_execution_plans", "执行计划缺口", "当前没有 executionPlan 数据，执行计划覆盖情况暂不计入看板。"));
+  }
+  if (topMissingErrorTypes.length) {
+    gaps.push(buildDashboardDataGap("missing_execution_plan_coverage", "执行计划覆盖缺口", "部分高频错题还没有启用中的执行计划。"));
+  }
+  return gaps;
+}
+
+function interventionTriggerLabel(value) {
+  const map = {
+    before_training: "训练前提醒",
+    during_training: "训练中提醒",
+    after_review: "复盘后提醒",
+    weekly_plan: "周期计划提醒",
+    repeated_mistake: "旧题复现提醒",
+    execution_deviation: "执行偏离提醒"
+  };
+  return map[value] || cleanText(value, 80) || "知行提醒";
+}
+
+function interventionUserResponseLabel(value) {
+  const map = {
+    continue: "继续",
+    change_to_hold: "改为观望",
+    later: "稍后再练",
+    mute_session: "本局不再提醒",
+    followed_plan: "已按计划执行",
+    deviated_again: "仍然偏离",
+    unclear: "说不清"
+  };
+  return map[value] || cleanText(value, 80) || "待确认";
 }
 
 function buildDashboardExecution(evidence) {
