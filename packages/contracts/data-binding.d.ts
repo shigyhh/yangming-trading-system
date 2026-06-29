@@ -786,6 +786,33 @@ export type DashboardBookmarkSummary = {
   latest_items: ArchiveItem[]
 }
 
+export type DashboardInterventionResponseSummary = {
+  continuedCount: number
+  continued_count: number
+  changeToHoldCount: number
+  change_to_hold_count: number
+  laterCount: number
+  later_count: number
+  mutedCount: number
+  muted_count: number
+  followedPlanCount: number
+  followed_plan_count: number
+  deviatedAgainCount: number
+  deviated_again_count: number
+  unclearCount: number
+  unclear_count: number
+}
+
+export type DashboardInterventionOutcome = {
+  sampleCount: number
+  sample_count: number
+  followedPlanRate: number | null
+  followed_plan_rate: number | null
+  deviatedAgainRate: number | null
+  deviated_again_rate: number | null
+  label: string
+}
+
 export type DashboardInterventionSummary = {
   totalCount: number
   total_count: number
@@ -793,6 +820,24 @@ export type DashboardInterventionSummary = {
   by_trigger_type: DashboardCountItem[]
   byUserResponse: DashboardCountItem[]
   by_user_response: DashboardCountItem[]
+  byErrorType: DashboardCountItem[]
+  by_error_type: DashboardCountItem[]
+  bySourceType: DashboardCountItem[]
+  by_source_type: DashboardCountItem[]
+  responseSummary: DashboardInterventionResponseSummary
+  response_summary: DashboardInterventionResponseSummary
+  outcome: DashboardInterventionOutcome
+  latestItems: ArchiveItem[]
+  latest_items: ArchiveItem[]
+  dataGaps: DashboardDataGap[]
+  data_gaps: DashboardDataGap[]
+}
+
+export type DashboardExecutionPlanCoverage = {
+  errorTypesWithPlan: DashboardCountItem[]
+  error_types_with_plan: DashboardCountItem[]
+  topMissingErrorTypes: DashboardCountItem[]
+  top_missing_error_types: DashboardCountItem[]
 }
 
 export type DashboardExecutionPlanSummary = {
@@ -800,8 +845,13 @@ export type DashboardExecutionPlanSummary = {
   total_count: number
   enabledCount: number
   enabled_count: number
+  disabledCount: number
+  disabled_count: number
   byErrorType: DashboardCountItem[]
   by_error_type: DashboardCountItem[]
+  coverage: DashboardExecutionPlanCoverage
+  dataGaps: DashboardDataGap[]
+  data_gaps: DashboardDataGap[]
 }
 
 export type DashboardArchiveSummary = {
@@ -902,6 +952,18 @@ export type WeeklyMirrorSummary = {
   trade_review_count: number
   bookmarkCount: number
   bookmark_count: number
+  interventionCount: number
+  intervention_count: number
+  topInterventionTriggers: DashboardCountItem[]
+  top_intervention_triggers: DashboardCountItem[]
+  topUserResponses: DashboardCountItem[]
+  top_user_responses: DashboardCountItem[]
+  followedPlanCount: number
+  followed_plan_count: number
+  deviatedAgainCount: number
+  deviated_again_count: number
+  interventionDataGaps: DashboardDataGap[]
+  intervention_data_gaps: DashboardDataGap[]
   progressHighlights: string[]
   progress_highlights: string[]
   nextWeekTrainingPlan: string[]

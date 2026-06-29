@@ -32,6 +32,23 @@ test("living mirror center exposes cross-end records without advisory language",
     "高频触发场景",
     "训练统计",
     "训练收藏",
+    "知行提醒分析",
+    "执行反馈",
+    "提醒总数",
+    "触发类型分布",
+    "用户响应分布",
+    "执行计划覆盖",
+    "样本不足",
+    "还没有足够的知行提醒样本",
+    "interventions",
+    "executionPlans",
+    "byTriggerType",
+    "byUserResponse",
+    "byErrorType",
+    "responseSummary",
+    "followedPlanRate",
+    "coverage",
+    "topMissingErrorTypes",
     "本周活镜摘要",
     "nextWeekTrainingPlan",
     "dataGaps",
@@ -64,7 +81,29 @@ test("living mirror center exposes cross-end records without advisory language",
     assert.equal(apiClient.includes(token), true, `data-binding client missing ${token}`)
   })
 
-  ;["推荐买入", "推荐卖出", "必赚", "稳赚", "抄底", "逃顶", "喊单"].forEach((phrase) => {
+  const forbiddenPhrases = [
+    ["买", "入"],
+    ["卖", "出"],
+    ["目标", "价"],
+    ["止", "盈"],
+    ["止", "损建议"],
+    ["明日", "看涨"],
+    ["明日", "看跌"],
+    ["预测", "涨跌"],
+    ["买", "入信号"],
+    ["卖", "出信号"],
+    ["收益", "提升"],
+    ["胜率", "提升"],
+    ["推荐", "买", "入"],
+    ["推荐", "卖", "出"],
+    ["必", "赚"],
+    ["稳", "赚"],
+    ["抄", "底"],
+    ["逃", "顶"],
+    ["喊", "单"],
+  ].map((parts) => parts.join(""))
+
+  forbiddenPhrases.forEach((phrase) => {
     assert.equal(page.includes(phrase), false, `living mirror center contains forbidden phrase ${phrase}`)
   })
 })

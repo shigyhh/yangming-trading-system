@@ -18,7 +18,7 @@ import {
   fetchDataBindingSummary,
   type DataBindingSummaryResponse,
 } from "@/features/data-binding/api-client"
-import type { DashboardCountItem, DashboardSummary, DataBindingKLineRecord, WeeklyMirrorSummary } from "@yangming/contracts/data-binding"
+import type { DashboardCountItem, DashboardDataGap, DashboardSummary, DataBindingKLineRecord, WeeklyMirrorSummary } from "@yangming/contracts/data-binding"
 import type { LivingMirrorProfile, TradeReview, TrainingPrescriptionDispatch } from "@yangming/contracts/living-mirror"
 
 const complianceText = "本中枢仅用于交易心理觉察、复盘训练与行为管理，不预测行情，不构成投资建议。"
@@ -200,6 +200,7 @@ export default function LivingMirrorCenterPage() {
           />
           <TrainingDashboardPanel dashboard={dashboardSummary} />
           <BookmarkDashboardPanel dashboard={dashboardSummary} />
+          <InterventionDashboardPanel dashboard={dashboardSummary} />
           <WeeklyMirrorDashboardPanel weekly={weeklySummary} />
           <DashboardDataGapsPanel dashboard={dashboardSummary} weekly={weeklySummary} />
         </section>
@@ -473,6 +474,84 @@ function BookmarkDashboardPanel({ dashboard }: { dashboard: DashboardSummary | n
         ) : (
           <EmptyText>收藏训练片段后，这里会出现最近收藏。</EmptyText>
         )}
+      </div>
+    </CenterPanel>
+  )
+}
+
+function InterventionDashboardPanel({ dashboard }: { dashboard: DashboardSummary | null }) {
+  const interventions = dashboard?.interventions
+  const executionPlans = dashboard?.executionPlans || dashboard?.execution_plans
+  const responseSummary = interventions?.responseSummary || interventions?.response_summary || null
+  const outcome = interventions?.outcome || null
+  const interventionGaps = interventions?.dataGaps || interventions?.data_gaps || []
+  const planGaps = executionPlans?.dataGaps || executionPlans?.data_gaps || []
+  const coverage = executionPlans?.coverage || null
+  const topMissingErrorTypes = coverage?.topMissingErrorTypes || coverage?.top_missing_error_types || []
+  const errorTypesWithPlan = coverage?.errorTypesWithPlan || coverage?.error_types_with_plan || []
+  const hasInterventionSamples = (interventions?.totalCount ?? interventions?.total_count ?? 0) > 0
+
+  return (
+    <CenterPanel className="lg:col-span-12">
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,.42fr)_minmax(0,.58fr)]">
+        <div>
+          <PanelHeader eyebrow="知行提醒分析" title={outcome?.label || "样本不足"} />
+          <p className="mt-4 font-function text-sm leading-7 text-[rgba(220,212,195,.62)]">
+            这里只分析训练和复盘中的知行提醒，观察提醒后的执行反馈，不提供行情判断或收益承诺。
+          </p>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <CenterMetric label="提醒总数" value={numberText(interventions?.totalCount ?? interventions?.total_count)} />
+            <CenterMetric label="执行反馈样本" value={numberText(outcome?.sampleCount ?? outcome?.sample_count)} />
+            <CenterMetric label="已按计划执行" value={numberText(responseSummary?.followedPlanCount ?? responseSummary?.followed_plan_count)} />
+            <CenterMetric label="仍然偏离" value={numberText(responseSummary?.deviatedAgainCount ?? responseSummary?.deviated_again_count)} />
+          </div>
+          <div className="mt-5 rounded-[8px] border border-[rgba(95,132,117,.18)] bg-[rgba(95,132,117,.055)] px-4 py-3">
+            <p className="font-function text-xs font-semibold tracking-[.14em] text-[rgba(216,183,111,.72)]">执行反馈</p>
+            <p className="mt-2 font-function text-sm leading-7 text-[rgba(220,212,195,.62)]">
+              {typeof (outcome?.followedPlanRate ?? outcome?.followed_plan_rate) === "number"
+                ? `按计划反馈占比 ${formatRate(outcome?.followedPlanRate ?? outcome?.followed_plan_rate)}`
+                : "样本不足"}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <MiniCountBlock
+            title="触发类型分布"
+            items={labelCountItems(interventions?.byTriggerType || interventions?.by_trigger_type || [], interventionTriggerText)}
+            emptyText="暂无知行提醒触发样本。"
+          />
+          <MiniCountBlock
+            title="用户响应分布"
+            items={labelCountItems(interventions?.byUserResponse || interventions?.by_user_response || [], interventionResponseText)}
+            emptyText="暂无用户响应样本。"
+          />
+          <MiniCountBlock
+            title="覆盖的错题类型"
+            items={interventions?.byErrorType || interventions?.by_error_type || []}
+            emptyText="暂无错题类型覆盖。"
+          />
+          <MiniCountBlock
+            title="执行计划覆盖"
+            items={errorTypesWithPlan}
+            emptyText="暂无启用中的执行计划覆盖。"
+          />
+        </div>
+      </div>
+
+      <div className="mt-5 grid gap-4 lg:grid-cols-2">
+        <div className="rounded-[8px] border border-[rgba(217,189,122,.1)] bg-white/[.02] p-4">
+          <p className="font-function text-xs font-semibold tracking-[.14em] text-[rgba(216,183,111,.7)]">待补执行计划的错题</p>
+          <CountList items={topMissingErrorTypes} emptyText="高频错题已有启用中的执行计划，或当前样本不足。" />
+        </div>
+        <div className="rounded-[8px] border border-[rgba(217,189,122,.1)] bg-white/[.02] p-4">
+          <p className="font-function text-xs font-semibold tracking-[.14em] text-[rgba(216,183,111,.7)]">提醒数据缺口</p>
+          {hasInterventionSamples || interventionGaps.length || planGaps.length ? (
+            <DataGapList gaps={[...interventionGaps, ...planGaps]} emptyText="暂无明确提醒数据缺口。" />
+          ) : (
+            <EmptyText>还没有足够的知行提醒样本。完成几次训练或复盘提醒后，这里会显示提醒后的执行反馈。</EmptyText>
+          )}
+        </div>
       </div>
     </CenterPanel>
   )
@@ -802,6 +881,53 @@ function MiniCountBlock({ title, items, emptyText }: { title: string; items: Das
       </div>
     </div>
   )
+}
+
+function DataGapList({ gaps, emptyText }: { gaps: DashboardDataGap[]; emptyText: string }) {
+  if (!gaps.length) return <EmptyText>{emptyText}</EmptyText>
+
+  return (
+    <div className="mt-3 grid gap-3">
+      {gaps.slice(0, 4).map((gap) => (
+        <div key={`${gap.type}-${gap.label}`} className="rounded-[8px] border border-[rgba(217,189,122,.1)] bg-white/[.02] px-4 py-3">
+          <p className="font-function text-xs font-semibold tracking-[.14em] text-[rgba(216,183,111,.7)]">{gap.label}</p>
+          <p className="mt-2 font-function text-sm leading-7 text-[rgba(220,212,195,.56)]">{gap.message}</p>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function labelCountItems(items: DashboardCountItem[], mapper: (key: string) => string) {
+  return items.map((item) => ({
+    ...item,
+    label: mapper(item.key || item.label) || item.label || item.key,
+  }))
+}
+
+function interventionTriggerText(value: string) {
+  const labels: Record<string, string> = {
+    before_training: "训练前",
+    during_training: "训练中",
+    after_review: "复盘后",
+    weekly_plan: "周期计划",
+    repeated_mistake: "旧题复现",
+    execution_deviation: "执行偏离",
+  }
+  return labels[value] || value
+}
+
+function interventionResponseText(value: string) {
+  const labels: Record<string, string> = {
+    continue: "继续",
+    change_to_hold: "改为观望",
+    later: "稍后再练",
+    mute_session: "本局不再提醒",
+    followed_plan: "已按计划执行",
+    deviated_again: "仍然偏离",
+    unclear: "说不清",
+  }
+  return labels[value] || value
 }
 
 function numberText(value: number | null | undefined) {
