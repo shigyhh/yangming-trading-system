@@ -17,7 +17,18 @@ const {
   saveZhixingReminderEvent,
   getExecutionPlanLibrary
 } = require("../../utils/store");
-const { syncLocalState, syncTrainingProgress, requestKlineTrainingSample, fetchKlineTrainingSlice, createTrainingBookmark } = require("../../utils/api");
+const {
+  syncLocalState,
+  syncTrainingProgress,
+  requestKlineTrainingSample,
+  fetchKlineTrainingSlice,
+  createTrainingBookmark,
+  listInterventionRules,
+  listExecutionPlans,
+  fetchDashboardSummary,
+  fetchDashboardWeeklySummary,
+  createRemoteInterventionEvent
+} = require("../../utils/api");
 const { buildTraining7View } = require("../../modules/training7/index");
 const {
   buildKlineMindSession,
@@ -36,6 +47,10 @@ const {
   buildTrainingSceneReminder,
   createInterventionEvent
 } = require("../../modules/zhixing-reminder/index");
+const {
+  normalizeInterventionResources,
+  shouldShowIntervention
+} = require("../../modules/intervention-engine/index");
 const { buildKlineTradeReviewRecord: buildKlineMirrorRecord } = require("../../modules/kline-simulator/index");
 
 function inferHeartThieves(text) {
@@ -421,8 +436,14 @@ Page({
     bookmarkSaving: false,
     bookmarkMessage: "",
     bookmarkError: "",
+    interventionRules: [],
+    interventionPlans: [],
+    dashboardSummary: null,
+    weeklySummary: null,
+    interventionResourceFallbacks: [],
     zhixingReminderDisabled: false,
     zhixingReminderShownCount: 0,
+    zhixingReminderLastShownAtByKey: {},
     showSelectors: false,
     showGuide: false,
     showBodySignal: false
@@ -483,6 +504,37 @@ Page({
       samplingError: samplingUi.samplingError,
       savedRecord: klineMindRecord && klineMindRecord.updatedAt ? klineMindRecord : null,
       showBodySignal: !!form.bodySignal
+    });
+    this.refreshInterventionResources(executionPlanLibrary);
+  },
+
+  async refreshInterventionResources(executionPlanLibrary = getExecutionPlanLibrary()) {
+    const settle = (promise) => promise
+      .then((value) => ({ value, error: null }))
+      .catch((error) => ({ value: null, error }));
+    const results = await Promise.all([
+      settle(listInterventionRules({ includeDisabled: false })),
+      settle(listExecutionPlans({ includeDisabled: false })),
+      settle(fetchDashboardSummary({ range: "30d" })),
+      settle(fetchDashboardWeeklySummary({ week: "current" }))
+    ]);
+    const resources = normalizeInterventionResources({
+      rulesResult: results[0].value,
+      rulesError: results[0].error,
+      plansResult: results[1].value,
+      plansError: results[1].error,
+      dashboardResult: results[2].value,
+      dashboardError: results[2].error,
+      weeklyResult: results[3].value,
+      weeklyError: results[3].error,
+      localExecutionPlanLibrary: executionPlanLibrary
+    });
+    this.setData({
+      interventionRules: resources.rules,
+      interventionPlans: resources.plans,
+      dashboardSummary: resources.dashboardSummary,
+      weeklySummary: resources.weeklySummary,
+      interventionResourceFallbacks: resources.fallbacks
     });
   },
 
@@ -620,13 +672,30 @@ Page({
     wx.showToast({ title: "已进入今日针对训练", icon: "none" });
   },
 
-  async startSpecialTraining(e) {
+  startSpecialTraining(e) {
     const packId = String(((e.currentTarget || {}).dataset || {}).packId || "").trim();
     const meta = buildSpecialTrainingSessionMeta(packId);
     if (!meta.errorType) {
       wx.showToast({ title: "专项训练暂不可用", icon: "none" });
       return;
     }
+    const reminder = buildTrainingPreReminder(Object.assign({}, this.buildZhixingReminderContext(), meta, {
+      sourceType: "special_training",
+      source_type: "special_training"
+    }));
+    if (reminder && !this.data.zhixingReminderDisabled) {
+      this.presentZhixingReminder(reminder, {
+        onContinue: () => this.enterSpecialTraining(meta),
+        onHold: () => wx.showToast({ title: "已记录观望，本次先不训练", icon: "none" }),
+        onLater: () => wx.showToast({ title: "已记录稍后再练", icon: "none" }),
+        onMute: () => this.enterSpecialTraining(meta, { disableReminders: true })
+      });
+      return;
+    }
+    this.enterSpecialTraining(meta);
+  },
+
+  async enterSpecialTraining(meta = {}, options = {}) {
     const form = Object.assign({}, stripTrainingContext(this.data.form || {}), meta);
     const samplingAttempt = await this.fetchTrainingSample(meta);
     const session = buildKlineMindSession({
@@ -651,7 +720,7 @@ Page({
       samplingStatusText: samplingUi.samplingStatusText,
       samplingMessage: samplingUi.samplingMessage,
       samplingError: samplingUi.samplingError,
-      zhixingReminderDisabled: false,
+      zhixingReminderDisabled: options.disableReminders ? true : false,
       zhixingReminderShownCount: 0
     });
     wx.showToast({ title: "已进入专项训练", icon: "none" });
@@ -716,6 +785,29 @@ Page({
       hiddenSymbol: true,
       hiddenDateRange: true
     });
+    const reminder = buildTrainingPreReminder(Object.assign({}, this.buildZhixingReminderContext(), meta, {
+      sourceType: "custom_session",
+      source_type: "custom_session",
+      errorType: "自选盲练",
+      error_type: "自选盲练",
+      sceneTags: ["自选盲练"],
+      scene_tags: ["自选盲练"],
+      nextAction: "先看事实，再记录第一念",
+      next_action: "先看事实，再记录第一念"
+    }));
+    if (reminder && !this.data.zhixingReminderDisabled) {
+      this.presentZhixingReminder(reminder, {
+        onContinue: () => this.enterCustomBlindTraining(meta),
+        onHold: () => wx.showToast({ title: "已记录观望，本次先不训练", icon: "none" }),
+        onLater: () => wx.showToast({ title: "已记录稍后再练", icon: "none" }),
+        onMute: () => this.enterCustomBlindTraining(meta, { disableReminders: true })
+      });
+      return;
+    }
+    this.enterCustomBlindTraining(meta);
+  },
+
+  async enterCustomBlindTraining(meta = {}, options = {}) {
     this.setData({
       customSessionStatusText: "正在载入自选片段",
       customSessionMessage: "从历史 K 线服务读取，不在小程序复制行情数据。",
@@ -785,7 +877,7 @@ Page({
         samplingStatusText: "",
         samplingMessage: "",
         samplingError: "",
-        zhixingReminderDisabled: false,
+        zhixingReminderDisabled: options.disableReminders ? true : false,
         zhixingReminderShownCount: 0
       });
       wx.showToast({ title: "已进入自选盲练", icon: "none" });
@@ -898,6 +990,52 @@ Page({
       reviewFocus.scene_tags
     ));
     return {
+      triggerType: "",
+      trigger_type: "",
+      sourceType: pickValue(
+        form.sourceType,
+        form.source_type,
+        session.sourceType,
+        session.source_type,
+        this.data.activeTrainingMode
+      ),
+      source_type: pickValue(
+        form.source_type,
+        form.sourceType,
+        session.source_type,
+        session.sourceType,
+        this.data.activeTrainingMode
+      ),
+      sessionId: pickValue(session.sessionId, session.session_id, form.sessionId, form.session_id, form.id, form.date),
+      session_id: pickValue(session.session_id, session.sessionId, form.session_id, form.sessionId, form.id, form.date),
+      planId: pickValue(
+        form.planId,
+        form.plan_id,
+        form.executionPlanId,
+        form.execution_plan_id,
+        session.planId,
+        session.plan_id,
+        session.executionPlanId,
+        session.execution_plan_id,
+        reviewFocus.planId,
+        reviewFocus.plan_id,
+        reviewFocus.executionPlanId,
+        reviewFocus.execution_plan_id
+      ),
+      plan_id: pickValue(
+        form.plan_id,
+        form.planId,
+        form.execution_plan_id,
+        form.executionPlanId,
+        session.plan_id,
+        session.planId,
+        session.execution_plan_id,
+        session.executionPlanId,
+        reviewFocus.plan_id,
+        reviewFocus.planId,
+        reviewFocus.execution_plan_id,
+        reviewFocus.executionPlanId
+      ),
       errorType: pickValue(
         form.errorType,
         form.error_type,
@@ -918,6 +1056,10 @@ Page({
       scene_tag: sceneTags[0] || "",
       sceneTags,
       scene_tags: sceneTags,
+      firstThought: pickValue(form.firstReaction, form.firstThought, form.first_thought, session.firstThought, session.first_thought),
+      first_thought: pickValue(form.first_thought, form.firstThought, form.firstReaction, session.first_thought, session.firstThought),
+      triggerScene: pickValue(form.triggerScene, form.trigger_scene, session.triggerScene, session.trigger_scene, sceneTags[0]),
+      trigger_scene: pickValue(form.trigger_scene, form.triggerScene, session.trigger_scene, session.triggerScene, sceneTags[0]),
       nextAction: pickValue(
         form.nextAction,
         form.next_action,
@@ -950,11 +1092,40 @@ Page({
         reviewFocus.training_prescription,
         reviewFocus.trainingPrescription
       ),
-      executionPlanLibrary: getExecutionPlanLibrary()
+      expectedAction: pickValue(form.expectedAction, form.expected_action, session.expectedAction, session.expected_action, reviewFocus.expectedAction, reviewFocus.expected_action),
+      expected_action: pickValue(form.expected_action, form.expectedAction, session.expected_action, session.expectedAction, reviewFocus.expected_action, reviewFocus.expectedAction),
+      userAction: pickValue(form.boundaryChoice, form.boundary_choice),
+      user_action: pickValue(form.boundary_choice, form.boundaryChoice),
+      executionResult: pickValue(form.executionResult, form.execution_result),
+      execution_result: pickValue(form.execution_result, form.executionResult),
+      samplingResult: pickValue(form.samplingResult, form.sampling_result, session.samplingResult, session.sampling_result),
+      sampling_result: pickValue(form.sampling_result, form.samplingResult, session.sampling_result, session.samplingResult),
+      fallbackUsed: pickValue(form.fallbackUsed, form.fallback_used, session.fallbackUsed, session.fallback_used, false),
+      fallback_used: pickValue(form.fallback_used, form.fallbackUsed, session.fallback_used, session.fallbackUsed, false),
+      fallbackReason: pickValue(form.fallbackReason, form.fallback_reason, session.fallbackReason, session.fallback_reason),
+      fallback_reason: pickValue(form.fallback_reason, form.fallbackReason, session.fallback_reason, session.fallbackReason),
+      executionPlanLibrary: getExecutionPlanLibrary(),
+      interventionRules: this.data.interventionRules,
+      interventionPlans: this.data.interventionPlans,
+      dashboardSummary: this.data.dashboardSummary,
+      weeklySummary: this.data.weeklySummary
     };
   },
 
   presentZhixingReminder(reminder, handlers = {}) {
+    const decision = shouldShowIntervention(reminder, {
+      shownCount: reminder.triggerType === "during_training" || reminder.trigger_type === "during_training"
+        ? this.data.zhixingReminderShownCount
+        : 0,
+      maxPerSession: reminder.maxPerSession || reminder.max_per_session || 2,
+      muted: this.data.zhixingReminderDisabled,
+      lastShownAtByKey: this.data.zhixingReminderLastShownAtByKey,
+      cooldownMs: Number(reminder.cooldownMinutes || reminder.cooldown_minutes || 1) * 60 * 1000
+    });
+    if (!decision.show) {
+      if (handlers.onContinue) handlers.onContinue();
+      return;
+    }
     if (!wx.showModal || !wx.showActionSheet) {
       this.saveZhixingReminderResponse(reminder, "continue");
       if (handlers.onContinue) handlers.onContinue();
@@ -1010,13 +1181,20 @@ Page({
       userResponse: response
     }));
     saveZhixingReminderEvent(event);
+    createRemoteInterventionEvent(event).catch(() => {});
+    const key = `${event.triggerType || event.trigger_type || ""}:${event.errorType || event.error_type || ""}`;
+    const lastShownAtByKey = Object.assign({}, this.data.zhixingReminderLastShownAtByKey || {});
+    if (key !== ":") lastShownAtByKey[key] = Date.now();
     if ((reminder || {}).triggerType === "during_training") {
       this.setData({
+        zhixingReminderLastShownAtByKey: lastShownAtByKey,
         zhixingReminderShownCount: Math.min(
           2,
           Number(this.data.zhixingReminderShownCount || 0) + 1
         )
       });
+    } else {
+      this.setData({ zhixingReminderLastShownAtByKey: lastShownAtByKey });
     }
     syncLocalState({ silent: true }).catch(() => {});
   },

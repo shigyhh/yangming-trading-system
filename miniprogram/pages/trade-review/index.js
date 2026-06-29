@@ -22,6 +22,11 @@ const {
 } = require("../../modules/trade-review/index");
 const { MARKET_PRESETS, TIMEFRAME_PRESETS } = require("../../modules/kline-simulator/index");
 const {
+  listInterventionRules,
+  listExecutionPlans,
+  fetchDashboardSummary,
+  fetchDashboardWeeklySummary,
+  createRemoteInterventionEvent,
   requestTradeReviewOcrDraft,
   syncLocalState,
   syncTradeReviewRecord,
@@ -32,6 +37,7 @@ const {
   buildReviewRepeatReminder,
   createInterventionEvent
 } = require("../../modules/zhixing-reminder/index");
+const { normalizeInterventionResources } = require("../../modules/intervention-engine/index");
 
 function defaultForm() {
   return {
@@ -136,6 +142,11 @@ Page({
     latestReviewId: "",
     records: [],
     reviewFlow: buildReviewFlow(defaultForm(), null),
+    interventionRules: [],
+    interventionPlans: [],
+    dashboardSummary: null,
+    weeklySummary: null,
+    interventionResourceFallbacks: [],
     ocrStatus: {
       state: "idle",
       text: "截图字段以手动确认为准。"
@@ -154,12 +165,43 @@ Page({
 
   onShow() {
     this.refreshRecords();
+    this.refreshInterventionResources();
   },
 
   refreshRecords() {
     const state = getTradeReviewRecords();
     this.setData({
       records: (state.records || []).slice().reverse().slice(0, 5).map(decorateReport)
+    });
+  },
+
+  async refreshInterventionResources() {
+    const settle = (promise) => promise
+      .then((value) => ({ value, error: null }))
+      .catch((error) => ({ value: null, error }));
+    const results = await Promise.all([
+      settle(listInterventionRules({ includeDisabled: false })),
+      settle(listExecutionPlans({ includeDisabled: false })),
+      settle(fetchDashboardSummary({ range: "30d" })),
+      settle(fetchDashboardWeeklySummary({ week: "current" }))
+    ]);
+    const resources = normalizeInterventionResources({
+      rulesResult: results[0].value,
+      rulesError: results[0].error,
+      plansResult: results[1].value,
+      plansError: results[1].error,
+      dashboardResult: results[2].value,
+      dashboardError: results[2].error,
+      weeklyResult: results[3].value,
+      weeklyError: results[3].error,
+      localExecutionPlanLibrary: getExecutionPlanLibrary()
+    });
+    this.setData({
+      interventionRules: resources.rules,
+      interventionPlans: resources.plans,
+      dashboardSummary: resources.dashboardSummary,
+      weeklySummary: resources.weeklySummary,
+      interventionResourceFallbacks: resources.fallbacks
     });
   },
 
@@ -375,7 +417,11 @@ Page({
     const zhixingReminder = buildReviewRepeatReminder({
       currentRecord: state.latest,
       records: state.records,
-      executionPlanLibrary: getExecutionPlanLibrary()
+      executionPlanLibrary: getExecutionPlanLibrary(),
+      interventionRules: this.data.interventionRules,
+      interventionPlans: this.data.interventionPlans,
+      dashboardSummary: this.data.dashboardSummary,
+      weeklySummary: this.data.weeklySummary
     });
     if (zhixingReminder) {
       setTimeout(() => this.presentReviewRepeatReminder(zhixingReminder), 350);
@@ -416,6 +462,7 @@ Page({
       userResponse: response
     }));
     saveZhixingReminderEvent(event);
+    createRemoteInterventionEvent(event).catch(() => {});
     syncLocalState({ silent: true }).catch(() => {});
   },
 

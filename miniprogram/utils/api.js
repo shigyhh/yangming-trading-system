@@ -446,6 +446,111 @@ async function deleteTrainingBookmark(bookmarkId = "") {
   }
 }
 
+async function listInterventionRules(filters = {}) {
+  try {
+    const auth = await ensureAuth();
+    const state = collectLocalState();
+    const user = buildDataBindingUser(auth, state);
+    const query = buildQuery({
+      trigger_type: pickApiValue(filters.triggerType, filters.trigger_type),
+      error_type: pickApiValue(filters.errorType, filters.error_type),
+      include_disabled: filters.includeDisabled || filters.include_disabled ? "true" : ""
+    });
+    return request({
+      path: `/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/intervention-rules${query ? `?${query}` : ""}`,
+      method: "GET",
+      token: auth.access_token
+    });
+  } catch (error) {
+    saveConnectionFallback(error, "知行提醒规则同步：暂未连接");
+    throw error;
+  }
+}
+
+async function listExecutionPlans(filters = {}) {
+  try {
+    const auth = await ensureAuth();
+    const state = collectLocalState();
+    const user = buildDataBindingUser(auth, state);
+    const query = buildQuery({
+      error_type: pickApiValue(filters.errorType, filters.error_type),
+      include_disabled: filters.includeDisabled || filters.include_disabled ? "true" : ""
+    });
+    return request({
+      path: `/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/execution-plans${query ? `?${query}` : ""}`,
+      method: "GET",
+      token: auth.access_token
+    });
+  } catch (error) {
+    saveConnectionFallback(error, "执行计划同步：暂未连接");
+    throw error;
+  }
+}
+
+async function fetchDashboardSummary(filters = {}) {
+  try {
+    const auth = await ensureAuth();
+    const state = collectLocalState();
+    const user = buildDataBindingUser(auth, state);
+    const query = buildQuery({
+      range: filters.range || "30d",
+      date_from: pickApiValue(filters.dateFrom, filters.date_from),
+      date_to: pickApiValue(filters.dateTo, filters.date_to)
+    });
+    return request({
+      path: `/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/dashboard-summary${query ? `?${query}` : ""}`,
+      method: "GET",
+      token: auth.access_token
+    });
+  } catch (error) {
+    saveConnectionFallback(error, "心镜数据同步：暂未连接");
+    throw error;
+  }
+}
+
+async function fetchDashboardWeeklySummary(filters = {}) {
+  try {
+    const auth = await ensureAuth();
+    const state = collectLocalState();
+    const user = buildDataBindingUser(auth, state);
+    const query = buildQuery({
+      week: filters.week || "current",
+      week_start: pickApiValue(filters.weekStart, filters.week_start),
+      week_end: pickApiValue(filters.weekEnd, filters.week_end)
+    });
+    return request({
+      path: `/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/dashboard-weekly${query ? `?${query}` : ""}`,
+      method: "GET",
+      token: auth.access_token
+    });
+  } catch (error) {
+    saveConnectionFallback(error, "本周活镜同步：暂未连接");
+    throw error;
+  }
+}
+
+async function createRemoteInterventionEvent(event = {}) {
+  try {
+    const auth = await ensureAuth();
+    const state = collectLocalState();
+    const user = buildDataBindingUser(auth, state);
+    return request({
+      path: `/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/intervention-events`,
+      method: "POST",
+      token: auth.access_token,
+      data: {
+        user,
+        intervention_event: event,
+        interventionEvent: event,
+        source: "miniprogram"
+      }
+    });
+  } catch (error) {
+    saveConnectionFallback(error, "知行提醒事件同步：暂未连接");
+    throw error;
+  }
+}
+
 function normalizeApiList(value) {
   if (Array.isArray(value)) {
     return value.map((item) => String(item || "").trim()).filter(Boolean);
@@ -579,6 +684,11 @@ module.exports = {
   listTrainingBookmarks,
   createTrainingBookmark,
   deleteTrainingBookmark,
+  listInterventionRules,
+  listExecutionPlans,
+  fetchDashboardSummary,
+  fetchDashboardWeeklySummary,
+  createRemoteInterventionEvent,
   requestKlineTrainingSample,
   fetchKlineTrainingSlice
 };

@@ -16,7 +16,10 @@ assert.deepStrictEqual(ZHIXING_REMINDER_CHOICES.map((item) => item.label), [
   "继续",
   "改为观望",
   "稍后再练",
-  "本局不再提醒"
+  "本局不再提醒",
+  "已按计划执行",
+  "仍然偏离",
+  "说不清"
 ]);
 
 const preReminder = buildTrainingPreReminder({
@@ -26,7 +29,8 @@ const preReminder = buildTrainingPreReminder({
 assert.strictEqual(preReminder.triggerType, "before_training");
 assert.strictEqual(preReminder.trigger_type, "before_training");
 assert.strictEqual(preReminder.errorType, "追高冲动");
-assert.strictEqual(preReminder.message.includes("这是你的高频旧题：追高冲动"), true);
+assert.strictEqual(preReminder.message.includes("先停一下"), true);
+assert.strictEqual(preReminder.message.includes("追高冲动"), true);
 assert.strictEqual(preReminder.message.includes("先观察，等回踩确认"), true);
 
 const planLibrary = buildExecutionPlanLibrary({
@@ -55,7 +59,7 @@ const sceneReminder = buildTrainingSceneReminder({
 });
 assert.strictEqual(sceneReminder.triggerType, "during_training");
 assert.strictEqual(sceneReminder.sceneTag, "放量拉升");
-assert.strictEqual(sceneReminder.message.includes("本次只练一个动作"), true);
+assert.strictEqual(sceneReminder.message.includes("按你的执行计划处理"), true);
 
 assert.strictEqual(buildTrainingSceneReminder({
   errorType: "追高冲动",
@@ -121,6 +125,9 @@ assert.strictEqual(event.created_at, "2026-06-28T10:00:00.000Z");
 
 assert.strictEqual(normalizeZhixingReminderResponse("继续"), "continue");
 assert.strictEqual(normalizeZhixingReminderResponse("本局不再提醒"), "mute_session");
+assert.strictEqual(normalizeZhixingReminderResponse("已按计划执行"), "followed_plan");
+assert.strictEqual(normalizeZhixingReminderResponse("仍然偏离"), "deviated_again");
+assert.strictEqual(normalizeZhixingReminderResponse("说不清"), "unclear");
 assert.strictEqual(normalizeZhixingReminderResponse("unknown"), "unknown");
 
 console.log("zhixing reminder tests passed");
