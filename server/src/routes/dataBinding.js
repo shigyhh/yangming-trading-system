@@ -2,13 +2,51 @@ import { readJson, sendJson, notFound } from "../lib/http.js";
 import {
   createTrainingBookmarkBinding,
   deleteTrainingBookmarkBinding,
+  getDashboardSummaryBinding,
   getMirrorArchiveBinding,
   getMirrorArchiveItemBinding,
+  getWeeklyMirrorSummaryBinding,
   listTrainingBookmarkBindings,
   updateTrainingBookmarkBinding
 } from "../services/dataBinding.js";
 
 export async function handleDataBindingRoute(req, res, { url, pathname }) {
+  const dashboardSummaryMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/dashboard-summary$/);
+  if (req.method === "GET" && dashboardSummaryMatch) {
+    const result = await getDashboardSummaryBinding(decodeURIComponent(dashboardSummaryMatch[1]), {
+      range: url.searchParams.get("range") || "30d",
+      dateFrom: url.searchParams.get("dateFrom") || url.searchParams.get("date_from") || "",
+      dateTo: url.searchParams.get("dateTo") || url.searchParams.get("date_to") || ""
+    });
+    if (!result) {
+      notFound(res);
+      return true;
+    }
+    sendJson(res, 200, {
+      ok: true,
+      ...result
+    });
+    return true;
+  }
+
+  const dashboardWeeklyMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/dashboard-weekly$/);
+  if (req.method === "GET" && dashboardWeeklyMatch) {
+    const result = await getWeeklyMirrorSummaryBinding(decodeURIComponent(dashboardWeeklyMatch[1]), {
+      week: url.searchParams.get("week") || "current",
+      weekStart: url.searchParams.get("weekStart") || url.searchParams.get("week_start") || "",
+      weekEnd: url.searchParams.get("weekEnd") || url.searchParams.get("week_end") || ""
+    });
+    if (!result) {
+      notFound(res);
+      return true;
+    }
+    sendJson(res, 200, {
+      ok: true,
+      ...result
+    });
+    return true;
+  }
+
   const mirrorArchiveMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/mirror-archive$/);
   if (req.method === "GET" && mirrorArchiveMatch) {
     const result = await getMirrorArchiveBinding(decodeURIComponent(mirrorArchiveMatch[1]));

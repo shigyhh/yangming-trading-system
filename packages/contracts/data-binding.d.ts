@@ -1,5 +1,6 @@
 import type {
   ArchiveIndex,
+  ArchiveItem,
   AssistantHandoff,
   DailyHeartWitness,
   LivingMirrorClosedLoop,
@@ -440,6 +441,221 @@ export type DataBindingTrainingBookmarkListResponse = {
   count: number
   include_disabled: boolean
   includeDisabled: boolean
+}
+
+export type DashboardRange = "7d" | "30d" | "90d" | string
+
+export type DashboardCountItem = {
+  key: string
+  label: string
+  count: number
+}
+
+export type DashboardDataGap = {
+  type: string
+  key?: string
+  label: string
+  message: string
+}
+
+export type DashboardOverview = {
+  tradeReviewCount: number
+  trade_review_count: number
+  klineTrainingCount: number
+  kline_training_count: number
+  trainingBookmarkCount: number
+  training_bookmark_count: number
+  interventionEventCount: number
+  intervention_event_count: number
+  executionPlanCount: number
+  execution_plan_count: number
+  activeDays: number
+  active_days: number
+}
+
+export type DashboardExecutionSummary = {
+  alignedCount: number
+  aligned_count: number
+  deviatedCount: number
+  deviated_count: number
+  unclearCount: number
+  unclear_count: number
+  sampleCount: number
+  sample_count: number
+  consistencyRate: number | null
+  consistency_rate: number | null
+  label: string
+}
+
+export type DashboardMistakeSummary = {
+  topErrorTypes: DashboardCountItem[]
+  top_error_types: DashboardCountItem[]
+  totalMistakeCount: number
+  total_mistake_count: number
+}
+
+export type DashboardFirstThoughtSummary = {
+  topFirstThoughts: DashboardCountItem[]
+  top_first_thoughts: DashboardCountItem[]
+}
+
+export type DashboardTriggerSceneSummary = {
+  topTriggerScenes: DashboardCountItem[]
+  top_trigger_scenes: DashboardCountItem[]
+}
+
+export type DashboardTrainingSummary = {
+  bySourceType: DashboardCountItem[]
+  by_source_type: DashboardCountItem[]
+  byTrainingPack: DashboardCountItem[]
+  by_training_pack: DashboardCountItem[]
+  bySegment: DashboardCountItem[]
+  by_segment: DashboardCountItem[]
+  fallbackCount: number
+  fallback_count: number
+  samplingCount: number
+  sampling_count: number
+  customSessionCount: number
+  custom_session_count: number
+}
+
+export type DashboardBookmarkSummary = {
+  totalCount: number
+  total_count: number
+  byType: DashboardCountItem[]
+  by_type: DashboardCountItem[]
+  latestItems: ArchiveItem[]
+  latest_items: ArchiveItem[]
+}
+
+export type DashboardInterventionSummary = {
+  totalCount: number
+  total_count: number
+  byTriggerType: DashboardCountItem[]
+  by_trigger_type: DashboardCountItem[]
+  byUserResponse: DashboardCountItem[]
+  by_user_response: DashboardCountItem[]
+}
+
+export type DashboardExecutionPlanSummary = {
+  totalCount: number
+  total_count: number
+  enabledCount: number
+  enabled_count: number
+  byErrorType: DashboardCountItem[]
+  by_error_type: DashboardCountItem[]
+}
+
+export type DashboardArchiveSummary = {
+  totalCount: number
+  total_count: number
+  byType: Record<string, number>
+  by_type: Record<string, number>
+}
+
+export type DashboardTrendBucket = {
+  key: string
+  date?: string
+  weekStart?: string
+  week_start?: string
+  tradeReviewCount: number
+  trade_review_count: number
+  klineTrainingCount: number
+  kline_training_count: number
+  trainingBookmarkCount: number
+  training_bookmark_count: number
+  executionSampleCount: number
+  execution_sample_count: number
+  consistencyRate: number | null
+  consistency_rate: number | null
+}
+
+export type DashboardTrendSummary = {
+  daily: DashboardTrendBucket[]
+  weekly: DashboardTrendBucket[]
+  executionConsistencyTrend: DashboardTrendBucket[]
+  execution_consistency_trend: DashboardTrendBucket[]
+  mistakeTrend: DashboardCountItem[]
+  mistake_trend: DashboardCountItem[]
+  trainingTrend: DashboardCountItem[]
+  training_trend: DashboardCountItem[]
+}
+
+export type DashboardSummary = {
+  schemaVersion: "dashboard_summary_v1" | string
+  schema_version: "dashboard_summary_v1" | string
+  userId: string
+  user_id: string
+  range: DashboardRange
+  dateFrom: string
+  date_from: string
+  dateTo: string
+  date_to: string
+  generatedAt: string
+  generated_at: string
+  overview: DashboardOverview
+  execution: DashboardExecutionSummary
+  mistakes: DashboardMistakeSummary
+  firstThoughts: DashboardFirstThoughtSummary
+  first_thoughts: DashboardFirstThoughtSummary
+  triggerScenes: DashboardTriggerSceneSummary
+  trigger_scenes: DashboardTriggerSceneSummary
+  training: DashboardTrainingSummary
+  bookmarks: DashboardBookmarkSummary
+  interventions: DashboardInterventionSummary
+  executionPlans: DashboardExecutionPlanSummary
+  execution_plans: DashboardExecutionPlanSummary
+  archive: DashboardArchiveSummary
+  trends: DashboardTrendSummary
+  dataGaps: DashboardDataGap[]
+  data_gaps: DashboardDataGap[]
+}
+
+export type DashboardSummaryResponse = {
+  user: DataBindingPublicUser
+  dashboard_summary: DashboardSummary
+  dashboardSummary: DashboardSummary
+}
+
+export type WeeklyMirrorSummary = {
+  schemaVersion: "weekly_mirror_summary_v1" | string
+  schema_version: "weekly_mirror_summary_v1" | string
+  userId: string
+  user_id: string
+  weekStart: string
+  week_start: string
+  weekEnd: string
+  week_end: string
+  generatedAt: string
+  generated_at: string
+  topErrorTypes: DashboardCountItem[]
+  top_error_types: DashboardCountItem[]
+  topFirstThoughts: DashboardCountItem[]
+  top_first_thoughts: DashboardCountItem[]
+  topTriggerScenes: DashboardCountItem[]
+  top_trigger_scenes: DashboardCountItem[]
+  executionConsistency: DashboardExecutionSummary
+  execution_consistency: DashboardExecutionSummary
+  repeatCount: number
+  repeat_count: number
+  trainingCount: number
+  training_count: number
+  tradeReviewCount: number
+  trade_review_count: number
+  bookmarkCount: number
+  bookmark_count: number
+  progressHighlights: string[]
+  progress_highlights: string[]
+  nextWeekTrainingPlan: string[]
+  next_week_training_plan: string[]
+  dataGaps: DashboardDataGap[]
+  data_gaps: DashboardDataGap[]
+}
+
+export type WeeklyMirrorSummaryResponse = {
+  user: DataBindingPublicUser
+  weekly_mirror_summary: WeeklyMirrorSummary
+  weeklyMirrorSummary: WeeklyMirrorSummary
 }
 
 export type DataBindingRetestResponse = {
