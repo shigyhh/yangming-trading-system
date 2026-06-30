@@ -76,57 +76,6 @@
   font-weight: 700;
 }
 
-.profile-depth-toggle {
-  margin-top: 22rpx;
-  padding: 24rpx 26rpx;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18rpx;
-  border-color: rgba(216, 183, 111, 0.15);
-  background:
-    radial-gradient(circle at 8% 0%, rgba(216, 183, 111, 0.09), transparent 42%),
-    rgba(255, 255, 255, 0.032);
-}
-
-.profile-depth-toggle view,
-.profile-depth-toggle text {
-  position: relative;
-  z-index: 1;
-}
-
-.profile-depth-toggle view text {
-  display: block;
-  color: #d8b76f;
-  font-size: 23rpx;
-  font-weight: 900;
-  letter-spacing: 0.12em;
-}
-
-.profile-depth-toggle view view {
-  margin-top: 8rpx;
-  color: rgba(247, 239, 223, 0.56);
-  font-size: 22rpx;
-  line-height: 1.5;
-}
-
-.profile-depth-toggle > text {
-  flex: 0 0 auto;
-  color: rgba(216, 183, 111, 0.72);
-  font-size: 21rpx;
-  font-weight: 900;
-}
-
-.profile-depth-stack {
-  margin-top: 22rpx;
-  display: grid;
-  gap: 22rpx;
-}
-
-.profile-depth-stack > .card {
-  margin-top: 0;
-}
-
 .identity-card {
   margin-top: 22rpx;
   padding: 26rpx;
