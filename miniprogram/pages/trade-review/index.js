@@ -21,7 +21,6 @@ const {
   buildTradeReviewClosure,
   buildTradeReviewRecordView
 } = require("../../modules/trade-review/index");
-const { MARKET_PRESETS, TIMEFRAME_PRESETS } = require("../../modules/kline-simulator/index");
 const {
   listInterventionRules,
   listExecutionPlans,
@@ -134,8 +133,6 @@ function decorateReport(report) {
 Page({
   data: {
     form: defaultForm(),
-    markets: MARKET_PRESETS,
-    timeframes: TIMEFRAME_PRESETS,
     actions: ACTION_OPTIONS,
     emotions: EMOTION_OPTIONS,
     boundaryStates: BOUNDARY_STATES,
@@ -266,14 +263,6 @@ Page({
           }
         });
       });
-  },
-
-  selectMarket(e) {
-    this.patchForm({ marketKey: e.currentTarget.dataset.key || "cn" });
-  },
-
-  selectTimeframe(e) {
-    this.patchForm({ timeframeKey: e.currentTarget.dataset.key || "1d" });
   },
 
   selectAction(e) {
