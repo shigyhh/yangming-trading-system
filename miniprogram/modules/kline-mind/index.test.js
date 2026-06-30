@@ -7,8 +7,15 @@ const {
   calculateKlineMindScore,
   MARKET_CATALOG,
   TIMEFRAME_CATALOG,
+  INDICATOR_CATALOG,
   KLINE_TRAINING_METHODS,
   getPersonalityKlineDrill,
+  getInitialKlineVisibleCount,
+  startKlineTrainingRuntime,
+  setKlineRuntimeChartZoom,
+  setKlineRuntimeMainIndicator,
+  setKlineRuntimeIndicator,
+  buildKlineTrainingRecordPatch,
   listSpecialTrainingPacks,
   getSpecialTrainingPack,
   buildSpecialTrainingSessionMeta,
@@ -22,8 +29,10 @@ const {
 
 assert.strictEqual(SIX_GATE_MAP.length, 6);
 assert.ok(Object.keys(PERSONALITY_KLINE_PRESCRIPTIONS).length >= 9);
-assert.deepStrictEqual(Object.keys(MARKET_CATALOG), ["cn_equity", "futures", "us_equity", "hk_equity", "crypto"]);
-assert.deepStrictEqual(TIMEFRAME_CATALOG.map((item) => item.key), ["5m", "10m", "30m", "60m", "1d", "1w", "1mo", "1y"]);
+assert.deepStrictEqual(Object.keys(MARKET_CATALOG), ["cn_equity"]);
+assert.deepStrictEqual(TIMEFRAME_CATALOG.map((item) => item.key), ["1d", "60m", "30m"]);
+assert.deepStrictEqual(TIMEFRAME_CATALOG.map((item) => item.label), ["长线", "中线", "短线"]);
+assert.deepStrictEqual(INDICATOR_CATALOG.map((item) => item.key), ["ma", "macd", "boll", "vol", "rsi", "kdj"]);
 assert.ok(KLINE_TRAINING_METHODS.find((item) => item.key === "firecracker"));
 assert.ok(getPersonalityKlineDrill("焦虑型").drillAction.includes("固定观察窗口"));
 
@@ -60,6 +69,28 @@ assert.strictEqual(session.prescription.heartThief, "怕错过");
 assert.strictEqual(session.candles.length, 6);
 assert.ok(session.candles.some((item) => item.selected));
 assert.ok(session.gates.find((item) => item.key === "zhaoxin").trainingAction);
+assert.ok(session.indicatorOverlay.ma5.length > 0);
+assert.deepStrictEqual(session.indicatorPanelOptions.map((item) => item.key), ["vol", "macd", "rsi", "kdj"]);
+
+const runtime = startKlineTrainingRuntime(session, {
+  trainingSessionId: "kline-module-runtime",
+  initialVisibleCount: getInitialKlineVisibleCount(session),
+  initialMainIndicatorKey: "ma",
+  initialIndicatorKey: "vol"
+});
+assert.strictEqual(runtime.simulationMode, "blind_step_replay");
+assert.ok(runtime.visibleCandles.length > 0);
+assert.ok(runtime.indicatorOverlay.ma5.length > 0);
+assert.strictEqual(runtime.indicatorPanel.type, "vol");
+const zoomedRuntime = setKlineRuntimeChartZoom(runtime, "focus");
+assert.strictEqual(zoomedRuntime.chartZoomKey, "focus");
+const bollRuntime = setKlineRuntimeMainIndicator(runtime, "boll");
+assert.ok(bollRuntime.indicatorOverlay.bollUpper.length > 0);
+const macdRuntime = setKlineRuntimeIndicator(runtime, "macd");
+assert.strictEqual(macdRuntime.indicatorPanel.type, "macd");
+const runtimePatch = buildKlineTrainingRecordPatch(macdRuntime);
+assert.strictEqual(runtimePatch.simulationMode, "blind_step_replay");
+assert.ok(runtimePatch.selectedCandleKey);
 
 const record = buildKlineMindRecord({
   selectedCandleKey: session.selectedCandleKey,
