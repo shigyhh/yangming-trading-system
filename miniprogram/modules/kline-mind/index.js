@@ -137,59 +137,50 @@ const MARKET_CATALOG = {
     triggerLabel: "真实历史片段",
     mindQuestion: "你看到快速放大时，是守住计划观察，还是想马上证明判断？",
     guardrail: "只记录触发与边界，不把历史片段当成当下判断。"
-  },
-  futures: {
-    key: "futures",
-    name: "期货",
-    rhythm: "节奏快、长影线、情绪放大",
-    defaultSymbol: "IF主连",
-    rule: "保证金、连续合约、夜盘差异",
-    triggerLabel: "真实历史片段",
-    mindQuestion: "速度变快时，你能否先停住身体，再回到预设边界？",
-    guardrail: "训练只看反应速度与守界能力，不输出操作方向。"
-  },
-  us_equity: {
-    key: "us_equity",
-    name: "美股",
-    rhythm: "缺口、趋势段、尾盘波动",
-    defaultSymbol: "AAPL",
-    rule: "T+0、盘前盘后需独立标记",
-    triggerLabel: "真实历史片段",
-    mindQuestion: "缺口之后，你是在观察结构，还是在被错过感牵动？",
-    guardrail: "本训练使用历史数据，不形成任何当下市场判断。"
-  },
-  hk_equity: {
-    key: "hk_equity",
-    name: "港股",
-    rhythm: "流动性切换、跳动明显、反复试探",
-    defaultSymbol: "00700.HK",
-    rule: "T+0、交易单位与流动性需标记",
-    triggerLabel: "真实历史片段",
-    mindQuestion: "反复试探时，你是在等待事实更清楚，还是被不确定感牵走？",
-    guardrail: "只做心理训练记录，不给出任何交易结论。"
-  },
-  crypto: {
-    key: "crypto",
-    name: "数字货币",
-    rhythm: "连续交易、波动密集、情绪放大",
-    defaultSymbol: "BTCUSDT",
-    rule: "7x24、无涨跌幅、需标注交易所来源",
-    triggerLabel: "真实历史片段",
-    mindQuestion: "连续波动中，你是在守住观察窗口，还是被不断变化牵走？",
-    guardrail: "只做心理训练记录，不关联任何当下决策。"
   }
 };
 
 const TIMEFRAME_CATALOG = [
-  { key: "5m", label: "5分钟", granularity: "intraday", required: true },
-  { key: "10m", label: "10分钟", granularity: "intraday", required: true },
-  { key: "30m", label: "30分钟", granularity: "intraday", required: true },
-  { key: "60m", label: "60分钟", granularity: "intraday", required: true },
-  { key: "1d", label: "日线", granularity: "daily", required: true },
-  { key: "1w", label: "周线", granularity: "weekly", required: true },
-  { key: "1mo", label: "月线", granularity: "monthly", required: true },
-  { key: "1y", label: "年线", granularity: "yearly", required: true }
+  { key: "1d", label: "长线", granularity: "daily", required: true },
+  { key: "60m", label: "中线", granularity: "intraday", required: true },
+  { key: "30m", label: "短线", granularity: "intraday", required: true }
 ];
+
+const CHART_ZOOM_OPTIONS = [
+  { key: "overview", label: "总览", hint: "约180根，先看整体趋势", windowSize: 180 },
+  { key: "wide", label: "缩小", hint: "约150根，适合盲练", windowSize: 150 },
+  { key: "standard", label: "标准", hint: "约90根，平衡节奏", windowSize: 90 },
+  { key: "focus", label: "放大", hint: "约48根，细看局部", windowSize: 48 }
+];
+
+const INDICATOR_CATALOG = [
+  { key: "ma", label: "MA", name: "均线", trainingUse: "看趋势牵动" },
+  { key: "macd", label: "MACD", name: "动能", trainingUse: "看冲动来源" },
+  { key: "boll", label: "BOLL", name: "波动边界", trainingUse: "看边界感" },
+  { key: "vol", label: "VOL", name: "量能", trainingUse: "看放量反应" },
+  { key: "rsi", label: "RSI", name: "强弱", trainingUse: "看过热牵动" },
+  { key: "kdj", label: "KDJ", name: "摆动", trainingUse: "看追涨犹豫" }
+];
+
+const MAIN_INDICATOR_OPTIONS = [
+  { key: "ma", label: "MA" },
+  { key: "boll", label: "BOLL" }
+];
+
+const INDICATOR_PANEL_OPTIONS = [
+  { key: "vol", label: "VOL" },
+  { key: "macd", label: "MACD" },
+  { key: "rsi", label: "RSI" },
+  { key: "kdj", label: "KDJ" }
+];
+
+const CHART_GEOMETRY = {
+  overview: { candleWidth: 2, bodyWidth: 2, gap: 1, paddingX: 18, paddingTop: 24 },
+  wide: { candleWidth: 4, bodyWidth: 4, gap: 1, paddingX: 18, paddingTop: 24 },
+  standard: { candleWidth: 10, bodyWidth: 8, gap: 4, paddingX: 18, paddingTop: 24 },
+  focus: { candleWidth: 22, bodyWidth: 17, gap: 7, paddingX: 18, paddingTop: 24 }
+};
+const BLIND_CHART_MIN_WIDTH = 690;
 
 const KLINE_TRAINING_METHODS = [
   {
@@ -365,6 +356,18 @@ const DAY_SCENARIOS = {
 const REACTION_OPTIONS = ["急躁", "恐惧", "贪念", "证明", "抗拒", "逃避"];
 const BODY_OPTIONS = ["紧", "热", "空", "沉", "乱", "稳"];
 const BOUNDARY_OPTIONS = ["停十秒", "写边界", "只记录", "延后判断", "回到计划", "做收盘省察"];
+const KLINE_MIND_SLICE_SEEDS = [
+  "scene-fast-001",
+  "scene-missed-001",
+  "scene-fake-001",
+  "scene-drop-001",
+  "scene-boundary-001",
+  "scene-loss-streak-001",
+  "scene-retest-001"
+];
+const MIN_VISIBLE_CANDLES = 6;
+const DEFAULT_VISIBLE_CANDLES = 150;
+const MAX_VISIBLE_CANDLES = 180;
 
 function clampDay(day) {
   const value = Number(day || 1);
@@ -399,17 +402,131 @@ function buildTimeframeOptions(selectedKey) {
   }));
 }
 
-function normalizeHistoryCandles(historySlice = {}) {
-  const candles = Array.isArray(historySlice.candles) ? historySlice.candles : [];
+function getChartZoomMeta(zoomKey = "wide") {
+  return CHART_ZOOM_OPTIONS.find((item) => item.key === zoomKey) || CHART_ZOOM_OPTIONS[1];
+}
+
+function buildChartZoomOptions(selectedKey = "wide") {
+  return CHART_ZOOM_OPTIONS.map((item) => Object.assign({}, item, {
+    selected: item.key === selectedKey
+  }));
+}
+
+function getNextKlineMindSliceSeed(currentSeed = "") {
+  const index = KLINE_MIND_SLICE_SEEDS.indexOf(String(currentSeed || ""));
+  if (index < 0) return KLINE_MIND_SLICE_SEEDS[0];
+  return KLINE_MIND_SLICE_SEEDS[(index + 1) % KLINE_MIND_SLICE_SEEDS.length];
+}
+
+function pickFiniteNumber(...values) {
+  for (const value of values) {
+    if (value === "" || value === null || value === undefined) continue;
+    const number = Number(value);
+    if (Number.isFinite(number)) return number;
+  }
+  return NaN;
+}
+
+function normalizeRawHistoryCandle(item = {}, index = 0) {
+  const open = pickFiniteNumber(item.open, item.o, item.openPrice, item.open_price);
+  const high = pickFiniteNumber(item.high, item.h, item.highPrice, item.high_price);
+  const low = pickFiniteNumber(item.low, item.l, item.lowPrice, item.low_price);
+  const close = pickFiniteNumber(item.close, item.c, item.closePrice, item.close_price);
+  if (![open, high, low, close].every(Number.isFinite)) return null;
+
+  return {
+    key: item.id || item.key || `m${index + 1}`,
+    date: item.date || item.time || item.t || item.label || "",
+    open,
+    high: Math.max(high, open, close, low),
+    low: Math.min(low, open, close, high),
+    close,
+    volume: pickFiniteNumber(item.volume, item.vol, item.v, item.amount, 0),
+    focus: !!item.focus
+  };
+}
+
+function normalizeWindowSize(windowSize) {
+  const value = Number(windowSize || DEFAULT_VISIBLE_CANDLES);
+  if (!Number.isFinite(value)) return DEFAULT_VISIBLE_CANDLES;
+  return Math.max(MIN_VISIBLE_CANDLES, Math.min(MAX_VISIBLE_CANDLES, Math.round(value)));
+}
+
+function average(values = []) {
+  if (!values.length) return null;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function movingAverage(values = [], index, period) {
+  if (index < 0) return null;
+  const start = Math.max(0, index - period + 1);
+  return average(values.slice(start, index + 1));
+}
+
+function standardDeviation(values = [], mean) {
+  if (!values.length || mean === null) return null;
+  const variance = values.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) / values.length;
+  return Math.sqrt(variance);
+}
+
+function pickVisibleHistoryWindow(candles, windowSize = DEFAULT_VISIBLE_CANDLES) {
+  const safeWindowSize = normalizeWindowSize(windowSize);
+  if (!candles.length) return [];
+  if (candles.length <= safeWindowSize) return candles;
+
+  const focusIndex = candles.findIndex((item) => item.focus);
+  if (focusIndex >= 0) {
+    const half = Math.floor(safeWindowSize / 2);
+    const start = Math.max(0, Math.min(candles.length - safeWindowSize, focusIndex - half));
+    return candles.slice(start, start + safeWindowSize);
+  }
+
+  return candles.slice(candles.length - safeWindowSize);
+}
+
+function normalizeHistoryCandles(historySlice = {}, options = {}) {
+  const rawCandles = Array.isArray(historySlice.candles)
+    ? historySlice.candles
+    : Array.isArray(historySlice.bars) ? historySlice.bars : [];
+  const normalizedCandles = rawCandles
+    .map(normalizeRawHistoryCandle)
+    .filter(Boolean)
+    .map((item, sourceIndex) => Object.assign({}, item, { sourceIndex }));
+  const candles = pickVisibleHistoryWindow(normalizedCandles, options.windowSize);
   if (!candles.length) return [];
 
   const highs = candles.map((item) => Number(item.high)).filter(Number.isFinite);
   const lows = candles.map((item) => Number(item.low)).filter(Number.isFinite);
   const volumes = candles.map((item) => Number(item.volume || 0)).filter(Number.isFinite);
-  const maxHigh = Math.max.apply(null, highs);
-  const minLow = Math.min.apply(null, lows);
+  const closes = normalizedCandles.map((item) => Number(item.close));
+  const allIndicatorValues = normalizedCandles.map((item, index) => {
+    const ma5 = movingAverage(closes, index, 5);
+    const ma10 = movingAverage(closes, index, 10);
+    const ma20 = movingAverage(closes, index, 20);
+    const bollWindow = closes.slice(Math.max(0, index - 19), index + 1);
+    const deviation = ma20 === null ? null : standardDeviation(bollWindow, ma20);
+    return {
+      ma5,
+      ma10,
+      ma20,
+      bollUpper: ma20 === null || deviation === null ? null : ma20 + deviation * 2,
+      bollLower: ma20 === null || deviation === null ? null : ma20 - deviation * 2
+    };
+  });
+  const indicatorValues = candles.map((item) => allIndicatorValues[item.sourceIndex] || {});
+  const overlayValues = indicatorValues.reduce((items, item) => {
+    ["ma5", "ma10", "ma20", "bollUpper", "bollLower"].forEach((key) => {
+      if (Number.isFinite(item[key])) items.push(item[key]);
+    });
+    return items;
+  }, []);
+  const maxHigh = Math.max.apply(null, highs.concat(overlayValues));
+  const minLow = Math.min.apply(null, lows.concat(overlayValues));
   const maxVolume = Math.max.apply(null, volumes.concat([1]));
   const range = Math.max(0.0001, maxHigh - minLow);
+  const valueToY = (value) => Number.isFinite(value)
+    ? Math.round(((maxHigh - value) / range) * 168 + 34)
+    : null;
 
   return candles.map((item, index) => {
     const open = Number(item.open);
@@ -425,15 +542,17 @@ function normalizeHistoryCandles(historySlice = {}) {
     const bodyHeight = Math.max(6, Math.abs(openY - closeY));
     const wickHeight = Math.max(8, lowY - highY);
     const volumeHeight = Math.max(8, Math.round((volume / maxVolume) * 62));
-    const key = item.id || `m${index + 1}`;
+    const key = item.key || `m${index + 1}`;
     const tone = close > open ? "gold" : close < open ? "jade" : "flat";
+    const indicator = indicatorValues[index] || {};
 
     return {
       key,
+      sourceIndex: Number(item.sourceIndex || index),
       label: item.focus ? "问" : "",
       indexLabel: String(index + 1).padStart(2, "0"),
       tone,
-      date: item.date || item.time || "",
+      date: item.date || "",
       open,
       high,
       low,
@@ -442,10 +561,309 @@ function normalizeHistoryCandles(historySlice = {}) {
       wickStyle: `height: ${Math.round(wickHeight)}rpx; top: ${Math.round(highY)}rpx;`,
       bodyStyle: `height: ${Math.round(bodyHeight)}rpx; top: ${Math.round(bodyTop)}rpx;`,
       volumeStyle: `height: ${volumeHeight}rpx;`,
+      closeY: valueToY(close),
+      ma5Y: valueToY(indicator.ma5),
+      ma10Y: valueToY(indicator.ma10),
+      ma20Y: valueToY(indicator.ma20),
+      bollUpperY: valueToY(indicator.bollUpper),
+      bollLowerY: valueToY(indicator.bollLower),
       focus: !!item.focus,
       selected: false
     };
   });
+}
+
+function roundMetric(value, digits = 2) {
+  const number = Number(value || 0);
+  if (!Number.isFinite(number)) return 0;
+  const factor = Math.pow(10, digits);
+  return Math.round(number * factor) / factor;
+}
+
+function getChartGeometry(zoomKey = "wide") {
+  return CHART_GEOMETRY[zoomKey] || CHART_GEOMETRY.wide;
+}
+
+function getChartLayout(candleCount, zoomKey = "wide") {
+  const count = Math.max(1, Number(candleCount || 0));
+  const geometry = getChartGeometry(zoomKey);
+  const width = BLIND_CHART_MIN_WIDTH;
+  if (count <= 1) return Object.assign({}, geometry, { width, gap: geometry.gap });
+  const naturalWidth = Math.round(geometry.paddingX * 2 + count * geometry.candleWidth + Math.max(0, count - 1) * geometry.gap);
+  if (naturalWidth >= width) return Object.assign({}, geometry, { width: naturalWidth, gap: geometry.gap });
+  const gap = Math.max(geometry.gap, (width - geometry.paddingX * 2 - count * geometry.candleWidth) / (count - 1));
+  return Object.assign({}, geometry, { width, gap });
+}
+
+function getChartBoardStyle(candleCount, zoomKey = "wide") {
+  const layout = getChartLayout(candleCount, zoomKey);
+  return [
+    `width: ${layout.width}rpx`,
+    "min-width: 100%",
+    `--kline-gap: ${roundMetric(layout.gap, 2)}rpx`,
+    `--kline-candle-width: ${roundMetric(layout.candleWidth, 2)}rpx`,
+    `--kline-body-width: ${roundMetric(layout.bodyWidth || layout.candleWidth, 2)}rpx`
+  ].join("; ") + ";";
+}
+
+function getChartViewportCapacity(zoomKey = "wide") {
+  const geometry = getChartGeometry(zoomKey);
+  const plotWidth = BLIND_CHART_MIN_WIDTH - geometry.paddingX * 2;
+  const step = Math.max(1, geometry.candleWidth + geometry.gap);
+  return Math.max(1, Math.floor((plotWidth + geometry.gap) / step));
+}
+
+function buildOverlaySegments(candles = [], field, zoomKey = "wide") {
+  const geometry = getChartLayout(candles.length, zoomKey);
+  const segments = [];
+  for (let index = 0; index < candles.length - 1; index += 1) {
+    const currentRawY = candles[index][field];
+    const nextRawY = candles[index + 1][field];
+    if (currentRawY === null || currentRawY === undefined || nextRawY === null || nextRawY === undefined) continue;
+    const currentY = Number(currentRawY);
+    const nextY = Number(nextRawY);
+    if (!Number.isFinite(currentY) || !Number.isFinite(nextY)) continue;
+    const x1 = geometry.paddingX + index * (geometry.candleWidth + geometry.gap) + geometry.candleWidth / 2;
+    const x2 = geometry.paddingX + (index + 1) * (geometry.candleWidth + geometry.gap) + geometry.candleWidth / 2;
+    const y1 = geometry.paddingTop + currentY;
+    const y2 = geometry.paddingTop + nextY;
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const width = Math.sqrt(dx * dx + dy * dy);
+    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+    segments.push({
+      key: `${field}-${index}`,
+      style: `left: ${roundMetric(x1, 1)}rpx; top: ${roundMetric(y1, 1)}rpx; width: ${roundMetric(width, 1)}rpx; transform: rotate(${roundMetric(angle, 2)}deg);`
+    });
+  }
+  return segments;
+}
+
+function getMainIndicatorMeta(key = "ma") {
+  if (key === "hide") return { key: "hide", label: "" };
+  return MAIN_INDICATOR_OPTIONS.find((item) => item.key === key) || MAIN_INDICATOR_OPTIONS[0];
+}
+
+function buildEmptyIndicatorOverlay() {
+  return {
+    ma5: [],
+    ma10: [],
+    ma20: [],
+    bollUpper: [],
+    bollLower: []
+  };
+}
+
+function buildIndicatorOverlay(candles = [], zoomKey = "wide", indicatorKey = "ma") {
+  const meta = getMainIndicatorMeta(indicatorKey);
+  if (meta.key === "hide") return buildEmptyIndicatorOverlay();
+  if (meta.key === "boll") {
+    return Object.assign(buildEmptyIndicatorOverlay(), {
+      ma20: buildOverlaySegments(candles, "ma20Y", zoomKey),
+      bollUpper: buildOverlaySegments(candles, "bollUpperY", zoomKey),
+      bollLower: buildOverlaySegments(candles, "bollLowerY", zoomKey)
+    });
+  }
+  return Object.assign(buildEmptyIndicatorOverlay(), {
+    ma5: buildOverlaySegments(candles, "ma5Y", zoomKey),
+    ma10: buildOverlaySegments(candles, "ma10Y", zoomKey),
+    ma20: buildOverlaySegments(candles, "ma20Y", zoomKey)
+  });
+}
+
+function getIndicatorPanelMeta(key = "vol") {
+  if (key === "hide") return { key: "hide", label: "" };
+  return INDICATOR_PANEL_OPTIONS.find((item) => item.key === key) || INDICATOR_PANEL_OPTIONS[0];
+}
+
+function emaSeries(values = [], period) {
+  const k = 2 / (period + 1);
+  let previous = null;
+  return values.map((value) => {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return null;
+    previous = previous === null ? number : number * k + previous * (1 - k);
+    return previous;
+  });
+}
+
+function buildPanelLineSegments(points = [], field, zoomKey = "wide") {
+  const geometry = getChartLayout(points.length, zoomKey);
+  const segments = [];
+  for (let index = 0; index < points.length - 1; index += 1) {
+    const currentRawY = points[index][field];
+    const nextRawY = points[index + 1][field];
+    if (currentRawY === null || currentRawY === undefined || nextRawY === null || nextRawY === undefined) continue;
+    const currentY = Number(currentRawY);
+    const nextY = Number(nextRawY);
+    if (!Number.isFinite(currentY) || !Number.isFinite(nextY)) continue;
+    const x1 = geometry.paddingX + index * (geometry.candleWidth + geometry.gap) + geometry.candleWidth / 2;
+    const x2 = geometry.paddingX + (index + 1) * (geometry.candleWidth + geometry.gap) + geometry.candleWidth / 2;
+    const y1 = currentY;
+    const y2 = nextY;
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const width = Math.sqrt(dx * dx + dy * dy);
+    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+    segments.push({
+      key: `${field}-${index}`,
+      style: `left: ${roundMetric(x1, 1)}rpx; top: ${roundMetric(y1, 1)}rpx; width: ${roundMetric(width, 1)}rpx; transform: rotate(${roundMetric(angle, 2)}deg);`
+    });
+  }
+  return segments;
+}
+
+function buildVolPanel(candles = []) {
+  const maxVolume = Math.max.apply(null, candles.map((item) => Number(item.volume || 0)).concat([1]));
+  return candles.map((item, index) => ({
+    key: `vol-${item.key || index}`,
+    tone: item.tone || "flat",
+    barStyle: `height: ${Math.max(2, Math.round((Number(item.volume || 0) / maxVolume) * 76))}rpx;`
+  }));
+}
+
+function buildMacdPanel(candles = [], zoomKey = "wide") {
+  const closes = candles.map((item) => Number(item.close || 0));
+  const ema12 = emaSeries(closes, 12);
+  const ema26 = emaSeries(closes, 26);
+  const dif = closes.map((_, index) => Number(ema12[index]) - Number(ema26[index]));
+  const dea = emaSeries(dif, 9);
+  const hist = dif.map((value, index) => value - Number(dea[index] || 0));
+  const maxAbs = Math.max.apply(null, hist.concat(dif).concat(dea).map((value) => Math.abs(Number(value || 0))).concat([0.0001]));
+  const mid = 46;
+  const points = candles.map((item, index) => {
+    const histogram = Number(hist[index] || 0);
+    const barHeight = Math.max(2, Math.round(Math.abs(histogram) / maxAbs * 42));
+    return {
+      key: `macd-${item.key || index}`,
+      tone: histogram >= 0 ? "gold" : "jade",
+      barStyle: `height: ${barHeight}rpx; top: ${histogram >= 0 ? mid - barHeight : mid}rpx;`,
+      difY: mid - Number(dif[index] || 0) / maxAbs * 38,
+      deaY: mid - Number(dea[index] || 0) / maxAbs * 38
+    };
+  });
+  return {
+    items: points,
+    lines: {
+      dif: buildPanelLineSegments(points, "difY", zoomKey),
+      dea: buildPanelLineSegments(points, "deaY", zoomKey)
+    }
+  };
+}
+
+function indicatorValueToY(value) {
+  const safe = Math.max(0, Math.min(100, Number(value || 0)));
+  return 86 - safe / 100 * 80;
+}
+
+function buildRsiValues(candles = [], period = 14) {
+  let avgGain = 0;
+  let avgLoss = 0;
+  return candles.map((item, index) => {
+    if (index === 0) return 50;
+    const prev = Number(candles[index - 1].close || 0);
+    const current = Number(item.close || 0);
+    const change = current - prev;
+    const gain = Math.max(0, change);
+    const loss = Math.max(0, -change);
+    const divisor = Math.min(period, index);
+    avgGain = index === 1 ? gain : ((avgGain * (divisor - 1)) + gain) / divisor;
+    avgLoss = index === 1 ? loss : ((avgLoss * (divisor - 1)) + loss) / divisor;
+    if (avgLoss <= 0) return 100;
+    const rs = avgGain / avgLoss;
+    return 100 - 100 / (1 + rs);
+  });
+}
+
+function buildRsiPanel(candles = [], zoomKey = "wide") {
+  const rsiValues = buildRsiValues(candles, 14);
+  const points = candles.map((item, index) => ({
+    key: `rsi-${item.key || index}`,
+    rsiY: indicatorValueToY(rsiValues[index])
+  }));
+  return {
+    items: [],
+    lines: {
+      rsi: buildPanelLineSegments(points, "rsiY", zoomKey)
+    }
+  };
+}
+
+function buildKdjPanel(candles = [], zoomKey = "wide") {
+  let k = 50;
+  let d = 50;
+  const points = candles.map((item, index) => {
+    const start = Math.max(0, index - 8);
+    const window = candles.slice(start, index + 1);
+    const high = Math.max.apply(null, window.map((candle) => Number(candle.high || 0)).concat([Number(item.high || 0)]));
+    const low = Math.min.apply(null, window.map((candle) => Number(candle.low || 0)).concat([Number(item.low || 0)]));
+    const close = Number(item.close || 0);
+    const rsv = high === low ? 50 : ((close - low) / (high - low)) * 100;
+    k = k * 2 / 3 + rsv / 3;
+    d = d * 2 / 3 + k / 3;
+    const j = 3 * k - 2 * d;
+    return {
+      key: `kdj-${item.key || index}`,
+      kY: indicatorValueToY(k),
+      dY: indicatorValueToY(d),
+      jY: indicatorValueToY(j)
+    };
+  });
+  return {
+    items: [],
+    lines: {
+      k: buildPanelLineSegments(points, "kY", zoomKey),
+      d: buildPanelLineSegments(points, "dY", zoomKey),
+      j: buildPanelLineSegments(points, "jY", zoomKey)
+    }
+  };
+}
+
+function buildBollPanel(candles = [], zoomKey = "wide") {
+  const points = candles.map((item, index) => ({
+    key: `boll-${item.key || index}`,
+    upperY: Number.isFinite(Number(item.bollUpperY)) ? Math.max(6, Math.min(86, Number(item.bollUpperY) / 2.7)) : null,
+    lowerY: Number.isFinite(Number(item.bollLowerY)) ? Math.max(6, Math.min(86, Number(item.bollLowerY) / 2.7)) : null,
+    midY: Number.isFinite(Number(item.ma20Y)) ? Math.max(6, Math.min(86, Number(item.ma20Y) / 2.7)) : null
+  }));
+  return {
+    items: [],
+    lines: {
+      upper: buildPanelLineSegments(points, "upperY", zoomKey),
+      lower: buildPanelLineSegments(points, "lowerY", zoomKey),
+      mid: buildPanelLineSegments(points, "midY", zoomKey)
+    }
+  };
+}
+
+function buildIndicatorPanel(candles = [], key = "vol", zoomKey = "wide") {
+  const meta = getIndicatorPanelMeta(key);
+  if (meta.key === "hide") {
+    return { type: "hide", label: meta.label, visible: false, items: [], lines: {} };
+  }
+  if (meta.key === "macd") {
+    const macd = buildMacdPanel(candles, zoomKey);
+    return { type: "macd", label: meta.label, visible: true, items: macd.items, lines: macd.lines };
+  }
+  if (meta.key === "boll") {
+    const boll = buildBollPanel(candles, zoomKey);
+    return { type: "boll", label: meta.label, visible: true, items: boll.items, lines: boll.lines };
+  }
+  if (meta.key === "rsi") {
+    const rsi = buildRsiPanel(candles, zoomKey);
+    return { type: "rsi", label: meta.label, visible: true, items: rsi.items, lines: rsi.lines };
+  }
+  if (meta.key === "kdj") {
+    const kdj = buildKdjPanel(candles, zoomKey);
+    return { type: "kdj", label: meta.label, visible: true, items: kdj.items, lines: kdj.lines };
+  }
+  return {
+    type: "vol",
+    label: meta.label,
+    visible: true,
+    items: buildVolPanel(candles),
+    lines: {}
+  };
 }
 
 function getHistorySlice(historyCache = {}, marketKey, timeframeKey) {
@@ -503,6 +921,276 @@ function normalizeTrainingPrescription(value, fallbackPrescription = {}) {
 function cleanText(value, maxLength = 180) {
   const text = String(value || "").trim();
   return maxLength > 0 ? text.slice(0, maxLength) : text;
+}
+
+function cleanEventText(value, maxLength = 180) {
+  return cleanText(value, maxLength);
+}
+
+function normalizeDecisionInterval(value) {
+  const number = Number(value || 5);
+  if (!Number.isFinite(number)) return 5;
+  return Math.max(3, Math.min(10, Math.round(number)));
+}
+
+function buildRuntimeViewport(candles = [], currentIndex = 0, zoomKey = "wide", panOffset = 0) {
+  if (!Array.isArray(candles) || !candles.length) {
+    return {
+      startIndex: 0,
+      endIndex: 0,
+      rightBoundaryIndex: 0,
+      panOffset: 0,
+      maxPanOffset: 0,
+      capacity: 0,
+      barStepRpx: 1
+    };
+  }
+  const safeIndex = Math.max(0, Math.min(candles.length - 1, Number(currentIndex || 0)));
+  const capacity = Math.max(1, Math.min(safeIndex + 1, getChartViewportCapacity(zoomKey)));
+  const maxPanOffset = Math.max(0, safeIndex - capacity + 1);
+  const safePanOffset = Math.max(0, Math.min(maxPanOffset, Math.round(Number(panOffset || 0))));
+  const endIndex = Math.max(capacity - 1, safeIndex - safePanOffset);
+  const startIndex = Math.max(0, endIndex - capacity + 1);
+  const geometry = getChartGeometry(zoomKey);
+  return {
+    startIndex,
+    endIndex,
+    rightBoundaryIndex: safeIndex,
+    panOffset: safePanOffset,
+    maxPanOffset,
+    capacity,
+    barStepRpx: geometry.candleWidth + geometry.gap
+  };
+}
+
+function buildRuntimeVisibleCandles(candles = [], viewport = {}) {
+  if (!Array.isArray(candles) || !candles.length) return [];
+  const startIndex = Math.max(0, Number(viewport.startIndex || 0));
+  const endIndex = Math.max(startIndex, Number(viewport.endIndex || startIndex));
+  return candles.slice(startIndex, endIndex + 1).map((item, index) => Object.assign({}, item, {
+    runtimeIndex: startIndex + index
+  }));
+}
+
+function normalizeInitialVisibleCount(value, totalCandles) {
+  const total = Math.max(0, Number(totalCandles || 0));
+  if (!total) return 0;
+  const number = Number(value || 1);
+  if (!Number.isFinite(number)) return 1;
+  return Math.max(1, Math.min(total, Math.round(number)));
+}
+
+function getInitialKlineVisibleCount(session = {}) {
+  const candles = Array.isArray(session.candles) ? session.candles : [];
+  if (!candles.length) return 0;
+  const windowSize = Number(session.chartWindowSize || DEFAULT_VISIBLE_CANDLES);
+  const safeWindowSize = Number.isFinite(windowSize) ? windowSize : DEFAULT_VISIBLE_CANDLES;
+  const target = Math.max(72, Math.min(132, Math.floor(safeWindowSize * 0.8)));
+  return Math.min(candles.length, target);
+}
+
+function normalizeRuntimeAction(action) {
+  const value = String(action || "HOLD").toUpperCase();
+  if (value === "ACT" || value === "BUY") return "ACT";
+  if (value === "AVOID" || value === "SELL") return "AVOID";
+  return "HOLD";
+}
+
+function buildSessionMetrics(decisions = []) {
+  const safeDecisions = Array.isArray(decisions) ? decisions : [];
+  return {
+    decisionCount: safeDecisions.length,
+    actionCount: safeDecisions.filter((item) => item.action === "ACT").length,
+    avoidCount: safeDecisions.filter((item) => item.action === "AVOID").length,
+    holdCount: safeDecisions.filter((item) => item.action === "HOLD").length,
+    positionSize: 0,
+    totalPnl: 0,
+    maxDrawdown: 0
+  };
+}
+
+function shouldRuntimeRequireDecision(currentIndex, decisionInterval) {
+  const index = Number(currentIndex || 0);
+  return index > 0 && index % normalizeDecisionInterval(decisionInterval) === 0;
+}
+
+function buildRuntimeState(baseRuntime = {}, patch = {}) {
+  const runtime = Object.assign({}, baseRuntime, patch);
+  const candles = Array.isArray(runtime.candles) ? runtime.candles : [];
+  const safeIndex = candles.length
+    ? Math.max(0, Math.min(candles.length - 1, Number(runtime.currentIndex || 0)))
+    : 0;
+  const zoomKey = runtime.chartZoomKey || "wide";
+  const viewport = buildRuntimeViewport(candles, safeIndex, zoomKey, runtime.chartPanOffset);
+  const visibleCandles = buildRuntimeVisibleCandles(candles, viewport);
+  const activeCandle = candles[safeIndex] ? Object.assign({}, candles[safeIndex], { runtimeIndex: safeIndex }) : (visibleCandles[visibleCandles.length - 1] || null);
+  const hasDecisionForCurrentIndex = Number(runtime.lastDecisionIndex) === safeIndex;
+  const mustDecide = !!runtime.lockedUntilDecision || (!hasDecisionForCurrentIndex && shouldRuntimeRequireDecision(safeIndex, runtime.decisionInterval));
+  return Object.assign({}, runtime, {
+    currentIndex: safeIndex,
+    visibleCandles,
+    activeCandle,
+    chartViewport: viewport,
+    chartPanOffset: viewport.panOffset,
+    chartBoardStyle: getChartBoardStyle(visibleCandles.length, zoomKey),
+    chartScrollLeft: 0,
+    indicatorOverlay: buildIndicatorOverlay(visibleCandles, zoomKey, runtime.mainIndicatorKey || "ma"),
+    indicatorPanel: buildIndicatorPanel(visibleCandles, runtime.indicatorPanelKey || "vol", zoomKey),
+    sessionMetrics: buildSessionMetrics(runtime.decisionTimeline || []),
+    mustDecide,
+    lockedUntilDecision: mustDecide
+  });
+}
+
+function startKlineTrainingRuntime(session = {}, options = {}) {
+  const candles = Array.isArray(session.candles) ? session.candles : [];
+  const initialVisibleCount = normalizeInitialVisibleCount(options.initialVisibleCount, candles.length);
+  return buildRuntimeState({
+    trainingSessionId: cleanEventText(options.trainingSessionId || `kline-session-${Date.now()}`, 160),
+    simulationMode: "blind_step_replay",
+    sliceSeed: cleanEventText(options.sliceSeed || ((session.historySlice || {}).seed) || ((session.historySlice || {}).sliceSeed) || "", 120),
+    marketKey: ((session.market || {}).key) || "",
+    timeframeKey: session.timeframeKey || "",
+    chartZoomKey: session.chartZoomKey || "wide",
+    mainIndicatorKey: options.initialMainIndicatorKey || session.defaultMainIndicatorKey || "ma",
+    indicatorPanelKey: options.initialIndicatorKey || session.defaultIndicatorKey || "vol",
+    decisionInterval: normalizeDecisionInterval(options.decisionInterval),
+    currentIndex: Math.max(0, initialVisibleCount - 1),
+    totalCandles: candles.length,
+    candles,
+    chartPanOffset: 0,
+    chartViewport: null,
+    decisionTimeline: [],
+    emotionBadges: [],
+    riskHints: [],
+    coachHints: [],
+    sessionMetrics: buildSessionMetrics(),
+    lastDecisionIndex: -1,
+    lockedUntilDecision: false,
+    blockedReason: ""
+  });
+}
+
+function setKlineRuntimeIndicator(runtime = {}, indicatorKey = "vol") {
+  return buildRuntimeState(runtime, {
+    indicatorPanelKey: getIndicatorPanelMeta(indicatorKey).key
+  });
+}
+
+function setKlineRuntimeMainIndicator(runtime = {}, indicatorKey = "ma") {
+  return buildRuntimeState(runtime, {
+    mainIndicatorKey: getMainIndicatorMeta(indicatorKey).key
+  });
+}
+
+function setKlineRuntimeChartZoom(runtime = {}, chartZoomKey = "wide") {
+  return buildRuntimeState(runtime, {
+    chartZoomKey: getChartZoomMeta(chartZoomKey).key
+  });
+}
+
+function setKlineRuntimeViewportPan(runtime = {}, panOffset = 0) {
+  return buildRuntimeState(runtime, {
+    chartPanOffset: panOffset
+  });
+}
+
+function buildEmotionBadge(decision = {}) {
+  const text = `${decision.action || ""} ${decision.reactionDirection || ""} ${decision.firstReaction || ""} ${decision.boundaryChoice || ""}`;
+  if (/不甘|夺回|回本|扳回/.test(text)) return { type: "REVENGE", label: "不甘", text: "不顺后想立刻夺回节奏。" };
+  if (/追|错过|贪|急|证明/.test(text) || decision.action === "ACT" || decision.reactionDirection === "act") {
+    return { type: "IMPULSE", label: "冲动", text: "想马上行动时，先照见怕错过。" };
+  }
+  if (/怕|恐|割|退出|躲/.test(text) || decision.action === "AVOID" || decision.reactionDirection === "avoid") {
+    return { type: "FEAR", label: "惧念", text: "想躲开时，先分清事实与不安。" };
+  }
+  if (/犹豫|不敢|等确认/.test(text)) return { type: "HESITATION", label: "犹疑", text: "知而未行时，先看见停滞处。" };
+  return { type: "OBSERVE", label: "观照", text: "先记录，再继续观察。" };
+}
+
+function buildRiskHint(emotionBadge = null) {
+  const type = (emotionBadge || {}).type || "";
+  if (type === "IMPULSE") return { level: "medium", text: "出现冲动：先停十秒，再回到原边界。" };
+  if (type === "FEAR") return { level: "medium", text: "出现惧念：先看事实，再记录不安。" };
+  if (type === "REVENGE") return { level: "high", text: "出现不甘：本轮只记录，不追加动作。" };
+  if (type === "HESITATION") return { level: "low", text: "出现犹疑：写下知道却未行动的原因。" };
+  return { level: "low", text: "继续只做训练记录，不作当下判断。" };
+}
+
+function buildCoachHint(decision = {}, emotionBadge = null) {
+  const action = normalizeRuntimeAction(decision.action);
+  const label = (emotionBadge || {}).label || "观照";
+  return {
+    title: `${label}已记录`,
+    text: action === "HOLD"
+      ? "你先停下来观察，这一刻先守住了记录。"
+      : "这一念已经写入记录，下一步先停十秒，再看是否仍合边界。"
+  };
+}
+
+function advanceKlineTrainingRuntime(runtime = {}) {
+  if (runtime.lockedUntilDecision || runtime.mustDecide) {
+    return Object.assign({}, runtime, {
+      blockedReason: "decision_required",
+      mustDecide: true,
+      lockedUntilDecision: true
+    });
+  }
+  const total = Number(runtime.totalCandles || (runtime.candles || []).length || 0);
+  const nextIndex = Math.min(Math.max(0, total - 1), Number(runtime.currentIndex || 0) + 1);
+  return buildRuntimeState(runtime, {
+    currentIndex: nextIndex,
+    chartPanOffset: 0,
+    blockedReason: ""
+  });
+}
+
+function recordKlineTrainingDecision(runtime = {}, decision = {}) {
+  const activeCandle = runtime.activeCandle || (runtime.candles || [])[runtime.currentIndex] || {};
+  const safeDecision = {
+    id: `decision-${runtime.trainingSessionId || "local"}-${runtime.currentIndex}-${(runtime.decisionTimeline || []).length + 1}`,
+    sessionId: runtime.trainingSessionId || "",
+    index: Number(runtime.currentIndex || 0),
+    action: normalizeRuntimeAction(decision.action),
+    selectedCandleKey: cleanEventText(decision.selectedCandleKey || activeCandle.key || "", 80),
+    reactionDirection: cleanEventText(decision.reactionDirection, 40),
+    firstReaction: cleanEventText(decision.firstReaction, 160),
+    boundaryChoice: cleanEventText(decision.boundaryChoice, 120),
+    createdAt: decision.createdAt || Date.now()
+  };
+  const emotionBadge = buildEmotionBadge(safeDecision);
+  const riskHint = buildRiskHint(emotionBadge);
+  const coachHint = buildCoachHint(safeDecision, emotionBadge);
+  return buildRuntimeState(runtime, {
+    decisionTimeline: (runtime.decisionTimeline || []).concat([safeDecision]),
+    emotionBadges: emotionBadge ? (runtime.emotionBadges || []).concat([emotionBadge]) : (runtime.emotionBadges || []),
+    riskHints: (runtime.riskHints || []).concat([riskHint]),
+    coachHints: (runtime.coachHints || []).concat([coachHint]),
+    lastDecisionIndex: Number(runtime.currentIndex || 0),
+    mustDecide: false,
+    lockedUntilDecision: false,
+    blockedReason: ""
+  });
+}
+
+function buildKlineTrainingRecordPatch(runtime = {}) {
+  const decisions = Array.isArray(runtime.decisionTimeline) ? runtime.decisionTimeline : [];
+  const lastDecision = decisions[decisions.length - 1] || {};
+  const activeCandle = runtime.activeCandle || (runtime.candles || [])[runtime.currentIndex] || {};
+  return {
+    trainingSessionId: cleanEventText(runtime.trainingSessionId, 160),
+    simulationMode: cleanEventText(runtime.simulationMode || "blind_step_replay", 80),
+    sliceSeed: cleanEventText(runtime.sliceSeed, 120),
+    selectedCandleKey: cleanEventText(lastDecision.selectedCandleKey || activeCandle.key || "", 80),
+    reactionDirection: cleanEventText(lastDecision.reactionDirection, 40),
+    firstReaction: cleanEventText(lastDecision.firstReaction, 160),
+    boundaryChoice: cleanEventText(lastDecision.boundaryChoice, 120),
+    decisionTimeline: decisions,
+    emotionBadges: Array.isArray(runtime.emotionBadges) ? runtime.emotionBadges : [],
+    riskHints: Array.isArray(runtime.riskHints) ? runtime.riskHints : [],
+    coachHints: Array.isArray(runtime.coachHints) ? runtime.coachHints : [],
+    sessionMetrics: buildSessionMetrics(decisions)
+  };
 }
 
 function normalizeBooleanValue(value) {
@@ -762,7 +1450,7 @@ const SPECIAL_TRAINING_PACKS = [
     error_type: "卖飞懊悔",
     title: "卖飞懊悔专项",
     scene_tags: ["洗盘后走强", "趋势中继"],
-    training_goal: "卖出后不因懊悔追回。",
+    training_goal: "动作后不因懊悔追回。",
     expected_action: "按规则处理，不追回情绪单",
     default_prompt: "先看事实：你是在重新确认规则，还是被懊悔牵回？"
   },
@@ -1098,7 +1786,9 @@ function buildKlineMindSession({
   const scenario = DAY_SCENARIOS[day] || DAY_SCENARIOS[1];
   const marketKey = (record || {}).marketKey || "cn_equity";
   const timeframeKey = (record || {}).timeframeKey || "1d";
-  const timeframeMeta = TIMEFRAME_CATALOG.find((item) => item.key === timeframeKey) || TIMEFRAME_CATALOG[4];
+  const timeframeMeta = TIMEFRAME_CATALOG.find((item) => item.key === timeframeKey) || TIMEFRAME_CATALOG[0];
+  const chartZoomKey = (record || {}).chartZoomKey || "wide";
+  const chartZoomMeta = getChartZoomMeta(chartZoomKey);
   const market = getMarketConfig(marketKey);
   const customSessionSource = customSession || (pickValue((record || {}).sourceType, (record || {}).source_type) === "custom_session" ? record : null);
   const customSessionContext = buildCustomSessionContext(customSessionSource || {});
@@ -1114,11 +1804,14 @@ function buildKlineMindSession({
   const samplingHistorySlice = buildSamplingHistorySlice(normalizedSampling || {});
   const customHistorySlice = (customSessionSource || {}).historySlice || (customSessionSource || {}).slice;
   const historySlice = customHistorySlice || (record || {}).historySlice || samplingHistorySlice || getHistorySlice(historyCache, market.key, timeframeKey);
-  const rawCandles = normalizeHistoryCandles(historySlice || {});
+  const rawCandles = normalizeHistoryCandles(historySlice || {}, { windowSize: chartZoomMeta.windowSize });
   const selectedKey = (record || {}).selectedCandleKey || "";
   const prescription = getKlinePrescription(personalityType);
   const stageGate = getSixGate(stagePlan.stageKey);
   const candles = markSelectedCandles(rawCandles, selectedKey, scenario.focusIndex);
+  const chartBoardStyle = getChartBoardStyle(candles.length, chartZoomMeta.key);
+  const mainIndicatorKey = (record || {}).mainIndicatorKey || "ma";
+  const indicatorOverlay = buildIndicatorOverlay(candles, chartZoomMeta.key, mainIndicatorKey);
   const selectedCandleKey = selectedKey || ((candles.find((item) => item.selected) || {}).key) || "";
   const reviewFocusContext = buildReviewFocusContext(reviewFocus || {}, prescription);
   const specialTrainingContext = buildSpecialTrainingContext(specialTraining || record || {});
@@ -1136,6 +1829,17 @@ function buildKlineMindSession({
     timeframeKey,
     timeframeLabel: timeframeMeta.label,
     timeframeOptions: buildTimeframeOptions(timeframeKey),
+    chartZoomKey: chartZoomMeta.key,
+    chartWindowSize: chartZoomMeta.windowSize,
+    chartZoomOptions: buildChartZoomOptions(chartZoomMeta.key),
+    chartBoardStyle,
+    indicatorOverlay,
+    defaultMainIndicatorKey: "ma",
+    mainIndicatorOptions: MAIN_INDICATOR_OPTIONS,
+    defaultIndicatorKey: "vol",
+    indicatorPanelOptions: INDICATOR_PANEL_OPTIONS,
+    chartOrientationHint: "横屏训练更稳，适合看更多 K 线；竖屏可放大少量细看。",
+    indicatorCatalog: INDICATOR_CATALOG,
     historySlice: historySlice || null,
     hasHistoricalData: candles.length > 0,
     dataStatusText: candles.length
@@ -1457,6 +2161,10 @@ module.exports = {
   PERSONALITY_KLINE_DRILLS,
   MARKET_CATALOG,
   TIMEFRAME_CATALOG,
+  CHART_ZOOM_OPTIONS,
+  INDICATOR_CATALOG,
+  MAIN_INDICATOR_OPTIONS,
+  INDICATOR_PANEL_OPTIONS,
   KLINE_TRAINING_METHODS,
   GATE_TRAINING_ACTIONS,
   DAY_SCENARIOS,
@@ -1477,7 +2185,17 @@ module.exports = {
   normalizeTrainingBookmark,
   buildBookmarkReplaySliceRequest,
   getMarketConfig,
+  getNextKlineMindSliceSeed,
+  getInitialKlineVisibleCount,
   normalizeHistoryCandles,
+  startKlineTrainingRuntime,
+  advanceKlineTrainingRuntime,
+  recordKlineTrainingDecision,
+  setKlineRuntimeChartZoom,
+  setKlineRuntimeViewportPan,
+  setKlineRuntimeIndicator,
+  setKlineRuntimeMainIndicator,
+  buildKlineTrainingRecordPatch,
   buildKlineMindSession,
   buildKlineMindRecord,
   calculateKlineMindScore

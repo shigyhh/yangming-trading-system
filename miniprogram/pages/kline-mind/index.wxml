@@ -206,23 +206,161 @@
         </view>
       </view>
 
-      <view wx:if="{{session.hasHistoricalData}}" class="wave-board">
-        <button
-          wx:for="{{session.candles}}"
-          wx:key="key"
-          class="mind-candle {{item.tone}} {{item.focus ? 'focus' : ''}} {{item.selected ? 'selected' : ''}}"
-          data-key="{{item.key}}"
-          bindtap="selectCandle"
+      <view class="chart-toolbar">
+        <view class="chart-toolbar-row">
+          <view class="chart-period-rail">
+            <text>训练风格</text>
+            <button
+              wx:for="{{session.timeframeOptions}}"
+              wx:key="key"
+              class="timeframe-chip {{item.selected ? 'active' : ''}}"
+              data-timeframe="{{item.key}}"
+              bindtap="selectTimeframe"
+            >
+              {{item.label}}
+            </button>
+          </view>
+          <button class="slice-change-btn" bindtap="switchSlice">
+            {{sliceSwitchLocked ? '稍候' : '换一段'}}
+          </button>
+        </view>
+        <view class="chart-toolbar-row compact">
+          <view class="chart-zoom-status">{{session.chartOrientationHint}}</view>
+          <view class="chart-stepper">
+            <view class="chart-stepper-control" bindtap="decreaseChartZoom">-</view>
+            <view class="chart-stepper-control" bindtap="increaseChartZoom">+</view>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{session.hasHistoricalData}}" class="chart-canvas-wrap">
+        <view
+          class="wave-board-scroll"
+          bindtouchstart="onChartPanStart"
+          bindtouchmove="onChartPanMove"
+          bindtouchend="onChartPanEnd"
+          bindtouchcancel="onChartPanEnd"
         >
-          <view class="wick" style="{{item.wickStyle}}"></view>
-          <view class="body" style="{{item.bodyStyle}}"></view>
-          <view class="volume" style="{{item.volumeStyle}}"></view>
-          <text wx:if="{{item.label}}">{{item.label}}</text>
-        </button>
+          <view class="chart-scroll-inner" style="{{runtimeView.chartBoardStyle}}">
+            <view class="wave-board zoom-{{session.chartZoomKey}}">
+              <view class="wave-board-content">
+                <view class="indicator-lines">
+                  <view wx:for="{{runtimeView.indicatorOverlay.bollUpper}}" wx:key="key" class="indicator-segment boll" style="{{item.style}}"></view>
+                  <view wx:for="{{runtimeView.indicatorOverlay.bollLower}}" wx:key="key" class="indicator-segment boll" style="{{item.style}}"></view>
+                  <view wx:for="{{runtimeView.indicatorOverlay.ma20}}" wx:key="key" class="indicator-segment ma20" style="{{item.style}}"></view>
+                  <view wx:for="{{runtimeView.indicatorOverlay.ma10}}" wx:key="key" class="indicator-segment ma10" style="{{item.style}}"></view>
+                  <view wx:for="{{runtimeView.indicatorOverlay.ma5}}" wx:key="key" class="indicator-segment ma5" style="{{item.style}}"></view>
+                </view>
+                <button
+                  wx:for="{{runtimeView.visibleCandles}}"
+                  wx:key="key"
+                  class="mind-candle {{item.tone}} {{item.focus ? 'focus' : ''}} {{item.selected ? 'selected' : ''}}"
+                  data-key="{{item.key}}"
+                  bindtap="selectCandle"
+                >
+                  <view class="wick" style="{{item.wickStyle}}"></view>
+                  <view class="body" style="{{item.bodyStyle}}"></view>
+                  <view class="volume" style="{{item.volumeStyle}}"></view>
+                  <text wx:if="{{item.label}}">{{item.label}}</text>
+                </button>
+              </view>
+            </view>
+
+            <view class="indicator-strip-spacer"></view>
+
+            <view wx:if="{{runtimeView.indicatorPanel.visible}}" class="sub-indicator-board {{runtimeView.indicatorPanel.type}} zoom-{{session.chartZoomKey}}">
+              <view class="sub-indicator-content">
+                <view wx:for="{{runtimeView.indicatorPanel.lines.upper}}" wx:key="key" class="sub-line boll-upper" style="{{item.style}}"></view>
+                <view wx:for="{{runtimeView.indicatorPanel.lines.lower}}" wx:key="key" class="sub-line boll-lower" style="{{item.style}}"></view>
+                <view wx:for="{{runtimeView.indicatorPanel.lines.mid}}" wx:key="key" class="sub-line boll-mid" style="{{item.style}}"></view>
+                <view wx:for="{{runtimeView.indicatorPanel.lines.dif}}" wx:key="key" class="sub-line dif" style="{{item.style}}"></view>
+                <view wx:for="{{runtimeView.indicatorPanel.lines.dea}}" wx:key="key" class="sub-line dea" style="{{item.style}}"></view>
+                <view wx:for="{{runtimeView.indicatorPanel.lines.rsi}}" wx:key="key" class="sub-line rsi" style="{{item.style}}"></view>
+                <view wx:for="{{runtimeView.indicatorPanel.lines.k}}" wx:key="key" class="sub-line k" style="{{item.style}}"></view>
+                <view wx:for="{{runtimeView.indicatorPanel.lines.d}}" wx:key="key" class="sub-line d" style="{{item.style}}"></view>
+                <view wx:for="{{runtimeView.indicatorPanel.lines.j}}" wx:key="key" class="sub-line j" style="{{item.style}}"></view>
+                <view
+                  wx:for="{{runtimeView.indicatorPanel.items}}"
+                  wx:key="key"
+                  class="sub-indicator-item {{item.tone}}"
+                >
+                  <view class="sub-bar" style="{{item.barStyle}}"></view>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+        <view class="indicator-strip">
+          <view
+            wx:for="{{session.mainIndicatorOptions}}"
+            wx:for-item="mainIndicator"
+            wx:key="key"
+            class="chart-indicator-chip {{mainIndicator.key === selectedMainIndicatorKey ? 'active' : ''}}"
+            data-indicator="{{mainIndicator.key}}"
+            bindtap="selectMainIndicator"
+          >
+            {{mainIndicator.label}}
+          </view>
+          <view class="indicator-divider"></view>
+          <view
+            wx:for="{{session.indicatorPanelOptions}}"
+            wx:for-item="subIndicator"
+            wx:key="key"
+            class="chart-indicator-chip {{subIndicator.key === selectedIndicatorKey ? 'active' : ''}}"
+            data-indicator="{{subIndicator.key}}"
+            bindtap="selectIndicator"
+          >
+            {{subIndicator.label}}
+          </view>
+        </view>
       </view>
       <view wx:else class="history-empty">
-        <view>历史数据未载入</view>
-        <text>请先同步真实历史数据；未载入前不展示占位 K线。</text>
+        <view>{{historyLoading ? '正在读取历史数据' : '历史数据未载入'}}</view>
+        <text>{{historyLoading ? '正在从服务器读取真实历史片段。' : '请先同步真实历史数据；未载入前不展示占位 K线。'}}</text>
+      </view>
+
+      <view wx:if="{{trainingRuntime && runtimeView.visibleCandles.length}}" class="simulation-console">
+        <view class="simulation-head">
+          <view>
+            <text>逐根盲练</text>
+            <view>{{runtimeView.progressText}} · 已记 {{runtimeView.decisionCount}} 次</view>
+          </view>
+          <text wx:if="{{runtimeView.latestEmotion}}" class="emotion-badge">{{runtimeView.latestEmotion}}</text>
+        </view>
+
+        <view class="risk-hint {{runtimeView.mustDecide ? 'required' : ''}}">
+          {{runtimeView.latestRisk}}
+        </view>
+        <view class="runtime-metrics">
+          <view>
+            <text>记录</text>
+            <view>{{runtimeView.actionText}}</view>
+          </view>
+          <view>
+            <text>指标</text>
+            <view>{{selectedMainIndicatorKey}} / {{selectedIndicatorKey}}</view>
+          </view>
+        </view>
+        <view class="coach-hint" wx:if="{{runtimeView.latestCoach}}">
+          {{runtimeView.latestCoach}}
+        </view>
+        <view class="decision-prompt">{{runtimeView.decisionPrompt}}</view>
+
+        <view class="decision-actions">
+          <view
+            wx:for="{{decisionActions}}"
+            wx:key="key"
+            class="decision-action decision-btn {{item.key}}"
+            data-action="{{item.key}}"
+            bindtap="recordRuntimeDecision"
+          >
+            <text>{{item.label}}</text>
+          </view>
+        </view>
+
+        <button class="runtime-next {{runtimeView.mustDecide ? 'locked' : ''}}" bindtap="advanceRuntimeCandle">
+          {{runtimeView.nextButtonText}}
+        </button>
       </view>
 
       <view class="wave-question">
@@ -231,15 +369,19 @@
         <text class="guardrail">{{session.marketGuardrail}}</text>
       </view>
 
-      <view wx:if="{{activeTrainingMode === 'custom_session' && session.hasHistoricalData}}" class="custom-action-panel">
-        <view>
-          <text>{{session.customProgressText}}</text>
-          <view>训练中隐藏真实标的和日期，只按当前图形记录动作。</view>
+      <view class="slice-playbook">
+        <text class="slice-playbook-title">本段练法</text>
+        <view class="slice-playbook-step">
+          <text class="slice-playbook-index">1</text>
+          <view class="slice-playbook-copy">先停十秒，只看哪一根最牵动你。</view>
         </view>
-        <view class="custom-action-buttons">
-          <button data-action="买入" bindtap="advanceCustomSession">买入</button>
-          <button data-action="卖出" bindtap="advanceCustomSession">卖出</button>
-          <button data-action="观望" bindtap="advanceCustomSession">观望</button>
+        <view class="slice-playbook-step">
+          <text class="slice-playbook-index">2</text>
+          <view class="slice-playbook-copy">点最牵动的一根，写下第一反应。</view>
+        </view>
+        <view class="slice-playbook-step">
+          <text class="slice-playbook-index">3</text>
+          <view class="slice-playbook-copy">回到边界，不把历史片段当成当下判断。</view>
         </view>
       </view>
     </view>
