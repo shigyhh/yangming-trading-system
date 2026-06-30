@@ -184,7 +184,7 @@ const BLIND_CHART_MIN_WIDTH = 690;
 const KLINE_TRAINING_METHODS = [
   {
     key: "firecracker",
-    title: "爆竹 K 线",
+    title: "强触发盲练",
     subtitle: "连续急促、放量、长实体或长影线的强触发历史片段。",
     focus: "训练急念、不甘、证明欲",
     steps: ["先停十秒", "点最想追的一根", "写下想动理由", "只做一次记录"]

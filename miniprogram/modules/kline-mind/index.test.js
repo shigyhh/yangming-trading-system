@@ -27,6 +27,7 @@ assert.deepStrictEqual(Object.keys(MARKET_CATALOG), ["cn_equity"]);
 assert.deepStrictEqual(TIMEFRAME_CATALOG.map((item) => item.key), ["1d", "60m", "30m"]);
 assert.ok(KLINE_TRAINING_METHODS.find((item) => item.key === "firecracker"));
 assert.strictEqual(KLINE_TRAINING_METHODS[0].key, "firecracker");
+assert.ok(!KLINE_TRAINING_METHODS.some((item) => String(item.title || "").includes("爆竹")));
 assert.ok(KLINE_TRAINING_METHODS[0].steps.includes("点最想追的一根"));
 assert.ok(getPersonalityKlineDrill("焦虑型").drillAction.includes("固定观察窗口"));
 assert.strictEqual(getNextKlineMindSliceSeed(""), "scene-fast-001");
