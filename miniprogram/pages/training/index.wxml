@@ -1,8 +1,16 @@
 <view class="page-shell">
   <view class="page-content">
     <view class="training-brand-row">
-      <view class="training-brand-mark brand-seal-frame" aria-label="阳明照见训练小标">
-        <image class="brand-seal-art" src="/assets/brand/ymty-zhao-logo.svg" mode="aspectFit"></image>
+      <view class="training-brand-mark brand-zhao-mini" aria-label="阳明照见训练小标">
+        <view class="zhao-eyes">
+          <view class="zhao-eye"></view>
+          <view class="zhao-eye"></view>
+        </view>
+        <view class="zhao-mirror"></view>
+        <view class="zhao-fire">
+          <view class="zhao-fire-dot"></view>
+          <view class="zhao-fire-dot"></view>
+        </view>
       </view>
       <view class="training-brand-copy">
         <text>阳明训练系统</text>
@@ -14,8 +22,16 @@
     <view class="page-subtitle">{{result ? type + '专属路径' : '未照见时使用通用事上练；完成照见后会自动匹配路径。'}}</view>
 
     <view class="mind-bridge card" bindtap="goMind">
-      <view class="mind-seal brand-seal-frame" aria-label="开盘照心小标">
-        <image class="brand-seal-art" src="/assets/brand/ymty-zhao-logo.svg" mode="aspectFit"></image>
+      <view class="mind-seal brand-zhao-mini" aria-label="开盘照心小标">
+        <view class="zhao-eyes">
+          <view class="zhao-eye"></view>
+          <view class="zhao-eye"></view>
+        </view>
+        <view class="zhao-mirror"></view>
+        <view class="zhao-fire">
+          <view class="zhao-fire-dot"></view>
+          <view class="zhao-fire-dot"></view>
+        </view>
       </view>
       <view class="mind-copy">
         <text>{{mind ? '今日照心 · ' + mind.name : '先做开盘照心'}}</text>
@@ -27,17 +43,12 @@
     <view class="seven-training-card card">
       <view class="seven-training-head">
         <view>
-          <text>今日只练一件事</text>
+          <text>7 天交易观心陪跑</text>
           <view>Day {{training7View.currentDay}} · {{trainingDay.title}}</view>
         </view>
         <text>{{training7View.progressText}}</text>
       </view>
       <view class="seven-training-bar"><view style="width: {{training7View.progressPercent}}%;"></view></view>
-      <view class="training-today-focus">
-        <text>今日动作</text>
-        <view>{{trainingDay.title}}</view>
-        <text>{{trainingDay.reflectionQuestion}}</text>
-      </view>
       <view class="seven-day-list">
         <button
           wx:for="{{training7View.days}}"
@@ -58,7 +69,7 @@
         </view>
         <view>{{trainingDay.reflectionQuestion}}</view>
       </view>
-      <button class="primary-btn kline-entry-btn" bindtap="goKlineMind">开始K线观心</button>
+      <button class="secondary-btn kline-entry-btn" bindtap="goKlineMind">进入 K 线历史训练</button>
       <button wx:if="{{training7View.canRetest}}" class="secondary-btn" bindtap="goRetest">开始复测</button>
     </view>
 
