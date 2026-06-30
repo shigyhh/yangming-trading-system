@@ -30,6 +30,7 @@ const {
   fetchTradeReviewMarketContext,
   prefetchKlineTrainingSlices,
   normalizeKlineTrainingSliceResult,
+  createRemoteInterventionEvent,
   syncKlineTrainingRecord,
   retryPendingKlineTrainingSync
 } = require("./api");
@@ -949,12 +950,59 @@ async function runKlineSyncTests() {
   assert.strictEqual(storage.ym_kline_mind_records["2026-06-22"].oneThoughtEvent.eventId, "one-thought-kr-event-pending-001");
 }
 
+async function runInterventionEventApiTests() {
+  resetStorage();
+  envVersion = "release";
+  const requests = [];
+  global.wx.request = (options) => {
+    requests.push(options);
+    if (options.url.endsWith("/api/v1/auth/demo-login")) {
+      options.success({
+        statusCode: 200,
+        data: {
+          ok: true,
+          user: { id: "demo-login", display_name: "测试同修" },
+          access_token: "token-intervention",
+          expires_at: "2099-01-01T00:00:00.000Z"
+        }
+      });
+      return;
+    }
+    if (options.url.endsWith("/intervention-events")) {
+      options.success({
+        statusCode: 200,
+        data: {
+          ok: true,
+          intervention_event: options.data.intervention_event
+        }
+      });
+      return;
+    }
+    options.fail({ errMsg: `unexpected request: ${options.url}` });
+  };
+
+  const result = await createRemoteInterventionEvent({
+    id: "intervention-api-001",
+    triggerType: "after_review",
+    errorType: "追涨冲动",
+    userResponse: "continue"
+  });
+  const post = requests.find((item) => item.url.endsWith("/intervention-events"));
+  assert.ok(post);
+  assert.strictEqual(post.method, "POST");
+  assert.strictEqual(post.header.Authorization, "Bearer token-intervention");
+  assert.strictEqual(post.data.intervention_event.id, "intervention-api-001");
+  assert.strictEqual(result.intervention_event.id, "intervention-api-001");
+  assert.strictEqual(JSON.stringify(post.data).includes("13800138000"), false);
+}
+
 runKlineSliceTests()
   .then(runTradeReviewMarketContextTests)
   .then(runLivingMirrorProfileTests)
   .then(runLivingMirrorGrowthProjectionTests)
   .then(runTodayStateTests)
   .then(runKlineSyncTests)
+  .then(runInterventionEventApiTests)
   .then(() => console.log("miniprogram api tests passed"))
   .catch((error) => {
     console.error(error);

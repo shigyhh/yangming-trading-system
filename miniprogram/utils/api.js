@@ -731,6 +731,29 @@ async function requestTradeReviewOcrDraft({ imagePath = "", imageMeta = {} } = {
   }
 }
 
+async function createRemoteInterventionEvent(event = {}) {
+  try {
+    const auth = await ensureAuth();
+    const state = collectLocalState();
+    const user = buildDataBindingUser(auth, state);
+    return request({
+      path: `/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/intervention-events`,
+      method: "POST",
+      token: auth.access_token,
+      data: {
+        user,
+        intervention_event: event,
+        interventionEvent: event,
+        event,
+        source: "miniprogram"
+      }
+    });
+  } catch (error) {
+    saveConnectionFallback(error, "知行提醒同步：暂未连接");
+    throw error;
+  }
+}
+
 async function listTrainingBookmarks(filters = {}) {
   try {
     const auth = await ensureAuth();
@@ -1413,6 +1436,7 @@ module.exports = {
   retryPendingKlineTrainingSync,
   syncTradeReviewRecord,
   requestTradeReviewOcrDraft,
+  createRemoteInterventionEvent,
   listTrainingBookmarks,
   createTrainingBookmark,
   deleteTrainingBookmark,

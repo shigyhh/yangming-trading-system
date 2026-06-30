@@ -16,7 +16,7 @@ import { getI18nBundle, listSupportedLocales } from "../services/i18n.js";
 import { getQuestionBankStats } from "../services/questionBank.js";
 import { consumeWechatAuthCode, createWechatAuthUrl } from "../services/wechatAuth.js";
 import { advanceZhixingReplaySession, finishZhixingReplaySession, getZhixingReplaySession, listZhixingReplayResults, startZhixingReplaySession, submitZhixingReplayDecision } from "../services/zhixingReplay.js";
-import { generateShareCardBinding, getAdminUserFromBindings, getDataBindingUserSummary, getInviteSourceStatsBinding, getRetestComparisonBinding, getShareCardBinding, getUserReportBinding, listAdminUsersFromBindings, saveAssessmentReportBinding, saveKLineRecordBinding, saveRetestResultBinding, saveTradeReviewBinding, saveTrainingRecordBinding, syncAssistantSummaryToFeishuBinding, updateAssistantHandoffBinding } from "../services/dataBinding.js";
+import { createInterventionEventBinding, createTradeReviewOcrDraftBinding, createTrainingBookmarkBinding, deleteTrainingBookmarkBinding, generateShareCardBinding, getAdminUserFromBindings, getDashboardSummaryBinding, getDashboardWeeklySummaryBinding, getDataBindingUserSummary, getInviteSourceStatsBinding, getRetestComparisonBinding, getShareCardBinding, getTrainingPrescriptionBinding, getUserReportBinding, listAdminUsersFromBindings, listExecutionPlansBinding, listInterventionRulesBinding, listTrainingBookmarksBinding, saveAssessmentReportBinding, saveKLineRecordBinding, saveRetestResultBinding, saveTradeReviewBinding, saveTrainingRecordBinding, syncAssistantSummaryToFeishuBinding, updateAssistantHandoffBinding } from "../services/dataBinding.js";
 import { getGlobalReflectionToday, listGlobalReflectionChoices, submitGlobalReflectionVote } from "../services/globalReflection.js";
 import { buildHistoricalKlineHotSlice, buildHistoricalKlineSlice, downloadHistoricalKline, getHistoricalKlineRules, listHistoricalKlineCatalog, listHistoricalKlineInstruments, revealHistoricalKlineSlice, warmHistoricalKlineHotPool } from "../services/historicalKline.js";
 
@@ -89,6 +89,15 @@ export async function route(req, res) {
         data_binding_training_record: "POST /api/v1/data-binding/users/:user_id/training-records",
         data_binding_kline_record: "POST /api/v1/data-binding/users/:user_id/kline-records",
         data_binding_trade_review: "POST /api/v1/data-binding/users/:user_id/trade-reviews",
+        data_binding_trade_review_ocr: "POST /api/v1/data-binding/users/:user_id/trade-review-ocr",
+        data_binding_training_bookmarks: "GET|POST /api/v1/data-binding/users/:user_id/training-bookmarks",
+        data_binding_training_bookmark: "DELETE /api/v1/data-binding/users/:user_id/training-bookmarks/:bookmark_id",
+        data_binding_intervention_rules: "GET /api/v1/data-binding/users/:user_id/intervention-rules",
+        data_binding_intervention_events: "POST /api/v1/data-binding/users/:user_id/intervention-events",
+        data_binding_execution_plans: "GET /api/v1/data-binding/users/:user_id/execution-plans",
+        data_binding_dashboard_summary: "GET /api/v1/data-binding/users/:user_id/dashboard-summary",
+        data_binding_dashboard_weekly: "GET /api/v1/data-binding/users/:user_id/dashboard-weekly",
+        data_binding_training_prescription: "GET /api/v1/data-binding/users/:user_id/training-prescription",
         data_binding_retest: "POST /api/v1/data-binding/users/:user_id/retests",
         data_binding_retest_comparison: "GET /api/v1/data-binding/users/:user_id/retest-comparison",
         data_binding_user_summary: "GET /api/v1/data-binding/users/:user_id/summary",
@@ -267,6 +276,80 @@ export async function route(req, res) {
       review: body.review,
       source: body.source || body.source_channel || "api"
     });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const dataBindingTradeReviewOcrMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/trade-review-ocr$/);
+  if (req.method === "POST" && dataBindingTradeReviewOcrMatch) {
+    const body = await readJson(req);
+    const result = await createTradeReviewOcrDraftBinding({
+      user: { ...(body.user || {}), userId: dataBindingTradeReviewOcrMatch[1] },
+      image: body.image || body.image_meta || {},
+      source: body.source || body.source_channel || "api"
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const dataBindingTrainingBookmarksMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/training-bookmarks$/);
+  if (req.method === "GET" && dataBindingTrainingBookmarksMatch) {
+    const result = await listTrainingBookmarksBinding(dataBindingTrainingBookmarksMatch[1], Object.fromEntries(url.searchParams));
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "POST" && dataBindingTrainingBookmarksMatch) {
+    const body = await readJson(req);
+    const result = await createTrainingBookmarkBinding({
+      user: { ...(body.user || {}), userId: dataBindingTrainingBookmarksMatch[1] },
+      bookmark: body.training_bookmark || body.trainingBookmark || body.bookmark || {},
+      source: body.source || body.source_channel || "api"
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const dataBindingTrainingBookmarkMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/training-bookmarks\/([^/]+)$/);
+  if (req.method === "DELETE" && dataBindingTrainingBookmarkMatch) {
+    const result = await deleteTrainingBookmarkBinding(dataBindingTrainingBookmarkMatch[1], dataBindingTrainingBookmarkMatch[2]);
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const dataBindingInterventionRulesMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/intervention-rules$/);
+  if (req.method === "GET" && dataBindingInterventionRulesMatch) {
+    const result = await listInterventionRulesBinding(dataBindingInterventionRulesMatch[1], Object.fromEntries(url.searchParams));
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const dataBindingInterventionEventsMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/intervention-events$/);
+  if (req.method === "POST" && dataBindingInterventionEventsMatch) {
+    const body = await readJson(req);
+    const result = await createInterventionEventBinding({
+      user: { ...(body.user || {}), userId: dataBindingInterventionEventsMatch[1] },
+      event: body.intervention_event || body.interventionEvent || body.event || {},
+      source: body.source || body.source_channel || "api"
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const dataBindingExecutionPlansMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/execution-plans$/);
+  if (req.method === "GET" && dataBindingExecutionPlansMatch) {
+    const result = await listExecutionPlansBinding(dataBindingExecutionPlansMatch[1], Object.fromEntries(url.searchParams));
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const dataBindingDashboardSummaryMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/dashboard-summary$/);
+  if (req.method === "GET" && dataBindingDashboardSummaryMatch) {
+    const result = await getDashboardSummaryBinding(dataBindingDashboardSummaryMatch[1], Object.fromEntries(url.searchParams));
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const dataBindingDashboardWeeklyMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/dashboard-weekly$/);
+  if (req.method === "GET" && dataBindingDashboardWeeklyMatch) {
+    const result = await getDashboardWeeklySummaryBinding(dataBindingDashboardWeeklyMatch[1], Object.fromEntries(url.searchParams));
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const dataBindingTrainingPrescriptionMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/training-prescription$/);
+  if (req.method === "GET" && dataBindingTrainingPrescriptionMatch) {
+    const result = await getTrainingPrescriptionBinding(dataBindingTrainingPrescriptionMatch[1]);
     return sendJson(res, 200, { ok: true, ...result });
   }
 

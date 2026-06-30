@@ -2,12 +2,22 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  createInterventionEventBinding,
+  createTradeReviewOcrDraftBinding,
+  createTrainingBookmarkBinding,
+  deleteTrainingBookmarkBinding,
+  getDashboardSummaryBinding,
+  getDashboardWeeklySummaryBinding,
+  getTrainingPrescriptionBinding,
   generateShareCardBinding,
   getDataBindingUserSummary,
   getInviteSourceStatsBinding,
   getRetestComparisonBinding,
   getShareCardBinding,
+  listExecutionPlansBinding,
   listAdminUsersFromBindings,
+  listInterventionRulesBinding,
+  listTrainingBookmarksBinding,
   resetDataBindingForTests,
   saveAssessmentReportBinding,
   saveKLineRecordBinding,
@@ -98,6 +108,66 @@ test("data binding service stores assessment, training, kline and retest in runt
     },
     source: "web-next"
   });
+  const bookmark = await createTrainingBookmarkBinding({
+    user,
+    bookmark: {
+      id: "bookmark-001",
+      bookmarkType: "mistake_card",
+      sourceType: "special_training",
+      trainingPackId: "impulse-day-1",
+      segmentId: "segment-001",
+      symbol: "600519",
+      period: "30m",
+      title: "追涨冲动复训片段",
+      note: "回看第一念和下次动作。",
+      executionResult: "aligned"
+    },
+    source: "miniprogram"
+  });
+  const listedBookmarks = await listTrainingBookmarksBinding(user.userId, {
+    bookmark_type: "mistake_card"
+  });
+  const deletedBookmark = await deleteTrainingBookmarkBinding(user.userId, "bookmark-001");
+  const listedDeletedBookmarks = await listTrainingBookmarksBinding(user.userId, {
+    include_disabled: "true"
+  });
+  const interventionEvent = await createInterventionEventBinding({
+    user,
+    event: {
+      id: "intervention-001",
+      triggerType: "after_review",
+      sourceType: "trade_review",
+      reviewId: tradeReview.review.id,
+      errorType: "追涨冲动",
+      firstThought: "怕错过",
+      expectedAction: "先停十秒，再复盘。",
+      userResponse: "continue"
+    },
+    source: "miniprogram"
+  });
+  const interventionRules = await listInterventionRulesBinding(user.userId, {
+    include_disabled: "true"
+  });
+  const executionPlans = await listExecutionPlansBinding(user.userId, {
+    include_disabled: "true"
+  });
+  const dashboardSummary = await getDashboardSummaryBinding(user.userId, {
+    range: "30d"
+  });
+  const dashboardWeekly = await getDashboardWeeklySummaryBinding(user.userId, {
+    week: "current"
+  });
+  const ocrDraft = await createTradeReviewOcrDraftBinding({
+    user,
+    image: {
+      fileName: "trade-review.png",
+      size: 128,
+      width: 720,
+      height: 1280
+    },
+    source: "miniprogram"
+  });
+  const trainingPrescription = await getTrainingPrescriptionBinding(user.userId);
   const retest = await saveRetestResultBinding({ user, report: retestReport });
   const handoff = await updateAssistantHandoffBinding(user.userId, {
     status: "已承接",
@@ -158,6 +228,22 @@ test("data binding service stores assessment, training, kline and retest in runt
   assert.equal(tradeReview.review.symbolMasked, "****19");
   assert.ok(tradeReview.living_mirror_stats.mirrorScores.chasing >= 0);
   assert.ok(tradeReview.living_mirror_stats.thiefCounts["贪"] >= 1);
+  assert.equal(bookmark.training_bookmark.id, "bookmark-001");
+  assert.equal(bookmark.training_bookmark.bookmark_type, "mistake_card");
+  assert.equal(listedBookmarks.training_bookmarks.length, 1);
+  assert.equal(deletedBookmark.deleted, true);
+  assert.equal(deletedBookmark.training_bookmarks.length, 0);
+  assert.equal(listedDeletedBookmarks.training_bookmarks[0].enabled, false);
+  assert.equal(interventionEvent.intervention_event.trigger_type, "after_review");
+  assert.equal(interventionEvent.intervention_event.user_response, "continue");
+  assert.ok(Array.isArray(interventionRules.intervention_rules));
+  assert.ok(Array.isArray(executionPlans.execution_plans));
+  assert.ok(dashboardSummary.dashboard_summary.totalTradeReviews >= 1);
+  assert.ok(dashboardSummary.dashboard_summary.interventionEventCount >= 1);
+  assert.equal(dashboardWeekly.weekly_mirror_summary.week, "current");
+  assert.equal(ocrDraft.ocr_draft.status, "manual");
+  assert.equal(trainingPrescription.training_prescription.schemaVersion, "training_prescription_v1");
+  assert.ok(trainingPrescription.training_prescription.action.includes("复盘"));
   assert.ok(summary.admin_user.klineRecords[0].disciplineAction.includes("过程质量"));
   assert.equal(retest.comparison[0].delta, -18);
   assert.equal(handoff.assistant.status, "已承接");
@@ -176,6 +262,13 @@ test("data binding service stores assessment, training, kline and retest in runt
   assert.equal(aliasSummary.training_records.length, 2);
   assert.equal(summary.kline_records.length, 1);
   assert.equal(summary.trade_reviews.length, 1);
+  assert.equal(summary.training_bookmarks.length, 1);
+  assert.equal(summary.training_bookmarks[0].enabled, false);
+  assert.equal(summary.intervention_events.length, 1);
+  assert.equal(summary.trade_review_ocr_drafts.length, 1);
+  assert.equal(summary.dashboard_summary.interventionEventCount, 1);
+  assert.equal(summary.weekly_mirror_summary.interventionEventCount, 1);
+  assert.equal(summary.training_prescription.schemaVersion, "training_prescription_v1");
   assert.equal(summary.mirror_report.mainMirror, "追涨之镜");
   assert.equal(summary.mirror_report.schemaVersion, "living_mirror_v1");
   assert.equal(summary.living_mirror_stats.schemaVersion, "living_mirror_v1");
@@ -197,6 +290,9 @@ test("data binding service stores assessment, training, kline and retest in runt
   assert.equal(reloadedSummary.training_records.length, 2);
   assert.equal(reloadedSummary.kline_records.length, 1);
   assert.equal(reloadedSummary.trade_reviews.length, 1);
+  assert.equal(reloadedSummary.training_bookmarks.length, 1);
+  assert.equal(reloadedSummary.intervention_events.length, 1);
+  assert.equal(reloadedSummary.trade_review_ocr_drafts.length, 1);
   assert.equal(reloadedSummary.living_mirror_stats.loopRelapseCount, 1);
   assert.equal(reloadedSummary.admin_user.assistant.owner, "助教明远");
   assert.equal(reloadedSummary.admin_user.assistantSummary.primaryType, "冲动型");

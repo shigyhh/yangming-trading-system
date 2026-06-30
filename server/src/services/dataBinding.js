@@ -188,6 +188,176 @@ export async function saveTradeReviewBinding({ user = {}, review = {}, source = 
   };
 }
 
+export async function listTrainingBookmarksBinding(userId, filters = {}) {
+  await ensureDataBindingLoaded();
+  const record = findUserRecord(userId);
+  const includeDisabled = filters.includeDisabled || filters.include_disabled;
+  const bookmarkType = cleanText(filters.bookmarkType || filters.bookmark_type || "", 80);
+  const sourceType = cleanText(filters.sourceType || filters.source_type || "", 80);
+  const trainingPackId = cleanText(filters.trainingPackId || filters.training_pack_id || "", 120);
+  const bookmarks = ((record && record.training_bookmarks) || [])
+    .filter((item) => includeDisabled || item.enabled !== false)
+    .filter((item) => !bookmarkType || item.bookmark_type === bookmarkType || item.bookmarkType === bookmarkType)
+    .filter((item) => !sourceType || item.source_type === sourceType || item.sourceType === sourceType)
+    .filter((item) => !trainingPackId || item.training_pack_id === trainingPackId || item.trainingPackId === trainingPackId);
+  return {
+    training_bookmarks: bookmarks,
+    trainingBookmarks: bookmarks
+  };
+}
+
+export async function createTrainingBookmarkBinding({ user = {}, bookmark = {}, source = "api" }) {
+  await ensureDataBindingLoaded();
+  const profile = normalizeUserProfile(user);
+  const userRecord = ensureUser(profile);
+  const now = new Date().toISOString();
+  const normalized = normalizeTrainingBookmark(bookmark, userRecord.id, now, source);
+  userRecord.training_bookmarks = mergeById(userRecord.training_bookmarks || [], [normalized])
+    .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+  userRecord.updated_at = now;
+  await persistDataBindingUsers();
+  return {
+    user: publicUser(userRecord),
+    training_bookmark: normalized,
+    trainingBookmark: normalized,
+    training_bookmarks: userRecord.training_bookmarks,
+    trainingBookmarks: userRecord.training_bookmarks
+  };
+}
+
+export async function deleteTrainingBookmarkBinding(userId, bookmarkId = "") {
+  await ensureDataBindingLoaded();
+  const record = findUserRecord(userId);
+  if (!record) {
+    return { deleted: false, training_bookmarks: [], trainingBookmarks: [] };
+  }
+  const id = String(bookmarkId || "");
+  const now = new Date().toISOString();
+  record.training_bookmarks = (record.training_bookmarks || []).map((item) => (
+    String(item.id || "") === id
+      ? { ...item, enabled: false, deleted_at: now, updated_at: now, updatedAt: now }
+      : item
+  ));
+  record.updated_at = now;
+  await persistDataBindingUsers();
+  const active = record.training_bookmarks.filter((item) => item.enabled !== false);
+  return {
+    deleted: true,
+    training_bookmarks: active,
+    trainingBookmarks: active
+  };
+}
+
+export async function listInterventionRulesBinding(userId, filters = {}) {
+  await ensureDataBindingLoaded();
+  const record = findUserRecord(userId);
+  const includeDisabled = filters.includeDisabled || filters.include_disabled;
+  const triggerType = cleanText(filters.triggerType || filters.trigger_type || "", 80);
+  const errorType = cleanText(filters.errorType || filters.error_type || "", 100);
+  const rules = ((record && record.intervention_rules) || [])
+    .filter((item) => includeDisabled || item.enabled !== false)
+    .filter((item) => !triggerType || item.trigger_type === triggerType || item.triggerType === triggerType)
+    .filter((item) => !errorType || item.error_type === errorType || item.errorType === errorType);
+  return {
+    intervention_rules: rules,
+    interventionRules: rules
+  };
+}
+
+export async function listExecutionPlansBinding(userId, filters = {}) {
+  await ensureDataBindingLoaded();
+  const record = findUserRecord(userId);
+  const includeDisabled = filters.includeDisabled || filters.include_disabled;
+  const errorType = cleanText(filters.errorType || filters.error_type || "", 100);
+  const plans = ((record && record.execution_plans) || [])
+    .filter((item) => includeDisabled || item.enabled !== false)
+    .filter((item) => !errorType || item.error_type === errorType || item.errorType === errorType);
+  return {
+    execution_plans: plans,
+    executionPlans: plans
+  };
+}
+
+export async function createInterventionEventBinding({ user = {}, event = {}, source = "api" }) {
+  await ensureDataBindingLoaded();
+  const profile = normalizeUserProfile(user);
+  const userRecord = ensureUser(profile);
+  const now = new Date().toISOString();
+  const normalized = normalizeInterventionEvent(event, userRecord.id, now, source);
+  userRecord.intervention_events = mergeById(userRecord.intervention_events || [], [normalized])
+    .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
+    .slice(0, 200);
+  userRecord.updated_at = now;
+  await persistDataBindingUsers();
+  return {
+    user: publicUser(userRecord),
+    intervention_event: normalized,
+    interventionEvent: normalized,
+    intervention_events: userRecord.intervention_events,
+    interventionEvents: userRecord.intervention_events
+  };
+}
+
+export async function getDashboardSummaryBinding(userId, filters = {}) {
+  await ensureDataBindingLoaded();
+  const record = findUserRecord(userId);
+  const dashboard = buildDashboardSummary(record, filters);
+  return {
+    dashboard_summary: dashboard,
+    dashboardSummary: dashboard
+  };
+}
+
+export async function getDashboardWeeklySummaryBinding(userId, filters = {}) {
+  await ensureDataBindingLoaded();
+  const record = findUserRecord(userId);
+  const weekly = buildDashboardWeeklySummary(record, filters);
+  return {
+    weekly_mirror_summary: weekly,
+    weeklyMirrorSummary: weekly
+  };
+}
+
+export async function getTrainingPrescriptionBinding(userId) {
+  await ensureDataBindingLoaded();
+  const record = findUserRecord(userId);
+  const prescription = buildTrainingPrescription(record);
+  return {
+    training_prescription: prescription,
+    trainingPrescription: prescription
+  };
+}
+
+export async function createTradeReviewOcrDraftBinding({ user = {}, image = {}, source = "api" }) {
+  await ensureDataBindingLoaded();
+  const profile = normalizeUserProfile(user);
+  const userRecord = ensureUser(profile);
+  const now = new Date().toISOString();
+  const draft = {
+    id: `ocr-${crypto.randomUUID()}`,
+    status: "manual",
+    message: "识别服务未连接，先手动确认字段。",
+    fields: {},
+    image_meta: {
+      fileName: cleanText(image.fileName || image.file_name || "", 120),
+      size: Number(image.size || 0),
+      width: Number(image.width || 0),
+      height: Number(image.height || 0)
+    },
+    source,
+    created_at: now,
+    createdAt: now
+  };
+  userRecord.trade_review_ocr_drafts = [draft].concat(userRecord.trade_review_ocr_drafts || []).slice(0, 30);
+  userRecord.updated_at = now;
+  await persistDataBindingUsers();
+  return {
+    user: publicUser(userRecord),
+    ocr_draft: draft,
+    ocrDraft: draft
+  };
+}
+
 export async function getRetestComparisonBinding(userId) {
   await ensureDataBindingLoaded();
   const record = findUserRecord(userId);
@@ -210,6 +380,22 @@ export async function getDataBindingUserSummary(userId) {
     living_mirror_stats: record.living_mirror_stats || null,
     retests: record.retests,
     retest_comparison: getLatestRetestComparison(record),
+    training_bookmarks: record.training_bookmarks || [],
+    trainingBookmarks: record.training_bookmarks || [],
+    intervention_rules: record.intervention_rules || [],
+    interventionRules: record.intervention_rules || [],
+    execution_plans: record.execution_plans || [],
+    executionPlans: record.execution_plans || [],
+    intervention_events: record.intervention_events || [],
+    interventionEvents: record.intervention_events || [],
+    trade_review_ocr_drafts: record.trade_review_ocr_drafts || [],
+    tradeReviewOcrDrafts: record.trade_review_ocr_drafts || [],
+    dashboard_summary: buildDashboardSummary(record),
+    dashboardSummary: buildDashboardSummary(record),
+    weekly_mirror_summary: buildDashboardWeeklySummary(record),
+    weeklyMirrorSummary: buildDashboardWeeklySummary(record),
+    training_prescription: buildTrainingPrescription(record),
+    trainingPrescription: buildTrainingPrescription(record),
     assistant_summary: record.assistant_summary || null,
     feishu_sync: record.feishu_sync || null,
     share_card: record.share_card || null,
@@ -430,6 +616,11 @@ function normalizePersistedUserRecord(record) {
     retests: Array.isArray(record?.retests) ? record.retests : [],
     mirror_report: record?.mirror_report || null,
     trade_reviews: Array.isArray(record?.trade_reviews) ? record.trade_reviews : [],
+    training_bookmarks: Array.isArray(record?.training_bookmarks) ? record.training_bookmarks : [],
+    intervention_rules: Array.isArray(record?.intervention_rules) ? record.intervention_rules : [],
+    execution_plans: Array.isArray(record?.execution_plans) ? record.execution_plans : [],
+    intervention_events: Array.isArray(record?.intervention_events) ? record.intervention_events : [],
+    trade_review_ocr_drafts: Array.isArray(record?.trade_review_ocr_drafts) ? record.trade_review_ocr_drafts : [],
     living_mirror_stats: record?.living_mirror_stats || null,
     practice_state: record?.practice_state || null,
     assistant: normalizeAssistant(record?.assistant),
@@ -508,6 +699,11 @@ function ensureUser(profile) {
     retests: [],
     mirror_report: null,
     trade_reviews: [],
+    training_bookmarks: [],
+    intervention_rules: [],
+    execution_plans: [],
+    intervention_events: [],
+    trade_review_ocr_drafts: [],
     living_mirror_stats: null,
     practice_state: null,
     assistant: {
@@ -555,6 +751,14 @@ function mergeUserRecords(canonical, incoming) {
   canonical.mirror_report = chooseLatestByTime(canonical.mirror_report, incoming.mirror_report, "createdAt");
   canonical.trade_reviews = mergeById(canonical.trade_reviews, incoming.trade_reviews)
     .sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
+  canonical.training_bookmarks = mergeById(canonical.training_bookmarks, incoming.training_bookmarks)
+    .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+  canonical.intervention_rules = mergeById(canonical.intervention_rules, incoming.intervention_rules);
+  canonical.execution_plans = mergeById(canonical.execution_plans, incoming.execution_plans);
+  canonical.intervention_events = mergeById(canonical.intervention_events, incoming.intervention_events)
+    .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+  canonical.trade_review_ocr_drafts = mergeById(canonical.trade_review_ocr_drafts, incoming.trade_review_ocr_drafts)
+    .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
   canonical.practice_state = canonical.practice_state || incoming.practice_state;
   canonical.assistant = chooseAssistant(canonical.assistant, incoming.assistant);
   canonical.assistant_summary = chooseLatestByTime(canonical.assistant_summary, incoming.assistant_summary, "created_at");
@@ -765,6 +969,94 @@ function normalizeTrainingRecord(record, fallbackTime) {
   };
 }
 
+function normalizeTrainingBookmark(bookmark, userId, fallbackTime, source) {
+  const bookmarkType = cleanText(bookmark.bookmarkType || bookmark.bookmark_type || "session", 80);
+  const sourceType = cleanText(bookmark.sourceType || bookmark.source_type || "training", 80);
+  const trainingPackId = cleanText(bookmark.trainingPackId || bookmark.training_pack_id || "", 120);
+  const segmentId = cleanText(bookmark.segmentId || bookmark.segment_id || "", 120);
+  const executionResult = cleanText(bookmark.executionResult || bookmark.execution_result || "", 80);
+  const createdAt = bookmark.createdAt || bookmark.created_at || fallbackTime;
+
+  return {
+    id: String(bookmark.id || crypto.randomUUID()),
+    userId,
+    user_id: userId,
+    bookmarkType,
+    bookmark_type: bookmarkType,
+    sourceType,
+    source_type: sourceType,
+    trainingPackId,
+    training_pack_id: trainingPackId,
+    segmentId,
+    segment_id: segmentId,
+    symbol: cleanText(bookmark.symbol || "", 40),
+    period: cleanText(bookmark.period || bookmark.timeframe || "", 40),
+    startDate: cleanText(bookmark.startDate || bookmark.start_date || "", 40),
+    start_date: cleanText(bookmark.startDate || bookmark.start_date || "", 40),
+    endDate: cleanText(bookmark.endDate || bookmark.end_date || "", 40),
+    end_date: cleanText(bookmark.endDate || bookmark.end_date || "", 40),
+    title: cleanText(bookmark.title || "训练收藏", 120),
+    note: cleanText(bookmark.note || bookmark.reason || "", 200),
+    errorType: cleanText(bookmark.errorType || bookmark.error_type || "", 100),
+    error_type: cleanText(bookmark.errorType || bookmark.error_type || "", 100),
+    sceneTags: normalizeStringList(bookmark.sceneTags || bookmark.scene_tags, 8, 40),
+    scene_tags: normalizeStringList(bookmark.sceneTags || bookmark.scene_tags, 8, 40),
+    executionResult,
+    execution_result: executionResult,
+    samplingResult: sanitizeLooseJson(bookmark.samplingResult || bookmark.sampling_result || null),
+    sampling_result: sanitizeLooseJson(bookmark.samplingResult || bookmark.sampling_result || null),
+    enabled: normalizeBoolean(bookmark.enabled, true),
+    source,
+    createdAt,
+    created_at: createdAt,
+    updatedAt: fallbackTime,
+    updated_at: fallbackTime
+  };
+}
+
+function normalizeInterventionEvent(event, userId, fallbackTime, source) {
+  const triggerType = cleanText(event.triggerType || event.trigger_type || "manual", 80);
+  const sourceType = cleanText(event.sourceType || event.source_type || "miniprogram", 80);
+  const errorType = cleanText(event.errorType || event.error_type || "", 100);
+  const userResponse = cleanText(event.userResponse || event.user_response || "recorded", 80);
+  const createdAt = event.createdAt || event.created_at || fallbackTime;
+
+  return {
+    id: String(event.id || crypto.randomUUID()),
+    userId,
+    user_id: userId,
+    triggerType,
+    trigger_type: triggerType,
+    sourceType,
+    source_type: sourceType,
+    sessionId: cleanText(event.sessionId || event.session_id || "", 120),
+    session_id: cleanText(event.sessionId || event.session_id || "", 120),
+    reviewId: cleanText(event.reviewId || event.review_id || "", 120),
+    review_id: cleanText(event.reviewId || event.review_id || "", 120),
+    planId: cleanText(event.planId || event.plan_id || "", 120),
+    plan_id: cleanText(event.planId || event.plan_id || "", 120),
+    errorType,
+    error_type: errorType,
+    firstThought: cleanText(event.firstThought || event.first_thought || "", 160),
+    first_thought: cleanText(event.firstThought || event.first_thought || "", 160),
+    sceneTag: cleanText(event.sceneTag || event.scene_tag || "", 80),
+    scene_tag: cleanText(event.sceneTag || event.scene_tag || "", 80),
+    sceneTags: normalizeStringList(event.sceneTags || event.scene_tags, 8, 40),
+    scene_tags: normalizeStringList(event.sceneTags || event.scene_tags, 8, 40),
+    expectedAction: cleanText(event.expectedAction || event.expected_action || "先照见第一念，再回到复盘。", 160),
+    expected_action: cleanText(event.expectedAction || event.expected_action || "先照见第一念，再回到复盘。", 160),
+    message: cleanText(event.message || "已记录一次知行提醒。", 220),
+    userResponse,
+    user_response: userResponse,
+    metadata: sanitizeLooseJson(event.metadata || {}),
+    source,
+    createdAt,
+    created_at: createdAt,
+    updatedAt: fallbackTime,
+    updated_at: fallbackTime
+  };
+}
+
 function normalizeTradeReview(review, userRecord, fallbackTime, source) {
   const buyReason = cleanText(review.buyReason || review.buy_reason || "", 260);
   const sellReason = cleanText(review.sellReason || review.sell_reason || "", 260);
@@ -798,6 +1090,158 @@ function normalizeTradeReview(review, userRecord, fallbackTime, source) {
     createdAt: review.createdAt || review.created_at || fallbackTime,
     source
   };
+}
+
+function buildDashboardSummary(record, filters = {}) {
+  const now = new Date().toISOString();
+  const range = cleanText(filters.range || "30d", 20);
+  const livingStats = record?.living_mirror_stats || refreshLivingMirrorState(record, { updateTrend: false }) || {};
+  const tradeReviews = record?.trade_reviews || [];
+  const trainingRecords = record?.training_records || [];
+  const klineRecords = record?.kline_records || [];
+  const activeBookmarks = (record?.training_bookmarks || []).filter((item) => item.enabled !== false);
+  const interventionEvents = record?.intervention_events || [];
+  const latestReview = tradeReviews[tradeReviews.length - 1] || null;
+  const latestMirror = latestReview?.detectedMirror || record?.mirror_report?.mainMirror || "待照见";
+
+  return {
+    userId: record?.id || "",
+    user_id: record?.id || "",
+    range,
+    totalTrainingRecords: trainingRecords.length,
+    total_training_records: trainingRecords.length,
+    totalKlineRecords: klineRecords.length,
+    total_kline_records: klineRecords.length,
+    totalTradeReviews: tradeReviews.length,
+    total_trade_reviews: tradeReviews.length,
+    trainingBookmarkCount: activeBookmarks.length,
+    training_bookmark_count: activeBookmarks.length,
+    interventionEventCount: interventionEvents.length,
+    intervention_event_count: interventionEvents.length,
+    executionPlanCount: (record?.execution_plans || []).filter((item) => item.enabled !== false).length,
+    execution_plan_count: (record?.execution_plans || []).filter((item) => item.enabled !== false).length,
+    latestMirror,
+    latest_mirror: latestMirror,
+    conscienceGrowth: Number(livingStats.conscienceGrowth || 0),
+    conscience_growth: Number(livingStats.conscienceGrowth || 0),
+    trainingCompletionRate: Number(livingStats.trainingCompletionRate || 0),
+    training_completion_rate: Number(livingStats.trainingCompletionRate || 0),
+    loopRelapseCount: Number(livingStats.loopRelapseCount || tradeReviews.length || 0),
+    loop_relapse_count: Number(livingStats.loopRelapseCount || tradeReviews.length || 0),
+    updatedAt: livingStats.lastUpdated || now,
+    updated_at: livingStats.lastUpdated || now
+  };
+}
+
+function buildDashboardWeeklySummary(record, filters = {}) {
+  const week = cleanText(filters.week || "current", 40);
+  const now = new Date().toISOString();
+  const tradeReviews = record?.trade_reviews || [];
+  const trainingRecords = record?.training_records || [];
+  const interventionEvents = record?.intervention_events || [];
+  const latestReview = tradeReviews[tradeReviews.length - 1] || null;
+  const focus = latestReview?.strongestThought || latestReview?.detectedMirror || record?.mirror_report?.mainMirror || "先照见第一念";
+
+  return {
+    userId: record?.id || "",
+    user_id: record?.id || "",
+    week,
+    tradeReviewCount: tradeReviews.length,
+    trade_review_count: tradeReviews.length,
+    trainingRecordCount: trainingRecords.length,
+    training_record_count: trainingRecords.length,
+    interventionEventCount: interventionEvents.length,
+    intervention_event_count: interventionEvents.length,
+    focus: cleanText(focus, 120),
+    nextAction: buildNextTrainingAction(record),
+    next_action: buildNextTrainingAction(record),
+    updatedAt: now,
+    updated_at: now
+  };
+}
+
+function buildTrainingPrescription(record) {
+  const now = new Date().toISOString();
+  const completedCount = (record?.training_records || []).filter((item) => item.status === "completed").length;
+  const day = Math.max(1, Math.min(7, completedCount + 1));
+  const mirror = record?.mirror_report?.mainMirror || inferMirrorName([
+    record?.assessment?.report?.primaryType?.label,
+    record?.trade_reviews?.at(-1)?.detectedMirror
+  ], "追涨之镜");
+  const reportPrescription = record?.assessment?.report?.trainingPrescription7Days?.[day - 1] || {};
+  const latestThought = record?.trade_reviews?.at(-1)?.strongestThought || record?.assessment?.report?.firstThoughtDisplay || "第一念";
+  const title = cleanText(reportPrescription.theme || reportPrescription.title || `Day ${day} · 今日事上练`, 80);
+  const action = cleanText(reportPrescription.action || buildNextTrainingAction(record), 180);
+
+  return {
+    schemaVersion: "training_prescription_v1",
+    schema_version: "training_prescription_v1",
+    id: `prescription-${record?.id || "anonymous"}-${now.slice(0, 10)}`,
+    userId: record?.id || "",
+    user_id: record?.id || "",
+    day,
+    status: "received",
+    mirror,
+    title,
+    reason: cleanText(`围绕「${latestThought}」做一次记录、复盘与训练。`, 160),
+    action,
+    reflectionPrompt: cleanText(reportPrescription.reflectionPrompt || reportPrescription.reflection_prompt || "今天最值得记录的一念是什么？", 160),
+    reflection_prompt: cleanText(reportPrescription.reflectionPrompt || reportPrescription.reflection_prompt || "今天最值得记录的一念是什么？", 160),
+    steps: [
+      "先停十秒，写下第一念。",
+      "完成一条真实复盘或一段盲练。",
+      "记录下次同场景的执行动作。"
+    ],
+    klinePractice: {
+      enabled: true,
+      mode: "blind_review",
+      title: "K线观心",
+      note: "只看行为反应，不做行情判断。"
+    },
+    kline_practice: {
+      enabled: true,
+      mode: "blind_review",
+      title: "K线观心",
+      note: "只看行为反应，不做行情判断。"
+    },
+    complianceNotice: "本处方仅用于交易心理训练与复盘管理，不构成投资建议。",
+    compliance_notice: "本处方仅用于交易心理训练与复盘管理，不构成投资建议。",
+    updatedAt: now,
+    updated_at: now
+  };
+}
+
+function buildNextTrainingAction(record) {
+  const latestThought = record?.trade_reviews?.at(-1)?.strongestThought || record?.assessment?.report?.firstThoughtDisplay || "第一念";
+  return cleanText(`先记录「${latestThought}」，再完成一次复盘或盲练。`, 160);
+}
+
+function normalizeStringList(value, limit = 8, maxLength = 40) {
+  const source = Array.isArray(value) ? value : value ? [value] : [];
+  return Array.from(new Set(source.map((item) => cleanText(item, maxLength)).filter(Boolean))).slice(0, limit);
+}
+
+function normalizeBoolean(value, fallback = true) {
+  if (value === undefined || value === null || value === "") return fallback;
+  if (value === false || value === "false" || value === 0 || value === "0") return false;
+  return true;
+}
+
+function sanitizeLooseJson(value, depth = 0) {
+  if (depth > 6) return null;
+  if (value === null || value === undefined) return null;
+  if (typeof value === "string") return cleanText(value, 400);
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+  if (typeof value === "boolean") return value;
+  if (Array.isArray(value)) return value.slice(0, 80).map((item) => sanitizeLooseJson(item, depth + 1));
+  if (typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value)
+        .slice(0, 80)
+        .map(([key, item]) => [cleanText(key, 80), sanitizeLooseJson(item, depth + 1)])
+    );
+  }
+  return null;
 }
 
 function normalizeRadarComparison(item) {
