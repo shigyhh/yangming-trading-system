@@ -68,6 +68,6 @@
       </view>
     </block>
 
-    <compliance-notice />
+    <compliance-notice variant="full" />
   </view>
 </view>

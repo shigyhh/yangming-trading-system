@@ -90,6 +90,6 @@
       暂无对应执行计划，可先新增一张计划卡。
     </view>
 
-    <compliance-notice />
+    <compliance-notice variant="full" />
   </view>
 </view>

@@ -47,7 +47,7 @@
       <view class="upload-preview" wx:if="{{form.screenshotPath}}">
         <image src="{{form.screenshotPath}}" mode="aspectFill" aria-label="交易复盘截图预览" />
       </view>
-      <view wx:else class="upload-empty">上传一张交易截图；系统尽量识别代码、日期和周期。</view>
+      <view wx:else class="upload-empty">上传一张交易截图；系统尽量识别日期和股票代码。</view>
       <view class="upload-actions">
         <button class="primary-btn upload-primary" bindtap="chooseImage">{{form.screenshotPath ? '重新上传截图' : '上传交易截图'}}</button>
         <button class="manual-anchor-link" bindtap="showManualAnchor">没有截图，手动填写</button>
@@ -69,20 +69,10 @@
           </picker>
         </view>
         <view>
-          <text>标的/合约</text>
-          <input value="{{form.symbol}}" bindinput="inputSymbol" placeholder="代码 / 合约 / 币种" />
+          <text>股票代码</text>
+          <input value="{{form.symbol}}" bindinput="inputSymbol" placeholder="例如：600123" />
         </view>
       </view>
-
-      <view class="field-label">数据品类</view>
-      <scroll-view scroll-x class="chip-strip" show-scrollbar="{{false}}">
-        <button wx:for="{{markets}}" wx:key="key" class="{{form.marketKey === item.key ? 'active' : ''}}" data-key="{{item.key}}" bindtap="selectMarket">{{item.label}}</button>
-      </scroll-view>
-
-      <view class="field-label">周期切片</view>
-      <scroll-view scroll-x class="chip-strip" show-scrollbar="{{false}}">
-        <button wx:for="{{timeframes}}" wx:key="key" class="{{form.timeframeKey === item.key ? 'active' : ''}}" data-key="{{item.key}}" bindtap="selectTimeframe">{{item.label}}</button>
-      </scroll-view>
 
       <view wx:if="{{marketContext && marketContext.status === 'ready'}}" class="anchor-meta">
         {{marketContext.marketLabel}} · {{marketContext.timeframeLabel}} · {{marketContext.candleCount}} 根
@@ -173,16 +163,6 @@
 
     <view wx:if="{{showAdvanced && !manualAnchorVisible && !form.screenshotPath && !form.symbol}}" class="form-card card">
       <text>历史数据锚点</text>
-      <view class="field-label">数据品类</view>
-      <scroll-view scroll-x class="chip-strip" show-scrollbar="{{false}}">
-        <button wx:for="{{markets}}" wx:key="key" class="{{form.marketKey === item.key ? 'active' : ''}}" data-key="{{item.key}}" bindtap="selectMarket">{{item.label}}</button>
-      </scroll-view>
-
-      <view class="field-label">周期切片</view>
-      <scroll-view scroll-x class="chip-strip" show-scrollbar="{{false}}">
-        <button wx:for="{{timeframes}}" wx:key="key" class="{{form.timeframeKey === item.key ? 'active' : ''}}" data-key="{{item.key}}" bindtap="selectTimeframe">{{item.label}}</button>
-      </scroll-view>
-
       <view class="field-grid">
         <view>
           <text>记录日期</text>
@@ -191,8 +171,8 @@
           </picker>
         </view>
         <view>
-          <text>标的/合约</text>
-          <input value="{{form.symbol}}" bindinput="inputSymbol" placeholder="例如：代码、合约、币种" />
+          <text>股票代码</text>
+          <input value="{{form.symbol}}" bindinput="inputSymbol" placeholder="例如：600123" />
         </view>
       </view>
     </view>
@@ -295,6 +275,11 @@
         <text>针对训练</text>
         <view>{{report.trainingAction}}</view>
       </view>
+      <view class="report-arrival-card card">
+        <text>心镜报告</text>
+        <view>复盘完成后，心镜报告会在这里出现。</view>
+        <button class="ghost-btn" bindtap="goGeneratedDetail">查看心镜报告</button>
+      </view>
       <view wx:if="{{showResultDetail && closure}}" class="closure-card">
         <text>{{closure.title}}</text>
         <view class="closure-proof">{{closure.proofLine}}</view>
@@ -332,7 +317,6 @@
       </view>
     </view>
 
-    <compliance-notice />
+    <compliance-notice variant="full" />
   </view>
-  <bottom-tab-bar active="review" />
 </view>
