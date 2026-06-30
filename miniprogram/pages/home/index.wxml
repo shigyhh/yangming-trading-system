@@ -80,10 +80,6 @@
           bindtap="goMiniPrimary"
         >{{miniHomeView.primaryText}}</button>
         <view wx:if="{{miniHomeView.primaryHint}}" class="mini-primary-hint">{{miniHomeView.primaryHint}}</view>
-        <view class="home-quiet-paths">
-          <button data-noripple="1" class="home-quiet-link" bindtap="goKlineMind">K线观心</button>
-          <text>用真实历史片段，先看第一反应。</text>
-        </view>
       </view>
 
       <view class="edict-scroll" bindlongpress="openPosterMode">

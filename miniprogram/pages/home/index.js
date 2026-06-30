@@ -2048,10 +2048,6 @@ Page({
     wx.redirectTo({ url: "/pages/kline-mind/index" });
   },
 
-  goKlineMind() {
-    wx.redirectTo({ url: "/pages/kline-mind/index" });
-  },
-
   handleHeroTask(e) {
     const key = e.currentTarget.dataset.key;
     if (key === "opening_check") {
