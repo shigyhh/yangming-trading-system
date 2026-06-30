@@ -60,5 +60,5 @@ test("risk radar and training prescription stay bounded", () => {
 
   assert.ok(radar.every((item) => item.value >= 0 && item.value <= 100));
   assert.equal(prescription.length, 7);
-  assert.ok(prescription[0].action.includes("止损条件"));
+  assert.ok(prescription[0].action.includes("风险处理条件"));
 });

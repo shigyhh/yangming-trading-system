@@ -114,9 +114,9 @@ function buildTrainingBindingPayload({ auth = {}, state = {}, progress = null } 
   };
 }
 
-function buildKLineBindingPayload({ auth = {}, state = {}, progress = null, trainingRecord = null, klineRecord = null } = {}) {
+function buildKLineBindingPayload({ auth = {}, state = {}, progress = null, trainingRecord = null } = {}) {
   const practiceState = progress || buildPracticeState(state);
-  const sourceRecord = klineRecord || getLatestRecordFromSources([
+  const sourceRecord = getLatestRecordFromSources([
     practiceState.intraday_boundary_records,
     state.intraday_boundary_records,
     practiceState.kline_mind_records,
@@ -131,13 +131,6 @@ function buildKLineBindingPayload({ auth = {}, state = {}, progress = null, trai
   if (!sourceRecord) return null;
 
   const record = {
-    id: sourceRecord.id || sourceRecord.recordId || sourceRecord.record_id || "",
-    idempotencyKey: sourceRecord.idempotencyKey || sourceRecord.idempotency_key || sourceRecord.id || "",
-    userId: buildDataBindingUser(auth, state).userId,
-    sessionId: sourceRecord.sessionId || sourceRecord.session_id || "",
-    sceneId: sourceRecord.sceneId || sourceRecord.scene_id || "",
-    linkedTradeReviewId: sourceRecord.linkedTradeReviewId || sourceRecord.linked_trade_review_id || "",
-    linkedOneThoughtEventId: sourceRecord.linkedOneThoughtEventId || sourceRecord.linked_one_thought_event_id || "",
     day: Number((trainingRecord || {}).day || sourceRecord.day || (practiceState.training7_state || {}).currentDay || 1),
     recordedAt: toIso(sourceRecord.updatedAt || sourceRecord.createdAt || Date.now()),
     scene: pickText(sourceRecord.scene, sourceRecord.scenarioTitle, sourceRecord.trigger, sourceRecord.currentStatus, sourceRecord.todayRisk, "小程序训练场景"),
@@ -146,26 +139,8 @@ function buildKLineBindingPayload({ auth = {}, state = {}, progress = null, trai
     symbol: pickText(sourceRecord.symbol, ""),
     dataSource: pickText(sourceRecord.dataSource, ""),
     reaction: pickText(sourceRecord.reaction, sourceRecord.firstReaction, sourceRecord.firstThought, sourceRecord.note, "已觉察，未展开"),
-    disciplineAction: pickText(sourceRecord.disciplineAction, sourceRecord.boundaryChoice, sourceRecord.boundary, sourceRecord.action, sourceRecord.nextAction, "先停一息，再复盘"),
-    disciplineScore: normalizeNumberValue(pickValue(
-      sourceRecord.disciplineScore,
-      sourceRecord.discipline_score,
-      sourceRecord.scores && sourceRecord.scores.boundaryKeeping,
-      sourceRecord.score
-    )),
-    processScores: sourceRecord.processScores || sourceRecord.process_scores || sourceRecord.scores || {},
-    processInsight: pickText(sourceRecord.processInsight, sourceRecord.process_insight, sourceRecord.insight, sourceRecord.insightLine)
+    disciplineAction: pickText(sourceRecord.disciplineAction, sourceRecord.boundaryChoice, sourceRecord.boundary, sourceRecord.action, sourceRecord.nextAction, "先停一息，再复盘")
   };
-  const oneThoughtEvent = sourceRecord.oneThoughtEvent || sourceRecord.one_thought_event || null;
-  if (oneThoughtEvent && typeof oneThoughtEvent === "object") {
-    record.oneThoughtEvent = Object.assign({}, oneThoughtEvent, {
-      eventId: oneThoughtEvent.eventId || oneThoughtEvent.event_id || record.linkedOneThoughtEventId,
-      eventType: oneThoughtEvent.eventType || oneThoughtEvent.event_type || "kline_training",
-      userId: oneThoughtEvent.userId || oneThoughtEvent.user_id || record.userId
-    });
-    record.linkedOneThoughtEventId = record.linkedOneThoughtEventId || record.oneThoughtEvent.eventId || "";
-    record.linked_one_thought_event_id = record.linkedOneThoughtEventId;
-  }
   const period = pickText(sourceRecord.period, sourceRecord.timeframeKey, sourceRecord.timeframe_key);
   if (period) record.period = period;
   attachAliasedField(record, "sourceType", "source_type", pickValue(sourceRecord.sourceType, sourceRecord.source_type, "kline_training"));
@@ -292,7 +267,7 @@ function normalizeBoolean() {
 function normalizeMarketType(value) {
   const text = String(value || "").toLowerCase();
   if (["cn", "cn_equity", "a_share", "ashare"].includes(text) || String(value || "").includes("A股")) return "a_share";
-  if (["hk", "hk_equity", ["hk", "stock"].join("_")].includes(text) || String(value || "").includes(["港", "股"].join(""))) return "hk_equity";
+  if (["hk", "hk_equity", "hk_stock"].includes(text) || String(value || "").includes("港股")) return "hk_stock";
   if (["us", "us_equity", "us_stock"].includes(text) || String(value || "").includes("美股")) return "us_stock";
   if (["futures", "future"].includes(text) || String(value || "").includes("期货")) return "futures";
   if (["crypto", "digital_currency"].includes(text) || String(value || "").includes("数字货币")) return "crypto";

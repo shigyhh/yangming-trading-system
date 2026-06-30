@@ -327,7 +327,7 @@ function applyServerTradeReviewResult(record = {}, result = {}) {
 function toLocalMarketKey(value) {
   const text = String(value || "").toLowerCase();
   if (["cn_equity", "a_share", "ashare", "cn"].includes(text)) return "cn";
-  if ([["hk", "equity"].join("_"), ["hk", "stock"].join("_"), "hk"].includes(text)) return "hk";
+  if (["hk_equity", "hk_stock", "hk"].includes(text)) return "hk";
   if (["us_equity", "us_stock", "us"].includes(text)) return "us";
   if (["futures", "future"].includes(text)) return "futures";
   if (["crypto", "digital_currency"].includes(text)) return "crypto";
@@ -674,7 +674,7 @@ function buildLivingMirrorStats(tradeReviewState = {}) {
   const records = ((tradeReviewState || {}).records || [])
     .filter(Boolean)
     .slice()
-    .sort((a, b) => Number(a.createdAt || a.updatedAt || 0) - Number(b.createdAt || b.updatedAt || 0));
+    .sort((a, b) => getRecordTimestamp(a) - getRecordTimestamp(b));
   const klineRecords = normalizeRecordCollection(
     tradeReviewState.klineMindRecords ||
     tradeReviewState.kline_mind_records ||
@@ -1020,10 +1020,14 @@ function isWithinRecentDays(record = {}, days = 30) {
 }
 
 function getRecordTimestamp(record = {}) {
-  const rawDate = record.date || record.tradeDate || record.createdAt || record.created_at || record.updatedAt || record.updated_at;
+  const rawDate = record.date || record.tradeDate || record.trade_date || record.createdAt || record.created_at || record.updatedAt || record.updated_at;
   if (!rawDate) return 0;
   if (typeof rawDate === "number") return rawDate;
   if (/^\d+$/.test(String(rawDate))) return Number(rawDate);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(rawDate))) {
+    const [year, month, day] = String(rawDate).split("-").map(Number);
+    return new Date(year, month - 1, day).getTime();
+  }
   const timestamp = new Date(rawDate).getTime();
   return Number.isNaN(timestamp) ? 0 : timestamp;
 }

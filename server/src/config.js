@@ -7,6 +7,9 @@ const __dirname = path.dirname(__filename);
 const serverRoot = path.resolve(__dirname, "..");
 
 loadLocalEnv(path.resolve(serverRoot, ".env"));
+if (process.env.SKIP_LOCAL_ENV !== "true") {
+  loadLocalEnv(path.resolve(serverRoot, ".env.local"), { override: true });
+}
 
 export const config = {
   port: Number(process.env.PORT || 8787),
@@ -17,7 +20,7 @@ export const config = {
   publicBaseUrl: process.env.PUBLIC_BASE_URL || "",
   serveWeb: process.env.SERVE_WEB !== "false",
   dataDir: path.resolve(serverRoot, "data"),
-  marketDataDir: path.resolve(serverRoot, "data", "market"),
+  marketDataDir: path.resolve(process.env.KLINE_CACHE_ROOT || path.resolve(serverRoot, "data", "market")),
   runtimeDir: path.resolve(serverRoot, "data", "runtime"),
   questionBankPath: path.resolve(serverRoot, "data", "question-bank.json"),
   klinePracticeBankPath: path.resolve(serverRoot, "data", "kline-practice-bank.json"),
@@ -43,6 +46,7 @@ export const config = {
   smsCodeMaxAttempts: Number(process.env.SMS_CODE_MAX_ATTEMPTS || 5),
   smsWebhookUrl: process.env.SMS_WEBHOOK_URL || "",
   smsWebhookToken: process.env.SMS_WEBHOOK_TOKEN || "",
+  tradeReviewOcrProvider: process.env.TRADE_REVIEW_OCR_PROVIDER || "",
   smsSignName: process.env.SMS_SIGN_NAME || "",
   smsTemplateCode: process.env.SMS_TEMPLATE_CODE || "",
   aliyunAccessKeyId: process.env.ALIYUN_ACCESS_KEY_ID || "",
@@ -70,8 +74,8 @@ function parseList(value) {
     .filter(Boolean);
 }
 
-function loadLocalEnv(filePath) {
-  if (typeof process.loadEnvFile === "function") {
+function loadLocalEnv(filePath, { override = false } = {}) {
+  if (typeof process.loadEnvFile === "function" && !override) {
     try {
       process.loadEnvFile(filePath);
       return;
@@ -95,7 +99,7 @@ function loadLocalEnv(filePath) {
       if ((quote === "\"" || quote === "'") && value.endsWith(quote)) {
         value = value.slice(1, -1);
       }
-      if (process.env[key] === undefined) {
+      if (override || process.env[key] === undefined) {
         process.env[key] = value;
       }
     }

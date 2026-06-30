@@ -148,9 +148,9 @@ const TIMEFRAME_CATALOG = [
 
 const CHART_ZOOM_OPTIONS = [
   { key: "overview", label: "总览", hint: "约180根，先看整体趋势", windowSize: 180 },
-  { key: "wide", label: "缩小", hint: "约150根，适合横屏盲测", windowSize: 150 },
+  { key: "wide", label: "缩小", hint: "约150根，适合盲练", windowSize: 150 },
   { key: "standard", label: "标准", hint: "约90根，平衡节奏", windowSize: 90 },
-  { key: "focus", label: "放大", hint: "约48根，细看", windowSize: 48 }
+  { key: "focus", label: "放大", hint: "约48根，细看局部", windowSize: 48 }
 ];
 
 const INDICATOR_CATALOG = [
@@ -184,39 +184,39 @@ const BLIND_CHART_MIN_WIDTH = 690;
 
 const KLINE_TRAINING_METHODS = [
   {
-    key: "firecracker",
-    title: "强触发盲练",
-    subtitle: "连续急促、放量、长实体或长影线的强触发历史片段。",
-    focus: "训练急念、不甘、证明欲",
-    steps: ["先停十秒", "点最想追的一根", "写下想动理由", "只做一次记录"]
-  },
-  {
     key: "step_replay",
     title: "逐根推进",
-    subtitle: "把图当成回放，不猜后面，只看当下哪一根牵动你。",
+    subtitle: "像复盘一样一根一根展开，只记录被牵动的那一刻。",
     focus: "训练反应速度与停顿能力",
-    steps: ["看十秒", "点最牵动的一根", "选第一念", "回到边界"]
+    steps: ["看已展开片段", "点选最牵动的一根", "写第一反应", "回到边界再继续"]
   },
   {
     key: "blind_mirror",
     title: "盲练观心",
-    subtitle: "不看名称、盈亏、时间，只看结构和身体里的第一反应。",
+    subtitle: "隐藏名称与时间，只看结构、节奏和自己的第一念。",
     focus: "训练少受外部标签影响",
-    steps: ["不问是哪只", "不问涨跌结论", "只记想追还是想躲", "结束后再看来源"]
+    steps: ["隐藏标的标签", "隐藏日期区间", "只记念头变化", "结束后再揭示来源"]
   },
   {
     key: "rule_mapping",
     title: "规则映射",
-    subtitle: "先把市场规则翻译成今天的一条边界，再看图。",
+    subtitle: "不同市场有不同制度，把规则转成边界训练。",
     focus: "训练规则意识与执行稳定",
-    steps: ["写一条边界", "看到触发先停", "不临场改口", "复盘是否守住"]
+    steps: ["识别市场规则", "写下今日边界", "触碰即记录", "复盘是否改口径"]
+  },
+  {
+    key: "firecracker",
+    title: "爆竹 K 线",
+    subtitle: "连续急促、放量、长实体或长影线的强触发历史片段。",
+    focus: "训练急念、不甘、证明欲",
+    steps: ["先停十秒", "标记身体感受", "写下想动的理由", "只完成一次观心记录"]
   },
   {
     key: "review_loop",
     title: "省察回放",
-    subtitle: "训练后不判断对错，只问这一次哪里被牵动。",
+    subtitle: "训练后不评价对错，只回看反应、边界与知行断点。",
     focus: "训练复盘而不责备",
-    steps: ["回看触发点", "写身体感受", "写一句照见", "沉淀到活镜"]
+    steps: ["回看触发点", "记录是否守界", "写一句照见", "沉淀到七日复测"]
   }
 ];
 
@@ -403,7 +403,7 @@ function buildTimeframeOptions(selectedKey) {
 }
 
 function getChartZoomMeta(zoomKey = "wide") {
-  return CHART_ZOOM_OPTIONS.find((item) => item.key === zoomKey) || CHART_ZOOM_OPTIONS[0];
+  return CHART_ZOOM_OPTIONS.find((item) => item.key === zoomKey) || CHART_ZOOM_OPTIONS[1];
 }
 
 function buildChartZoomOptions(selectedKey = "wide") {
@@ -471,7 +471,7 @@ function standardDeviation(values = [], mean) {
 
 function pickVisibleHistoryWindow(candles, windowSize = DEFAULT_VISIBLE_CANDLES) {
   const safeWindowSize = normalizeWindowSize(windowSize);
-  if (candles.length < MIN_VISIBLE_CANDLES) return [];
+  if (!candles.length) return [];
   if (candles.length <= safeWindowSize) return candles;
 
   const focusIndex = candles.findIndex((item) => item.focus);
@@ -573,6 +573,13 @@ function normalizeHistoryCandles(historySlice = {}, options = {}) {
   });
 }
 
+function roundMetric(value, digits = 2) {
+  const number = Number(value || 0);
+  if (!Number.isFinite(number)) return 0;
+  const factor = Math.pow(10, digits);
+  return Math.round(number * factor) / factor;
+}
+
 function getChartGeometry(zoomKey = "wide") {
   return CHART_GEOMETRY[zoomKey] || CHART_GEOMETRY.wide;
 }
@@ -588,10 +595,6 @@ function getChartLayout(candleCount, zoomKey = "wide") {
   return Object.assign({}, geometry, { width, gap });
 }
 
-function getChartBoardWidth(candleCount, zoomKey = "wide") {
-  return getChartLayout(candleCount, zoomKey).width;
-}
-
 function getChartBoardStyle(candleCount, zoomKey = "wide") {
   const layout = getChartLayout(candleCount, zoomKey);
   return [
@@ -601,11 +604,6 @@ function getChartBoardStyle(candleCount, zoomKey = "wide") {
     `--kline-candle-width: ${roundMetric(layout.candleWidth, 2)}rpx`,
     `--kline-body-width: ${roundMetric(layout.bodyWidth || layout.candleWidth, 2)}rpx`
   ].join("; ") + ";";
-}
-
-function getChartRightBoundaryScrollLeft(candleCount, zoomKey = "wide") {
-  const layout = getChartLayout(candleCount, zoomKey);
-  return Math.max(0, Math.round(layout.width - BLIND_CHART_MIN_WIDTH));
 }
 
 function getChartViewportCapacity(zoomKey = "wide") {
@@ -899,22 +897,14 @@ function pickValue(...values) {
   return undefined;
 }
 
-function cleanText(value, maxLength = 180) {
-  const text = String(value || "").trim();
-  return maxLength > 0 ? text.slice(0, maxLength) : text;
-}
-
 function normalizeList(value) {
-  if (Array.isArray(value)) return value.map((item) => String(item || "").trim()).filter(Boolean);
-  if (typeof value === "string") return value.split(/[、,，/]/).map((item) => item.trim()).filter(Boolean);
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item || "").trim()).filter(Boolean);
+  }
+  if (typeof value === "string") {
+    return value.split(/[、,，/]/).map((item) => item.trim()).filter(Boolean);
+  }
   return [];
-}
-
-function normalizeBooleanValue(value) {
-  if (value === true || value === false) return value;
-  if (value === "true" || value === "1" || value === 1) return true;
-  if (value === "false" || value === "0" || value === 0) return false;
-  return false;
 }
 
 function normalizeTrainingPrescription(value, fallbackPrescription = {}) {
@@ -926,6 +916,288 @@ function normalizeTrainingPrescription(value, fallbackPrescription = {}) {
     watchPoint: fallbackPrescription.watchPoint || "",
     firstQuestion: fallbackPrescription.firstQuestion || ""
   };
+}
+
+function cleanText(value, maxLength = 180) {
+  const text = String(value || "").trim();
+  return maxLength > 0 ? text.slice(0, maxLength) : text;
+}
+
+function cleanEventText(value, maxLength = 180) {
+  return cleanText(value, maxLength);
+}
+
+function normalizeDecisionInterval(value) {
+  const number = Number(value || 5);
+  if (!Number.isFinite(number)) return 5;
+  return Math.max(3, Math.min(10, Math.round(number)));
+}
+
+function buildRuntimeViewport(candles = [], currentIndex = 0, zoomKey = "wide", panOffset = 0) {
+  if (!Array.isArray(candles) || !candles.length) {
+    return {
+      startIndex: 0,
+      endIndex: 0,
+      rightBoundaryIndex: 0,
+      panOffset: 0,
+      maxPanOffset: 0,
+      capacity: 0,
+      barStepRpx: 1
+    };
+  }
+  const safeIndex = Math.max(0, Math.min(candles.length - 1, Number(currentIndex || 0)));
+  const capacity = Math.max(1, Math.min(safeIndex + 1, getChartViewportCapacity(zoomKey)));
+  const maxPanOffset = Math.max(0, safeIndex - capacity + 1);
+  const safePanOffset = Math.max(0, Math.min(maxPanOffset, Math.round(Number(panOffset || 0))));
+  const endIndex = Math.max(capacity - 1, safeIndex - safePanOffset);
+  const startIndex = Math.max(0, endIndex - capacity + 1);
+  const geometry = getChartGeometry(zoomKey);
+  return {
+    startIndex,
+    endIndex,
+    rightBoundaryIndex: safeIndex,
+    panOffset: safePanOffset,
+    maxPanOffset,
+    capacity,
+    barStepRpx: geometry.candleWidth + geometry.gap
+  };
+}
+
+function buildRuntimeVisibleCandles(candles = [], viewport = {}) {
+  if (!Array.isArray(candles) || !candles.length) return [];
+  const startIndex = Math.max(0, Number(viewport.startIndex || 0));
+  const endIndex = Math.max(startIndex, Number(viewport.endIndex || startIndex));
+  return candles.slice(startIndex, endIndex + 1).map((item, index) => Object.assign({}, item, {
+    runtimeIndex: startIndex + index
+  }));
+}
+
+function normalizeInitialVisibleCount(value, totalCandles) {
+  const total = Math.max(0, Number(totalCandles || 0));
+  if (!total) return 0;
+  const number = Number(value || 1);
+  if (!Number.isFinite(number)) return 1;
+  return Math.max(1, Math.min(total, Math.round(number)));
+}
+
+function getInitialKlineVisibleCount(session = {}) {
+  const candles = Array.isArray(session.candles) ? session.candles : [];
+  if (!candles.length) return 0;
+  const windowSize = Number(session.chartWindowSize || DEFAULT_VISIBLE_CANDLES);
+  const safeWindowSize = Number.isFinite(windowSize) ? windowSize : DEFAULT_VISIBLE_CANDLES;
+  const target = Math.max(72, Math.min(132, Math.floor(safeWindowSize * 0.8)));
+  return Math.min(candles.length, target);
+}
+
+function normalizeRuntimeAction(action) {
+  const value = String(action || "HOLD").toUpperCase();
+  if (value === "ACT" || value === "BUY") return "ACT";
+  if (value === "AVOID" || value === "SELL") return "AVOID";
+  return "HOLD";
+}
+
+function buildSessionMetrics(decisions = []) {
+  const safeDecisions = Array.isArray(decisions) ? decisions : [];
+  return {
+    decisionCount: safeDecisions.length,
+    actionCount: safeDecisions.filter((item) => item.action === "ACT").length,
+    avoidCount: safeDecisions.filter((item) => item.action === "AVOID").length,
+    holdCount: safeDecisions.filter((item) => item.action === "HOLD").length,
+    positionSize: 0,
+    totalPnl: 0,
+    maxDrawdown: 0
+  };
+}
+
+function shouldRuntimeRequireDecision(currentIndex, decisionInterval) {
+  const index = Number(currentIndex || 0);
+  return index > 0 && index % normalizeDecisionInterval(decisionInterval) === 0;
+}
+
+function buildRuntimeState(baseRuntime = {}, patch = {}) {
+  const runtime = Object.assign({}, baseRuntime, patch);
+  const candles = Array.isArray(runtime.candles) ? runtime.candles : [];
+  const safeIndex = candles.length
+    ? Math.max(0, Math.min(candles.length - 1, Number(runtime.currentIndex || 0)))
+    : 0;
+  const zoomKey = runtime.chartZoomKey || "wide";
+  const viewport = buildRuntimeViewport(candles, safeIndex, zoomKey, runtime.chartPanOffset);
+  const visibleCandles = buildRuntimeVisibleCandles(candles, viewport);
+  const activeCandle = candles[safeIndex] ? Object.assign({}, candles[safeIndex], { runtimeIndex: safeIndex }) : (visibleCandles[visibleCandles.length - 1] || null);
+  const hasDecisionForCurrentIndex = Number(runtime.lastDecisionIndex) === safeIndex;
+  const mustDecide = !!runtime.lockedUntilDecision || (!hasDecisionForCurrentIndex && shouldRuntimeRequireDecision(safeIndex, runtime.decisionInterval));
+  return Object.assign({}, runtime, {
+    currentIndex: safeIndex,
+    visibleCandles,
+    activeCandle,
+    chartViewport: viewport,
+    chartPanOffset: viewport.panOffset,
+    chartBoardStyle: getChartBoardStyle(visibleCandles.length, zoomKey),
+    chartScrollLeft: 0,
+    indicatorOverlay: buildIndicatorOverlay(visibleCandles, zoomKey, runtime.mainIndicatorKey || "ma"),
+    indicatorPanel: buildIndicatorPanel(visibleCandles, runtime.indicatorPanelKey || "vol", zoomKey),
+    sessionMetrics: buildSessionMetrics(runtime.decisionTimeline || []),
+    mustDecide,
+    lockedUntilDecision: mustDecide
+  });
+}
+
+function startKlineTrainingRuntime(session = {}, options = {}) {
+  const candles = Array.isArray(session.candles) ? session.candles : [];
+  const initialVisibleCount = normalizeInitialVisibleCount(options.initialVisibleCount, candles.length);
+  return buildRuntimeState({
+    trainingSessionId: cleanEventText(options.trainingSessionId || `kline-session-${Date.now()}`, 160),
+    simulationMode: "blind_step_replay",
+    sliceSeed: cleanEventText(options.sliceSeed || ((session.historySlice || {}).seed) || ((session.historySlice || {}).sliceSeed) || "", 120),
+    marketKey: ((session.market || {}).key) || "",
+    timeframeKey: session.timeframeKey || "",
+    chartZoomKey: session.chartZoomKey || "wide",
+    mainIndicatorKey: options.initialMainIndicatorKey || session.defaultMainIndicatorKey || "ma",
+    indicatorPanelKey: options.initialIndicatorKey || session.defaultIndicatorKey || "vol",
+    decisionInterval: normalizeDecisionInterval(options.decisionInterval),
+    currentIndex: Math.max(0, initialVisibleCount - 1),
+    totalCandles: candles.length,
+    candles,
+    chartPanOffset: 0,
+    chartViewport: null,
+    decisionTimeline: [],
+    emotionBadges: [],
+    riskHints: [],
+    coachHints: [],
+    sessionMetrics: buildSessionMetrics(),
+    lastDecisionIndex: -1,
+    lockedUntilDecision: false,
+    blockedReason: ""
+  });
+}
+
+function setKlineRuntimeIndicator(runtime = {}, indicatorKey = "vol") {
+  return buildRuntimeState(runtime, {
+    indicatorPanelKey: getIndicatorPanelMeta(indicatorKey).key
+  });
+}
+
+function setKlineRuntimeMainIndicator(runtime = {}, indicatorKey = "ma") {
+  return buildRuntimeState(runtime, {
+    mainIndicatorKey: getMainIndicatorMeta(indicatorKey).key
+  });
+}
+
+function setKlineRuntimeChartZoom(runtime = {}, chartZoomKey = "wide") {
+  return buildRuntimeState(runtime, {
+    chartZoomKey: getChartZoomMeta(chartZoomKey).key
+  });
+}
+
+function setKlineRuntimeViewportPan(runtime = {}, panOffset = 0) {
+  return buildRuntimeState(runtime, {
+    chartPanOffset: panOffset
+  });
+}
+
+function buildEmotionBadge(decision = {}) {
+  const text = `${decision.action || ""} ${decision.reactionDirection || ""} ${decision.firstReaction || ""} ${decision.boundaryChoice || ""}`;
+  if (/不甘|夺回|回本|扳回/.test(text)) return { type: "REVENGE", label: "不甘", text: "不顺后想立刻夺回节奏。" };
+  if (/追|错过|贪|急|证明/.test(text) || decision.action === "ACT" || decision.reactionDirection === "act") {
+    return { type: "IMPULSE", label: "冲动", text: "想马上行动时，先照见怕错过。" };
+  }
+  if (/怕|恐|割|退出|躲/.test(text) || decision.action === "AVOID" || decision.reactionDirection === "avoid") {
+    return { type: "FEAR", label: "惧念", text: "想躲开时，先分清事实与不安。" };
+  }
+  if (/犹豫|不敢|等确认/.test(text)) return { type: "HESITATION", label: "犹疑", text: "知而未行时，先看见停滞处。" };
+  return { type: "OBSERVE", label: "观照", text: "先记录，再继续观察。" };
+}
+
+function buildRiskHint(emotionBadge = null) {
+  const type = (emotionBadge || {}).type || "";
+  if (type === "IMPULSE") return { level: "medium", text: "出现冲动：先停十秒，再回到原边界。" };
+  if (type === "FEAR") return { level: "medium", text: "出现惧念：先看事实，再记录不安。" };
+  if (type === "REVENGE") return { level: "high", text: "出现不甘：本轮只记录，不追加动作。" };
+  if (type === "HESITATION") return { level: "low", text: "出现犹疑：写下知道却未行动的原因。" };
+  return { level: "low", text: "继续只做训练记录，不作当下判断。" };
+}
+
+function buildCoachHint(decision = {}, emotionBadge = null) {
+  const action = normalizeRuntimeAction(decision.action);
+  const label = (emotionBadge || {}).label || "观照";
+  return {
+    title: `${label}已记录`,
+    text: action === "HOLD"
+      ? "你先停下来观察，这一刻先守住了记录。"
+      : "这一念已经写入记录，下一步先停十秒，再看是否仍合边界。"
+  };
+}
+
+function advanceKlineTrainingRuntime(runtime = {}) {
+  if (runtime.lockedUntilDecision || runtime.mustDecide) {
+    return Object.assign({}, runtime, {
+      blockedReason: "decision_required",
+      mustDecide: true,
+      lockedUntilDecision: true
+    });
+  }
+  const total = Number(runtime.totalCandles || (runtime.candles || []).length || 0);
+  const nextIndex = Math.min(Math.max(0, total - 1), Number(runtime.currentIndex || 0) + 1);
+  return buildRuntimeState(runtime, {
+    currentIndex: nextIndex,
+    chartPanOffset: 0,
+    blockedReason: ""
+  });
+}
+
+function recordKlineTrainingDecision(runtime = {}, decision = {}) {
+  const activeCandle = runtime.activeCandle || (runtime.candles || [])[runtime.currentIndex] || {};
+  const safeDecision = {
+    id: `decision-${runtime.trainingSessionId || "local"}-${runtime.currentIndex}-${(runtime.decisionTimeline || []).length + 1}`,
+    sessionId: runtime.trainingSessionId || "",
+    index: Number(runtime.currentIndex || 0),
+    action: normalizeRuntimeAction(decision.action),
+    selectedCandleKey: cleanEventText(decision.selectedCandleKey || activeCandle.key || "", 80),
+    reactionDirection: cleanEventText(decision.reactionDirection, 40),
+    firstReaction: cleanEventText(decision.firstReaction, 160),
+    boundaryChoice: cleanEventText(decision.boundaryChoice, 120),
+    createdAt: decision.createdAt || Date.now()
+  };
+  const emotionBadge = buildEmotionBadge(safeDecision);
+  const riskHint = buildRiskHint(emotionBadge);
+  const coachHint = buildCoachHint(safeDecision, emotionBadge);
+  return buildRuntimeState(runtime, {
+    decisionTimeline: (runtime.decisionTimeline || []).concat([safeDecision]),
+    emotionBadges: emotionBadge ? (runtime.emotionBadges || []).concat([emotionBadge]) : (runtime.emotionBadges || []),
+    riskHints: (runtime.riskHints || []).concat([riskHint]),
+    coachHints: (runtime.coachHints || []).concat([coachHint]),
+    lastDecisionIndex: Number(runtime.currentIndex || 0),
+    mustDecide: false,
+    lockedUntilDecision: false,
+    blockedReason: ""
+  });
+}
+
+function buildKlineTrainingRecordPatch(runtime = {}) {
+  const decisions = Array.isArray(runtime.decisionTimeline) ? runtime.decisionTimeline : [];
+  const lastDecision = decisions[decisions.length - 1] || {};
+  const activeCandle = runtime.activeCandle || (runtime.candles || [])[runtime.currentIndex] || {};
+  return {
+    trainingSessionId: cleanEventText(runtime.trainingSessionId, 160),
+    simulationMode: cleanEventText(runtime.simulationMode || "blind_step_replay", 80),
+    sliceSeed: cleanEventText(runtime.sliceSeed, 120),
+    selectedCandleKey: cleanEventText(lastDecision.selectedCandleKey || activeCandle.key || "", 80),
+    reactionDirection: cleanEventText(lastDecision.reactionDirection, 40),
+    firstReaction: cleanEventText(lastDecision.firstReaction, 160),
+    boundaryChoice: cleanEventText(lastDecision.boundaryChoice, 120),
+    decisionTimeline: decisions,
+    emotionBadges: Array.isArray(runtime.emotionBadges) ? runtime.emotionBadges : [],
+    riskHints: Array.isArray(runtime.riskHints) ? runtime.riskHints : [],
+    coachHints: Array.isArray(runtime.coachHints) ? runtime.coachHints : [],
+    sessionMetrics: buildSessionMetrics(decisions)
+  };
+}
+
+function normalizeBooleanValue(value) {
+  if (value === true || value === false) return value;
+  if (value === "true" || value === "1" || value === 1) return true;
+  if (value === "false" || value === "0" || value === 0) return false;
+  return false;
 }
 
 function pickSamplingPayload(input = {}) {
@@ -978,36 +1250,84 @@ function buildSamplingMetadata(payload = {}) {
 function normalizeKlineSamplingResult(input = {}) {
   const payload = pickSamplingPayload(input);
   if (!payload) return null;
+  const explicitSamplingPayload = !!(
+    input.samplingResult ||
+    input.sampling_result ||
+    input.sample ||
+    input.result ||
+    input.data
+  );
   const rawBars = Array.isArray(payload.bars)
     ? payload.bars
     : Array.isArray(payload.candles)
       ? payload.candles
       : [];
-  const hasSamplingIdentity = !!(
-    input.samplingResult ||
-    input.sampling_result ||
-    input.sample ||
-    input.result ||
-    input.data ||
+  const hasSamplingIdentity = explicitSamplingPayload ||
     hasValue(pickValue(payload.segmentId, payload.segment_id)) ||
-    rawBars.length ||
+    rawBars.length > 0 ||
     normalizeBooleanValue(pickValue(payload.fallbackUsed, payload.fallback_used, false)) ||
-    hasValue(pickValue(payload.fallbackReason, payload.fallback_reason))
-  );
+    hasValue(pickValue(payload.fallbackReason, payload.fallback_reason));
   if (!hasSamplingIdentity) return null;
   const metadata = buildSamplingMetadata(payload);
+  const bars = rawBars;
   const samplingStatus = metadata.fallbackUsed
     ? "fallback"
-    : metadata.segmentId || rawBars.length
+    : metadata.segmentId || bars.length
       ? "matched"
       : "";
 
   return Object.assign({}, metadata, {
-    bars: rawBars,
+    bars,
     samplingResult: metadata,
     sampling_result: metadata,
     samplingStatus,
     sampling_status: samplingStatus
+  });
+}
+
+function buildSamplingHistorySlice(samplingResult = {}) {
+  if (!samplingResult || !Array.isArray(samplingResult.bars) || !samplingResult.bars.length) return null;
+  return {
+    source: samplingResult.source || (samplingResult.fallbackUsed ? "fallback" : "segment"),
+    symbol: samplingResult.symbol || "",
+    name: samplingResult.name || "",
+    start: samplingResult.startDate || samplingResult.start_date || "",
+    end: samplingResult.endDate || samplingResult.end_date || "",
+    startDate: samplingResult.startDate || samplingResult.start_date || "",
+    start_date: samplingResult.start_date || samplingResult.startDate || "",
+    endDate: samplingResult.endDate || samplingResult.end_date || "",
+    end_date: samplingResult.end_date || samplingResult.endDate || "",
+    period: samplingResult.period || "1d",
+    data_range: {
+      start: samplingResult.startDate || samplingResult.start_date || "",
+      end: samplingResult.endDate || samplingResult.end_date || ""
+    },
+    candles: samplingResult.bars
+  };
+}
+
+function attachSamplingMetadata(target = {}, input = {}) {
+  const normalized = normalizeKlineSamplingResult(input);
+  if (!normalized) return target;
+  const samplingSourceLabel = normalized.fallbackUsed ? "兜底片段" : "匹配片段";
+  const samplingSceneTagsText = (normalized.sceneTags || normalized.scene_tags || []).join(" / ");
+  return Object.assign({}, target, {
+    segmentId: normalized.segmentId,
+    segment_id: normalized.segment_id,
+    trainingPackId: normalized.trainingPackId || target.trainingPackId || target.training_pack_id || "",
+    training_pack_id: normalized.training_pack_id || target.training_pack_id || target.trainingPackId || "",
+    samplingResult: normalized.samplingResult,
+    sampling_result: normalized.sampling_result,
+    fallbackUsed: normalized.fallbackUsed,
+    fallback_used: normalized.fallback_used,
+    fallbackReason: normalized.fallbackReason,
+    fallback_reason: normalized.fallback_reason,
+    samplingStatus: normalized.samplingStatus,
+    sampling_status: normalized.sampling_status,
+    samplingSourceLabel,
+    sampling_source_label: samplingSourceLabel,
+    samplingSceneTagsText,
+    sampling_scene_tags_text: samplingSceneTagsText
   });
 }
 
@@ -1061,7 +1381,10 @@ function buildCustomSessionMeta(input = {}) {
   const revealedDateRangeText = formatDateRangeText(startDate, endDate);
   const nextAction = "先看事实，再记录第一念。";
   const sceneTags = ["自选盲练"];
-  const trainingPrescription = { title: "自选盲练", action: nextAction };
+  const trainingPrescription = {
+    title: "自选盲练",
+    action: nextAction
+  };
 
   return {
     sourceType: "custom_session",
@@ -1127,7 +1450,7 @@ const SPECIAL_TRAINING_PACKS = [
     error_type: "卖飞懊悔",
     title: "卖飞懊悔专项",
     scene_tags: ["洗盘后走强", "趋势中继"],
-    training_goal: "行动后不因懊悔追回。",
+    training_goal: "动作后不因懊悔追回。",
     expected_action: "按规则处理，不追回情绪单",
     default_prompt: "先看事实：你是在重新确认规则，还是被懊悔牵回？"
   },
@@ -1242,9 +1565,459 @@ function buildSpecialTrainingSessionMeta(value = {}) {
   };
 }
 
+function buildSpecialTrainingContext(specialTraining = {}) {
+  const sourceType = pickValue(specialTraining.sourceType, specialTraining.source_type);
+  if (sourceType !== "special_training") return null;
+  const meta = buildSpecialTrainingSessionMeta(specialTraining);
+  const sceneTags = normalizeList(pickValue(specialTraining.sceneTags, specialTraining.scene_tags, meta.sceneTags));
+  const expectedAction = cleanText(pickValue(specialTraining.expectedAction, specialTraining.expected_action, specialTraining.nextAction, specialTraining.next_action, meta.expectedAction), 160);
+  const trainingPrescription = normalizeTrainingPrescription(
+    pickValue(specialTraining.trainingPrescription, specialTraining.training_prescription, meta.trainingPrescription),
+    { title: meta.trainingPackTitle, boundaryPractice: expectedAction }
+  );
+
+  return Object.assign({}, meta, {
+    sceneTags,
+    scene_tags: sceneTags,
+    expectedAction,
+    expected_action: expectedAction,
+    nextAction: expectedAction,
+    next_action: expectedAction,
+    trainingPrescription,
+    training_prescription: trainingPrescription
+  });
+}
+
+function buildCustomSessionContext(customSession = {}) {
+  const sourceType = pickValue(customSession.sourceType, customSession.source_type);
+  const hasCustomInput = sourceType === "custom_session" ||
+    hasValue(pickValue(customSession.symbol, customSession.code, customSession.instrument)) ||
+    hasValue(pickValue(customSession.startDate, customSession.start_date, customSession.start)) ||
+    hasValue(pickValue(customSession.endDate, customSession.end_date, customSession.end)) ||
+    hasValue(pickValue(customSession.trainingLength, customSession.training_length));
+  if (!hasCustomInput) return null;
+  return buildCustomSessionMeta(customSession);
+}
+
+function buildReviewFocusContext(reviewFocus = {}, prescription = {}) {
+  const sourceType = pickValue(reviewFocus.sourceType, reviewFocus.source_type);
+  const errorType = pickValue(
+    reviewFocus.errorType,
+    reviewFocus.error_type,
+    reviewFocus.mainErrorType,
+    reviewFocus.main_error_type,
+    reviewFocus.relatedMirror,
+    reviewFocus.relatedPersonality,
+    reviewFocus.personalityType
+  );
+  const rawSceneTags = normalizeList(pickValue(reviewFocus.sceneTags, reviewFocus.scene_tags));
+  const fallbackSceneTags = normalizeList(pickValue(
+    reviewFocus.triggerScene,
+    reviewFocus.trigger_scene,
+    reviewFocus.stageName,
+    reviewFocus.stageGate,
+    errorType
+  ));
+  const sceneTags = rawSceneTags.length ? rawSceneTags : fallbackSceneTags;
+  const rawTrainingPrescription = pickValue(
+    reviewFocus.trainingPrescription,
+    reviewFocus.training_prescription,
+    reviewFocus.trainingAction,
+    reviewFocus.training_action,
+    reviewFocus.nextRule,
+    reviewFocus.next_rule
+  );
+  const rawNextAction = pickValue(
+    reviewFocus.nextAction,
+    reviewFocus.next_action,
+    reviewFocus.nextRule,
+    reviewFocus.next_rule,
+    reviewFocus.trainingAction,
+    reviewFocus.training_action,
+    rawTrainingPrescription && typeof rawTrainingPrescription === "object" ? rawTrainingPrescription.action : ""
+  );
+  const rawExpectedAction = pickValue(
+    reviewFocus.expectedAction,
+    reviewFocus.expected_action,
+    rawNextAction
+  );
+  const executionPlanId = pickValue(
+    reviewFocus.executionPlanId,
+    reviewFocus.execution_plan_id,
+    reviewFocus.planId,
+    reviewFocus.plan_id
+  );
+  const sourceReviewId = pickValue(
+    reviewFocus.sourceReviewId,
+    reviewFocus.source_review_id,
+    reviewFocus.reviewId,
+    reviewFocus.review_id,
+    reviewFocus.id
+  );
+  const explicitReviewFocus = sourceType === "review_focus";
+
+  if (!explicitReviewFocus && !hasValue(errorType) && !sceneTags.length && !hasValue(rawTrainingPrescription) && !hasValue(rawNextAction) && !hasValue(sourceReviewId)) {
+    return null;
+  }
+
+  const trainingPrescription = normalizeTrainingPrescription(rawTrainingPrescription, prescription);
+  const nextAction = pickValue(rawNextAction, trainingPrescription.action);
+  const expectedAction = pickValue(rawExpectedAction, nextAction);
+
+  const context = {
+    sourceType: "review_focus",
+    source_type: "review_focus",
+    errorType: errorType || "待照见",
+    error_type: errorType || "待照见",
+    trainingPrescription,
+    training_prescription: trainingPrescription,
+    sceneTags,
+    scene_tags: sceneTags,
+    nextAction: nextAction || "",
+    next_action: nextAction || "",
+    expectedAction: expectedAction || "",
+    expected_action: expectedAction || ""
+  };
+
+  if (executionPlanId) {
+    context.executionPlanId = executionPlanId;
+    context.execution_plan_id = executionPlanId;
+  }
+
+  if (sourceReviewId) {
+    context.sourceReviewId = sourceReviewId;
+    context.source_review_id = sourceReviewId;
+  }
+
+  return context;
+}
+
+function pickSessionContext(session = {}) {
+  const sourceType = pickValue(session.sourceType, session.source_type);
+  if (sourceType === "custom_session") {
+    return buildCustomSessionContext(session);
+  }
+  if (sourceType === "special_training") {
+    return attachSamplingMetadata(buildSpecialTrainingContext(session), session);
+  }
+  if (sourceType !== "review_focus") return null;
+  return attachSamplingMetadata({
+    sourceType: "review_focus",
+    source_type: "review_focus",
+    errorType: pickValue(session.errorType, session.error_type, "待照见"),
+    error_type: pickValue(session.errorType, session.error_type, "待照见"),
+    trainingPrescription: pickValue(session.trainingPrescription, session.training_prescription, {}),
+    training_prescription: pickValue(session.trainingPrescription, session.training_prescription, {}),
+    sceneTags: normalizeList(pickValue(session.sceneTags, session.scene_tags)),
+    scene_tags: normalizeList(pickValue(session.sceneTags, session.scene_tags)),
+    nextAction: pickValue(session.nextAction, session.next_action, ""),
+    next_action: pickValue(session.nextAction, session.next_action, ""),
+    expectedAction: pickValue(session.expectedAction, session.expected_action, session.nextAction, session.next_action, ""),
+    expected_action: pickValue(session.expectedAction, session.expected_action, session.nextAction, session.next_action, ""),
+    executionPlanId: pickValue(session.executionPlanId, session.execution_plan_id, ""),
+    execution_plan_id: pickValue(session.executionPlanId, session.execution_plan_id, ""),
+    sourceReviewId: pickValue(session.sourceReviewId, session.source_review_id, ""),
+    source_review_id: pickValue(session.sourceReviewId, session.source_review_id, "")
+  }, session);
+}
+
+function buildTrainingMistakeCard(record = {}, context = null) {
+  if (!context) return null;
+  const trainingPrescription = context.trainingPrescription || context.training_prescription || {};
+  const sceneTags = context.sceneTags || context.scene_tags || [];
+  const executionResult = normalizeExecutionResult(
+    record.executionResult,
+    record.execution_result,
+    record.executionLabel,
+    record.execution_label,
+    record.lawResult,
+    record.law_result,
+    record.completed ? "aligned" : "unclear"
+  );
+  return {
+    title: "最明显执行偏离",
+    errorType: context.errorType || context.error_type || "",
+    error_type: context.error_type || context.errorType || "",
+    sceneTags,
+    scene_tags: sceneTags,
+    firstReaction: record.firstReaction || "",
+    boundaryChoice: record.boundaryChoice || "",
+    insightLine: record.insightLine || "",
+    executionResult,
+    execution_result: executionResult,
+    executionLabel: executionResult,
+    execution_label: executionResult,
+    trainingPrescription,
+    training_prescription: trainingPrescription,
+    nextAction: context.nextAction || context.next_action || "",
+    next_action: context.next_action || context.nextAction || "",
+    trainingGoal: context.trainingGoal || context.training_goal || "",
+    training_goal: context.training_goal || context.trainingGoal || "",
+    expectedAction: context.expectedAction || context.expected_action || context.nextAction || context.next_action || "",
+    expected_action: context.expected_action || context.expectedAction || context.next_action || context.nextAction || "",
+    trainingPackId: context.trainingPackId || context.training_pack_id || "",
+    training_pack_id: context.training_pack_id || context.trainingPackId || "",
+    trainingPackTitle: context.trainingPackTitle || context.training_pack_title || "",
+    training_pack_title: context.training_pack_title || context.trainingPackTitle || "",
+    segmentId: context.segmentId || context.segment_id || "",
+    segment_id: context.segment_id || context.segmentId || "",
+    samplingResult: context.samplingResult || context.sampling_result || null,
+    sampling_result: context.sampling_result || context.samplingResult || null,
+    fallbackUsed: context.fallbackUsed || context.fallback_used || false,
+    fallback_used: context.fallback_used || context.fallbackUsed || false,
+    fallbackReason: context.fallbackReason || context.fallback_reason || "",
+    fallback_reason: context.fallback_reason || context.fallbackReason || ""
+  };
+}
+
+function buildKlineMindSession({
+  assessment = null,
+  trainingDay = null,
+  record = null,
+  historyCache = {},
+  reviewFocus = null,
+  specialTraining = null,
+  customSession = null,
+  samplingResult = null
+} = {}) {
+  const day = clampDay((trainingDay || {}).day || (record || {}).day || 1);
+  const personalityType = (assessment || {}).primary || "平衡型";
+  const stagePlan = getPersonalityStagePlan(personalityType);
+  const scenario = DAY_SCENARIOS[day] || DAY_SCENARIOS[1];
+  const marketKey = (record || {}).marketKey || "cn_equity";
+  const timeframeKey = (record || {}).timeframeKey || "1d";
+  const timeframeMeta = TIMEFRAME_CATALOG.find((item) => item.key === timeframeKey) || TIMEFRAME_CATALOG[0];
+  const chartZoomKey = (record || {}).chartZoomKey || "wide";
+  const chartZoomMeta = getChartZoomMeta(chartZoomKey);
+  const market = getMarketConfig(marketKey);
+  const customSessionSource = customSession || (pickValue((record || {}).sourceType, (record || {}).source_type) === "custom_session" ? record : null);
+  const customSessionContext = buildCustomSessionContext(customSessionSource || {});
+  const normalizedSampling = normalizeKlineSamplingResult(pickValue(
+    samplingResult,
+    (record || {}).samplingResult,
+    (record || {}).sampling_result,
+    (reviewFocus || {}).samplingResult,
+    (reviewFocus || {}).sampling_result,
+    (specialTraining || {}).samplingResult,
+    (specialTraining || {}).sampling_result
+  ));
+  const samplingHistorySlice = buildSamplingHistorySlice(normalizedSampling || {});
+  const customHistorySlice = (customSessionSource || {}).historySlice || (customSessionSource || {}).slice;
+  const historySlice = customHistorySlice || (record || {}).historySlice || samplingHistorySlice || getHistorySlice(historyCache, market.key, timeframeKey);
+  const rawCandles = normalizeHistoryCandles(historySlice || {}, { windowSize: chartZoomMeta.windowSize });
+  const selectedKey = (record || {}).selectedCandleKey || "";
+  const prescription = getKlinePrescription(personalityType);
+  const stageGate = getSixGate(stagePlan.stageKey);
+  const candles = markSelectedCandles(rawCandles, selectedKey, scenario.focusIndex);
+  const chartBoardStyle = getChartBoardStyle(candles.length, chartZoomMeta.key);
+  const mainIndicatorKey = (record || {}).mainIndicatorKey || "ma";
+  const indicatorOverlay = buildIndicatorOverlay(candles, chartZoomMeta.key, mainIndicatorKey);
+  const selectedCandleKey = selectedKey || ((candles.find((item) => item.selected) || {}).key) || "";
+  const reviewFocusContext = buildReviewFocusContext(reviewFocus || {}, prescription);
+  const specialTrainingContext = buildSpecialTrainingContext(specialTraining || record || {});
+
+  const session = {
+    day,
+    personalityType,
+    secondaryType: (assessment || {}).secondary || "",
+    title: scenario.title,
+    subtitle: scenario.subtitle,
+    prompt: scenario.prompt,
+    scenarioId: scenario.id,
+    market,
+    marketOptions: buildMarketOptions(market.key),
+    timeframeKey,
+    timeframeLabel: timeframeMeta.label,
+    timeframeOptions: buildTimeframeOptions(timeframeKey),
+    chartZoomKey: chartZoomMeta.key,
+    chartWindowSize: chartZoomMeta.windowSize,
+    chartZoomOptions: buildChartZoomOptions(chartZoomMeta.key),
+    chartBoardStyle,
+    indicatorOverlay,
+    defaultMainIndicatorKey: "ma",
+    mainIndicatorOptions: MAIN_INDICATOR_OPTIONS,
+    defaultIndicatorKey: "vol",
+    indicatorPanelOptions: INDICATOR_PANEL_OPTIONS,
+    chartOrientationHint: "横屏训练更稳，适合看更多 K 线；竖屏可放大少量细看。",
+    indicatorCatalog: INDICATOR_CATALOG,
+    historySlice: historySlice || null,
+    hasHistoricalData: candles.length > 0,
+    dataStatusText: candles.length
+      ? normalizedSampling
+        ? normalizedSampling.fallbackUsed ? "使用基础盲练兜底" : "已匹配训练片段"
+        : "真实历史数据已载入"
+      : "等待历史数据同步",
+    marketQuestion: market.mindQuestion,
+    marketGuardrail: market.guardrail,
+    trainingMethods: KLINE_TRAINING_METHODS,
+    personalityDrill: getPersonalityKlineDrill(personalityType),
+    prescription,
+    stagePlan,
+    stageGate,
+    gates: SIX_GATE_MAP.map((gate) => Object.assign({}, gate, GATE_TRAINING_ACTIONS[gate.key] || {}, {
+      active: gate.key === stageGate.key
+    })),
+    candles,
+    selectedCandleKey,
+    reactionOptions: REACTION_OPTIONS,
+    bodyOptions: BODY_OPTIONS,
+    boundaryOptions: BOUNDARY_OPTIONS,
+    completed: !!((record || {}).completed),
+    score: calculateKlineMindScore(record || {})
+  };
+
+  const sessionWithSampling = normalizedSampling ? attachSamplingMetadata(Object.assign({}, session, {
+    samplingStatusText: normalizedSampling.fallbackUsed ? "使用基础盲练兜底" : "已匹配片段",
+    sampling_status_text: normalizedSampling.fallbackUsed ? "使用基础盲练兜底" : "已匹配片段",
+    samplingSourceLabel: normalizedSampling.fallbackUsed ? "兜底片段" : "匹配片段",
+    sampling_source_label: normalizedSampling.fallbackUsed ? "兜底片段" : "匹配片段"
+  }), normalizedSampling) : session;
+
+  const trainingContext = reviewFocusContext || specialTrainingContext || customSessionContext;
+  if (customSessionContext && trainingContext === customSessionContext) {
+    const customTotal = Math.max(1, candles.length || customSessionContext.trainingLength || customSessionContext.training_length || 1);
+    const customVisibleCount = Math.max(
+      1,
+      Math.min(customTotal, Number(customSessionContext.customVisibleCount || customSessionContext.custom_visible_count || 1) || 1)
+    );
+    return Object.assign({}, sessionWithSampling, customSessionContext, {
+      dataStatusText: candles.length ? "自选盲练片段已载入" : sessionWithSampling.dataStatusText,
+      customTotalCount: customTotal,
+      custom_total_count: customTotal,
+      customVisibleCount,
+      custom_visible_count: customVisibleCount,
+      customProgressText: `当前第 ${customVisibleCount} 根 / 共 ${customTotal} 根`,
+      custom_progress_text: `当前第 ${customVisibleCount} 根 / 共 ${customTotal} 根`
+    });
+  }
+  return trainingContext ? Object.assign({}, sessionWithSampling, attachSamplingMetadata(trainingContext, sessionWithSampling)) : sessionWithSampling;
+}
+
+function calculateKlineMindScore(record = {}) {
+  const fields = [
+    record.selectedCandleKey,
+    record.firstReaction,
+    record.bodySignal,
+    record.boundaryChoice,
+    record.insightLine
+  ];
+  const filledCount = fields.filter((item) => String(item || "").trim()).length;
+  const boundaryBonus = record.boundaryChoice ? 12 : 0;
+  const insightBonus = String(record.insightLine || "").trim().length >= 8 ? 12 : 0;
+  return Math.max(0, Math.min(100, 28 + filledCount * 10 + boundaryBonus + insightBonus));
+}
+
+function buildSingleExecutionConsistency(executionResult) {
+  const normalized = normalizeExecutionResult(executionResult);
+  if (normalized === "按计划执行") {
+    return {
+      alignedCount: 1,
+      deviationCount: 0,
+      denominator: 1,
+      isSampleEnough: true,
+      rate: 100,
+      rateText: "100%"
+    };
+  }
+  if (normalized === "执行偏离") {
+    return {
+      alignedCount: 0,
+      deviationCount: 1,
+      denominator: 1,
+      isSampleEnough: true,
+      rate: 0,
+      rateText: "0%"
+    };
+  }
+  return {
+    alignedCount: 0,
+    deviationCount: 0,
+    denominator: 0,
+    isSampleEnough: false,
+    rate: null,
+    rateText: "样本不足"
+  };
+}
+
+function buildKlineMindRecord(input = {}, session = {}) {
+  const selectedCandleKey = input.selectedCandleKey || session.selectedCandleKey || "";
+  const selectedCandle = (session.candles || []).find((item) => item.key === selectedCandleKey) || {};
+  const firstReaction = String(input.firstReaction || "").trim();
+  const bodySignal = String(input.bodySignal || "").trim();
+  const boundaryChoice = String(input.boundaryChoice || "").trim();
+  const insightLine = String(input.insightLine || "").trim();
+  const sessionContext = pickSessionContext(session);
+  const record = {
+    day: clampDay(input.day || session.day || 1),
+    scenarioId: session.scenarioId || input.scenarioId || "",
+    scenarioTitle: session.title || input.scenarioTitle || "",
+    marketKey: ((session.market || {}).key) || input.marketKey || "cn_equity",
+    marketName: ((session.market || {}).name) || input.marketName || "A股",
+    timeframeKey: session.timeframeKey || input.timeframeKey || "1d",
+    dataSource: ((session.historySlice || {}).source) || input.dataSource || "",
+    symbol: ((session.historySlice || {}).symbol) || input.symbol || ((session.market || {}).defaultSymbol) || "",
+    dataStart: ((session.historySlice || {}).start) || input.dataStart || "",
+    dataEnd: ((session.historySlice || {}).end) || input.dataEnd || "",
+    personalityType: session.personalityType || input.personalityType || "平衡型",
+    secondaryType: session.secondaryType || input.secondaryType || "",
+    stageKey: (session.stageGate || {}).key || input.stageKey || "",
+    stageName: (session.stageGate || {}).name || input.stageName || "",
+    selectedCandleKey,
+    selectedCandleLabel: selectedCandle.label || selectedCandle.indexLabel || input.selectedCandleLabel || "",
+    firstReaction,
+    bodySignal,
+    boundaryChoice,
+    insightLine,
+    prescriptionTitle: ((session.prescription || {}).title) || input.prescriptionTitle || "",
+    completed: !!(firstReaction && boundaryChoice && insightLine),
+    updatedAt: Date.now()
+  };
+  const executionResult = normalizeExecutionResult(
+    input.executionResult,
+    input.execution_result,
+    input.executionLabel,
+    input.execution_label,
+    input.lawResult,
+    input.law_result,
+    record.completed ? "aligned" : "unclear"
+  );
+  const recordExecutionConsistency = buildSingleExecutionConsistency(executionResult);
+  const scoredRecord = Object.assign({}, record, {
+    score: calculateKlineMindScore(record),
+    executionResult,
+    execution_result: executionResult,
+    executionLabel: executionResult,
+    execution_label: executionResult,
+    executionConsistency: recordExecutionConsistency,
+    execution_consistency: recordExecutionConsistency,
+    executionConsistencyRateText: recordExecutionConsistency.rateText,
+    execution_consistency_rate_text: recordExecutionConsistency.rateText
+  });
+  if (!sessionContext) return scoredRecord;
+
+  const repeatCount = Number(pickValue(input.repeatCount, input.repeat_count, session.repeatCount, session.repeat_count, 1)) || 1;
+  const trainingMistakeCard = buildTrainingMistakeCard(scoredRecord, sessionContext);
+  const executionConsistency = buildSingleExecutionConsistency(trainingMistakeCard.executionResult);
+  return Object.assign({}, scoredRecord, sessionContext, {
+    executionResult: trainingMistakeCard.executionResult,
+    execution_result: trainingMistakeCard.execution_result,
+    executionLabel: trainingMistakeCard.executionLabel,
+    execution_label: trainingMistakeCard.execution_label,
+    executionConsistency,
+    execution_consistency: executionConsistency,
+    executionConsistencyRateText: executionConsistency.rateText,
+    execution_consistency_rate_text: executionConsistency.rateText,
+    repeatCount,
+    repeat_count: repeatCount,
+    trainingMistakeCard,
+    training_mistake_card: trainingMistakeCard
+  });
+}
+
 function normalizeBookmarkType(value = "") {
-  const text = cleanText(value, 60);
-  return ["session", "action", "mistake_card"].includes(text) ? text : "session";
+  const type = cleanText(value, 40);
+  if (["session", "action", "mistake_card"].includes(type)) return type;
+  return "session";
 }
 
 function normalizeBarIndex(value) {
@@ -1292,12 +2065,15 @@ function normalizeTrainingBookmark(input = {}) {
   const updatedAt = pickValue(input.updatedAt, input.updated_at, createdAt);
   const enabledInput = pickValue(input.enabled);
   const enabled = enabledInput === undefined ? true : normalizeBooleanValue(enabledInput);
-  const title = cleanText(pickValue(
-    input.title,
-    bookmarkType === "mistake_card" ? "训练错题卡收藏" : "",
-    bookmarkType === "action" ? "训练动作收藏" : "",
-    "训练整局收藏"
-  ), 120);
+  const title = cleanText(
+    pickValue(
+      input.title,
+      bookmarkType === "mistake_card" ? "训练错题卡收藏" : "",
+      bookmarkType === "action" ? "训练动作收藏" : "",
+      "训练整局收藏"
+    ),
+    120
+  );
 
   return {
     id,
@@ -1379,582 +2155,16 @@ function buildBookmarkReplaySliceRequest(bookmark = {}) {
   };
 }
 
-function normalizeDecisionInterval(value) {
-  const number = Number(value || 5);
-  if (!Number.isFinite(number)) return 5;
-  return Math.max(3, Math.min(10, Math.round(number)));
-}
-
-function buildRuntimeViewport(candles = [], currentIndex = 0, zoomKey = "wide", panOffset = 0) {
-  if (!Array.isArray(candles) || !candles.length) {
-    return {
-      startIndex: 0,
-      endIndex: 0,
-      rightBoundaryIndex: 0,
-      panOffset: 0,
-      maxPanOffset: 0,
-      capacity: 0,
-      barStepRpx: 1
-    };
-  }
-  const safeIndex = Math.max(0, Math.min(candles.length - 1, Number(currentIndex || 0)));
-  const capacity = Math.max(1, Math.min(safeIndex + 1, getChartViewportCapacity(zoomKey)));
-  const maxPanOffset = Math.max(0, safeIndex - capacity + 1);
-  const safePanOffset = Math.max(0, Math.min(maxPanOffset, Math.round(Number(panOffset || 0))));
-  const endIndex = Math.max(capacity - 1, safeIndex - safePanOffset);
-  const startIndex = Math.max(0, endIndex - capacity + 1);
-  const geometry = getChartGeometry(zoomKey);
-  return {
-    startIndex,
-    endIndex,
-    rightBoundaryIndex: safeIndex,
-    panOffset: safePanOffset,
-    maxPanOffset,
-    capacity,
-    barStepRpx: geometry.candleWidth + geometry.gap
-  };
-}
-
-function buildRuntimeVisibleCandles(candles = [], viewport = {}) {
-  if (!Array.isArray(candles) || !candles.length) return [];
-  const startIndex = Math.max(0, Number(viewport.startIndex || 0));
-  const endIndex = Math.max(startIndex, Number(viewport.endIndex || startIndex));
-  return candles.slice(startIndex, endIndex + 1).map((item, index) => Object.assign({}, item, {
-    runtimeIndex: startIndex + index
-  }));
-}
-
-function normalizeInitialVisibleCount(value, totalCandles) {
-  const total = Math.max(0, Number(totalCandles || 0));
-  if (!total) return 0;
-  const number = Number(value || 1);
-  if (!Number.isFinite(number)) return 1;
-  return Math.max(1, Math.min(total, Math.round(number)));
-}
-
-function getInitialKlineVisibleCount(session = {}) {
-  const candles = Array.isArray(session.candles) ? session.candles : [];
-  if (!candles.length) return 0;
-  const windowSize = Number(session.chartWindowSize || DEFAULT_VISIBLE_CANDLES);
-  const safeWindowSize = Number.isFinite(windowSize) ? windowSize : DEFAULT_VISIBLE_CANDLES;
-  const target = Math.max(72, Math.min(132, Math.floor(safeWindowSize * 0.8)));
-  return Math.min(candles.length, target);
-}
-
-function roundMetric(value, digits = 2) {
-  const number = Number(value || 0);
-  if (!Number.isFinite(number)) return 0;
-  const factor = Math.pow(10, digits);
-  return Math.round(number * factor) / factor;
-}
-
-function getRuntimePrice(candle = {}) {
-  const price = Number(candle.close || candle.c || candle.price || 0);
-  return Number.isFinite(price) && price > 0 ? price : 0;
-}
-
-function normalizePositionState(state = {}) {
-  return {
-    side: state.side === "LONG" ? "LONG" : "FLAT",
-    entryPrice: roundMetric(state.entryPrice, 4),
-    positionSize: Number(state.positionSize || state.size || 0) > 0 ? 1 : 0,
-    realizedPnl: roundMetric(state.realizedPnl),
-    unrealizedPnl: roundMetric(state.unrealizedPnl),
-    equity: roundMetric(state.equity || 100),
-    peakEquity: roundMetric(state.peakEquity || 100),
-    maxDrawdown: roundMetric(state.maxDrawdown)
-  };
-}
-
-function markPositionToMarket(positionState = {}, candle = {}) {
-  const price = getRuntimePrice(candle);
-  const state = normalizePositionState(positionState);
-  const unrealizedPnl = state.side === "LONG" && state.entryPrice > 0 && price > 0
-    ? ((price - state.entryPrice) / state.entryPrice) * 100 * state.positionSize
-    : 0;
-  const equity = 100 + state.realizedPnl + unrealizedPnl;
-  const peakEquity = Math.max(state.peakEquity || 100, equity);
-  const maxDrawdown = Math.max(state.maxDrawdown || 0, peakEquity - equity);
-  return Object.assign({}, state, {
-    unrealizedPnl: roundMetric(unrealizedPnl),
-    equity: roundMetric(equity),
-    peakEquity: roundMetric(peakEquity),
-    maxDrawdown: roundMetric(maxDrawdown)
-  });
-}
-
-function executeSimulatedPosition(positionState = {}, decision = {}, candle = {}) {
-  const action = String(decision.action || "HOLD").toUpperCase();
-  const price = Number(decision.price || getRuntimePrice(candle));
-  const state = markPositionToMarket(positionState, candle);
-  if (!Number.isFinite(price) || price <= 0) return state;
-
-  if (action === "BUY" && state.side !== "LONG") {
-    return markPositionToMarket(Object.assign({}, state, {
-      side: "LONG",
-      entryPrice: price,
-      positionSize: 1,
-      unrealizedPnl: 0
-    }), candle);
-  }
-
-  if (action === "SELL" && state.side === "LONG" && state.entryPrice > 0) {
-    const realizedChange = ((price - state.entryPrice) / state.entryPrice) * 100 * state.positionSize;
-    return markPositionToMarket(Object.assign({}, state, {
-      side: "FLAT",
-      entryPrice: 0,
-      positionSize: 0,
-      realizedPnl: roundMetric(state.realizedPnl + realizedChange),
-      unrealizedPnl: 0
-    }), candle);
-  }
-
-  return state;
-}
-
-function buildSessionMetrics(positionState = {}, decisions = []) {
-  const state = normalizePositionState(positionState);
-  const tradeDecisions = Array.isArray(decisions)
-    ? decisions.filter((item) => item && item.action && item.action !== "HOLD")
-    : [];
-  return {
-    positionSide: state.side,
-    positionSize: state.positionSize,
-    realizedPnl: state.realizedPnl,
-    unrealizedPnl: state.unrealizedPnl,
-    totalPnl: roundMetric(state.realizedPnl + state.unrealizedPnl),
-    maxDrawdown: state.maxDrawdown,
-    tradeCount: tradeDecisions.length
-  };
-}
-
-function shouldRuntimeRequireDecision(currentIndex, decisionInterval) {
-  const index = Number(currentIndex || 0);
-  return index > 0 && index % normalizeDecisionInterval(decisionInterval) === 0;
-}
-
-function buildRuntimeState(baseRuntime = {}, patch = {}) {
-  const runtime = Object.assign({}, baseRuntime, patch);
-  const candles = Array.isArray(runtime.candles) ? runtime.candles : [];
-  const safeIndex = candles.length
-    ? Math.max(0, Math.min(candles.length - 1, Number(runtime.currentIndex || 0)))
-    : 0;
-  const zoomKey = runtime.chartZoomKey || "wide";
-  const viewport = buildRuntimeViewport(candles, safeIndex, zoomKey, runtime.chartPanOffset);
-  const visibleCandles = buildRuntimeVisibleCandles(candles, viewport);
-  const activeCandle = candles[safeIndex] ? Object.assign({}, candles[safeIndex], { runtimeIndex: safeIndex }) : (visibleCandles[visibleCandles.length - 1] || null);
-  const positionState = markPositionToMarket(runtime.positionState || {}, activeCandle || {});
-  const hasDecisionForCurrentIndex = Number(runtime.lastDecisionIndex) === safeIndex;
-  const mustDecide = !!runtime.lockedUntilDecision || (!hasDecisionForCurrentIndex && shouldRuntimeRequireDecision(safeIndex, runtime.decisionInterval));
-  return Object.assign({}, runtime, {
-    currentIndex: safeIndex,
-    visibleCandles,
-    activeCandle,
-    chartViewport: viewport,
-    chartPanOffset: viewport.panOffset,
-    chartBoardStyle: getChartBoardStyle(visibleCandles.length, zoomKey),
-    chartScrollLeft: 0,
-    indicatorOverlay: buildIndicatorOverlay(visibleCandles, zoomKey, runtime.mainIndicatorKey || "ma"),
-    indicatorPanel: buildIndicatorPanel(visibleCandles, runtime.indicatorPanelKey || "vol", zoomKey),
-    positionState,
-    sessionMetrics: buildSessionMetrics(positionState, runtime.decisionTimeline || []),
-    mustDecide,
-    lockedUntilDecision: mustDecide
-  });
-}
-
-function startKlineTrainingRuntime(session = {}, options = {}) {
-  const candles = Array.isArray(session.candles) ? session.candles : [];
-  const initialVisibleCount = normalizeInitialVisibleCount(options.initialVisibleCount, candles.length);
-  return buildRuntimeState({
-    trainingSessionId: cleanEventText(options.trainingSessionId || `kline-session-${Date.now()}`, 160),
-    simulationMode: "blind_step_replay",
-    sliceSeed: cleanEventText(options.sliceSeed || ((session.historySlice || {}).seed) || "", 120),
-    marketKey: ((session.market || {}).key) || "",
-    timeframeKey: session.timeframeKey || "",
-    chartZoomKey: session.chartZoomKey || "wide",
-    mainIndicatorKey: options.initialMainIndicatorKey || session.defaultMainIndicatorKey || "ma",
-    indicatorPanelKey: options.initialIndicatorKey || session.defaultIndicatorKey || "vol",
-    decisionInterval: normalizeDecisionInterval(options.decisionInterval),
-    currentIndex: Math.max(0, initialVisibleCount - 1),
-    totalCandles: candles.length,
-    candles,
-    chartPanOffset: 0,
-    chartViewport: null,
-    decisionTimeline: [],
-    emotionBadges: [],
-    riskHints: [],
-    coachHints: [],
-    positionState: normalizePositionState(),
-    sessionMetrics: buildSessionMetrics(),
-    lastDecisionIndex: -1,
-    lockedUntilDecision: false,
-    blockedReason: ""
-  });
-}
-
-function setKlineRuntimeIndicator(runtime = {}, indicatorKey = "vol") {
-  return buildRuntimeState(runtime, {
-    indicatorPanelKey: getIndicatorPanelMeta(indicatorKey).key
-  });
-}
-
-function setKlineRuntimeMainIndicator(runtime = {}, indicatorKey = "ma") {
-  return buildRuntimeState(runtime, {
-    mainIndicatorKey: getMainIndicatorMeta(indicatorKey).key
-  });
-}
-
-function setKlineRuntimeChartZoom(runtime = {}, chartZoomKey = "wide") {
-  return buildRuntimeState(runtime, {
-    chartZoomKey: getChartZoomMeta(chartZoomKey).key
-  });
-}
-
-function setKlineRuntimeViewportPan(runtime = {}, panOffset = 0) {
-  return buildRuntimeState(runtime, {
-    chartPanOffset: panOffset
-  });
-}
-
-function buildEmotionBadge(decision = {}) {
-  const text = `${decision.action || ""} ${decision.reactionDirection || ""} ${decision.firstReaction || ""} ${decision.boundaryChoice || ""}`;
-  if (/不甘|夺回|回本|扳回/.test(text)) return { type: "REVENGE", label: "不甘", text: "不顺后想立刻夺回节奏。" };
-  if (/追|错过|贪|急|证明/.test(text) || decision.reactionDirection === "act") {
-    return { type: "GREED", label: "追念", text: "想追上去时，先照见怕错过。" };
-  }
-  if (/怕|恐|割|退出|躲/.test(text) || decision.reactionDirection === "avoid") {
-    return { type: "FEAR", label: "惧念", text: "想退出时，先分清事实与不安。" };
-  }
-  if (/犹豫|不敢|等确认/.test(text)) return { type: "HESITATION", label: "犹疑", text: "知而未行时，先看见停滞处。" };
-  if (decision.action && decision.action !== "HOLD" && !decision.boundaryChoice) {
-    return { type: "IMPULSE", label: "冲动", text: "无边界动作容易变成临场反应。" };
-  }
-  return null;
-}
-
-function buildRiskHint(emotionBadge = null) {
-  const type = (emotionBadge || {}).type || "";
-  if (type === "GREED") return { level: "medium", text: "出现追念：先停十秒，再回到原边界。" };
-  if (type === "FEAR") return { level: "medium", text: "出现惧念：先看事实，再记录不安。" };
-  if (type === "REVENGE") return { level: "high", text: "出现不甘：本轮只记录，不加重动作。" };
-  if (type === "HESITATION") return { level: "low", text: "出现犹疑：写下知道却未行动的原因。" };
-  if (type === "IMPULSE") return { level: "medium", text: "出现无边界动作：先补边界，再继续训练。" };
-  return { level: "low", text: "继续只做训练记录，不作当下判断。" };
-}
-
-function buildCoachHint(decision = {}, emotionBadge = null) {
-  const action = String(decision.action || "HOLD").toUpperCase();
-  const label = (emotionBadge || {}).label || "观照";
-  return {
-    title: `${label}已记录`,
-    text: action === "HOLD"
-      ? "你先停下来观察，这一刻先守住了记录。"
-      : "动作已经写入记录，下一步先停十秒，再看是否仍合边界。"
-  };
-}
-
-function advanceKlineTrainingRuntime(runtime = {}) {
-  if (runtime.lockedUntilDecision || runtime.mustDecide) {
-    return Object.assign({}, runtime, {
-      blockedReason: "decision_required",
-      mustDecide: true,
-      lockedUntilDecision: true
-    });
-  }
-  const total = Number(runtime.totalCandles || (runtime.candles || []).length || 0);
-  const nextIndex = Math.min(Math.max(0, total - 1), Number(runtime.currentIndex || 0) + 1);
-  return buildRuntimeState(runtime, {
-    currentIndex: nextIndex,
-    chartPanOffset: 0,
-    blockedReason: ""
-  });
-}
-
-function recordKlineTrainingDecision(runtime = {}, decision = {}) {
-  const activeCandle = runtime.activeCandle || (runtime.candles || [])[runtime.currentIndex] || {};
-  const safeDecision = {
-    id: `decision-${runtime.trainingSessionId || "local"}-${runtime.currentIndex}-${(runtime.decisionTimeline || []).length + 1}`,
-    sessionId: runtime.trainingSessionId || "",
-    index: Number(runtime.currentIndex || 0),
-    action: String(decision.action || "HOLD").toUpperCase(),
-    price: Number(activeCandle.close || 0),
-    selectedCandleKey: cleanEventText(decision.selectedCandleKey || activeCandle.key || "", 80),
-    reactionDirection: cleanEventText(decision.reactionDirection, 40),
-    firstReaction: cleanEventText(decision.firstReaction, 160),
-    boundaryChoice: cleanEventText(decision.boundaryChoice, 120),
-    createdAt: decision.createdAt || Date.now()
-  };
-  const emotionBadge = buildEmotionBadge(safeDecision);
-  const riskHint = buildRiskHint(emotionBadge);
-  const coachHint = buildCoachHint(safeDecision, emotionBadge);
-  const nextPositionState = executeSimulatedPosition(runtime.positionState || {}, safeDecision, activeCandle);
-  const decisionWithPosition = Object.assign({}, safeDecision, {
-    positionSize: nextPositionState.positionSize,
-    pnl: roundMetric(nextPositionState.realizedPnl + nextPositionState.unrealizedPnl),
-    drawdown: nextPositionState.maxDrawdown
-  });
-  return buildRuntimeState(runtime, {
-    decisionTimeline: (runtime.decisionTimeline || []).concat([decisionWithPosition]),
-    emotionBadges: emotionBadge ? (runtime.emotionBadges || []).concat([emotionBadge]) : (runtime.emotionBadges || []),
-    riskHints: (runtime.riskHints || []).concat([riskHint]),
-    coachHints: (runtime.coachHints || []).concat([coachHint]),
-    positionState: nextPositionState,
-    lastDecisionIndex: Number(runtime.currentIndex || 0),
-    mustDecide: false,
-    lockedUntilDecision: false,
-    blockedReason: ""
-  });
-}
-
-function buildKlineTrainingRecordPatch(runtime = {}) {
-  const decisions = Array.isArray(runtime.decisionTimeline) ? runtime.decisionTimeline : [];
-  const lastDecision = decisions[decisions.length - 1] || {};
-  const activeCandle = runtime.activeCandle || (runtime.candles || [])[runtime.currentIndex] || {};
-  return {
-    trainingSessionId: cleanEventText(runtime.trainingSessionId, 160),
-    simulationMode: cleanEventText(runtime.simulationMode || "blind_step_replay", 80),
-    sliceSeed: cleanEventText(runtime.sliceSeed, 120),
-    selectedCandleKey: cleanEventText(lastDecision.selectedCandleKey || activeCandle.key || "", 80),
-    reactionDirection: cleanEventText(lastDecision.reactionDirection, 40),
-    firstReaction: cleanEventText(lastDecision.firstReaction, 160),
-    boundaryChoice: cleanEventText(lastDecision.boundaryChoice, 120),
-    decisionTimeline: decisions,
-    emotionBadges: Array.isArray(runtime.emotionBadges) ? runtime.emotionBadges : [],
-    riskHints: Array.isArray(runtime.riskHints) ? runtime.riskHints : [],
-    coachHints: Array.isArray(runtime.coachHints) ? runtime.coachHints : [],
-    positionState: normalizePositionState(runtime.positionState || {}),
-    sessionMetrics: buildSessionMetrics(runtime.positionState || {}, decisions)
-  };
-}
-
-function buildKlineMindSession({
-  assessment = null,
-  trainingDay = null,
-  record = null,
-  historyCache = {}
-} = {}) {
-  const day = clampDay((trainingDay || {}).day || (record || {}).day || 1);
-  const personalityType = (assessment || {}).primary || "平衡型";
-  const stagePlan = getPersonalityStagePlan(personalityType);
-  const scenario = DAY_SCENARIOS[day] || DAY_SCENARIOS[1];
-  const marketKey = (record || {}).marketKey || "cn_equity";
-  const timeframeKey = (record || {}).timeframeKey || "1d";
-  const timeframeMeta = TIMEFRAME_CATALOG.find((item) => item.key === timeframeKey) || TIMEFRAME_CATALOG[0];
-  const chartZoomKey = (record || {}).chartZoomKey || "wide";
-  const chartZoomMeta = getChartZoomMeta(chartZoomKey);
-  const market = getMarketConfig(marketKey);
-  const historySlice = (record || {}).historySlice || getHistorySlice(historyCache, market.key, timeframeKey);
-  const rawCandles = normalizeHistoryCandles(historySlice || {}, { windowSize: chartZoomMeta.windowSize });
-  const selectedKey = (record || {}).selectedCandleKey || "";
-  const prescription = getKlinePrescription(personalityType);
-  const stageGate = getSixGate(stagePlan.stageKey);
-  const candles = markSelectedCandles(rawCandles, selectedKey, scenario.focusIndex);
-  const chartBoardStyle = getChartBoardStyle(candles.length, chartZoomMeta.key);
-  const mainIndicatorKey = (record || {}).mainIndicatorKey || "ma";
-  const indicatorOverlay = buildIndicatorOverlay(candles, chartZoomMeta.key, mainIndicatorKey);
-  const selectedCandleKey = selectedKey || ((candles.find((item) => item.selected) || {}).key) || "";
-
-  return {
-    day,
-    personalityType,
-    secondaryType: (assessment || {}).secondary || "",
-    title: scenario.title,
-    subtitle: scenario.subtitle,
-    prompt: scenario.prompt,
-    scenarioId: scenario.id,
-    market,
-    marketOptions: buildMarketOptions(market.key),
-    timeframeKey,
-    timeframeLabel: timeframeMeta.label,
-    timeframeOptions: buildTimeframeOptions(timeframeKey),
-    chartZoomKey: chartZoomMeta.key,
-    chartWindowSize: chartZoomMeta.windowSize,
-    chartZoomOptions: buildChartZoomOptions(chartZoomMeta.key),
-    chartBoardStyle,
-    indicatorOverlay,
-    defaultMainIndicatorKey: "ma",
-    mainIndicatorOptions: MAIN_INDICATOR_OPTIONS,
-    defaultIndicatorKey: "vol",
-    indicatorPanelOptions: INDICATOR_PANEL_OPTIONS,
-    chartOrientationHint: "横屏训练更稳，适合看更多 K 线；竖屏可放大少量细看。",
-    indicatorCatalog: INDICATOR_CATALOG,
-    historySlice: historySlice || null,
-    hasHistoricalData: candles.length > 0,
-    dataStatusText: candles.length
-      ? ((historySlice || {}).source === "local_demo" ? "离线练习模式" : "历史练习数据已载入")
-      : "等待历史练习数据",
-    marketQuestion: market.mindQuestion,
-    marketGuardrail: market.guardrail,
-    trainingMethods: KLINE_TRAINING_METHODS,
-    personalityDrill: getPersonalityKlineDrill(personalityType),
-    prescription,
-    stagePlan,
-    stageGate,
-    gates: SIX_GATE_MAP.map((gate) => Object.assign({}, gate, GATE_TRAINING_ACTIONS[gate.key] || {}, {
-      active: gate.key === stageGate.key
-    })),
-    candles,
-    selectedCandleKey,
-    reactionOptions: REACTION_OPTIONS,
-    bodyOptions: BODY_OPTIONS,
-    boundaryOptions: BOUNDARY_OPTIONS,
-    completed: !!((record || {}).completed),
-    score: calculateKlineMindScore(record || {})
-  };
-}
-
-function calculateKlineMindScore(record = {}) {
-  const fields = [
-    record.selectedCandleKey,
-    record.firstReaction,
-    record.bodySignal,
-    record.boundaryChoice,
-    record.insightLine
-  ];
-  const filledCount = fields.filter((item) => String(item || "").trim()).length;
-  const boundaryBonus = record.boundaryChoice ? 12 : 0;
-  const insightBonus = String(record.insightLine || "").trim().length >= 8 ? 12 : 0;
-  return Math.max(0, Math.min(100, 28 + filledCount * 10 + boundaryBonus + insightBonus));
-}
-
-function cleanEventText(value, limit = 280) {
-  const text = String(value || "").trim().slice(0, limit);
-  if (!text) return "";
-  return text
-    .replace(/(^|[^\d])1[3-9]\d{9}(?=\D|$)/g, "$1[redacted_phone]")
-    .replace(/(token|access_token|authorization|验证码|code)[=:：]\s*[\w.-]+/gi, "$1=[redacted]");
-}
-
-function normalizeEventIdPart(value) {
-  return cleanEventText(value, 120)
-    .replace(/[^a-zA-Z0-9_-]+/g, "-")
-    .replace(/^-+|-+$/g, "") || "local";
-}
-
-function getKlineLocalRecordId(record = {}) {
-  const explicitId = record.localRecordId || record.id || record.recordId || record.reviewId;
-  if (explicitId) return String(explicitId);
-  return [
-    record.day || "day",
-    record.marketKey || record.market || "market",
-    record.timeframeKey || record.timeframe || "timeframe",
-    record.selectedCandleKey || "candle",
-    record.updatedAt || record.completedAt || record.createdAt || "local"
-  ].map(normalizeEventIdPart).join("-");
-}
-
-function buildOneThoughtEvent(record = {}, options = {}) {
-  const identity = options.identity || {};
-  const existingEvent = record.oneThoughtEvent || options.existingEvent || {};
-  const localRecordId = String(options.localRecordId || record.localRecordId || existingEvent.localRecordId || getKlineLocalRecordId(record));
-  const userId = cleanEventText(identity.userId || record.userId || existingEvent.userId, 96);
-  const anonymousId = cleanEventText(
-    identity.anonymousId || record.anonymousId || existingEvent.anonymousId || (!userId ? `anon_${normalizeEventIdPart(localRecordId)}` : ""),
-    96
-  );
-  const updatedAt = options.updatedAt || record.updatedAt || existingEvent.updatedAt || Date.now();
-  const completedAt = options.completedAt || record.completedAt || existingEvent.completedAt || updatedAt;
-
-  return {
-    eventId: cleanEventText(
-      options.eventId || record.eventId || existingEvent.eventId || `one-thought-kline-${normalizeEventIdPart(localRecordId)}`,
-      160
-    ),
-    localRecordId,
-    eventType: "kline_training",
-    userId,
-    anonymousId,
-    openid: cleanEventText(identity.openid || record.openid || existingEvent.openid, 96),
-    unionid: cleanEventText(identity.unionid || record.unionid || existingEvent.unionid, 96),
-    market: cleanEventText(record.marketKey || record.market || existingEvent.market, 48),
-    symbol: cleanEventText(record.symbol || existingEvent.symbol, 48),
-    timeframe: cleanEventText(record.timeframeKey || record.timeframe || existingEvent.timeframe, 24),
-    mode: cleanEventText(options.mode || record.mode || existingEvent.mode || "kline_mind", 48),
-    klineSource: cleanEventText(record.klineSource || record.sliceSource || record.dataSource || existingEvent.klineSource, 80),
-    serverSliceStatus: cleanEventText(record.serverSliceStatus || existingEvent.serverSliceStatus, 80),
-    serverSliceError: cleanEventText(record.serverSliceError || existingEvent.serverSliceError, 280),
-    firstThought: cleanEventText(record.firstThought || record.insightLine || existingEvent.firstThought, 280),
-    reactionChoice: cleanEventText(record.reactionChoice || record.firstReaction || existingEvent.reactionChoice, 80),
-    boundaryState: cleanEventText(record.boundaryState || record.boundaryChoice || existingEvent.boundaryState, 80),
-    mirrorType: cleanEventText(record.mirrorType || record.personalityType || existingEvent.mirrorType, 80),
-    relatedMirror: cleanEventText(
-      record.relatedMirror || record.relatedHeartMirror || record.primaryMirror || record.personalityType || existingEvent.relatedMirror,
-      80
-    ),
-    clientSyncStatus: cleanEventText(options.clientSyncStatus || record.clientSyncStatus || existingEvent.clientSyncStatus || "local_saved", 32),
-    createdAt: options.createdAt || record.createdAt || existingEvent.createdAt || completedAt,
-    completedAt,
-    updatedAt
-  };
-}
-
-function buildKlineMindRecord(input = {}, session = {}) {
-  const selectedCandleKey = input.selectedCandleKey || session.selectedCandleKey || "";
-  const selectedCandle = (session.candles || []).find((item) => item.key === selectedCandleKey) || {};
-  const reactionDirection = String(input.reactionDirection || "").trim();
-  const firstReaction = String(input.firstReaction || "").trim();
-  const bodySignal = String(input.bodySignal || "").trim();
-  const boundaryChoice = String(input.boundaryChoice || "").trim();
-  const insightLine = String(input.insightLine || "").trim();
-  const record = {
-    day: clampDay(input.day || session.day || 1),
-    scenarioId: session.scenarioId || input.scenarioId || "",
-    scenarioTitle: session.title || input.scenarioTitle || "",
-    marketKey: ((session.market || {}).key) || input.marketKey || "cn_equity",
-    marketName: ((session.market || {}).name) || input.marketName || "A股",
-    timeframeKey: session.timeframeKey || input.timeframeKey || "1d",
-    chartZoomKey: session.chartZoomKey || input.chartZoomKey || "wide",
-    mode: ((session.historySlice || {}).mode) || input.mode || "step_replay",
-    dataSource: ((session.historySlice || {}).source) || input.dataSource || "",
-    klineSource: ((session.historySlice || {}).klineSource) || ((session.historySlice || {}).source) || input.klineSource || "",
-    source: "miniprogram",
-    sliceSource: ((session.historySlice || {}).sliceSource) || ((session.historySlice || {}).source) || input.sliceSource || "",
-    serverSliceStatus: ((session.historySlice || {}).serverSliceStatus) || input.serverSliceStatus || "",
-    serverSliceError: ((session.historySlice || {}).serverSliceError) || input.serverSliceError || "",
-    symbol: ((session.historySlice || {}).symbol) || input.symbol || ((session.market || {}).defaultSymbol) || "",
-    dataStart: ((session.historySlice || {}).start) || input.dataStart || "",
-    dataEnd: ((session.historySlice || {}).end) || input.dataEnd || "",
-    personalityType: session.personalityType || input.personalityType || "平衡型",
-    secondaryType: session.secondaryType || input.secondaryType || "",
-    stageKey: (session.stageGate || {}).key || input.stageKey || "",
-    stageName: (session.stageGate || {}).name || input.stageName || "",
-    selectedCandleKey,
-    selectedCandleLabel: selectedCandle.label || selectedCandle.indexLabel || input.selectedCandleLabel || "",
-    reactionDirection,
-    firstReaction,
-    bodySignal,
-    boundaryChoice,
-    insightLine,
-    prescriptionTitle: ((session.prescription || {}).title) || input.prescriptionTitle || "",
-    completed: !!(firstReaction && boundaryChoice && insightLine),
-    updatedAt: Date.now()
-  };
-  const extension = {};
-  [
-    "trainingSessionId",
-    "simulationMode",
-    "sliceSeed",
-    "decisionTimeline",
-    "emotionBadges",
-    "riskHints",
-    "coachHints",
-    "positionState",
-    "sessionMetrics"
-  ].forEach((key) => {
-    if (input[key] !== undefined) extension[key] = input[key];
-  });
-  return Object.assign({}, record, extension, {
-    score: calculateKlineMindScore(record)
-  });
-}
-
 module.exports = {
   SIX_GATE_MAP,
   PERSONALITY_KLINE_PRESCRIPTIONS,
   PERSONALITY_KLINE_DRILLS,
   MARKET_CATALOG,
   TIMEFRAME_CATALOG,
+  CHART_ZOOM_OPTIONS,
+  INDICATOR_CATALOG,
+  MAIN_INDICATOR_OPTIONS,
+  INDICATOR_PANEL_OPTIONS,
   KLINE_TRAINING_METHODS,
   GATE_TRAINING_ACTIONS,
   DAY_SCENARIOS,
@@ -1974,10 +2184,10 @@ module.exports = {
   buildTrainingBookmark,
   normalizeTrainingBookmark,
   buildBookmarkReplaySliceRequest,
-  getNextKlineMindSliceSeed,
   getMarketConfig,
-  normalizeHistoryCandles,
+  getNextKlineMindSliceSeed,
   getInitialKlineVisibleCount,
+  normalizeHistoryCandles,
   startKlineTrainingRuntime,
   advanceKlineTrainingRuntime,
   recordKlineTrainingDecision,
@@ -1988,6 +2198,5 @@ module.exports = {
   buildKlineTrainingRecordPatch,
   buildKlineMindSession,
   buildKlineMindRecord,
-  buildOneThoughtEvent,
   calculateKlineMindScore
 };

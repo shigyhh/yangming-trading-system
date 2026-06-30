@@ -19,7 +19,7 @@ const TRAINING_7_DAYS = [
   },
   {
     day: 2,
-    title: "观边界抗拒",
+    title: "观风险处理抗拒",
     stage: "第二关 · 守界",
     mantra: "边界到了，正是知行合一处。",
     reflectionQuestion: "当预设边界被触碰时，你第一反应是遵守计划，还是想重新解释？",

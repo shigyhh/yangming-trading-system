@@ -1,0 +1,111 @@
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import test from "node:test";
+
+const dataBindingSource = fs.readFileSync(new URL("./data-binding.d.ts", import.meta.url), "utf8");
+
+test("data-binding contract declares dashboard summary metrics and aliases", () => {
+  [
+    "DashboardSummary",
+    "dashboard_summary",
+    "DashboardSummaryResponse",
+    "overview",
+    "execution",
+    "mistakes",
+    "firstThoughts",
+    "first_thoughts",
+    "triggerScenes",
+    "trigger_scenes",
+    "training",
+    "bookmarks",
+    "interventions",
+    "byErrorType",
+    "by_error_type",
+    "bySourceType",
+    "by_source_type",
+    "responseSummary",
+    "response_summary",
+    "continuedCount",
+    "continued_count",
+    "changeToHoldCount",
+    "change_to_hold_count",
+    "laterCount",
+    "later_count",
+    "mutedCount",
+    "muted_count",
+    "followedPlanCount",
+    "followed_plan_count",
+    "deviatedAgainCount",
+    "deviated_again_count",
+    "unclearCount",
+    "unclear_count",
+    "outcome",
+    "sampleCount",
+    "sample_count",
+    "followedPlanRate",
+    "followed_plan_rate",
+    "deviatedAgainRate",
+    "deviated_again_rate",
+    "latestItems",
+    "latest_items",
+    "executionPlans",
+    "execution_plans",
+    "disabledCount",
+    "disabled_count",
+    "coverage",
+    "errorTypesWithPlan",
+    "error_types_with_plan",
+    "topMissingErrorTypes",
+    "top_missing_error_types",
+    "archive",
+    "trends",
+    "dataGaps",
+    "data_gaps",
+    "consistencyRate",
+    "consistency_rate",
+    "trainingPackId",
+    "training_pack_id",
+    "segmentId",
+    "segment_id"
+  ].forEach((token) => {
+    assert.ok(dataBindingSource.includes(token), `missing ${token}`);
+  });
+});
+
+test("data-binding contract declares weekly mirror summary", () => {
+  [
+    "WeeklyMirrorSummary",
+    "weekly_mirror_summary",
+    "WeeklyMirrorSummaryResponse",
+    "weekStart",
+    "week_start",
+    "weekEnd",
+    "week_end",
+    "topErrorTypes",
+    "top_error_types",
+    "topFirstThoughts",
+    "top_first_thoughts",
+    "topTriggerScenes",
+    "top_trigger_scenes",
+    "executionConsistency",
+    "execution_consistency",
+    "repeatCount",
+    "repeat_count",
+    "interventionCount",
+    "intervention_count",
+    "topInterventionTriggers",
+    "top_intervention_triggers",
+    "topUserResponses",
+    "top_user_responses",
+    "followedPlanCount",
+    "followed_plan_count",
+    "deviatedAgainCount",
+    "deviated_again_count",
+    "interventionDataGaps",
+    "intervention_data_gaps",
+    "nextWeekTrainingPlan",
+    "next_week_training_plan"
+  ].forEach((token) => {
+    assert.ok(dataBindingSource.includes(token), `missing ${token}`);
+  });
+});

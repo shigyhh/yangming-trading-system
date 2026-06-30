@@ -9,7 +9,7 @@ assert.deepStrictEqual(
   TRAINING_7_DAYS.map((item) => item.title),
   [
     "观入场冲动",
-    "观边界抗拒",
+    "观风险处理抗拒",
     "观亏损后的证明欲",
     "观盈利后的失控",
     "观加仓与扛单",

@@ -774,6 +774,7 @@ function getKlineMindRecords() {
 function getKlineHistoryCache() {
   return read(YM_KLINE_HISTORY_CACHE, {
     cn_equity: {},
+    hk_equity: {},
     us_equity: {},
     futures: {},
     crypto: {},
@@ -951,69 +952,6 @@ function saveKlineReviewReport(report) {
     latest: record,
     records
   });
-}
-
-function saveKlineReviewSyncStatus(reviewId, syncState = {}) {
-  const state = getKlineReviewReports();
-  const targetId = String(reviewId || (state.latest || {}).id || "");
-  if (!targetId) return state;
-  const nextFields = {
-    klineTrainingSyncStatus: syncState.klineTrainingSyncStatus || syncState.status || "pending",
-    klineTrainingLastSyncedAt: syncState.klineTrainingLastSyncedAt || syncState.lastSyncedAt || "",
-    klineTrainingSyncStartedAt: syncState.klineTrainingSyncStartedAt || syncState.startedAt || "",
-    klineTrainingSyncError: syncState.klineTrainingSyncError || syncState.error || ""
-  };
-  const updateRecord = (record) => {
-    if (!record || String(record.id || "") !== targetId) return record;
-    return Object.assign({}, record, nextFields, { updatedAt: Date.now() });
-  };
-  const records = (state.records || []).map(updateRecord);
-  const latest = updateRecord(state.latest || records[records.length - 1] || null);
-  return write(YM_KLINE_REVIEW_REPORTS, { latest, records });
-}
-
-function saveKlineMindOneThoughtEventSyncStatus(eventId, syncState = {}) {
-  const targetEventId = String(eventId || "");
-  if (!targetEventId) return getKlineMindRecords();
-  const records = getKlineMindRecords();
-  const now = Date.now();
-  let changed = false;
-  const nextRecords = Object.keys(records).reduce((next, key) => {
-    const record = records[key] || {};
-    const event = record.oneThoughtEvent || {};
-    const currentEventId = String(event.eventId || record.linkedOneThoughtEventId || "");
-    if (currentEventId !== targetEventId) {
-      next[key] = record;
-      return next;
-    }
-    const nextEvent = Object.assign({}, event, {
-      clientSyncStatus: syncState.clientSyncStatus || syncState.status || event.clientSyncStatus || "local_saved",
-      clientSyncStartedAt: syncState.clientSyncStartedAt || syncState.startedAt || event.clientSyncStartedAt || "",
-      clientSyncLastSyncedAt: syncState.clientSyncLastSyncedAt || syncState.lastSyncedAt || event.clientSyncLastSyncedAt || "",
-      clientSyncError: syncState.clientSyncError || syncState.error || "",
-      updatedAt: syncState.updatedAt || now
-    });
-    next[key] = Object.assign({}, record, {
-      clientSyncStatus: nextEvent.clientSyncStatus,
-      oneThoughtEvent: nextEvent,
-      updatedAt: now
-    });
-    changed = true;
-    return next;
-  }, {});
-  if (!changed) return records;
-  return write(YM_KLINE_MIND_RECORDS, nextRecords);
-}
-
-function getPendingKlineMindOneThoughtRecords() {
-  const records = getKlineMindRecords();
-  return Object.keys(records)
-    .map((key) => records[key])
-    .filter((record) => {
-      const event = (record || {}).oneThoughtEvent || {};
-      const status = event.clientSyncStatus || (record || {}).clientSyncStatus || "";
-      return status === "pending_retry" || status === "sync_failed";
-    });
 }
 
 function getKlineMirrorChallenges() {
@@ -2457,9 +2395,6 @@ module.exports = {
   deleteExecutionPlanRecord,
   getKlineReviewReports,
   saveKlineReviewReport,
-  saveKlineReviewSyncStatus,
-  saveKlineMindOneThoughtEventSyncStatus,
-  getPendingKlineMindOneThoughtRecords,
   getKlineMirrorChallenges,
   saveKlineMirrorChallenge,
   getAnonymousReactionStats,

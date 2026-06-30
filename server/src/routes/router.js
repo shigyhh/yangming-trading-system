@@ -1,5 +1,5 @@
 import { config } from "../config.js";
-import { readJson, sendJson, notFound, serveStatic } from "../lib/http.js";
+import { readJson, readRawBody, sendJson, notFound, serveStatic } from "../lib/http.js";
 import { startAssessment, submitAssessment, getAssessment, getUserAssessmentHistory } from "../services/assessments.js";
 import { getNextAssistantQr } from "../services/assistantQr.js";
 import { assertUserAccess, authenticateRequest, getUser, loginOrRegisterUser } from "../services/auth.js";
@@ -16,13 +16,23 @@ import { getI18nBundle, listSupportedLocales } from "../services/i18n.js";
 import { getQuestionBankStats } from "../services/questionBank.js";
 import { consumeWechatAuthCode, createWechatAuthUrl } from "../services/wechatAuth.js";
 import { advanceZhixingReplaySession, finishZhixingReplaySession, getZhixingReplaySession, listZhixingReplayResults, startZhixingReplaySession, submitZhixingReplayDecision } from "../services/zhixingReplay.js";
-import { createInterventionEventBinding, createTradeReviewOcrDraftBinding, createTrainingBookmarkBinding, deleteTrainingBookmarkBinding, generateShareCardBinding, getAdminUserFromBindings, getDashboardSummaryBinding, getDashboardWeeklySummaryBinding, getDataBindingUserSummary, getInviteSourceStatsBinding, getRetestComparisonBinding, getShareCardBinding, getTrainingPrescriptionBinding, getUserReportBinding, listAdminUsersFromBindings, listExecutionPlansBinding, listInterventionRulesBinding, listTrainingBookmarksBinding, saveAssessmentReportBinding, saveKLineRecordBinding, saveRetestResultBinding, saveTradeReviewBinding, saveTrainingRecordBinding, syncAssistantSummaryToFeishuBinding, updateAssistantHandoffBinding } from "../services/dataBinding.js";
+import { dispatchTrainingPrescriptionBinding, generateShareCardBinding, getAdminUserFromBindings, getDataBindingUserSummary, getInviteSourceStatsBinding, getRetestComparisonBinding, getShareCardBinding, getTrainingPrescriptionBinding, getUserReportBinding, listAdminUsersFromBindings, listTradeReviewBindings, saveAssessmentReportBinding, saveKLineRecordBinding, saveRetestResultBinding, saveTradeReviewBinding, saveTrainingRecordBinding, syncAssistantSummaryToFeishuBinding, updateAssistantHandoffBinding } from "../services/dataBinding.js";
 import { getGlobalReflectionToday, listGlobalReflectionChoices, submitGlobalReflectionVote } from "../services/globalReflection.js";
-import { buildHistoricalKlineHotSlice, buildHistoricalKlineSlice, downloadHistoricalKline, getHistoricalKlineRules, listHistoricalKlineCatalog, listHistoricalKlineInstruments, revealHistoricalKlineSlice, warmHistoricalKlineHotPool } from "../services/historicalKline.js";
-
-export function getKlineWindowSizeParam(url) {
-  return url.searchParams.get("window") || url.searchParams.get("window_size") || url.searchParams.get("count") || "";
-}
+import { buildHistoricalKlineSlice, downloadHistoricalKline, getHistoricalKlineRules, listHistoricalKlineCatalog, listHistoricalKlineInstruments, revealHistoricalKlineSlice } from "../services/historicalKline.js";
+import { buildTradeReviewOcrDraft } from "../services/tradeReviewOcr.js";
+import { createYmtyLivecode, createYmtyOrder, getYmtyAdminCampaign, getYmtyAfterpayEntrance, getYmtyAuditLogs, getYmtyOrderForPayment, getYmtyOrderStatus, getYmtyPublicCampaign, isYmtyMockPaymentAllowed, listYmtyCourseUsers, listYmtyLivecodeAssignments, listYmtyLivecodes, listYmtyOrders, markYmtyMockPaySuccess, markYmtyOrderPaid, switchYmtyAfterpayLivecode, toggleYmtyLivecodeFull, toggleYmtyLivecodeStatus, updateYmtyCampaign, updateYmtyLivecode, updateYmtyLivecodeByKey } from "../services/ymtyCampaign.js";
+import { getYmtyAnalyticsSummary, recordYmtyFrontendEvent } from "../services/ymtyAnalytics.js";
+import { addYmtyCrmNote, exportYmtyCrmCsv, getYmtyCrmLead, listYmtyCrmLeads, publicYmtyCrmLead, publicYmtyCrmLeadDetail, updateYmtyCrmLead, updateYmtyCrmLeadStage } from "../services/ymtyCrm.js";
+import { getYmtyWecomSummary, linkYmtyWecomEventToLead, listYmtyWecomEvents, listYmtyWecomSyncJobs, publicYmtyWecomEvent, publicYmtyWecomSyncJob, receiveYmtyWecomCallback, retryYmtyWecomSyncJob, verifyYmtyWecomCallbackUrl } from "../services/wecomCustomer.js";
+import { getYmtyRefundConfigStatus, getYmtyRefundPolicy, previewYmtyRefund, updateYmtyRefundPolicy } from "../services/ymtyRefundPolicy.js";
+import { approveYmtyRefund, createYmtyRefund, executeYmtyRefund, getYmtyRefund, handleWechatRefundNotify, listYmtyRefunds, queryYmtyRefundProvider, rejectYmtyRefund } from "../services/ymtyRefunds.js";
+import { authenticateYmtyAdmin, changeYmtyAdminPassword, getYmtyAdminMe, loginYmtyAdmin, logoutYmtyAdmin } from "../services/adminAuth.js";
+import { saveYmtyLivecodeUpload } from "../services/ymtyUpload.js";
+import { assertRealPayConfigReady, createH5Order, createJsapiOrder, createWapOrder, isPaymentConfigError, normalizePayChannel, parseAlipayNotify, parseWechatNotify, validateAlipayPayment, validateWechatPayment, verifyAlipayNotify, verifyWechatNotify } from "../services/payments/index.js";
+import { handleKlineSegmentRoute } from "./klineSegments.js";
+import { handleKlineSamplingRoute } from "./klineSampling.js";
+import { handleTrainingPackRoute } from "./trainingPacks.js";
+import { handleDataBindingRoute } from "./dataBinding.js";
 
 export async function route(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
@@ -69,16 +79,21 @@ export async function route(req, res) {
         kline_history_instruments: "GET /api/v1/kline-history/instruments?market=cn_equity&timeframe=1d",
         kline_history_rules: "GET /api/v1/kline-history/rules?market=cn_equity",
         kline_history_slice: "GET /api/v1/kline-history/slice?market=cn_equity&symbol=600519&timeframe=1d&blind=1",
-        kline_history_hot_slice: "GET /api/v1/kline-history/hot-slice?market=cn_equity&timeframe=1d&window=150&blind=1",
-        kline_history_hot_pool: "GET /api/v1/kline-history/hot-pool?market=cn_equity&timeframe=1d&window=150&pool_size=12",
         kline_history_reveal: "GET /api/v1/kline-history/reveal?token=xxx",
         kline_history_download: "POST /api/v1/kline-history/download",
+        kline_segments: "GET|POST /api/v1/kline-segments",
+        kline_segment: "GET|PATCH /api/v1/kline-segments/:id",
+        kline_segment_enabled: "PATCH /api/v1/kline-segments/:id/enabled",
+        kline_training_sample: "POST /api/v1/kline-training/sample",
         zhixing_replay_start: "POST /api/v1/zhixing-replay/start",
         zhixing_replay_session: "GET /api/v1/zhixing-replay/:session_id",
         zhixing_replay_decision: "POST /api/v1/zhixing-replay/:session_id/decision",
         zhixing_replay_next: "POST /api/v1/zhixing-replay/:session_id/next",
         zhixing_replay_finish: "POST /api/v1/zhixing-replay/:session_id/finish",
         zhixing_replay_results: "GET /api/v1/users/:user_id/zhixing-replay/results",
+        training_packs: "GET|POST /api/v1/training-packs",
+        training_pack: "PATCH /api/v1/training-packs/:id",
+        training_pack_enabled: "PATCH /api/v1/training-packs/:id/enabled",
         forum_posts: "GET /api/v1/forum/posts?category=&q=",
         forum_create_post: "POST /api/v1/forum/posts",
         forum_post: "GET /api/v1/forum/posts/:post_id",
@@ -88,19 +103,16 @@ export async function route(req, res) {
         data_binding_user_report: "GET /api/v1/data-binding/users/:user_id/report",
         data_binding_training_record: "POST /api/v1/data-binding/users/:user_id/training-records",
         data_binding_kline_record: "POST /api/v1/data-binding/users/:user_id/kline-records",
-        data_binding_trade_review: "POST /api/v1/data-binding/users/:user_id/trade-reviews",
-        data_binding_trade_review_ocr: "POST /api/v1/data-binding/users/:user_id/trade-review-ocr",
+        data_binding_mirror_archive: "GET /api/v1/data-binding/users/:user_id/mirror-archive",
+        data_binding_mirror_archive_item: "GET /api/v1/data-binding/users/:user_id/mirror-archive/:item_id",
         data_binding_training_bookmarks: "GET|POST /api/v1/data-binding/users/:user_id/training-bookmarks",
-        data_binding_training_bookmark: "DELETE /api/v1/data-binding/users/:user_id/training-bookmarks/:bookmark_id",
-        data_binding_intervention_rules: "GET /api/v1/data-binding/users/:user_id/intervention-rules",
-        data_binding_intervention_events: "POST /api/v1/data-binding/users/:user_id/intervention-events",
-        data_binding_execution_plans: "GET /api/v1/data-binding/users/:user_id/execution-plans",
-        data_binding_dashboard_summary: "GET /api/v1/data-binding/users/:user_id/dashboard-summary",
-        data_binding_dashboard_weekly: "GET /api/v1/data-binding/users/:user_id/dashboard-weekly",
-        data_binding_training_prescription: "GET /api/v1/data-binding/users/:user_id/training-prescription",
+        data_binding_training_bookmark: "PATCH|DELETE /api/v1/data-binding/users/:user_id/training-bookmarks/:id",
+        data_binding_trade_review: "GET|POST /api/v1/data-binding/users/:user_id/trade-reviews",
+        data_binding_trade_review_ocr: "POST /api/v1/data-binding/users/:user_id/trade-review-ocr",
         data_binding_retest: "POST /api/v1/data-binding/users/:user_id/retests",
         data_binding_retest_comparison: "GET /api/v1/data-binding/users/:user_id/retest-comparison",
         data_binding_user_summary: "GET /api/v1/data-binding/users/:user_id/summary",
+        data_binding_training_prescription: "GET|POST /api/v1/data-binding/users/:user_id/training-prescription",
         admin_users: "GET /api/v1/admin/users",
         admin_user_detail: "GET /api/v1/admin/users/:user_id",
         admin_assistant_handoff: "POST /api/v1/admin/users/:user_id/assistant-handoff",
@@ -111,7 +123,14 @@ export async function route(req, res) {
         i18n_bundle: "GET /api/v1/i18n/bundle?locale=zh-CN",
         global_reflection_options: "GET /api/v1/global-reflection/options",
         global_reflection_today: "GET /api/v1/global-reflection/today",
-        global_reflection_vote: "POST /api/v1/global-reflection/vote"
+        global_reflection_vote: "POST /api/v1/global-reflection/vote",
+        ymty_pay_create: "POST /api/pay/create",
+        ymty_track: "POST /api/track/ymty",
+        ymty_wechat_notify: "POST /api/pay/wechat/notify",
+        ymty_alipay_notify: "POST /api/pay/alipay/notify",
+        ymty_order_status: "GET /api/order/status?order_id=ymty_xxx",
+        ymty_afterpay_entrance: "GET /api/afterpay/entrance?order_id=ymty_xxx",
+        ymty_course_my: "GET /api/course/my?user_id=xxx"
       }
     });
   }
@@ -124,9 +143,690 @@ export async function route(req, res) {
     });
   }
 
+  if (await handleTrainingPackRoute(req, res, { url, pathname })) return;
+  if (await handleKlineSegmentRoute(req, res, { url, pathname })) return;
+  if (await handleKlineSamplingRoute(req, res, { url, pathname })) return;
+  if (await handleDataBindingRoute(req, res, { url, pathname })) return;
+
   if (req.method === "GET" && pathname === "/api/v1/stats/public") {
     const stats = await getPublicStats();
     return sendJson(res, 200, { ok: true, ...stats });
+  }
+
+  if (req.method === "GET" && pathname === "/api/public/campaign/ymty") {
+    const campaign = await getYmtyPublicCampaign();
+    return sendJson(res, 200, { ok: true, ...campaign });
+  }
+
+  if (req.method === "GET" && pathname === "/api/wecom/customer/callback") {
+    try {
+      const result = verifyYmtyWecomCallbackUrl(Object.fromEntries(url.searchParams.entries()));
+      res.writeHead(200, {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-store"
+      });
+      return res.end(result.echostr);
+    } catch (error) {
+      return sendWecomRouteError(res, error);
+    }
+  }
+
+  if (req.method === "POST" && pathname === "/api/wecom/customer/callback") {
+    const rawBody = await readRawBody(req, 256 * 1024);
+    try {
+      const result = await receiveYmtyWecomCallback({
+        query: Object.fromEntries(url.searchParams.entries()),
+        rawBody: rawBody.toString("utf8")
+      });
+      return sendJson(res, 200, { ok: true, ...result });
+    } catch (error) {
+      return sendWecomRouteError(res, error);
+    }
+  }
+
+  if (req.method === "POST" && pathname === "/api/track/ymty") {
+    const body = await readLimitedJson(req, 16 * 1024);
+    const orderId = body.order_id || body.orderId || "";
+    let isOrderPaid = false;
+    if (orderId) {
+      try {
+        const order = await getYmtyOrderForPayment(orderId);
+        isOrderPaid = order.pay_status === "paid";
+      } catch {
+        isOrderPaid = false;
+      }
+    }
+    const result = await recordYmtyFrontendEvent({
+      body,
+      ip: getIp(req),
+      userAgent: req.headers["user-agent"] || "",
+      isOrderPaid
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "POST" && pathname === "/api/pay/create") {
+    const body = await readJson(req);
+    const track = body.track && typeof body.track === "object" ? body.track : {};
+    const payChannel = normalizePayChannel(body.pay_channel || body.payChannel || "mock");
+    try {
+      assertRealPayConfigReady(payChannel);
+    } catch (error) {
+      if (isPaymentConfigError(error)) {
+        return sendJson(res, error.statusCode || 503, {
+          code: error.statusCode || 503,
+          message: error.message
+        });
+      }
+      throw error;
+    }
+
+    if (payChannel === "wechat_jsapi") {
+      const openid = body.openid || body.openId || getCookie(req, "ymty_wechat_openid");
+      if (!openid) {
+        const oauthReturnUrl = body.oauth_return_url || body.oauthReturnUrl || req.headers.referer || "/hd/ymty/index.html";
+        return sendJson(res, 428, {
+          ok: false,
+          provider: "wechat",
+          code: "OAUTH_REQUIRED",
+          message: "微信 JSAPI 支付需要 openid，请先完成微信网页授权",
+          oauth_url: buildWechatOAuthStartUrl(req, oauthReturnUrl)
+        });
+      }
+    }
+
+    const created = await createYmtyOrder({
+      productCode: body.product_code || body.productCode,
+      payChannel,
+      channel: body.channel || track.channel,
+      campaign: body.campaign || track.campaign,
+      creative: body.creative || track.creative,
+      sessionId: track.session_id || track.sessionId,
+      clickId: track.click_id || track.gdt_vid || track.bd_vid || track.douyin_click_id,
+      landingUrl: track.landing_url,
+      referrerHost: getReferrerHost(track.referrer || req.headers.referer || "")
+    });
+
+    if (payChannel !== "mock") {
+      const redirectUrl = buildSuccessUrl(req, created.order, body.success_url || body.successUrl || "");
+      const context = {
+        ip: getIp(req),
+        userAgent: req.headers["user-agent"] || "",
+        redirectUrl,
+        returnUrl: redirectUrl,
+        openid: body.openid || body.openId || getCookie(req, "ymty_wechat_openid")
+      };
+      let payment;
+      try {
+        payment = payChannel === "wechat_jsapi"
+          ? await createJsapiOrder(created.order, context)
+          : payChannel === "wechat_h5"
+            ? await createH5Order(created.order, context)
+            : await createWapOrder(created.order, context);
+      } catch (error) {
+        if (error.provider) {
+          return sendJson(res, error.statusCode || 502, {
+            ok: false,
+            provider: error.provider,
+            code: error.providerCode || "PAYMENT_PROVIDER_ERROR",
+            message: error.providerMessage || error.message
+          });
+        }
+        throw error;
+      }
+      return sendJson(res, 200, { ok: true, order: created.order, payment });
+    }
+
+    return sendJson(res, 200, { ok: true, ...created });
+  }
+
+  if (req.method === "GET" && pathname === "/api/order/status") {
+    const result = await getYmtyOrderStatus({
+      orderId: url.searchParams.get("order_id") || url.searchParams.get("orderId") || "",
+      token: url.searchParams.get("token") || ""
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/afterpay/entrance") {
+    try {
+      const result = await getYmtyAfterpayEntrance({
+        orderId: url.searchParams.get("order_id") || url.searchParams.get("orderId") || "",
+        token: url.searchParams.get("token") || ""
+      });
+      return sendJson(res, 200, { ok: true, ...result });
+    } catch (error) {
+      if (error.code === "NO_AVAILABLE_LIVECODE") {
+        return sendJson(res, error.statusCode || 503, {
+          ok: false,
+          code: error.code,
+          message: error.message
+        });
+      }
+      throw error;
+    }
+  }
+
+  if (req.method === "POST" && pathname === "/api/afterpay/entrance/switch") {
+    const body = await readJson(req);
+    try {
+      const result = await switchYmtyAfterpayLivecode({
+        orderId: body.order_id || body.orderId || "",
+        token: body.token || "",
+        reason: body.reason || "user_reported_failure",
+        ip: getIp(req)
+      });
+      return sendJson(res, 200, { ok: true, ...result });
+    } catch (error) {
+      if (["NO_ALTERNATIVE_LIVECODE", "SWITCH_LIMIT_EXCEEDED", "NO_AVAILABLE_LIVECODE"].includes(error.code)) {
+        return sendJson(res, error.statusCode || 503, {
+          ok: false,
+          code: error.code,
+          message: error.message
+        });
+      }
+      throw error;
+    }
+  }
+
+  if (req.method === "POST" && pathname === "/api/mock/pay-success") {
+    if (!isYmtyMockPaymentAllowed()) return notFound(res);
+    const body = await readJson(req);
+    const result = await markYmtyMockPaySuccess({
+      orderId: body.order_id || body.orderId || url.searchParams.get("order_id") || "",
+      token: body.token || url.searchParams.get("token") || "",
+      transactionId: body.transaction_id || body.transactionId || ""
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "POST" && pathname === "/api/pay/mock/complete") {
+    if (!isYmtyMockPaymentAllowed()) return notFound(res);
+    const body = await readJson(req);
+    const result = await markYmtyMockPaySuccess({
+      orderId: body.order_id || body.orderId || url.searchParams.get("order_id") || "",
+      token: body.token || url.searchParams.get("token") || "",
+      transactionId: body.transaction_id || body.transactionId || ""
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/course/my") {
+    const query = Object.fromEntries(url.searchParams.entries());
+    const { course_users: courseUsers } = await listYmtyCourseUsers();
+    const courses = courseUsers.filter((item) => {
+      if (query.order_id || query.orderId) return item.order_id === (query.order_id || query.orderId);
+      if (query.user_id || query.userId) return item.user_id === (query.user_id || query.userId);
+      if (query.openid) return item.openid === query.openid;
+      if (query.unionid) return item.unionid === query.unionid;
+      return false;
+    }).map((item) => ({
+      course_id: item.product_code,
+      course_name: item.course_name,
+      status: item.status,
+      order_id: item.order_id,
+      unlocked_at: item.paid_at,
+      product_code: item.product_code
+    }));
+    return sendJson(res, 200, { ok: true, courses });
+  }
+
+  if (req.method === "GET" && pathname === "/api/wechat/oauth/start") {
+    const oauthUrl = buildWechatOAuthAuthorizeUrl(req, url.searchParams.get("return_url") || "");
+    res.writeHead(302, {
+      Location: oauthUrl,
+      "Cache-Control": "no-store"
+    });
+    return res.end();
+  }
+
+  if (req.method === "GET" && pathname === "/api/wechat/oauth/callback") {
+    const result = await exchangeWechatOAuthCode({
+      code: url.searchParams.get("code") || ""
+    });
+    const state = parseOAuthState(url.searchParams.get("state") || "");
+    res.writeHead(302, {
+      Location: normalizeOAuthReturnUrl(req, state.returnUrl || ""),
+      "Set-Cookie": `ymty_wechat_openid=${encodeURIComponent(result.openid)}; HttpOnly; Path=/; SameSite=Lax; Max-Age=1800`,
+      "Cache-Control": "no-store"
+    });
+    return res.end();
+  }
+
+  if (req.method === "POST" && pathname === "/api/pay/wechat/notify") {
+    const rawBody = await readRawBody(req, 1024 * 1024);
+    try {
+      await verifyWechatNotify(req.headers, rawBody);
+      const payload = await parseWechatNotify(rawBody);
+      const order = await getYmtyOrderForPayment(payload.out_trade_no);
+      validateWechatPayment(payload, order);
+      await markYmtyOrderPaid({
+        orderId: order.order_id,
+        payChannel: order.pay_channel,
+        transactionId: payload.transaction_id,
+        eventType: "wechat_pay_success",
+        rawPayload: {
+          out_trade_no: payload.out_trade_no,
+          transaction_id: payload.transaction_id,
+          trade_state: payload.trade_state,
+          amount: payload.amount
+        },
+        verifyStatus: "wechat_verified"
+      });
+      return sendJson(res, 200, { code: "SUCCESS", message: "成功" });
+    } catch (error) {
+      return sendJson(res, error.statusCode || 400, {
+        code: "FAIL",
+        message: error.message || "微信支付通知处理失败"
+      });
+    }
+  }
+
+  if (req.method === "POST" && pathname === "/api/pay/wechat/refund-notify") {
+    const rawBody = await readRawBody(req, 1024 * 1024);
+    try {
+      await handleWechatRefundNotify({
+        headers: req.headers,
+        body: rawBody
+      });
+      return sendJson(res, 200, { code: "SUCCESS", message: "成功" });
+    } catch (error) {
+      return sendJson(res, error.statusCode || 400, {
+        code: "FAIL",
+        message: error.message || "微信退款通知处理失败"
+      });
+    }
+  }
+
+  if (req.method === "POST" && pathname === "/api/pay/alipay/notify") {
+    const rawBody = await readRawBody(req, 1024 * 1024);
+    const params = Object.fromEntries(new URLSearchParams(rawBody.toString("utf8")));
+    try {
+      await verifyAlipayNotify(params);
+      const payload = await parseAlipayNotify(params);
+      const order = await getYmtyOrderForPayment(payload.out_trade_no);
+      validateAlipayPayment(payload, order);
+      await markYmtyOrderPaid({
+        orderId: order.order_id,
+        payChannel: order.pay_channel,
+        transactionId: payload.trade_no,
+        eventType: "alipay_pay_success",
+        rawPayload: {
+          out_trade_no: payload.out_trade_no,
+          trade_no: payload.trade_no,
+          trade_status: payload.trade_status,
+          total_amount: payload.total_amount
+        },
+        verifyStatus: "alipay_verified"
+      });
+      res.writeHead(200, {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-store"
+      });
+      return res.end("success");
+    } catch (error) {
+      res.writeHead(error.statusCode || 400, {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-store"
+      });
+      return res.end("fail");
+    }
+  }
+
+  if (req.method === "POST" && pathname === "/api/admin/login") {
+    const body = await readJson(req);
+    const result = await loginYmtyAdmin({
+      username: body.username || "",
+      password: body.password || ""
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/me") {
+    const result = await getYmtyAdminMe(req);
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "POST" && pathname === "/api/admin/change-password") {
+    const body = await readJson(req);
+    const result = await changeYmtyAdminPassword(req, {
+      oldPassword: body.old_password || body.oldPassword || "",
+      newPassword: body.new_password || body.newPassword || ""
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "POST" && pathname === "/api/admin/logout") {
+    const result = await logoutYmtyAdmin(req);
+    return sendJson(res, 200, result);
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/campaign/ymty") {
+    await assertYmtyAdminAccess(req);
+    const result = await getYmtyAdminCampaign();
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "POST" && pathname === "/api/admin/campaign/ymty") {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await updateYmtyCampaign({
+      adminId: admin.adminId,
+      patch: body,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "POST" && pathname === "/api/admin/livecode") {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await updateYmtyLivecode({
+      adminId: admin.adminId,
+      patch: body,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/livecodes") {
+    await assertYmtyAdminAccess(req);
+    const result = await listYmtyLivecodes();
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "POST" && pathname === "/api/admin/livecodes") {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await createYmtyLivecode({
+      adminId: admin.adminId,
+      patch: body,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const livecodeToggleFullMatch = pathname.match(/^\/api\/admin\/livecodes\/([^/]+)\/toggle-full$/);
+  if (req.method === "POST" && livecodeToggleFullMatch) {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await toggleYmtyLivecodeFull({
+      adminId: admin.adminId,
+      codeKey: decodeURIComponent(livecodeToggleFullMatch[1]),
+      manualFull: body.manual_full ?? body.manualFull,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const livecodeToggleStatusMatch = pathname.match(/^\/api\/admin\/livecodes\/([^/]+)\/toggle-status$/);
+  if (req.method === "POST" && livecodeToggleStatusMatch) {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await toggleYmtyLivecodeStatus({
+      adminId: admin.adminId,
+      codeKey: decodeURIComponent(livecodeToggleStatusMatch[1]),
+      status: body.status || "active",
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const livecodeUpdateMatch = pathname.match(/^\/api\/admin\/livecodes\/([^/]+)$/);
+  if (req.method === "POST" && livecodeUpdateMatch) {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await updateYmtyLivecodeByKey({
+      adminId: admin.adminId,
+      codeKey: decodeURIComponent(livecodeUpdateMatch[1]),
+      patch: body,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/livecode-assignments") {
+    await assertYmtyAdminAccess(req);
+    const result = await listYmtyLivecodeAssignments();
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "POST" && pathname === "/api/admin/upload") {
+    try {
+      await assertYmtyAdminAccess(req);
+      const result = await saveYmtyLivecodeUpload(req);
+      return sendJson(res, 200, { code: 0, data: result });
+    } catch (error) {
+      return sendJson(res, error.statusCode || 400, {
+        code: error.statusCode || 400,
+        message: error.message || "上传失败"
+      });
+    }
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/orders") {
+    await assertYmtyAdminAccess(req);
+    const result = await listYmtyOrders();
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/audit-logs") {
+    await assertYmtyAdminAccess(req);
+    const result = await getYmtyAuditLogs();
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/crm/leads") {
+    await assertYmtyAdminAccess(req);
+    const result = await listYmtyCrmLeads(Object.fromEntries(url.searchParams.entries()));
+    return sendJson(res, 200, { ok: true, leads: result.leads.map((lead) => publicYmtyCrmLead(lead)) });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/crm/export.csv") {
+    await assertYmtyAdminAccess(req);
+    const csv = await exportYmtyCrmCsv(Object.fromEntries(url.searchParams.entries()));
+    res.writeHead(200, {
+      "Content-Type": "text/csv; charset=utf-8",
+      "Content-Disposition": "attachment; filename=\"ymty-crm-leads.csv\"",
+      "Cache-Control": "no-store"
+    });
+    return res.end(csv);
+  }
+
+  const crmLeadMatch = pathname.match(/^\/api\/admin\/crm\/leads\/([^/]+)$/);
+  if (req.method === "GET" && crmLeadMatch) {
+    await assertYmtyAdminAccess(req);
+    const result = await getYmtyCrmLead(decodeURIComponent(crmLeadMatch[1]));
+    return sendJson(res, 200, { ok: true, ...publicYmtyCrmLeadDetail(result) });
+  }
+
+  if (req.method === "POST" && crmLeadMatch) {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await updateYmtyCrmLead({
+      leadId: decodeURIComponent(crmLeadMatch[1]),
+      patch: body,
+      adminId: admin.adminId,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, lead: publicYmtyCrmLead(result.lead) });
+  }
+
+  const crmStageMatch = pathname.match(/^\/api\/admin\/crm\/leads\/([^/]+)\/stage$/);
+  if (req.method === "POST" && crmStageMatch) {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await updateYmtyCrmLeadStage({
+      leadId: decodeURIComponent(crmStageMatch[1]),
+      stage: body.stage || "",
+      reason: body.reason || body.note || "",
+      adminId: admin.adminId,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, lead: publicYmtyCrmLead(result.lead) });
+  }
+
+  const crmNoteMatch = pathname.match(/^\/api\/admin\/crm\/leads\/([^/]+)\/note$/);
+  if (req.method === "POST" && crmNoteMatch) {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await addYmtyCrmNote({
+      leadId: decodeURIComponent(crmNoteMatch[1]),
+      body: body.body || body.note || "",
+      adminId: admin.adminId,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/refunds/config") {
+    await assertYmtyAdminAccess(req);
+    const result = await getYmtyRefundConfigStatus();
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/refund-policy") {
+    await assertYmtyAdminAccess(req);
+    const policy = await getYmtyRefundPolicy();
+    return sendJson(res, 200, { ok: true, policy });
+  }
+
+  if (req.method === "POST" && pathname === "/api/admin/refund-policy") {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await updateYmtyRefundPolicy({
+      patch: body,
+      admin,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "POST" && pathname === "/api/admin/refunds/preview") {
+    await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await previewYmtyRefund({
+      orderId: body.order_id || body.orderId || "",
+      amountCents: body.amount_cents ?? body.amountCents,
+      triggerType: body.trigger_type || body.triggerType || ""
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/refunds") {
+    await assertYmtyAdminAccess(req);
+    const result = await listYmtyRefunds(Object.fromEntries(url.searchParams.entries()));
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "POST" && pathname === "/api/admin/refunds") {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await createYmtyRefund({
+      orderId: body.order_id || body.orderId || "",
+      amountCents: body.amount_cents ?? body.amountCents,
+      reason: body.reason || "",
+      admin,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const refundApproveMatch = pathname.match(/^\/api\/admin\/refunds\/([^/]+)\/approve$/);
+  if (req.method === "POST" && refundApproveMatch) {
+    const admin = await assertYmtyAdminAccess(req);
+    const result = await approveYmtyRefund({
+      refundId: decodeURIComponent(refundApproveMatch[1]),
+      admin,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const refundRejectMatch = pathname.match(/^\/api\/admin\/refunds\/([^/]+)\/reject$/);
+  if (req.method === "POST" && refundRejectMatch) {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await rejectYmtyRefund({
+      refundId: decodeURIComponent(refundRejectMatch[1]),
+      reason: body.reason || body.note || "",
+      admin,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const refundExecuteMatch = pathname.match(/^\/api\/admin\/refunds\/([^/]+)\/execute$/);
+  if (req.method === "POST" && refundExecuteMatch) {
+    const admin = await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await executeYmtyRefund({
+      refundId: decodeURIComponent(refundExecuteMatch[1]),
+      confirmOrderSuffix: body.confirm_order_suffix || body.confirmOrderSuffix || "",
+      admin,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const refundQueryMatch = pathname.match(/^\/api\/admin\/refunds\/([^/]+)\/query$/);
+  if (req.method === "POST" && refundQueryMatch) {
+    const admin = await assertYmtyAdminAccess(req);
+    const result = await queryYmtyRefundProvider({
+      refundId: decodeURIComponent(refundQueryMatch[1]),
+      admin,
+      ip: getIp(req)
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const refundDetailMatch = pathname.match(/^\/api\/admin\/refunds\/([^/]+)$/);
+  if (req.method === "GET" && refundDetailMatch) {
+    await assertYmtyAdminAccess(req);
+    const result = await getYmtyRefund(decodeURIComponent(refundDetailMatch[1]));
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/wecom/customer/summary") {
+    await assertYmtyAdminAccess(req);
+    const result = await getYmtyWecomSummary();
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/wecom/customer/events") {
+    await assertYmtyAdminAccess(req);
+    const result = await listYmtyWecomEvents(Object.fromEntries(url.searchParams.entries()));
+    return sendJson(res, 200, { ok: true, events: result.events.map((event) => publicYmtyWecomEvent(event)) });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/wecom/customer/sync-jobs") {
+    await assertYmtyAdminAccess(req);
+    const result = await listYmtyWecomSyncJobs(Object.fromEntries(url.searchParams.entries()));
+    return sendJson(res, 200, { ok: true, jobs: result.jobs.map((job) => publicYmtyWecomSyncJob(job)) });
+  }
+
+  const wecomEventLinkMatch = pathname.match(/^\/api\/admin\/wecom\/customer\/events\/([^/]+)\/link$/);
+  if (req.method === "POST" && wecomEventLinkMatch) {
+    await assertYmtyAdminAccess(req);
+    const body = await readJson(req);
+    const result = await linkYmtyWecomEventToLead({
+      eventId: decodeURIComponent(wecomEventLinkMatch[1]),
+      leadId: body.lead_id || body.leadId || ""
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const wecomSyncRetryMatch = pathname.match(/^\/api\/admin\/wecom\/customer\/sync-jobs\/([^/]+)\/retry$/);
+  if (req.method === "POST" && wecomSyncRetryMatch) {
+    await assertYmtyAdminAccess(req);
+    const result = await retryYmtyWecomSyncJob(decodeURIComponent(wecomSyncRetryMatch[1]));
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/admin/analytics/summary") {
+    await assertYmtyAdminAccess(req);
+    const result = await getYmtyAnalyticsSummary(Object.fromEntries(url.searchParams.entries()));
+    return sendJson(res, 200, { ok: true, ...result });
   }
 
   if (req.method === "GET" && pathname === "/api/v1/questions/stats") {
@@ -269,6 +969,12 @@ export async function route(req, res) {
   }
 
   const dataBindingTradeReviewMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/trade-reviews$/);
+  if (req.method === "GET" && dataBindingTradeReviewMatch) {
+    const result = await listTradeReviewBindings(dataBindingTradeReviewMatch[1]);
+    if (!result) return sendJson(res, 404, { ok: false, error: "用户不存在" });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
   if (req.method === "POST" && dataBindingTradeReviewMatch) {
     const body = await readJson(req);
     const result = await saveTradeReviewBinding({
@@ -282,75 +988,12 @@ export async function route(req, res) {
   const dataBindingTradeReviewOcrMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/trade-review-ocr$/);
   if (req.method === "POST" && dataBindingTradeReviewOcrMatch) {
     const body = await readJson(req);
-    const result = await createTradeReviewOcrDraftBinding({
+    const ocrDraft = await buildTradeReviewOcrDraft({
       user: { ...(body.user || {}), userId: dataBindingTradeReviewOcrMatch[1] },
-      image: body.image || body.image_meta || {},
+      image: body.image || {},
       source: body.source || body.source_channel || "api"
     });
-    return sendJson(res, 200, { ok: true, ...result });
-  }
-
-  const dataBindingTrainingBookmarksMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/training-bookmarks$/);
-  if (req.method === "GET" && dataBindingTrainingBookmarksMatch) {
-    const result = await listTrainingBookmarksBinding(dataBindingTrainingBookmarksMatch[1], Object.fromEntries(url.searchParams));
-    return sendJson(res, 200, { ok: true, ...result });
-  }
-
-  if (req.method === "POST" && dataBindingTrainingBookmarksMatch) {
-    const body = await readJson(req);
-    const result = await createTrainingBookmarkBinding({
-      user: { ...(body.user || {}), userId: dataBindingTrainingBookmarksMatch[1] },
-      bookmark: body.training_bookmark || body.trainingBookmark || body.bookmark || {},
-      source: body.source || body.source_channel || "api"
-    });
-    return sendJson(res, 200, { ok: true, ...result });
-  }
-
-  const dataBindingTrainingBookmarkMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/training-bookmarks\/([^/]+)$/);
-  if (req.method === "DELETE" && dataBindingTrainingBookmarkMatch) {
-    const result = await deleteTrainingBookmarkBinding(dataBindingTrainingBookmarkMatch[1], dataBindingTrainingBookmarkMatch[2]);
-    return sendJson(res, 200, { ok: true, ...result });
-  }
-
-  const dataBindingInterventionRulesMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/intervention-rules$/);
-  if (req.method === "GET" && dataBindingInterventionRulesMatch) {
-    const result = await listInterventionRulesBinding(dataBindingInterventionRulesMatch[1], Object.fromEntries(url.searchParams));
-    return sendJson(res, 200, { ok: true, ...result });
-  }
-
-  const dataBindingInterventionEventsMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/intervention-events$/);
-  if (req.method === "POST" && dataBindingInterventionEventsMatch) {
-    const body = await readJson(req);
-    const result = await createInterventionEventBinding({
-      user: { ...(body.user || {}), userId: dataBindingInterventionEventsMatch[1] },
-      event: body.intervention_event || body.interventionEvent || body.event || {},
-      source: body.source || body.source_channel || "api"
-    });
-    return sendJson(res, 200, { ok: true, ...result });
-  }
-
-  const dataBindingExecutionPlansMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/execution-plans$/);
-  if (req.method === "GET" && dataBindingExecutionPlansMatch) {
-    const result = await listExecutionPlansBinding(dataBindingExecutionPlansMatch[1], Object.fromEntries(url.searchParams));
-    return sendJson(res, 200, { ok: true, ...result });
-  }
-
-  const dataBindingDashboardSummaryMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/dashboard-summary$/);
-  if (req.method === "GET" && dataBindingDashboardSummaryMatch) {
-    const result = await getDashboardSummaryBinding(dataBindingDashboardSummaryMatch[1], Object.fromEntries(url.searchParams));
-    return sendJson(res, 200, { ok: true, ...result });
-  }
-
-  const dataBindingDashboardWeeklyMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/dashboard-weekly$/);
-  if (req.method === "GET" && dataBindingDashboardWeeklyMatch) {
-    const result = await getDashboardWeeklySummaryBinding(dataBindingDashboardWeeklyMatch[1], Object.fromEntries(url.searchParams));
-    return sendJson(res, 200, { ok: true, ...result });
-  }
-
-  const dataBindingTrainingPrescriptionMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/training-prescription$/);
-  if (req.method === "GET" && dataBindingTrainingPrescriptionMatch) {
-    const result = await getTrainingPrescriptionBinding(dataBindingTrainingPrescriptionMatch[1]);
-    return sendJson(res, 200, { ok: true, ...result });
+    return sendJson(res, 200, { ok: true, ocr_draft: ocrDraft });
   }
 
   const dataBindingRetestMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/retests$/);
@@ -376,6 +1019,22 @@ export async function route(req, res) {
     const summary = await getDataBindingUserSummary(dataBindingSummaryMatch[1]);
     if (!summary) return sendJson(res, 404, { ok: false, error: "用户不存在" });
     return sendJson(res, 200, { ok: true, ...summary });
+  }
+
+  const dataBindingPrescriptionMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/training-prescription$/);
+  if (req.method === "GET" && dataBindingPrescriptionMatch) {
+    const result = await getTrainingPrescriptionBinding(dataBindingPrescriptionMatch[1]);
+    if (!result) return sendJson(res, 404, { ok: false, error: "用户不存在" });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "POST" && dataBindingPrescriptionMatch) {
+    const body = await readJson(req);
+    const result = await dispatchTrainingPrescriptionBinding(dataBindingPrescriptionMatch[1], {
+      source: body.source || body.source_channel || "web-next"
+    });
+    if (!result) return sendJson(res, 404, { ok: false, error: "用户不存在" });
+    return sendJson(res, 200, { ok: true, ...result });
   }
 
   const dataBindingShareCardMatch = pathname.match(/^\/api\/v1\/data-binding\/users\/([^/]+)\/share-card$/);
@@ -774,7 +1433,7 @@ export async function route(req, res) {
       symbol: url.searchParams.get("symbol") || url.searchParams.get("code") || url.searchParams.get("instrument") || "",
       timeframeKey: url.searchParams.get("timeframe") || url.searchParams.get("timeframe_key") || url.searchParams.get("klt") || "",
       adjustmentMode: url.searchParams.get("adjustment") || url.searchParams.get("adjustment_mode") || url.searchParams.get("fq") || "",
-      windowSize: getKlineWindowSizeParam(url),
+      windowSize: url.searchParams.get("window") || url.searchParams.get("window_size") || "",
       mode: url.searchParams.get("mode") || "step_replay",
       personalityType: url.searchParams.get("personality_type") || "",
       gateKey: url.searchParams.get("gate") || url.searchParams.get("gate_key") || "",
@@ -782,43 +1441,6 @@ export async function route(req, res) {
       seed: url.searchParams.get("seed") || "",
       startDate: url.searchParams.get("start_date") || url.searchParams.get("start") || "",
       endDate: url.searchParams.get("end_date") || url.searchParams.get("end") || ""
-    });
-    return sendJson(res, 200, { ok: true, ...result });
-  }
-
-  if (req.method === "GET" && pathname === "/api/v1/kline-history/hot-slice") {
-    const result = await buildHistoricalKlineHotSlice({
-      marketKey: url.searchParams.get("market") || url.searchParams.get("market_key") || "",
-      symbol: url.searchParams.get("symbol") || url.searchParams.get("code") || url.searchParams.get("instrument") || "",
-      timeframeKey: url.searchParams.get("timeframe") || url.searchParams.get("timeframe_key") || url.searchParams.get("klt") || "",
-      adjustmentMode: url.searchParams.get("adjustment") || url.searchParams.get("adjustment_mode") || url.searchParams.get("fq") || "",
-      windowSize: getKlineWindowSizeParam(url),
-      mode: url.searchParams.get("mode") || "step_replay",
-      personalityType: url.searchParams.get("personality_type") || "",
-      gateKey: url.searchParams.get("gate") || url.searchParams.get("gate_key") || "shi_shang_mo",
-      blind: getBooleanParam(url, "blind", true),
-      startDate: url.searchParams.get("start_date") || url.searchParams.get("start") || "",
-      endDate: url.searchParams.get("end_date") || url.searchParams.get("entryTime") || url.searchParams.get("entry_time") || url.searchParams.get("end") || "",
-      poolSize: url.searchParams.get("pool_size") || ""
-    });
-    return sendJson(res, 200, { ok: true, ...result });
-  }
-
-  if (req.method === "GET" && pathname === "/api/v1/kline-history/hot-pool") {
-    const result = await warmHistoricalKlineHotPool({
-      marketKey: url.searchParams.get("market") || url.searchParams.get("market_key") || "",
-      symbol: url.searchParams.get("symbol") || url.searchParams.get("code") || url.searchParams.get("instrument") || "",
-      timeframeKey: url.searchParams.get("timeframe") || url.searchParams.get("timeframe_key") || url.searchParams.get("klt") || "",
-      adjustmentMode: url.searchParams.get("adjustment") || url.searchParams.get("adjustment_mode") || url.searchParams.get("fq") || "",
-      windowSize: getKlineWindowSizeParam(url),
-      mode: url.searchParams.get("mode") || "step_replay",
-      personalityType: url.searchParams.get("personality_type") || "",
-      gateKey: url.searchParams.get("gate") || url.searchParams.get("gate_key") || "shi_shang_mo",
-      blind: getBooleanParam(url, "blind", true),
-      startDate: url.searchParams.get("start_date") || url.searchParams.get("start") || "",
-      endDate: url.searchParams.get("end_date") || url.searchParams.get("entryTime") || url.searchParams.get("entry_time") || url.searchParams.get("end") || "",
-      poolSize: url.searchParams.get("pool_size") || "",
-      poolSeed: url.searchParams.get("pool_seed") || ""
     });
     return sendJson(res, 200, { ok: true, ...result });
   }
@@ -1036,10 +1658,130 @@ function getIp(req) {
   return req.socket.remoteAddress || "";
 }
 
+function sendWecomRouteError(res, error) {
+  return sendJson(res, error.statusCode || 400, {
+    ok: false,
+    code: error.code || "WECOM_CALLBACK_ERROR",
+    message: error.message || "企业微信回调处理失败"
+  });
+}
+
 function getPublicOrigin(req) {
   if (config.publicBaseUrl) return config.publicBaseUrl.replace(/\/$/, "");
   const proto = req.headers["x-forwarded-proto"] || "http";
   return `${proto}://${req.headers.host}`;
+}
+
+async function readLimitedJson(req, limitBytes) {
+  const raw = (await readRawBody(req, limitBytes)).toString("utf8").trim();
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw);
+  } catch {
+    const error = new Error("请求体不是合法 JSON");
+    error.statusCode = 400;
+    throw error;
+  }
+}
+
+function getReferrerHost(referrer = "") {
+  try {
+    return new URL(String(referrer || "")).hostname.slice(0, 120);
+  } catch {
+    return "";
+  }
+}
+
+function buildSuccessUrl(req, order, providedSuccessUrl = "") {
+  const base = String(providedSuccessUrl || process.env.ALIPAY_RETURN_URL || `${getPublicOrigin(req)}/hd/ymty/success.html`).split("?")[0];
+  const url = new URL(base, getPublicOrigin(req));
+  url.searchParams.set("order_id", order.order_id);
+  url.searchParams.set("token", order.order_token);
+  return url.toString();
+}
+
+function buildWechatOAuthStartUrl(req, returnUrl = "") {
+  const url = new URL("/api/wechat/oauth/start", getPublicOrigin(req));
+  if (returnUrl) url.searchParams.set("return_url", returnUrl);
+  return `${url.pathname}${url.search}`;
+}
+
+function buildWechatOAuthAuthorizeUrl(req, returnUrl = "") {
+  assertWechatOAuthConfig();
+  const callbackUrl = process.env.WECHAT_JSAPI_OAUTH_REDIRECT_URL || `${getPublicOrigin(req)}/api/wechat/oauth/callback`;
+  const state = Buffer.from(JSON.stringify({
+    returnUrl: normalizeOAuthReturnUrl(req, returnUrl)
+  })).toString("base64url");
+  const params = new URLSearchParams({
+    appid: process.env.WECHAT_SERVICE_APP_ID,
+    redirect_uri: callbackUrl,
+    response_type: "code",
+    scope: "snsapi_base",
+    state,
+    connect_redirect: "1"
+  });
+  return `https://open.weixin.qq.com/connect/oauth2/authorize?${params.toString()}#wechat_redirect`;
+}
+
+async function exchangeWechatOAuthCode({ code = "" } = {}) {
+  assertWechatOAuthConfig();
+  if (!code) {
+    const error = new Error("微信 OAuth code 缺失");
+    error.statusCode = 400;
+    throw error;
+  }
+  const params = new URLSearchParams({
+    appid: process.env.WECHAT_SERVICE_APP_ID,
+    secret: process.env.WECHAT_SERVICE_APP_SECRET,
+    code,
+    grant_type: "authorization_code"
+  });
+  const response = await fetch(`https://api.weixin.qq.com/sns/oauth2/access_token?${params.toString()}`);
+  const data = await response.json();
+  if (!response.ok || !data.openid) {
+    const error = new Error(data.errmsg || "微信 OAuth 获取 openid 失败");
+    error.statusCode = response.status || 502;
+    throw error;
+  }
+  return { openid: data.openid };
+}
+
+function parseOAuthState(state = "") {
+  try {
+    const parsed = JSON.parse(Buffer.from(state, "base64url").toString("utf8"));
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function normalizeOAuthReturnUrl(req, returnUrl = "") {
+  const fallback = "/hd/ymty/index.html";
+  if (!returnUrl) return fallback;
+  try {
+    const origin = getPublicOrigin(req);
+    const url = new URL(returnUrl, origin);
+    if (url.origin !== origin) return fallback;
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return fallback;
+  }
+}
+
+function assertWechatOAuthConfig() {
+  if (process.env.WECHAT_SERVICE_APP_ID && process.env.WECHAT_SERVICE_APP_SECRET) return;
+  const error = new Error("微信 OAuth 配置未完成");
+  error.statusCode = 503;
+  throw error;
+}
+
+function getCookie(req, key) {
+  const raw = String(req.headers.cookie || "");
+  const item = raw
+    .split(";")
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(`${key}=`));
+  return item ? decodeURIComponent(item.slice(key.length + 1)) : "";
 }
 
 function getBooleanParam(url, key, fallback = false) {
@@ -1056,6 +1798,10 @@ function assertKlineDownloadAccess(req) {
   const error = new Error("K线下载服务未授权");
   error.statusCode = 403;
   throw error;
+}
+
+async function assertYmtyAdminAccess(req) {
+  return authenticateYmtyAdmin(req);
 }
 
 function maskPhone(phone) {

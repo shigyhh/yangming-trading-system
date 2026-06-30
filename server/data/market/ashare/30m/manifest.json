@@ -1,0 +1,11 @@
+{
+  "market": "ashare",
+  "timeframe": "30m",
+  "source": "baostock",
+  "last_trade_date": "20260612",
+  "updated_at": "2026-06-12T01:42:57.272Z",
+  "symbols_count": 4,
+  "candles_count": 3776,
+  "status": "ok",
+  "errors": []
+}

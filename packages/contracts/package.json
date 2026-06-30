@@ -1,0 +1,28 @@
+{
+  "name": "@yangming/contracts",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    "./data-binding": {
+      "types": "./data-binding.d.ts"
+    },
+    "./global-reflection": {
+      "types": "./global-reflection.d.ts"
+    },
+    "./i18n": {
+      "types": "./i18n.d.ts"
+    },
+    "./living-mirror": {
+      "types": "./living-mirror.d.ts"
+    },
+    "./kline-segment": {
+      "types": "./kline-segment.d.ts"
+    },
+    "./kline-sampling": {
+      "types": "./kline-sampling.d.ts"
+    },
+    "./training-pack": {
+      "types": "./training-pack.d.ts"
+    }
+  }
+}

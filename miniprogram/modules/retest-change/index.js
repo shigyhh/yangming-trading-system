@@ -12,7 +12,7 @@ const RISK_BASELINE = {
 
 const METRICS = [
   { key: "entryImpulse", label: "入场冲动", direction: "down" },
-  { key: "stopResistance", label: "边界抗拒", direction: "down" },
+  { key: "stopResistance", label: "风险处理抗拒", direction: "down" },
   { key: "proving", label: "亏损后证明欲", direction: "down" },
   { key: "execution", label: "计划执行力", direction: "up" },
   { key: "stability", label: "稳定度", direction: "up" }

@@ -82,6 +82,116 @@ CREATE TABLE IF NOT EXISTS invite_codes (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS ymty_product_configs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id VARCHAR(80) NOT NULL UNIQUE,
+  course_id VARCHAR(80) NOT NULL,
+  course_name VARCHAR(160) NOT NULL,
+  organizer VARCHAR(160),
+  price_cents INTEGER NOT NULL,
+  currency VARCHAR(12) NOT NULL DEFAULT 'CNY',
+  training_days INTEGER NOT NULL DEFAULT 7,
+  opening_time_text VARCHAR(160),
+  lecturer VARCHAR(80),
+  compliance_text TEXT,
+  status VARCHAR(30) NOT NULL DEFAULT 'active',
+  afterpay_config JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ymty_product_configs_status ON ymty_product_configs(status);
+
+CREATE TABLE IF NOT EXISTS ymty_orders (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_no VARCHAR(80) NOT NULL UNIQUE,
+  client_order_no VARCHAR(120),
+  user_id UUID REFERENCES users(id),
+  openid VARCHAR(160),
+  unionid VARCHAR(160),
+  phone_hash VARCHAR(160),
+  phone_mask VARCHAR(32),
+  product_id VARCHAR(80) NOT NULL,
+  course_id VARCHAR(80) NOT NULL,
+  course_name VARCHAR(160) NOT NULL,
+  amount_cents INTEGER NOT NULL,
+  currency VARCHAR(12) NOT NULL DEFAULT 'CNY',
+  status VARCHAR(30) NOT NULL DEFAULT 'pending',
+  payment_channel VARCHAR(40) NOT NULL DEFAULT 'mock',
+  payment_mode VARCHAR(40) NOT NULL DEFAULT 'mock',
+  transaction_id VARCHAR(160),
+  source_channel VARCHAR(80),
+  paid_at TIMESTAMPTZ,
+  expires_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ymty_orders_user_id ON ymty_orders(user_id);
+CREATE INDEX IF NOT EXISTS idx_ymty_orders_openid ON ymty_orders(openid);
+CREATE INDEX IF NOT EXISTS idx_ymty_orders_phone_hash ON ymty_orders(phone_hash);
+CREATE INDEX IF NOT EXISTS idx_ymty_orders_status ON ymty_orders(status);
+CREATE INDEX IF NOT EXISTS idx_ymty_orders_created_at ON ymty_orders(created_at DESC);
+
+CREATE TABLE IF NOT EXISTS ymty_payment_notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  provider VARCHAR(40) NOT NULL,
+  order_no VARCHAR(80),
+  transaction_id VARCHAR(160),
+  verify_status VARCHAR(40) NOT NULL DEFAULT 'pending',
+  handled_status VARCHAR(40) NOT NULL DEFAULT 'received',
+  raw_summary JSONB,
+  received_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  handled_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ymty_payment_notifications_provider ON ymty_payment_notifications(provider);
+CREATE INDEX IF NOT EXISTS idx_ymty_payment_notifications_order_no ON ymty_payment_notifications(order_no);
+CREATE INDEX IF NOT EXISTS idx_ymty_payment_notifications_received_at ON ymty_payment_notifications(received_at DESC);
+
+CREATE TABLE IF NOT EXISTS ymty_course_enrollments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  enrollment_no VARCHAR(80) NOT NULL UNIQUE,
+  order_no VARCHAR(80) NOT NULL,
+  user_id UUID REFERENCES users(id),
+  openid VARCHAR(160),
+  phone_hash VARCHAR(160),
+  phone_mask VARCHAR(32),
+  product_id VARCHAR(80) NOT NULL,
+  course_id VARCHAR(80) NOT NULL,
+  course_name VARCHAR(160) NOT NULL,
+  status VARCHAR(30) NOT NULL DEFAULT 'active',
+  training_days INTEGER NOT NULL DEFAULT 7,
+  opening_time_text VARCHAR(160),
+  lecturer VARCHAR(80),
+  miniprogram_path TEXT,
+  unlocked_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ymty_course_enrollments_order_no ON ymty_course_enrollments(order_no);
+CREATE INDEX IF NOT EXISTS idx_ymty_course_enrollments_user_id ON ymty_course_enrollments(user_id);
+CREATE INDEX IF NOT EXISTS idx_ymty_course_enrollments_openid ON ymty_course_enrollments(openid);
+CREATE INDEX IF NOT EXISTS idx_ymty_course_enrollments_phone_hash ON ymty_course_enrollments(phone_hash);
+
+CREATE TABLE IF NOT EXISTS ymty_afterpay_entrances (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  entrance_key VARCHAR(80) NOT NULL UNIQUE,
+  product_id VARCHAR(80) NOT NULL,
+  entrance_type VARCHAR(40) NOT NULL DEFAULT 'assistant_qr_rotation',
+  lead_link TEXT,
+  miniprogram_path TEXT,
+  live_code_config JSONB,
+  status VARCHAR(30) NOT NULL DEFAULT 'active',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ymty_afterpay_entrances_product_id ON ymty_afterpay_entrances(product_id);
+CREATE INDEX IF NOT EXISTS idx_ymty_afterpay_entrances_status ON ymty_afterpay_entrances(status);
+
 CREATE TABLE IF NOT EXISTS question_bank (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   question_code VARCHAR(40) NOT NULL UNIQUE,
@@ -185,6 +295,252 @@ CREATE TABLE IF NOT EXISTS reports (
 CREATE INDEX IF NOT EXISTS idx_reports_user_id ON reports(user_id);
 CREATE INDEX IF NOT EXISTS idx_reports_assessment_id ON reports(assessment_id);
 CREATE INDEX IF NOT EXISTS idx_reports_created_at ON reports(created_at);
+
+CREATE TABLE IF NOT EXISTS mirror_reports (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  report_no VARCHAR(60) UNIQUE,
+  user_id UUID NOT NULL REFERENCES users(id),
+  assessment_id UUID REFERENCES assessment_sessions(id),
+  source_report_id UUID REFERENCES reports(id),
+  mirror_spectrum JSONB NOT NULL DEFAULT '{}'::jsonb,
+  main_mirror VARCHAR(40) NOT NULL,
+  sub_mirror VARCHAR(40),
+  primary_mirror_score NUMERIC(5,2),
+  secondary_mirror_score NUMERIC(5,2),
+  thieves JSONB NOT NULL DEFAULT '[]'::jsonb,
+  verdict TEXT NOT NULL,
+  risk_radar JSONB NOT NULL DEFAULT '[]'::jsonb,
+  typical_cycle JSONB NOT NULL DEFAULT '{}'::jsonb,
+  seven_day_prescription JSONB NOT NULL DEFAULT '[]'::jsonb,
+  camp_suggestion VARCHAR(120),
+  compliance_note TEXT NOT NULL DEFAULT '本报告用于交易心理觉察与训练，不构成投资建议。',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_mirror_reports_user_id ON mirror_reports(user_id);
+CREATE INDEX IF NOT EXISTS idx_mirror_reports_assessment_id ON mirror_reports(assessment_id);
+CREATE INDEX IF NOT EXISTS idx_mirror_reports_main_mirror ON mirror_reports(main_mirror);
+CREATE INDEX IF NOT EXISTS idx_mirror_reports_created_at ON mirror_reports(created_at DESC);
+
+CREATE TABLE IF NOT EXISTS trade_reviews (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id),
+  mirror_report_id UUID REFERENCES mirror_reports(id),
+  image_url TEXT,
+  image_storage_key TEXT,
+  image_sha256 VARCHAR(128),
+  trade_date DATE,
+  symbol_masked VARCHAR(80),
+  market_type VARCHAR(40),
+  buy_reason TEXT,
+  sell_reason TEXT,
+  strongest_thought TEXT NOT NULL,
+  detected_mirror VARCHAR(40),
+  detected_thieves JSONB NOT NULL DEFAULT '[]'::jsonb,
+  behavior_tags JSONB NOT NULL DEFAULT '[]'::jsonb,
+  personal_cycle JSONB NOT NULL DEFAULT '{}'::jsonb,
+  review_text TEXT,
+  ai_summary TEXT,
+  compliance_note TEXT NOT NULL DEFAULT '本复盘仅用于交易心理觉察与行为训练，不构成投资建议。',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_trade_reviews_user_id ON trade_reviews(user_id);
+CREATE INDEX IF NOT EXISTS idx_trade_reviews_trade_date ON trade_reviews(trade_date);
+CREATE INDEX IF NOT EXISTS idx_trade_reviews_detected_mirror ON trade_reviews(detected_mirror);
+CREATE INDEX IF NOT EXISTS idx_trade_reviews_created_at ON trade_reviews(created_at DESC);
+
+CREATE TABLE IF NOT EXISTS personal_cycles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id),
+  mirror VARCHAR(40) NOT NULL,
+  trigger_text TEXT,
+  thought_text TEXT NOT NULL,
+  action_text TEXT,
+  result_text TEXT,
+  recurrence_text TEXT,
+  thieves JSONB NOT NULL DEFAULT '[]'::jsonb,
+  evidence_review_id UUID REFERENCES trade_reviews(id),
+  occurrence_count INTEGER NOT NULL DEFAULT 1,
+  last_occurred_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_personal_cycles_user_id ON personal_cycles(user_id);
+CREATE INDEX IF NOT EXISTS idx_personal_cycles_mirror ON personal_cycles(mirror);
+CREATE INDEX IF NOT EXISTS idx_personal_cycles_last_occurred_at ON personal_cycles(last_occurred_at DESC);
+
+CREATE TABLE IF NOT EXISTS daily_reflections (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id),
+  date_key DATE NOT NULL,
+  mirror VARCHAR(40),
+  thieves JSONB NOT NULL DEFAULT '[]'::jsonb,
+  today_insight TEXT NOT NULL,
+  practice_action TEXT NOT NULL,
+  completed BOOLEAN NOT NULL DEFAULT false,
+  source_channel VARCHAR(80),
+  completed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(user_id, date_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_daily_reflections_user_id ON daily_reflections(user_id);
+CREATE INDEX IF NOT EXISTS idx_daily_reflections_date_key ON daily_reflections(date_key);
+CREATE INDEX IF NOT EXISTS idx_daily_reflections_completed ON daily_reflections(completed);
+
+CREATE TABLE IF NOT EXISTS training_records (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id),
+  mirror_report_id UUID REFERENCES mirror_reports(id),
+  trade_review_id UUID REFERENCES trade_reviews(id),
+  daily_reflection_id UUID REFERENCES daily_reflections(id),
+  date_key DATE NOT NULL,
+  mirror VARCHAR(40),
+  action TEXT NOT NULL,
+  completed BOOLEAN NOT NULL DEFAULT false,
+  note TEXT,
+  source_channel VARCHAR(80),
+  completed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_training_records_user_id ON training_records(user_id);
+CREATE INDEX IF NOT EXISTS idx_training_records_date_key ON training_records(date_key);
+CREATE INDEX IF NOT EXISTS idx_training_records_mirror ON training_records(mirror);
+CREATE INDEX IF NOT EXISTS idx_training_records_completed ON training_records(completed);
+
+CREATE TABLE IF NOT EXISTS living_mirror_stats (
+  user_id UUID PRIMARY KEY REFERENCES users(id),
+  mirror_spectrum JSONB NOT NULL DEFAULT '{}'::jsonb,
+  mirror_scores JSONB NOT NULL DEFAULT '{}'::jsonb,
+  thief_counts JSONB NOT NULL DEFAULT '{}'::jsonb,
+  life_form_type VARCHAR(40) NOT NULL DEFAULT 'heart_mirror_tree',
+  life_display_name VARCHAR(80) NOT NULL DEFAULT '心镜之树',
+  life_stage VARCHAR(40) NOT NULL DEFAULT 'seed',
+  vitality_score INTEGER NOT NULL DEFAULT 0 CHECK (vitality_score >= 0),
+  tree_state JSONB NOT NULL DEFAULT '{}'::jsonb,
+  growth_trend JSONB NOT NULL DEFAULT '[]'::jsonb,
+  training_completion_rate NUMERIC(5,2) NOT NULL DEFAULT 0,
+  cycle_relapse_count INTEGER NOT NULL DEFAULT 0,
+  conscience_growth INTEGER NOT NULL DEFAULT 0 CHECK (conscience_growth BETWEEN 0 AND 100),
+  last_main_mirror VARCHAR(40),
+  last_sub_mirror VARCHAR(40),
+  last_daily_reflection_at TIMESTAMPTZ,
+  last_trade_review_at TIMESTAMPTZ,
+  last_updated TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_living_mirror_stats_last_updated ON living_mirror_stats(last_updated DESC);
+CREATE INDEX IF NOT EXISTS idx_living_mirror_stats_last_main_mirror ON living_mirror_stats(last_main_mirror);
+
+CREATE TABLE IF NOT EXISTS living_mirror_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id),
+  event_type VARCHAR(40) NOT NULL,
+  source_type VARCHAR(40) NOT NULL,
+  source_id UUID,
+  mirror VARCHAR(40),
+  thieves JSONB NOT NULL DEFAULT '[]'::jsonb,
+  delta_scores JSONB NOT NULL DEFAULT '{}'::jsonb,
+  life_delta JSONB NOT NULL DEFAULT '{}'::jsonb,
+  note TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_living_mirror_events_user_id ON living_mirror_events(user_id);
+CREATE INDEX IF NOT EXISTS idx_living_mirror_events_event_type ON living_mirror_events(event_type);
+CREATE INDEX IF NOT EXISTS idx_living_mirror_events_mirror ON living_mirror_events(mirror);
+CREATE INDEX IF NOT EXISTS idx_living_mirror_events_created_at ON living_mirror_events(created_at DESC);
+
+CREATE TABLE IF NOT EXISTS mirror_scroll_entries (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id),
+  day_index INTEGER,
+  entry_date DATE NOT NULL,
+  entry_type VARCHAR(40) NOT NULL,
+  title VARCHAR(160) NOT NULL,
+  summary TEXT,
+  mirror_snapshot JSONB NOT NULL DEFAULT '{}'::jsonb,
+  tree_snapshot JSONB NOT NULL DEFAULT '{}'::jsonb,
+  source_type VARCHAR(40),
+  source_id UUID,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_mirror_scroll_entries_user_id ON mirror_scroll_entries(user_id);
+CREATE INDEX IF NOT EXISTS idx_mirror_scroll_entries_entry_date ON mirror_scroll_entries(entry_date DESC);
+CREATE INDEX IF NOT EXISTS idx_mirror_scroll_entries_entry_type ON mirror_scroll_entries(entry_type);
+
+CREATE TABLE IF NOT EXISTS assistant_handoffs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id),
+  mirror_report_id UUID REFERENCES mirror_reports(id),
+  trade_review_id UUID REFERENCES trade_reviews(id),
+  phone_masked VARCHAR(32),
+  mirror_spectrum JSONB NOT NULL DEFAULT '{}'::jsonb,
+  main_mirror VARCHAR(40),
+  sub_mirror VARCHAR(40),
+  risk_tags JSONB NOT NULL DEFAULT '[]'::jsonb,
+  personal_cycle_summary TEXT,
+  recent_review_summary TEXT,
+  suggested_action TEXT,
+  suggested_script TEXT,
+  compliance_reminder TEXT NOT NULL DEFAULT '仅做交易心理觉察、训练与复盘承接，不提供投资建议。',
+  feishu_synced BOOLEAN NOT NULL DEFAULT false,
+  feishu_synced_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_assistant_handoffs_user_id ON assistant_handoffs(user_id);
+CREATE INDEX IF NOT EXISTS idx_assistant_handoffs_feishu_synced ON assistant_handoffs(feishu_synced);
+CREATE INDEX IF NOT EXISTS idx_assistant_handoffs_created_at ON assistant_handoffs(created_at DESC);
+
+CREATE TABLE IF NOT EXISTS share_cards (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id),
+  mirror_report_id UUID REFERENCES mirror_reports(id),
+  invite_code_id UUID REFERENCES invite_codes(id),
+  card_type VARCHAR(40) NOT NULL DEFAULT 'mirror_report',
+  today_proof TEXT,
+  mirror_spectrum JSONB NOT NULL DEFAULT '{}'::jsonb,
+  main_mirror VARCHAR(40),
+  verdict TEXT,
+  practice_action TEXT,
+  tree_stage VARCHAR(40),
+  image_url TEXT,
+  public_token VARCHAR(120) UNIQUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_share_cards_user_id ON share_cards(user_id);
+CREATE INDEX IF NOT EXISTS idx_share_cards_public_token ON share_cards(public_token);
+CREATE INDEX IF NOT EXISTS idx_share_cards_created_at ON share_cards(created_at DESC);
+
+CREATE TABLE IF NOT EXISTS global_reflection_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id),
+  anonymous_key VARCHAR(120),
+  thought TEXT NOT NULL,
+  mirror_spectrum JSONB NOT NULL DEFAULT '{}'::jsonb,
+  main_mirror VARCHAR(40),
+  thieves JSONB NOT NULL DEFAULT '[]'::jsonb,
+  trading_scene VARCHAR(160),
+  country_code VARCHAR(12),
+  locale VARCHAR(20),
+  market_type VARCHAR(40),
+  occurred_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_global_reflection_events_main_mirror ON global_reflection_events(main_mirror);
+CREATE INDEX IF NOT EXISTS idx_global_reflection_events_country_locale ON global_reflection_events(country_code, locale);
+CREATE INDEX IF NOT EXISTS idx_global_reflection_events_occurred_at ON global_reflection_events(occurred_at DESC);
 
 CREATE TABLE IF NOT EXISTS daily_checkins (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -356,3 +712,118 @@ CREATE TABLE IF NOT EXISTS dojo_mind_records (
 
 CREATE INDEX IF NOT EXISTS idx_dojo_mind_records_user_id ON dojo_mind_records(user_id);
 CREATE INDEX IF NOT EXISTS idx_dojo_mind_records_date_key ON dojo_mind_records(date_key);
+
+CREATE TABLE IF NOT EXISTS products (
+  product_code VARCHAR(80) PRIMARY KEY,
+  product_name VARCHAR(160) NOT NULL,
+  display_price_yuan NUMERIC(10,2) NOT NULL,
+  amount_cents INTEGER NOT NULL CHECK (amount_cents > 0),
+  currency VARCHAR(16) NOT NULL DEFAULT 'CNY',
+  cycle VARCHAR(80),
+  start_time VARCHAR(120),
+  lecturer VARCHAR(80),
+  status VARCHAR(30) NOT NULL DEFAULT 'offline',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_products_status ON products(status);
+
+CREATE TABLE IF NOT EXISTS livecodes (
+  code_key VARCHAR(80) PRIMARY KEY,
+  name VARCHAR(120) NOT NULL,
+  wecom_link TEXT,
+  qr_image TEXT,
+  auto_redirect_after_paid BOOLEAN NOT NULL DEFAULT false,
+  redirect_delay_ms INTEGER NOT NULL DEFAULT 600,
+  remark TEXT,
+  button_text VARCHAR(80),
+  service_text VARCHAR(160),
+  status VARCHAR(30) NOT NULL DEFAULT 'inactive',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_livecodes_status ON livecodes(status);
+
+CREATE TABLE IF NOT EXISTS orders (
+  order_id VARCHAR(80) PRIMARY KEY,
+  order_token VARCHAR(160) NOT NULL,
+  product_code VARCHAR(80) NOT NULL REFERENCES products(product_code),
+  product_name VARCHAR(160) NOT NULL,
+  amount_cents INTEGER NOT NULL CHECK (amount_cents > 0),
+  pay_channel VARCHAR(32) NOT NULL DEFAULT 'mock',
+  pay_status VARCHAR(30) NOT NULL DEFAULT 'pending',
+  transaction_id VARCHAR(120),
+  channel VARCHAR(80),
+  campaign VARCHAR(80),
+  creative VARCHAR(80),
+  paid_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_orders_product_code ON orders(product_code);
+CREATE INDEX IF NOT EXISTS idx_orders_pay_status ON orders(pay_status);
+CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at DESC);
+
+CREATE TABLE IF NOT EXISTS payment_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id VARCHAR(80) NOT NULL REFERENCES orders(order_id),
+  pay_channel VARCHAR(32) NOT NULL,
+  event_type VARCHAR(60) NOT NULL,
+  raw_payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+  verify_status VARCHAR(40) NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_payment_logs_order_id ON payment_logs(order_id);
+CREATE INDEX IF NOT EXISTS idx_payment_logs_event_type ON payment_logs(event_type);
+CREATE INDEX IF NOT EXISTS idx_payment_logs_created_at ON payment_logs(created_at DESC);
+
+CREATE TABLE IF NOT EXISTS course_users (
+  user_id VARCHAR(120) PRIMARY KEY,
+  openid VARCHAR(160),
+  unionid VARCHAR(160),
+  order_id VARCHAR(80) NOT NULL UNIQUE REFERENCES orders(order_id),
+  product_code VARCHAR(80) NOT NULL REFERENCES products(product_code),
+  course_name VARCHAR(160) NOT NULL,
+  status VARCHAR(30) NOT NULL DEFAULT 'active',
+  paid_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_course_users_openid ON course_users(openid);
+CREATE INDEX IF NOT EXISTS idx_course_users_unionid ON course_users(unionid);
+CREATE INDEX IF NOT EXISTS idx_course_users_product_code ON course_users(product_code);
+
+CREATE TABLE IF NOT EXISTS admin_users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  username VARCHAR(80) NOT NULL UNIQUE,
+  password_hash VARCHAR(200) NOT NULL,
+  role VARCHAR(40) NOT NULL DEFAULT 'admin',
+  status VARCHAR(30) NOT NULL DEFAULT 'active',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_admin_users_status ON admin_users(status);
+
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  admin_id VARCHAR(120),
+  action VARCHAR(80) NOT NULL,
+  target_type VARCHAR(80) NOT NULL,
+  target_id VARCHAR(120) NOT NULL,
+  before_json JSONB,
+  after_json JSONB,
+  ip INET,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_logs_admin_id ON audit_logs(admin_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_target ON audit_logs(target_type, target_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at DESC);
+
+-- production does not seed live data
+-- all runtime data must be created via admin panel

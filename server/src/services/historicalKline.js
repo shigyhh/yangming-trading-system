@@ -8,20 +8,10 @@ import { fetchProviderKlines, listKlineProviders, resolveDefaultProvider } from 
 const COMPLIANCE_TEXT = "本数据仅用于交易心理训练、行为觉察与复盘教育；不构成投资建议。";
 const DEFAULT_MARKET = "cn_equity";
 const DEFAULT_TIMEFRAME = "1d";
-const DEFAULT_WINDOW_SIZE = 180;
+const DEFAULT_WINDOW_SIZE = 96;
 const MIN_WINDOW_SIZE = 12;
 const MAX_WINDOW_SIZE = 240;
 const SLICE_TOKEN_VERSION = "kline_slice_v1";
-const HOT_SLICE_CACHE_LIMIT = clamp(Number(process.env.KLINE_SLICE_HOT_CACHE_LIMIT || 256), 16, 1000);
-const DETERMINISTIC_SLICE_CACHE_TTL_MS = 10 * 60 * 1000;
-const DETERMINISTIC_SLICE_CACHE_LIMIT = 360;
-const HOT_POOL_DEFAULT_SIZE = clamp(Number(process.env.KLINE_HOT_POOL_SIZE || 12), 3, 60);
-const HOT_POOL_MAX_SIZE = clamp(Number(process.env.KLINE_HOT_POOL_MAX_SIZE || 60), 3, 120);
-const HOT_POOL_DEFAULT_GATE = "shi_shang_mo";
-const hotSliceCache = new Map();
-const deterministicSliceCache = new Map();
-const hotSlicePools = new Map();
-const hotPoolWarmTasks = new Map();
 
 const TIMEFRAMES = [
   { key: "5m", label: "5分钟", granularity: "intraday", minutes: 5 },
@@ -406,7 +396,8 @@ export async function buildHistoricalKlineSlice({
   blind = true,
   seed = "",
   startDate = "",
-  endDate = ""
+  endDate = "",
+  anchor = ""
 } = {}) {
   const market = getMarket(marketKey);
   const timeframe = getTimeframe(timeframeKey || market.defaultTimeframe);
@@ -414,53 +405,11 @@ export async function buildHistoricalKlineSlice({
   const trainingMode = getTrainingMode(mode);
   const gate = getGatePractice(gateKey);
   const personality = getPersonalityPractice(personalityType);
-  const safeWindowSize = clamp(Number(windowSize || DEFAULT_WINDOW_SIZE), MIN_WINDOW_SIZE, MAX_WINDOW_SIZE);
-  const requestedSymbol = String(symbol || "").trim();
-  const deterministicCacheKey = buildDeterministicSliceCacheKey({
-    marketKey: market.key,
-    symbol: requestedSymbol,
-    timeframeKey: timeframe.key,
-    adjustmentMode: adjustment.key,
-    windowSize: safeWindowSize,
-    mode: trainingMode.key,
-    personalityType,
-    gateKey: gate?.key || "",
-    blind,
-    seed,
-    startDate,
-    endDate
-  });
-  const cached = deterministicCacheKey ? readDeterministicSliceCache(deterministicCacheKey) : null;
-  if (cached) return markSliceCacheStatus(cached, "deterministic_hit");
-  const hotCacheKey = buildHotSliceCacheKey({
-    marketKey: market.key,
-    symbol,
-    timeframeKey: timeframe.key,
-    adjustmentMode: adjustment.key,
-    windowSize: safeWindowSize,
-    mode: trainingMode.key,
-    personalityType: personality.label,
-    gateKey: gate.key,
-    blind,
-    seed,
-    startDate,
-    endDate
-  });
-  const hotCached = getHotSliceCache(hotCacheKey);
-  if (hotCached) return withSliceCacheStatus(hotCached, "hit");
-
   const instruments = await loadInstrumentList(market);
-  const { instrument, dataset, candles } = await resolveSliceDataset({
-    market,
-    symbol,
-    instruments,
-    timeframeKey: timeframe.key,
-    adjustmentMode: adjustment.key,
-    windowSize: safeWindowSize,
-    seed,
-    startDate,
-    endDate
-  });
+  const instrument = await resolveInstrument({ market, symbol, instruments, timeframeKey: timeframe.key, seed });
+  const dataset = await loadKlineDataset({ market, symbol: instrument.symbol, timeframeKey: timeframe.key, adjustmentMode: adjustment.key });
+  const candles = filterCandlesByDate(dataset.candles, { startDate, endDate });
+  const safeWindowSize = clamp(Number(windowSize || DEFAULT_WINDOW_SIZE), MIN_WINDOW_SIZE, MAX_WINDOW_SIZE);
 
   if (candles.length < safeWindowSize) {
     const error = new Error(`真实历史K线数量不足：${market.label} ${timeframe.label} ${instrument.symbol}`);
@@ -476,8 +425,8 @@ export async function buildHistoricalKlineSlice({
   }
 
   const rng = createSeededRng([market.key, instrument.symbol, timeframe.key, trainingMode.key, personality?.label || "", gate?.key || "", seed || ""].join(":"));
-  const startIndex = requestedSymbol && (startDate || endDate)
-    ? chooseAnchoredSliceStartIndex(candles, { windowSize: safeWindowSize, startDate, endDate })
+  const startIndex = anchor === "end"
+    ? Math.max(0, candles.length - safeWindowSize)
     : chooseSliceStartIndex(candles, {
       windowSize: safeWindowSize,
       mode: trainingMode.key,
@@ -513,7 +462,7 @@ export async function buildHistoricalKlineSlice({
   const blindBasePrice = segment[0]?.close || segment[0]?.open || 1;
   const blindVolumeBase = average(segment.map((item) => Number(item.volume || 0)).filter((value) => value > 0)) || 1;
 
-  const result = {
+  return {
     slice: {
       id: sliceId,
       blind: Boolean(blind),
@@ -562,156 +511,8 @@ export async function buildHistoricalKlineSlice({
       }),
       reveal_token: Boolean(blind) ? encodeSliceToken(descriptor) : "",
       reveal: Boolean(blind) ? null : descriptor,
-      cache_status: deterministicCacheKey ? "deterministic_miss" : "uncached",
-      deterministic_cache: Boolean(deterministicCacheKey),
       compliance: COMPLIANCE_TEXT
     }
-  };
-  if (deterministicCacheKey) {
-    writeDeterministicSliceCache(deterministicCacheKey, result);
-    return result;
-  }
-  setHotSliceCache(hotCacheKey, result);
-  return withSliceCacheStatus(result, "miss");
-}
-
-export async function warmHistoricalKlineHotPool({
-  marketKey = DEFAULT_MARKET,
-  symbol = "",
-  timeframeKey = DEFAULT_TIMEFRAME,
-  adjustmentMode = "none",
-  windowSize = DEFAULT_WINDOW_SIZE,
-  mode = "step_replay",
-  personalityType = "",
-  gateKey = "",
-  blind = true,
-  startDate = "",
-  endDate = "",
-  poolSize = HOT_POOL_DEFAULT_SIZE,
-  poolSeed = "",
-  dedupe = true
-} = {}) {
-  const normalizedGateKey = gateKey || HOT_POOL_DEFAULT_GATE;
-  const poolKey = buildHotPoolKey({
-    marketKey,
-    symbol,
-    timeframeKey,
-    adjustmentMode,
-    windowSize,
-    mode,
-    personalityType,
-    gateKey: normalizedGateKey,
-    blind,
-    startDate,
-    endDate
-  });
-  const safePoolSize = clamp(Number(poolSize || HOT_POOL_DEFAULT_SIZE), 1, HOT_POOL_MAX_SIZE);
-  const existing = hotSlicePools.get(poolKey);
-  if (existing?.items?.length >= safePoolSize) {
-    return buildHotPoolSummary(poolKey, existing.items, "ready");
-  }
-  if (dedupe && hotPoolWarmTasks.has(poolKey)) {
-    return hotPoolWarmTasks.get(poolKey);
-  }
-
-  const task = (async () => {
-    const items = Array.isArray(existing?.items) ? existing.items.slice(0, safePoolSize) : [];
-    const baseSeed = String(poolSeed || `${Date.now()}-${crypto.randomBytes(6).toString("hex")}`);
-    for (let index = items.length; index < safePoolSize; index += 1) {
-      const seed = `${baseSeed}:pool:${index}`;
-      const result = await buildHistoricalKlineSlice({
-        marketKey,
-        symbol,
-        timeframeKey,
-        adjustmentMode,
-        windowSize,
-        mode,
-        personalityType,
-        gateKey: normalizedGateKey,
-        blind,
-        seed,
-        startDate,
-        endDate
-      });
-      items.push(withHotPoolMetadata(result, {
-        cacheStatus: "pool_warm",
-        poolKey,
-        poolSize: safePoolSize
-      }));
-    }
-
-    hotSlicePools.set(poolKey, {
-      updatedAt: new Date().toISOString(),
-      items
-    });
-    return buildHotPoolSummary(poolKey, items, "ready");
-  })();
-
-  if (dedupe) {
-    hotPoolWarmTasks.set(poolKey, task);
-    task.finally(() => {
-      if (hotPoolWarmTasks.get(poolKey) === task) hotPoolWarmTasks.delete(poolKey);
-    });
-  }
-  return task;
-}
-
-export async function buildHistoricalKlineHotSlice(params = {}) {
-  const normalizedParams = Object.assign({}, params, {
-    gateKey: params.gateKey || HOT_POOL_DEFAULT_GATE
-  });
-  const poolKey = buildHotPoolKey(normalizedParams);
-  let entry = hotSlicePools.get(poolKey);
-  const hadReadyPool = !!(entry?.items?.length);
-  if (!hadReadyPool) {
-    await warmHistoricalKlineHotPool(Object.assign({}, normalizedParams, { poolSize: 1, dedupe: true }));
-    entry = hotSlicePools.get(poolKey);
-  }
-
-  const items = Array.isArray(entry?.items) ? entry.items : [];
-  if (!items.length) return buildHistoricalKlineSlice(params);
-  const index = Math.floor(Math.random() * items.length);
-  const poolSizeBeforeConsume = items.length;
-  const [selected] = items.splice(index, 1);
-  hotSlicePools.set(poolKey, {
-    updatedAt: new Date().toISOString(),
-    items
-  });
-  warmHistoricalKlineHotPool(normalizedParams).catch(() => {});
-  return withHotPoolMetadata(selected, {
-    cacheStatus: hadReadyPool ? "pool_hit" : "pool_cold_fill",
-    poolKey,
-    poolSize: poolSizeBeforeConsume
-  });
-}
-
-export async function warmDefaultHistoricalKlineHotPools() {
-  const timeframes = ["1d", "60m", "30m"];
-  const results = [];
-  for (const timeframeKey of timeframes) {
-    try {
-      const result = await warmHistoricalKlineHotPool({
-        marketKey: "cn_equity",
-        timeframeKey,
-        windowSize: 150,
-        mode: "step_replay",
-        gateKey: "shi_shang_mo",
-        blind: true,
-        poolSize: HOT_POOL_DEFAULT_SIZE
-      });
-      results.push(result.pool);
-    } catch (error) {
-      results.push({
-        status: "error",
-        timeframe_key: timeframeKey,
-        error: error.message
-      });
-    }
-  }
-  return {
-    ok: results.some((item) => item.status === "ready"),
-    pools: results,
-    warmed_at: new Date().toISOString()
   };
 }
 
@@ -944,15 +745,6 @@ async function loadAshareInstruments(market) {
 
 async function listCachedMarketSymbols(market) {
   const root = path.join(config.marketDataDir, market.dataDir);
-  return listCachedSymbolsInRoot(root);
-}
-
-async function listCachedAshareSymbols() {
-  const root = path.join(config.marketDataDir, "ashare");
-  return listCachedSymbolsInRoot(root);
-}
-
-async function listCachedSymbolsInRoot(root) {
   const symbols = new Set();
   try {
     const timeframeDirs = await fs.readdir(root, { withFileTypes: true });
@@ -969,64 +761,22 @@ async function listCachedSymbolsInRoot(root) {
   return Array.from(symbols);
 }
 
-async function listCachedSymbolsInDir(root) {
+async function listCachedAshareSymbols() {
+  const root = path.join(config.marketDataDir, "ashare");
   const symbols = new Set();
   try {
-    const files = await fs.readdir(root, { withFileTypes: true });
-    files.forEach((file) => {
-      if (file.isFile() && file.name.endsWith(".json")) symbols.add(file.name.replace(/\.json$/, ""));
-    });
+    const timeframeDirs = await fs.readdir(root, { withFileTypes: true });
+    for (const dirent of timeframeDirs) {
+      if (!dirent.isDirectory()) continue;
+      const files = await fs.readdir(path.join(root, dirent.name), { withFileTypes: true });
+      files.forEach((file) => {
+        if (file.isFile() && file.name.endsWith(".json")) symbols.add(file.name.replace(/\.json$/, ""));
+      });
+    }
   } catch (error) {
     if (error.code !== "ENOENT") throw error;
   }
   return Array.from(symbols);
-}
-
-async function listCachedSymbolsForTimeframe(market, timeframeKey) {
-  const symbols = new Set(await listCachedSymbolsInDir(path.join(config.marketDataDir, market.dataDir, timeframeKey)));
-  if (market.key === "cn_equity") {
-    const klt = ASHARE_KLT_BY_TIMEFRAME[timeframeKey];
-    if (klt) {
-      const legacySymbols = await listCachedSymbolsInDir(path.join(config.marketDataDir, "ashare", klt));
-      legacySymbols.forEach((symbol) => symbols.add(symbol));
-    }
-  }
-  return Array.from(symbols);
-}
-
-export function chooseCachedInstrument({
-  instruments = [],
-  cachedSymbols = [],
-  marketKey = "",
-  timeframeKey = "",
-  seed = ""
-} = {}) {
-  const cachedPool = buildCachedInstrumentCandidates({ instruments, cachedSymbols, marketKey, timeframeKey, seed });
-  if (!cachedPool.length) return null;
-  return cachedPool[0];
-}
-
-function buildCachedInstrumentCandidates({
-  instruments = [],
-  cachedSymbols = [],
-  marketKey = "",
-  timeframeKey = "",
-  seed = ""
-} = {}) {
-  const cached = uniqueStrings(cachedSymbols);
-  if (!cached.length) return [];
-  const instrumentMap = new Map(instruments.map((item) => [item.symbol, item]));
-  const rng = createSeededRng(`${marketKey}:${timeframeKey}:${seed || "cached"}`);
-  return cached
-    .map((symbol) => instrumentMap.get(symbol) || {
-      symbol,
-      name: "",
-      secid: "",
-      instrument_key: createInstrumentKey(symbol)
-    })
-    .map((instrument) => ({ instrument, rank: rng() }))
-    .sort((a, b) => a.rank - b.rank)
-    .map((item) => item.instrument);
 }
 
 async function upsertInstrument(market, patch) {
@@ -1067,75 +817,12 @@ function normalizeInstrument(item) {
   };
 }
 
-async function resolveSliceDataset({
-  market,
-  symbol = "",
-  instruments = [],
-  timeframeKey,
-  adjustmentMode,
-  windowSize,
-  seed = "",
-  startDate = "",
-  endDate = ""
-}) {
-  const requested = String(symbol || "").trim();
-  if (requested) {
-    const instrument = await resolveInstrument({ market, symbol: requested, instruments, timeframeKey, seed });
-    const dataset = await loadKlineDataset({ market, symbol: instrument.symbol, timeframeKey, adjustmentMode });
-    const candles = filterCandlesByDate(dataset.candles, { startDate, endDate });
-    return { instrument, dataset, candles };
-  }
-
-  const cachedSymbols = await listCachedSymbolsForTimeframe(market, timeframeKey);
-  const candidates = buildCachedInstrumentCandidates({
-    instruments,
-    cachedSymbols,
-    marketKey: market.key,
-    timeframeKey,
-    seed
-  });
-  const attempts = candidates.slice(0, 24);
-  let best = null;
-
-  for (const instrument of attempts) {
-    try {
-      const dataset = await loadKlineDataset({ market, symbol: instrument.symbol, timeframeKey, adjustmentMode, allowMissing: true });
-      const candles = filterCandlesByDate(dataset.candles, { startDate, endDate });
-      if (!best || candles.length > best.candles.length) best = { instrument, dataset, candles };
-      if (candles.length >= windowSize) return { instrument, dataset, candles };
-    } catch {
-      // Skip broken cache files; the next cached symbol may still be usable.
-    }
-  }
-
-  if (best) return best;
-
-  const error = new Error(`真实历史K线未缓存：${market.label} ${getTimeframe(timeframeKey).label}`);
-  error.statusCode = 404;
-  error.details = {
-    market_key: market.key,
-    timeframe_key: timeframeKey,
-    cached_symbol_count: cachedSymbols.length,
-    tried_count: attempts.length
-  };
-  throw error;
-}
-
-async function resolveInstrument({ market, symbol, instruments, timeframeKey, seed, cachedSymbols = [] }) {
+async function resolveInstrument({ market, symbol, instruments, timeframeKey, seed }) {
   const requested = String(symbol || "").trim();
   if (requested) {
     const found = instruments.find((item) => item.symbol === requested || item.instrument_key === requested);
     return found || { symbol: requested, name: "", secid: "", instrument_key: createInstrumentKey(requested) };
   }
-
-  const cachedInstrument = chooseCachedInstrument({
-    instruments,
-    cachedSymbols,
-    marketKey: market.key,
-    timeframeKey,
-    seed
-  });
-  if (cachedInstrument) return cachedInstrument;
 
   const ready = [];
   for (const instrument of instruments.slice(0, 800)) {
@@ -1337,174 +1024,6 @@ function filterCandlesByDate(candles, { startDate = "", endDate = "" } = {}) {
     if (end && key > end) return false;
     return true;
   });
-}
-
-function buildDeterministicSliceCacheKey({
-  marketKey = "",
-  symbol = "",
-  timeframeKey = "",
-  adjustmentMode = "",
-  windowSize = DEFAULT_WINDOW_SIZE,
-  mode = "",
-  personalityType = "",
-  gateKey = "",
-  blind = true,
-  seed = "",
-  startDate = "",
-  endDate = ""
-} = {}) {
-  const safeSymbol = String(symbol || "").trim();
-  if (!safeSymbol) return "";
-  return [
-    marketKey,
-    safeSymbol,
-    timeframeKey,
-    adjustmentMode,
-    windowSize,
-    mode,
-    personalityType,
-    gateKey,
-    blind ? "blind" : "open",
-    seed,
-    normalizeDateKey(startDate),
-    normalizeDateKey(endDate)
-  ].join("|");
-}
-
-function buildHotSliceCacheKey(input = {}) {
-  return JSON.stringify([
-    input.marketKey || DEFAULT_MARKET,
-    String(input.symbol || "").trim(),
-    input.timeframeKey || DEFAULT_TIMEFRAME,
-    input.adjustmentMode || "none",
-    Number(input.windowSize || DEFAULT_WINDOW_SIZE),
-    input.mode || "step_replay",
-    input.personalityType || "",
-    input.gateKey || "",
-    Boolean(input.blind),
-    String(input.seed || ""),
-    normalizeDateKey(input.startDate || ""),
-    normalizeDateKey(input.endDate || "")
-  ]);
-}
-
-function readDeterministicSliceCache(cacheKey) {
-  const cached = deterministicSliceCache.get(cacheKey);
-  if (!cached) return null;
-  if (Date.now() - cached.cachedAt > DETERMINISTIC_SLICE_CACHE_TTL_MS) {
-    deterministicSliceCache.delete(cacheKey);
-    return null;
-  }
-  deterministicSliceCache.delete(cacheKey);
-  deterministicSliceCache.set(cacheKey, cached);
-  return cloneJson(cached.result);
-}
-
-function writeDeterministicSliceCache(cacheKey, result) {
-  if (!cacheKey || !result?.slice) return;
-  deterministicSliceCache.set(cacheKey, {
-    cachedAt: Date.now(),
-    result: cloneJson(result)
-  });
-  while (deterministicSliceCache.size > DETERMINISTIC_SLICE_CACHE_LIMIT) {
-    deterministicSliceCache.delete(deterministicSliceCache.keys().next().value);
-  }
-}
-
-function markSliceCacheStatus(result, status) {
-  return {
-    ...result,
-    slice: {
-      ...(result.slice || {}),
-      cache_status: status,
-      deterministic_cache: true
-    }
-  };
-}
-
-function cloneJson(value) {
-  return JSON.parse(JSON.stringify(value));
-}
-
-function getHotSliceCache(cacheKey) {
-  if (!hotSliceCache.has(cacheKey)) return null;
-  const cached = hotSliceCache.get(cacheKey);
-  hotSliceCache.delete(cacheKey);
-  hotSliceCache.set(cacheKey, cached);
-  return cached;
-}
-
-function setHotSliceCache(cacheKey, result) {
-  if (!cacheKey || !result?.slice) return;
-  hotSliceCache.set(cacheKey, cloneJson(result));
-  while (hotSliceCache.size > HOT_SLICE_CACHE_LIMIT) {
-    hotSliceCache.delete(hotSliceCache.keys().next().value);
-  }
-}
-
-function withSliceCacheStatus(result, cacheStatus) {
-  const cloned = cloneJson(result);
-  if (cloned?.slice) cloned.slice.cache_status = cacheStatus;
-  return cloned;
-}
-
-function buildHotPoolKey(input = {}) {
-  const market = getMarket(input.marketKey || DEFAULT_MARKET);
-  const timeframe = getTimeframe(input.timeframeKey || market.defaultTimeframe || DEFAULT_TIMEFRAME);
-  const adjustment = getAdjustmentMode(input.adjustmentMode || "none");
-  const trainingMode = getTrainingMode(input.mode || "step_replay");
-  const gate = getGatePractice(input.gateKey || "");
-  const personality = getPersonalityPractice(input.personalityType || "");
-  const safeWindowSize = clamp(Number(input.windowSize || DEFAULT_WINDOW_SIZE), MIN_WINDOW_SIZE, MAX_WINDOW_SIZE);
-  return JSON.stringify([
-    market.key,
-    String(input.symbol || "").trim(),
-    timeframe.key,
-    adjustment.key,
-    safeWindowSize,
-    trainingMode.key,
-    personality.label,
-    gate.key,
-    Boolean(input.blind !== false),
-    normalizeDateKey(input.startDate || ""),
-    normalizeDateKey(input.endDate || "")
-  ]);
-}
-
-function buildHotPoolSummary(poolKey, items = [], status = "ready") {
-  return {
-    pool: {
-      key: hashText(poolKey),
-      status,
-      size: items.length,
-      updated_at: new Date().toISOString()
-    },
-    compliance: COMPLIANCE_TEXT
-  };
-}
-
-function withHotPoolMetadata(result, { cacheStatus = "pool_hit", poolKey = "", poolSize = 0 } = {}) {
-  const cloned = withSliceCacheStatus(result, cacheStatus);
-  if (cloned?.slice) {
-    cloned.slice.hot_pool = true;
-    cloned.slice.pool_key = hashText(poolKey);
-    cloned.slice.pool_size = poolSize;
-  }
-  return cloned;
-}
-
-function hashText(value = "") {
-  return crypto.createHash("sha256").update(String(value)).digest("base64url").slice(0, 18);
-}
-
-function chooseAnchoredSliceStartIndex(candles, { windowSize, startDate = "", endDate = "" } = {}) {
-  const maxStart = Math.max(0, candles.length - windowSize);
-  if (maxStart <= 0) return 0;
-  const start = normalizeDateKey(startDate);
-  const end = normalizeDateKey(endDate);
-  if (end) return maxStart;
-  if (start) return 0;
-  return maxStart;
 }
 
 function chooseSliceStartIndex(candles, { windowSize, mode, personality, gate, rng }) {

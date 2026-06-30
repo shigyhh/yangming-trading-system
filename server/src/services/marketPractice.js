@@ -101,7 +101,7 @@ const KLINE_STAGES = [
   },
   {
     id: "stop_loss",
-    name: "扛单型止损关卡",
+    name: "扛单型风险处理关卡",
     subtitle: "练破位执行，不和亏损辩论",
     required_streak_days: 0,
     personality_type: "扛单型",
@@ -1030,10 +1030,10 @@ function buildAshareDecisionMap({ rightDecision, futureReturn, maxRunup, maxDraw
     买点开仓: `选择买点前，必须先确认失效线和仓位。${summary}`,
     卖点离场: `离场不是胆小，而是保护计划。${summary}`,
     继续观望: `看不清时不做，也是一种交易能力。${summary}`,
-    触发止损: `止损不是失败，是把亏损锁在系统能承受的范围内。${summary}`
+    触发风险处理: `风险处理不是失败，是把亏损锁在系统能承受的范围内。${summary}`
   };
 
-  return Object.fromEntries(["买点开仓", "卖点离场", "继续观望", "触发止损"].map((label) => {
+  return Object.fromEntries(["买点开仓", "卖点离场", "继续观望", "触发风险处理"].map((label) => {
     const isRight = label === rightDecision;
     return [
       label,
@@ -1047,7 +1047,7 @@ function buildAshareDecisionMap({ rightDecision, futureReturn, maxRunup, maxDraw
 }
 
 function chooseAshareRightDecision({ futureReturn, maxRunup, maxDrawdown }) {
-  if (maxDrawdown <= -5.5 && futureReturn < -1) return "触发止损";
+  if (maxDrawdown <= -5.5 && futureReturn < -1) return "触发风险处理";
   if (futureReturn >= 3.5 && maxDrawdown > -4) return "买点开仓";
   if (futureReturn <= -2.5 || maxDrawdown <= -4.8) return "卖点离场";
   if (maxRunup >= 5 && futureReturn > 1.5) return "买点开仓";
@@ -1056,14 +1056,14 @@ function chooseAshareRightDecision({ futureReturn, maxRunup, maxDrawdown }) {
 
 function scoreAshareAlternative(label, { futureReturn, maxRunup, maxDrawdown }) {
   if (label === "继续观望") return Math.abs(futureReturn) <= 2.5 ? 78 : 62;
-  if (label === "触发止损") return maxDrawdown <= -4 ? 74 : 58;
+  if (label === "触发风险处理") return maxDrawdown <= -4 ? 74 : 58;
   if (label === "卖点离场") return futureReturn < 0 ? 72 : 55;
   if (label === "买点开仓") return maxRunup > 3 ? 70 : 48;
   return 60;
 }
 
 function disciplineAshareAlternative(label) {
-  if (label.includes("止损")) return 82;
+  if (label.includes("风险处理")) return 82;
   if (label.includes("观望")) return 78;
   if (label.includes("卖点")) return 74;
   return 62;
@@ -1339,7 +1339,7 @@ function buildPracticeInsight(record, scenario) {
   if (record.score >= 85) return "此心能定，临盘能照。今天这次练习体现了较强的计划感。";
   if (record.discipline >= 75) return "胜负未必尽如人意，但能守住规则，就是事上练的进步。";
   if (record.decision.includes("追")) return "今日要观照的是怕错过。行情越急，越要先正心。";
-  if (record.decision.includes("扛")) return "今日要观照的是不愿认错。知错能改，才是真止损。";
+  if (record.decision.includes("扛")) return "今日要观照的是不愿认错。知错能改，才是真按计划处理。";
   return "练习的重点不是猜对，而是看见自己在波动面前如何起心动念。";
 }
 

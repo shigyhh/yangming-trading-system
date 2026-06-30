@@ -1,3 +1,5 @@
+const { normalizeExecutionResult } = require("../../utils/execution-terminology");
+
 const LOOP_NODES = [
   { key: "enter_reflection", label: "入照心" },
   { key: "nine_mirrors", label: "九镜显影" },
@@ -19,35 +21,6 @@ const THOUGHT_OPTIONS = [
   { key: "ask_others", label: "想问别人", pattern: /别人|群里|老师|朋友|外部/ },
   { key: "abandon_plan", label: "想改计划", pattern: /改计划|重新解释|临时|证明|翻本|不甘/ }
 ];
-
-const HOME_TODAY_STATE_STATUS = {
-  not_seen: "待照见",
-  not_trained: "待训练",
-  not_reviewed: "待复盘",
-  completed: "今日已完成",
-  unknown: "活镜仍在显影"
-};
-
-const HOME_TODAY_ACTIONS = ["照见一念", "K线训练", "轻复盘", "查看活镜"];
-
-const HOME_TODAY_ACTION_ROUTES = {
-  "照见一念": { actionKey: "mind", route: "/pages/mind/index" },
-  "K线训练": { actionKey: "kline", route: "/pages/kline-mind/index" },
-  "轻复盘": { actionKey: "trade-review", route: "/pages/trade-review/index" },
-  "查看活镜": { actionKey: "living-mirror", route: "/pages/living-mirror/index" }
-};
-
-function formatHomeTodayUpdatedAt(value = "") {
-  const raw = String(value || "").trim();
-  if (!raw) return "";
-  const date = new Date(raw);
-  if (Number.isNaN(date.getTime())) return raw;
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  const hour = String(date.getHours()).padStart(2, "0");
-  const minute = String(date.getMinutes()).padStart(2, "0");
-  return `${month}月${day}日 ${hour}:${minute}更新`;
-}
 
 function buildMiniProgramBinding({ userBinding = {}, profile = {}, linkToken = "", reportId = "" } = {}) {
   const anonymousId = userBinding.userId || profile.anonymousId || `anon_${userBinding.inviteCode || "pending"}`;
@@ -151,24 +124,113 @@ function buildMiniHomeView(context = {}) {
   };
 }
 
-function buildHomeTodayStateView(todayState = {}) {
-  const rawStatus = String(todayState.status || "");
-  const status = HOME_TODAY_STATE_STATUS[rawStatus] ? rawStatus : "unknown";
-  const rawAction = String(todayState.nextAction || todayState.nextActionText || "");
-  const nextActionText = HOME_TODAY_ACTIONS.includes(rawAction) ? rawAction : "先照见这一念";
-  return {
-    title: "今日所照",
-    status,
-    statusText: HOME_TODAY_STATE_STATUS[status],
-    nextActionText,
-    progress: Math.max(0, Math.min(100, Number(todayState.progress || 0))),
-    updatedAt: formatHomeTodayUpdatedAt(todayState.updatedAt),
-    fallbackText: status === "unknown" ? "今日状态暂未同步，本地修行仍可继续。" : ""
-  };
-}
+function buildTodayNextStepState(context = {}) {
+  const dayKey = context.todayKey || todayKey();
+  const review = findLatestTodayReview(context.tradeReviewState || {}, dayKey);
+  const mainErrorType = pickText(review, "mainErrorType", "main_error_type");
+  const mistakeCard = pickRaw(review, "mistakeCard", "mistake_card");
+  const hasReviewCard = !!review && (!!mainErrorType || hasValue(mistakeCard));
 
-function resolveHomeTodayStateAction(nextAction = "") {
-  return HOME_TODAY_ACTION_ROUTES[String(nextAction || "")] || { actionKey: "", route: "" };
+  if (!hasReviewCard) {
+    return {
+      status: "need_review",
+      title: "今日只练一件事",
+      mainText: "上传一条真实记录，先照见一次第一念。",
+      primaryActionText: "上传真实记录",
+      primaryActionType: "trade-review",
+      primaryActionUrl: "/pages/trade-review/index",
+      secondaryText: "",
+      mainErrorType: "待补充",
+      errorType: "",
+      nextAction: "先记录，再行动",
+      executionResult: "",
+      sourceReviewId: "",
+      sessionId: ""
+    };
+  }
+
+  const sourceReviewId = pickText(review, "id", "reviewId", "review_id");
+  const nextAction = pickText(review, "nextAction", "next_action", "nextRule", "next_rule") || "先记录，再行动";
+  const trainingPrescription = pickText(
+    review,
+    "trainingPrescription",
+    "training_prescription",
+    "trainingAction",
+    "training_action",
+    "nextAction",
+    "next_action",
+    "nextRule",
+    "next_rule"
+  );
+  const sceneTags = pickSceneTags(review);
+  const reviewFocusUrl = buildReviewFocusUrl({
+    sourceReviewId,
+    errorType: mainErrorType || "待补充",
+    trainingPrescription,
+    sceneTags,
+    nextAction
+  });
+  const focusRecord = findLatestTodayReviewFocusRecord(context, dayKey);
+  const focusHasResult = hasTrainingResult(focusRecord);
+
+  if (!focusRecord || !focusHasResult) {
+    const safeError = mainErrorType || "待补充";
+    return {
+      status: "need_training",
+      title: "错题已见",
+      mainText: "错题已见，今日只练一次相似情境。",
+      primaryActionText: "开始今日针对训练",
+      primaryActionType: "review-focus-training",
+      primaryActionUrl: reviewFocusUrl,
+      secondaryText: `根据你最近真实复盘，今日训练：${safeError}专项`,
+      mainErrorType: safeError,
+      errorType: safeError,
+      nextAction,
+      executionResult: "",
+      sourceReviewId,
+      sessionId: pickText(focusRecord, "id", "sessionId", "session_id")
+    };
+  }
+
+  const errorType = pickText(focusRecord, "errorType", "error_type") || mainErrorType || "待补充";
+  const executionResult = normalizeExecutionResult(
+    pickRaw(focusRecord, "executionResult", "execution_result", "executionLabel", "execution_label", "lawResult", "law_result")
+  );
+  const sessionId = pickText(focusRecord, "id", "sessionId", "session_id");
+
+  if (isTrainingCardViewed(focusRecord)) {
+    return {
+      status: "completed",
+      title: "今日已照见一次，也练过一次",
+      mainText: "今日已照见一次，也练过一次。",
+      primaryActionText: "查看今日活镜",
+      primaryActionType: "living-mirror",
+      primaryActionUrl: "/pages/living-mirror/index",
+      secondaryText: `今日错题：${mainErrorType || errorType}\n下次执行动作：${nextAction}`,
+      mainErrorType: mainErrorType || errorType,
+      errorType,
+      nextAction,
+      executionResult,
+      sourceReviewId,
+      sessionId
+    };
+  }
+
+  return {
+    status: "need_review_training_card",
+    title: "今日已练",
+    mainText: "今日已练，回看一次执行偏离。",
+    primaryActionText: "查看训练错题卡",
+    primaryActionType: "training-card",
+    primaryActionUrl: appendQuery(reviewFocusUrl, { showResult: "1", sessionId }),
+    secondaryText: `本次训练：${errorType}专项\n执行结果：${executionResult}`,
+    mainErrorType: mainErrorType || errorType,
+    errorType,
+    nextAction,
+    executionResult,
+    sourceReviewId,
+    sessionId
+  };
 }
 
 function buildMiniDailyPractice(context = {}) {
@@ -300,6 +362,170 @@ function mostFrequent(values) {
   return Object.keys(counts).sort((a, b) => counts[b] - counts[a] || a.localeCompare(b))[0] || "待照见";
 }
 
+function findLatestTodayReview(tradeReviewState = {}, dayKey) {
+  const records = normalizeRecordList(tradeReviewState);
+  return records
+    .filter((item) => isSameDayRecord(item, dayKey))
+    .filter((item) => !!pickText(item, "mainErrorType", "main_error_type") || hasValue(pickRaw(item, "mistakeCard", "mistake_card")))
+    .sort((a, b) => getRecordTime(b) - getRecordTime(a))[0] || null;
+}
+
+function findLatestTodayReviewFocusRecord(context = {}, dayKey) {
+  const records = [
+    ...normalizeRecordList(context.klineMindRecords),
+    ...normalizeRecordList(context.klineSessionRecords),
+    ...normalizeRecordList(context.klineRecords),
+    ...normalizeRecordList(context.todayKlineMindRecord)
+  ];
+  return records
+    .filter((item) => isSameDayRecord(item, dayKey))
+    .filter((item) => pickText(item, "sourceType", "source_type") === "review_focus")
+    .sort((a, b) => getRecordTime(b) - getRecordTime(a))[0] || null;
+}
+
+function normalizeRecordList(source) {
+  if (!source) return [];
+  if (Array.isArray(source)) return source.filter(Boolean);
+  if (isRecordLike(source)) return [source];
+  const records = [];
+  if (source.latest) records.push(source.latest);
+  if (Array.isArray(source.records)) records.push(...source.records);
+  Object.keys(source).forEach((key) => {
+    const value = source[key];
+    if (value && typeof value === "object" && !Array.isArray(value) && key !== "latest") {
+      records.push(value);
+    }
+  });
+  const seen = {};
+  return records.filter((item, index) => {
+    const key = pickText(item, "id", "sessionId", "session_id") || `${getRecordTime(item)}-${index}`;
+    if (seen[key]) return false;
+    seen[key] = true;
+    return true;
+  });
+}
+
+function isRecordLike(value = {}) {
+  return !!(
+    value.date ||
+    value.tradeDate ||
+    value.createdAt ||
+    value.created_at ||
+    value.updatedAt ||
+    value.updated_at ||
+    value.sourceType ||
+    value.source_type ||
+    value.mainErrorType ||
+    value.main_error_type ||
+    value.mistakeCard ||
+    value.mistake_card
+  );
+}
+
+function isSameDayRecord(record = {}, dayKey) {
+  const raw = pickRaw(record, "date", "tradeDate", "createdAt", "created_at", "updatedAt", "updated_at");
+  const normalized = normalizeDayKey(raw);
+  return normalized === dayKey;
+}
+
+function normalizeDayKey(value) {
+  if (!value) return "";
+  if (typeof value === "number") return formatDateKey(new Date(value));
+  const text = String(value || "").trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
+  if (/^\d+$/.test(text)) return formatDateKey(new Date(Number(text)));
+  const timestamp = new Date(text).getTime();
+  if (Number.isNaN(timestamp)) return "";
+  return formatDateKey(new Date(timestamp));
+}
+
+function formatDateKey(date) {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "";
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function getRecordTime(record = {}) {
+  const raw = pickRaw(record, "updatedAt", "updated_at", "createdAt", "created_at", "date", "tradeDate");
+  if (typeof raw === "number") return raw;
+  const text = String(raw || "").trim();
+  if (/^\d+$/.test(text)) return Number(text);
+  const timestamp = new Date(text).getTime();
+  return Number.isNaN(timestamp) ? 0 : timestamp;
+}
+
+function pickRaw(source = {}, ...fields) {
+  for (let index = 0; index < fields.length; index += 1) {
+    const value = source ? source[fields[index]] : undefined;
+    if (hasValue(value)) return value;
+  }
+  return "";
+}
+
+function pickText(source = {}, ...fields) {
+  const value = pickRaw(source, ...fields);
+  if (Array.isArray(value)) return value.map((item) => String(item || "").trim()).filter(Boolean).join("、");
+  if (value && typeof value === "object") {
+    return String(value.title || value.action || value.text || value.summary || "").trim();
+  }
+  return String(value || "").trim();
+}
+
+function hasValue(value) {
+  if (Array.isArray(value)) return value.length > 0;
+  if (value && typeof value === "object") return Object.keys(value).length > 0;
+  return String(value || "").trim().length > 0;
+}
+
+function pickSceneTags(review = {}) {
+  const direct = pickRaw(review, "sceneTags", "scene_tags");
+  if (Array.isArray(direct)) return direct.map((item) => String(item || "").trim()).filter(Boolean);
+  const text = pickText(review, "sceneTags", "scene_tags", "triggerScene", "trigger_scene");
+  return text ? text.split(/[、,，/]/).map((item) => item.trim()).filter(Boolean) : [];
+}
+
+function hasTrainingResult(record = {}) {
+  if (!record) return false;
+  return hasValue(pickRaw(record, "trainingMistakeCard", "training_mistake_card")) ||
+    !!pickText(record, "executionResult", "execution_result", "executionLabel", "execution_label", "lawResult", "law_result") ||
+    !!record.completed;
+}
+
+function isTrainingCardViewed(record = {}) {
+  return !!(
+    record.trainingMistakeCardViewed ||
+    record.training_mistake_card_viewed ||
+    record.trainingMistakeCardViewedAt ||
+    record.training_mistake_card_viewed_at
+  );
+}
+
+function buildReviewFocusUrl(input = {}) {
+  return appendQuery("/pages/kline-mind/index", {
+    from: "review_focus",
+    sourceType: "review_focus",
+    source_type: "review_focus",
+    sourceReviewId: input.sourceReviewId || "",
+    source_review_id: input.sourceReviewId || "",
+    errorType: input.errorType || "",
+    error_type: input.errorType || "",
+    trainingPrescription: input.trainingPrescription || "",
+    training_prescription: input.trainingPrescription || "",
+    sceneTags: (input.sceneTags || []).join(","),
+    scene_tags: (input.sceneTags || []).join(","),
+    nextAction: input.nextAction || "",
+    next_action: input.nextAction || ""
+  });
+}
+
+function appendQuery(url, params = {}) {
+  const query = Object.keys(params)
+    .filter((key) => params[key] !== undefined && params[key] !== null && String(params[key]).length > 0)
+    .map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(String(params[key]))}`)
+    .join("&");
+  if (!query) return url;
+  return url.includes("?") ? `${url}&${query}` : `${url}?${query}`;
+}
+
 function nowIso() {
   return new Date().toISOString();
 }
@@ -315,9 +541,7 @@ module.exports = {
   buildMiniProgramBinding,
   buildMiniLoopProgress,
   buildMiniHomeView,
-  buildHomeTodayStateView,
-  formatHomeTodayUpdatedAt,
-  resolveHomeTodayStateAction,
+  buildTodayNextStepState,
   buildMiniDailyPractice,
   buildMiniHeartProof,
   buildBehaviorLoop,

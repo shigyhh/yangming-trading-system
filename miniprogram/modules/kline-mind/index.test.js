@@ -4,43 +4,37 @@ const {
   PERSONALITY_KLINE_PRESCRIPTIONS,
   buildKlineMindSession,
   buildKlineMindRecord,
-  buildOneThoughtEvent,
   calculateKlineMindScore,
   MARKET_CATALOG,
   TIMEFRAME_CATALOG,
+  INDICATOR_CATALOG,
   KLINE_TRAINING_METHODS,
-  normalizeHistoryCandles,
-  getNextKlineMindSliceSeed,
   getPersonalityKlineDrill,
+  getInitialKlineVisibleCount,
+  startKlineTrainingRuntime,
+  setKlineRuntimeChartZoom,
+  setKlineRuntimeMainIndicator,
+  setKlineRuntimeIndicator,
+  buildKlineTrainingRecordPatch,
   listSpecialTrainingPacks,
+  getSpecialTrainingPack,
   buildSpecialTrainingSessionMeta,
   buildKlineSamplingRequest,
   normalizeKlineSamplingResult,
   buildCustomSessionMeta,
   buildTrainingBookmark,
   normalizeTrainingBookmark,
-  buildBookmarkReplaySliceRequest,
-  getInitialKlineVisibleCount,
-  startKlineTrainingRuntime,
-  advanceKlineTrainingRuntime,
-  recordKlineTrainingDecision,
-  setKlineRuntimeChartZoom,
-  setKlineRuntimeViewportPan,
-  buildKlineTrainingRecordPatch
+  buildBookmarkReplaySliceRequest
 } = require("./index");
 
 assert.strictEqual(SIX_GATE_MAP.length, 6);
 assert.ok(Object.keys(PERSONALITY_KLINE_PRESCRIPTIONS).length >= 9);
 assert.deepStrictEqual(Object.keys(MARKET_CATALOG), ["cn_equity"]);
 assert.deepStrictEqual(TIMEFRAME_CATALOG.map((item) => item.key), ["1d", "60m", "30m"]);
+assert.deepStrictEqual(TIMEFRAME_CATALOG.map((item) => item.label), ["长线", "中线", "短线"]);
+assert.deepStrictEqual(INDICATOR_CATALOG.map((item) => item.key), ["ma", "macd", "boll", "vol", "rsi", "kdj"]);
 assert.ok(KLINE_TRAINING_METHODS.find((item) => item.key === "firecracker"));
-assert.strictEqual(KLINE_TRAINING_METHODS[0].key, "firecracker");
-assert.ok(!KLINE_TRAINING_METHODS.some((item) => String(item.title || "").includes("爆竹")));
-assert.ok(KLINE_TRAINING_METHODS[0].steps.includes("点最想追的一根"));
 assert.ok(getPersonalityKlineDrill("焦虑型").drillAction.includes("固定观察窗口"));
-assert.strictEqual(getNextKlineMindSliceSeed(""), "scene-fast-001");
-assert.notStrictEqual(getNextKlineMindSliceSeed("scene-fast-001"), "scene-fast-001");
-assert.strictEqual(getNextKlineMindSliceSeed("unknown-seed"), "scene-fast-001");
 
 const historicalSlice = {
   source: "verified_fixture",
@@ -59,7 +53,7 @@ const historicalSlice = {
 
 const session = buildKlineMindSession({
   assessment: { primary: "冲动型", secondary: "焦虑型" },
-  trainingDay: { day: 2, title: "观边界抗拒" },
+  trainingDay: { day: 2, title: "观风险处理抗拒" },
   record: { marketKey: "cn_equity", timeframeKey: "1d" },
   historyCache: { cn_equity: { "1d": historicalSlice } }
 });
@@ -75,169 +69,28 @@ assert.strictEqual(session.prescription.heartThief, "怕错过");
 assert.strictEqual(session.candles.length, 6);
 assert.ok(session.candles.some((item) => item.selected));
 assert.ok(session.gates.find((item) => item.key === "zhaoxin").trainingAction);
+assert.ok(session.indicatorOverlay.ma5.length > 0);
+assert.deepStrictEqual(session.indicatorPanelOptions.map((item) => item.key), ["vol", "macd", "rsi", "kdj"]);
 
-const specialPacks = listSpecialTrainingPacks();
-assert.ok(specialPacks.find((item) => item.trainingPackId === "chase_high_impulse"));
-const specialMeta = buildSpecialTrainingSessionMeta({ errorType: "追高冲动" });
-assert.strictEqual(specialMeta.sourceType, "special_training");
-assert.strictEqual(specialMeta.trainingPackId, "chase_high_impulse");
-const samplingRequest = buildKlineSamplingRequest(specialMeta, { period: "30m", excludeSegmentIds: ["seg-1"] });
-assert.strictEqual(samplingRequest.period, "30m");
-assert.deepStrictEqual(samplingRequest.excludeSegmentIds, ["seg-1"]);
-const samplingResult = normalizeKlineSamplingResult({
-  segment_id: "seg-2",
-  training_pack_id: "chase_high_impulse",
-  scene_tags: ["放量拉升"],
-  start_date: "2026-06-01",
-  end_date: "2026-06-10",
-  bars: [{ t: "2026-06-01", o: 1, h: 2, l: 0.8, c: 1.6 }]
+const runtime = startKlineTrainingRuntime(session, {
+  trainingSessionId: "kline-module-runtime",
+  initialVisibleCount: getInitialKlineVisibleCount(session),
+  initialMainIndicatorKey: "ma",
+  initialIndicatorKey: "vol"
 });
-assert.strictEqual(samplingResult.segmentId, "seg-2");
-assert.strictEqual(samplingResult.samplingStatus, "matched");
-const customMeta = buildCustomSessionMeta({
-  symbol: "000001.SZ",
-  period: "60m",
-  startDate: "2026-06-01",
-  endDate: "2026-06-10",
-  hiddenSymbol: false
-});
-assert.strictEqual(customMeta.sourceType, "custom_session");
-assert.strictEqual(customMeta.customSymbolText, "000001.SZ");
-const bookmark = buildTrainingBookmark({
-  record: {
-    id: "record-1",
-    sourceType: "special_training",
-    samplingResult,
-    executionResult: "aligned"
-  },
-  session: { symbol: "000001.SZ", period: "30m" },
-  bookmarkType: "mistake_card"
-});
-assert.strictEqual(normalizeTrainingBookmark(bookmark).bookmarkType, "mistake_card");
-assert.deepStrictEqual(buildBookmarkReplaySliceRequest(bookmark), {
-  symbol: "000001.SZ",
-  timeframeKey: "30m",
-  startDate: "2026-06-01",
-  endDate: "2026-06-10",
-  trainingLength: 60,
-  mode: "replay",
-  blind: false
-});
-
-const compactSchemaSlice = {
-  source: "server_cache",
-  candles: Array.from({ length: 20 }, (_, index) => ({
-    t: `2024-02-${String(index + 1).padStart(2, "0")}`,
-    o: 10 + index * 0.1,
-    h: 10.8 + index * 0.1,
-    l: 9.8 + index * 0.1,
-    c: 10.4 + index * 0.1,
-    v: 1000 + index * 50
-  }))
-};
-const visualCandles = normalizeHistoryCandles(compactSchemaSlice);
-assert.strictEqual(visualCandles.length, 20);
-assert.ok(visualCandles.every((item) => !String(item.wickStyle + item.bodyStyle + item.volumeStyle).includes("NaN")));
-assert.strictEqual(visualCandles[0].date, "2024-02-01");
-
-const wideVisualCandles = normalizeHistoryCandles({
-  source: "server_cache",
-  candles: Array.from({ length: 48 }, (_, index) => ({
-    t: `2024-03-${String(index + 1).padStart(2, "0")}`,
-    o: 10 + index * 0.05,
-    h: 10.7 + index * 0.05,
-    l: 9.8 + index * 0.05,
-    c: 10.35 + index * 0.05,
-    v: 1200 + index * 40
-  }))
-}, { windowSize: 36 });
-assert.strictEqual(wideVisualCandles.length, 36);
-assert.strictEqual(wideVisualCandles[0].date, "2024-03-13");
-
-const longBlindSlice = {
-  source: "server_cache",
-  candles: Array.from({ length: 180 }, (_, index) => ({
-    t: `bar-${String(index + 1).padStart(3, "0")}`,
-    o: 10 + Math.sin(index / 5) * 0.4 + index * 0.01,
-    h: 10.7 + Math.sin(index / 5) * 0.4 + index * 0.01,
-    l: 9.6 + Math.sin(index / 5) * 0.4 + index * 0.01,
-    c: 10.25 + Math.sin((index + 1) / 5) * 0.4 + index * 0.01,
-    v: 1200 + (index % 13) * 80
-  }))
-};
-const longVisualCandles = normalizeHistoryCandles(longBlindSlice, { windowSize: 150 });
-assert.strictEqual(longVisualCandles.length, 150);
-assert.strictEqual(longVisualCandles[0].date, "bar-031");
-assert.strictEqual(longVisualCandles[0].ma5Y !== null, true);
-assert.strictEqual(longVisualCandles[0].ma10Y !== null, true);
-assert.strictEqual(longVisualCandles[0].ma20Y !== null, true);
-assert.strictEqual(longVisualCandles[0].bollUpperY !== null, true);
-assert.strictEqual(longVisualCandles[0].bollLowerY !== null, true);
-
-const defaultLongSession = buildKlineMindSession({
-  record: {
-    marketKey: "cn_equity",
-    timeframeKey: "1d",
-    historySlice: longBlindSlice
-  }
-});
-assert.strictEqual(defaultLongSession.chartZoomKey, "wide");
-assert.strictEqual(defaultLongSession.chartWindowSize, 150);
-assert.strictEqual(defaultLongSession.candles.length, 150);
-assert.deepStrictEqual(defaultLongSession.chartZoomOptions.map((item) => item.key), ["overview", "wide", "standard", "focus"]);
-assert.ok(defaultLongSession.chartZoomOptions.find((item) => item.key === "overview").hint.includes("180"));
-assert.ok(defaultLongSession.chartZoomOptions.find((item) => item.key === "wide").hint.includes("150"));
-assert.strictEqual(defaultLongSession.defaultMainIndicatorKey, "ma");
-assert.strictEqual(defaultLongSession.defaultIndicatorKey, "vol");
-assert.deepStrictEqual(defaultLongSession.timeframeOptions.map((item) => item.label), ["长线", "中线", "短线"]);
-assert.deepStrictEqual(defaultLongSession.mainIndicatorOptions.map((item) => item.key), ["ma", "boll"]);
-assert.deepStrictEqual(defaultLongSession.indicatorPanelOptions.map((item) => item.key), ["vol", "macd", "rsi", "kdj"]);
-assert.ok(defaultLongSession.chartBoardStyle.includes("width:"));
-assert.ok(defaultLongSession.indicatorOverlay.ma5.length > 0);
-assert.ok(defaultLongSession.indicatorOverlay.ma10.length > 0);
-assert.ok(defaultLongSession.indicatorOverlay.ma20.length > 0);
-assert.strictEqual(defaultLongSession.indicatorOverlay.bollUpper.length, 0);
-assert.strictEqual(defaultLongSession.indicatorOverlay.bollLower.length, 0);
-assert.strictEqual(defaultLongSession.candles[4].ma5Y !== null, true);
-
-const overviewSession = buildKlineMindSession({
-  record: {
-    marketKey: "cn_equity",
-    timeframeKey: "1d",
-    chartZoomKey: "overview",
-    historySlice: longBlindSlice
-  }
-});
-assert.strictEqual(overviewSession.chartZoomKey, "overview");
-assert.strictEqual(overviewSession.chartWindowSize, 180);
-assert.strictEqual(overviewSession.candles.length, 180);
-assert.ok(overviewSession.chartBoardStyle.includes("min-width: 100%"));
-assert.ok(overviewSession.chartBoardStyle.includes("--kline-gap"));
-
-const bollCompleteSession = buildKlineMindSession({
-  record: {
-    marketKey: "cn_equity",
-    timeframeKey: "1d",
-    chartZoomKey: "overview",
-    mainIndicatorKey: "boll",
-    historySlice: longBlindSlice
-  }
-});
-assert.strictEqual(bollCompleteSession.indicatorOverlay.bollUpper.length, bollCompleteSession.candles.length - 1);
-assert.strictEqual(bollCompleteSession.indicatorOverlay.bollLower.length, bollCompleteSession.candles.length - 1);
-
-const sparseSession = buildKlineMindSession({
-  record: {
-    marketKey: "cn_equity",
-    timeframeKey: "1d",
-    historySlice: {
-      source: "server_cache",
-      candles: historicalSlice.candles.slice(0, 2)
-    }
-  }
-});
-assert.strictEqual(sparseSession.hasHistoricalData, false);
-assert.strictEqual(sparseSession.candles.length, 0);
+assert.strictEqual(runtime.simulationMode, "blind_step_replay");
+assert.ok(runtime.visibleCandles.length > 0);
+assert.ok(runtime.indicatorOverlay.ma5.length > 0);
+assert.strictEqual(runtime.indicatorPanel.type, "vol");
+const zoomedRuntime = setKlineRuntimeChartZoom(runtime, "focus");
+assert.strictEqual(zoomedRuntime.chartZoomKey, "focus");
+const bollRuntime = setKlineRuntimeMainIndicator(runtime, "boll");
+assert.ok(bollRuntime.indicatorOverlay.bollUpper.length > 0);
+const macdRuntime = setKlineRuntimeIndicator(runtime, "macd");
+assert.strictEqual(macdRuntime.indicatorPanel.type, "macd");
+const runtimePatch = buildKlineTrainingRecordPatch(macdRuntime);
+assert.strictEqual(runtimePatch.simulationMode, "blind_step_replay");
+assert.ok(runtimePatch.selectedCandleKey);
 
 const record = buildKlineMindRecord({
   selectedCandleKey: session.selectedCandleKey,
@@ -251,304 +104,547 @@ assert.strictEqual(record.completed, true);
 assert.strictEqual(record.scenarioTitle, "边界触碰");
 assert.strictEqual(record.marketKey, "cn_equity");
 assert.strictEqual(record.timeframeKey, "1d");
-assert.strictEqual(record.chartZoomKey, "wide");
 assert.strictEqual(record.symbol, "000001.SZ");
-assert.strictEqual(record.klineSource, "verified_fixture");
-assert.strictEqual(record.source, "miniprogram");
 assert.ok(record.score >= 80);
 assert.strictEqual(calculateKlineMindScore({}), 28);
 
-const demoSession = buildKlineMindSession({
+const reviewFocus = {
+  sourceType: "review_focus",
+  source_type: "review_focus",
+  executionPlanId: "plan-review-focus-001",
+  execution_plan_id: "plan-review-focus-001",
+  errorType: "追涨之镜",
+  error_type: "追涨之镜",
+  trainingPrescription: { action: "停十秒，写下边界。" },
+  training_prescription: { action: "停十秒，写下边界。" },
+  sceneTags: ["放量拉升", "怕错过"],
+  scene_tags: ["放量拉升", "怕错过"],
+  nextAction: "同类场景先停十秒。",
+  next_action: "同类场景先停十秒。",
+  expectedAction: "同类场景先停十秒。",
+  expected_action: "同类场景先停十秒。",
+  sourceReviewId: "tr-review-focus-001",
+  source_review_id: "tr-review-focus-001"
+};
+const reviewFocusSession = buildKlineMindSession({
+  assessment: { primary: "冲动型" },
+  trainingDay: { day: 3 },
+  record: { marketKey: "cn_equity", timeframeKey: "1d" },
+  historyCache: { cn_equity: { "1d": historicalSlice } },
+  reviewFocus
+});
+
+assert.strictEqual(reviewFocusSession.sourceType, "review_focus");
+assert.strictEqual(reviewFocusSession.source_type, "review_focus");
+assert.strictEqual(reviewFocusSession.errorType, "追涨之镜");
+assert.strictEqual(reviewFocusSession.error_type, "追涨之镜");
+assert.deepStrictEqual(reviewFocusSession.trainingPrescription, { action: "停十秒，写下边界。" });
+assert.deepStrictEqual(reviewFocusSession.training_prescription, { action: "停十秒，写下边界。" });
+assert.deepStrictEqual(reviewFocusSession.sceneTags, ["放量拉升", "怕错过"]);
+assert.deepStrictEqual(reviewFocusSession.scene_tags, ["放量拉升", "怕错过"]);
+assert.strictEqual(reviewFocusSession.nextAction, "同类场景先停十秒。");
+assert.strictEqual(reviewFocusSession.next_action, "同类场景先停十秒。");
+assert.strictEqual(reviewFocusSession.expectedAction, "同类场景先停十秒。");
+assert.strictEqual(reviewFocusSession.expected_action, "同类场景先停十秒。");
+assert.strictEqual(reviewFocusSession.executionPlanId, "plan-review-focus-001");
+assert.strictEqual(reviewFocusSession.execution_plan_id, "plan-review-focus-001");
+assert.strictEqual(reviewFocusSession.sourceReviewId, "tr-review-focus-001");
+assert.strictEqual(reviewFocusSession.source_review_id, "tr-review-focus-001");
+
+const reviewFocusRecord = buildKlineMindRecord({
+  selectedCandleKey: reviewFocusSession.selectedCandleKey,
+  firstReaction: "怕错过",
+  boundaryChoice: "停十秒",
+  insightLine: "我看见自己被放量拉升牵动。"
+}, reviewFocusSession);
+
+assert.strictEqual(reviewFocusRecord.sourceType, "review_focus");
+assert.strictEqual(reviewFocusRecord.source_type, "review_focus");
+assert.strictEqual(reviewFocusRecord.errorType, "追涨之镜");
+assert.strictEqual(reviewFocusRecord.error_type, "追涨之镜");
+assert.deepStrictEqual(reviewFocusRecord.sceneTags, ["放量拉升", "怕错过"]);
+assert.deepStrictEqual(reviewFocusRecord.scene_tags, ["放量拉升", "怕错过"]);
+assert.deepStrictEqual(reviewFocusRecord.trainingPrescription, { action: "停十秒，写下边界。" });
+assert.deepStrictEqual(reviewFocusRecord.training_prescription, { action: "停十秒，写下边界。" });
+assert.strictEqual(reviewFocusRecord.nextAction, "同类场景先停十秒。");
+assert.strictEqual(reviewFocusRecord.next_action, "同类场景先停十秒。");
+assert.strictEqual(reviewFocusRecord.expectedAction, "同类场景先停十秒。");
+assert.strictEqual(reviewFocusRecord.expected_action, "同类场景先停十秒。");
+assert.strictEqual(reviewFocusRecord.executionPlanId, "plan-review-focus-001");
+assert.strictEqual(reviewFocusRecord.execution_plan_id, "plan-review-focus-001");
+assert.strictEqual(reviewFocusRecord.sourceReviewId, "tr-review-focus-001");
+assert.strictEqual(reviewFocusRecord.source_review_id, "tr-review-focus-001");
+assert.strictEqual(reviewFocusRecord.trainingMistakeCard.title, "最明显执行偏离");
+assert.strictEqual(reviewFocusRecord.training_mistake_card.title, "最明显执行偏离");
+assert.strictEqual(reviewFocusRecord.executionResult, "按计划执行");
+assert.strictEqual(reviewFocusRecord.execution_result, "按计划执行");
+assert.strictEqual(reviewFocusRecord.executionLabel, "按计划执行");
+assert.strictEqual(reviewFocusRecord.execution_label, "按计划执行");
+assert.strictEqual(reviewFocusRecord.executionConsistencyRateText, "100%");
+assert.strictEqual(reviewFocusRecord.execution_consistency_rate_text, "100%");
+assert.strictEqual(reviewFocusRecord.executionConsistency.rateText, "100%");
+
+const samplingResponse = {
+  sampling_result: {
+    segment_id: "segment-fast-rise",
+    training_pack_id: "pack-chasing-surge",
+    error_type: "追涨之镜",
+    scene_tags: ["放量拉升", "怕错过"],
+    symbol: "000001.SZ",
+    name: "训练片段",
+    period: "1d",
+    start_date: "2026-05-01",
+    end_date: "2026-05-16",
+    bars: historicalSlice.candles,
+    fallback_used: false,
+    source: "segment"
+  }
+};
+const normalizedSampling = normalizeKlineSamplingResult(samplingResponse);
+assert.strictEqual(normalizedSampling.segmentId, "segment-fast-rise");
+assert.strictEqual(normalizedSampling.segment_id, "segment-fast-rise");
+assert.strictEqual(normalizedSampling.trainingPackId, "pack-chasing-surge");
+assert.strictEqual(normalizedSampling.training_pack_id, "pack-chasing-surge");
+assert.strictEqual(normalizedSampling.fallbackUsed, false);
+assert.strictEqual(normalizedSampling.fallback_used, false);
+assert.strictEqual(normalizedSampling.bars.length, historicalSlice.candles.length);
+assert.strictEqual("bars" in normalizedSampling.samplingResult, false);
+assert.strictEqual("bars" in normalizedSampling.sampling_result, false);
+
+const reviewFocusSamplingRequest = buildKlineSamplingRequest(reviewFocus, {
+  period: "1d",
+  difficulty: "normal",
+  excludeSegmentIds: ["segment-old"]
+});
+assert.strictEqual(reviewFocusSamplingRequest.sourceType, "review_focus");
+assert.strictEqual(reviewFocusSamplingRequest.source_type, "review_focus");
+assert.strictEqual(reviewFocusSamplingRequest.errorType, "追涨之镜");
+assert.strictEqual(reviewFocusSamplingRequest.error_type, "追涨之镜");
+assert.deepStrictEqual(reviewFocusSamplingRequest.sceneTags, ["放量拉升", "怕错过"]);
+assert.deepStrictEqual(reviewFocusSamplingRequest.scene_tags, ["放量拉升", "怕错过"]);
+assert.deepStrictEqual(reviewFocusSamplingRequest.excludeSegmentIds, ["segment-old"]);
+assert.deepStrictEqual(reviewFocusSamplingRequest.exclude_segment_ids, ["segment-old"]);
+
+const reviewFocusSampledSession = buildKlineMindSession({
+  assessment: { primary: "冲动型" },
+  trainingDay: { day: 3 },
+  record: { marketKey: "cn_equity", timeframeKey: "1d" },
+  historyCache: {},
+  reviewFocus,
+  samplingResult: samplingResponse
+});
+assert.strictEqual(reviewFocusSampledSession.sourceType, "review_focus");
+assert.strictEqual(reviewFocusSampledSession.segmentId, "segment-fast-rise");
+assert.strictEqual(reviewFocusSampledSession.segment_id, "segment-fast-rise");
+assert.strictEqual(reviewFocusSampledSession.trainingPackId, "pack-chasing-surge");
+assert.strictEqual(reviewFocusSampledSession.training_pack_id, "pack-chasing-surge");
+assert.strictEqual(reviewFocusSampledSession.samplingStatus, "matched");
+assert.strictEqual(reviewFocusSampledSession.sampling_status, "matched");
+assert.strictEqual(reviewFocusSampledSession.hasHistoricalData, true);
+assert.strictEqual(reviewFocusSampledSession.historySlice.source, "segment");
+assert.strictEqual("bars" in reviewFocusSampledSession.samplingResult, false);
+assert.strictEqual("bars" in reviewFocusSampledSession.sampling_result, false);
+
+const sampledRecord = buildKlineMindRecord({
+  selectedCandleKey: reviewFocusSampledSession.selectedCandleKey,
+  firstReaction: "怕错过",
+  boundaryChoice: "停十秒",
+  insightLine: "抽题片段也能写入训练记录。"
+}, reviewFocusSampledSession);
+assert.strictEqual(sampledRecord.segmentId, "segment-fast-rise");
+assert.strictEqual(sampledRecord.segment_id, "segment-fast-rise");
+assert.strictEqual(sampledRecord.trainingPackId, "pack-chasing-surge");
+assert.strictEqual(sampledRecord.training_pack_id, "pack-chasing-surge");
+assert.strictEqual(sampledRecord.fallbackUsed, false);
+assert.strictEqual(sampledRecord.fallback_used, false);
+assert.strictEqual("bars" in sampledRecord.samplingResult, false);
+assert.strictEqual("bars" in sampledRecord.sampling_result, false);
+
+const specialTrainingPacks = listSpecialTrainingPacks();
+assert.deepStrictEqual(specialTrainingPacks.map((item) => item.errorType), [
+  "追高冲动",
+  "补仓冲动",
+  "卖飞懊悔",
+  "计划外交易"
+]);
+const chaseHighPack = getSpecialTrainingPack("追高冲动");
+assert.strictEqual(chaseHighPack.title, "追高冲动专项");
+assert.deepStrictEqual(chaseHighPack.scene_tags, ["放量拉升", "假突破", "冲高回落"]);
+assert.ok(chaseHighPack.trainingGoal.includes("快速上涨"));
+assert.strictEqual(chaseHighPack.expected_action, "第一根放量不追，先观察");
+assert.ok(chaseHighPack.trainingPrescription.action.includes("先观察"));
+const specialMeta = buildSpecialTrainingSessionMeta("chase_high_impulse");
+assert.strictEqual(specialMeta.sourceType, "special_training");
+assert.strictEqual(specialMeta.source_type, "special_training");
+assert.strictEqual(specialMeta.errorType, "追高冲动");
+assert.strictEqual(specialMeta.error_type, "追高冲动");
+assert.deepStrictEqual(specialMeta.sceneTags, ["放量拉升", "假突破", "冲高回落"]);
+assert.deepStrictEqual(specialMeta.scene_tags, ["放量拉升", "假突破", "冲高回落"]);
+assert.strictEqual(specialMeta.trainingPackId, "chase_high_impulse");
+assert.strictEqual(specialMeta.training_pack_title, "追高冲动专项");
+
+const specialSamplingRequest = buildKlineSamplingRequest(specialMeta, {
+  period: "1d"
+});
+assert.strictEqual(specialSamplingRequest.sourceType, "special_training");
+assert.strictEqual(specialSamplingRequest.source_type, "special_training");
+assert.strictEqual(specialSamplingRequest.errorType, "追高冲动");
+assert.strictEqual(specialSamplingRequest.error_type, "追高冲动");
+assert.strictEqual(specialSamplingRequest.trainingPackId, "chase_high_impulse");
+assert.strictEqual(specialSamplingRequest.training_pack_id, "chase_high_impulse");
+
+const specialSession = buildKlineMindSession({
+  assessment: { primary: "冲动型" },
+  trainingDay: { day: 3 },
+  record: Object.assign({ marketKey: "cn_equity", timeframeKey: "1d" }, specialMeta),
+  historyCache: { cn_equity: { "1d": historicalSlice } }
+});
+assert.strictEqual(specialSession.sourceType, "special_training");
+assert.strictEqual(specialSession.source_type, "special_training");
+assert.strictEqual(specialSession.errorType, "追高冲动");
+assert.strictEqual(specialSession.error_type, "追高冲动");
+assert.deepStrictEqual(specialSession.sceneTags, ["放量拉升", "假突破", "冲高回落"]);
+assert.strictEqual(specialSession.expectedAction, "第一根放量不追，先观察");
+assert.strictEqual(specialSession.nextAction, "第一根放量不追，先观察");
+assert.strictEqual(specialSession.trainingPrescription.action, "第一根放量不追，先观察");
+
+const specialRecord = buildKlineMindRecord({
+  selectedCandleKey: specialSession.selectedCandleKey,
+  firstReaction: "怕错过",
+  boundaryChoice: "先观察",
+  insightLine: "我看见自己想追第一根放量。"
+}, specialSession);
+assert.strictEqual(specialRecord.sourceType, "special_training");
+assert.strictEqual(specialRecord.source_type, "special_training");
+assert.strictEqual(specialRecord.errorType, "追高冲动");
+assert.strictEqual(specialRecord.error_type, "追高冲动");
+assert.strictEqual(specialRecord.trainingPackTitle, "追高冲动专项");
+assert.strictEqual(specialRecord.training_pack_title, "追高冲动专项");
+assert.strictEqual(specialRecord.nextAction, "第一根放量不追，先观察");
+assert.strictEqual(specialRecord.trainingMistakeCard.errorType, "追高冲动");
+assert.strictEqual(specialRecord.training_mistake_card.trainingPackTitle, "追高冲动专项");
+
+const oldLawResultRecord = buildKlineMindRecord({
+  selectedCandleKey: reviewFocusSession.selectedCandleKey,
+  firstReaction: "怕错过",
+  boundaryChoice: "停十秒",
+  insightLine: "我看见自己被放量拉升牵动。",
+  lawResult: "broken"
+}, reviewFocusSession);
+assert.strictEqual(oldLawResultRecord.executionResult, "执行偏离");
+assert.strictEqual(oldLawResultRecord.execution_result, "执行偏离");
+assert.strictEqual(oldLawResultRecord.executionLabel, "执行偏离");
+assert.strictEqual(oldLawResultRecord.execution_label, "执行偏离");
+assert.strictEqual(oldLawResultRecord.trainingMistakeCard.executionResult, "执行偏离");
+assert.strictEqual(oldLawResultRecord.training_mistake_card.execution_result, "执行偏离");
+assert.strictEqual(oldLawResultRecord.executionConsistencyRateText, "0%");
+assert.strictEqual(oldLawResultRecord.executionConsistency.deviationCount, 1);
+
+const unclearExecutionRecord = buildKlineMindRecord({
+  selectedCandleKey: reviewFocusSession.selectedCandleKey,
+  firstReaction: "说不清",
+  boundaryChoice: "停十秒",
+  insightLine: "我暂时说不清这一念。",
+  execution_result: "unclear"
+}, reviewFocusSession);
+assert.strictEqual(unclearExecutionRecord.executionResult, "说不清");
+assert.strictEqual(unclearExecutionRecord.executionConsistencyRateText, "样本不足");
+assert.strictEqual(unclearExecutionRecord.executionConsistency.isSampleEnough, false);
+
+const newExecutionResultPriorityRecord = buildKlineMindRecord({
+  selectedCandleKey: reviewFocusSession.selectedCandleKey,
+  firstReaction: "怕错过",
+  boundaryChoice: "停十秒",
+  insightLine: "我看见自己被放量拉升牵动。",
+  execution_result: "aligned",
+  law_result: "broken"
+}, reviewFocusSession);
+assert.strictEqual(newExecutionResultPriorityRecord.executionResult, "按计划执行");
+assert.strictEqual(newExecutionResultPriorityRecord.execution_result, "按计划执行");
+
+const blindSession = buildKlineMindSession({
   assessment: { primary: "冲动型" },
   trainingDay: { day: 1 },
-  record: {
-    marketKey: "cn_equity",
-    timeframeKey: "30m",
-    chartZoomKey: "wide",
-    historySlice: {
-      source: "local_demo",
-      klineSource: "local_demo",
-      sliceSource: "local_demo",
-      serverSliceStatus: "network_error",
-      serverSliceError: "K线服务暂不可用",
-      symbol: "local-demo",
-      candles: historicalSlice.candles
-    }
-  }
+  historyCache: { cn_equity: { "1d": historicalSlice } }
 });
-const demoRecord = buildKlineMindRecord({
-  selectedCandleKey: demoSession.selectedCandleKey,
+assert.notStrictEqual(blindSession.sourceType, "review_focus");
+assert.notStrictEqual(blindSession.source_type, "review_focus");
+assert.notStrictEqual(blindSession.sourceType, "special_training");
+assert.notStrictEqual(blindSession.source_type, "special_training");
+assert.strictEqual(blindSession.segmentId, undefined);
+assert.strictEqual(blindSession.samplingResult, undefined);
+
+const customHistorySlice = Object.assign({}, historicalSlice, {
+  source: "custom_history_slice",
+  symbol: "600519",
+  name: "贵州茅台",
+  start: "2024-01-02",
+  startDate: "2024-01-02",
+  start_date: "2024-01-02",
+  end: "2024-01-09",
+  endDate: "2024-01-09",
+  end_date: "2024-01-09",
+  period: "1d",
+  candles: historicalSlice.candles.slice(0, 4)
+});
+const customMeta = buildCustomSessionMeta({
+  symbol: "600519",
+  period: "1d",
+  startDate: "2024-01-02",
+  endDate: "2024-01-09",
+  trainingLength: "4"
+});
+assert.strictEqual(customMeta.sourceType, "custom_session");
+assert.strictEqual(customMeta.source_type, "custom_session");
+assert.strictEqual(customMeta.symbol, "600519");
+assert.strictEqual(customMeta.period, "1d");
+assert.strictEqual(customMeta.startDate, "2024-01-02");
+assert.strictEqual(customMeta.start_date, "2024-01-02");
+assert.strictEqual(customMeta.endDate, "2024-01-09");
+assert.strictEqual(customMeta.end_date, "2024-01-09");
+assert.strictEqual(customMeta.trainingLength, 4);
+assert.strictEqual(customMeta.training_length, 4);
+assert.strictEqual(customMeta.hiddenSymbol, true);
+assert.strictEqual(customMeta.hidden_symbol, true);
+assert.strictEqual(customMeta.hiddenDateRange, true);
+assert.strictEqual(customMeta.hidden_date_range, true);
+
+const customSession = buildKlineMindSession({
+  assessment: { primary: "冲动型" },
+  trainingDay: { day: 1 },
+  record: Object.assign({ marketKey: "cn_equity", timeframeKey: "1d", historySlice: customHistorySlice }, customMeta),
+  customSession: Object.assign({}, customMeta, { historySlice: customHistorySlice })
+});
+assert.strictEqual(customSession.sourceType, "custom_session");
+assert.strictEqual(customSession.source_type, "custom_session");
+assert.strictEqual(customSession.hasHistoricalData, true);
+assert.strictEqual(customSession.symbol, "600519");
+assert.strictEqual(customSession.hiddenSymbol, true);
+assert.strictEqual(customSession.hidden_symbol, true);
+assert.strictEqual(customSession.hiddenDateRange, true);
+assert.strictEqual(customSession.hidden_date_range, true);
+assert.strictEqual(customSession.trainingLength, 4);
+assert.strictEqual(customSession.training_length, 4);
+assert.strictEqual(customSession.customSymbolText, "隐藏标的");
+assert.strictEqual(customSession.customDateRangeText, "隐藏真实日期");
+assert.strictEqual(customSession.revealedSymbolText, "600519");
+assert.strictEqual(customSession.revealedDateRangeText, "2024-01-02 至 2024-01-09");
+assert.strictEqual(customSession.samplingResult, undefined);
+
+const customRecord = buildKlineMindRecord({
+  selectedCandleKey: customSession.selectedCandleKey,
+  firstReaction: "怕错过",
+  boundaryChoice: "观望",
+  insightLine: "自选盲练中我先记录，不被标的名字牵动。"
+}, customSession);
+assert.strictEqual(customRecord.sourceType, "custom_session");
+assert.strictEqual(customRecord.source_type, "custom_session");
+assert.strictEqual(customRecord.symbol, "600519");
+assert.strictEqual(customRecord.period, "1d");
+assert.strictEqual(customRecord.startDate, "2024-01-02");
+assert.strictEqual(customRecord.start_date, "2024-01-02");
+assert.strictEqual(customRecord.endDate, "2024-01-09");
+assert.strictEqual(customRecord.end_date, "2024-01-09");
+assert.strictEqual(customRecord.trainingLength, 4);
+assert.strictEqual(customRecord.training_length, 4);
+assert.strictEqual(customRecord.hiddenSymbol, true);
+assert.strictEqual(customRecord.hidden_symbol, true);
+assert.strictEqual(customRecord.hiddenDateRange, true);
+assert.strictEqual(customRecord.hidden_date_range, true);
+assert.strictEqual(customRecord.trainingMistakeCard.errorType, "自选盲练");
+assert.strictEqual(customRecord.training_mistake_card.error_type, "自选盲练");
+assert.strictEqual(customRecord.samplingResult, undefined);
+assert.notStrictEqual(customRecord.fallbackUsed, true);
+
+const sampledBookmark = buildTrainingBookmark({
+  record: sampledRecord,
+  session: reviewFocusSampledSession,
+  bookmarkType: "mistake_card",
+  note: "回看这一局里的追高冲动。"
+});
+assert.strictEqual(sampledBookmark.bookmarkType, "mistake_card");
+assert.strictEqual(sampledBookmark.bookmark_type, "mistake_card");
+assert.strictEqual(sampledBookmark.sourceType, "review_focus");
+assert.strictEqual(sampledBookmark.source_type, "review_focus");
+assert.ok(sampledBookmark.sessionId);
+assert.strictEqual(sampledBookmark.session_id, sampledBookmark.sessionId);
+assert.strictEqual(sampledBookmark.errorType, "追涨之镜");
+assert.strictEqual(sampledBookmark.executionResult, sampledRecord.executionResult);
+assert.strictEqual(sampledBookmark.segmentId, "segment-fast-rise");
+assert.strictEqual(sampledBookmark.segment_id, "segment-fast-rise");
+assert.strictEqual(sampledBookmark.trainingPackId, "pack-chasing-surge");
+assert.strictEqual(sampledBookmark.training_pack_id, "pack-chasing-surge");
+assert.strictEqual(sampledBookmark.samplingResult.source, "segment");
+assert.strictEqual(sampledBookmark.sampling_result.source, "segment");
+assert.strictEqual("bars" in sampledBookmark.samplingResult, false);
+assert.strictEqual("bars" in sampledBookmark.sampling_result, false);
+
+const normalizedBookmark = normalizeTrainingBookmark({
+  bookmark_type: "action",
+  session_id: "session-legacy",
+  action_id: "action-1",
+  bar_index: 3,
+  source_type: "special_training",
+  error_type: "追高冲动",
+  scene_tags: "放量拉升 / 假突破",
+  execution_result: "执行偏离",
+  segment_id: "segment-legacy",
+  training_pack_id: "pack-legacy",
+  sampling_result: {
+    segment_id: "segment-legacy",
+    training_pack_id: "pack-legacy",
+    source: "segment",
+    bars: [{ close: 10.2 }]
+  },
+  title: "第 3 根动作"
+});
+assert.strictEqual(normalizedBookmark.bookmarkType, "action");
+assert.strictEqual(normalizedBookmark.bookmark_type, "action");
+assert.strictEqual(normalizedBookmark.actionId, "action-1");
+assert.strictEqual(normalizedBookmark.action_id, "action-1");
+assert.strictEqual(normalizedBookmark.barIndex, 3);
+assert.strictEqual(normalizedBookmark.bar_index, 3);
+assert.deepStrictEqual(normalizedBookmark.sceneTags, ["放量拉升", "假突破"]);
+assert.strictEqual(normalizedBookmark.samplingResult.segmentId, "segment-legacy");
+assert.strictEqual("bars" in normalizedBookmark.samplingResult, false);
+
+const customBookmark = buildTrainingBookmark({
+  record: customRecord,
+  session: customSession,
+  bookmarkType: "session"
+});
+assert.strictEqual(customBookmark.sourceType, "custom_session");
+assert.strictEqual(customBookmark.source_type, "custom_session");
+assert.strictEqual(customBookmark.symbol, "600519");
+assert.strictEqual(customBookmark.period, "1d");
+assert.strictEqual(customBookmark.startDate, "2024-01-02");
+assert.strictEqual(customBookmark.start_date, "2024-01-02");
+assert.strictEqual(customBookmark.endDate, "2024-01-09");
+assert.strictEqual(customBookmark.end_date, "2024-01-09");
+assert.strictEqual(customBookmark.samplingResult, null);
+assert.strictEqual(customBookmark.sampling_result, null);
+
+const replayRequest = buildBookmarkReplaySliceRequest(customBookmark);
+assert.deepStrictEqual(replayRequest, {
+  symbol: "600519",
+  timeframeKey: "1d",
+  startDate: "2024-01-02",
+  endDate: "2024-01-09",
+  trainingLength: 60,
+  mode: "replay",
+  blind: false
+});
+
+const fallbackSampling = normalizeKlineSamplingResult({
+  segmentId: "",
+  trainingPackId: "pack-chasing-surge",
+  errorType: "追涨之镜",
+  sceneTags: ["放量拉升"],
+  symbol: "000001.SZ",
+  period: "1d",
+  bars: historicalSlice.candles,
+  fallbackUsed: true,
+  fallbackReason: "sampling_api_failed",
+  source: "base_blind_fallback"
+});
+assert.strictEqual(fallbackSampling.fallbackUsed, true);
+assert.strictEqual(fallbackSampling.fallback_used, true);
+assert.strictEqual(fallbackSampling.fallbackReason, "sampling_api_failed");
+assert.strictEqual(fallbackSampling.fallback_reason, "sampling_api_failed");
+assert.strictEqual("bars" in fallbackSampling.samplingResult, false);
+
+const legacySessionRecord = buildKlineMindRecord({
   firstReaction: "急躁",
   boundaryChoice: "停十秒",
-  insightLine: "离线练习模式下，我只记录第一念。"
-}, demoSession);
-assert.strictEqual(demoSession.dataStatusText, "离线练习模式");
-assert.strictEqual(demoSession.chartZoomKey, "wide");
-assert.strictEqual(demoSession.chartWindowSize, 150);
-assert.ok(demoSession.chartOrientationHint.includes("横屏"));
-assert.deepStrictEqual(demoSession.indicatorCatalog.map((item) => item.key), ["ma", "macd", "boll", "vol", "rsi", "kdj"]);
-assert.strictEqual(demoRecord.klineSource, "local_demo");
-assert.strictEqual(demoRecord.sliceSource, "local_demo");
-assert.strictEqual(demoRecord.serverSliceStatus, "network_error");
-assert.strictEqual(demoRecord.serverSliceError, "K线服务暂不可用");
+  insightLine: "旧 session 也能完成。"
+}, { day: 1, candles: [] });
+assert.strictEqual(legacySessionRecord.completed, true);
+assert.notStrictEqual(legacySessionRecord.sourceType, "review_focus");
 
-const runtime = startKlineTrainingRuntime(demoSession, {
-  trainingSessionId: "runtime-001",
-  decisionInterval: 3,
-  sliceSeed: "scene-fast-001"
-});
-assert.strictEqual(runtime.trainingSessionId, "runtime-001");
-assert.strictEqual(runtime.simulationMode, "blind_step_replay");
-assert.strictEqual(runtime.currentIndex, 0);
-assert.strictEqual(runtime.visibleCandles.length, 1);
-assert.strictEqual(runtime.mustDecide, false);
-assert.strictEqual(runtime.positionState.side, "FLAT");
-assert.strictEqual(runtime.sessionMetrics.positionSize, 0);
-assert.strictEqual(runtime.sessionMetrics.maxDrawdown, 0);
-
-const warmupRuntime = startKlineTrainingRuntime(buildKlineMindSession({
-  record: {
-    marketKey: "cn_equity",
-    timeframeKey: "1d",
-    historySlice: compactSchemaSlice
-  }
-}), {
-  trainingSessionId: "runtime-warmup-001",
-  initialVisibleCount: 8
-});
-assert.strictEqual(warmupRuntime.currentIndex, 7);
-assert.strictEqual(warmupRuntime.visibleCandles.length, 8);
-assert.strictEqual(warmupRuntime.activeCandle.key, warmupRuntime.visibleCandles[7].key);
-assert.strictEqual(
-  warmupRuntime.visibleCandles.some((item) => Number(item.runtimeIndex) > warmupRuntime.currentIndex),
-  false
-);
-assert.ok(warmupRuntime.chartBoardStyle.includes("width:"));
-assert.ok(warmupRuntime.chartBoardStyle.includes("min-width: 100%"));
-assert.strictEqual(warmupRuntime.chartScrollLeft, 0);
-assert.strictEqual(warmupRuntime.indicatorPanel.type, "vol");
-assert.strictEqual(warmupRuntime.indicatorPanel.items.length, 8);
-assert.ok(warmupRuntime.indicatorOverlay.ma5.length > 0);
-assert.strictEqual(warmupRuntime.indicatorOverlay.bollUpper.length, 0);
-assert.strictEqual(warmupRuntime.mustDecide, false);
-
-const zoomedWarmupRuntime = setKlineRuntimeChartZoom(warmupRuntime, "focus");
-assert.strictEqual(zoomedWarmupRuntime.currentIndex, warmupRuntime.currentIndex);
-assert.strictEqual(zoomedWarmupRuntime.activeCandle.key, warmupRuntime.activeCandle.key);
-assert.strictEqual(zoomedWarmupRuntime.visibleCandles.length, warmupRuntime.visibleCandles.length);
-assert.strictEqual(zoomedWarmupRuntime.chartZoomKey, "focus");
-
-const anchoredRuntime = startKlineTrainingRuntime(defaultLongSession, {
-  trainingSessionId: "runtime-anchor-001",
-  initialVisibleCount: 48
-});
-const anchoredZoomRuntime = setKlineRuntimeChartZoom(anchoredRuntime, "focus");
-assert.strictEqual(anchoredZoomRuntime.currentIndex, anchoredRuntime.currentIndex);
-assert.strictEqual(anchoredZoomRuntime.activeCandle.key, anchoredRuntime.activeCandle.key);
-assert.strictEqual(anchoredZoomRuntime.chartScrollLeft, 0);
-assert.strictEqual(anchoredZoomRuntime.chartViewport.rightBoundaryIndex, anchoredRuntime.currentIndex);
-assert.strictEqual(
-  Number(anchoredZoomRuntime.visibleCandles[anchoredZoomRuntime.visibleCandles.length - 1].runtimeIndex),
-  anchoredRuntime.currentIndex
-);
-
-const initialTrainingContext = getInitialKlineVisibleCount(defaultLongSession);
-assert.strictEqual(initialTrainingContext, 120);
-const expandedContextRuntime = startKlineTrainingRuntime(defaultLongSession, {
-  trainingSessionId: "runtime-expanded-context-001",
-  initialVisibleCount: initialTrainingContext
-});
-assert.strictEqual(expandedContextRuntime.visibleCandles.length, 120);
-assert.strictEqual(expandedContextRuntime.currentIndex, 119);
-assert.strictEqual(
-  expandedContextRuntime.visibleCandles.some((item) => Number(item.runtimeIndex) > expandedContextRuntime.currentIndex),
-  false
-);
-
-const overviewFullRuntime = startKlineTrainingRuntime(overviewSession, {
-  trainingSessionId: "runtime-overview-full-001",
-  initialVisibleCount: 180
-});
-assert.strictEqual(overviewFullRuntime.chartZoomKey, "overview");
-assert.strictEqual(overviewFullRuntime.visibleCandles.length, 180);
-assert.strictEqual(Number(overviewFullRuntime.visibleCandles[0].runtimeIndex), 0);
-assert.strictEqual(
-  Number(overviewFullRuntime.visibleCandles[overviewFullRuntime.visibleCandles.length - 1].runtimeIndex),
-  179
-);
-
-const professionalViewportRuntime = startKlineTrainingRuntime(defaultLongSession, {
-  trainingSessionId: "runtime-professional-viewport-001",
-  initialVisibleCount: 150
-});
-assert.strictEqual(professionalViewportRuntime.currentIndex, 149);
-assert.strictEqual(
-  Number(professionalViewportRuntime.visibleCandles[professionalViewportRuntime.visibleCandles.length - 1].runtimeIndex),
-  professionalViewportRuntime.currentIndex
-);
-assert.strictEqual(
-  professionalViewportRuntime.visibleCandles.some((item) => Number(item.runtimeIndex) > professionalViewportRuntime.currentIndex),
-  false
-);
-const professionalZoomOutRuntime = setKlineRuntimeChartZoom(professionalViewportRuntime, "overview");
-assert.ok(professionalZoomOutRuntime.visibleCandles.length > professionalViewportRuntime.visibleCandles.length);
-assert.strictEqual(
-  Number(professionalZoomOutRuntime.visibleCandles[professionalZoomOutRuntime.visibleCandles.length - 1].runtimeIndex),
-  professionalZoomOutRuntime.currentIndex
-);
-assert.strictEqual(Number(professionalZoomOutRuntime.visibleCandles[0].runtimeIndex), 0);
-const professionalPannedRuntime = setKlineRuntimeViewportPan(professionalViewportRuntime, 18);
-assert.strictEqual(professionalPannedRuntime.chartPanOffset, 18);
-assert.strictEqual(
-  Number(professionalPannedRuntime.visibleCandles[professionalPannedRuntime.visibleCandles.length - 1].runtimeIndex),
-  professionalViewportRuntime.currentIndex - 18
-);
-assert.strictEqual(
-  professionalPannedRuntime.visibleCandles.some((item) => Number(item.runtimeIndex) > professionalPannedRuntime.currentIndex),
-  false
-);
-const professionalOverPannedRuntime = setKlineRuntimeViewportPan(professionalViewportRuntime, 999);
-assert.strictEqual(Number(professionalOverPannedRuntime.visibleCandles[0].runtimeIndex), 0);
-assert.strictEqual(
-  professionalOverPannedRuntime.chartPanOffset,
-  professionalOverPannedRuntime.chartViewport.maxPanOffset
-);
-
-const rsiRuntime = startKlineTrainingRuntime(demoSession, {
-  trainingSessionId: "runtime-rsi-001",
-  initialVisibleCount: 6,
-  initialIndicatorKey: "rsi"
-});
-assert.strictEqual(rsiRuntime.indicatorPanel.type, "rsi");
-assert.ok(rsiRuntime.indicatorPanel.lines.rsi.length > 0);
-
-const kdjRuntime = startKlineTrainingRuntime(demoSession, {
-  trainingSessionId: "runtime-kdj-001",
-  initialVisibleCount: 6,
-  initialIndicatorKey: "kdj"
-});
-assert.strictEqual(kdjRuntime.indicatorPanel.type, "kdj");
-assert.ok(kdjRuntime.indicatorPanel.lines.k.length > 0);
-assert.ok(kdjRuntime.indicatorPanel.lines.d.length > 0);
-assert.ok(kdjRuntime.indicatorPanel.lines.j.length > 0);
-
-const runtimeStep1 = advanceKlineTrainingRuntime(runtime);
-const runtimeStep2 = advanceKlineTrainingRuntime(runtimeStep1);
-const runtimeStep3 = advanceKlineTrainingRuntime(runtimeStep2);
-assert.strictEqual(runtimeStep3.currentIndex, 3);
-assert.strictEqual(runtimeStep3.mustDecide, true);
-assert.strictEqual(runtimeStep3.lockedUntilDecision, true);
-
-const blockedRuntime = advanceKlineTrainingRuntime(runtimeStep3);
-assert.strictEqual(blockedRuntime.currentIndex, 3);
-assert.strictEqual(blockedRuntime.blockedReason, "decision_required");
-
-const decidedRuntime = recordKlineTrainingDecision(runtimeStep3, {
-  action: "BUY",
-  selectedCandleKey: runtimeStep3.activeCandle.key,
-  reactionDirection: "act",
-  firstReaction: "想追上去，怕错过这一根。",
-  boundaryChoice: "停十秒"
-});
-assert.strictEqual(decidedRuntime.mustDecide, false);
-assert.strictEqual(decidedRuntime.lockedUntilDecision, false);
-assert.strictEqual(decidedRuntime.decisionTimeline.length, 1);
-assert.strictEqual(decidedRuntime.decisionTimeline[0].action, "BUY");
-assert.strictEqual(decidedRuntime.decisionTimeline[0].positionSize, 1);
-assert.strictEqual(decidedRuntime.positionState.side, "LONG");
-assert.strictEqual(decidedRuntime.positionState.entryPrice, decidedRuntime.decisionTimeline[0].price);
-assert.strictEqual(decidedRuntime.sessionMetrics.positionSize, 1);
-assert.deepStrictEqual(decidedRuntime.emotionBadges.map((item) => item.type), ["GREED"]);
-assert.ok(decidedRuntime.riskHints[0].text.includes("追"));
-assert.ok(decidedRuntime.coachHints[0].text.includes("先停"));
-
-const runtimeRecordPatch = buildKlineTrainingRecordPatch(decidedRuntime);
-assert.strictEqual(runtimeRecordPatch.trainingSessionId, "runtime-001");
-assert.strictEqual(runtimeRecordPatch.simulationMode, "blind_step_replay");
-assert.strictEqual(runtimeRecordPatch.sliceSeed, "scene-fast-001");
-assert.strictEqual(runtimeRecordPatch.selectedCandleKey, decidedRuntime.activeCandle.key);
-assert.strictEqual(runtimeRecordPatch.reactionDirection, "act");
-assert.strictEqual(runtimeRecordPatch.firstReaction, "想追上去，怕错过这一根。");
-assert.strictEqual(runtimeRecordPatch.boundaryChoice, "停十秒");
-assert.strictEqual(runtimeRecordPatch.decisionTimeline.length, 1);
-assert.strictEqual(runtimeRecordPatch.emotionBadges[0].type, "GREED");
-assert.ok(runtimeRecordPatch.riskHints[0].text.includes("追"));
-assert.ok(runtimeRecordPatch.coachHints[0].text.includes("先停"));
-assert.strictEqual(runtimeRecordPatch.sessionMetrics.positionSize, 1);
-assert.strictEqual(runtimeRecordPatch.positionState.side, "LONG");
-
-const runtimeStep4 = advanceKlineTrainingRuntime(decidedRuntime);
-assert.strictEqual(runtimeStep4.currentIndex, 4);
-assert.ok(Number.isFinite(runtimeStep4.sessionMetrics.unrealizedPnl));
-
-const closedRuntime = recordKlineTrainingDecision(runtimeStep4, {
-  action: "SELL",
-  selectedCandleKey: runtimeStep4.activeCandle.key,
-  reactionDirection: "observe",
-  firstReaction: "先退出模拟仓位，记录这次波动。",
-  boundaryChoice: "回到计划"
-});
-assert.strictEqual(closedRuntime.positionState.side, "FLAT");
-assert.strictEqual(closedRuntime.sessionMetrics.positionSize, 0);
-assert.ok(Number.isFinite(closedRuntime.sessionMetrics.realizedPnl));
-assert.ok(Number.isFinite(closedRuntime.sessionMetrics.maxDrawdown));
-
-const runtimeRecord = buildKlineMindRecord({
-  selectedCandleKey: demoSession.selectedCandleKey,
-  firstReaction: "急躁",
-  boundaryChoice: "停十秒",
-  insightLine: "我看见自己想追上去，但先停了一下。",
-  trainingSessionId: decidedRuntime.trainingSessionId,
-  simulationMode: decidedRuntime.simulationMode,
-  sliceSeed: decidedRuntime.sliceSeed,
-  decisionTimeline: decidedRuntime.decisionTimeline,
-  emotionBadges: decidedRuntime.emotionBadges,
-  riskHints: decidedRuntime.riskHints,
-  coachHints: decidedRuntime.coachHints,
-  positionState: decidedRuntime.positionState,
-  sessionMetrics: decidedRuntime.sessionMetrics
-}, demoSession);
-assert.strictEqual(runtimeRecord.trainingSessionId, "runtime-001");
-assert.strictEqual(runtimeRecord.simulationMode, "blind_step_replay");
-assert.strictEqual(runtimeRecord.sliceSeed, "scene-fast-001");
-assert.strictEqual(runtimeRecord.decisionTimeline.length, 1);
-assert.strictEqual(runtimeRecord.sessionMetrics.positionSize, 1);
-assert.strictEqual(runtimeRecord.positionState.side, "LONG");
-assert.strictEqual(runtimeRecord.firstReaction, "急躁");
-assert.strictEqual(runtimeRecord.boundaryChoice, "停十秒");
-assert.strictEqual(runtimeRecord.insightLine, "我看见自己想追上去，但先停了一下。");
-
-const oneThoughtEvent = buildOneThoughtEvent(Object.assign({}, demoRecord, {
-  localRecordId: "kline-mind-local-001",
-  userId: "",
-  insightLine: "手机号 13800138000 不应进入事件明文。",
-  relatedMirror: "冲动型"
-}), {
-  identity: {
-    anonymousId: "anon-open-loop-001"
+const camelOnlyFocusSession = buildKlineMindSession({
+  assessment: { primary: "冲动型" },
+  trainingDay: { day: 4 },
+  historyCache: { cn_equity: { "1d": historicalSlice } },
+  reviewFocus: {
+    sourceType: "review_focus",
+    errorType: "计划外追涨",
+    trainingPrescription: "停十秒，写下第一念。",
+    sceneTags: "放量拉升,怕错过",
+    nextAction: "先复盘再行动",
+    sourceReviewId: "review-camel-only"
   }
 });
-const rebuiltOneThoughtEvent = buildOneThoughtEvent(Object.assign({}, demoRecord, {
-  localRecordId: "kline-mind-local-001"
-}), {
-  existingEvent: oneThoughtEvent
+assert.strictEqual(camelOnlyFocusSession.sourceType, "review_focus");
+assert.strictEqual(camelOnlyFocusSession.source_type, "review_focus");
+assert.strictEqual(camelOnlyFocusSession.errorType, "计划外追涨");
+assert.strictEqual(camelOnlyFocusSession.error_type, "计划外追涨");
+assert.deepStrictEqual(camelOnlyFocusSession.trainingPrescription, { action: "停十秒，写下第一念。" });
+assert.deepStrictEqual(camelOnlyFocusSession.training_prescription, { action: "停十秒，写下第一念。" });
+assert.deepStrictEqual(camelOnlyFocusSession.sceneTags, ["放量拉升", "怕错过"]);
+assert.deepStrictEqual(camelOnlyFocusSession.scene_tags, ["放量拉升", "怕错过"]);
+assert.strictEqual(camelOnlyFocusSession.sourceReviewId, "review-camel-only");
+assert.strictEqual(camelOnlyFocusSession.source_review_id, "review-camel-only");
+
+const snakeOnlyFocusSession = buildKlineMindSession({
+  assessment: { primary: "焦虑型" },
+  trainingDay: { day: 5 },
+  historyCache: { cn_equity: { "1d": historicalSlice } },
+  reviewFocus: {
+    source_type: "review_focus",
+    error_type: "冲高回落",
+    training_prescription: { action: "固定观察窗口。" },
+    scene_tags: ["冲高回落"],
+    next_action: "只记录，不追动",
+    source_review_id: "review-snake-only"
+  }
 });
-assert.strictEqual(oneThoughtEvent.eventId, rebuiltOneThoughtEvent.eventId);
-assert.strictEqual(oneThoughtEvent.localRecordId, "kline-mind-local-001");
-assert.strictEqual(oneThoughtEvent.eventType, "kline_training");
-assert.strictEqual(oneThoughtEvent.anonymousId, "anon-open-loop-001");
-assert.strictEqual(oneThoughtEvent.klineSource, "local_demo");
-assert.strictEqual(oneThoughtEvent.serverSliceStatus, "network_error");
-assert.strictEqual(oneThoughtEvent.serverSliceError, "K线服务暂不可用");
-assert.strictEqual(oneThoughtEvent.market, "cn_equity");
-assert.strictEqual(oneThoughtEvent.symbol, "local-demo");
-assert.strictEqual(oneThoughtEvent.timeframe, "30m");
-assert.strictEqual(oneThoughtEvent.mode, "step_replay");
-assert.strictEqual(oneThoughtEvent.reactionChoice, "急躁");
-assert.strictEqual(oneThoughtEvent.boundaryState, "停十秒");
-assert.strictEqual(oneThoughtEvent.relatedMirror, "冲动型");
-assert.strictEqual(oneThoughtEvent.clientSyncStatus, "local_saved");
-assert.ok(!JSON.stringify(oneThoughtEvent).includes("13800138000"));
+assert.strictEqual(snakeOnlyFocusSession.sourceType, "review_focus");
+assert.strictEqual(snakeOnlyFocusSession.source_type, "review_focus");
+assert.strictEqual(snakeOnlyFocusSession.errorType, "冲高回落");
+assert.strictEqual(snakeOnlyFocusSession.error_type, "冲高回落");
+assert.deepStrictEqual(snakeOnlyFocusSession.sceneTags, ["冲高回落"]);
+assert.deepStrictEqual(snakeOnlyFocusSession.scene_tags, ["冲高回落"]);
+
+const missingSourceTypeSession = buildKlineMindSession({
+  assessment: { primary: "冲动型" },
+  trainingDay: { day: 2 },
+  historyCache: { cn_equity: { "1d": historicalSlice } },
+  reviewFocus: {
+    sourceType: "base_blind",
+    source_type: "base_blind"
+  }
+});
+assert.notStrictEqual(missingSourceTypeSession.sourceType, "review_focus");
+assert.notStrictEqual(missingSourceTypeSession.source_type, "review_focus");
+
+const sparseReviewFocusRecord = buildKlineMindRecord({
+  selectedCandleKey: reviewFocusSession.selectedCandleKey,
+  firstReaction: "说不清",
+  boundaryChoice: "先停十秒",
+  insightLine: "旧 session 缺字段也能生成训练错题卡。"
+}, {
+  day: 2,
+  source_type: "review_focus",
+  error_type: "旧题复现",
+  candles: reviewFocusSession.candles,
+  selectedCandleKey: reviewFocusSession.selectedCandleKey
+});
+assert.strictEqual(sparseReviewFocusRecord.sourceType, "review_focus");
+assert.strictEqual(sparseReviewFocusRecord.source_type, "review_focus");
+assert.strictEqual(sparseReviewFocusRecord.errorType, "旧题复现");
+assert.strictEqual(sparseReviewFocusRecord.error_type, "旧题复现");
+assert.deepStrictEqual(sparseReviewFocusRecord.trainingPrescription, {});
+assert.deepStrictEqual(sparseReviewFocusRecord.training_prescription, {});
+assert.deepStrictEqual(sparseReviewFocusRecord.sceneTags, []);
+assert.deepStrictEqual(sparseReviewFocusRecord.scene_tags, []);
+assert.strictEqual(sparseReviewFocusRecord.repeatCount, 1);
+assert.strictEqual(sparseReviewFocusRecord.repeat_count, 1);
+assert.ok(sparseReviewFocusRecord.executionResult);
+assert.strictEqual(sparseReviewFocusRecord.executionResult, sparseReviewFocusRecord.execution_result);
+assert.strictEqual(sparseReviewFocusRecord.executionResult, "按计划执行");
+assert.strictEqual(sparseReviewFocusRecord.trainingMistakeCard.title, "最明显执行偏离");
+assert.strictEqual(sparseReviewFocusRecord.training_mistake_card.title, "最明显执行偏离");
+assert.strictEqual(JSON.stringify(sparseReviewFocusRecord).includes("最明显失守"), false);
 
 const fallback = buildKlineMindSession({
   assessment: { primary: "未知型" },

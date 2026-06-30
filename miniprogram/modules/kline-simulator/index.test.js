@@ -9,11 +9,7 @@ const {
   buildKlineDayRetestComparison,
   getKlineRecommendationForMirror,
   createMirrorChallenge,
-  buildKlineChange,
-  MARKET_PRESETS,
-  TIMEFRAME_PRESETS,
-  KLINE_TRAINING_MARKET_PRESETS,
-  KLINE_TRAINING_TIMEFRAME_PRESETS
+  buildKlineChange
 } = require("./index");
 
 const scenarios = getKlineScenarios();
@@ -22,17 +18,11 @@ assert.ok(scenarios[0].mirrorNames.includes("追涨之镜"));
 assert.strictEqual(scenarios[0].marketLabel, "A股");
 assert.strictEqual(scenarios[0].timeframeLabel, "日线");
 
-const availableMarkets = new Set(getKlineScenarios().map((item) => item.marketKey));
-assert.strictEqual(availableMarkets.has(["h", "k"].join("")), false);
-assert.ok(MARKET_PRESETS.find((item) => item.key === "crypto"));
-assert.ok(TIMEFRAME_PRESETS.find((item) => item.key === "5m"));
-assert.deepStrictEqual(KLINE_TRAINING_MARKET_PRESETS.map((item) => item.key), ["cn"]);
-assert.deepStrictEqual(KLINE_TRAINING_TIMEFRAME_PRESETS.map((item) => item.key), ["30m", "60m", "1d"]);
+const hkFast = getKlineScenarios({ marketKey: "hk", timeframeKey: "5m" })[0];
+assert.strictEqual(hkFast.marketLabel, "港股");
+assert.strictEqual(hkFast.timeframeLabel, "5分钟");
 
 const scene = getKlineScenario("scene-fast-001");
-assert.ok(scene.candles.length >= 30);
-assert.ok(scene.candles.some((item) => Math.abs(item.close - item.open) >= 7));
-assert.ok(scene.candles.some((item) => item.volume >= 2200));
 let session = createKlineSession(scene.id);
 session.lastStepAt = Date.now() - 2400;
 session.currentEmotion = "急躁";

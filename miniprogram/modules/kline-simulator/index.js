@@ -30,6 +30,7 @@ function getBoundaryStateMeta(key) {
 
 const MARKET_PRESETS = [
   { key: "cn", label: "A股", ruleTag: "T+1 规则", session: "日内节奏固定，重点观察隔夜与边界反应" },
+  { key: "hk", label: "港股", ruleTag: "港股规则", session: "波动节奏更开放，重点观察不确定感" },
   { key: "us", label: "美股", ruleTag: "美股规则", session: "交易时段不同，重点观察疲惫与冲动" },
   { key: "futures", label: "期货", ruleTag: "期货规则", session: "杠杆感更强，重点观察急与惧" },
   { key: "crypto", label: "数字货币", ruleTag: "全天候波动", session: "无固定休息感，重点观察频繁查看" }
@@ -46,50 +47,6 @@ const TIMEFRAME_PRESETS = [
   { key: "5m", label: "5分钟", pace: "快速", candleWindow: 6 }
 ];
 
-const KLINE_TRAINING_MARKET_PRESETS = MARKET_PRESETS.filter((item) => item.key === "cn");
-const KLINE_TRAINING_TIMEFRAME_PRESETS = ["30m", "60m", "1d"]
-  .map((key) => TIMEFRAME_PRESETS.find((item) => item.key === key))
-  .filter(Boolean);
-
-const FIRECRACKER_CANDLES = [
-  [100, 102, 99, 101, 820],
-  [101, 103, 100, 102, 900],
-  [102, 106, 101, 105, 1180],
-  [105, 112, 104, 111, 1860],
-  [111, 121, 110, 119, 2460],
-  [119, 128, 117, 126, 2880],
-  [126, 130, 119, 121, 2320],
-  [121, 124, 114, 116, 1980],
-  [116, 121, 111, 119, 1680],
-  [119, 126, 118, 124, 2140],
-  [124, 127, 115, 117, 2260],
-  [117, 120, 110, 112, 1880],
-  [112, 115, 108, 110, 1560],
-  [110, 113, 106, 108, 1420],
-  [108, 116, 107, 115, 2240],
-  [115, 123, 114, 121, 2580],
-  [121, 129, 119, 127, 3120],
-  [127, 132, 121, 123, 2860],
-  [123, 126, 118, 120, 2380],
-  [120, 127, 119, 126, 2660],
-  [126, 134, 125, 132, 3360],
-  [132, 138, 128, 130, 3180],
-  [130, 136, 126, 134, 3020],
-  [134, 137, 127, 129, 2940],
-  [129, 132, 124, 126, 2460],
-  [126, 131, 122, 129, 2240],
-  [129, 136, 128, 135, 2860],
-  [135, 142, 133, 140, 3480],
-  [140, 146, 136, 138, 3300],
-  [138, 141, 130, 132, 3160],
-  [132, 136, 126, 128, 2840],
-  [128, 134, 124, 133, 2520],
-  [133, 139, 132, 137, 2760],
-  [137, 144, 135, 142, 3380],
-  [142, 145, 134, 136, 3280],
-  [136, 139, 128, 130, 2920]
-].map(([open, high, low, close, volume]) => ({ open, high, low, close, volume }));
-
 const MOCK_KLINE_SCENARIOS = [
   {
     id: "scene-fast-001",
@@ -98,7 +55,14 @@ const MOCK_KLINE_SCENARIOS = [
     triggerType: "怕错过",
     relatedPersonalities: ["冲动型", "焦虑型"],
     trainingDay: 1,
-    candles: FIRECRACKER_CANDLES,
+    candles: [
+      { open: 100, high: 102, low: 99, close: 101 },
+      { open: 101, high: 104, low: 100, close: 103 },
+      { open: 103, high: 108, low: 102, close: 107 },
+      { open: 107, high: 111, low: 106, close: 110 },
+      { open: 110, high: 112, low: 105, close: 106 },
+      { open: 106, high: 108, low: 102, close: 103 }
+    ],
     checkpoints: [
       {
         step: 1,
@@ -385,7 +349,7 @@ function getMarketPreset(key) {
 }
 
 function getTimeframePreset(key) {
-  return TIMEFRAME_PRESETS.find((item) => item.key === key) || TIMEFRAME_PRESETS.find((item) => item.key === "1d") || TIMEFRAME_PRESETS[0];
+  return TIMEFRAME_PRESETS.find((item) => item.key === key) || TIMEFRAME_PRESETS[3];
 }
 
 function decorateScenario(scene, options = {}) {
@@ -662,7 +626,7 @@ function buildKlineInsight({ scene, reaction, scores, impulseWithin3s, firstThou
 
 function getTrainingSuggestion(trait) {
   if (/冲动|怕错过/.test(trait)) return "观入场冲动";
-  if (/扛|边界/.test(trait)) return "观边界抗拒";
+  if (/扛|边界/.test(trait)) return "观风险处理抗拒";
   if (/偏执|证明/.test(trait)) return "观亏损后的证明欲";
   if (/赌徒|放大/.test(trait)) return "观盈利后的失控";
   if (/拖延|完美/.test(trait)) return "观计划执行断裂";
@@ -833,8 +797,6 @@ module.exports = {
   PROCESS_SCORE_LABELS,
   MARKET_PRESETS,
   TIMEFRAME_PRESETS,
-  KLINE_TRAINING_MARKET_PRESETS,
-  KLINE_TRAINING_TIMEFRAME_PRESETS,
   MOCK_KLINE_SCENARIOS,
   getMarketPreset,
   getTimeframePreset,

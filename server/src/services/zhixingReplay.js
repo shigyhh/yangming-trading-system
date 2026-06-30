@@ -310,7 +310,7 @@ function detectBreaches(session, decision, { price, requestedPct, barIndex }) {
     breaches.push(makeBreach("revenge_trade", "亏损后带着回本念头加仓"));
   }
   if (hasPosition && price <= stopLine && decision.action !== "sell") {
-    breaches.push(makeBreach("stop_not_executed", `价格已触及计划止损线${roundMoney(stopLine)}，但没有离场`));
+    breaches.push(makeBreach("stop_not_executed", `价格已触及计划风险线${roundMoney(stopLine)}，但没有离场`));
   }
   if (decision.action === "sell" && getAvailableShares(session.account, barIndex) <= 0) {
     breaches.push(makeBreach("t1_blocked", "A股T+1限制：今日买入的仓位不能当日卖出"));
@@ -514,11 +514,11 @@ function buildCoachAdvice(session, dominantCode) {
   if (!dominantCode) return "本轮最好的地方，是多数动作没有离开开仓前的计划。下一轮继续练：慢一拍，不错过真正的机会。";
   const map = {
     no_plan_entry: "你最大的问题不是看不懂K线，而是盘中给自己临时加理由。明天只守一条：没有写下出场，不开第一笔。",
-    stop_not_executed: "止损线一动，心里的侥幸就开始替你交易。明天只守一条：触线即退，不与亏损辩论。",
-    max_position: "仓位一重，心就失衡。明天只守一条：单笔不超过计划仓位，错了也能睡得着。",
+    stop_not_executed: "风险线一动，心里的侥幸就开始替你交易。明天只守一条：触线即按计划处理，不与亏损辩论。",
+    max_position: "投入一重，心就失衡。明天只守一条：单笔不超过计划投入边界，错了也能睡得着。",
     emotion_open: "情绪在前，交易在后，就容易把冲动包装成机会。明天只守一条：急躁、贪婪、想回本时，不下第一笔。",
     revenge_trade: "想回本不是交易理由，是心中贼。明天只守一条：亏损后暂停一根K线再决策。",
-    t1_blocked: "规则本身也是修行。T+1卖不掉时，才知道开仓前仓位和止损有多重要。"
+    t1_blocked: "规则本身也是修行。T+1卖不掉时，才知道开仓前投入边界和风险处理有多重要。"
   };
   return map[dominantCode] || "这轮复盘的重点不是盈亏，而是看见自己在哪一根K线上离开了计划。";
 }
@@ -527,7 +527,7 @@ function buildTomorrowPractice(dominantCode) {
   const map = {
     no_plan_entry: "无计划不开仓训练",
     stop_not_executed: "触线即退训练",
-    max_position: "三成仓位上限训练",
+    max_position: "三成计划投入边界训练",
     emotion_open: "急躁不下第一笔训练",
     revenge_trade: "亏损后暂停训练",
     t1_blocked: "T+1规则前置训练"
@@ -540,7 +540,7 @@ function buildLiveScript(session, dominantBreach) {
 }
 
 function summarizePlan(plan) {
-  return `方向：${plan.direction}；止损：-${plan.stop_loss_pct}%；止盈：+${plan.take_profit_pct}%；仓位上限：${plan.max_position_pct}%；戒律：${plan.rule}`;
+  return `方向：${plan.direction}；风险处理：-${plan.stop_loss_pct}%；盈利后的退出动作：+${plan.take_profit_pct}%；计划投入边界：${plan.max_position_pct}%；戒律：${plan.rule}`;
 }
 
 function summarizeActions(session) {
@@ -562,7 +562,7 @@ function makeBreach(code, message) {
 function breachName(code) {
   const map = {
     no_plan_entry: "无计划开仓",
-    stop_not_executed: "止损未执行",
+    stop_not_executed: "风险处理未执行",
     max_position: "仓位越界",
     emotion_open: "情绪开仓",
     revenge_trade: "回本交易",

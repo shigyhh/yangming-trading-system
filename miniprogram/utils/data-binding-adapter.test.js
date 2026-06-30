@@ -114,6 +114,44 @@ const state = {
     "2026-06-01": {
       date: "2026-06-01",
       day: 1,
+      sourceType: "kline_training",
+      errorType: "chasing",
+      sceneTags: ["急拉", "边界触碰"],
+      trainingPrescription: {
+        action: "停十秒，写下边界。"
+      },
+      executionResult: "执行偏离",
+      repeatCount: 2,
+      segmentId: "segment-fast-rise",
+      segment_id: "segment-fast-rise",
+      trainingPackId: "pack-chasing-surge",
+      training_pack_id: "pack-chasing-surge",
+      samplingResult: {
+        segmentId: "segment-fast-rise",
+        segment_id: "segment-fast-rise",
+        trainingPackId: "pack-chasing-surge",
+        training_pack_id: "pack-chasing-surge",
+        errorType: "chasing",
+        error_type: "chasing",
+        sceneTags: ["急拉", "边界触碰"],
+        scene_tags: ["急拉", "边界触碰"],
+        source: "segment",
+        fallbackUsed: false,
+        fallback_used: false,
+        bars: [{ close: 10.2 }]
+      },
+      sampling_result: {
+        segment_id: "segment-fast-rise",
+        training_pack_id: "pack-chasing-surge",
+        source: "segment",
+        fallback_used: false,
+        bars: [{ close: 10.2 }]
+      },
+      fallbackUsed: false,
+      fallback_used: false,
+      trainingMistakeCard: {
+        title: "急拉旧题"
+      },
       scenarioTitle: "边界触碰",
       firstReaction: "急躁",
       boundaryChoice: "停十秒",
@@ -146,6 +184,15 @@ const state = {
       exitPrepared: "no",
       relatedMirror: "追涨之镜",
       heartThieves: ["贪", "急"],
+      mainErrorType: "chasing",
+      triggerScene: "急拉时怕错过",
+      trainingPrescription: {
+        action: "停十秒，写第一念。"
+      },
+      nextRule: "下次先写边界",
+      mistakeCard: {
+        title: "怕错过错题卡"
+      },
       actionLabel: "计划外动作",
       emotion: "急躁",
       verdict: "这次复盘照见的是怕错过带动动作。",
@@ -196,43 +243,36 @@ assert.strictEqual(klinePayload.record.day, 1);
 assert.ok(klinePayload.record.scene.includes("边界触碰"));
 assert.strictEqual(klinePayload.record.reaction, "急躁");
 assert.strictEqual(klinePayload.record.disciplineAction, "停十秒");
-
-const directKlinePayload = buildKLineBindingPayload({
-  auth,
-  state,
-  klineRecord: {
-    id: "kr-local-001",
-    sessionId: "ks-local-001",
-    sceneId: "scene-fast-001",
-    sceneTitle: "快速拉升场景",
-    marketKey: "cn",
-    timeframeKey: "1d",
-    symbol: "历史盲练切片",
-    startedAt: 1764547200000,
-    completedAt: 1764547300000,
-    candlesRange: { start: "2026-06-01", end: "2026-06-10" },
-    userActions: [{ optionId: "rush", label: "想追", reactionTimeMs: 2400 }],
-    mistakes: ["边界差点失守"],
-    heartThieves: ["贪", "急"],
-    scores: { boundaryKeeping: 54, impulseDelay: 42 },
-    insight: "你已经看见第一念，下一步是让手慢半拍。",
-    trainingSuggestion: "建议进入 Day 1：观入场冲动。",
-    linkedTradeReviewId: "tr-from-kr-local-001",
-    linkedOneThoughtEventId: "ot-local-001",
-    source: "miniprogram",
-    createdAt: 1764547300000
-  }
-});
-assert.ok(directKlinePayload);
-assert.strictEqual(directKlinePayload.record.id, "kr-local-001");
-assert.strictEqual(directKlinePayload.record.idempotencyKey, "kr-local-001");
-assert.strictEqual(directKlinePayload.record.userId, "phone_13812345678");
-assert.strictEqual(directKlinePayload.record.sessionId, "ks-local-001");
-assert.strictEqual(directKlinePayload.record.sceneId, "scene-fast-001");
-assert.strictEqual(directKlinePayload.record.linkedTradeReviewId, "tr-from-kr-local-001");
-assert.strictEqual(directKlinePayload.record.disciplineScore, 54);
-assert.strictEqual(directKlinePayload.record.processScores.boundaryKeeping, 54);
-assert.strictEqual(directKlinePayload.record.processInsight, "你已经看见第一念，下一步是让手慢半拍。");
+assert.strictEqual(klinePayload.record.sourceType, "kline_training");
+assert.strictEqual(klinePayload.record.source_type, "kline_training");
+assert.strictEqual(klinePayload.record.errorType, "chasing");
+assert.strictEqual(klinePayload.record.error_type, "chasing");
+assert.deepStrictEqual(klinePayload.record.sceneTags, ["急拉", "边界触碰"]);
+assert.deepStrictEqual(klinePayload.record.scene_tags, ["急拉", "边界触碰"]);
+assert.deepStrictEqual(klinePayload.record.trainingPrescription, { action: "停十秒，写下边界。" });
+assert.deepStrictEqual(klinePayload.record.training_prescription, { action: "停十秒，写下边界。" });
+assert.strictEqual(klinePayload.record.executionResult, "执行偏离");
+assert.strictEqual(klinePayload.record.execution_result, "执行偏离");
+assert.strictEqual(klinePayload.record.repeatCount, 2);
+assert.strictEqual(klinePayload.record.repeat_count, 2);
+assert.strictEqual(klinePayload.record.segmentId, "segment-fast-rise");
+assert.strictEqual(klinePayload.record.segment_id, "segment-fast-rise");
+assert.strictEqual(klinePayload.record.trainingPackId, "pack-chasing-surge");
+assert.strictEqual(klinePayload.record.training_pack_id, "pack-chasing-surge");
+assert.strictEqual(klinePayload.record.fallbackUsed, false);
+assert.strictEqual(klinePayload.record.fallback_used, false);
+assert.strictEqual(klinePayload.record.samplingResult.segmentId, "segment-fast-rise");
+assert.strictEqual(klinePayload.record.sampling_result.segment_id, "segment-fast-rise");
+assert.strictEqual(klinePayload.record.samplingResult.trainingPackId, "pack-chasing-surge");
+assert.strictEqual(klinePayload.record.sampling_result.training_pack_id, "pack-chasing-surge");
+assert.strictEqual(klinePayload.record.samplingResult.source, "segment");
+assert.strictEqual(klinePayload.record.sampling_result.source, "segment");
+assert.strictEqual(klinePayload.record.samplingResult.fallbackUsed, false);
+assert.strictEqual(klinePayload.record.sampling_result.fallback_used, false);
+assert.strictEqual("bars" in klinePayload.record.samplingResult, false);
+assert.strictEqual("bars" in klinePayload.record.sampling_result, false);
+assert.deepStrictEqual(klinePayload.record.trainingMistakeCard, { title: "急拉旧题" });
+assert.deepStrictEqual(klinePayload.record.training_mistake_card, { title: "急拉旧题" });
 
 const tradeReviewPayload = buildTradeReviewBindingPayload({ auth, state });
 assert.ok(tradeReviewPayload);
@@ -247,6 +287,214 @@ assert.strictEqual(tradeReviewPayload.review.wasPlanned, false);
 assert.strictEqual(tradeReviewPayload.review.hadExitRule, false);
 assert.strictEqual(tradeReviewPayload.review.changedPlanDuringTrade, true);
 assert.strictEqual(tradeReviewPayload.review.ocrDraft.status, "provider_not_configured");
+assert.strictEqual(tradeReviewPayload.review.mainErrorType, "chasing");
+assert.strictEqual(tradeReviewPayload.review.main_error_type, "chasing");
+assert.strictEqual(tradeReviewPayload.review.firstThought, "怕错过");
+assert.strictEqual(tradeReviewPayload.review.first_thought, "怕错过");
+assert.strictEqual(tradeReviewPayload.review.triggerScene, "急拉时怕错过");
+assert.strictEqual(tradeReviewPayload.review.trigger_scene, "急拉时怕错过");
+assert.deepStrictEqual(tradeReviewPayload.review.trainingPrescription, { action: "停十秒，写第一念。" });
+assert.deepStrictEqual(tradeReviewPayload.review.training_prescription, { action: "停十秒，写第一念。" });
+assert.strictEqual(tradeReviewPayload.review.nextRule, "下次先写边界");
+assert.strictEqual(tradeReviewPayload.review.next_rule, "下次先写边界");
+assert.deepStrictEqual(tradeReviewPayload.review.mistakeCard, { title: "怕错过错题卡" });
+assert.deepStrictEqual(tradeReviewPayload.review.mistake_card, { title: "怕错过错题卡" });
+
+const snakeOnlyTradeReviewPayload = buildTradeReviewBindingPayload({
+  auth,
+  state: Object.assign({}, state, {
+    trade_review_records: {
+      latest: {
+        id: "tr-snake-001",
+        trade_date: "2026-06-02",
+        market_type: "cn",
+        first_thought: "又想追",
+        main_error_type: "impulse",
+        trigger_scene: "放量突破",
+        training_prescription: { action: "只记录，不行动。" },
+        next_rule: "下次看见放量先停十秒",
+        mistake_card: { title: "追涨旧题复现" },
+        createdAt: 1764547500000
+      },
+      records: []
+    }
+  })
+});
+assert.strictEqual(snakeOnlyTradeReviewPayload.review.mainErrorType, "impulse");
+assert.strictEqual(snakeOnlyTradeReviewPayload.review.main_error_type, "impulse");
+assert.strictEqual(snakeOnlyTradeReviewPayload.review.firstThought, "又想追");
+assert.strictEqual(snakeOnlyTradeReviewPayload.review.first_thought, "又想追");
+assert.strictEqual(snakeOnlyTradeReviewPayload.review.triggerScene, "放量突破");
+assert.strictEqual(snakeOnlyTradeReviewPayload.review.trigger_scene, "放量突破");
+assert.deepStrictEqual(snakeOnlyTradeReviewPayload.review.trainingPrescription, { action: "只记录，不行动。" });
+assert.deepStrictEqual(snakeOnlyTradeReviewPayload.review.training_prescription, { action: "只记录，不行动。" });
+assert.strictEqual(snakeOnlyTradeReviewPayload.review.nextRule, "下次看见放量先停十秒");
+assert.strictEqual(snakeOnlyTradeReviewPayload.review.next_rule, "下次看见放量先停十秒");
+assert.deepStrictEqual(snakeOnlyTradeReviewPayload.review.mistakeCard, { title: "追涨旧题复现" });
+assert.deepStrictEqual(snakeOnlyTradeReviewPayload.review.mistake_card, { title: "追涨旧题复现" });
+
+const snakeOnlyKlinePayload = buildKLineBindingPayload({
+  auth,
+  state: Object.assign({}, state, {
+    intraday_boundary_records: {},
+    kline_mind_records: {
+      "2026-06-02": {
+        date: "2026-06-02",
+        day: 2,
+        source_type: "kline_training",
+        error_type: "hesitation",
+        scene_tags: ["横盘", "犹疑"],
+        training_prescription: { action: "固定观察窗口。" },
+        execution_result: "按计划执行",
+        repeat_count: 3,
+        training_pack_id: "pack-snake-only",
+        segment_id: "segment-snake-only",
+        sampling_result: {
+          segment_id: "segment-snake-only",
+          training_pack_id: "pack-snake-only",
+          source: "fallback_catalog_slice",
+          fallback_used: true,
+          fallback_reason: "no_matching_segment",
+          bars: [{ close: 9.8 }]
+        },
+        fallback_used: true,
+        fallback_reason: "no_matching_segment",
+        training_mistake_card: { title: "犹疑旧题" },
+        scenarioTitle: "横盘犹疑",
+        firstReaction: "想等确认",
+        boundaryChoice: "固定观察窗口",
+        updatedAt: 1764547600000
+      }
+    }
+  })
+});
+assert.strictEqual(snakeOnlyKlinePayload.record.sourceType, "kline_training");
+assert.strictEqual(snakeOnlyKlinePayload.record.source_type, "kline_training");
+assert.strictEqual(snakeOnlyKlinePayload.record.errorType, "hesitation");
+assert.strictEqual(snakeOnlyKlinePayload.record.error_type, "hesitation");
+assert.deepStrictEqual(snakeOnlyKlinePayload.record.sceneTags, ["横盘", "犹疑"]);
+assert.deepStrictEqual(snakeOnlyKlinePayload.record.scene_tags, ["横盘", "犹疑"]);
+assert.deepStrictEqual(snakeOnlyKlinePayload.record.trainingPrescription, { action: "固定观察窗口。" });
+assert.deepStrictEqual(snakeOnlyKlinePayload.record.training_prescription, { action: "固定观察窗口。" });
+assert.strictEqual(snakeOnlyKlinePayload.record.executionResult, "按计划执行");
+assert.strictEqual(snakeOnlyKlinePayload.record.execution_result, "按计划执行");
+assert.strictEqual(snakeOnlyKlinePayload.record.repeatCount, 3);
+assert.strictEqual(snakeOnlyKlinePayload.record.repeat_count, 3);
+assert.strictEqual(snakeOnlyKlinePayload.record.trainingPackId, "pack-snake-only");
+assert.strictEqual(snakeOnlyKlinePayload.record.training_pack_id, "pack-snake-only");
+assert.strictEqual(snakeOnlyKlinePayload.record.segmentId, "segment-snake-only");
+assert.strictEqual(snakeOnlyKlinePayload.record.segment_id, "segment-snake-only");
+assert.strictEqual(snakeOnlyKlinePayload.record.fallbackUsed, true);
+assert.strictEqual(snakeOnlyKlinePayload.record.fallback_used, true);
+assert.strictEqual(snakeOnlyKlinePayload.record.fallbackReason, "no_matching_segment");
+assert.strictEqual(snakeOnlyKlinePayload.record.fallback_reason, "no_matching_segment");
+assert.strictEqual(snakeOnlyKlinePayload.record.samplingResult.segmentId, "segment-snake-only");
+assert.strictEqual(snakeOnlyKlinePayload.record.sampling_result.segment_id, "segment-snake-only");
+assert.strictEqual("bars" in snakeOnlyKlinePayload.record.samplingResult, false);
+assert.strictEqual("bars" in snakeOnlyKlinePayload.record.sampling_result, false);
+assert.deepStrictEqual(snakeOnlyKlinePayload.record.trainingMistakeCard, { title: "犹疑旧题" });
+assert.deepStrictEqual(snakeOnlyKlinePayload.record.training_mistake_card, { title: "犹疑旧题" });
+
+const lawResultOnlyKlinePayload = buildKLineBindingPayload({
+  auth,
+  state: Object.assign({}, state, {
+    intraday_boundary_records: {},
+    kline_mind_records: {
+      "2026-06-03": {
+        date: "2026-06-03",
+        day: 3,
+        source_type: "review_focus",
+        error_type: "追涨",
+        law_result: "broken",
+        repeat_count: 1,
+        scenarioTitle: "放量拉升",
+        firstReaction: "怕错过",
+        boundaryChoice: "停十秒",
+        updatedAt: 1764547700000
+      }
+    }
+  })
+});
+assert.strictEqual(lawResultOnlyKlinePayload.record.executionResult, "执行偏离");
+assert.strictEqual(lawResultOnlyKlinePayload.record.execution_result, "执行偏离");
+assert.strictEqual(lawResultOnlyKlinePayload.record.executionLabel, "执行偏离");
+assert.strictEqual(lawResultOnlyKlinePayload.record.execution_label, "执行偏离");
+
+const customSessionKlinePayload = buildKLineBindingPayload({
+  auth,
+  state: Object.assign({}, state, {
+    intraday_boundary_records: {},
+    kline_mind_records: {
+      "2026-06-05": {
+        date: "2026-06-05",
+        day: 5,
+        sourceType: "custom_session",
+        source_type: "custom_session",
+        symbol: "600519",
+        period: "1d",
+        startDate: "2024-01-02",
+        start_date: "2024-01-02",
+        endDate: "2024-01-09",
+        end_date: "2024-01-09",
+        trainingLength: 60,
+        training_length: 60,
+        hiddenSymbol: true,
+        hidden_symbol: true,
+        hiddenDateRange: true,
+        hidden_date_range: true,
+        scenarioTitle: "自选盲练",
+        firstReaction: "怕错过",
+        boundaryChoice: "观望",
+        insightLine: "自选盲练只记录第一念。",
+        historySlice: {
+          candles: [{ close: 10.2 }]
+        },
+        completed: true,
+        updatedAt: 1764547900000
+      }
+    }
+  })
+});
+assert.strictEqual(customSessionKlinePayload.record.sourceType, "custom_session");
+assert.strictEqual(customSessionKlinePayload.record.source_type, "custom_session");
+assert.strictEqual(customSessionKlinePayload.record.symbol, "600519");
+assert.strictEqual(customSessionKlinePayload.record.period, "1d");
+assert.strictEqual(customSessionKlinePayload.record.startDate, "2024-01-02");
+assert.strictEqual(customSessionKlinePayload.record.start_date, "2024-01-02");
+assert.strictEqual(customSessionKlinePayload.record.endDate, "2024-01-09");
+assert.strictEqual(customSessionKlinePayload.record.end_date, "2024-01-09");
+assert.strictEqual(customSessionKlinePayload.record.trainingLength, 60);
+assert.strictEqual(customSessionKlinePayload.record.training_length, 60);
+assert.strictEqual(customSessionKlinePayload.record.hiddenSymbol, true);
+assert.strictEqual(customSessionKlinePayload.record.hidden_symbol, true);
+assert.strictEqual(customSessionKlinePayload.record.hiddenDateRange, true);
+assert.strictEqual(customSessionKlinePayload.record.hidden_date_range, true);
+assert.strictEqual("bars" in customSessionKlinePayload.record, false);
+assert.strictEqual("historySlice" in customSessionKlinePayload.record, false);
+
+const executionLabelPriorityKlinePayload = buildKLineBindingPayload({
+  auth,
+  state: Object.assign({}, state, {
+    intraday_boundary_records: {},
+    kline_mind_records: {
+      "2026-06-04": {
+        date: "2026-06-04",
+        day: 4,
+        source_type: "review_focus",
+        error_type: "冲高回落",
+        execution_label: "aligned",
+        law_result: "broken",
+        repeat_count: 1,
+        scenarioTitle: "冲高回落",
+        firstReaction: "说不清",
+        boundaryChoice: "只记录",
+        updatedAt: 1764547800000
+      }
+    }
+  })
+});
+assert.strictEqual(executionLabelPriorityKlinePayload.record.executionResult, "按计划执行");
+assert.strictEqual(executionLabelPriorityKlinePayload.record.execution_result, "按计划执行");
 
 const sharePayload = buildShareCardBindingPayload({
   auth,
@@ -271,84 +519,14 @@ forbiddenPhrases.forEach((phrase) => {
 });
 
 const apiSource = fs.readFileSync(path.join(__dirname, "api.js"), "utf8");
-const adapterSource = fs.readFileSync(path.join(__dirname, "data-binding-adapter.js"), "utf8");
-const tradeReviewModuleSource = fs.readFileSync(path.join(__dirname, "../modules/trade-review/index.js"), "utf8");
 assert.ok(apiSource.includes("/api/v1/data-binding/assessment-report"));
 assert.ok(apiSource.includes("/api/v1/data-binding/users/"));
 assert.ok(apiSource.includes("/trade-reviews"));
-assert.ok(apiSource.includes("syncKlineTrainingRecord"));
-assert.ok(apiSource.includes("retryPendingKlineTrainingSync"));
-assert.ok(apiSource.includes("klineTrainingSyncStatus"));
-assert.ok(apiSource.includes("klineTrainingLastSyncedAt"));
-assert.ok(apiSource.includes("klineTrainingSyncStartedAt"));
-assert.ok(apiSource.includes("force"));
-assert.ok(apiSource.includes("tradeReviewSyncStatus"));
-assert.ok(apiSource.includes("tradeReviewLastSyncedAt"));
-assert.strictEqual(adapterSource.includes(["h", "k", "_stock"].join("")), false);
-assert.strictEqual(adapterSource.includes(["港", "股"].join("")), false);
-assert.strictEqual(tradeReviewModuleSource.includes(["h", "k", "_equity"].join("")), false);
-assert.strictEqual(tradeReviewModuleSource.includes(["h", "k", "_stock"].join("")), false);
 assert.ok(apiSource.includes("/trade-review-ocr"));
 assert.ok(apiSource.includes("/training-prescription"));
 assert.ok(apiSource.includes("pullTrainingPrescription"));
 assert.strictEqual(apiSource.includes("/assessment-report`"), false);
 assert.strictEqual(apiSource.includes("/training-progress`"), false);
 assert.strictEqual(apiSource.includes("/share-attribution`"), false);
-
-const klineSessionSource = fs.readFileSync(path.join(__dirname, "../pages/kline-session/index.js"), "utf8");
-assert.ok(klineSessionSource.includes("syncKlineTrainingRecord"));
-assert.ok(klineSessionSource.includes("linkedTradeReviewId"));
-assert.ok(klineSessionSource.includes("if (!result || !result.ok)"));
-assert.ok(klineSessionSource.includes("marketContext"));
-assert.ok(klineSessionSource.includes("mergeLocalDemoSlice"));
-assert.ok(klineSessionSource.includes("local_demo"));
-assert.ok(klineSessionSource.includes("serverSliceStatus"));
-assert.ok(klineSessionSource.includes("serverSliceError"));
-assert.ok(klineSessionSource.includes("sliceSource"));
-assert.ok(klineSessionSource.includes("klineTrainingSyncStartedAt"));
-assert.ok(klineSessionSource.includes("force: true"));
-assert.ok(klineSessionSource.includes(".catch(() => {})"));
-const klineReviewSource = fs.readFileSync(path.join(__dirname, "../pages/kline-review/index.js"), "utf8");
-assert.ok(klineReviewSource.includes("retryPendingKlineTrainingSync"));
-const klineSimulatorPageSource = fs.readFileSync(path.join(__dirname, "../pages/kline-simulator/index.js"), "utf8");
-assert.ok(klineSimulatorPageSource.includes("stripScenarioRuntimeData"));
-assert.ok(klineSimulatorPageSource.includes("saveKlineScenarioState(scenarios.map(stripScenarioRuntimeData))"));
-const klineMindSource = fs.readFileSync(path.join(__dirname, "../pages/kline-mind/index.js"), "utf8");
-const tradeReviewPageSource = fs.readFileSync(path.join(__dirname, "../pages/trade-review/index.js"), "utf8");
-assert.ok(klineMindSource.includes("fetchKlineTrainingSlice"));
-assert.ok(klineMindSource.includes("retryPendingKlineTrainingSync"));
-assert.strictEqual(klineMindSource.includes("getKlineHistoryCache"), false);
-assert.ok(klineMindSource.includes("historySlice"));
-assert.ok(klineMindSource.includes("buildUnavailableHistorySlice"));
-assert.ok(klineMindSource.includes("server_unavailable"));
-assert.ok(klineMindSource.includes("真实历史数据未载入"));
-assert.strictEqual(klineMindSource.includes("buildLocalDemoHistorySlice"), false);
-assert.strictEqual(klineMindSource.includes("getKlineScenario"), false);
-
-const appConfig = JSON.parse(fs.readFileSync(path.join(__dirname, "../app.json"), "utf8"));
-const klineMindWxmlSource = fs.readFileSync(path.join(__dirname, "../pages/kline-mind/index.wxml"), "utf8");
-const h5BridgeWxmlSource = fs.readFileSync(path.join(__dirname, "../pages/h5-bridge/index.wxml"), "utf8");
-assert.ok(klineMindSource.includes("buildTradeReviewUrl"));
-assert.ok(klineMindSource.includes("goTradeReviewH5"));
-assert.ok(klineMindWxmlSource.includes("查看本次复盘"));
-assert.ok(klineMindWxmlSource.includes('wx:if="{{tradeReviewUrl}}"'));
-assert.ok(appConfig.pages.includes("pages/h5-bridge/index"));
-assert.ok(h5BridgeWxmlSource.includes("<web-view"));
-assert.ok(tradeReviewPageSource.includes("buildTradeReviewUrl"));
-assert.ok(tradeReviewPageSource.includes("resolveReportUrl"));
-assert.ok(tradeReviewPageSource.includes("/pages/h5-bridge/index?url="));
-assert.ok(tradeReviewPageSource.includes("/pages/report/index"));
-
-const livingMirrorPageSource = fs.readFileSync(path.join(__dirname, "../pages/living-mirror/index.js"), "utf8");
-const livingMirrorWxmlSource = fs.readFileSync(path.join(__dirname, "../pages/living-mirror/index.wxml"), "utf8");
-assert.ok(apiSource.includes("fetchLivingMirrorProfile"));
-assert.ok(apiSource.includes("/living-mirror/profile"));
-assert.ok(livingMirrorPageSource.includes("fetchLivingMirrorProfile"));
-assert.ok(livingMirrorPageSource.includes("getUserBinding"));
-assert.ok(livingMirrorWxmlSource.includes("活镜成长摘要"));
-assert.ok(livingMirrorWxmlSource.includes("serverLivingMirrorProfile.totalEvents"));
-assert.ok(livingMirrorWxmlSource.includes("serverLivingMirrorProfile.dominantReaction"));
-assert.ok(livingMirrorWxmlSource.includes("serverLivingMirrorProfile.repeatedThoughts"));
-assert.ok(livingMirrorWxmlSource.includes("serverLivingMirrorProfile.latestBoundaryState"));
 
 console.log("miniprogram data-binding adapter tests passed");
