@@ -19,6 +19,17 @@
     0 20rpx 42rpx rgba(0, 0, 0, 0.26);
 }
 
+.training-brand-mark.brand-seal-frame {
+  display: grid;
+  place-items: center;
+  padding: 10rpx;
+}
+
+.training-brand-mark .brand-seal-art {
+  width: 100%;
+  height: 100%;
+}
+
 .training-brand-copy text {
   display: block;
   color: rgba(244, 235, 221, 0.86);
@@ -92,6 +103,44 @@
   height: 100%;
   border-radius: inherit;
   background: linear-gradient(90deg, rgba(95, 132, 117, 0.92), rgba(216, 183, 111, 0.96));
+}
+
+.training-today-focus {
+  position: relative;
+  z-index: 1;
+  margin-top: 22rpx;
+  padding: 24rpx;
+  border-radius: 22rpx;
+  border: 1rpx solid rgba(216, 183, 111, 0.16);
+  background:
+    radial-gradient(circle at 8% 12%, rgba(216, 183, 111, 0.12), transparent 42%),
+    rgba(255, 255, 255, 0.035);
+}
+
+.training-today-focus text:first-child {
+  display: block;
+  color: #d8b76f;
+  font-size: 22rpx;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.training-today-focus view {
+  margin-top: 12rpx;
+  color: #fff6e6;
+  font-family: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", serif;
+  font-size: 34rpx;
+  line-height: 1.38;
+  font-weight: 800;
+}
+
+.training-today-focus text:last-child {
+  display: block;
+  margin-top: 10rpx;
+  color: rgba(247, 239, 223, 0.58);
+  font-size: 23rpx;
+  line-height: 1.5;
+  font-weight: 700;
 }
 
 .seven-day-list {
@@ -182,6 +231,19 @@
   display: flex;
   gap: 6rpx;
   font-size: 0;
+}
+
+.mind-seal.brand-seal-frame {
+  padding: 9rpx;
+  border-color: rgba(201, 157, 76, 0.42);
+  background:
+    radial-gradient(circle at 50% 40%, rgba(216, 183, 111, 0.14), transparent 68%),
+    rgba(201, 157, 76, 0.08);
+}
+
+.mind-seal .brand-seal-art {
+  width: 100%;
+  height: 100%;
 }
 
 .mind-copy text {
