@@ -70,4 +70,5 @@
 
     <compliance-notice />
   </view>
+  <bottom-tab-bar active="profile" />
 </view>

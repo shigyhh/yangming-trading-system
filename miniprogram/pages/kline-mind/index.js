@@ -286,6 +286,16 @@ function normalizeList(value) {
   return [];
 }
 
+function decodeEntryValue(value) {
+  if (!hasValue(value)) return "";
+  const text = String(value || "").trim();
+  try {
+    return decodeURIComponent(text);
+  } catch (error) {
+    return text;
+  }
+}
+
 function uniqueList(values) {
   const seen = {};
   return values.filter((item) => {
@@ -300,6 +310,12 @@ function isReviewFocusEntry(options = {}) {
   return options.sourceType === "review_focus" ||
     options.source_type === "review_focus" ||
     options.from === "review_focus";
+}
+
+function isSpecialTrainingEntry(options = {}) {
+  return options.sourceType === "special_training" ||
+    options.source_type === "special_training" ||
+    options.from === "special_training";
 }
 
 function stripTrainingContext(form = {}) {
@@ -480,6 +496,31 @@ function buildReviewFocusFromEntry(options = {}, tradeReviewState = {}) {
   };
 }
 
+function buildSpecialTrainingFromEntry(options = {}) {
+  if (!isSpecialTrainingEntry(options)) return null;
+  const meta = buildSpecialTrainingSessionMeta({
+    trainingPackId: decodeEntryValue(pickValue(options.trainingPackId, options.training_pack_id, options.packId, options.pack_id)),
+    training_pack_id: decodeEntryValue(pickValue(options.training_pack_id, options.trainingPackId, options.pack_id, options.packId)),
+    errorType: decodeEntryValue(pickValue(options.errorType, options.error_type, options.title, options.trainingPackTitle, options.training_pack_title)),
+    error_type: decodeEntryValue(pickValue(options.error_type, options.errorType, options.title, options.training_pack_title, options.trainingPackTitle)),
+    title: decodeEntryValue(pickValue(options.trainingPackTitle, options.training_pack_title, options.title)),
+    sceneTags: normalizeList(decodeEntryValue(pickValue(options.sceneTags, options.scene_tags, options.sceneId, options.scene_id))),
+    scene_tags: normalizeList(decodeEntryValue(pickValue(options.scene_tags, options.sceneTags, options.scene_id, options.sceneId))),
+    expectedAction: decodeEntryValue(pickValue(options.expectedAction, options.expected_action, options.nextAction, options.next_action)),
+    expected_action: decodeEntryValue(pickValue(options.expected_action, options.expectedAction, options.next_action, options.nextAction))
+  });
+  return Object.assign({}, meta, {
+    marketKey: decodeEntryValue(pickValue(options.marketKey, options.market, options.market_key)),
+    market_key: decodeEntryValue(pickValue(options.market_key, options.marketKey, options.market)),
+    timeframeKey: decodeEntryValue(pickValue(options.timeframeKey, options.timeframe, options.period, options.timeframe_key)),
+    timeframe_key: decodeEntryValue(pickValue(options.timeframe_key, options.timeframeKey, options.timeframe, options.period)),
+    period: decodeEntryValue(pickValue(options.period, options.timeframeKey, options.timeframe)),
+    symbol: decodeEntryValue(options.symbol),
+    sourceSceneId: decodeEntryValue(pickValue(options.sceneId, options.scene_id)),
+    source_scene_id: decodeEntryValue(pickValue(options.scene_id, options.sceneId))
+  });
+}
+
 function applyExecutionPlanToReviewFocus(reviewFocus, executionPlanLibrary) {
   if (!reviewFocus) return reviewFocus;
   const errorType = pickValue(reviewFocus.errorType, reviewFocus.error_type);
@@ -564,18 +605,23 @@ Page({
     });
     const trainingDay = training7View.today || {};
     const executionPlanLibrary = getExecutionPlanLibrary();
+    const entrySpecialTraining = buildSpecialTrainingFromEntry(this.entryOptions || {});
     const reviewFocus = applyExecutionPlanToReviewFocus(
-      buildReviewFocusFromEntry(this.entryOptions || {}, getTradeReviewRecords()),
+      entrySpecialTraining ? null : buildReviewFocusFromEntry(this.entryOptions || {}, getTradeReviewRecords()),
       executionPlanLibrary
     );
+    const sessionRecord = entrySpecialTraining
+      ? Object.assign({}, klineMindRecord || {}, entrySpecialTraining, { selectedCandleKey: "" })
+      : klineMindRecord;
     const session = buildKlineMindSession({
       assessment,
       trainingDay,
-      record: klineMindRecord,
+      record: sessionRecord,
       historyCache: getKlineHistoryCache(),
-      reviewFocus
+      reviewFocus,
+      specialTraining: entrySpecialTraining
     });
-    const form = buildForm(klineMindRecord, session);
+    const form = buildForm(sessionRecord, session);
     const sourceType = session.sourceType || session.source_type || "";
     const samplingUi = buildSamplingUiFromSession(session);
     const runtimeData = this.buildRuntimeData(session, form);
@@ -589,7 +635,7 @@ Page({
       runtimeView: runtimeData.runtimeView,
       selectedMainIndicatorKey: runtimeData.selectedMainIndicatorKey,
       selectedIndicatorKey: runtimeData.selectedIndicatorKey,
-      reviewFocus,
+      reviewFocus: entrySpecialTraining ? null : reviewFocus,
       reviewFocusErrorType: (reviewFocus && (reviewFocus.errorType || reviewFocus.error_type)) || "",
       reviewFocusNextAction: (reviewFocus && (reviewFocus.nextAction || reviewFocus.next_action)) || "",
       form,

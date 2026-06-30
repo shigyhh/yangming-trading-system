@@ -16,6 +16,32 @@ const { buildTraining7View } = require("../../modules/training7/index");
 const { buildKlineDayRetestComparison, getKlineRecommendationForMirror } = require("../../modules/kline-simulator/index");
 const { buildLivingMirrorTree } = require("../../modules/mini-loop/index");
 
+function encodeQuery(params = {}) {
+  return Object.keys(params)
+    .filter((key) => params[key] !== undefined && params[key] !== null && String(params[key]).trim() !== "")
+    .map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(String(params[key]))}`)
+    .join("&");
+}
+
+function buildKlineMindRecommendationPath(recommendation = {}) {
+  const query = encodeQuery({
+    sourceType: "special_training",
+    source_type: "special_training",
+    errorType: recommendation.errorType || recommendation.error_type || recommendation.title || recommendation.mirrorName,
+    error_type: recommendation.error_type || recommendation.errorType || recommendation.title || recommendation.mirrorName,
+    trainingPackTitle: recommendation.title,
+    training_pack_title: recommendation.title,
+    sceneId: recommendation.sceneId,
+    scene_id: recommendation.sceneId,
+    marketKey: recommendation.marketKey || recommendation.market,
+    market: recommendation.marketKey || recommendation.market,
+    timeframeKey: recommendation.timeframeKey || recommendation.timeframe,
+    timeframe: recommendation.timeframeKey || recommendation.timeframe,
+    symbol: recommendation.symbol
+  });
+  return `/pages/kline-mind/index?${query}`;
+}
+
 function buildReviewTop3View(stats = {}) {
   const total = Number(stats.totalReviews || 0);
   return {
@@ -209,6 +235,6 @@ Page({
   },
 
   goRecommendedKline() {
-    wx.navigateTo({ url: (this.data.klineRecommendation || {}).path || "/pages/kline-simulator/index" });
+    wx.navigateTo({ url: buildKlineMindRecommendationPath(this.data.klineRecommendation || {}) });
   }
 });
