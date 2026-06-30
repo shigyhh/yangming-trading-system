@@ -345,6 +345,18 @@
     linear-gradient(180deg, #080807 0%, #0c0f0d 48%, #050606 100%);
 }
 
+.scene-edict.edict-hero.single-focus {
+  justify-content: flex-start;
+}
+
+.scene-edict.edict-hero.single-focus .mini-mirror-card {
+  margin-top: 30rpx;
+}
+
+.scene-edict.edict-hero.single-focus .edict-scroll {
+  flex: 1 1 auto;
+}
+
 .edict-hero::before,
 .edict-hero::after,
 .edict-bg {
@@ -439,6 +451,18 @@
   font-size: 0;
 }
 
+.edict-header > .brand-seal-frame {
+  width: 70rpx;
+  height: 70rpx;
+  flex-basis: 70rpx;
+  border-radius: 20rpx;
+}
+
+.edict-header .brand-seal-art {
+  width: 56rpx;
+  height: 56rpx;
+}
+
 .brand-copy {
   min-width: 0;
 }
@@ -503,7 +527,8 @@
 .mini-mirror-one,
 .living-written,
 .mini-primary,
-.mini-primary-hint {
+.mini-primary-hint,
+.home-quiet-paths {
   position: relative;
   z-index: 1;
 }
@@ -641,12 +666,20 @@
 .living-written-mark {
   width: 58rpx;
   height: 58rpx;
-  display: flex;
-  border-radius: 50%;
-  color: rgba(255, 236, 205, 0.9);
-  border: 2rpx solid rgba(154, 73, 48, 0.62);
-  background: rgba(120, 60, 45, 0.32);
+  flex-basis: 58rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 18rpx;
+  border-color: rgba(154, 73, 48, 0.5);
+  background:
+    radial-gradient(circle at 50% 42%, rgba(120, 60, 45, 0.24), transparent 58%),
+    rgba(120, 60, 45, 0.12);
   font-size: 0;
+}
+
+.living-written-mark .brand-seal-art {
+  width: 46rpx;
+  height: 46rpx;
 }
 
 .living-written-mark .zhao-eye {
@@ -715,6 +748,40 @@
   font-size: 20rpx;
   line-height: 1.4;
   text-align: center;
+}
+
+.home-quiet-paths {
+  margin-top: 16rpx;
+  padding-top: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14rpx;
+  border-top: 1rpx solid rgba(217, 189, 122, 0.08);
+}
+
+.home-quiet-link {
+  flex: 0 0 auto;
+  min-height: 54rpx;
+  padding: 0 24rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 999rpx;
+  color: rgba(216, 183, 111, 0.88);
+  border: 1rpx solid rgba(217, 189, 122, 0.2);
+  background:
+    linear-gradient(180deg, rgba(216, 183, 111, 0.1), rgba(216, 183, 111, 0.035)),
+    rgba(8, 8, 7, 0.24);
+  font-size: 22rpx;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.home-quiet-paths > text {
+  min-width: 0;
+  color: rgba(244, 235, 221, 0.45);
+  font-size: 20rpx;
+  line-height: 1.42;
 }
 
 .kline-mind-entry {
@@ -1298,11 +1365,20 @@
 .completion-living-mark {
   width: 66rpx;
   height: 66rpx;
-  border-radius: 50%;
-  color: rgba(255, 236, 205, 0.92);
-  border: 2rpx solid rgba(154, 73, 48, 0.64);
-  background: rgba(120, 60, 45, 0.34);
+  flex-basis: 66rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 20rpx;
+  border-color: rgba(154, 73, 48, 0.5);
+  background:
+    radial-gradient(circle at 50% 42%, rgba(120, 60, 45, 0.25), transparent 58%),
+    rgba(120, 60, 45, 0.12);
   font-size: 0;
+}
+
+.completion-living-mark .brand-seal-art {
+  width: 52rpx;
+  height: 52rpx;
 }
 
 .completion-living-mark .zhao-eye {
@@ -1801,13 +1877,21 @@
 .seal-mark-large {
   width: 74rpx;
   height: 74rpx;
-  display: flex;
-  border-radius: 50%;
-  color: rgba(255, 236, 205, 0.92);
-  border: 2rpx solid rgba(154, 73, 48, 0.66);
-  background: rgba(120, 60, 45, 0.34);
+  flex-basis: 74rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 22rpx;
+  border-color: rgba(154, 73, 48, 0.5);
+  background:
+    radial-gradient(circle at 50% 42%, rgba(120, 60, 45, 0.26), transparent 58%),
+    rgba(120, 60, 45, 0.12);
   font-size: 0;
-  transform: rotate(-8deg);
+  transform: rotate(-4deg);
+}
+
+.seal-mark-large .brand-seal-art {
+  width: 58rpx;
+  height: 58rpx;
 }
 
 .seal-mark-large .zhao-eye {
@@ -3830,6 +3914,18 @@
     border-radius: 18rpx;
   }
 
+  .edict-header > .brand-seal-frame {
+    width: 64rpx;
+    height: 64rpx;
+    flex-basis: 64rpx;
+    border-radius: 18rpx;
+  }
+
+  .edict-header .brand-seal-art {
+    width: 52rpx;
+    height: 52rpx;
+  }
+
   .brand-title {
     font-size: 25rpx;
   }
@@ -3889,6 +3985,16 @@
 
   .mini-primary-hint {
     font-size: 20rpx;
+  }
+
+  .home-quiet-paths {
+    gap: 12rpx;
+  }
+
+  .home-quiet-link {
+    min-height: 52rpx;
+    padding: 0 22rpx;
+    font-size: 21rpx;
   }
 
   .kline-mind-entry {
@@ -4018,6 +4124,18 @@
     font-size: 42rpx;
   }
 
+  .edict-header > .brand-seal-frame {
+    width: 60rpx;
+    height: 60rpx;
+    flex-basis: 60rpx;
+    border-radius: 18rpx;
+  }
+
+  .edict-header .brand-seal-art {
+    width: 48rpx;
+    height: 48rpx;
+  }
+
   .brand-title {
     font-size: 23rpx;
   }
@@ -4076,6 +4194,14 @@
   .mini-primary {
     min-height: 76rpx;
     font-size: 24rpx;
+  }
+
+  .home-quiet-paths {
+    align-items: flex-start;
+  }
+
+  .home-quiet-paths > text {
+    font-size: 19rpx;
   }
 
   .kline-mind-entry {
