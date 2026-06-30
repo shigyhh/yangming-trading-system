@@ -40,9 +40,8 @@ assert.ok(
 )
 assert.ok(homeWxml.includes("single-focus"), "home page should include the single-focus first-screen state")
 assert.ok(homeWxml.includes("K线观心"), "home page should keep a lightweight K-line mind entry")
-
-assert.equal(homeWxml.includes("阳明心学交易系统"), false, "home page should not keep the old brand shell title")
-assert.equal(homeWxml.includes("每日一页 · 照见本心"), false, "home page should not keep the old brand shell subtitle")
+assert.ok(homeWxml.includes("阳明心学交易系统"), "home page should keep the old visual baseline brand title")
+assert.ok(homeWxml.includes("每日一页 · 照见本心"), "home page should keep the old visual baseline brand subtitle")
 
 for (const word of forbiddenVisibleTradingCopy) {
   assert.equal(homeWxml.includes(word), false, `home page should not include user-visible trading signal copy: ${word}`)

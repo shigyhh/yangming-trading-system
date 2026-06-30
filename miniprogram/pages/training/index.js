@@ -39,6 +39,15 @@ function buildSteps(state) {
   return STEP_META.map((item) => Object.assign({}, item, { done: !!(state.steps || {})[item.id] }));
 }
 
+function buildTrainingDayFocus(trainingDay = {}) {
+  return {
+    dayText: `Day ${trainingDay.day || 1}`,
+    title: trainingDay.title || "观入场冲动",
+    question: trainingDay.question || trainingDay.boundaryPractice || "当你想立刻进入一件事时，是看见事实，还是想用行动缓解不安？",
+    action: trainingDay.action || trainingDay.boundaryPractice || "先停十秒，写下第一念。"
+  };
+}
+
 Page({
   data: {
     result: null,
@@ -55,7 +64,10 @@ Page({
     indexFocus: "",
     trainingCard: null,
     training7View: buildTraining7View({}, {}),
-    trainingDay: null
+    trainingDay: null,
+    trainingDayFocus: buildTrainingDayFocus(),
+    showTrainingPlan: false,
+    showTrainingDepth: false
   },
 
   onShow() {
@@ -97,8 +109,17 @@ Page({
       mindTask: mind?.oneThing || state.mindTask || "",
       indexFocus: mind?.indexFocus || state.indexFocus || "知行合一",
       training7View,
-      trainingDay
+      trainingDay,
+      trainingDayFocus: buildTrainingDayFocus(trainingDay)
     });
+  },
+
+  toggleTrainingPlan() {
+    this.setData({ showTrainingPlan: !this.data.showTrainingPlan });
+  },
+
+  toggleTrainingDepth() {
+    this.setData({ showTrainingDepth: !this.data.showTrainingDepth });
   },
 
   toggleStep(e) {

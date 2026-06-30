@@ -1,11 +1,13 @@
+.mirror-summary-card,
 .mirror-bridge,
+.server-profile-card,
+.review-top3-card,
 .mirror-hero,
 .stability-card,
 .triple-card,
 .server-prescription-card,
 .mirror-tree-card,
 .evidence-tree-card,
-.weekly-report-card,
 .change-card,
 .kline-retest-card,
 .training-progress-card,
@@ -18,8 +20,15 @@
   padding: 30rpx;
 }
 
+.mirror-summary-card text,
+.mirror-summary-card view,
+.mirror-summary-card button,
 .mirror-bridge text,
 .mirror-bridge view,
+.server-profile-card text,
+.server-profile-card view,
+.review-top3-card text,
+.review-top3-card view,
 .mirror-hero text,
 .mirror-hero view,
 .stability-card text,
@@ -33,8 +42,6 @@
 .mirror-tree-card view,
 .evidence-tree-card text,
 .evidence-tree-card view,
-.weekly-report-card text,
-.weekly-report-card view,
 .change-card text,
 .change-card view,
 .kline-retest-card text,
@@ -57,6 +64,297 @@
 .assistant-card button {
   position: relative;
   z-index: 1;
+}
+
+.server-profile-card {
+  overflow: hidden;
+  border-color: rgba(216, 183, 111, 0.16);
+  background:
+    radial-gradient(circle at 92% 0%, rgba(216, 183, 111, 0.12), transparent 40%),
+    rgba(255, 255, 255, 0.034);
+}
+
+.review-top3-card {
+  overflow: hidden;
+  border: 1rpx solid rgba(216, 183, 111, 0.18);
+  background:
+    radial-gradient(circle at 90% 0%, rgba(216, 183, 111, 0.12), transparent 42%),
+    radial-gradient(circle at 12% 100%, rgba(88, 194, 173, 0.09), transparent 44%),
+    rgba(255, 255, 255, 0.034);
+}
+
+.review-top3-summary {
+  margin-top: 18rpx;
+  color: #fff6e6;
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", serif;
+  font-size: 30rpx;
+  line-height: 1.45;
+  font-weight: 900;
+}
+
+.review-top3-grid {
+  margin-top: 20rpx;
+  display: grid;
+  gap: 14rpx;
+}
+
+.review-top3-section {
+  padding: 18rpx;
+  border-radius: 18rpx;
+  border: 1rpx solid rgba(241, 210, 125, 0.09);
+  background: rgba(8, 8, 7, 0.24);
+}
+
+.review-top3-title {
+  color: rgba(216, 183, 111, 0.72);
+  font-size: 21rpx;
+  line-height: 1.35;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.review-top3-row {
+  margin-top: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.review-top3-row text {
+  min-width: 0;
+  color: rgba(247, 239, 223, 0.86);
+  font-size: 25rpx;
+  line-height: 1.35;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
+.review-top3-row view {
+  flex: 0 0 auto;
+  color: #73d6bd;
+  font-size: 22rpx;
+  line-height: 1.35;
+  font-weight: 900;
+}
+
+.review-top3-rule {
+  margin-top: 18rpx;
+  padding: 18rpx 20rpx;
+  border-left: 4rpx solid rgba(88, 194, 173, 0.56);
+  border-radius: 12rpx;
+  color: rgba(247, 239, 223, 0.88);
+  background: rgba(88, 194, 173, 0.07);
+  font-size: 24rpx;
+  line-height: 1.5;
+  font-weight: 900;
+}
+
+.mirror-summary-card {
+  display: grid;
+  grid-template-columns: 84rpx minmax(0, 1fr);
+  gap: 20rpx;
+  overflow: hidden;
+  border-color: rgba(216, 183, 111, 0.18);
+  background:
+    radial-gradient(circle at 88% 0%, rgba(216, 183, 111, 0.14), transparent 42%),
+    radial-gradient(circle at 18% 92%, rgba(95, 132, 117, 0.1), transparent 40%),
+    rgba(255, 255, 255, 0.036);
+}
+
+.summary-seal {
+  width: 84rpx;
+  height: 84rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 28rpx;
+  color: rgba(255, 236, 205, 0.92);
+  border: 2rpx solid rgba(120, 60, 45, 0.58);
+  background: rgba(120, 60, 45, 0.28);
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", serif;
+  font-size: 42rpx;
+  transform: rotate(-7deg);
+}
+
+.summary-main {
+  min-width: 0;
+}
+
+.summary-main text,
+.summary-grid text {
+  display: block;
+  color: rgba(216, 183, 111, 0.74);
+  font-size: 20rpx;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.summary-main view {
+  margin-top: 8rpx;
+  color: #fff6e6;
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", serif;
+  font-size: 46rpx;
+  line-height: 1.18;
+  font-weight: 900;
+}
+
+.summary-grid,
+.summary-actions {
+  grid-column: 1 / -1;
+}
+
+.summary-grid {
+  margin-top: 2rpx;
+  display: grid;
+  gap: 12rpx;
+}
+
+.summary-grid > view {
+  padding: 18rpx;
+  border-radius: 18rpx;
+  border: 1rpx solid rgba(216, 183, 111, 0.1);
+  background: rgba(8, 8, 7, 0.22);
+}
+
+.summary-grid view view {
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.84);
+  font-size: 25rpx;
+  line-height: 1.45;
+  font-weight: 850;
+}
+
+.summary-actions {
+  margin-top: 4rpx;
+  display: grid;
+  gap: 12rpx;
+}
+
+.server-profile-grid {
+  margin-top: 22rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12rpx;
+}
+
+.server-profile-grid > view,
+.server-thought-card {
+  padding: 18rpx;
+  border-radius: 18rpx;
+  border: 1rpx solid rgba(241, 210, 125, 0.1);
+  background: rgba(255, 255, 255, 0.034);
+}
+
+.server-profile-grid text,
+.server-thought-card > text {
+  display: block;
+  color: rgba(216, 183, 111, 0.72);
+  font-size: 20rpx;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.server-profile-grid view view {
+  margin-top: 10rpx;
+  color: #fff6e6;
+  font-size: 32rpx;
+  line-height: 1.25;
+  font-weight: 900;
+}
+
+.server-thought-card {
+  margin-top: 12rpx;
+}
+
+.server-thought-card view {
+  margin-top: 12rpx;
+  color: rgba(247, 239, 223, 0.82);
+  font-size: 25rpx;
+  line-height: 1.5;
+  font-weight: 800;
+}
+
+.server-boundary-line {
+  margin-top: 16rpx;
+  color: rgba(247, 239, 223, 0.9);
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", serif;
+  font-size: 30rpx;
+  line-height: 1.45;
+  font-weight: 900;
+}
+
+.server-profile-foot {
+  margin-top: 12rpx;
+  color: rgba(247, 239, 223, 0.46);
+  font-size: 21rpx;
+  line-height: 1.5;
+}
+
+.growth-summary-mini {
+  margin-top: 18rpx;
+  padding: 20rpx;
+  border-radius: 20rpx;
+  border: 1rpx solid rgba(216, 183, 111, 0.12);
+  background: rgba(8, 8, 7, 0.28);
+}
+
+.growth-summary-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.growth-summary-head text,
+.growth-summary-grid text,
+.growth-summary-next text {
+  display: block;
+  color: rgba(216, 183, 111, 0.72);
+  font-size: 20rpx;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.growth-summary-head view {
+  color: #fff6e6;
+  font-size: 25rpx;
+  line-height: 1.35;
+  font-weight: 900;
+  text-align: right;
+}
+
+.growth-summary-grid {
+  margin-top: 16rpx;
+  display: grid;
+  gap: 12rpx;
+}
+
+.growth-summary-grid > view,
+.growth-summary-next {
+  padding: 16rpx;
+  border-radius: 16rpx;
+  border: 1rpx solid rgba(241, 210, 125, 0.08);
+  background: rgba(255, 255, 255, 0.028);
+}
+
+.growth-summary-grid view view,
+.growth-summary-next view {
+  margin-top: 8rpx;
+  color: rgba(247, 239, 223, 0.84);
+  font-size: 24rpx;
+  line-height: 1.45;
+  font-weight: 800;
+}
+
+.growth-summary-next {
+  margin-top: 12rpx;
+}
+
+.growth-summary-foot {
+  margin-top: 12rpx;
+  color: rgba(247, 239, 223, 0.42);
+  font-size: 20rpx;
+  line-height: 1.4;
 }
 
 .mirror-bridge {
@@ -552,78 +850,6 @@
   font-size: 20rpx;
 }
 
-.weekly-report-card {
-  overflow: hidden;
-  border-color: rgba(88, 194, 173, 0.16);
-  background:
-    radial-gradient(circle at 92% 0%, rgba(88, 194, 173, 0.12), transparent 42%),
-    radial-gradient(circle at 10% 100%, rgba(216, 183, 111, 0.1), transparent 44%),
-    rgba(255, 255, 255, 0.035);
-}
-
-.weekly-report-grid {
-  margin-top: 22rpx;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12rpx;
-}
-
-.weekly-report-grid > view,
-.weekly-progress,
-.weekly-plan-row {
-  min-width: 0;
-  padding: 18rpx;
-  border-radius: 18rpx;
-  border: 1rpx solid rgba(241, 210, 125, 0.1);
-  background: rgba(8, 8, 7, 0.22);
-}
-
-.weekly-report-grid text,
-.weekly-progress text,
-.weekly-plan-title {
-  display: block;
-  color: rgba(216, 183, 111, 0.78);
-  font-size: 21rpx;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-}
-
-.weekly-report-grid view view,
-.weekly-progress view,
-.weekly-plan-row view {
-  margin-top: 8rpx;
-  color: #fff6e6;
-  font-size: 26rpx;
-  line-height: 1.4;
-  font-weight: 900;
-  overflow-wrap: anywhere;
-}
-
-.weekly-progress {
-  margin-top: 16rpx;
-  border-left: 4rpx solid rgba(88, 194, 173, 0.52);
-}
-
-.weekly-plan-block {
-  margin-top: 20rpx;
-}
-
-.weekly-plan-list {
-  margin-top: 12rpx;
-  display: grid;
-  gap: 12rpx;
-}
-
-.weekly-plan-row text {
-  display: block;
-  margin-top: 8rpx;
-  color: rgba(247, 239, 223, 0.66);
-  font-size: 22rpx;
-  line-height: 1.45;
-  font-weight: 800;
-  overflow-wrap: anywhere;
-}
-
 .card-head {
   display: flex;
   justify-content: space-between;
@@ -667,128 +893,6 @@
 
 .change-row view.warn {
   color: #f1d27d;
-}
-
-.pattern-summary {
-  margin-top: 22rpx;
-  display: grid;
-  gap: 12rpx;
-}
-
-.pattern-row,
-.trigger-scene-row {
-  padding: 18rpx;
-  border-radius: 18rpx;
-  border: 1rpx solid rgba(241, 210, 125, 0.1);
-  background: rgba(255, 255, 255, 0.032);
-}
-
-.pattern-row text,
-.trigger-scene-block > text,
-.trigger-scene-row text {
-  display: block;
-  color: rgba(216, 183, 111, 0.78);
-  font-size: 21rpx;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-}
-
-.pattern-row view {
-  margin-top: 8rpx;
-  color: rgba(247, 239, 223, 0.86);
-  font-size: 27rpx;
-  line-height: 1.42;
-  font-weight: 900;
-}
-
-.execution-consistency-block {
-  margin-top: 24rpx;
-  padding: 20rpx;
-  border-radius: 18rpx;
-  border: 1rpx solid rgba(115, 214, 189, 0.14);
-  background: rgba(115, 214, 189, 0.045);
-}
-
-.execution-consistency-title {
-  color: rgba(216, 183, 111, 0.82);
-  font-size: 22rpx;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-}
-
-.execution-consistency-grid {
-  margin-top: 16rpx;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12rpx;
-}
-
-.execution-consistency-grid > view,
-.execution-consistency-detail > view {
-  padding: 16rpx;
-  border-radius: 14rpx;
-  background: rgba(255, 255, 255, 0.035);
-}
-
-.execution-consistency-grid text,
-.execution-consistency-detail text {
-  display: block;
-  color: rgba(247, 239, 223, 0.5);
-  font-size: 20rpx;
-  line-height: 1.35;
-}
-
-.execution-consistency-grid view view {
-  margin-top: 8rpx;
-  color: #73d6bd;
-  font-size: 28rpx;
-  font-weight: 900;
-}
-
-.execution-consistency-detail {
-  margin-top: 12rpx;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12rpx;
-}
-
-.execution-consistency-detail view view {
-  margin-top: 8rpx;
-  color: rgba(247, 239, 223, 0.86);
-  font-size: 25rpx;
-  font-weight: 900;
-  line-height: 1.4;
-}
-
-.trigger-scene-block {
-  margin-top: 24rpx;
-}
-
-.trigger-scene-list {
-  margin-top: 12rpx;
-  display: grid;
-  gap: 10rpx;
-}
-
-.trigger-scene-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18rpx;
-}
-
-.trigger-scene-row text {
-  flex: 1;
-  color: rgba(247, 239, 223, 0.84);
-  font-size: 25rpx;
-  letter-spacing: 0;
-}
-
-.trigger-scene-row view {
-  color: #f1d27d;
-  font-size: 24rpx;
-  font-weight: 900;
-  white-space: nowrap;
 }
 
 .retest-line {
@@ -892,6 +996,8 @@
 .recommend-card button,
 .assistant-card button {
   margin-top: 24rpx;
+  line-height: 1.2;
+  text-align: center;
 }
 
 .recommend-title {
@@ -942,7 +1048,7 @@
   border-bottom: 1rpx solid rgba(241, 210, 125, 0.08);
   background: transparent;
   font-size: 25rpx;
-  line-height: 1.4;
+  line-height: 1.28;
   text-align: left;
 }
 

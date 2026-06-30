@@ -16,6 +16,46 @@ const { buildTraining7View } = require("../../modules/training7/index");
 const { buildKlineDayRetestComparison, getKlineRecommendationForMirror } = require("../../modules/kline-simulator/index");
 const { buildLivingMirrorTree } = require("../../modules/mini-loop/index");
 
+function buildReviewTop3View(stats = {}) {
+  const total = Number(stats.totalReviews || 0);
+  return {
+    windowDays: 30,
+    total,
+    summary: total
+      ? `最近 ${total} 条真实复盘里，反复出现的是「${stats.topMistakeText || "待补充"}」。`
+      : "完成第一条真实复盘后，这里会沉淀重复念头。",
+    topErrors: stats.topMistakes || [],
+    topFirstThoughts: stats.topFirstThoughts || [],
+    topTriggerScenes: stats.topTriggerScenes || [],
+    nextRule: stats.nextActionText || "先记录，再行动"
+  };
+}
+
+function buildServerLivingMirrorProfile(stats = {}) {
+  return {
+    statusText: Number(stats.totalReviews || 0) ? "本地已生成" : "待第一条复盘",
+    totalEvents: Number(stats.totalReviews || 0),
+    dominantReaction: stats.currentMirror || "待照见",
+    repeatedThoughts: (stats.topFirstThoughts || []).map((item) => item.label).slice(0, 3),
+    latestBoundaryState: stats.executionConsistencyRateText || "样本不足",
+    fallbackText: "本地活镜摘要",
+    updatedAt: stats.updatedAt ? "刚刚更新" : "待更新"
+  };
+}
+
+function buildGrowthSummary(stats = {}, training7View = {}) {
+  if (!Number(stats.totalReviews || 0)) return null;
+  return {
+    stageText: stats.currentMirror || "待照见",
+    totalEventsText: `${stats.totalReviews || 0} 次`,
+    topThoughtText: stats.topFirstThoughtText || "待记录",
+    completedDaysText: `Day ${training7View.currentDay || 1}`,
+    zhixingText: stats.executionConsistencyRateText || "样本不足",
+    nextActionText: stats.mainTraining || "把第一念记录下来。",
+    updatedAtText: "刚刚"
+  };
+}
+
 Page({
   data: {
     stats: {
@@ -73,7 +113,11 @@ Page({
     unifiedJourneyView: getUnifiedJourneyView(),
     miniLoopProgress: getMiniLoopProgress(),
     training7View: buildTraining7View(getTraining7State(), {}),
-    hasRecords: false
+    hasRecords: false,
+    showMirrorDepth: false,
+    reviewTop3: buildReviewTop3View({}),
+    serverLivingMirrorProfile: buildServerLivingMirrorProfile({}),
+    growthSummary: null
   },
 
   onShow() {
@@ -92,6 +136,7 @@ Page({
     const tripleReflection = stats.tripleReflection || {};
     const miniLoopProgress = getMiniLoopProgress();
     const evidenceSummary = getEvidenceSummary({ limit: 6 });
+    const training7View = buildTraining7View(getTraining7State(), {});
     const latest = (tradeReviewState || {}).latest || {};
     const klineRecommendation = getKlineRecommendationForMirror(stats.currentMirror, {
       marketKey: latest.marketKey || "cn",
@@ -117,9 +162,16 @@ Page({
       evidenceSummary,
       evidenceRows: evidenceSummary.rows || [],
       unifiedJourneyView: getUnifiedJourneyView(),
-      training7View: buildTraining7View(getTraining7State(), {}),
-      hasRecords: Number(stats.totalReviews || 0) > 0
+      training7View,
+      hasRecords: Number(stats.totalReviews || 0) > 0,
+      reviewTop3: buildReviewTop3View(stats),
+      serverLivingMirrorProfile: buildServerLivingMirrorProfile(stats),
+      growthSummary: buildGrowthSummary(stats, training7View)
     });
+  },
+
+  toggleMirrorDepth() {
+    this.setData({ showMirrorDepth: !this.data.showMirrorDepth });
   },
 
   getPrescriptionStatusText(prescription) {

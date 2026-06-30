@@ -1,10 +1,68 @@
 <view class="page-shell">
   <view class="page-content">
     <text class="eyebrow">LIVING MIRROR · 行为印记</text>
-    <view class="page-title">活镜成长<br />训练台</view>
-    <view class="page-subtitle">这里不是报告展示页，而是把每次真实复盘沉淀成九镜变化、心贼频次和下一次训练动作。</view>
+    <view class="page-title">活镜</view>
+    <view class="page-subtitle">把每次真实复盘沉淀成一面镜：看见反复出现的念头，再决定下一步只练什么。</view>
 
-    <view class="mirror-bridge card">
+    <view class="mirror-summary-card card">
+      <view class="summary-seal">镜</view>
+      <view class="summary-main">
+        <text>当前主镜</text>
+        <view>{{stats.currentMirror || '活镜未点亮'}}</view>
+      </view>
+      <view class="summary-grid">
+        <view>
+          <text>高频一念</text>
+          <view>{{stats.topThievesText || '待照见'}}</view>
+        </view>
+        <view>
+          <text>下一步修行</text>
+          <view>{{stats.mainTraining || '先完成一条真实复盘。'}}</view>
+        </view>
+        <view>
+          <text>最近沉淀</text>
+          <view>{{hasRecords ? stats.totalReviews + ' 条真实复盘' : '待第一条复盘'}}</view>
+        </view>
+      </view>
+      <view class="summary-actions">
+        <button class="primary-btn" bindtap="goReview">{{hasRecords ? '继续记录一笔复盘' : '写下第一条复盘'}}</button>
+        <button wx:if="{{hasRecords}}" class="ghost-btn mirror-depth-toggle" bindtap="toggleMirrorDepth">{{showMirrorDepth ? '收起细节' : '查看成长细节'}}</button>
+      </view>
+    </view>
+
+    <view wx:if="{{hasRecords}}" class="review-top3-card card">
+      <view class="card-head">
+        <text>真实复盘 Top3</text>
+        <view>近 {{reviewTop3.windowDays}} 天 · {{reviewTop3.total}} 条</view>
+      </view>
+      <view class="review-top3-summary">{{reviewTop3.summary}}</view>
+      <view class="review-top3-grid">
+        <view class="review-top3-section">
+          <view class="review-top3-title">最近重复最多的错题</view>
+          <view wx:for="{{reviewTop3.topErrors}}" wx:key="label" wx:for-item="rankItem" class="review-top3-row">
+            <text>{{rankItem.label}}</text>
+            <view>{{rankItem.count}} 次</view>
+          </view>
+        </view>
+        <view class="review-top3-section">
+          <view class="review-top3-title">最常见的第一念</view>
+          <view wx:for="{{reviewTop3.topFirstThoughts}}" wx:key="label" wx:for-item="rankItem" class="review-top3-row">
+            <text>{{rankItem.label}}</text>
+            <view>{{rankItem.count}} 次</view>
+          </view>
+        </view>
+        <view class="review-top3-section">
+          <view class="review-top3-title">最容易失守的场景</view>
+          <view wx:for="{{reviewTop3.topTriggerScenes}}" wx:key="label" wx:for-item="rankItem" class="review-top3-row">
+            <text>{{rankItem.label}}</text>
+            <view>{{rankItem.count}} 次</view>
+          </view>
+        </view>
+      </view>
+      <view class="review-top3-rule">下一次最该守：{{reviewTop3.nextRule}}</view>
+    </view>
+
+    <view wx:if="{{showMirrorDepth}}" class="mirror-bridge card">
       <view class="bridge-line">复盘，是你写下事实。活镜，是系统照见反复出现的念头。</view>
       <view class="journey-progress-grid">
         <view>
@@ -40,7 +98,30 @@
       </view>
     </view>
 
-    <view class="mirror-hero card">
+    <view wx:if="{{showMirrorDepth}}" class="server-profile-card card">
+      <view class="card-head">
+        <text>活镜成长摘要</text>
+        <view>{{serverLivingMirrorProfile.statusText}}</view>
+      </view>
+      <view class="server-profile-grid">
+        <view>
+          <text>已照见次数</text>
+          <view>{{serverLivingMirrorProfile.totalEvents}}</view>
+        </view>
+        <view>
+          <text>主要反应</text>
+          <view>{{serverLivingMirrorProfile.dominantReaction}}</view>
+        </view>
+      </view>
+      <view class="server-thought-card">
+        <text>你最近反复出现的念头</text>
+        <view wx:for="{{serverLivingMirrorProfile.repeatedThoughts}}" wx:key="*this">{{item}}</view>
+      </view>
+      <view class="server-boundary-line">{{serverLivingMirrorProfile.latestBoundaryState}}</view>
+      <view class="server-profile-foot">{{serverLivingMirrorProfile.updatedAt}} · {{serverLivingMirrorProfile.fallbackText}}</view>
+    </view>
+
+    <view wx:if="{{showMirrorDepth}}" class="mirror-hero card">
       <view class="lake-glow"></view>
       <view class="mirror-label">复盘生成主镜</view>
       <view class="mirror-name">{{stats.currentMirror || '活镜未点亮'}}</view>
@@ -49,9 +130,38 @@
         <text>最近高频心贼</text>
         <view>{{stats.topThievesText || '待照见'}}</view>
       </view>
+      <view wx:if="{{growthSummary}}" class="growth-summary-mini">
+        <view class="growth-summary-head">
+          <text>成长摘要</text>
+          <view>{{growthSummary.stageText}}</view>
+        </view>
+        <view class="growth-summary-grid">
+          <view>
+            <text>照见事实</text>
+            <view>{{growthSummary.totalEventsText}}</view>
+          </view>
+          <view>
+            <text>高频一念</text>
+            <view>{{growthSummary.topThoughtText}}</view>
+          </view>
+          <view>
+            <text>已照见天数</text>
+            <view>{{growthSummary.completedDaysText}}</view>
+          </view>
+          <view>
+            <text>知行稳定度</text>
+            <view>{{growthSummary.zhixingText}}</view>
+          </view>
+        </view>
+        <view class="growth-summary-next">
+          <text>下一步修行</text>
+          <view>{{growthSummary.nextActionText}}</view>
+        </view>
+        <view class="growth-summary-foot">更新于 {{growthSummary.updatedAtText}}</view>
+      </view>
     </view>
 
-    <view class="stability-card card">
+    <view wx:if="{{showMirrorDepth}}" class="stability-card card">
       <view class="card-head">
         <text>知行稳定度</text>
         <view>{{zhixingStability.level}}</view>
@@ -74,7 +184,7 @@
       <view class="stability-foot">{{zhixingStability.riskLine}}</view>
     </view>
 
-    <view class="triple-card card">
+    <view wx:if="{{showMirrorDepth}}" class="triple-card card">
       <view class="card-head">
         <text>三证互照</text>
         <view>{{tripleReflection.evidenceLevelText || tripleReflection.stateLabel}}</view>
@@ -92,7 +202,7 @@
       <view class="triple-prescription">{{tripleReflection.nextCalibration || tripleReflection.prescription}}</view>
     </view>
 
-    <view class="server-prescription-card card">
+    <view wx:if="{{showMirrorDepth}}" class="server-prescription-card card">
       <view class="card-head">
         <text>中枢今日训练</text>
         <view>{{prescriptionStatusText}}</view>
@@ -107,7 +217,7 @@
       <button class="primary-btn" bindtap="receiveServerPrescription">接收今日训练</button>
     </view>
 
-    <view class="mirror-tree-card card">
+    <view wx:if="{{showMirrorDepth}}" class="mirror-tree-card card">
       <view class="tree-glow"></view>
       <view class="card-head">
         <text>活镜树</text>
@@ -130,7 +240,7 @@
       </view>
     </view>
 
-    <view class="evidence-tree-card card">
+    <view wx:if="{{showMirrorDepth}}" class="evidence-tree-card card">
       <view class="card-head">
         <text>闭环印记</text>
         <view>{{evidenceSummary.total ? evidenceSummary.total + ' 条入树' : '待第一枚心证入树'}}</view>
@@ -145,104 +255,10 @@
       <view wx:else class="empty-text">完成今日落印后，第一枚心证会长成活镜树的一片叶。</view>
     </view>
 
-    <view class="weekly-report-card card">
+    <view wx:if="{{showMirrorDepth}}" class="change-card card">
       <view class="card-head">
-        <text>本周活镜</text>
-        <view>{{stats.weeklyReport.weekRangeText || '本周'}} · {{stats.weeklyReport.total || 0}} 条</view>
-      </view>
-      <block wx:if="{{stats.weeklyReport.hasStats}}">
-        <view class="weekly-report-grid">
-          <view>
-            <text>本周最高频错题</text>
-            <view>{{stats.weeklyReport.topMistakeText || '样本不足'}}</view>
-          </view>
-          <view>
-            <text>本周最常见第一念</text>
-            <view>{{stats.weeklyReport.topFirstThoughtText || '样本不足'}}</view>
-          </view>
-          <view>
-            <text>本周执行一致率</text>
-            <view>{{stats.weeklyReport.executionConsistencyRateText || '样本不足'}}</view>
-          </view>
-          <view>
-            <text>本周旧题复现</text>
-            <view>{{stats.weeklyReport.oldIssueRepeatText || '样本不足'}}</view>
-          </view>
-        </view>
-        <view class="weekly-progress">
-          <text>本周进步</text>
-          <view>{{stats.weeklyReport.progressText || '样本不足'}}</view>
-        </view>
-        <view class="weekly-plan-block">
-          <view class="weekly-plan-title">下周训练安排</view>
-          <view wx:if="{{stats.weeklyReport.nextWeekPlans.length}}" class="weekly-plan-list">
-            <view wx:for="{{stats.weeklyReport.nextWeekPlans}}" wx:key="errorType" class="weekly-plan-row">
-              <view>{{item.text}}</view>
-              <text>{{item.focus}}</text>
-              <text>下次执行动作：{{item.action}}</text>
-            </view>
-          </view>
-          <view wx:else class="empty-text">{{stats.weeklyReport.nextWeekPlanEmptyText || '样本不足，先完成一次真实复盘和一次针对训练。'}}</view>
-        </view>
-      </block>
-      <view wx:else class="empty-text">{{stats.weeklyReport.emptyText || '样本不足，先完成一次真实复盘和一次针对训练。'}}</view>
-    </view>
-
-    <view class="change-card card">
-      <view class="card-head">
-        <text>近 30 天活镜</text>
-        <view>{{stats.oldIssueText || '旧题复现'}} · {{stats.executionPatternText || '执行偏离'}}</view>
-      </view>
-      <view class="pattern-summary">
-        <view class="pattern-row">
-          <text>最高频错题</text>
-          <view>{{stats.topMistakeText || '待补充'}}</view>
-        </view>
-        <view class="pattern-row">
-          <text>最常见第一念</text>
-          <view>{{stats.topFirstThoughtText || '待记录'}}</view>
-        </view>
-        <view class="pattern-row">
-          <text>下次执行动作</text>
-          <view>{{stats.nextActionText || '先记录，再行动'}}</view>
-        </view>
-      </view>
-      <view class="execution-consistency-block">
-        <view class="execution-consistency-title">执行一致性</view>
-        <view class="execution-consistency-grid">
-          <view>
-            <text>知行一致率</text>
-            <view>{{stats.executionConsistencyRateText || '样本不足'}}</view>
-          </view>
-          <view>
-            <text>执行偏离</text>
-            <view>{{stats.executionDeviationText || '0 次'}}</view>
-          </view>
-          <view>
-            <text>旧题复现</text>
-            <view>{{stats.oldIssueRepeatText || '0 次'}}</view>
-          </view>
-        </view>
-        <view class="execution-consistency-detail">
-          <view>
-            <text>最高频执行偏离</text>
-            <view>{{stats.topDeviationTypeText || '样本不足'}}</view>
-          </view>
-          <view>
-            <text>最常见第一念</text>
-            <view>{{stats.executionConsistency.topFirstThoughtText || stats.topFirstThoughtText || '待记录'}}</view>
-          </view>
-        </view>
-      </view>
-      <view class="trigger-scene-block">
-        <text>高频触发场景</text>
-        <view wx:if="{{stats.topTriggerScenes.length}}" class="trigger-scene-list">
-          <view wx:for="{{stats.topTriggerScenes}}" wx:key="label" class="trigger-scene-row">
-            <text>{{index + 1}}. {{item.label}}</text>
-            <view>{{item.count}} 次</view>
-          </view>
-        </view>
-        <view wx:else class="empty-text">{{stats.triggerSceneEmptyText || '暂无足够触发场景样本。'}}</view>
+        <text>7 天印记变化</text>
+        <view>只看反应模式，不绑定结果</view>
       </view>
       <view class="change-row" wx:for="{{stats.mirrorTrendRows}}" wx:key="mirror">
         <text>{{item.mirror}}</text>
@@ -250,7 +266,7 @@
       </view>
     </view>
 
-    <view class="kline-retest-card card">
+    <view wx:if="{{showMirrorDepth}}" class="kline-retest-card card">
       <view class="card-head">
         <text>{{klineDayRetest.title}}</text>
         <view>{{klineDayRetest.stageText}}</view>
@@ -265,7 +281,7 @@
       <view class="retest-insight">{{klineDayRetest.insight}}</view>
     </view>
 
-    <view class="training-progress-card card">
+    <view wx:if="{{showMirrorDepth}}" class="training-progress-card card">
       <view class="card-head">
         <text>训练进度</text>
         <view>Day {{training7View.currentDay}} · {{training7View.progressText}}</view>
@@ -277,7 +293,7 @@
       </view>
     </view>
 
-    <view class="loop-card card">
+    <view wx:if="{{showMirrorDepth}}" class="loop-card card">
       <view class="card-head">
         <text>{{miniLoopProgress.behaviorLoop.title || '循环之镜'}}</text>
         <view>重复反应路径</view>
@@ -286,7 +302,7 @@
       <view class="loop-next">{{miniLoopProgress.behaviorLoop.nextAction || '完成两次复盘后生成下一次提醒。'}}</view>
     </view>
 
-    <view class="reminder-card card">
+    <view wx:if="{{showMirrorDepth}}" class="reminder-card card">
       <view class="card-head">
         <text>下一次训练提醒</text>
         <view>今日只练一件事</view>
@@ -296,7 +312,7 @@
       <button class="primary-btn" bindtap="goReview">{{hasRecords ? '继续记录一笔复盘' : '上传第一条记录'}}</button>
     </view>
 
-    <view class="recommend-card card">
+    <view wx:if="{{showMirrorDepth}}" class="recommend-card card">
       <view class="card-head">
         <text>活镜推荐切片</text>
         <view>按当前主镜生成</view>
@@ -309,7 +325,7 @@
 
     <view class="recent-card card">
       <view class="card-head">
-        <text>最近三次复盘</text>
+        <text>最近沉淀</text>
         <view bindtap="goArchive">进入档案</view>
       </view>
       <view wx:if="{{stats.recentThree.length}}">
@@ -324,7 +340,7 @@
       <view wx:else class="empty-text">还没有复盘记录。先上传一张截图，照见第一次真实反应。</view>
     </view>
 
-    <view class="assistant-card card">
+    <view wx:if="{{showMirrorDepth}}" class="assistant-card card">
       <view class="card-head">
         <text>助教承接摘要</text>
         <view>本地记录</view>
@@ -357,7 +373,7 @@
       <button class="ghost-btn" bindtap="goAssistant">去我的页承接</button>
     </view>
 
-    <compliance-notice />
+    <compliance-notice variant="compact" />
   </view>
   <bottom-tab-bar active="mirror" />
 </view>

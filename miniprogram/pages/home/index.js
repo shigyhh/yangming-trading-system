@@ -1996,6 +1996,10 @@ Page({
     wx.pageScrollTo({ selector: ".scene-edict", duration: 420 });
   },
 
+  goServerTodayAction() {
+    this.goMiniPrimary({ currentTarget: { dataset: {} } });
+  },
+
   handleCompletionAction(e) {
     const action = e.currentTarget.dataset.action;
     if (action === "card") {

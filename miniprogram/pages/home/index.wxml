@@ -26,8 +26,8 @@
           <image class="brand-seal-art" src="/assets/brand/ymty-zhao-logo.svg" mode="aspectFit"></image>
         </view>
         <view class="brand-copy">
-          <view class="brand-title">今日心证</view>
-          <view class="brand-subtitle">照见当下 · 训练执行</view>
+          <view class="brand-title">阳明心学交易系统</view>
+          <view class="brand-subtitle">每日一页 · 照见本心</view>
         </view>
       </view>
 
@@ -65,7 +65,7 @@
           <view>{{miniHomeView.todayOneThought}}</view>
         </view>
         <view wx:if="{{homeFocusView.done}}" class="living-written">
-          <view class="living-written-mark brand-seal-frame" aria-label="今日已照见小标">
+          <view class="living-written-mark brand-seal-frame" aria-label="阳明照见艺术标">
             <image class="brand-seal-art" src="/assets/brand/ymty-zhao-logo.svg" mode="aspectFit"></image>
           </view>
           <view class="living-written-copy">
@@ -80,7 +80,7 @@
           bindtap="goMiniPrimary"
         >{{miniHomeView.primaryText}}</button>
         <view wx:if="{{miniHomeView.primaryHint}}" class="mini-primary-hint">{{miniHomeView.primaryHint}}</view>
-        <view class="home-quiet-paths">
+        <view wx:if="{{!homeFocusView.done}}" class="home-quiet-paths">
           <button data-noripple="1" class="home-quiet-link" bindtap="goKlineMind">K线观心</button>
           <text>用真实历史片段，先看第一反应。</text>
         </view>
@@ -99,7 +99,7 @@
             <text>今日主动作</text>
             <view>{{homeFocusView.primaryText}}</view>
           </view>
-          <view wx:if="{{homeFocusView.links.length}}" class="home-focus-links">
+          <view wx:if="{{homeFocusView.done && homeFocusView.links.length}}" class="home-focus-links">
             <button
               wx:for="{{homeFocusView.links}}"
               wx:key="key"
@@ -118,7 +118,7 @@
             </view>
           </view>
           <view class="completion-living-rite">
-            <view class="completion-living-mark brand-seal-frame" aria-label="今日已写入活镜">
+            <view class="completion-living-mark brand-seal-frame" aria-label="阳明照见艺术标">
               <image class="brand-seal-art" src="/assets/brand/ymty-zhao-logo.svg" mode="aspectFit"></image>
             </view>
             <view class="completion-living-copy">
@@ -150,6 +150,54 @@
               class="{{item.primary ? 'primary' : ''}}"
               bindtap="handleCompletionAction"
             >{{item.text}}</button>
+          </view>
+        </view>
+
+        <view wx:if="{{false}}" class="home-today-state-card">
+          <view class="home-today-state-head">
+            <view>
+              <text>今日所照</text>
+              <view>{{serverTodayStateView.statusText}}</view>
+            </view>
+            <text>{{serverTodayStateView.progress}}%</text>
+          </view>
+          <view class="home-today-state-line">
+            <text>下一步</text>
+            <view>{{serverTodayStateView.nextActionText}}</view>
+          </view>
+          <button data-noripple="1" class="home-today-state-action" bindtap="goServerTodayAction">继续这一步</button>
+          <view class="home-today-state-foot">{{serverTodayStateView.updatedAt || serverTodayStateView.fallbackText}}</view>
+        </view>
+
+        <view wx:if="{{false && homeContinuitySteps.length}}" class="home-continuity-panel">
+          <view class="home-continuity-head">
+            <view>
+              <view class="home-continuity-kicker">今日闭环</view>
+              <text>{{closureEvidenceChain.title}}</text>
+              <view>{{closureEvidenceChain.subtitle}}</view>
+            </view>
+            <text>{{closureEvidenceChain.progressText}}</text>
+          </view>
+          <view class="home-continuity-meter">
+            <view style="width: {{closureEvidenceChain.progressPercent}}%;"></view>
+          </view>
+          <view class="home-continuity-steps">
+            <block wx:for="{{homeContinuitySteps}}" wx:key="key">
+              <view
+                class="home-continuity-step {{item.done ? 'done' : ''}} {{item.current ? 'current' : ''}}"
+              >
+                <text>{{item.numberText}}</text>
+                <view>
+                  <text>{{item.title}}</text>
+                  <view>{{item.detail}}</view>
+                </view>
+                <text>{{item.statusText}}</text>
+              </view>
+            </block>
+          </view>
+          <view class="home-continuity-next">
+            <text>下一步</text>
+            <view>{{closureEvidenceChain.nextActionText}}</view>
           </view>
         </view>
 
@@ -204,7 +252,7 @@
           </view>
           <button data-noripple="1" class="three-seal-save" bindtap="saveThreeSeals">{{threeSeals.completed ? '更新今日之印' : '落下今日之印'}}</button>
           <view wx:if="{{threeSeals.completed}}" class="seal-open-panel">
-            <view class="seal-mark-large brand-seal-frame" aria-label="今日之印小标">
+            <view class="seal-mark-large brand-seal-frame" aria-label="阳明照见艺术标">
               <image class="brand-seal-art" src="/assets/brand/ymty-zhao-logo.svg" mode="aspectFit"></image>
             </view>
             <view>
@@ -215,6 +263,14 @@
             <button data-noripple="1" bindtap="goTradeReview">去复盘</button>
             <button data-noripple="1" bindtap="goLivingMirror">看活镜</button>
           </view>
+        </view>
+
+        <view wx:if="{{homeFocusView.done}}" class="kline-mind-entry" bindtap="goKlineMind" data-noripple="1">
+          <view>
+            <text>今日观心</text>
+            <view>用历史 K 线片段，看见第一反应。</view>
+          </view>
+          <text>{{heroTasks.klineDone ? '已练' : '去练'}}</text>
         </view>
 
         <view wx:if="{{false}}" class="contemplation-block compact">
@@ -457,7 +513,7 @@
         <view class="teaser-copy">
           <view class="teaser-kicker">{{ritualProgress.cardKicker}}</view>
           <view class="teaser-title">{{ritualProgress.cardTitle}}</view>
-          <text>{{ritualProgress.cardCopy}}</text>
+          <text class="teaser-body">{{ritualProgress.cardCopy}}</text>
         </view>
         <view class="mini-heart-card">
           <view class="mini-card-line"></view>
@@ -469,7 +525,7 @@
             <view
               wx:for="{{qrBlocks}}"
               wx:key="key"
-              class="{{item.active ? 'active' : ''}}"
+              class="mini-card-qr-cell {{item.active ? 'active' : ''}}"
             ></view>
           </view>
         </view>
@@ -490,13 +546,13 @@
           ></view>
         </view>
         <view class="companion-metrics">
-          <view>
-            <text>{{companionView.stageMates}}</text>
-            <view>同修{{companionView.stageShort}}</view>
+          <view class="companion-metric">
+            <text class="companion-metric-value">{{companionView.stageMates}}</text>
+            <view class="companion-metric-label">同修{{companionView.stageShort}}</view>
           </view>
-          <view>
-            <text>{{companionView.oathMates}}</text>
-            <view>同守一戒</view>
+          <view class="companion-metric">
+            <text class="companion-metric-value">{{companionView.oathMates}}</text>
+            <view class="companion-metric-label">同守一戒</view>
           </view>
         </view>
       </view>
@@ -518,7 +574,18 @@
       <view class="entry-note">数据仅用于本页状态记录</view>
     </view>
 
-    <compliance-notice compact="{{true}}" />
+    <view wx:if="{{homeFocusView.done}}" class="home-bottom-echo">
+      <view>
+        <text>今日收束</text>
+        <view>{{closureEvidenceChain.nextActionText}}</view>
+      </view>
+      <view>
+        <text>{{training7Summary.statusText}}</text>
+        <view>{{training7Summary.todayTitle}}</view>
+      </view>
+    </view>
+
+    <compliance-notice variant="compact" />
   </view>
 
   <view wx:if="{{posterMode}}" class="edict-poster-mode" catchtap="closePosterMode" catchtouchmove="noop">
@@ -529,8 +596,8 @@
     <view class="poster-header">
       <view class="poster-seal">知</view>
       <view>
-        <view class="poster-brand">今日心证</view>
-        <view class="poster-subtitle">照见当下 · 训练执行</view>
+        <view class="poster-brand">阳明心学交易系统</view>
+        <view class="poster-subtitle">每日一页 · 照见本心</view>
       </view>
     </view>
 

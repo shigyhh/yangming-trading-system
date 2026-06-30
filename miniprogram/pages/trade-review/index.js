@@ -59,10 +59,93 @@ function defaultForm() {
     actionKey: "planned",
     emotion: "平静",
     firstThought: "",
+    triggerScene: "",
+    positionState: "holding",
     planBoundary: "",
     boundaryState: "kept",
     stagePositionKey: "near_boundary",
     reviewNote: ""
+  };
+}
+
+const FIRST_THOUGHT_OPTIONS = [
+  "怕错过",
+  "不甘心",
+  "想证明",
+  "先等等",
+  "想拉回",
+  "按计划"
+];
+
+const TRIGGER_SCENE_OPTIONS = [
+  "突然拉升",
+  "跌破边界",
+  "连续不顺",
+  "外部声音",
+  "卖飞后",
+  "横盘犹豫"
+];
+
+const POSITION_STATE_OPTIONS = [
+  { key: "holding", label: "持有中" },
+  { key: "closed", label: "已完成" },
+  { key: "watching", label: "只观察" }
+];
+
+const NEXT_ACTION_OPTIONS = [
+  "先停十秒，写下第一念",
+  "只按原计划执行",
+  "边界触发后先复盘",
+  "不在情绪里补动作",
+  "记录事实，不解释波动"
+];
+
+function buildMarketContextStatus(ocrStatus = {}, marketContext = null) {
+  if (marketContext && marketContext.status === "ready") {
+    return { state: "ready", text: "历史位置已回看" };
+  }
+  if (ocrStatus.state === "loading") return { state: "loading", text: "识别草稿处理中" };
+  if (ocrStatus.state === "manual") return { state: "manual", text: "手动确认字段" };
+  return { state: "idle", text: "字段以手动确认为准" };
+}
+
+function countRankValues(values = []) {
+  return values.reduce((counts, value) => {
+    const key = String(value || "").trim();
+    if (!key) return counts;
+    counts[key] = (counts[key] || 0) + 1;
+    return counts;
+  }, {});
+}
+
+function topRankEntries(values = []) {
+  const counts = countRankValues(values);
+  return Object.keys(counts)
+    .map((label) => ({ label, count: counts[label] }))
+    .sort((a, b) => b.count - a.count || String(a.label).localeCompare(String(b.label)))
+    .slice(0, 3);
+}
+
+function pickRecordValue(record = {}, ...keys) {
+  for (let index = 0; index < keys.length; index += 1) {
+    const value = record[keys[index]];
+    if (value !== undefined && value !== null && String(value).trim()) return value;
+  }
+  return "";
+}
+
+function buildMirrorTop3(records = []) {
+  const recent = (records || []).slice(-30);
+  const topErrors = topRankEntries(recent.map((item) => pickRecordValue(item, "mainErrorType", "main_error_type", "relatedMirror")));
+  const topFirstThoughts = topRankEntries(recent.map((item) => pickRecordValue(item, "firstThought", "first_thought")));
+  const topTriggerScenes = topRankEntries(recent.map((item) => pickRecordValue(item, "triggerScene", "trigger_scene")));
+  const latestWithRule = recent.slice().reverse().find((item) => pickRecordValue(item, "nextRule", "next_rule", "nextAction", "next_action"));
+  return {
+    hasStats: !!(topErrors.length || topFirstThoughts.length || topTriggerScenes.length),
+    topErrors,
+    topFirstThoughts,
+    topTriggerScenes,
+    nextRule: pickRecordValue(latestWithRule || {}, "nextRule", "next_rule", "nextAction", "next_action") || "先记录，再行动"
   };
 }
 
@@ -158,6 +241,17 @@ Page({
       text: "截图字段以手动确认为准。"
     },
     ocrDraft: null,
+    manualAnchorVisible: false,
+    marketContext: null,
+    marketContextStatus: buildMarketContextStatus({
+      state: "idle",
+      text: "截图字段以手动确认为准。"
+    }),
+    firstThoughtOptions: FIRST_THOUGHT_OPTIONS,
+    triggerSceneOptions: TRIGGER_SCENE_OPTIONS,
+    positionStates: POSITION_STATE_OPTIONS,
+    nextActionOptions: NEXT_ACTION_OPTIONS,
+    mirrorTop3: buildMirrorTop3([]),
     showAdvanced: false,
     showResultDetail: false
   },
@@ -176,8 +270,10 @@ Page({
 
   refreshRecords() {
     const state = getTradeReviewRecords();
+    const records = state.records || [];
     this.setData({
-      records: (state.records || []).slice().reverse().slice(0, 5).map(decorateReport)
+      records: records.slice().reverse().slice(0, 5).map(decorateReport),
+      mirrorTop3: buildMirrorTop3(records)
     });
   },
 
@@ -219,7 +315,8 @@ Page({
         ocrStatus: {
           state: "loading",
           text: "正在请求识别草稿，字段仍需你确认。"
-        }
+        },
+        marketContextStatus: buildMarketContextStatus({ state: "loading" })
       });
       this.requestOcrDraft(path);
     };
@@ -244,6 +341,7 @@ Page({
       .then((result) => {
         const draft = result.ocr_draft || result.ocrDraft || {};
         const fields = draft.fields || {};
+        const marketContext = result.market_context || result.marketContext || draft.market_context || draft.marketContext || null;
         const patch = {};
         if (fields.tradeDate) patch.tradeDate = fields.tradeDate;
         if (fields.symbol) patch.symbol = fields.symbol;
@@ -255,7 +353,9 @@ Page({
           ocrStatus: {
             state: draft.status || "pending",
             text: draft.message || "识别草稿已生成，请继续手动确认。"
-          }
+          },
+          marketContext,
+          marketContextStatus: buildMarketContextStatus({ state: draft.status || "pending" }, marketContext)
         });
       })
       .catch(() => {
@@ -263,9 +363,18 @@ Page({
           ocrStatus: {
             state: "manual",
             text: "识别服务未连接，先手动确认字段。"
-          }
+          },
+          marketContextStatus: buildMarketContextStatus({ state: "manual" })
         });
       });
+  },
+
+  showManualAnchor() {
+    this.setData({
+      manualAnchorVisible: true,
+      showAdvanced: true,
+      marketContextStatus: buildMarketContextStatus({ state: "manual" })
+    });
   },
 
   selectMarket(e) {
@@ -324,12 +433,28 @@ Page({
     this.patchForm({ firstThought: e.detail.value });
   },
 
+  selectFirstThought(e) {
+    this.patchForm({ firstThought: e.currentTarget.dataset.value || "" });
+  },
+
+  selectTriggerScene(e) {
+    this.patchForm({ triggerScene: e.currentTarget.dataset.value || "" });
+  },
+
+  selectPositionState(e) {
+    this.patchForm({ positionState: e.currentTarget.dataset.key || "holding" });
+  },
+
   inputAfterReaction(e) {
     this.patchForm({ afterReaction: e.detail.value });
   },
 
   inputNextAction(e) {
     this.patchForm({ nextAction: e.detail.value });
+  },
+
+  selectNextAction(e) {
+    this.patchForm({ nextAction: e.currentTarget.dataset.value || "" });
   },
 
   inputBoundary(e) {
@@ -536,6 +661,10 @@ Page({
     const id = this.data.latestReviewId || ((this.data.report || {}).id);
     if (!id) return;
     wx.navigateTo({ url: `/pages/trade-review-detail/index?id=${id}` });
+  },
+
+  goReport() {
+    wx.navigateTo({ url: "/pages/report/index" });
   },
 
   goLivingMirror() {

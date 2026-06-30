@@ -156,6 +156,8 @@ Page({
     userDataChain: USER_DATA_CHAIN,
     debugDataChain: DEBUG_DATA_CHAIN,
     shareMoments: buildShareMomentEntries(),
+    showEvidenceChain: false,
+    showProfileDepth: false,
     menu: []
   },
 
@@ -267,6 +269,14 @@ Page({
 
   inputApiBase(e) {
     this.setData({ apiBase: e.detail.value });
+  },
+
+  toggleProfileDepth() {
+    this.setData({ showProfileDepth: !this.data.showProfileDepth });
+  },
+
+  toggleEvidenceChain() {
+    this.setData({ showEvidenceChain: !this.data.showEvidenceChain });
   },
 
   saveApiBase() {
