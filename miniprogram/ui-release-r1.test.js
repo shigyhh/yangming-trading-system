@@ -33,6 +33,7 @@ const livingMirrorWxml = readPage("living-mirror", "index.wxml");
 const livingMirrorJs = readPage("living-mirror", "index.js");
 const klineMindWxml = readPage("kline-mind", "index.wxml");
 const klineMindJs = readPage("kline-mind", "index.js");
+const klineCanvasRendererJs = readFileSync(join(root, "miniprogram", "modules", "kline-mind", "canvas-renderer.js"), "utf8");
 const klineMindJson = readPage("kline-mind", "index.json");
 const tradeReviewWxml = readPage("trade-review", "index.wxml");
 const tradeReviewJs = readPage("trade-review", "index.js");
@@ -116,7 +117,7 @@ const demoSession = buildKlineMindSession({
     }
   }
 });
-assert.strictEqual(demoSession.dataStatusText, "离线练习模式");
+assert.strictEqual(demoSession.dataStatusText, "真实历史数据已载入");
 assert.equal(klineMindWxml.includes("session.market.defaultSymbol"), false, "kline mind page should not expose raw symbol codes in status meta");
 assert.equal(klineMindWxml.includes("数据状态"), false, "kline mind page should use user-facing source labels");
 assert.equal(klineMindWxml.includes('class="sim-meta"'), false, "kline mind should not render cockpit-style data status blocks");
@@ -124,8 +125,11 @@ assert.ok(klineMindWxml.includes('class="wave-source-line"'), "kline mind should
 assert.ok(klineMindWxml.includes("K线盲练"), "kline mind should frame the session as K-line blind practice");
 assert.equal(klineMindWxml.includes("真实历史盲练"), false, "kline mind should not keep a duplicated blind-practice control block above the chart");
 assert.ok(klineMindWxml.includes('wx:if="{{savedRecord && savedRecord.completed}}" class="path-links"'), "kline mind should show cross-page links only after the record is complete");
-assertRuleHas(klineMindWxss, ".wave-board", ["position: relative", "overflow: hidden"], "kline mind wave board should act as a fixed blind viewport");
-assertRuleHas(klineMindWxss, ".wave-board-content", ["width: 100%", "display: flex", "gap: var(--kline-gap, 6rpx)"], "kline mind candle strip should fill the visible board and rely on scroll-left for the current-candle boundary");
+assert.ok(klineMindWxml.includes('canvas-id="klineMainCanvas"'), "kline mind should render the main K-line chart through canvas");
+assert.ok(klineMindWxml.includes('canvas-id="klineIndicatorCanvas"'), "kline mind should render indicator panels through canvas");
+assert.equal(klineMindWxml.includes("mind-candle"), false, "kline mind should not render WXML candle decorations");
+assertRuleHas(klineMindWxss, ".chart-canvas-stage", ["position: relative", "background: #030504"], "kline mind canvas stage should own the chart surface");
+assertRuleHas(klineMindWxss, ".kline-main-canvas", ["height: 336rpx"], "kline mind main canvas should keep the blind viewport height");
 
 assert.ok(profileWxml.includes('wx:if="{{debugMode}}" class="debug-release-tools card"'), "profile debug release tools should be hidden behind debugMode");
 assert.equal(profileWxml.includes('class="danger-clear"'), false, "profile should not expose dangerous clear action in normal page flow");
@@ -222,8 +226,8 @@ assert.equal(klineMindWxml.includes('<text wx:if="{{item.label}}"'), false, "kli
 assert.ok(klineMindWxml.includes('class="chart-stepper"'), "kline chart should expose compact -/+ zoom controls in the chart corner");
 assert.ok(klineMindWxml.includes("bindtap=\"decreaseChartZoom\""), "kline chart should let the user zoom out with a minus control");
 assert.ok(klineMindWxml.includes("bindtap=\"increaseChartZoom\""), "kline chart should let the user zoom in with a plus control");
-assert.ok(klineMindWxml.indexOf('class="chart-stepper"') < klineMindWxml.indexOf('class="wave-board-scroll"'), "kline zoom controls should stay fixed in the visible chart corner, not inside the horizontal candle canvas");
-const klineChartTouchStart = klineMindWxml.indexOf('class="wave-board-scroll"');
+assert.ok(klineMindWxml.indexOf('class="chart-stepper"') < klineMindWxml.indexOf('class="chart-canvas-scroll"'), "kline zoom controls should stay fixed in the visible chart corner, not inside the horizontal candle canvas");
+const klineChartTouchStart = klineMindWxml.indexOf('class="chart-canvas-scroll"');
 const klineIndicatorRailStart = klineMindWxml.indexOf('class="indicator-strip"', klineChartTouchStart);
 assert.ok(klineMindWxml.indexOf('class="indicator-strip-spacer"', klineChartTouchStart) < klineIndicatorRailStart, "kline chart should reserve space for a fixed indicator rail inside the candle canvas");
 assert.ok(klineIndicatorRailStart > klineChartTouchStart, "kline indicator rail should stay fixed outside the touch-panned candle canvas");
@@ -239,7 +243,7 @@ assert.equal(klineMindWxml.includes("训练方法"), false, "kline page should n
 assert.equal(klineMindWxml.includes('class="practice-flow"'), false, "kline record flow should not look like three inactive navigation pills");
 assert.ok(klineMindWxml.includes("横屏训练更稳"), "kline chart should recommend landscape practice for dense K-line training");
 assert.ok(klineMindJson.includes('"pageOrientation": "auto"'), "kline mind should allow landscape practice on real devices");
-assert.ok(klineMindWxml.includes('class="sub-indicator-board'), "kline indicator layer should render below the chart");
+assert.ok(klineMindWxml.includes('class="kline-indicator-canvas'), "kline indicator layer should render below the chart through canvas");
 assert.ok(klineMindWxml.includes('class="indicator-strip"'), "kline indicators should render as a single-row selector");
 assert.ok(klineMindWxml.includes("交易风格"), "kline timeframe selector should be framed as trading style, not chart period switching");
 assert.equal(klineMindWxml.includes("<text>周期</text>"), false, "kline timeframe selector should not look like same-symbol period switching");
@@ -265,25 +269,26 @@ assert.equal(klineMindWxml.includes("模拟盈亏"), false, "kline runtime metri
 assert.equal(klineMindJs.includes("先做模拟决策"), false, "kline runtime button should say decision directly after the global simulation boundary is present");
 assert.equal(klineMindWxml.includes("toggleIndicatorPicker"), false, "kline indicators should not use a dropdown picker");
 assert.equal(klineMindWxml.includes('class="sub-indicator-menu"'), false, "kline indicators should not render a dropdown menu");
-assert.equal(sliceBetween(klineMindWxml, 'class="indicator-strip"', 'class="sub-indicator-board').includes("主图"), false, "kline indicator row should not spell out main-chart labels");
-assert.equal(sliceBetween(klineMindWxml, 'class="indicator-strip"', 'class="sub-indicator-board').includes("副图"), false, "kline indicator row should not spell out sub-chart labels");
-assert.ok(sliceBetween(klineMindWxml, 'class="indicator-strip"', 'class="sub-indicator-board').includes("chart-indicator-chip"), "kline indicator row should use chart-scoped chip styles");
+assert.equal(sliceBetween(klineMindWxml, 'class="indicator-strip"', 'class="runtime-card').includes("主图"), false, "kline indicator row should not spell out main-chart labels");
+assert.equal(sliceBetween(klineMindWxml, 'class="indicator-strip"', 'class="runtime-card').includes("副图"), false, "kline indicator row should not spell out sub-chart labels");
+assert.ok(sliceBetween(klineMindWxml, 'class="indicator-strip"', 'class="runtime-card').includes("chart-indicator-chip"), "kline indicator row should use chart-scoped chip styles");
 assert.deepStrictEqual(demoSession.mainIndicatorOptions.map((item) => item.label), ["MA", "BOLL"]);
 assert.deepStrictEqual(demoSession.indicatorPanelOptions.map((item) => item.label), ["VOL", "MACD", "RSI", "KDJ"]);
 assert.deepStrictEqual(demoSession.indicatorCatalog.map((item) => item.label), ["MA", "MACD", "BOLL", "VOL", "RSI", "KDJ"]);
-assert.ok(klineMindWxml.includes("lines.rsi"), "kline indicator panel should render RSI as a line indicator");
-assert.ok(klineMindWxml.includes("lines.k"), "kline indicator panel should render KDJ K line");
-assert.ok(klineMindWxml.includes("lines.d"), "kline indicator panel should render KDJ D line");
-assert.ok(klineMindWxml.includes("lines.j"), "kline indicator panel should render KDJ J line");
+assert.ok(klineCanvasRendererJs.includes("rsi"), "kline indicator canvas renderer should draw RSI as a line indicator");
+assert.ok(klineCanvasRendererJs.includes("k:"), "kline indicator canvas renderer should draw KDJ K line");
+assert.ok(klineCanvasRendererJs.includes("d:"), "kline indicator canvas renderer should draw KDJ D line");
+assert.ok(klineCanvasRendererJs.includes("j:"), "kline indicator canvas renderer should draw KDJ J line");
+assert.ok(klineCanvasRendererJs.includes("indicator-bar"), "kline indicator canvas renderer should draw VOL/MACD bars");
 assertRuleHas(klineMindWxss, ".chart-toolbar-row", ["grid-template-columns: minmax(0, 1fr) minmax(96rpx, 112rpx)", "width: 100%", "overflow: hidden"], "kline toolbar should keep trading style and change-slice action inside the card");
 assertRuleHas(klineMindWxss, ".chart-period-rail", ["display: flex", "width: 100%", "overflow-x: auto"], "kline timeframe selector should use a compact scrollable toolbar instead of a full-width segmented block");
 assertRuleHas(klineMindWxss, ".slice-change-btn", ["width: 100%", "max-width: 112rpx", "justify-content: center"], "kline change-slice button should not overlap the trading style rail");
 assertRuleHas(klineMindWxss, ".indicator-strip", ["display: flex", "overflow-x: auto"], "kline indicator selector should be one horizontal row");
 assertRuleHas(klineMindWxss, ".chart-indicator-chip", ["flex: 0 0 auto", "height: 38rpx"], "kline indicator chips should stay compact inside the chart toolbar");
 assertRuleHas(klineMindWxss, ".chart-scroll-inner", ["width: 100%", "min-width: 100%"], "kline chart should fill the visible viewport even at the widest zoom-out");
-assertRuleHas(klineMindWxss, ".wave-board-content", ["width: 100%", "gap: var(--kline-gap, 6rpx)"], "kline candle track should fill the board while using the runtime gap");
-assertRuleHas(klineMindWxss, ".mind-candle", ["flex: 0 0 var(--kline-candle-width, 4rpx)"], "kline zoom should use runtime bar width instead of fixed segmented classes");
-assertRuleHas(klineMindWxss, ".sub-indicator-item", ["flex: 0 0 var(--kline-candle-width, 4rpx)"], "kline sub indicators should share the same runtime bar width");
+assertRuleHas(klineMindWxss, ".chart-canvas-stage", ["width: 100%", "min-width: 100%"], "kline canvas stage should fill the visible board");
+assertRuleHas(klineMindWxss, ".kline-main-canvas", ["height: 336rpx"], "kline main canvas should own the real candle drawing surface");
+assertRuleHas(klineMindWxss, ".kline-indicator-canvas", ["height: 104rpx"], "kline indicator canvas should own the indicator drawing surface");
 assertRuleHas(klineMindWxss, ".decision-action", ["width: 100%", "box-sizing: border-box"], "kline decision actions should use stable non-native button boxes");
 assert.ok(trainingWxml.includes('class="training-subtle-links"'), "training plan/detail entries should sit in a quiet secondary link row");
 assert.ok(trainingWxml.indexOf('class="primary-btn kline-entry-btn"') < trainingWxml.indexOf('class="training-subtle-links"'), "training first screen should visually encounter the single primary action before optional links");

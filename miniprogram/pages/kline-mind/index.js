@@ -44,6 +44,7 @@ const {
 const {
   buildKlineTradeReviewRecord: buildKlineMirrorRecord
 } = require("../../modules/kline-simulator/index");
+const { buildKlineCanvasDrawModel } = require("../../modules/kline-mind/canvas-renderer");
 
 const REACTION_DIRECTIONS = [
   { key: "act", label: "想立刻做", detail: "追、急、想证明" },
@@ -60,6 +61,11 @@ const DECISION_ACTIONS = [
 const CHART_ZOOM_ORDER = ["overview", "wide", "standard", "focus"];
 const SLICE_SWITCH_LIMIT = 5;
 const SLICE_SWITCH_COOLDOWN_MS = 3000;
+const KLINE_CANVAS_METRICS = {
+  width: 690,
+  mainHeight: 336,
+  indicatorHeight: 104
+};
 
 function inferReactionDirection(firstReaction) {
   const value = String(firstReaction || "");
@@ -289,7 +295,8 @@ Page({
     selectedIndicatorKey: "vol",
     sliceSwitchCount: 0,
     sliceSwitchLocked: false,
-    tradeReviewUrl: ""
+    tradeReviewUrl: "",
+    canvasMetrics: KLINE_CANVAS_METRICS
   },
 
   onShow() {
@@ -362,6 +369,87 @@ Page({
     });
   },
 
+  drawCanvasCommands(canvasId, board = {}) {
+    if (typeof wx === "undefined" || !wx.createCanvasContext) return;
+    const ctx = wx.createCanvasContext(canvasId, this);
+    if (!ctx) return;
+    const width = Number(board.width || KLINE_CANVAS_METRICS.width);
+    const height = Number(board.height || KLINE_CANVAS_METRICS.mainHeight);
+    const systemInfo = wx.getSystemInfoSync ? wx.getSystemInfoSync() : {};
+    const rpxScale = Math.max(0.2, Number(systemInfo.windowWidth || 375) / 750);
+    if (ctx.save) ctx.save();
+    if (ctx.scale) ctx.scale(rpxScale, rpxScale);
+    ctx.setFillStyle("#030504");
+    ctx.fillRect(0, 0, width, height);
+
+    (board.commands || []).forEach((command) => {
+      if (command.type === "grid-line" || command.type === "line-segment") {
+        ctx.beginPath();
+        ctx.setStrokeStyle(command.color || "rgba(244, 235, 221, 0.2)");
+        ctx.setLineWidth(command.lineWidth || 1);
+        ctx.moveTo(command.x1, command.y1);
+        ctx.lineTo(command.x2, command.y2);
+        ctx.stroke();
+        return;
+      }
+
+      if (command.type === "candle") {
+        ctx.beginPath();
+        ctx.setStrokeStyle(command.color);
+        ctx.setLineWidth(command.selected ? 2 : 1);
+        ctx.moveTo(command.x, command.highY);
+        ctx.lineTo(command.x, command.lowY);
+        ctx.stroke();
+        ctx.setFillStyle(command.color);
+        ctx.fillRect(
+          command.x - command.bodyWidth / 2,
+          command.bodyTop,
+          command.bodyWidth,
+          command.bodyHeight
+        );
+        if (command.selected) {
+          const left = command.x - command.bodyWidth / 2 - 2;
+          const top = command.bodyTop - 2;
+          const right = left + command.bodyWidth + 4;
+          const bottom = top + command.bodyHeight + 4;
+          ctx.setStrokeStyle("rgba(255, 223, 117, 0.86)");
+          ctx.setLineWidth(2);
+          ctx.beginPath();
+          ctx.moveTo(left, top);
+          ctx.lineTo(right, top);
+          ctx.lineTo(right, bottom);
+          ctx.lineTo(left, bottom);
+          ctx.lineTo(left, top);
+          ctx.stroke();
+        }
+        return;
+      }
+
+      if (command.type === "indicator-bar") {
+        ctx.setFillStyle(command.color || "rgba(214, 224, 218, 0.42)");
+        ctx.fillRect(
+          command.x - command.width / 2,
+          command.top,
+          command.width,
+          command.height
+        );
+      }
+    });
+
+    if (ctx.restore) ctx.restore();
+    ctx.draw();
+  },
+
+  drawKlineCanvas() {
+    const runtimeView = this.data.runtimeView || {};
+    if (!runtimeView.visibleCandles || !runtimeView.visibleCandles.length) return;
+    const model = buildKlineCanvasDrawModel(runtimeView, KLINE_CANVAS_METRICS);
+    this.drawCanvasCommands("klineMainCanvas", model.main);
+    if (model.indicator.visible) {
+      this.drawCanvasCommands("klineIndicatorCanvas", model.indicator);
+    }
+  },
+
   applyHistorySlice(record = {}, historySlice = {}) {
     const recordWithSlice = Object.assign({}, record || {}, { historySlice });
     const session = this.buildSession(recordWithSlice);
@@ -373,6 +461,8 @@ Page({
       form: Object.assign({}, this.data.form, recordWithSlice, { selectedCandleKey: session.selectedCandleKey }),
       historyLoading: false,
       historyError: session.hasHistoricalData ? "" : (historySlice.serverSliceError || "真实历史数据未载入")
+    }, () => {
+      this.drawKlineCanvas();
     });
     if (session.hasHistoricalData) {
       this.prefetchTimeframeSlices(recordWithSlice);
@@ -546,6 +636,8 @@ Page({
       session,
       trainingRuntime,
       runtimeView: buildRuntimeView(trainingRuntime)
+    }, () => {
+      this.drawKlineCanvas();
     });
   },
 
@@ -588,6 +680,8 @@ Page({
     this.setData({
       trainingRuntime: nextRuntime,
       runtimeView: buildRuntimeView(nextRuntime)
+    }, () => {
+      this.drawKlineCanvas();
     });
   },
 
@@ -606,6 +700,8 @@ Page({
       trainingRuntime: runtime,
       runtimeView: buildRuntimeView(runtime),
       form: Object.assign({}, this.data.form || {}, { mainIndicatorKey: indicatorKey })
+    }, () => {
+      this.drawKlineCanvas();
     });
   },
 
@@ -619,6 +715,8 @@ Page({
       selectedIndicatorKey: indicatorKey,
       trainingRuntime: runtime,
       runtimeView: buildRuntimeView(runtime)
+    }, () => {
+      this.drawKlineCanvas();
     });
   },
 
@@ -700,6 +798,8 @@ Page({
       this.setData({
         trainingRuntime: nextRuntime,
         runtimeView: buildRuntimeView(nextRuntime)
+      }, () => {
+        this.drawKlineCanvas();
       });
       wx.showToast({ title: "先做一次决策", icon: "none" });
       return;
@@ -710,6 +810,8 @@ Page({
       form: Object.assign({}, this.data.form, {
         selectedCandleKey: ((nextRuntime.activeCandle || {}).key) || (this.data.form || {}).selectedCandleKey || ""
       })
+    }, () => {
+      this.drawKlineCanvas();
     });
   },
 
@@ -735,6 +837,8 @@ Page({
       form: Object.assign({}, form, {
         selectedCandleKey: runtimePatch.selectedCandleKey || form.selectedCandleKey || ""
       })
+    }, () => {
+      this.drawKlineCanvas();
     });
     wx.showToast({
       title: action === "HOLD" ? "已记录观望" : "已记录动作",

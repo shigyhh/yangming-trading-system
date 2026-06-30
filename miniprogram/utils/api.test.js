@@ -12,6 +12,8 @@ assert.ok(apiSource.includes("syncTrainingProgress"));
 assert.ok(apiSource.includes("syncTradeReviewRecord"));
 assert.ok(apiSource.includes("requestKlineTrainingSample"));
 assert.ok(apiSource.includes("fetchKlineTrainingSlice"));
+assert.ok(apiSource.includes("normalizeKlineHistorySymbol"));
+assert.ok(apiSource.includes("symbol: normalizeKlineHistorySymbol(symbol)"));
 assert.ok(apiSource.includes("listTrainingBookmarks"));
 assert.ok(apiSource.includes("createTrainingBookmark"));
 assert.ok(apiSource.includes("deleteTrainingBookmark"));

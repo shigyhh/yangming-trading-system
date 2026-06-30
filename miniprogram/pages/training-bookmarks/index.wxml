@@ -48,6 +48,6 @@
       </view>
     </view>
 
-    <compliance-notice />
+    <compliance-notice variant="full" />
   </view>
 </view>
