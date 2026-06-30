@@ -115,7 +115,7 @@ function buildShareCardPreview(type, context = {}) {
       shareTitle: "这张雷达帮我看见了自己的反应惯性。",
       metrics: riskRadar.length ? riskRadar.slice(0, 5).map((item) => buildMetric(item.label, item.value || "待照见")) : [
         buildMetric("追涨冲动", radar.chasing || assessment.impulse || 82),
-        buildMetric("止损抗拒", radar.stopResistance || assessment.boundary || 76),
+        buildMetric("边界抗拒", radar.stopResistance || assessment.boundary || 76),
         buildMetric("亏损后证明欲", radar.proving || assessment.proving || 88),
         buildMetric("计划执行断裂", radar.executionBreak || assessment.execution || 64),
         buildMetric("盈利后失控", radar.euphoria || assessment.euphoria || 58)
@@ -196,7 +196,7 @@ function buildShareCardPreview(type, context = {}) {
         ? retestChange.metrics.map((item) => buildMetric(item.label, item.value))
         : [
             buildMetric("入场冲动", "待完成 7 天"),
-            buildMetric("止损抗拒", "待完成 7 天"),
+            buildMetric("边界抗拒", "待完成 7 天"),
             buildMetric("亏损后证明欲", "待完成 7 天"),
             buildMetric("计划执行力", "待完成 7 天"),
             buildMetric("复盘完成度", "待完成 7 天")
@@ -258,7 +258,7 @@ function buildShareCardPreview(type, context = {}) {
     },
     live_reservation: {
       headline: lesson.title || "今晚事上练课",
-      body: lesson.subtitle || "止损抗拒背后的控制感",
+      body: lesson.subtitle || "边界抗拒背后的控制感",
       insight: lesson.description || "这节课讲的不是技术，是亏损后那个不甘心的自己。",
       cta: lesson.watched ? "分享回放照见" : "预约观课",
       shareTitle: lesson.watched ? "这节事上练课照见了我的一念。" : "今晚一起做一次事上练课。",

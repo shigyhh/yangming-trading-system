@@ -118,7 +118,7 @@
       <button class="primary-btn" bindtap="goUpload">上传真实记录</button>
     </view>
 
-    <compliance-notice variant="full" />
+    <compliance-notice />
   </view>
   <bottom-tab-bar active="review" />
 </view>

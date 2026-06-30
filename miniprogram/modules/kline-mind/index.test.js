@@ -12,6 +12,14 @@ const {
   normalizeHistoryCandles,
   getNextKlineMindSliceSeed,
   getPersonalityKlineDrill,
+  listSpecialTrainingPacks,
+  buildSpecialTrainingSessionMeta,
+  buildKlineSamplingRequest,
+  normalizeKlineSamplingResult,
+  buildCustomSessionMeta,
+  buildTrainingBookmark,
+  normalizeTrainingBookmark,
+  buildBookmarkReplaySliceRequest,
   getInitialKlineVisibleCount,
   startKlineTrainingRuntime,
   advanceKlineTrainingRuntime,
@@ -51,7 +59,7 @@ const historicalSlice = {
 
 const session = buildKlineMindSession({
   assessment: { primary: "冲动型", secondary: "焦虑型" },
-  trainingDay: { day: 2, title: "观止损抗拒" },
+  trainingDay: { day: 2, title: "观边界抗拒" },
   record: { marketKey: "cn_equity", timeframeKey: "1d" },
   historyCache: { cn_equity: { "1d": historicalSlice } }
 });
@@ -67,6 +75,54 @@ assert.strictEqual(session.prescription.heartThief, "怕错过");
 assert.strictEqual(session.candles.length, 6);
 assert.ok(session.candles.some((item) => item.selected));
 assert.ok(session.gates.find((item) => item.key === "zhaoxin").trainingAction);
+
+const specialPacks = listSpecialTrainingPacks();
+assert.ok(specialPacks.find((item) => item.trainingPackId === "chase_high_impulse"));
+const specialMeta = buildSpecialTrainingSessionMeta({ errorType: "追高冲动" });
+assert.strictEqual(specialMeta.sourceType, "special_training");
+assert.strictEqual(specialMeta.trainingPackId, "chase_high_impulse");
+const samplingRequest = buildKlineSamplingRequest(specialMeta, { period: "30m", excludeSegmentIds: ["seg-1"] });
+assert.strictEqual(samplingRequest.period, "30m");
+assert.deepStrictEqual(samplingRequest.excludeSegmentIds, ["seg-1"]);
+const samplingResult = normalizeKlineSamplingResult({
+  segment_id: "seg-2",
+  training_pack_id: "chase_high_impulse",
+  scene_tags: ["放量拉升"],
+  start_date: "2026-06-01",
+  end_date: "2026-06-10",
+  bars: [{ t: "2026-06-01", o: 1, h: 2, l: 0.8, c: 1.6 }]
+});
+assert.strictEqual(samplingResult.segmentId, "seg-2");
+assert.strictEqual(samplingResult.samplingStatus, "matched");
+const customMeta = buildCustomSessionMeta({
+  symbol: "000001.SZ",
+  period: "60m",
+  startDate: "2026-06-01",
+  endDate: "2026-06-10",
+  hiddenSymbol: false
+});
+assert.strictEqual(customMeta.sourceType, "custom_session");
+assert.strictEqual(customMeta.customSymbolText, "000001.SZ");
+const bookmark = buildTrainingBookmark({
+  record: {
+    id: "record-1",
+    sourceType: "special_training",
+    samplingResult,
+    executionResult: "aligned"
+  },
+  session: { symbol: "000001.SZ", period: "30m" },
+  bookmarkType: "mistake_card"
+});
+assert.strictEqual(normalizeTrainingBookmark(bookmark).bookmarkType, "mistake_card");
+assert.deepStrictEqual(buildBookmarkReplaySliceRequest(bookmark), {
+  symbol: "000001.SZ",
+  timeframeKey: "30m",
+  startDate: "2026-06-01",
+  endDate: "2026-06-10",
+  trainingLength: 60,
+  mode: "replay",
+  blind: false
+});
 
 const compactSchemaSlice = {
   source: "server_cache",

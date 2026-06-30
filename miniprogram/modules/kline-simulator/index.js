@@ -662,7 +662,7 @@ function buildKlineInsight({ scene, reaction, scores, impulseWithin3s, firstThou
 
 function getTrainingSuggestion(trait) {
   if (/冲动|怕错过/.test(trait)) return "观入场冲动";
-  if (/扛|边界/.test(trait)) return "观止损抗拒";
+  if (/扛|边界/.test(trait)) return "观边界抗拒";
   if (/偏执|证明/.test(trait)) return "观亏损后的证明欲";
   if (/赌徒|放大/.test(trait)) return "观盈利后的失控";
   if (/拖延|完美/.test(trait)) return "观计划执行断裂";

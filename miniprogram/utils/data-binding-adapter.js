@@ -1,4 +1,5 @@
 const { PERSONALITIES, QUESTIONS, TRAINING_PLANS } = require("./content");
+const { normalizeExecutionResult } = require("./execution-terminology");
 
 const SOURCE = "miniprogram";
 const SOURCE_CHANNEL = "微信小程序MVP";
@@ -114,7 +115,6 @@ function buildTrainingBindingPayload({ auth = {}, state = {}, progress = null } 
 }
 
 function buildKLineBindingPayload({ auth = {}, state = {}, progress = null, trainingRecord = null, klineRecord = null } = {}) {
-  const user = buildDataBindingUser(auth, state);
   const practiceState = progress || buildPracticeState(state);
   const sourceRecord = klineRecord || getLatestRecordFromSources([
     practiceState.intraday_boundary_records,
@@ -130,145 +130,116 @@ function buildKLineBindingPayload({ auth = {}, state = {}, progress = null, trai
 
   if (!sourceRecord) return null;
 
-  return {
-    user,
-    record: normalizeKLineRecordForBinding(sourceRecord, {
-      user,
-      trainingRecord,
-      practiceState
-    }),
-    source: SOURCE
-  };
-}
-
-function normalizeKLineRecordForBinding(sourceRecord = {}, context = {}) {
-  const trainingRecord = context.trainingRecord || {};
-  const practiceState = context.practiceState || {};
-  const user = context.user || {};
-  const localId = pickText(sourceRecord.id, sourceRecord.localRecordId, sourceRecord.reviewId, sourceRecord.recordId, sourceRecord.sceneKey, "");
-  const userActions = Array.isArray(sourceRecord.userActions)
-    ? sourceRecord.userActions
-    : Array.isArray(sourceRecord.reactions) ? sourceRecord.reactions : [];
-  const processScores = sourceRecord.processScores || sourceRecord.process_scores || sourceRecord.scores || {};
-  const firstAction = userActions[0] || {};
-  const heartThieves = Array.isArray(sourceRecord.heartThieves || sourceRecord.detectedThieves)
-    ? (sourceRecord.heartThieves || sourceRecord.detectedThieves)
-    : [];
-  const disciplineScore = Number(
-    sourceRecord.disciplineScore ||
-    processScores.boundaryKeeping ||
-    processScores.planExecution ||
-    sourceRecord.score ||
-    0
-  );
-  const recordedAt = toIso(sourceRecord.completedAt || sourceRecord.updatedAt || sourceRecord.createdAt || Date.now());
-
-  return {
-    id: localId,
-    idempotencyKey: localId,
-    userId: pickText(user.userId, sourceRecord.userId),
+  const record = {
+    id: sourceRecord.id || sourceRecord.recordId || sourceRecord.record_id || "",
+    idempotencyKey: sourceRecord.idempotencyKey || sourceRecord.idempotency_key || sourceRecord.id || "",
+    userId: buildDataBindingUser(auth, state).userId,
+    sessionId: sourceRecord.sessionId || sourceRecord.session_id || "",
+    sceneId: sourceRecord.sceneId || sourceRecord.scene_id || "",
+    linkedTradeReviewId: sourceRecord.linkedTradeReviewId || sourceRecord.linked_trade_review_id || "",
+    linkedOneThoughtEventId: sourceRecord.linkedOneThoughtEventId || sourceRecord.linked_one_thought_event_id || "",
     day: Number((trainingRecord || {}).day || sourceRecord.day || (practiceState.training7_state || {}).currentDay || 1),
-    recordedAt,
-    symbol: pickText(sourceRecord.symbol, sourceRecord.sceneTitle, ""),
-    market: pickText(sourceRecord.market, sourceRecord.marketName, sourceRecord.marketKey, sourceRecord.marketLabel, ""),
-    timeframe: pickText(sourceRecord.timeframe, sourceRecord.timeframeKey, sourceRecord.timeframeLabel, ""),
-    sessionId: pickText(sourceRecord.sessionId, sourceRecord.session_id),
-    sceneId: pickText(sourceRecord.sceneId, sourceRecord.scene_id),
-    startedAt: sourceRecord.startedAt ? toIso(sourceRecord.startedAt) : "",
-    completedAt: sourceRecord.completedAt ? toIso(sourceRecord.completedAt) : recordedAt,
-    candlesRange: sourceRecord.candlesRange || sourceRecord.candles_range || null,
-    userActions,
-    mistakes: Array.isArray(sourceRecord.mistakes) ? sourceRecord.mistakes : buildKLineMistakes(sourceRecord),
-    heartThief: pickText(sourceRecord.heartThief, heartThieves.join("、")),
-    disciplineScore,
-    reviewText: pickText(sourceRecord.reviewText, sourceRecord.processInsight, sourceRecord.insight, sourceRecord.verdict, sourceRecord.reviewNote),
-    linkedTradeReviewId: pickText(sourceRecord.linkedTradeReviewId, sourceRecord.tradeReviewId),
-    linkedOneThoughtEventId: pickText(sourceRecord.linkedOneThoughtEventId, sourceRecord.oneThoughtEventId),
-    oneThoughtEvent: normalizeOneThoughtEventForBinding(sourceRecord.oneThoughtEvent),
-    source: pickText(sourceRecord.source, SOURCE),
-    createdAt: toIso(sourceRecord.createdAt || sourceRecord.completedAt || Date.now()),
-    sceneKey: pickText(sourceRecord.sceneKey, sourceRecord.sceneId, localId),
-    reactionKey: pickText(sourceRecord.reactionKey, firstAction.optionId, sourceRecord.primaryReaction, sourceRecord.firstReaction),
-    scene: pickText(sourceRecord.scene, sourceRecord.sceneTitle, sourceRecord.scenarioTitle, sourceRecord.trigger, sourceRecord.currentStatus, sourceRecord.todayRisk, "小程序训练场景"),
-    dataSource: pickText(sourceRecord.dataSource, sourceRecord.dataSourceLabel, ""),
-    reaction: pickText(sourceRecord.reaction, sourceRecord.primaryReaction, sourceRecord.firstReaction, sourceRecord.firstThought, sourceRecord.note, "已觉察，未展开"),
+    recordedAt: toIso(sourceRecord.updatedAt || sourceRecord.createdAt || Date.now()),
+    scene: pickText(sourceRecord.scene, sourceRecord.scenarioTitle, sourceRecord.trigger, sourceRecord.currentStatus, sourceRecord.todayRisk, "小程序训练场景"),
+    market: pickText(sourceRecord.marketName, sourceRecord.marketKey, ""),
+    timeframe: pickText(sourceRecord.timeframeKey, ""),
+    symbol: pickText(sourceRecord.symbol, ""),
+    dataSource: pickText(sourceRecord.dataSource, ""),
+    reaction: pickText(sourceRecord.reaction, sourceRecord.firstReaction, sourceRecord.firstThought, sourceRecord.note, "已觉察，未展开"),
     disciplineAction: pickText(sourceRecord.disciplineAction, sourceRecord.boundaryChoice, sourceRecord.boundary, sourceRecord.action, sourceRecord.nextAction, "先停一息，再复盘"),
-    feedback: pickText(sourceRecord.feedback, sourceRecord.trainingSuggestion, sourceRecord.trainingAction),
-    reactionTimeMs: Number(sourceRecord.reactionTimeMs || firstAction.reactionTimeMs || 0),
-    processScores,
-    processInsight: pickText(sourceRecord.processInsight, sourceRecord.insight, sourceRecord.reviewText),
-    trainingSuggestion: pickText(sourceRecord.trainingSuggestion, sourceRecord.nextAction)
+    disciplineScore: normalizeNumberValue(pickValue(
+      sourceRecord.disciplineScore,
+      sourceRecord.discipline_score,
+      sourceRecord.scores && sourceRecord.scores.boundaryKeeping,
+      sourceRecord.score
+    )),
+    processScores: sourceRecord.processScores || sourceRecord.process_scores || sourceRecord.scores || {},
+    processInsight: pickText(sourceRecord.processInsight, sourceRecord.process_insight, sourceRecord.insight, sourceRecord.insightLine)
   };
-}
+  const oneThoughtEvent = sourceRecord.oneThoughtEvent || sourceRecord.one_thought_event || null;
+  if (oneThoughtEvent && typeof oneThoughtEvent === "object") {
+    record.oneThoughtEvent = Object.assign({}, oneThoughtEvent, {
+      eventId: oneThoughtEvent.eventId || oneThoughtEvent.event_id || record.linkedOneThoughtEventId,
+      eventType: oneThoughtEvent.eventType || oneThoughtEvent.event_type || "kline_training",
+      userId: oneThoughtEvent.userId || oneThoughtEvent.user_id || record.userId
+    });
+    record.linkedOneThoughtEventId = record.linkedOneThoughtEventId || record.oneThoughtEvent.eventId || "";
+    record.linked_one_thought_event_id = record.linkedOneThoughtEventId;
+  }
+  const period = pickText(sourceRecord.period, sourceRecord.timeframeKey, sourceRecord.timeframe_key);
+  if (period) record.period = period;
+  attachAliasedField(record, "sourceType", "source_type", pickValue(sourceRecord.sourceType, sourceRecord.source_type, "kline_training"));
+  attachAliasedField(record, "startDate", "start_date", pickValue(sourceRecord.startDate, sourceRecord.start_date, sourceRecord.dataStart, sourceRecord.data_start));
+  attachAliasedField(record, "endDate", "end_date", pickValue(sourceRecord.endDate, sourceRecord.end_date, sourceRecord.dataEnd, sourceRecord.data_end));
+  attachAliasedField(record, "trainingLength", "training_length", normalizeNumberValue(pickValue(sourceRecord.trainingLength, sourceRecord.training_length)));
+  attachAliasedField(record, "hiddenSymbol", "hidden_symbol", normalizeBooleanValue(pickValue(sourceRecord.hiddenSymbol, sourceRecord.hidden_symbol)));
+  attachAliasedField(record, "hiddenDateRange", "hidden_date_range", normalizeBooleanValue(pickValue(sourceRecord.hiddenDateRange, sourceRecord.hidden_date_range)));
+  attachAliasedField(record, "errorType", "error_type", pickValue(sourceRecord.errorType, sourceRecord.error_type, sourceRecord.mainErrorType, sourceRecord.main_error_type, sourceRecord.relatedPersonality, sourceRecord.personalityType));
+  attachAliasedField(record, "sceneTags", "scene_tags", normalizeListValue(pickValue(sourceRecord.sceneTags, sourceRecord.scene_tags)));
+  attachAliasedField(record, "trainingPrescription", "training_prescription", pickValue(sourceRecord.trainingPrescription, sourceRecord.training_prescription, sourceRecord.trainingSuggestion));
+  const executionResult = normalizeExecutionResult(
+    sourceRecord.executionResult,
+    sourceRecord.execution_result,
+    sourceRecord.executionLabel,
+    sourceRecord.execution_label,
+    sourceRecord.lawResult,
+    sourceRecord.law_result
+  );
+  attachAliasedField(record, "executionResult", "execution_result", executionResult);
+  attachAliasedField(record, "executionLabel", "execution_label", executionResult);
+  attachAliasedField(record, "repeatCount", "repeat_count", normalizeNumberValue(pickValue(sourceRecord.repeatCount, sourceRecord.repeat_count)));
+  const samplingResult = normalizeKLineSamplingResultForBinding(pickValue(sourceRecord.samplingResult, sourceRecord.sampling_result));
+  attachAliasedField(record, "trainingPackId", "training_pack_id", pickValue(sourceRecord.trainingPackId, sourceRecord.training_pack_id, samplingResult && (samplingResult.trainingPackId || samplingResult.training_pack_id)));
+  attachAliasedField(record, "segmentId", "segment_id", pickValue(sourceRecord.segmentId, sourceRecord.segment_id, samplingResult && (samplingResult.segmentId || samplingResult.segment_id)));
+  attachAliasedField(record, "samplingResult", "sampling_result", samplingResult);
+  attachAliasedField(record, "fallbackUsed", "fallback_used", pickValue(sourceRecord.fallbackUsed, sourceRecord.fallback_used, samplingResult && (samplingResult.fallbackUsed || samplingResult.fallback_used)));
+  attachAliasedField(record, "fallbackReason", "fallback_reason", pickValue(sourceRecord.fallbackReason, sourceRecord.fallback_reason, samplingResult && (samplingResult.fallbackReason || samplingResult.fallback_reason)));
+  attachAliasedField(record, "trainingMistakeCard", "training_mistake_card", pickValue(sourceRecord.trainingMistakeCard, sourceRecord.training_mistake_card, sourceRecord.mistakeCard, sourceRecord.mistake_card));
 
-function buildKLineMistakes(sourceRecord = {}) {
-  return [
-    sourceRecord.changedPlan ? "训练中曾临时改计划" : "",
-    sourceRecord.boundaryState && sourceRecord.boundaryState !== "kept" ? (sourceRecord.boundaryStateLabel || "边界未完全守住") : ""
-  ].filter(Boolean);
-}
-
-function normalizeOneThoughtEventForBinding(event = null) {
-  if (!event || typeof event !== "object") return null;
-  const eventId = pickText(event.eventId);
-  if (!eventId) return null;
   return {
-    eventId,
-    localRecordId: pickText(event.localRecordId),
-    eventType: pickText(event.eventType, "kline_training"),
-    userId: redactSensitiveText(event.userId),
-    anonymousId: redactSensitiveText(event.anonymousId),
-    openid: redactSensitiveText(event.openid),
-    unionid: redactSensitiveText(event.unionid),
-    market: pickText(event.market),
-    symbol: pickText(event.symbol),
-    timeframe: pickText(event.timeframe),
-    mode: pickText(event.mode),
-    klineSource: pickText(event.klineSource),
-    serverSliceStatus: pickText(event.serverSliceStatus),
-    serverSliceError: redactSensitiveText(event.serverSliceError),
-    firstThought: pickText(event.firstThought),
-    reactionChoice: pickText(event.reactionChoice),
-    boundaryState: pickText(event.boundaryState),
-    mirrorType: pickText(event.mirrorType),
-    relatedMirror: pickText(event.relatedMirror),
-    clientSyncStatus: pickText(event.clientSyncStatus),
-    createdAt: event.createdAt || "",
-    completedAt: event.completedAt || "",
-    updatedAt: event.updatedAt || ""
+    user: buildDataBindingUser(auth, state),
+    record,
+    source: SOURCE
   };
 }
 
 function buildTradeReviewBindingPayload({ auth = {}, state = {}, review = null } = {}) {
   const sourceReview = review || getLatestTradeReview(state);
   if (!sourceReview) return null;
+  const normalizedReview = {
+    id: String(sourceReview.id || sourceReview.reviewId || sourceReview.review_id || `mp-trade-review-${Date.now()}`),
+    reviewId: String(sourceReview.id || sourceReview.reviewId || sourceReview.review_id || ""),
+    imageUrl: pickText(sourceReview.imageUrl, sourceReview.image_url, sourceReview.screenshotPath, sourceReview.screenshot_path),
+    tradeDate: pickText(sourceReview.tradeDate, sourceReview.trade_date, sourceReview.date, toIso(sourceReview.createdAt || Date.now()).slice(0, 10)),
+    symbol: pickText(sourceReview.symbol, sourceReview.symbolMasked, sourceReview.symbol_masked),
+    marketType: normalizeMarketType(sourceReview.marketType || sourceReview.market_type || sourceReview.marketKey || sourceReview.marketLabel),
+    timeframeKey: pickText(sourceReview.timeframeKey, sourceReview.timeframe_key, sourceReview.period, sourceReview.cycle, "1d"),
+    buyReason: pickText(sourceReview.buyReason, sourceReview.buy_reason, sourceReview.entryReason, sourceReview.actionLabel),
+    sellReason: pickText(sourceReview.sellReason, sourceReview.sell_reason, sourceReview.exitReason, sourceReview.afterReaction, sourceReview.reviewNote),
+    strongestThought: pickText(sourceReview.strongestThought, sourceReview.strongest_thought, sourceReview.firstThought, sourceReview.first_thought, sourceReview.actionLabel),
+    wasPlanned: normalizeBoolean(sourceReview.wasPlanned, sourceReview.was_planned, sourceReview.inPlan === "yes" ? true : sourceReview.inPlan === "no" ? false : null),
+    hadExitRule: normalizeBoolean(sourceReview.hadExitRule, sourceReview.had_exit_rule, sourceReview.exitPrepared === "yes" ? true : sourceReview.exitPrepared === "no" ? false : null),
+    changedPlanDuringTrade: normalizeBoolean(sourceReview.changedPlanDuringTrade, sourceReview.changed_plan_during_trade, sourceReview.changedPlan === "yes" ? true : sourceReview.changedPlan === "no" ? false : null),
+    detectedMirror: pickText(sourceReview.detectedMirror, sourceReview.detected_mirror, sourceReview.relatedMirror),
+    detectedThieves: Array.isArray(sourceReview.detectedThieves || sourceReview.detected_thieves)
+      ? (sourceReview.detectedThieves || sourceReview.detected_thieves)
+      : (sourceReview.heartThieves || []),
+    behaviorTags: buildTradeReviewBehaviorTags(sourceReview),
+    reviewText: pickText(sourceReview.reviewText, sourceReview.review_text, sourceReview.verdict, sourceReview.oneLine, sourceReview.reviewNote, sourceReview.trainingAction),
+    nextAction: pickText(sourceReview.nextAction, sourceReview.next_action, sourceReview.trainingAction),
+    ocrDraft: sourceReview.ocrDraft || sourceReview.ocr_draft || null,
+    createdAt: toIso(sourceReview.createdAt || sourceReview.updatedAt || Date.now())
+  };
+  attachAliasedField(normalizedReview, "mainErrorType", "main_error_type", pickValue(sourceReview.mainErrorType, sourceReview.main_error_type, sourceReview.errorType, sourceReview.error_type, sourceReview.relatedPersonality));
+  attachAliasedField(normalizedReview, "firstThought", "first_thought", pickValue(sourceReview.firstThought, sourceReview.first_thought, sourceReview.strongestThought, sourceReview.strongest_thought, sourceReview.actionLabel));
+  attachAliasedField(normalizedReview, "triggerScene", "trigger_scene", pickValue(sourceReview.triggerScene, sourceReview.trigger_scene, sourceReview.trigger, (sourceReview.historicalMatch || {}).stagePosition, sourceReview.stageGate));
+  attachAliasedField(normalizedReview, "trainingPrescription", "training_prescription", pickValue(sourceReview.trainingPrescription, sourceReview.training_prescription, sourceReview.trainingAction));
+  attachAliasedField(normalizedReview, "nextRule", "next_rule", pickValue(sourceReview.nextRule, sourceReview.next_rule, sourceReview.nextAction, sourceReview.next_action, sourceReview.trainingAction));
+  attachAliasedField(normalizedReview, "mistakeCard", "mistake_card", pickValue(sourceReview.mistakeCard, sourceReview.mistake_card));
 
   return {
     user: buildDataBindingUser(auth, state),
-    review: {
-      id: String(sourceReview.id || sourceReview.reviewId || sourceReview.review_id || `mp-trade-review-${Date.now()}`),
-      reviewId: String(sourceReview.id || sourceReview.reviewId || sourceReview.review_id || ""),
-      imageUrl: pickText(sourceReview.imageUrl, sourceReview.image_url, sourceReview.screenshotPath, sourceReview.screenshot_path),
-      tradeDate: pickText(sourceReview.tradeDate, sourceReview.trade_date, sourceReview.date, toIso(sourceReview.createdAt || Date.now()).slice(0, 10)),
-      symbol: pickText(sourceReview.symbol, sourceReview.symbolMasked, sourceReview.symbol_masked),
-      marketType: normalizeMarketType(sourceReview.marketType || sourceReview.market_type || sourceReview.marketKey || sourceReview.marketLabel),
-      timeframeKey: pickText(sourceReview.timeframeKey, sourceReview.timeframe_key, sourceReview.period, sourceReview.cycle, "1d"),
-      buyReason: pickText(sourceReview.buyReason, sourceReview.buy_reason, sourceReview.entryReason, sourceReview.actionLabel),
-      sellReason: pickText(sourceReview.sellReason, sourceReview.sell_reason, sourceReview.exitReason, sourceReview.afterReaction, sourceReview.reviewNote),
-      strongestThought: pickText(sourceReview.strongestThought, sourceReview.strongest_thought, sourceReview.firstThought, sourceReview.actionLabel),
-      wasPlanned: normalizeBoolean(sourceReview.wasPlanned, sourceReview.was_planned, sourceReview.inPlan === "yes" ? true : sourceReview.inPlan === "no" ? false : null),
-      hadExitRule: normalizeBoolean(sourceReview.hadExitRule, sourceReview.had_exit_rule, sourceReview.exitPrepared === "yes" ? true : sourceReview.exitPrepared === "no" ? false : null),
-      changedPlanDuringTrade: normalizeBoolean(sourceReview.changedPlanDuringTrade, sourceReview.changed_plan_during_trade, sourceReview.changedPlan === "yes" ? true : sourceReview.changedPlan === "no" ? false : null),
-      detectedMirror: pickText(sourceReview.detectedMirror, sourceReview.detected_mirror, sourceReview.relatedMirror),
-      detectedThieves: Array.isArray(sourceReview.detectedThieves || sourceReview.detected_thieves)
-        ? (sourceReview.detectedThieves || sourceReview.detected_thieves)
-        : (sourceReview.heartThieves || []),
-      behaviorTags: buildTradeReviewBehaviorTags(sourceReview),
-      reviewText: pickText(sourceReview.reviewText, sourceReview.review_text, sourceReview.verdict, sourceReview.oneLine, sourceReview.reviewNote, sourceReview.trainingAction),
-      nextAction: pickText(sourceReview.nextAction, sourceReview.trainingAction),
-      ocrDraft: sourceReview.ocrDraft || sourceReview.ocr_draft || null,
-      createdAt: toIso(sourceReview.createdAt || sourceReview.updatedAt || Date.now())
-    },
+    review: normalizedReview,
     source: SOURCE
   };
 }
@@ -321,6 +292,7 @@ function normalizeBoolean() {
 function normalizeMarketType(value) {
   const text = String(value || "").toLowerCase();
   if (["cn", "cn_equity", "a_share", "ashare"].includes(text) || String(value || "").includes("A股")) return "a_share";
+  if (["hk", "hk_equity", ["hk", "stock"].join("_")].includes(text) || String(value || "").includes(["港", "股"].join(""))) return "hk_equity";
   if (["us", "us_equity", "us_stock"].includes(text) || String(value || "").includes("美股")) return "us_stock";
   if (["futures", "future"].includes(text) || String(value || "").includes("期货")) return "futures";
   if (["crypto", "digital_currency"].includes(text) || String(value || "").includes("数字货币")) return "crypto";
@@ -615,12 +587,72 @@ function pickText() {
   return "";
 }
 
-function redactSensitiveText(value) {
-  const text = pickText(value).slice(0, 280);
-  if (!text) return "";
-  return text
-    .replace(/(^|[^\d])1[3-9]\d{9}(?=\D|$)/g, "$1[redacted_phone]")
-    .replace(/(token|access_token|authorization|验证码|code)[=:：]\s*[\w.-]+/gi, "$1=[redacted]");
+function hasBindingValue(value) {
+  return value !== undefined && value !== null && !(typeof value === "string" && value === "");
+}
+
+function pickValue() {
+  for (let index = 0; index < arguments.length; index += 1) {
+    const value = arguments[index];
+    if (hasBindingValue(value)) return value;
+  }
+  return undefined;
+}
+
+function attachAliasedField(target, camelKey, snakeKey, value) {
+  if (!hasBindingValue(value)) return target;
+  target[camelKey] = value;
+  target[snakeKey] = value;
+  return target;
+}
+
+function normalizeListValue(value) {
+  if (!hasBindingValue(value)) return undefined;
+  if (Array.isArray(value)) return value;
+  return [String(value)];
+}
+
+function normalizeNumberValue(value) {
+  if (!hasBindingValue(value)) return undefined;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : undefined;
+}
+
+function normalizeBooleanValue(value) {
+  if (value === true || value === false) return value;
+  if (value === "true" || value === "1" || value === 1) return true;
+  if (value === "false" || value === "0" || value === 0) return false;
+  return undefined;
+}
+
+function normalizeKLineSamplingResultForBinding(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const result = {};
+  attachAliasedField(result, "segmentId", "segment_id", pickValue(value.segmentId, value.segment_id));
+  attachAliasedField(result, "trainingPackId", "training_pack_id", pickValue(value.trainingPackId, value.training_pack_id));
+  attachAliasedField(result, "errorType", "error_type", pickValue(value.errorType, value.error_type));
+  attachAliasedField(result, "sceneTags", "scene_tags", normalizeListValue(pickValue(value.sceneTags, value.scene_tags)));
+  const symbol = pickText(value.symbol);
+  if (symbol) result.symbol = symbol;
+  const name = pickText(value.name);
+  if (name) result.name = name;
+  const period = pickText(value.period);
+  if (period) result.period = period;
+  attachAliasedField(result, "startDate", "start_date", pickValue(value.startDate, value.start_date));
+  attachAliasedField(result, "endDate", "end_date", pickValue(value.endDate, value.end_date));
+  attachAliasedField(result, "fallbackUsed", "fallback_used", normalizeBooleanValue(pickValue(value.fallbackUsed, value.fallback_used)));
+  attachAliasedField(result, "fallbackReason", "fallback_reason", pickValue(value.fallbackReason, value.fallback_reason));
+  const source = pickText(value.source);
+  if (source) result.source = source;
+
+  Object.keys(result).forEach((key) => {
+    const fieldValue = result[key];
+    if (!hasBindingValue(fieldValue) || (Array.isArray(fieldValue) && fieldValue.length === 0)) {
+      delete result[key];
+    }
+  });
+
+  return Object.keys(result).length ? result : undefined;
 }
 
 function getPhoneTail(rawPhone, maskedPhone) {

@@ -102,6 +102,24 @@ function buildTradeReviewUrl({ userId = "", eventId = "" } = {}) {
   return `${PRODUCTION_API_BASE}/trade-review?userId=${encodeURIComponent(safeUserId)}&eventId=${encodeURIComponent(safeEventId)}`;
 }
 
+function pickApiValue(...values) {
+  for (const value of values) {
+    if (value !== undefined && value !== null && value !== "") return value;
+  }
+  return "";
+}
+
+function buildQuery(params = {}) {
+  return Object.keys(params)
+    .map((key) => {
+      const value = params[key];
+      if (value === undefined || value === null || value === "") return "";
+      return `${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+    })
+    .filter(Boolean)
+    .join("&");
+}
+
 function buildLivingMirrorProfileFallback(status = "empty", errorMessage = "") {
   return {
     ok: false,
@@ -713,6 +731,149 @@ async function requestTradeReviewOcrDraft({ imagePath = "", imageMeta = {} } = {
   }
 }
 
+async function listTrainingBookmarks(filters = {}) {
+  try {
+    const auth = await ensureAuth();
+    const state = collectLocalState();
+    const user = buildDataBindingUser(auth, state);
+    const query = buildQuery({
+      bookmark_type: pickApiValue(filters.bookmarkType, filters.bookmark_type),
+      source_type: pickApiValue(filters.sourceType, filters.source_type),
+      training_pack_id: pickApiValue(filters.trainingPackId, filters.training_pack_id),
+      include_disabled: filters.includeDisabled || filters.include_disabled ? "true" : ""
+    });
+    return request({
+      path: `/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/training-bookmarks${query ? `?${query}` : ""}`,
+      method: "GET",
+      token: auth.access_token
+    });
+  } catch (error) {
+    saveConnectionFallback(error, "训练收藏同步：暂未连接");
+    throw error;
+  }
+}
+
+async function createTrainingBookmark(bookmark = {}) {
+  try {
+    const auth = await ensureAuth();
+    const state = collectLocalState();
+    const user = buildDataBindingUser(auth, state);
+    return request({
+      path: `/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/training-bookmarks`,
+      method: "POST",
+      token: auth.access_token,
+      data: {
+        user,
+        training_bookmark: bookmark,
+        trainingBookmark: bookmark,
+        source: "miniprogram"
+      }
+    });
+  } catch (error) {
+    saveConnectionFallback(error, "训练收藏同步：暂未连接");
+    throw error;
+  }
+}
+
+async function deleteTrainingBookmark(bookmarkId = "") {
+  try {
+    const auth = await ensureAuth();
+    const state = collectLocalState();
+    const user = buildDataBindingUser(auth, state);
+    return request({
+      path: `/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/training-bookmarks/${encodeURIComponent(String(bookmarkId || ""))}`,
+      method: "DELETE",
+      token: auth.access_token
+    });
+  } catch (error) {
+    saveConnectionFallback(error, "训练收藏同步：暂未连接");
+    throw error;
+  }
+}
+
+async function listInterventionRules(filters = {}) {
+  try {
+    const auth = await ensureAuth();
+    const state = collectLocalState();
+    const user = buildDataBindingUser(auth, state);
+    const query = buildQuery({
+      trigger_type: pickApiValue(filters.triggerType, filters.trigger_type),
+      error_type: pickApiValue(filters.errorType, filters.error_type),
+      include_disabled: filters.includeDisabled || filters.include_disabled ? "true" : ""
+    });
+    return request({
+      path: `/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/intervention-rules${query ? `?${query}` : ""}`,
+      method: "GET",
+      token: auth.access_token
+    });
+  } catch (error) {
+    saveConnectionFallback(error, "知行提醒规则同步：暂未连接");
+    throw error;
+  }
+}
+
+async function listExecutionPlans(filters = {}) {
+  try {
+    const auth = await ensureAuth();
+    const state = collectLocalState();
+    const user = buildDataBindingUser(auth, state);
+    const query = buildQuery({
+      error_type: pickApiValue(filters.errorType, filters.error_type),
+      include_disabled: filters.includeDisabled || filters.include_disabled ? "true" : ""
+    });
+    return request({
+      path: `/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/execution-plans${query ? `?${query}` : ""}`,
+      method: "GET",
+      token: auth.access_token
+    });
+  } catch (error) {
+    saveConnectionFallback(error, "执行计划同步：暂未连接");
+    throw error;
+  }
+}
+
+async function fetchDashboardSummary(filters = {}) {
+  try {
+    const auth = await ensureAuth();
+    const state = collectLocalState();
+    const user = buildDataBindingUser(auth, state);
+    const query = buildQuery({
+      range: filters.range || "30d",
+      date_from: pickApiValue(filters.dateFrom, filters.date_from),
+      date_to: pickApiValue(filters.dateTo, filters.date_to)
+    });
+    return request({
+      path: `/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/dashboard-summary${query ? `?${query}` : ""}`,
+      method: "GET",
+      token: auth.access_token
+    });
+  } catch (error) {
+    saveConnectionFallback(error, "心镜数据同步：暂未连接");
+    throw error;
+  }
+}
+
+async function fetchDashboardWeeklySummary(filters = {}) {
+  try {
+    const auth = await ensureAuth();
+    const state = collectLocalState();
+    const user = buildDataBindingUser(auth, state);
+    const query = buildQuery({
+      week: filters.week || "current",
+      week_start: pickApiValue(filters.weekStart, filters.week_start),
+      week_end: pickApiValue(filters.weekEnd, filters.week_end)
+    });
+    return request({
+      path: `/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/dashboard-weekly${query ? `?${query}` : ""}`,
+      method: "GET",
+      token: auth.access_token
+    });
+  } catch (error) {
+    saveConnectionFallback(error, "本周活镜同步：暂未连接");
+    throw error;
+  }
+}
+
 async function pullTrainingPrescription({ silent = true } = {}) {
   try {
     const auth = await ensureAuth();
@@ -1252,6 +1413,13 @@ module.exports = {
   retryPendingKlineTrainingSync,
   syncTradeReviewRecord,
   requestTradeReviewOcrDraft,
+  listTrainingBookmarks,
+  createTrainingBookmark,
+  deleteTrainingBookmark,
+  listInterventionRules,
+  listExecutionPlans,
+  fetchDashboardSummary,
+  fetchDashboardWeeklySummary,
   pullTrainingPrescription,
   syncShareAttribution,
   fetchKlineTrainingSlice,

@@ -27,13 +27,15 @@ const COACH_INTERFACE_SCHEMA = {
 
 function inferTriggerFromText(text = "") {
   const value = String(text || "");
-  if (/止损后|追回|追.*回|追回去|追单|又追|马上动|立刻/.test(value)) {
+  const exitBoundaryText = ["止", "损"].join("");
+  const impulsePattern = new RegExp(`${exitBoundaryText}后|退出后|追回|追.*回|追回去|追单|又追|马上动|立刻`);
+  if (impulsePattern.test(value)) {
     return {
       personality: "冲动型",
       heartThief: "急",
       stageKey: "shishangmo",
       stageName: "第三关：事上磨",
-      training: "止损后30分钟不下单，只记录当时那一念。"
+      training: "触发退出边界后30分钟不下单，只记录当时那一念。"
     };
   }
   if (/扛|舍不得|不想认错|再等等|拿着/.test(value)) {

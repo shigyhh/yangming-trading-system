@@ -1,0 +1,53 @@
+<view class="page-shell">
+  <view class="page-content">
+    <text class="eyebrow">TRAINING BOOKMARKS · 训练收藏</text>
+
+    <view class="bookmark-hero card">
+      <view>
+        <text>训练收藏</text>
+        <view>收藏整局训练、训练错题卡或动作节点，之后只读回看，不改原记录。</view>
+      </view>
+      <button bindtap="loadBookmarks" loading="{{loading}}">刷新</button>
+    </view>
+
+    <view wx:if="{{loading}}" class="state-card card">正在载入训练收藏...</view>
+    <view wx:elif="{{error}}" class="state-card card error">{{error}}</view>
+    <view wx:elif="{{!bookmarks.length}}" class="state-card card">暂无训练收藏。完成一局 K 线训练后，可在结果卡收藏本局或训练错题卡。</view>
+
+    <view class="bookmark-list">
+      <view wx:for="{{bookmarks}}" wx:key="id" class="bookmark-card card">
+        <view class="bookmark-head">
+          <view>
+            <text>{{item.titleText}}</text>
+            <view>{{item.bookmarkTypeLabel}} · {{item.sourceTypeLabel}}</view>
+          </view>
+          <text>{{item.createdAtText}}</text>
+        </view>
+        <view class="bookmark-grid">
+          <view>
+            <text>错题类型</text>
+            <view>{{item.errorType || '待补充'}}</view>
+          </view>
+          <view>
+            <text>执行结果</text>
+            <view>{{item.executionResultText}}</view>
+          </view>
+          <view>
+            <text>场景标签</text>
+            <view>{{item.sceneTagsText}}</view>
+          </view>
+          <view>
+            <text>片段</text>
+            <view>{{item.segmentId || item.symbol || '待补充'}}</view>
+          </view>
+        </view>
+        <view class="bookmark-actions">
+          <button data-id="{{item.id}}" bindtap="goDetail">查看详情 / 回放</button>
+          <button data-id="{{item.id}}" bindtap="deleteBookmark">取消收藏</button>
+        </view>
+      </view>
+    </view>
+
+    <compliance-notice />
+  </view>
+</view>

@@ -22,7 +22,7 @@
       </view>
     </view>
 
-    <view wx:if="{{showAdvanced}}" class="record-flow card">
+    <view class="record-flow card">
       <view class="record-flow-head">
         <text>真实记录闭环</text>
         <view>一条记录，走完一次照见</view>
@@ -47,99 +47,22 @@
       <view class="upload-preview" wx:if="{{form.screenshotPath}}">
         <image src="{{form.screenshotPath}}" mode="aspectFill" aria-label="交易复盘截图预览" />
       </view>
-      <view wx:else class="upload-empty">上传一张交易截图；系统尽量识别代码、日期和周期。</view>
-      <view class="upload-actions">
-        <button class="primary-btn upload-primary" bindtap="chooseImage">{{form.screenshotPath ? '重新上传截图' : '上传交易截图'}}</button>
-        <button class="manual-anchor-link" bindtap="showManualAnchor">没有截图，手动填写</button>
-      </view>
+      <view wx:else class="upload-empty">支持 K 线、分时、交易记录、持仓截图；也可以先手动补充。</view>
+      <button class="primary-btn" bindtap="chooseImage">{{form.screenshotPath ? '重新选择记录' : '拍照 / 选择记录'}}</button>
       <view class="upload-note">{{ocrStatus.text}}</view>
     </view>
 
-    <view wx:if="{{manualAnchorVisible || form.screenshotPath || form.symbol}}" class="anchor-card card">
-      <view class="anchor-head">
-        <text>确认锚点</text>
-        <view class="anchor-status {{marketContextStatus.state}}">{{marketContextStatus.text}}</view>
-      </view>
-
-      <view class="field-grid">
-        <view>
-          <text>买入/记录日期</text>
-          <picker mode="date" value="{{form.tradeDate}}" bindchange="changeDate">
-            <view>{{form.tradeDate}}</view>
-          </picker>
-        </view>
-        <view>
-          <text>标的/合约</text>
-          <input value="{{form.symbol}}" bindinput="inputSymbol" placeholder="代码 / 合约 / 币种" />
-        </view>
-      </view>
-
-      <view class="field-label">数据品类</view>
-      <scroll-view scroll-x class="chip-strip" show-scrollbar="{{false}}">
-        <button wx:for="{{markets}}" wx:key="key" class="{{form.marketKey === item.key ? 'active' : ''}}" data-key="{{item.key}}" bindtap="selectMarket">{{item.label}}</button>
-      </scroll-view>
-
-      <view class="field-label">周期切片</view>
-      <scroll-view scroll-x class="chip-strip" show-scrollbar="{{false}}">
-        <button wx:for="{{timeframes}}" wx:key="key" class="{{form.timeframeKey === item.key ? 'active' : ''}}" data-key="{{item.key}}" bindtap="selectTimeframe">{{item.label}}</button>
-      </scroll-view>
-
-      <view wx:if="{{marketContext && marketContext.status === 'ready'}}" class="anchor-meta">
-        {{marketContext.marketLabel}} · {{marketContext.timeframeLabel}} · {{marketContext.candleCount}} 根
-      </view>
-    </view>
-
-    <view wx:if="{{form.screenshotPath || manualAnchorVisible || form.symbol}}" class="quick-review-card card">
+    <view class="quick-review-card card">
       <text>60 秒真实复盘</text>
-      <view>只回答三件事：第一念是什么，是否在计划内，下一次守什么。</view>
+      <view>这笔记录，是计划在行动，还是念头在行动？只记录行为，不评价外在波动。</view>
 
-      <view class="quick-label">第一念是什么？</view>
-      <view class="quick-choice-grid thought">
-        <button
-          wx:for="{{firstThoughtOptions}}"
-          wx:key="*this"
-          class="quick-choice-pill {{form.firstThought === item ? 'active' : ''}}"
-          data-value="{{item}}"
-          bindtap="selectFirstThought"
-        >{{item}}</button>
+      <view class="quick-label">这笔交易是否在原计划内？</view>
+      <view class="mini-choice">
+        <button class="{{form.inPlan === 'yes' ? 'active' : ''}}" data-value="yes" bindtap="selectPlanState">在计划内</button>
+        <button class="{{form.inPlan === 'no' ? 'active' : ''}}" data-value="no" bindtap="selectPlanState">计划外</button>
       </view>
 
-      <view wx:if="{{form.firstThought}}" class="quick-next-step">
-        <view class="quick-label">这笔交易是否在原计划内？</view>
-        <view class="quick-choice-grid three">
-          <button
-            wx:for="{{planStateOptions}}"
-            wx:key="key"
-            class="quick-choice-pill {{form.inPlan === item.key ? 'active' : ''}}"
-            data-value="{{item.key}}"
-            bindtap="selectPlanState"
-          >{{item.label}}</button>
-        </view>
-
-        <view class="quick-label">现在这笔是什么状态？</view>
-        <view class="quick-choice-grid three">
-          <button
-            wx:for="{{positionStates}}"
-            wx:key="key"
-            class="quick-choice-pill {{form.positionState === item.key ? 'active' : ''}}"
-            data-key="{{item.key}}"
-            bindtap="selectPositionState"
-          >{{item.label}}</button>
-        </view>
-
-        <view class="quick-label">下一次守什么？</view>
-        <view class="quick-choice-grid next-rule">
-          <button
-            wx:for="{{nextActionOptions}}"
-            wx:key="*this"
-            class="quick-choice-pill {{form.nextAction === item ? 'active' : ''}}"
-            data-value="{{item}}"
-            bindtap="selectNextAction"
-          >{{item}}</button>
-        </view>
-
-        <textarea class="optional-review-note" value="{{form.reviewNote}}" bindinput="inputNote" placeholder="可选补充一句，不写也可以。" />
-      </view>
+      <textarea value="{{form.firstThought}}" bindinput="inputThought" placeholder="下单前最强的一念是什么？例：怕错过 / 不甘心 / 想证明" />
 
       <view wx:if="{{showAdvanced}}" class="quick-label">有没有临盘改计划？</view>
       <view wx:if="{{showAdvanced}}" class="mini-choice">
@@ -154,24 +77,15 @@
       </view>
 
       <input wx:if="{{showAdvanced}}" value="{{form.afterReaction}}" bindinput="inputAfterReaction" placeholder="行动后第一反应是什么？例：后悔 / 松一口气 / 想再来一次" />
+      <textarea value="{{form.nextAction}}" bindinput="inputNextAction" placeholder="下一次同场景先做什么？例：先停十秒，写下第一念" />
     </view>
 
-    <view wx:if="{{!report && !form.screenshotPath && !manualAnchorVisible && !form.symbol}}" class="report-gate-hint">
-      先留住一条真实记录，再进入第一念；完成后生成你的第一面活镜。
-    </view>
-    <view wx:elif="{{!report && (form.screenshotPath || manualAnchorVisible || form.symbol) && !form.firstThought}}" class="report-gate-hint">
-      记录已留住。下一步，选择当时最强的一念。
-    </view>
-    <view wx:elif="{{!report && (form.screenshotPath || manualAnchorVisible || form.symbol) && form.firstThought && !form.nextAction}}" class="report-gate-hint">
-      第一念已确认。最后选择下一次守什么。
-    </view>
-
-    <view wx:if="{{(form.screenshotPath || manualAnchorVisible || form.symbol) && form.firstThought && form.nextAction}}" class="primary-stack quick-actions">
+    <view class="split-actions quick-actions">
+      <button class="ghost-btn" bindtap="toggleAdvanced">{{showAdvanced ? '收起补充项' : '补充锚点'}}</button>
       <button class="primary-btn" bindtap="generateReview">生成活镜复盘</button>
-      <button class="ghost-btn" bindtap="toggleAdvanced">{{showAdvanced ? '收起细节' : '补充细节'}}</button>
     </view>
 
-    <view wx:if="{{showAdvanced && !manualAnchorVisible && !form.screenshotPath && !form.symbol}}" class="form-card card">
+    <view wx:if="{{showAdvanced}}" class="form-card card">
       <text>历史数据锚点</text>
       <view class="field-label">数据品类</view>
       <scroll-view scroll-x class="chip-strip" show-scrollbar="{{false}}">
@@ -185,7 +99,7 @@
 
       <view class="field-grid">
         <view>
-          <text>买入/记录日期</text>
+          <text>记录日期</text>
           <picker mode="date" value="{{form.tradeDate}}" bindchange="changeDate">
             <view>{{form.tradeDate}}</view>
           </picker>
@@ -234,7 +148,7 @@
 
     <view wx:if="{{showAdvanced}}" class="split-actions">
       <button class="ghost-btn" bindtap="resetForm">重新填写</button>
-      <button class="secondary-btn" bindtap="generateReview">再次生成</button>
+      <button class="primary-btn" bindtap="generateReview">生成活镜复盘</button>
     </view>
 
     <view wx:if="{{report}}" class="report-card card">
@@ -295,11 +209,6 @@
         <text>针对训练</text>
         <view>{{report.trainingAction}}</view>
       </view>
-      <view class="report-arrival-card card">
-        <text>心镜报告已就位</text>
-        <view>复盘完成后，心镜报告会在这里出现，把这一次记录、第一念与下一步修行留成一页。</view>
-        <button class="primary-btn" bindtap="goReport">查看心镜报告</button>
-      </view>
       <view wx:if="{{showResultDetail && closure}}" class="closure-card">
         <text>{{closure.title}}</text>
         <view class="closure-proof">{{closure.proofLine}}</view>
@@ -318,25 +227,26 @@
       </view>
       <view class="split-actions result-actions">
         <button class="ghost-btn" bindtap="goGeneratedDetail">{{closure.detailActionText || '查看复盘详情'}}</button>
-        <button class="ghost-btn" bindtap="goLivingMirror">{{closure.primaryActionText || '查看活镜成长'}}</button>
+        <button class="primary-btn" bindtap="goLivingMirror">{{closure.primaryActionText || '查看活镜成长'}}</button>
       </view>
       <view class="single-action">
         <button class="ghost-btn" bindtap="toggleResultDetail">{{showResultDetail ? '收起复盘细节' : '展开复盘细节'}}</button>
-        <button class="ghost-btn" bindtap="goKlineTraining">{{closure.klineActionText || '进入观心训练'}}</button>
+        <button class="ghost-btn" bindtap="goKlineTraining">{{closure.klineActionText || '进入 K 线观心'}}</button>
       </view>
     </view>
 
     <view wx:if="{{records.length}}" class="recent-card card">
       <view class="recent-head">
         <text>最近复盘</text>
-        <button class="recent-archive-button" bindtap="goReviewArchive">进入档案</button>
+        <button bindtap="goReviewArchive">进入档案</button>
       </view>
       <view wx:for="{{records}}" wx:key="id" class="recent-row" data-id="{{item.id}}" bindtap="goReviewDetail">
-        <view class="recent-row-main">{{item.tradeDate}} · {{item.marketLabel}} · {{item.symbol}}</view>
-        <text class="recent-row-mirror">{{item.relatedMirror}}</text>
+        <view>{{item.tradeDate}} · {{item.marketLabel}} · {{item.symbol}}</view>
+        <text>{{item.relatedMirror}}</text>
       </view>
     </view>
 
-    <compliance-notice variant="full" />
+    <compliance-notice />
   </view>
+  <bottom-tab-bar active="review" />
 </view>

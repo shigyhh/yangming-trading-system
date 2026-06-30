@@ -1,10 +1,7 @@
 {
   "navigationBarTitleText": "真实复盘",
-  "navigationBarBackgroundColor": "#07100e",
-  "navigationBarTextStyle": "white",
-  "backgroundColor": "#07100e",
-  "backgroundTextStyle": "light",
   "usingComponents": {
+    "bottom-tab-bar": "/components/bottom-tab-bar/index",
     "compliance-notice": "/components/compliance-notice/index"
   }
 }

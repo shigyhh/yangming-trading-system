@@ -1,0 +1,185 @@
+.plan-hero {
+  margin-top: 30rpx;
+  padding: 30rpx;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24rpx;
+}
+
+.plan-hero text,
+.form-head text,
+.plan-card-head text {
+  display: block;
+  color: #fff6e6;
+  font-family: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", serif;
+  font-size: 36rpx;
+  font-weight: 800;
+}
+
+.plan-hero view view,
+.plan-card-head view view {
+  margin-top: 10rpx;
+  color: rgba(247, 239, 223, 0.56);
+  font-size: 23rpx;
+  line-height: 1.5;
+}
+
+.plan-hero button,
+.form-head button,
+.plan-actions button,
+.save-btn {
+  border-radius: 18rpx;
+  color: #11130d;
+  background: linear-gradient(180deg, #ead089, #c69846);
+  font-size: 24rpx;
+  font-weight: 900;
+}
+
+.plan-hero button {
+  flex: 0 0 168rpx;
+  min-height: 72rpx;
+}
+
+.plan-tabs {
+  margin-top: 22rpx;
+  display: flex;
+  gap: 12rpx;
+  overflow-x: auto;
+  padding-bottom: 4rpx;
+}
+
+.plan-tabs button {
+  flex: 0 0 auto;
+  min-height: 62rpx;
+  padding: 0 22rpx;
+  border-radius: 999rpx;
+  color: rgba(247, 239, 223, 0.62);
+  border: 1rpx solid rgba(216, 183, 111, 0.12);
+  background: rgba(255, 255, 255, 0.035);
+  font-size: 22rpx;
+  font-weight: 800;
+}
+
+.plan-tabs button.active {
+  color: #11130d;
+  border-color: rgba(216, 183, 111, 0.6);
+  background: linear-gradient(180deg, #ead089, #c69846);
+}
+
+.plan-form {
+  margin-top: 22rpx;
+  padding: 28rpx;
+}
+
+.form-head,
+.plan-card-head,
+.plan-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18rpx;
+}
+
+.form-head button {
+  flex: 0 0 120rpx;
+  min-height: 62rpx;
+  color: rgba(247, 239, 223, 0.76);
+  border: 1rpx solid rgba(216, 183, 111, 0.16);
+  background: rgba(216, 183, 111, 0.08);
+}
+
+.plan-form label {
+  display: block;
+  margin-top: 22rpx;
+  color: #d8b76f;
+  font-size: 22rpx;
+  font-weight: 900;
+}
+
+.plan-form input,
+.plan-form textarea {
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: 10rpx;
+  padding: 18rpx 20rpx;
+  border-radius: 18rpx;
+  color: #fff6e6;
+  border: 1rpx solid rgba(216, 183, 111, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 24rpx;
+}
+
+.plan-form textarea {
+  min-height: 120rpx;
+}
+
+.save-btn {
+  margin-top: 26rpx;
+  min-height: 76rpx;
+}
+
+.plan-list {
+  margin-top: 22rpx;
+  display: grid;
+  gap: 18rpx;
+}
+
+.plan-card {
+  padding: 28rpx;
+}
+
+.plan-card-head > text {
+  flex: 0 0 auto;
+  padding: 8rpx 14rpx;
+  border-radius: 999rpx;
+  color: #d8b76f;
+  border: 1rpx solid rgba(216, 183, 111, 0.18);
+  background: rgba(216, 183, 111, 0.07);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  font-size: 20rpx;
+}
+
+.plan-row {
+  margin-top: 18rpx;
+  display: grid;
+  grid-template-columns: 150rpx 1fr;
+  gap: 16rpx;
+  color: rgba(247, 239, 223, 0.58);
+  font-size: 23rpx;
+  line-height: 1.55;
+}
+
+.plan-row text {
+  color: rgba(216, 183, 111, 0.86);
+  font-weight: 900;
+}
+
+.plan-row view {
+  color: rgba(247, 239, 223, 0.72);
+}
+
+.plan-row.strong view {
+  color: #fff6e6;
+  font-weight: 800;
+}
+
+.plan-actions {
+  margin-top: 24rpx;
+}
+
+.plan-actions button {
+  flex: 1;
+  min-height: 64rpx;
+  color: rgba(247, 239, 223, 0.78);
+  border: 1rpx solid rgba(216, 183, 111, 0.16);
+  background: rgba(216, 183, 111, 0.08);
+}
+
+.empty-card {
+  margin-top: 22rpx;
+  padding: 32rpx;
+  color: rgba(247, 239, 223, 0.62);
+  font-size: 24rpx;
+  line-height: 1.6;
+}

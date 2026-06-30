@@ -28,8 +28,8 @@ function buildNodes(selectedKey) {
 }
 
 const STATUS_OPTIONS = ["平静", "急躁", "兴奋", "恐惧", "想证明", "想翻本", "犹豫", "麻木"];
-const RISK_OPTIONS = ["追涨", "扛单", "重仓", "频繁交易", "止损抗拒", "盈利后失控", "亏损后报复", "临时改计划"];
-const BOUNDARY_OPTIONS = ["仓位边界", "止损边界", "次数边界", "时间边界", "情绪边界", "计划边界"];
+const RISK_OPTIONS = ["追涨", "扛单", "重仓", "频繁交易", "边界抗拒", "盈利后失控", "亏损后报复", "临时改计划"];
+const BOUNDARY_OPTIONS = ["仓位边界", "退出边界", "次数边界", "时间边界", "情绪边界", "计划边界"];
 
 Page({
   data: {

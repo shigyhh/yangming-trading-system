@@ -1,4 +1,6 @@
 const { getMirrorBinding } = require("../../utils/content");
+const { normalizeExecutionResult } = require("../../utils/execution-terminology");
+const { resolveExecutionPlanAction } = require("../execution-plan/index");
 const { MARKET_PRESETS, TIMEFRAME_PRESETS } = require("../kline-simulator/index");
 
 const COMPLIANCE_TEXT = "本系统用于交易心理觉察与训练，不提供投资建议，不预测行情，不构成任何操作依据。";
@@ -56,6 +58,35 @@ const THIEF_TRAINING_MAP = {
   慢: "把复盘缩成三行：触发、第一念、下一次边界。",
   疑: "把计划依据写成一句话，减少临场摇摆。"
 };
+
+const WEEKLY_LIVING_MIRROR_EMPTY_TEXT = "样本不足，先完成一次真实复盘和一次针对训练。";
+
+const WEEKLY_TRAINING_PLAN_TEMPLATES = [
+  {
+    match: ["追高", "追涨", "怕错过", "冲动"],
+    title: "追高冲动专项",
+    focus: "放量拉升 / 假突破 / 冲高回落",
+    action: "第一根放量不追，先观察"
+  },
+  {
+    match: ["补仓"],
+    title: "补仓冲动专项",
+    focus: "下跌中继 / 反抽诱多",
+    action: "不在破位亏损中补仓"
+  },
+  {
+    match: ["卖飞", "懊悔"],
+    title: "卖飞懊悔专项",
+    focus: "洗盘后走强 / 趋势中继",
+    action: "按规则处理，不追回情绪单"
+  },
+  {
+    match: ["计划外", "临场", "无计划"],
+    title: "计划外交易专项",
+    focus: "横盘噪音 / 突然异动",
+    action: "无计划不交易"
+  }
+];
 
 const TRADE_REVIEW_STATUS_STEPS = [
   { key: "pending_confirmation", label: "待确认", detail: "截图、自述与第一念等待确认。" },
@@ -157,6 +188,20 @@ function getOption(list, key, fallbackIndex = 0) {
   return list.find((item) => item.key === key) || list[fallbackIndex];
 }
 
+function hasValue(value) {
+  if (value === undefined || value === null) return false;
+  if (typeof value === "string") return value.trim() !== "";
+  if (Array.isArray(value)) return value.length > 0;
+  return true;
+}
+
+function pickValue(...values) {
+  for (let index = 0; index < values.length; index += 1) {
+    if (hasValue(values[index])) return values[index];
+  }
+  return "";
+}
+
 function inferType(input = {}) {
   const keywordRule = matchKeywordMirrorRule(input);
   if (keywordRule) return keywordRule.type;
@@ -249,13 +294,6 @@ function applyServerTradeReviewResult(record = {}, result = {}) {
   const serverReview = result.review || result.trade_review || {};
   const profile = result.living_mirror_profile || result.livingMirrorProfile || null;
   const marketContext = serverReview.marketContext || serverReview.market_context || (profile || {}).latestMarketContext || null;
-  const serverOneThoughtEvent = serverReview.oneThoughtEvent || serverReview.one_thought_event || null;
-  const linkedOneThoughtEventId = serverReview.linkedOneThoughtEventId ||
-    serverReview.linked_one_thought_event_id ||
-    (serverOneThoughtEvent || {}).eventId ||
-    (serverOneThoughtEvent || {}).event_id ||
-    record.linkedOneThoughtEventId ||
-    "";
   const historicalMatch = marketContext
     ? buildHistoricalMatchFromMarketContext(marketContext, Object.assign({}, record, record.historicalMatch || {}))
     : (record.historicalMatch || buildHistoricalMatch(record));
@@ -281,8 +319,6 @@ function applyServerTradeReviewResult(record = {}, result = {}) {
     crossEndStatusText: serverReview.crossEndStatusText || serverReview.cross_end_status_text || record.crossEndStatusText,
     crossEndStatusSteps: serverReview.crossEndStatusSteps || serverReview.cross_end_status_steps || record.crossEndStatusSteps,
     statusUpdatedAt: serverReview.statusUpdatedAt || serverReview.status_updated_at || record.statusUpdatedAt,
-    linkedOneThoughtEventId,
-    oneThoughtEvent: serverOneThoughtEvent || record.oneThoughtEvent || null,
     updatedAt: Date.now()
   });
   return withTradeReviewCrossEndStatus(merged, { force: true });
@@ -291,6 +327,7 @@ function applyServerTradeReviewResult(record = {}, result = {}) {
 function toLocalMarketKey(value) {
   const text = String(value || "").toLowerCase();
   if (["cn_equity", "a_share", "ashare", "cn"].includes(text)) return "cn";
+  if ([["hk", "equity"].join("_"), ["hk", "stock"].join("_"), "hk"].includes(text)) return "hk";
   if (["us_equity", "us_stock", "us"].includes(text)) return "us";
   if (["futures", "future"].includes(text)) return "futures";
   if (["crypto", "digital_currency"].includes(text)) return "crypto";
@@ -408,6 +445,39 @@ function buildTradeReview(input = {}, context = {}) {
   const scores = buildProcessScores(input, type);
   const action = getOption(ACTION_OPTIONS, input.actionKey);
   const boundary = getOption(BOUNDARY_STATES, input.boundaryState);
+  const firstThought = input.firstThought || "未记录";
+  const triggerScene = input.triggerScene || input.trigger_scene || historicalMatch.stagePosition || historicalMatch.stageGate || "";
+  const mainErrorType = input.mainErrorType || input.main_error_type || (keywordRule || {}).mirrorName || binding.mirrorName || type;
+  const executionPlanAction = resolveExecutionPlanAction(mainErrorType, pickValue(
+    context.executionPlanLibrary,
+    context.execution_plan,
+    context.executionPlan,
+    input.executionPlanLibrary,
+    input.execution_plan,
+    input.executionPlan
+  ));
+  const trainingAction = (executionPlanAction || {}).nextAction || (keywordRule || {}).trainingAction || buildTrainingAction(type, boundary.key);
+  const trainingPrescription = input.trainingPrescription || input.training_prescription || (executionPlanAction || {}).trainingPrescription || {
+    action: trainingAction,
+    errorType: mainErrorType,
+    triggerScene,
+    planId: (executionPlanAction || {}).planId || "",
+    plan_id: (executionPlanAction || {}).plan_id || ""
+  };
+  const nextRule = input.nextRule || input.next_rule || input.nextAction || (executionPlanAction || {}).nextAction || trainingAction;
+  const mistakeCard = input.mistakeCard || input.mistake_card || {
+    title: `${mainErrorType}错题卡`,
+    mainErrorType,
+    main_error_type: mainErrorType,
+    firstThought,
+    first_thought: firstThought,
+    triggerScene,
+    trigger_scene: triggerScene,
+    nextRule,
+    next_rule: nextRule,
+    planId: (executionPlanAction || {}).planId || "",
+    plan_id: (executionPlanAction || {}).plan_id || ""
+  };
   const report = {
     id: input.id || `tr-${Date.now()}`,
     sourceType: "trade_review",
@@ -428,8 +498,22 @@ function buildTradeReview(input = {}, context = {}) {
     changedPlan: input.changedPlan || "no",
     exitPrepared: input.exitPrepared || "yes",
     afterReaction: input.afterReaction || "未记录",
-    nextAction: input.nextAction || "",
-    firstThought: input.firstThought || "未记录",
+    nextAction: input.nextAction || (executionPlanAction || {}).nextAction || "",
+    next_action: input.next_action || input.nextAction || (executionPlanAction || {}).next_action || "",
+    executionPlanId: (executionPlanAction || {}).planId || "",
+    execution_plan_id: (executionPlanAction || {}).plan_id || "",
+    mainErrorType,
+    main_error_type: mainErrorType,
+    firstThought,
+    first_thought: firstThought,
+    triggerScene,
+    trigger_scene: triggerScene,
+    trainingPrescription,
+    training_prescription: trainingPrescription,
+    nextRule,
+    next_rule: nextRule,
+    mistakeCard,
+    mistake_card: mistakeCard,
     planBoundary: input.planBoundary || "未记录",
     boundaryState: boundary.key,
     boundaryStateLabel: boundary.label,
@@ -444,7 +528,7 @@ function buildTradeReview(input = {}, context = {}) {
     scores,
     oneLine: buildOneLine({ type, input, action, boundary, historicalMatch }),
     verdict: (keywordRule || {}).verdict || buildOneLine({ type, input, action, boundary, historicalMatch }),
-    trainingAction: (keywordRule || {}).trainingAction || buildTrainingAction(type, boundary.key),
+    trainingAction,
     evidenceChain: buildEvidenceChain({ input, action, boundary, historicalMatch, binding, context }),
     includeInRetest: true,
     compliance: COMPLIANCE_TEXT,
@@ -591,17 +675,38 @@ function buildLivingMirrorStats(tradeReviewState = {}) {
     .filter(Boolean)
     .slice()
     .sort((a, b) => Number(a.createdAt || a.updatedAt || 0) - Number(b.createdAt || b.updatedAt || 0));
+  const klineRecords = normalizeRecordCollection(
+    tradeReviewState.klineMindRecords ||
+    tradeReviewState.kline_mind_records ||
+    tradeReviewState.klineRecords ||
+    tradeReviewState.trainingRecords
+  )
+    .concat(normalizeRecordCollection(tradeReviewState.klineSessionRecords || tradeReviewState.kline_session_records))
+    .concat(normalizeRecordCollection(tradeReviewState.klineReviewReports || tradeReviewState.kline_review_reports));
   const recent = records.slice(-14).reverse();
+  const recentThirty = records.filter((item) => isWithinRecentDays(item, 30));
   const lastSeven = records.slice(-7);
   const prevSeven = records.slice(-14, -7);
   const mirrorScores = countValues(records.map((item) => item.relatedMirror || "待照见"));
   const thiefCounts = countValues(records.flatMap((item) => item.heartThieves || []));
   const behaviorTags = countValues(records.map((item) => item.actionLabel || "待记录"));
+  const topTriggerScenes = topEntries(countValues(recentThirty.map((item) => pickRecordValue(item, "triggerScene", "trigger_scene"))), 3);
+  const topMistakes = topEntries(countValues(recentThirty.map((item) => pickRecordValue(item, "mainErrorType", "main_error_type"))), 3);
+  const topFirstThoughts = topEntries(countValues(recentThirty.map((item) => pickRecordValue(item, "firstThought", "first_thought"))), 3);
+  const nextActionText = pickLatestRecordValue(recentThirty, "nextAction", "next_action", "nextRule", "next_rule") || "先记录，再行动";
   const mirrorTrendRows = buildMirrorTrendRows(lastSeven, prevSeven);
   const currentMirror = topEntries(mirrorScores, 1)[0] || { label: "活镜未点亮", count: 0 };
   const topThieves = topEntries(thiefCounts, 2);
   const topThievesText = topThieves.length ? topThieves.map((item) => item.label).join(" / ") : "待照见";
   const reminder = buildLiveMirrorReminder(tradeReviewState);
+  const executionConsistency = buildExecutionConsistencyStats({
+    records,
+    klineRecords
+  });
+  const weeklyReport = buildWeeklyLivingMirrorReport({
+    records,
+    klineRecords
+  });
 
   return {
     updatedAt: Date.now(),
@@ -613,12 +718,27 @@ function buildLivingMirrorStats(tradeReviewState = {}) {
     mirrorScores,
     thiefCounts,
     behaviorTags,
+    oldIssueText: "旧题复现",
+    executionPatternText: "执行偏离",
+    topTriggerScenes,
+    triggerSceneEmptyText: topTriggerScenes.length ? "" : "暂无足够触发场景样本。",
+    topMistakes,
+    topMistakeText: formatTopEntry(topMistakes[0], "待补充"),
+    topFirstThoughts,
+    topFirstThoughtText: formatTopEntry(topFirstThoughts[0], "待记录"),
+    nextActionText,
+    executionConsistency,
+    executionConsistencyRateText: executionConsistency.rateText,
+    executionDeviationText: `${executionConsistency.deviationCount} 次`,
+    oldIssueRepeatText: `${executionConsistency.oldIssueRepeatCount} 次`,
+    topDeviationTypeText: formatTopEntry(executionConsistency.topDeviationTypes[0], "样本不足"),
+    weeklyReport,
     mirrorTrendRows,
     reviewHistory: recent.slice(0, 20).map((item) => ({
       id: item.id,
       date: item.tradeDate || formatDateTime(item.createdAt || item.updatedAt).slice(0, 10),
-      mirror: item.relatedMirror || "待照见",
-      thought: item.firstThought || item.actionLabel || "待记录",
+      mirror: item.relatedMirror || pickRecordValue(item, "mainErrorType", "main_error_type") || "待照见",
+      thought: pickRecordValue(item, "firstThought", "first_thought") || item.actionLabel || "待记录",
       marketLabel: item.marketLabel || "",
       timeframeLabel: item.timeframeLabel || "",
       symbol: item.symbol || ""
@@ -632,6 +752,308 @@ function buildLivingMirrorStats(tradeReviewState = {}) {
     assistantHandoff: buildAssistantHandoff({ records, stats: { currentMirror: currentMirror.label, topThievesText, reminder } }),
     compliance: COMPLIANCE_TEXT
   };
+}
+
+function buildWeeklyLivingMirrorReport({ records = [], klineRecords = [], now = Date.now() } = {}) {
+  const nowTimestamp = normalizeTimestamp(now) || Date.now();
+  const weekStart = getLocalWeekStart(nowTimestamp);
+  const weekEnd = weekStart + 7 * 24 * 60 * 60 * 1000;
+  const previousWeekStart = weekStart - 7 * 24 * 60 * 60 * 1000;
+  const reviewRecords = normalizeRecordCollection(records);
+  const trainingRecords = normalizeRecordCollection(klineRecords);
+  const normalizedItems = reviewRecords.map((item) => normalizeWeeklyReportItem(item, "review"))
+    .concat(trainingRecords.map((item) => normalizeWeeklyReportItem(item, "training")))
+    .filter((item) => item.timestamp);
+  const thisWeekItems = normalizedItems.filter((item) => item.timestamp >= weekStart && item.timestamp < weekEnd);
+  const previousWeekItems = normalizedItems.filter((item) => item.timestamp >= previousWeekStart && item.timestamp < weekStart);
+  const topMistakes = topEntries(countValues(thisWeekItems.map((item) => item.errorType)), 3);
+  const topFirstThoughts = topEntries(countValues(thisWeekItems.map((item) => item.firstThought)), 3);
+  const executionConsistency = buildExecutionConsistencyFromItems(thisWeekItems);
+  const previousConsistency = buildExecutionConsistencyFromItems(previousWeekItems);
+  const oldIssueRepeat = buildWeeklyOldIssueRepeat(thisWeekItems, topMistakes);
+  const nextWeekPlans = buildWeeklyNextTrainingPlans(topMistakes);
+  const hasStats = thisWeekItems.length > 0;
+
+  return {
+    hasStats,
+    weekRangeText: formatWeekRangeText(weekStart),
+    total: thisWeekItems.length,
+    reviewCount: thisWeekItems.filter((item) => item.sourceType === "review").length,
+    trainingCount: thisWeekItems.filter((item) => item.sourceType === "training").length,
+    topMistakes,
+    topMistakeText: formatTopEntry(topMistakes[0], "样本不足"),
+    topFirstThoughts,
+    topFirstThoughtText: formatTopEntry(topFirstThoughts[0], "样本不足"),
+    executionConsistency,
+    executionConsistencyRateText: executionConsistency.rateText,
+    oldIssueRepeatCount: oldIssueRepeat.count,
+    oldIssueRepeatText: oldIssueRepeat.text,
+    progressText: buildWeeklyProgressText(executionConsistency, previousConsistency),
+    nextWeekPlans,
+    nextWeekPlanEmptyText: WEEKLY_LIVING_MIRROR_EMPTY_TEXT,
+    emptyText: WEEKLY_LIVING_MIRROR_EMPTY_TEXT
+  };
+}
+
+function normalizeWeeklyReportItem(record = {}, sourceType = "review") {
+  const card = record.trainingMistakeCard || record.training_mistake_card || record.mistakeCard || record.mistake_card || {};
+  const errorType = pickRecordValue(record, "mainErrorType", "main_error_type", "errorType", "error_type") ||
+    pickRecordValue(card, "mainErrorType", "main_error_type", "errorType", "error_type");
+  const firstThought = pickRecordValue(record, "firstThought", "first_thought") ||
+    pickRecordValue(card, "firstThought", "first_thought");
+  const executionResult = normalizeExecutionResult(
+    record.executionResult,
+    record.execution_result,
+    record.executionLabel,
+    record.execution_label,
+    record.lawResult,
+    record.law_result,
+    card.executionResult,
+    card.execution_result,
+    card.lawResult,
+    card.law_result
+  );
+  const repeatCount = Number(
+    pickRawRecordValue(record, "repeatCount", "repeat_count") ||
+    pickRawRecordValue(card, "repeatCount", "repeat_count") ||
+    0
+  );
+
+  return {
+    sourceType,
+    timestamp: getRecordTimestamp(record),
+    errorType,
+    firstThought,
+    executionResult,
+    repeatCount: Number.isFinite(repeatCount) && repeatCount > 0 ? repeatCount : 0
+  };
+}
+
+function buildExecutionConsistencyFromItems(items = []) {
+  let alignedCount = 0;
+  let deviationCount = 0;
+  let unclearCount = 0;
+
+  items.forEach((item) => {
+    if (item.executionResult === "按计划执行") {
+      alignedCount += 1;
+    } else if (item.executionResult === "执行偏离") {
+      deviationCount += 1;
+    } else {
+      unclearCount += 1;
+    }
+  });
+
+  const denominator = alignedCount + deviationCount;
+  const rate = denominator ? Math.round((alignedCount / denominator) * 100) : null;
+  return {
+    alignedCount,
+    deviationCount,
+    deviatedCount: deviationCount,
+    unclearCount,
+    denominator,
+    isSampleEnough: denominator > 0,
+    rate,
+    rateText: denominator ? `${rate}%` : "样本不足"
+  };
+}
+
+function buildWeeklyOldIssueRepeat(items = [], topMistakes = []) {
+  if (!items.length) return { count: 0, text: "样本不足" };
+  const explicitRepeatCount = items.reduce((sum, item) => sum + Number(item.repeatCount || 0), 0);
+  const derivedRepeatCount = topMistakes.reduce((sum, item) => sum + Math.max(0, Number(item.count || 0) - 1), 0);
+  const count = Math.max(explicitRepeatCount, derivedRepeatCount);
+  return {
+    count,
+    text: count ? `${count} 次` : "本周暂无旧题复现"
+  };
+}
+
+function buildWeeklyProgressText(currentConsistency, previousConsistency) {
+  if (!currentConsistency.isSampleEnough || !previousConsistency.isSampleEnough) return "样本不足";
+  const diff = Number(currentConsistency.rate || 0) - Number(previousConsistency.rate || 0);
+  if (diff > 0) return `执行一致率较上周提升 ${diff} 个点`;
+  if (diff < 0) return `执行一致率较上周回落 ${Math.abs(diff)} 个点`;
+  return "执行一致率与上周持平";
+}
+
+function buildWeeklyNextTrainingPlans(topMistakes = []) {
+  return (topMistakes || []).slice(0, 3).map((item) => {
+    const label = String(item.label || "").trim();
+    const template = findWeeklyTrainingTemplate(label);
+    return {
+      errorType: label,
+      title: template.title,
+      focus: template.focus,
+      action: template.action,
+      count: item.count,
+      text: `${template.title} ${Math.max(1, Math.min(3, Number(item.count || 1)))} 组`
+    };
+  });
+}
+
+function findWeeklyTrainingTemplate(label) {
+  const text = String(label || "");
+  const template = WEEKLY_TRAINING_PLAN_TEMPLATES.find((item) => item.match.some((keyword) => text.includes(keyword)));
+  if (template) return template;
+  return {
+    title: `${text || "旧题复现"}专项`,
+    focus: "本周高频错题",
+    action: "先记录触发和第一念，再回到下次执行动作"
+  };
+}
+
+function buildExecutionConsistencyStats({ records = [], klineRecords = [], days = 30 } = {}) {
+  const recent = records.concat(klineRecords)
+    .filter(Boolean)
+    .filter((item) => isWithinRecentDays(item, days));
+  let alignedCount = 0;
+  let deviationCount = 0;
+  let unclearCount = 0;
+  let oldIssueRepeatCount = 0;
+  const deviationTypes = [];
+  const firstThoughts = [];
+
+  recent.forEach((item) => {
+    const result = normalizeExecutionResult(
+      item.executionResult,
+      item.execution_result,
+      item.executionLabel,
+      item.execution_label,
+      item.lawResult,
+      item.law_result
+    );
+    if (result === "按计划执行") {
+      alignedCount += 1;
+    } else if (result === "执行偏离") {
+      deviationCount += 1;
+      const type = pickRecordValue(item, "mainErrorType", "main_error_type", "errorType", "error_type");
+      if (type) deviationTypes.push(type);
+    } else {
+      unclearCount += 1;
+    }
+
+    const repeatCount = Number(pickRawRecordValue(item, "repeatCount", "repeat_count") || 0);
+    if (Number.isFinite(repeatCount) && repeatCount > 0) oldIssueRepeatCount += repeatCount;
+
+    const firstThought = pickRecordValue(item, "firstThought", "first_thought");
+    if (firstThought) firstThoughts.push(firstThought);
+  });
+
+  const denominator = alignedCount + deviationCount;
+  const rate = denominator ? Math.round((alignedCount / denominator) * 100) : null;
+  const topDeviationTypes = topEntries(countValues(deviationTypes), 3);
+  const topFirstThoughts = topEntries(countValues(firstThoughts), 3);
+
+  return {
+    days,
+    alignedCount,
+    deviationCount,
+    deviatedCount: deviationCount,
+    unclearCount,
+    denominator,
+    isSampleEnough: denominator > 0,
+    rate,
+    rateText: denominator ? `${rate}%` : "样本不足",
+    oldIssueRepeatCount,
+    oldIssueRepeatText: `${oldIssueRepeatCount} 次`,
+    topDeviationTypes,
+    topDeviationTypeText: formatTopEntry(topDeviationTypes[0], "样本不足"),
+    topFirstThoughts,
+    topFirstThoughtText: formatTopEntry(topFirstThoughts[0], "待记录")
+  };
+}
+
+function pickRecordValue(record = {}, ...fields) {
+  for (let index = 0; index < fields.length; index += 1) {
+    const value = record[fields[index]];
+    if (Array.isArray(value)) {
+      const first = value.map((item) => String(item || "").trim()).find(Boolean);
+      if (first) return first;
+      continue;
+    }
+    const text = String(value || "").trim();
+    if (text) return text;
+  }
+  return "";
+}
+
+function pickRawRecordValue(record = {}, ...fields) {
+  for (let index = 0; index < fields.length; index += 1) {
+    const value = record[fields[index]];
+    if (value !== undefined && value !== null && value !== "") return value;
+  }
+  return undefined;
+}
+
+function normalizeRecordCollection(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.filter(Boolean);
+  if (Array.isArray(value.records)) return value.records.filter(Boolean);
+  if (typeof value === "object") {
+    return Object.keys(value)
+      .map((key) => value[key])
+      .filter((item) => item && typeof item === "object");
+  }
+  return [];
+}
+
+function pickLatestRecordValue(records = [], ...fields) {
+  return records
+    .slice()
+    .sort((a, b) => getRecordTimestamp(b) - getRecordTimestamp(a))
+    .map((item) => pickRecordValue(item, ...fields))
+    .find(Boolean) || "";
+}
+
+function formatTopEntry(entry, fallback) {
+  if (!entry || !entry.label) return fallback;
+  return `${entry.label} ${entry.count} 次`;
+}
+
+function isWithinRecentDays(record = {}, days = 30) {
+  const timestamp = getRecordTimestamp(record);
+  if (!timestamp) return false;
+  const now = Date.now();
+  const start = now - Number(days || 30) * 24 * 60 * 60 * 1000;
+  return timestamp >= start && timestamp <= now;
+}
+
+function getRecordTimestamp(record = {}) {
+  const rawDate = record.date || record.tradeDate || record.createdAt || record.created_at || record.updatedAt || record.updated_at;
+  if (!rawDate) return 0;
+  if (typeof rawDate === "number") return rawDate;
+  if (/^\d+$/.test(String(rawDate))) return Number(rawDate);
+  const timestamp = new Date(rawDate).getTime();
+  return Number.isNaN(timestamp) ? 0 : timestamp;
+}
+
+function normalizeTimestamp(value) {
+  if (!value) return 0;
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (/^\d+$/.test(String(value))) return Number(value);
+  const timestamp = new Date(value).getTime();
+  return Number.isNaN(timestamp) ? 0 : timestamp;
+}
+
+function getLocalWeekStart(value) {
+  const date = new Date(normalizeTimestamp(value) || Date.now());
+  date.setHours(0, 0, 0, 0);
+  const day = date.getDay();
+  const offset = day === 0 ? 6 : day - 1;
+  date.setDate(date.getDate() - offset);
+  return date.getTime();
+}
+
+function formatWeekRangeText(startTimestamp) {
+  const endTimestamp = startTimestamp + 6 * 24 * 60 * 60 * 1000;
+  return `${formatMonthDay(startTimestamp)}-${formatMonthDay(endTimestamp)}`;
+}
+
+function formatMonthDay(timestamp) {
+  const date = new Date(timestamp);
+  const pad = (number) => String(number).padStart(2, "0");
+  return `${pad(date.getMonth() + 1)}/${pad(date.getDate())}`;
 }
 
 function clamp(value, min, max) {
@@ -736,5 +1158,7 @@ module.exports = {
   buildTradeReviewRecordView,
   buildTradeReviewClosure,
   buildLiveMirrorReminder,
-  buildLivingMirrorStats
+  buildLivingMirrorStats,
+  buildExecutionConsistencyStats,
+  buildWeeklyLivingMirrorReport
 };

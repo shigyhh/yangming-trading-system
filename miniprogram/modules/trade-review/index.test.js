@@ -9,8 +9,13 @@ const {
   buildTradeReviewClosure,
   buildLiveMirrorReminder,
   buildLivingMirrorStats,
+  buildWeeklyLivingMirrorReport,
   buildTradeReview
 } = require("./index");
+const {
+  buildExecutionPlanLibrary,
+  createExecutionPlan
+} = require("../execution-plan/index");
 
 assert.ok(ACTION_OPTIONS.length >= 6);
 assert.ok(BOUNDARY_STATES.length >= 3);
@@ -79,11 +84,6 @@ const syncedReview = applyServerTradeReviewResult(review, {
     id: review.id,
     detectedMirror: "追涨之镜",
     detectedThieves: ["贪", "急"],
-    linkedOneThoughtEventId: "evt-review-001",
-    oneThoughtEvent: {
-      eventId: "evt-review-001",
-      eventType: "trade_review"
-    },
     marketContext: {
       status: "ready",
       marketKey: "cn_equity",
@@ -108,8 +108,6 @@ assert.strictEqual(syncedReview.historicalMatch.sourceStatus, "历史片段已�
 assert.strictEqual(syncedReview.marketContext.status, "ready");
 assert.strictEqual(syncedReview.serverLivingMirrorProfile.currentMainMirror, "追涨之镜");
 assert.strictEqual(syncedReview.crossEndStatusText, "待训练");
-assert.strictEqual(syncedReview.linkedOneThoughtEventId, "evt-review-001");
-assert.strictEqual(syncedReview.oneThoughtEvent.eventId, "evt-review-001");
 
 const secondReview = buildTradeReview({
   marketKey: "cn",
@@ -148,5 +146,235 @@ assert.ok(stats.mirrorScores["追涨之镜"] >= 1);
 assert.ok(stats.thiefCounts["贪"] >= 1);
 assert.ok(stats.reviewHistory.length >= 2);
 assert.ok(stats.assistantHandoff.currentMirror);
+assert.strictEqual(stats.oldIssueText, "旧题复现");
+assert.strictEqual(stats.executionPatternText, "执行偏离");
+
+const now = Date.now();
+const dayMs = 24 * 60 * 60 * 1000;
+const recentDateText = new Date(now - dayMs * 4).toISOString().slice(0, 10);
+const triggerSceneStats = buildLivingMirrorStats({
+  records: [
+    { id: "scene-1", date: recentDateText, mainErrorType: "追涨", firstThought: "怕错过", triggerScene: "放量拉升", nextAction: "先停十秒" },
+    { id: "scene-2", createdAt: now - dayMs, main_error_type: "追涨", first_thought: "来不及", trigger_scene: "放量拉升", next_rule: "先写第一念" },
+    { id: "scene-3", created_at: now - dayMs * 2, mainErrorType: "回落", firstThought: "想证明", triggerScene: "冲高回落", next_action: "只记录" },
+    { id: "scene-4", createdAt: now - dayMs * 3, mainErrorType: "犹疑", firstThought: "再等等", trigger_scene: "横盘磨人", nextAction: "先复盘" },
+    { id: "scene-old", createdAt: now - dayMs * 35, mainErrorType: "旧题", firstThought: "旧念", triggerScene: "放量拉升", nextAction: "旧动作" }
+  ]
+});
+
+assert.deepStrictEqual(triggerSceneStats.topTriggerScenes.map((item) => `${item.label}:${item.count}`), [
+  "放量拉升:2",
+  "冲高回落:1",
+  "横盘磨人:1"
+]);
+assert.strictEqual(triggerSceneStats.triggerSceneEmptyText, "");
+assert.strictEqual(triggerSceneStats.topMistakes[0].label, "追涨");
+assert.ok(triggerSceneStats.topFirstThoughts.some((item) => item.label === "怕错过"));
+assert.strictEqual(triggerSceneStats.nextActionText, "先写第一念");
+
+const emptyTriggerSceneStats = buildLivingMirrorStats({
+  records: [
+    { id: "no-scene", createdAt: now, mainErrorType: "追涨", firstThought: "怕错过", nextAction: "先停十秒" }
+  ]
+});
+assert.deepStrictEqual(emptyTriggerSceneStats.topTriggerScenes, []);
+assert.strictEqual(emptyTriggerSceneStats.triggerSceneEmptyText, "暂无足够触发场景样本。");
+
+const executionConsistencyStats = buildLivingMirrorStats({
+  records: [
+    { id: "exec-review-1", date: recentDateText, execution_result: "aligned", mainErrorType: "补仓冲动", firstThought: "怕错过", repeatCount: 1 },
+    { id: "exec-review-2", createdAt: now - dayMs, law_result: "broken", main_error_type: "追高冲动", first_thought: "怕错过", repeat_count: 2 },
+    { id: "exec-review-old", createdAt: now - dayMs * 45, execution_result: "deviated", main_error_type: "过期偏离", first_thought: "旧念", repeat_count: 9 }
+  ],
+  klineMindRecords: {
+    today: { id: "exec-kline-1", created_at: now - dayMs * 2, executionResult: "deviated", errorType: "追高冲动", repeatCount: 3 },
+    yesterday: { id: "exec-kline-2", updatedAt: now - dayMs * 3, execution_result: "aligned", error_type: "计划外交易", repeat_count: 0 },
+    unclear: { id: "exec-kline-unclear", updated_at: new Date(now - dayMs * 4).toISOString(), execution_result: "unclear", error_type: "说不清旧题", repeat_count: 4 }
+  }
+});
+assert.strictEqual(executionConsistencyStats.executionConsistency.rateText, "50%");
+assert.strictEqual(executionConsistencyStats.executionConsistency.alignedCount, 2);
+assert.strictEqual(executionConsistencyStats.executionConsistency.deviationCount, 2);
+assert.strictEqual(executionConsistencyStats.executionConsistency.denominator, 4);
+assert.strictEqual(executionConsistencyStats.executionConsistency.oldIssueRepeatCount, 10);
+assert.deepStrictEqual(executionConsistencyStats.executionConsistency.topDeviationTypes.slice(0, 1), [
+  { label: "追高冲动", count: 2 }
+]);
+assert.strictEqual(executionConsistencyStats.executionConsistency.topFirstThoughts[0].label, "怕错过");
+assert.strictEqual(executionConsistencyStats.executionConsistencyRateText, "50%");
+assert.strictEqual(executionConsistencyStats.executionDeviationText, "2 次");
+assert.strictEqual(executionConsistencyStats.oldIssueRepeatText, "10 次");
+
+const insufficientExecutionConsistencyStats = buildLivingMirrorStats({
+  records: [
+    { id: "exec-unclear-only", createdAt: now, execution_result: "unclear", mainErrorType: "追高冲动", firstThought: "说不清" }
+  ]
+});
+assert.strictEqual(insufficientExecutionConsistencyStats.executionConsistency.rateText, "样本不足");
+assert.strictEqual(insufficientExecutionConsistencyStats.executionConsistency.isSampleEnough, false);
+assert.strictEqual(insufficientExecutionConsistencyStats.executionConsistency.denominator, 0);
+
+const legacyCompatStats = buildLivingMirrorStats({
+  records: [
+    { id: "legacy-camel", date: recentDateText, mainErrorType: "追涨", firstThought: "怕错过", triggerScene: "放量拉升", nextRule: "先停十秒" },
+    { id: "legacy-snake", createdAt: now - dayMs * 2, main_error_type: "冲高回落", first_thought: "还会涨", trigger_scene: "冲高回落", next_action: "写下第一念" },
+    { id: "legacy-created-at-snake", created_at: new Date(now - dayMs * 3).toISOString(), main_error_type: "横盘犹疑", firstThought: "再等等", triggerScene: "横盘磨人" },
+    { id: "legacy-updated", updatedAt: now - dayMs * 4, mainErrorType: "计划外动作", first_thought: "想证明", trigger_scene: "计划外拉升", nextRule: "只记录不行动" },
+    { id: "legacy-updated-snake", updated_at: new Date(now - dayMs).toISOString(), main_error_type: "尾盘冲动", first_thought: "最后一把", next_rule: "收盘前不追" },
+    { id: "legacy-missing-scene", createdAt: now - dayMs * 5, mainErrorType: "无触发场景", firstThought: "待补充" },
+    { id: "legacy-no-time", mainErrorType: "无时间旧题", firstThought: "旧念", triggerScene: "不纳入近 30 天" },
+    { id: "legacy-old", createdAt: now - dayMs * 40, main_error_type: "过期旧题", first_thought: "旧念", trigger_scene: "过期触发" }
+  ]
+});
+assert.deepStrictEqual(legacyCompatStats.topTriggerScenes.map((item) => item.label), [
+  "冲高回落",
+  "放量拉升",
+  "横盘磨人"
+]);
+assert.ok(legacyCompatStats.topMistakes.some((item) => item.label === "尾盘冲动"));
+assert.ok(legacyCompatStats.reviewHistory.some((item) => item.thought === "还会涨"));
+assert.strictEqual(legacyCompatStats.nextActionText, "收盘前不追");
+assert.strictEqual(legacyCompatStats.topTriggerScenes.some((item) => item.label === "不纳入近 30 天"), false);
+assert.strictEqual(legacyCompatStats.topTriggerScenes.some((item) => item.label === "过期触发"), false);
+
+const p1SmokeReview = buildTradeReview({
+  marketKey: "cn",
+  timeframeKey: "1d",
+  tradeDate: recentDateText,
+  symbol: "示例标的",
+  actionKey: "impulse",
+  emotion: "急躁",
+  firstThought: "怕错过",
+  inPlan: "no",
+  triggerScene: "放量拉升",
+  nextAction: "先停十秒再写第一念",
+  boundaryState: "lost",
+  reviewNote: "计划外买入后回看第一念。"
+});
+assert.strictEqual(p1SmokeReview.mainErrorType, p1SmokeReview.main_error_type);
+assert.ok(p1SmokeReview.mainErrorType);
+assert.strictEqual(p1SmokeReview.firstThought, "怕错过");
+assert.strictEqual(p1SmokeReview.first_thought, "怕错过");
+assert.strictEqual(p1SmokeReview.triggerScene, "放量拉升");
+assert.strictEqual(p1SmokeReview.trigger_scene, "放量拉升");
+assert.deepStrictEqual(p1SmokeReview.trainingPrescription, p1SmokeReview.training_prescription);
+assert.ok(p1SmokeReview.trainingPrescription.action);
+assert.strictEqual(p1SmokeReview.nextRule, p1SmokeReview.next_rule);
+assert.ok(p1SmokeReview.nextRule);
+assert.deepStrictEqual(p1SmokeReview.mistakeCard, p1SmokeReview.mistake_card);
+
+const customExecutionPlanLibrary = buildExecutionPlanLibrary({
+  records: [
+    createExecutionPlan({
+      title: "追高冲动自定义执行计划",
+      errorType: "追高冲动",
+      expectedAction: "先观察两根确认",
+      nextAction: "先观察两根确认",
+      trainingPrescription: "追高冲动专项强化"
+    }, { id: "plan-review-custom" })
+  ]
+});
+const plannedReview = buildTradeReview({
+  marketKey: "cn",
+  timeframeKey: "1d",
+  tradeDate: recentDateText,
+  actionKey: "impulse",
+  emotion: "急躁",
+  firstThought: "怕错过",
+  boundaryState: "lost",
+  reviewNote: "这次又被拉升牵动。"
+}, {
+  executionPlanLibrary: customExecutionPlanLibrary
+});
+assert.strictEqual(plannedReview.nextRule, "先观察两根确认");
+assert.strictEqual(plannedReview.next_rule, "先观察两根确认");
+assert.strictEqual(plannedReview.nextAction, "先观察两根确认");
+assert.strictEqual(plannedReview.next_action, "先观察两根确认");
+assert.strictEqual(plannedReview.mistakeCard.nextRule, "先观察两根确认");
+assert.strictEqual(plannedReview.mistake_card.plan_id, "plan-review-custom");
+assert.strictEqual(plannedReview.trainingPrescription.action, "追高冲动专项强化");
+assert.ok(p1SmokeReview.mistakeCard.title);
+
+const p1SmokeStats = buildLivingMirrorStats({ records: [p1SmokeReview] });
+assert.strictEqual(p1SmokeStats.topMistakes[0].label, p1SmokeReview.mainErrorType);
+assert.strictEqual(p1SmokeStats.topFirstThoughts[0].label, "怕错过");
+assert.strictEqual(p1SmokeStats.topTriggerScenes[0].label, "放量拉升");
+assert.strictEqual(p1SmokeStats.nextActionText, p1SmokeReview.nextRule);
+
+const weeklyReport = buildWeeklyLivingMirrorReport({
+  now: "2026-06-28T12:00:00+08:00",
+  records: [
+    {
+      id: "weekly-review-1",
+      createdAt: "2026-06-24T10:00:00+08:00",
+      mainErrorType: "追高冲动",
+      firstThought: "怕错过",
+      execution_result: "aligned"
+    },
+    {
+      id: "weekly-review-2",
+      created_at: "2026-06-25T10:00:00+08:00",
+      main_error_type: "追高冲动",
+      first_thought: "怕错过",
+      law_result: "broken",
+      repeat_count: 1
+    },
+    {
+      id: "weekly-review-previous",
+      createdAt: "2026-06-18T10:00:00+08:00",
+      mainErrorType: "追高冲动",
+      firstThought: "怕错过",
+      execution_result: "deviated"
+    },
+    {
+      id: "weekly-review-old",
+      createdAt: "2026-06-08T10:00:00+08:00",
+      mainErrorType: "过期旧题",
+      firstThought: "旧念",
+      execution_result: "deviated",
+      repeatCount: 8
+    }
+  ],
+  klineRecords: {
+    today: {
+      id: "weekly-kline-1",
+      createdAt: "2026-06-26T10:00:00+08:00",
+      errorType: "计划外交易",
+      firstThought: "想证明",
+      executionResult: "aligned",
+      repeatCount: 2
+    }
+  }
+});
+assert.strictEqual(weeklyReport.hasStats, true);
+assert.strictEqual(weeklyReport.total, 3);
+assert.strictEqual(weeklyReport.topMistakes[0].label, "追高冲动");
+assert.strictEqual(weeklyReport.topMistakeText, "追高冲动 2 次");
+assert.strictEqual(weeklyReport.topFirstThoughtText, "怕错过 2 次");
+assert.strictEqual(weeklyReport.executionConsistencyRateText, "67%");
+assert.strictEqual(weeklyReport.oldIssueRepeatText, "3 次");
+assert.ok(weeklyReport.progressText.includes("提升"));
+assert.ok(weeklyReport.nextWeekPlans.length >= 1);
+assert.strictEqual(weeklyReport.nextWeekPlans[0].title, "追高冲动专项");
+
+const weeklyEmptyReport = buildWeeklyLivingMirrorReport({
+  now: "2026-06-28T12:00:00+08:00",
+  records: []
+});
+assert.strictEqual(weeklyEmptyReport.hasStats, false);
+assert.strictEqual(weeklyEmptyReport.topMistakeText, "样本不足");
+assert.strictEqual(weeklyEmptyReport.executionConsistencyRateText, "样本不足");
+assert.deepStrictEqual(weeklyEmptyReport.nextWeekPlans, []);
+
+const statsWithWeeklyReport = buildLivingMirrorStats({
+  records: [
+    { id: "stats-weekly-1", createdAt: Date.now(), mainErrorType: "补仓冲动", firstThought: "不甘心", execution_result: "aligned" }
+  ],
+  klineMindRecords: {
+    one: { id: "stats-weekly-kline", createdAt: Date.now(), errorType: "补仓冲动", execution_result: "deviated" }
+  }
+});
+assert.ok(statsWithWeeklyReport.weeklyReport);
+assert.ok(statsWithWeeklyReport.weeklyReport.hasStats);
 
 console.log("trade-review module tests passed");
