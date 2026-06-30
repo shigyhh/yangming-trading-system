@@ -68,11 +68,20 @@
       <view class="closure-next-action">下一步：{{closureEvidenceChain.nextActionText}}</view>
     </view>
 
+    <view class="profile-depth-toggle card">
+      <view>
+        <text>档案与长期记录</text>
+        <view>训练收藏、执行计划与长期心证仍从下方入口进入。</view>
+      </view>
+      <text>已收束</text>
+    </view>
+
+    <view class="profile-depth-stack">
     <view class="identity-card card">
       <view class="identity-head">
         <view>
           <text>手机号贯穿档案</text>
-          <view>{{userBinding.phoneBound ? userBinding.phoneMask : '绑定后贯穿报告、训练、复测、邀约与助教承接'}}</view>
+          <view>{{userBinding.phoneBound ? userBinding.phoneMask : '绑定后贯穿报告、训练、复测与长期记录'}}</view>
         </view>
         <text>{{userBinding.phoneBound ? '已绑定' : '待绑定'}}</text>
       </view>
@@ -81,18 +90,18 @@
         <view>小程序训练记录</view>
         <view>复测变化</view>
         <view>邀请码来源</view>
-        <view>助教承接摘要</view>
+        <view>长期记录摘要</view>
       </view>
       <view class="identity-input">
         <input type="number" maxlength="11" value="{{phoneDraft}}" bindinput="inputPhone" placeholder="输入手机号完成贯穿绑定" />
         <button bindtap="savePhoneBinding">{{userBinding.phoneBound ? '更新绑定' : '绑定'}}</button>
       </view>
-      <view class="identity-source">邀请码来源：{{userBinding.inviteSource || '自然进入'}}</view>
-      <view class="identity-source">我的同修码：{{userBinding.inviteCode || localUserProfile.inviteCode || '待生成'}}</view>
-      <view class="identity-source">统一档案ID：{{userBinding.userIdDisplay || '待生成'}}</view>
+      <view wx:if="{{debugMode}}" class="identity-source">邀请码来源：{{userBinding.inviteSource || '自然进入'}}</view>
+      <view wx:if="{{debugMode}}" class="identity-source">我的同修码：{{userBinding.inviteCode || localUserProfile.inviteCode || '待生成'}}</view>
+      <view wx:if="{{debugMode}}" class="identity-source">统一档案ID：{{userBinding.userIdDisplay || '待生成'}}</view>
     </view>
 
-    <view class="sync-bridge-card card">
+    <view wx:if="{{debugMode}}" class="sync-bridge-card card">
       <view class="sync-bridge-head">
         <view>
           <text>高频陪跑端</text>
@@ -109,7 +118,7 @@
       <view class="assistant-summary">{{localUserProfile.assistantSummary}}</view>
     </view>
 
-    <view class="handoff-card card">
+    <view wx:if="{{debugMode}}" class="handoff-card card">
       <view class="handoff-head">
         <view>
           <text>助教承接</text>
@@ -173,7 +182,7 @@
       <view class="growth-next">下一步：{{growth.nextAction}} · {{continuity.milestone.label}}还差{{continuity.milestone.remaining}}日</view>
     </view>
 
-    <view class="membership-card card">
+    <view wx:if="{{debugMode}}" class="membership-card card">
       <view class="membership-head">
         <view>
           <text>会员修行体系</text>
@@ -189,7 +198,7 @@
       <view class="growth-next">{{retentionView.membership.nextText}}</view>
     </view>
 
-    <view class="subscription-card card">
+    <view wx:if="{{debugMode}}" class="subscription-card card">
       <view class="subscription-head">
         <view>
           <text>订阅与同修身份</text>
@@ -369,6 +378,8 @@
       </view>
     </view>
 
+    </view>
+
     <view class="section-title">
       <view>我的闭环</view>
       <text>留存路径</text>
@@ -386,9 +397,9 @@
 
     <view class="mission-card card">
       <text>小程序定位</text>
-      <view>阳明心学交易系统 · 高频陪跑端：每日心证、训练打卡、交易截图上传、真实复盘、活镜提醒、助教承接与订阅提醒。网页负责深度照见，小程序负责每天记录一次真实反应并推动下一次训练。</view>
+      <view>阳明心学交易系统 · 高频陪跑端：每日心证、训练打卡、交易截图上传、真实复盘、活镜提醒与长期记录。网页负责深度照见，小程序负责每天记录一次真实反应并推动下一次训练。</view>
     </view>
-    <button class="danger-clear" bindtap="clearLocalData">清理本地训练数据</button>
+    <button wx:if="{{debugMode}}" class="danger-clear" bindtap="clearLocalData">清理本地训练数据</button>
 
     <compliance-notice />
   </view>

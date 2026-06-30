@@ -53,31 +53,42 @@
     </view>
 
     <view class="quick-review-card card">
+      <view class="mistake-card-kicker">错题卡路径</view>
       <text>60 秒真实复盘</text>
       <view>这笔记录，是计划在行动，还是念头在行动？只记录行为，不评价外在波动。</view>
 
       <view class="quick-label">这笔交易是否在原计划内？</view>
-      <view class="mini-choice">
-        <button class="{{form.inPlan === 'yes' ? 'active' : ''}}" data-value="yes" bindtap="selectPlanState">在计划内</button>
-        <button class="{{form.inPlan === 'no' ? 'active' : ''}}" data-value="no" bindtap="selectPlanState">计划外</button>
+      <view class="quick-choice-grid two">
+        <button class="quick-choice-pill {{form.inPlan === 'yes' ? 'active' : ''}}" data-value="yes" bindtap="selectPlanState">在计划内</button>
+        <button class="quick-choice-pill {{form.inPlan === 'no' ? 'active' : ''}}" data-value="no" bindtap="selectPlanState">计划外</button>
       </view>
 
-      <textarea value="{{form.firstThought}}" bindinput="inputThought" placeholder="下单前最强的一念是什么？例：怕错过 / 不甘心 / 想证明" />
+      <view class="quick-label">第一念是什么？</view>
+      <textarea class="optional-review-note" value="{{form.firstThought}}" bindinput="inputThought" placeholder="下单前最强的一念是什么？例：怕错过 / 不甘心 / 想证明" />
+
+      <view class="quick-label">触发场景</view>
+      <view class="quick-choice-grid trigger-scene">
+        <button class="quick-choice-pill {{form.stagePositionKey === 'open_fast' ? 'active' : ''}}" data-key="open_fast" bindtap="selectStage">开盘加速</button>
+        <button class="quick-choice-pill {{form.stagePositionKey === 'near_boundary' ? 'active' : ''}}" data-key="near_boundary" bindtap="selectStage">边界附近</button>
+        <button class="quick-choice-pill {{form.stagePositionKey === 'pullback' ? 'active' : ''}}" data-key="pullback" bindtap="selectStage">回撤段</button>
+        <button class="quick-choice-pill {{form.stagePositionKey === 'sideways' ? 'active' : ''}}" data-key="sideways" bindtap="selectStage">横盘震荡</button>
+      </view>
 
       <view wx:if="{{showAdvanced}}" class="quick-label">有没有临盘改计划？</view>
-      <view wx:if="{{showAdvanced}}" class="mini-choice">
-        <button class="{{form.changedPlan === 'no' ? 'active' : ''}}" data-value="no" bindtap="selectChangedPlan">没有</button>
-        <button class="{{form.changedPlan === 'yes' ? 'active' : ''}}" data-value="yes" bindtap="selectChangedPlan">有改动</button>
+      <view wx:if="{{showAdvanced}}" class="quick-choice-grid two">
+        <button class="quick-choice-pill {{form.changedPlan === 'no' ? 'active' : ''}}" data-value="no" bindtap="selectChangedPlan">没有</button>
+        <button class="quick-choice-pill {{form.changedPlan === 'yes' ? 'active' : ''}}" data-value="yes" bindtap="selectChangedPlan">有改动</button>
       </view>
 
       <view wx:if="{{showAdvanced}}" class="quick-label">有没有提前写边界条件？</view>
-      <view wx:if="{{showAdvanced}}" class="mini-choice">
-        <button class="{{form.exitPrepared === 'yes' ? 'active' : ''}}" data-value="yes" bindtap="selectExitPrepared">已写清</button>
-        <button class="{{form.exitPrepared === 'no' ? 'active' : ''}}" data-value="no" bindtap="selectExitPrepared">未写清</button>
+      <view wx:if="{{showAdvanced}}" class="quick-choice-grid two">
+        <button class="quick-choice-pill {{form.exitPrepared === 'yes' ? 'active' : ''}}" data-value="yes" bindtap="selectExitPrepared">已写清</button>
+        <button class="quick-choice-pill {{form.exitPrepared === 'no' ? 'active' : ''}}" data-value="no" bindtap="selectExitPrepared">未写清</button>
       </view>
 
       <input wx:if="{{showAdvanced}}" value="{{form.afterReaction}}" bindinput="inputAfterReaction" placeholder="行动后第一反应是什么？例：后悔 / 松一口气 / 想再来一次" />
-      <textarea value="{{form.nextAction}}" bindinput="inputNextAction" placeholder="下一次同场景先做什么？例：先停十秒，写下第一念" />
+      <view class="quick-label">下次执行动作</view>
+      <textarea class="optional-review-note" value="{{form.nextAction}}" bindinput="inputNextAction" placeholder="下一次同场景先做什么？例：先停十秒，写下第一念" />
     </view>
 
     <view class="split-actions quick-actions">
@@ -208,6 +219,24 @@
       <view class="training-action">
         <text>针对训练</text>
         <view>{{report.trainingAction}}</view>
+      </view>
+      <view class="mistake-card">
+        <view class="mistake-card-head">
+          <text>错题卡</text>
+          <view>{{report.relatedMirror || '本次复盘'}}</view>
+        </view>
+        <view class="mistake-card-row">
+          <text>第一念</text>
+          <view>{{form.firstThought || report.oneLine}}</view>
+        </view>
+        <view class="mistake-card-row">
+          <text>触发场景</text>
+          <view>{{report.stageGate || report.historicalMatch.stagePosition}}</view>
+        </view>
+        <view class="mistake-card-row">
+          <text>下次执行动作</text>
+          <view>{{form.nextAction || report.trainingAction}}</view>
+        </view>
       </view>
       <view wx:if="{{showResultDetail && closure}}" class="closure-card">
         <text>{{closure.title}}</text>
