@@ -1,5 +1,24 @@
 const { getPersonalityStagePlan } = require("../../core/personality-stage-map");
 const { normalizeExecutionResult } = require("../../utils/execution-terminology");
+const {
+  INDICATOR_CATALOG,
+  MAIN_INDICATOR_OPTIONS,
+  INDICATOR_PANEL_OPTIONS,
+  getChartZoomMeta,
+  buildChartZoomOptions,
+  normalizeHistoryCandles: normalizeRuntimeHistoryCandles,
+  getChartBoardStyle,
+  buildIndicatorOverlay,
+  getInitialKlineVisibleCount,
+  startKlineTrainingRuntime,
+  advanceKlineTrainingRuntime,
+  recordKlineTrainingDecision,
+  setKlineRuntimeChartZoom,
+  setKlineRuntimeViewportPan,
+  setKlineRuntimeIndicator,
+  setKlineRuntimeMainIndicator,
+  buildKlineTrainingRecordPatch
+} = require("./runtime");
 
 const SIX_GATE_MAP = [
   {
@@ -399,53 +418,8 @@ function buildTimeframeOptions(selectedKey) {
   }));
 }
 
-function normalizeHistoryCandles(historySlice = {}) {
-  const candles = Array.isArray(historySlice.candles) ? historySlice.candles : [];
-  if (!candles.length) return [];
-
-  const highs = candles.map((item) => Number(item.high)).filter(Number.isFinite);
-  const lows = candles.map((item) => Number(item.low)).filter(Number.isFinite);
-  const volumes = candles.map((item) => Number(item.volume || 0)).filter(Number.isFinite);
-  const maxHigh = Math.max.apply(null, highs);
-  const minLow = Math.min.apply(null, lows);
-  const maxVolume = Math.max.apply(null, volumes.concat([1]));
-  const range = Math.max(0.0001, maxHigh - minLow);
-
-  return candles.map((item, index) => {
-    const open = Number(item.open);
-    const high = Number(item.high);
-    const low = Number(item.low);
-    const close = Number(item.close);
-    const volume = Number(item.volume || 0);
-    const highY = ((maxHigh - high) / range) * 168 + 34;
-    const lowY = ((maxHigh - low) / range) * 168 + 34;
-    const openY = ((maxHigh - open) / range) * 168 + 34;
-    const closeY = ((maxHigh - close) / range) * 168 + 34;
-    const bodyTop = Math.min(openY, closeY);
-    const bodyHeight = Math.max(6, Math.abs(openY - closeY));
-    const wickHeight = Math.max(8, lowY - highY);
-    const volumeHeight = Math.max(8, Math.round((volume / maxVolume) * 62));
-    const key = item.id || `m${index + 1}`;
-    const tone = close > open ? "gold" : close < open ? "jade" : "flat";
-
-    return {
-      key,
-      label: item.focus ? "问" : "",
-      indexLabel: String(index + 1).padStart(2, "0"),
-      tone,
-      date: item.date || item.time || "",
-      open,
-      high,
-      low,
-      close,
-      volume,
-      wickStyle: `height: ${Math.round(wickHeight)}rpx; top: ${Math.round(highY)}rpx;`,
-      bodyStyle: `height: ${Math.round(bodyHeight)}rpx; top: ${Math.round(bodyTop)}rpx;`,
-      volumeStyle: `height: ${volumeHeight}rpx;`,
-      focus: !!item.focus,
-      selected: false
-    };
-  });
+function normalizeHistoryCandles(historySlice = {}, options = {}) {
+  return normalizeRuntimeHistoryCandles(historySlice, options);
 }
 
 function getHistorySlice(historyCache = {}, marketKey, timeframeKey) {
@@ -1099,6 +1073,7 @@ function buildKlineMindSession({
   const marketKey = (record || {}).marketKey || "cn_equity";
   const timeframeKey = (record || {}).timeframeKey || "1d";
   const timeframeMeta = TIMEFRAME_CATALOG.find((item) => item.key === timeframeKey) || TIMEFRAME_CATALOG[4];
+  const chartZoomMeta = getChartZoomMeta((record || {}).chartZoomKey || "wide");
   const market = getMarketConfig(marketKey);
   const customSessionSource = customSession || (pickValue((record || {}).sourceType, (record || {}).source_type) === "custom_session" ? record : null);
   const customSessionContext = buildCustomSessionContext(customSessionSource || {});
@@ -1114,12 +1089,15 @@ function buildKlineMindSession({
   const samplingHistorySlice = buildSamplingHistorySlice(normalizedSampling || {});
   const customHistorySlice = (customSessionSource || {}).historySlice || (customSessionSource || {}).slice;
   const historySlice = customHistorySlice || (record || {}).historySlice || samplingHistorySlice || getHistorySlice(historyCache, market.key, timeframeKey);
-  const rawCandles = normalizeHistoryCandles(historySlice || {});
+  const rawCandles = normalizeHistoryCandles(historySlice || {}, { windowSize: chartZoomMeta.windowSize });
   const selectedKey = (record || {}).selectedCandleKey || "";
   const prescription = getKlinePrescription(personalityType);
   const stageGate = getSixGate(stagePlan.stageKey);
   const candles = markSelectedCandles(rawCandles, selectedKey, scenario.focusIndex);
   const selectedCandleKey = selectedKey || ((candles.find((item) => item.selected) || {}).key) || "";
+  const mainIndicatorKey = (record || {}).mainIndicatorKey || "ma";
+  const chartBoardStyle = getChartBoardStyle(candles.length, chartZoomMeta.key);
+  const indicatorOverlay = buildIndicatorOverlay(candles, chartZoomMeta.key, mainIndicatorKey);
   const reviewFocusContext = buildReviewFocusContext(reviewFocus || {}, prescription);
   const specialTrainingContext = buildSpecialTrainingContext(specialTraining || record || {});
 
@@ -1136,6 +1114,17 @@ function buildKlineMindSession({
     timeframeKey,
     timeframeLabel: timeframeMeta.label,
     timeframeOptions: buildTimeframeOptions(timeframeKey),
+    chartZoomKey: chartZoomMeta.key,
+    chartWindowSize: chartZoomMeta.windowSize,
+    chartZoomOptions: buildChartZoomOptions(chartZoomMeta.key),
+    chartBoardStyle,
+    indicatorOverlay,
+    defaultMainIndicatorKey: "ma",
+    mainIndicatorOptions: MAIN_INDICATOR_OPTIONS,
+    defaultIndicatorKey: "vol",
+    indicatorPanelOptions: INDICATOR_PANEL_OPTIONS,
+    chartOrientationHint: "横屏训练更稳，竖屏可用放大查看局部。",
+    indicatorCatalog: INDICATOR_CATALOG,
     historySlice: historySlice || null,
     hasHistoricalData: candles.length > 0,
     dataStatusText: candles.length
@@ -1238,6 +1227,7 @@ function buildSingleExecutionConsistency(executionResult) {
 function buildKlineMindRecord(input = {}, session = {}) {
   const selectedCandleKey = input.selectedCandleKey || session.selectedCandleKey || "";
   const selectedCandle = (session.candles || []).find((item) => item.key === selectedCandleKey) || {};
+  const reactionDirection = String(input.reactionDirection || "").trim();
   const firstReaction = String(input.firstReaction || "").trim();
   const bodySignal = String(input.bodySignal || "").trim();
   const boundaryChoice = String(input.boundaryChoice || "").trim();
@@ -1250,7 +1240,14 @@ function buildKlineMindRecord(input = {}, session = {}) {
     marketKey: ((session.market || {}).key) || input.marketKey || "cn_equity",
     marketName: ((session.market || {}).name) || input.marketName || "A股",
     timeframeKey: session.timeframeKey || input.timeframeKey || "1d",
+    chartZoomKey: session.chartZoomKey || input.chartZoomKey || "wide",
+    mode: ((session.historySlice || {}).mode) || input.mode || "step_replay",
     dataSource: ((session.historySlice || {}).source) || input.dataSource || "",
+    klineSource: ((session.historySlice || {}).klineSource) || ((session.historySlice || {}).source) || input.klineSource || "",
+    source: "miniprogram",
+    sliceSource: ((session.historySlice || {}).sliceSource) || ((session.historySlice || {}).source) || input.sliceSource || "",
+    serverSliceStatus: ((session.historySlice || {}).serverSliceStatus) || input.serverSliceStatus || "",
+    serverSliceError: ((session.historySlice || {}).serverSliceError) || input.serverSliceError || "",
     symbol: ((session.historySlice || {}).symbol) || input.symbol || ((session.market || {}).defaultSymbol) || "",
     dataStart: ((session.historySlice || {}).start) || input.dataStart || "",
     dataEnd: ((session.historySlice || {}).end) || input.dataEnd || "",
@@ -1260,6 +1257,7 @@ function buildKlineMindRecord(input = {}, session = {}) {
     stageName: (session.stageGate || {}).name || input.stageName || "",
     selectedCandleKey,
     selectedCandleLabel: selectedCandle.label || selectedCandle.indexLabel || input.selectedCandleLabel || "",
+    reactionDirection,
     firstReaction,
     bodySignal,
     boundaryChoice,
@@ -1268,6 +1266,20 @@ function buildKlineMindRecord(input = {}, session = {}) {
     completed: !!(firstReaction && boundaryChoice && insightLine),
     updatedAt: Date.now()
   };
+  const runtimeExtension = {};
+  [
+    "trainingSessionId",
+    "simulationMode",
+    "sliceSeed",
+    "decisionTimeline",
+    "emotionBadges",
+    "riskHints",
+    "coachHints",
+    "positionState",
+    "sessionMetrics"
+  ].forEach((key) => {
+    if (input[key] !== undefined) runtimeExtension[key] = input[key];
+  });
   const executionResult = normalizeExecutionResult(
     input.executionResult,
     input.execution_result,
@@ -1278,7 +1290,7 @@ function buildKlineMindRecord(input = {}, session = {}) {
     record.completed ? "aligned" : "unclear"
   );
   const recordExecutionConsistency = buildSingleExecutionConsistency(executionResult);
-  const scoredRecord = Object.assign({}, record, {
+  const scoredRecord = Object.assign({}, record, runtimeExtension, {
     score: calculateKlineMindScore(record),
     executionResult,
     execution_result: executionResult,
@@ -1478,6 +1490,15 @@ module.exports = {
   buildBookmarkReplaySliceRequest,
   getMarketConfig,
   normalizeHistoryCandles,
+  getInitialKlineVisibleCount,
+  startKlineTrainingRuntime,
+  advanceKlineTrainingRuntime,
+  recordKlineTrainingDecision,
+  setKlineRuntimeChartZoom,
+  setKlineRuntimeViewportPan,
+  setKlineRuntimeIndicator,
+  setKlineRuntimeMainIndicator,
+  buildKlineTrainingRecordPatch,
   buildKlineMindSession,
   buildKlineMindRecord,
   calculateKlineMindScore

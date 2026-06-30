@@ -718,6 +718,522 @@
   background: linear-gradient(180deg, rgba(216, 183, 111, 0.1), transparent 70%);
 }
 
+.chart-toolbar {
+  position: relative;
+  z-index: 1;
+  margin-top: 24rpx;
+  padding: 18rpx;
+  display: grid;
+  gap: 10rpx;
+  border: 1rpx solid rgba(244, 235, 221, 0.1);
+  border-radius: 22rpx;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.chart-toolbar-row {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10rpx;
+}
+
+.chart-period-rail {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 6rpx;
+  overflow-x: auto;
+  white-space: nowrap;
+  border: 1rpx solid rgba(244, 235, 221, 0.1);
+  border-radius: 999rpx;
+  background: rgba(5, 9, 8, 0.28);
+}
+
+.chart-period-rail > text {
+  flex: 0 0 auto;
+  padding: 0 8rpx 0 10rpx;
+  color: rgba(244, 235, 221, 0.42);
+  font-size: 19rpx;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.chart-period-rail .timeframe-chip {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 70rpx;
+  height: 42rpx;
+  margin: 0;
+  padding: 0 16rpx;
+  font-size: 20rpx;
+}
+
+.chart-orientation-note {
+  color: rgba(244, 235, 221, 0.5);
+  font-size: 19rpx;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.chart-canvas-wrap {
+  position: relative;
+  z-index: 1;
+  margin-top: 24rpx;
+}
+
+.wave-board-scroll {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  touch-action: pan-y;
+  border-radius: 12rpx;
+  overflow: hidden;
+  border: 1rpx solid rgba(244, 235, 221, 0.08);
+  background: #030504;
+}
+
+.chart-scroll-inner {
+  width: 100%;
+  min-width: 100%;
+  background: #030504;
+}
+
+.chart-canvas-wrap .wave-board {
+  width: 100%;
+  min-width: 0;
+  height: 336rpx;
+  margin: 0;
+  padding: 0;
+  display: block;
+  box-sizing: border-box;
+  overflow: hidden;
+  border-radius: 0;
+  background:
+    linear-gradient(90deg, rgba(50, 112, 96, 0.14) 1rpx, transparent 1rpx),
+    linear-gradient(180deg, rgba(128, 36, 28, 0.24) 1rpx, transparent 1rpx),
+    linear-gradient(180deg, rgba(4, 9, 8, 0.96), rgba(0, 0, 0, 0.98));
+  background-size: 42rpx 100%, 100% 42rpx, 100% 100%;
+}
+
+.wave-board-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 24rpx 18rpx 18rpx;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: var(--kline-gap, 6rpx);
+}
+
+.chart-stepper {
+  position: absolute;
+  z-index: 8;
+  right: 16rpx;
+  top: 14rpx;
+  display: inline-flex;
+  overflow: hidden;
+  border: 1rpx solid rgba(244, 235, 221, 0.16);
+  border-radius: 6rpx;
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.chart-stepper-control {
+  width: 54rpx;
+  height: 42rpx;
+  display: grid;
+  place-items: center;
+  color: rgba(244, 235, 221, 0.82);
+  font-size: 26rpx;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.chart-stepper-control + .chart-stepper-control {
+  border-left: 1rpx solid rgba(244, 235, 221, 0.12);
+}
+
+.indicator-lines {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.indicator-segment {
+  position: absolute;
+  height: 2rpx;
+  transform-origin: 0 50%;
+  opacity: 0.9;
+}
+
+.indicator-segment.ma5 {
+  background: rgba(235, 217, 78, 0.88);
+}
+
+.indicator-segment.ma10 {
+  background: rgba(190, 76, 215, 0.82);
+}
+
+.indicator-segment.ma20 {
+  opacity: 0.78;
+  background: rgba(234, 238, 116, 0.74);
+}
+
+.indicator-segment.boll {
+  height: 1rpx;
+  opacity: 0.72;
+  background: rgba(58, 210, 105, 0.78);
+}
+
+.chart-canvas-wrap .mind-candle {
+  z-index: 2;
+  flex: 0 0 var(--kline-candle-width, 4rpx);
+  height: 286rpx;
+  border-radius: 2rpx;
+}
+
+.chart-canvas-wrap .mind-candle .wick {
+  width: 2rpx;
+  border-radius: 0;
+  background: rgba(214, 224, 218, 0.72);
+}
+
+.chart-canvas-wrap .mind-candle .body {
+  width: var(--kline-body-width, 4rpx);
+  min-height: 8rpx;
+  border-radius: 1rpx;
+  background: rgba(214, 224, 218, 0.72);
+  box-shadow: none;
+}
+
+.chart-canvas-wrap .mind-candle.gold .wick,
+.chart-canvas-wrap .mind-candle.gold .body {
+  background: rgba(225, 62, 56, 0.92);
+}
+
+.chart-canvas-wrap .mind-candle.jade .wick,
+.chart-canvas-wrap .mind-candle.jade .body {
+  background: rgba(54, 214, 204, 0.9);
+}
+
+.indicator-strip {
+  position: relative;
+  z-index: 7;
+  min-height: 54rpx;
+  padding: 8rpx 18rpx;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  overflow-x: auto;
+  white-space: nowrap;
+  border: 1rpx solid rgba(244, 235, 221, 0.08);
+  border-top: 0;
+  background: rgba(0, 0, 0, 0.96);
+  box-sizing: border-box;
+}
+
+.indicator-strip-spacer {
+  height: 54rpx;
+  border-top: 1rpx solid rgba(244, 235, 221, 0.08);
+  background: rgba(0, 0, 0, 0.96);
+  box-sizing: border-box;
+}
+
+.chart-indicator-chip {
+  flex: 0 0 auto;
+  min-width: 64rpx;
+  height: 38rpx;
+  padding: 0 16rpx;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6rpx;
+  border: 1rpx solid rgba(244, 235, 221, 0.14);
+  color: rgba(244, 235, 221, 0.68);
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 19rpx;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.chart-indicator-chip.active {
+  color: #14140f;
+  border-color: rgba(216, 183, 111, 0.62);
+  background: rgba(216, 183, 111, 0.88);
+}
+
+.indicator-divider {
+  flex: 0 0 1rpx;
+  width: 1rpx;
+  height: 26rpx;
+  margin: 0 4rpx;
+  background: rgba(244, 235, 221, 0.14);
+}
+
+.sub-indicator-board {
+  position: relative;
+  width: 100%;
+  height: 104rpx;
+  padding: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  border-top: 1rpx solid rgba(244, 235, 221, 0.07);
+  background:
+    linear-gradient(90deg, rgba(50, 112, 96, 0.12) 1rpx, transparent 1rpx),
+    linear-gradient(180deg, rgba(128, 36, 28, 0.2) 1rpx, transparent 1rpx),
+    #010303;
+  background-size: 42rpx 100%, 100% 34rpx, 100% 100%;
+}
+
+.sub-indicator-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 8rpx 18rpx 12rpx;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: var(--kline-gap, 6rpx);
+}
+
+.sub-indicator-item {
+  position: relative;
+  z-index: 2;
+  flex: 0 0 var(--kline-candle-width, 4rpx);
+  height: 86rpx;
+}
+
+.sub-bar {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: var(--kline-body-width, 4rpx);
+  transform: translateX(-50%);
+  border-radius: 1rpx 1rpx 0 0;
+  background: rgba(214, 224, 218, 0.34);
+}
+
+.sub-indicator-board.macd .sub-bar {
+  bottom: auto;
+}
+
+.sub-indicator-item.gold .sub-bar {
+  background: rgba(225, 62, 56, 0.78);
+}
+
+.sub-indicator-item.jade .sub-bar {
+  background: rgba(54, 214, 204, 0.78);
+}
+
+.sub-line {
+  position: absolute;
+  z-index: 3;
+  height: 2rpx;
+  transform-origin: 0 50%;
+  pointer-events: none;
+}
+
+.sub-line.dif {
+  background: rgba(235, 217, 78, 0.86);
+}
+
+.sub-line.dea {
+  background: rgba(190, 76, 215, 0.82);
+}
+
+.sub-line.rsi {
+  background: rgba(216, 183, 111, 0.82);
+}
+
+.sub-line.k {
+  background: rgba(54, 214, 204, 0.78);
+}
+
+.sub-line.d {
+  background: rgba(235, 217, 78, 0.82);
+}
+
+.sub-line.j {
+  background: rgba(190, 76, 215, 0.78);
+}
+
+.simulation-console {
+  position: relative;
+  z-index: 1;
+  margin-top: 22rpx;
+  padding: 20rpx;
+  border: 1rpx solid rgba(216, 183, 111, 0.16);
+  border-radius: 22rpx;
+  background:
+    linear-gradient(135deg, rgba(216, 183, 111, 0.07), rgba(95, 132, 117, 0.055)),
+    rgba(5, 9, 8, 0.36);
+}
+
+.simulation-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.simulation-head text {
+  display: block;
+  color: rgba(216, 183, 111, 0.8);
+  font-size: 21rpx;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.simulation-head view view {
+  margin-top: 8rpx;
+  color: rgba(244, 235, 221, 0.62);
+  font-size: 22rpx;
+  line-height: 1.4;
+}
+
+.emotion-badge {
+  flex: 0 0 auto;
+  min-width: 74rpx;
+  height: 48rpx;
+  display: grid !important;
+  place-items: center;
+  border-radius: 999rpx;
+  color: #14140f !important;
+  background: rgba(216, 183, 111, 0.88);
+  font-size: 21rpx !important;
+  letter-spacing: 0 !important;
+}
+
+.risk-hint,
+.coach-hint,
+.decision-prompt {
+  margin-top: 16rpx;
+  color: rgba(244, 235, 221, 0.62);
+  font-size: 23rpx;
+  line-height: 1.5;
+}
+
+.risk-hint {
+  padding: 14rpx 16rpx;
+  border-left: 4rpx solid rgba(95, 132, 117, 0.62);
+  border-radius: 0 16rpx 16rpx 0;
+  background: rgba(95, 132, 117, 0.08);
+}
+
+.risk-hint.required {
+  border-left-color: rgba(216, 183, 111, 0.72);
+  color: rgba(255, 246, 230, 0.8);
+  background: rgba(216, 183, 111, 0.08);
+}
+
+.runtime-metrics {
+  margin-top: 14rpx;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8rpx;
+}
+
+.runtime-metrics > view {
+  min-width: 0;
+  padding: 12rpx 10rpx;
+  border-radius: 16rpx;
+  border: 1rpx solid rgba(244, 235, 221, 0.08);
+  background: rgba(255, 255, 255, 0.026);
+}
+
+.runtime-metrics text {
+  display: block;
+  color: rgba(216, 183, 111, 0.56);
+  font-size: 18rpx;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.runtime-metrics view view {
+  margin-top: 6rpx;
+  color: rgba(244, 235, 221, 0.76);
+  font-size: 22rpx;
+  font-weight: 900;
+  line-height: 1.22;
+}
+
+.coach-hint {
+  color: rgba(216, 183, 111, 0.72);
+}
+
+.decision-prompt {
+  color: rgba(244, 235, 221, 0.48);
+  font-size: 21rpx;
+}
+
+.decision-actions {
+  margin-top: 18rpx;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8rpx;
+}
+
+.decision-btn {
+  width: 100%;
+  min-width: 0;
+  min-height: 72rpx;
+  margin: 0;
+  padding: 0 6rpx;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  border-radius: 16rpx;
+  border: 1rpx solid rgba(244, 235, 221, 0.1);
+  color: rgba(244, 235, 221, 0.72);
+  background: rgba(255, 255, 255, 0.035);
+  line-height: 1.2;
+  text-align: center;
+}
+
+.decision-btn text {
+  color: inherit;
+  font-size: 21rpx;
+  font-weight: 900;
+}
+
+.decision-btn.BUY,
+.decision-btn.SELL {
+  border-color: rgba(216, 183, 111, 0.16);
+  background: rgba(216, 183, 111, 0.05);
+}
+
+.decision-btn.HOLD {
+  border-color: rgba(95, 132, 117, 0.18);
+  background: rgba(95, 132, 117, 0.07);
+}
+
+.runtime-next {
+  width: 100%;
+  min-height: 78rpx;
+  margin-top: 16rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 999rpx;
+  border: 1rpx solid rgba(216, 183, 111, 0.42);
+  color: #14140f;
+  background:
+    linear-gradient(180deg, rgba(255, 247, 207, 0.82), rgba(216, 183, 111, 0.96)),
+    #d8b76f;
+  font-size: 26rpx;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.runtime-next.locked {
+  color: rgba(244, 235, 221, 0.66);
+  border-color: rgba(244, 235, 221, 0.12);
+  background: rgba(255, 255, 255, 0.035);
+}
+
 .history-empty {
   position: relative;
   z-index: 1;

@@ -74,6 +74,7 @@ assert.ok(profile.includes("<bottom-tab-bar") && profile.includes('active="profi
 assert.ok(profileJs.includes("showProfileDepth"), "profile should support old visual depth toggle");
 
 const klineMind = read("miniprogram/pages/kline-mind/index.wxml");
+const klineMindJs = read("miniprogram/pages/kline-mind/index.js");
 [
   "runtimeView",
   "mainIndicatorOptions",
@@ -81,7 +82,26 @@ const klineMind = read("miniprogram/pages/kline-mind/index.wxml");
   "chart-indicator-chip",
   "advanceRuntimeCandle"
 ].forEach((marker) => {
-  assert.ok(!klineMind.includes(marker), `kline mind should not bring back old runtime marker ${marker}`);
+  assert.ok(klineMind.includes(marker), `kline mind should restore runtime marker ${marker}`);
+});
+[
+  "review_focus",
+  "special_training",
+  "custom_session",
+  "自选盲练",
+  "saveTrainingBookmark"
+].forEach((marker) => {
+  assert.ok(klineMind.includes(marker) || klineMindJs.includes(marker), `kline mind should keep current business marker ${marker}`);
+});
+[
+  "selectedMainIndicatorKey",
+  "selectedIndicatorKey",
+  "selectMainIndicator",
+  "selectIndicator",
+  "advanceRuntimeCandle",
+  "recordRuntimeDecision"
+].forEach((marker) => {
+  assert.ok(klineMindJs.includes(marker), `kline mind should bridge runtime behavior ${marker}`);
 });
 
 [

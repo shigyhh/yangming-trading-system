@@ -17,7 +17,16 @@ const {
   buildCustomSessionMeta,
   buildTrainingBookmark,
   normalizeTrainingBookmark,
-  buildBookmarkReplaySliceRequest
+  buildBookmarkReplaySliceRequest,
+  getInitialKlineVisibleCount,
+  startKlineTrainingRuntime,
+  advanceKlineTrainingRuntime,
+  recordKlineTrainingDecision,
+  setKlineRuntimeChartZoom,
+  setKlineRuntimeViewportPan,
+  setKlineRuntimeIndicator,
+  setKlineRuntimeMainIndicator,
+  buildKlineTrainingRecordPatch
 } = require("./index");
 
 assert.strictEqual(SIX_GATE_MAP.length, 6);
@@ -60,6 +69,51 @@ assert.strictEqual(session.prescription.heartThief, "怕错过");
 assert.strictEqual(session.candles.length, 6);
 assert.ok(session.candles.some((item) => item.selected));
 assert.ok(session.gates.find((item) => item.key === "zhaoxin").trainingAction);
+assert.strictEqual(session.defaultMainIndicatorKey, "ma");
+assert.strictEqual(session.defaultIndicatorKey, "vol");
+assert.deepStrictEqual(session.mainIndicatorOptions.map((item) => item.label), ["MA", "BOLL"]);
+assert.deepStrictEqual(session.indicatorPanelOptions.map((item) => item.label), ["VOL", "MACD", "RSI", "KDJ"]);
+assert.ok(session.chartBoardStyle.includes("--kline-candle-width"));
+assert.ok(session.indicatorOverlay.ma5.length > 0);
+
+const initialVisibleCount = getInitialKlineVisibleCount(session);
+assert.strictEqual(initialVisibleCount, session.candles.length);
+let runtime = startKlineTrainingRuntime(session, {
+  trainingSessionId: "runtime-test",
+  initialVisibleCount,
+  initialMainIndicatorKey: "ma",
+  initialIndicatorKey: "vol",
+  decisionInterval: 3
+});
+assert.strictEqual(runtime.trainingSessionId, "runtime-test");
+assert.strictEqual(runtime.simulationMode, "blind_step_replay");
+assert.strictEqual(runtime.visibleCandles.length, session.candles.length);
+assert.strictEqual(runtime.indicatorPanel.type, "vol");
+assert.ok(runtime.indicatorOverlay.ma5.length > 0);
+
+runtime = setKlineRuntimeMainIndicator(runtime, "boll");
+assert.ok(runtime.indicatorOverlay.bollUpper.length > 0);
+runtime = setKlineRuntimeIndicator(runtime, "macd");
+assert.strictEqual(runtime.indicatorPanel.type, "macd");
+assert.ok(runtime.indicatorPanel.lines.dif.length > 0);
+runtime = setKlineRuntimeChartZoom(runtime, "focus");
+assert.strictEqual(runtime.chartZoomKey, "focus");
+runtime = setKlineRuntimeViewportPan(runtime, 2);
+assert.ok(runtime.chartViewport);
+runtime = recordKlineTrainingDecision(runtime, {
+  action: "HOLD",
+  selectedCandleKey: session.selectedCandleKey,
+  reactionDirection: "observe",
+  firstReaction: "先看清",
+  boundaryChoice: "停十秒"
+});
+assert.strictEqual(runtime.decisionTimeline.length, 1);
+const advancedRuntime = advanceKlineTrainingRuntime(runtime);
+assert.ok(advancedRuntime.currentIndex >= runtime.currentIndex);
+const runtimePatch = buildKlineTrainingRecordPatch(advancedRuntime);
+assert.strictEqual(runtimePatch.trainingSessionId, "runtime-test");
+assert.strictEqual(runtimePatch.simulationMode, "blind_step_replay");
+assert.strictEqual(runtimePatch.decisionTimeline.length, 1);
 
 const record = buildKlineMindRecord({
   selectedCandleKey: session.selectedCandleKey,
