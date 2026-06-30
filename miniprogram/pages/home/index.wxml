@@ -16,26 +16,18 @@
   </view>
 
   <view class="ritual-content">
-    <view class="scene scene-edict edict-hero">
+    <view class="scene scene-edict edict-hero {{homeFocusView.done ? '' : 'single-focus'}}">
       <view class="edict-bg edict-bg-glow"></view>
       <view class="edict-bg edict-bg-mountain"></view>
       <view class="edict-bg edict-bg-grain"></view>
 
       <view class="edict-header">
-        <view class="brand-seal brand-zhao-mini" aria-label="阳明照见 C16 小标">
-          <view class="zhao-eyes">
-            <view class="zhao-eye"></view>
-            <view class="zhao-eye"></view>
-          </view>
-          <view class="zhao-mirror"></view>
-          <view class="zhao-fire">
-            <view class="zhao-fire-dot"></view>
-            <view class="zhao-fire-dot"></view>
-          </view>
+        <view class="brand-seal-frame" aria-label="阳明照见艺术标">
+          <image class="brand-seal-art" src="/assets/brand/ymty-zhao-logo.svg" mode="aspectFit"></image>
         </view>
         <view class="brand-copy">
-          <view class="brand-title">阳明心学交易系统</view>
-          <view class="brand-subtitle">每日一页 · 照见本心</view>
+          <view class="brand-title">今日心证</view>
+          <view class="brand-subtitle">照见当下 · 训练执行</view>
         </view>
       </view>
 
@@ -73,16 +65,8 @@
           <view>{{miniHomeView.todayOneThought}}</view>
         </view>
         <view wx:if="{{homeFocusView.done}}" class="living-written">
-          <view class="living-written-mark brand-zhao-mini" aria-label="今日已照见小标">
-            <view class="zhao-eyes">
-              <view class="zhao-eye"></view>
-              <view class="zhao-eye"></view>
-            </view>
-            <view class="zhao-mirror"></view>
-            <view class="zhao-fire">
-              <view class="zhao-fire-dot"></view>
-              <view class="zhao-fire-dot"></view>
-            </view>
+          <view class="living-written-mark brand-seal-frame" aria-label="今日已照见小标">
+            <image class="brand-seal-art" src="/assets/brand/ymty-zhao-logo.svg" mode="aspectFit"></image>
           </view>
           <view class="living-written-copy">
             <text>{{miniHomeView.livingMirrorFeedback}}</text>
@@ -96,19 +80,15 @@
           bindtap="goMiniPrimary"
         >{{miniHomeView.primaryText}}</button>
         <view wx:if="{{miniHomeView.primaryHint}}" class="mini-primary-hint">{{miniHomeView.primaryHint}}</view>
-      </view>
-
-      <view class="kline-mind-entry" bindtap="goKlineMind" data-noripple="1">
-        <view>
-          <text>今日 K 线观心</text>
-          <view>用历史 K 线片段，看见第一反应。</view>
+        <view class="home-quiet-paths">
+          <button data-noripple="1" class="home-quiet-link" bindtap="goKlineMind">K线观心</button>
+          <text>用真实历史片段，先看第一反应。</text>
         </view>
-        <text>{{heroTasks.klineDone ? '已练' : '去练'}}</text>
       </view>
 
       <view class="edict-scroll" bindlongpress="openPosterMode">
         <view class="practice-detail-head">
-          <view class="edict-label">当前状态</view>
+          <view class="edict-label">今日一步</view>
           <view>{{homeFocusView.statusLine}}</view>
         </view>
         <view wx:if="{{!homeFocusView.done}}" class="home-focus-card">
@@ -138,16 +118,8 @@
             </view>
           </view>
           <view class="completion-living-rite">
-            <view class="completion-living-mark brand-zhao-mini" aria-label="今日已写入活镜">
-              <view class="zhao-eyes">
-                <view class="zhao-eye"></view>
-                <view class="zhao-eye"></view>
-              </view>
-              <view class="zhao-mirror"></view>
-              <view class="zhao-fire">
-                <view class="zhao-fire-dot"></view>
-                <view class="zhao-fire-dot"></view>
-              </view>
+            <view class="completion-living-mark brand-seal-frame" aria-label="今日已写入活镜">
+              <image class="brand-seal-art" src="/assets/brand/ymty-zhao-logo.svg" mode="aspectFit"></image>
             </view>
             <view class="completion-living-copy">
               <text>今日已写入活镜</text>
@@ -232,16 +204,8 @@
           </view>
           <button data-noripple="1" class="three-seal-save" bindtap="saveThreeSeals">{{threeSeals.completed ? '更新今日之印' : '落下今日之印'}}</button>
           <view wx:if="{{threeSeals.completed}}" class="seal-open-panel">
-            <view class="seal-mark-large brand-zhao-mini" aria-label="今日之印小标">
-              <view class="zhao-eyes">
-                <view class="zhao-eye"></view>
-                <view class="zhao-eye"></view>
-              </view>
-              <view class="zhao-mirror"></view>
-              <view class="zhao-fire">
-                <view class="zhao-fire-dot"></view>
-                <view class="zhao-fire-dot"></view>
-              </view>
+            <view class="seal-mark-large brand-seal-frame" aria-label="今日之印小标">
+              <image class="brand-seal-art" src="/assets/brand/ymty-zhao-logo.svg" mode="aspectFit"></image>
             </view>
             <view>
               <text>朱砂印落下：今日已照见</text>
@@ -565,8 +529,8 @@
     <view class="poster-header">
       <view class="poster-seal">知</view>
       <view>
-        <view class="poster-brand">阳明心学交易系统</view>
-        <view class="poster-subtitle">每日一页 · 照见本心</view>
+        <view class="poster-brand">今日心证</view>
+        <view class="poster-subtitle">照见当下 · 训练执行</view>
       </view>
     </view>
 
