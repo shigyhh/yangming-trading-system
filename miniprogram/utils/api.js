@@ -19,6 +19,7 @@ const {
   buildShareCardBindingPayload,
   buildDataBindingUser
 } = require("./data-binding-adapter");
+const { getRuntimePlatform } = require("./runtime-info");
 
 const API_BASE_KEY = "zhixing_api_base";
 const API_BASE_ENABLED_KEY = "zhixing_api_base_enabled";
@@ -47,14 +48,6 @@ function getMiniProgramEnvVersion() {
 
 function isReleaseEnv() {
   return getMiniProgramEnvVersion() === "release";
-}
-
-function getRuntimePlatform() {
-  try {
-    return String((wx.getSystemInfoSync() || {}).platform || "");
-  } catch (error) {
-    return "";
-  }
 }
 
 function isRealDeviceRuntime() {

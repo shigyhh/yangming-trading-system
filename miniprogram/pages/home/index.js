@@ -55,6 +55,7 @@ const { buildTraining7View } = require("../../modules/training7/index");
 const { buildClassroomView } = require("../../modules/classroom/index");
 const { buildLiveMirrorReminder } = require("../../modules/trade-review/index");
 const { buildHomeTodayStateView, buildMiniHomeView, resolveHomeTodayStateAction } = require("../../modules/mini-loop/index");
+const { getRuntimePixelRatio } = require("../../utils/runtime-info");
 
 const ENTRY_STATE_KEY = "zhixing_ritual_entry";
 const REACTION_TAGS = ["恐惧", "贪念", "证明", "后悔", "急躁", "逃避"];
@@ -1760,7 +1761,7 @@ Page({
         const canvas = canvasInfo.node;
         const width = Math.max(Number(canvasInfo.width || 0), 320);
         const height = Math.max(Number(canvasInfo.height || 0), 560);
-        const dpr = (wx.getSystemInfoSync && wx.getSystemInfoSync().pixelRatio) || 2;
+        const dpr = getRuntimePixelRatio();
         canvas.width = width * dpr;
         canvas.height = height * dpr;
 

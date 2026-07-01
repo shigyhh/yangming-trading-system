@@ -48,6 +48,7 @@ const {
   buildKlineTradeReviewRecord: buildKlineMirrorRecord
 } = require("../../modules/kline-simulator/index");
 const { buildKlineCanvasDrawModel } = require("../../modules/kline-mind/canvas-renderer");
+const { getRuntimeRpxScale } = require("../../utils/runtime-info");
 
 const REACTION_DIRECTIONS = [
   { key: "act", label: "想立刻做", detail: "追、急、想证明" },
@@ -397,8 +398,7 @@ Page({
     if (!ctx) return;
     const width = Number(board.width || KLINE_CANVAS_METRICS.width);
     const height = Number(board.height || KLINE_CANVAS_METRICS.mainHeight);
-    const systemInfo = wx.getSystemInfoSync ? wx.getSystemInfoSync() : {};
-    const rpxScale = Math.max(0.2, Number(systemInfo.windowWidth || 375) / 750);
+    const rpxScale = getRuntimeRpxScale();
     if (ctx.save) ctx.save();
     if (ctx.scale) ctx.scale(rpxScale, rpxScale);
     ctx.setFillStyle("#030504");
@@ -496,8 +496,7 @@ Page({
     const touch = (e.touches || [])[0] || (e.changedTouches || [])[0] || {};
     const detail = e.detail || {};
     const rawX = Number(detail.x || touch.x || touch.clientX || touch.pageX || KLINE_CANVAS_METRICS.width / 2);
-    const systemInfo = (typeof wx !== "undefined" && wx.getSystemInfoSync) ? wx.getSystemInfoSync() : {};
-    const rpxScale = Math.max(0.2, Number(systemInfo.windowWidth || 375) / 750);
+    const rpxScale = getRuntimeRpxScale();
     return Math.max(0, Math.min(KLINE_CANVAS_METRICS.width, rawX / rpxScale));
   },
 
