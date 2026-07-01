@@ -178,7 +178,7 @@ const CHART_GEOMETRY = {
   overview: { candleWidth: 2, bodyWidth: 2, gap: 1, paddingX: 18, paddingTop: 24 },
   wide: { candleWidth: 4, bodyWidth: 4, gap: 1, paddingX: 18, paddingTop: 24 },
   standard: { candleWidth: 10, bodyWidth: 8, gap: 4, paddingX: 18, paddingTop: 24 },
-  focus: { candleWidth: 22, bodyWidth: 17, gap: 7, paddingX: 18, paddingTop: 24 }
+  focus: { candleWidth: 28, bodyWidth: 22, gap: 8, paddingX: 18, paddingTop: 24 }
 };
 const BLIND_CHART_MIN_WIDTH = 690;
 
@@ -484,6 +484,48 @@ function pickVisibleHistoryWindow(candles, windowSize = DEFAULT_VISIBLE_CANDLES)
   return candles.slice(candles.length - safeWindowSize);
 }
 
+function projectCandlesToVisiblePriceRange(candles = []) {
+  if (!Array.isArray(candles) || !candles.length) return [];
+
+  const highs = candles.map((item) => Number(item.high)).filter(Number.isFinite);
+  const lows = candles.map((item) => Number(item.low)).filter(Number.isFinite);
+  const candleMaxHigh = Math.max.apply(null, highs.concat([0]));
+  const candleMinLow = Math.min.apply(null, lows.concat([candleMaxHigh]));
+  const candleRange = Math.max(0.0001, candleMaxHigh - candleMinLow);
+  const pricePadding = Math.max(candleRange * 0.08, Math.abs(candleMaxHigh) * 0.001);
+  const maxHigh = candleMaxHigh + pricePadding;
+  const minLow = candleMinLow - pricePadding;
+  const range = Math.max(0.0001, maxHigh - minLow);
+  const clampChartY = (value) => Math.max(18, Math.min(218, value));
+  const valueToY = (value) => Number.isFinite(value)
+    ? Math.round(clampChartY(((maxHigh - value) / range) * 168 + 34))
+    : null;
+
+  return candles.map((item) => {
+    const open = Number(item.open);
+    const high = Number(item.high);
+    const low = Number(item.low);
+    const close = Number(item.close);
+    const highY = ((maxHigh - high) / range) * 168 + 34;
+    const lowY = ((maxHigh - low) / range) * 168 + 34;
+    const openY = ((maxHigh - open) / range) * 168 + 34;
+    const closeY = ((maxHigh - close) / range) * 168 + 34;
+    const bodyTop = Math.min(openY, closeY);
+    const bodyHeight = Math.max(6, Math.abs(openY - closeY));
+    const wickHeight = Math.max(8, lowY - highY);
+    return Object.assign({}, item, {
+      wickStyle: `height: ${Math.round(wickHeight)}rpx; top: ${Math.round(highY)}rpx;`,
+      bodyStyle: `height: ${Math.round(bodyHeight)}rpx; top: ${Math.round(bodyTop)}rpx;`,
+      closeY: valueToY(close),
+      ma5Y: valueToY(item.ma5),
+      ma10Y: valueToY(item.ma10),
+      ma20Y: valueToY(item.ma20),
+      bollUpperY: valueToY(item.bollUpper),
+      bollLowerY: valueToY(item.bollLower)
+    });
+  });
+}
+
 function normalizeHistoryCandles(historySlice = {}, options = {}) {
   const rawCandles = Array.isArray(historySlice.candles)
     ? historySlice.candles
@@ -495,8 +537,6 @@ function normalizeHistoryCandles(historySlice = {}, options = {}) {
   const candles = pickVisibleHistoryWindow(normalizedCandles, options.windowSize);
   if (!candles.length) return [];
 
-  const highs = candles.map((item) => Number(item.high)).filter(Number.isFinite);
-  const lows = candles.map((item) => Number(item.low)).filter(Number.isFinite);
   const volumes = candles.map((item) => Number(item.volume || 0)).filter(Number.isFinite);
   const closes = normalizedCandles.map((item) => Number(item.close));
   const allIndicatorValues = normalizedCandles.map((item, index) => {
@@ -514,33 +554,14 @@ function normalizeHistoryCandles(historySlice = {}, options = {}) {
     };
   });
   const indicatorValues = candles.map((item) => allIndicatorValues[item.sourceIndex] || {});
-  const overlayValues = indicatorValues.reduce((items, item) => {
-    ["ma5", "ma10", "ma20", "bollUpper", "bollLower"].forEach((key) => {
-      if (Number.isFinite(item[key])) items.push(item[key]);
-    });
-    return items;
-  }, []);
-  const maxHigh = Math.max.apply(null, highs.concat(overlayValues));
-  const minLow = Math.min.apply(null, lows.concat(overlayValues));
   const maxVolume = Math.max.apply(null, volumes.concat([1]));
-  const range = Math.max(0.0001, maxHigh - minLow);
-  const valueToY = (value) => Number.isFinite(value)
-    ? Math.round(((maxHigh - value) / range) * 168 + 34)
-    : null;
 
-  return candles.map((item, index) => {
+  return projectCandlesToVisiblePriceRange(candles.map((item, index) => {
     const open = Number(item.open);
     const high = Number(item.high);
     const low = Number(item.low);
     const close = Number(item.close);
     const volume = Number(item.volume || 0);
-    const highY = ((maxHigh - high) / range) * 168 + 34;
-    const lowY = ((maxHigh - low) / range) * 168 + 34;
-    const openY = ((maxHigh - open) / range) * 168 + 34;
-    const closeY = ((maxHigh - close) / range) * 168 + 34;
-    const bodyTop = Math.min(openY, closeY);
-    const bodyHeight = Math.max(6, Math.abs(openY - closeY));
-    const wickHeight = Math.max(8, lowY - highY);
     const volumeHeight = Math.max(8, Math.round((volume / maxVolume) * 62));
     const key = item.key || `m${index + 1}`;
     const tone = close > open ? "gold" : close < open ? "jade" : "flat";
@@ -558,19 +579,16 @@ function normalizeHistoryCandles(historySlice = {}, options = {}) {
       low,
       close,
       volume,
-      wickStyle: `height: ${Math.round(wickHeight)}rpx; top: ${Math.round(highY)}rpx;`,
-      bodyStyle: `height: ${Math.round(bodyHeight)}rpx; top: ${Math.round(bodyTop)}rpx;`,
       volumeStyle: `height: ${volumeHeight}rpx;`,
-      closeY: valueToY(close),
-      ma5Y: valueToY(indicator.ma5),
-      ma10Y: valueToY(indicator.ma10),
-      ma20Y: valueToY(indicator.ma20),
-      bollUpperY: valueToY(indicator.bollUpper),
-      bollLowerY: valueToY(indicator.bollLower),
+      ma5: indicator.ma5,
+      ma10: indicator.ma10,
+      ma20: indicator.ma20,
+      bollUpper: indicator.bollUpper,
+      bollLower: indicator.bollLower,
       focus: !!item.focus,
       selected: false
     };
-  });
+  }));
 }
 
 function roundMetric(value, digits = 2) {
@@ -1022,7 +1040,7 @@ function buildRuntimeState(baseRuntime = {}, patch = {}) {
     : 0;
   const zoomKey = runtime.chartZoomKey || "wide";
   const viewport = buildRuntimeViewport(candles, safeIndex, zoomKey, runtime.chartPanOffset);
-  const visibleCandles = buildRuntimeVisibleCandles(candles, viewport);
+  const visibleCandles = projectCandlesToVisiblePriceRange(buildRuntimeVisibleCandles(candles, viewport));
   const activeCandle = candles[safeIndex] ? Object.assign({}, candles[safeIndex], { runtimeIndex: safeIndex }) : (visibleCandles[visibleCandles.length - 1] || null);
   const hasDecisionForCurrentIndex = Number(runtime.lastDecisionIndex) === safeIndex;
   const mustDecide = !!runtime.lockedUntilDecision || (!hasDecisionForCurrentIndex && shouldRuntimeRequireDecision(safeIndex, runtime.decisionInterval));

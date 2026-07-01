@@ -137,8 +137,72 @@ assert.strictEqual(
   "zooming should keep the active revealed candle as the right boundary"
 );
 assert.ok(
+  focusedRuntime.chartViewport.capacity <= 18,
+  "focus zoom should keep fewer candles visible so the chart does not look flattened at maximum zoom"
+);
+assert.ok(
   Math.max(...focusedRuntime.visibleCandles.map((item) => item.runtimeIndex)) <= focusedRuntime.currentIndex,
   "zooming should not expose unrevealed future candles"
+);
+
+function readRpx(style, key) {
+  const match = new RegExp(`${key}:\\s*([0-9.]+)rpx`).exec(String(style || ""));
+  return match ? Number(match[1]) : null;
+}
+
+const priorSpikeSlice = {
+  source: "prior_spike_fixture",
+  symbol: "000001.SZ",
+  candles: Array.from({ length: 80 }, (_, index) => {
+    if (index === 60) {
+      return {
+        date: "2024-05-05",
+        open: 10.12,
+        high: 18.6,
+        low: 9.9,
+        close: 18.2,
+        volume: 9800
+      };
+    }
+    const base = 10.1 + Math.sin(index / 5) * 0.08 + Math.max(0, index - 62) * 0.018;
+    const close = base + (index % 3 === 0 ? -0.05 : 0.06);
+    return {
+      date: `2024-05-${String((index % 28) + 1).padStart(2, "0")}`,
+      open: Number(base.toFixed(2)),
+      high: Number((Math.max(base, close) + 0.12).toFixed(2)),
+      low: Number((Math.min(base, close) - 0.1).toFixed(2)),
+      close: Number(close.toFixed(2)),
+      volume: 1800 + index * 11
+    };
+  })
+};
+const priorSpikeSession = buildKlineMindSession({
+  assessment: { primary: "冲动型" },
+  trainingDay: { day: 1, title: "观入场冲动" },
+  record: { marketKey: "cn_equity", timeframeKey: "1d", chartZoomKey: "wide" },
+  historyCache: { cn_equity: { "1d": priorSpikeSlice } }
+});
+const priorSpikeRuntime = startKlineTrainingRuntime(priorSpikeSession, {
+  trainingSessionId: "kline-module-runtime-focus-scale",
+  initialVisibleCount: 80,
+  initialMainIndicatorKey: "boll",
+  initialIndicatorKey: "macd"
+});
+const focusedPriorSpikeRuntime = setKlineRuntimeChartZoom(priorSpikeRuntime, "focus");
+assert.ok(
+  Math.min(...focusedPriorSpikeRuntime.visibleCandles.map((item) => item.runtimeIndex)) > 60,
+  "focus zoom should exclude the prior spike from the visible candle window"
+);
+const visibleWickTops = focusedPriorSpikeRuntime.visibleCandles.map((item) => readRpx(item.wickStyle, "top"));
+const visibleWickBottoms = focusedPriorSpikeRuntime.visibleCandles.map((item) => {
+  const top = readRpx(item.wickStyle, "top");
+  const height = readRpx(item.wickStyle, "height");
+  return top + height;
+});
+const focusPriceSpread = Math.max(...visibleWickBottoms) - Math.min(...visibleWickTops);
+assert.ok(
+  focusPriceSpread >= 110,
+  "focus zoom should scale the visible candle highs/lows instead of flattening them against older indicator extremes"
 );
 
 const record = buildKlineMindRecord({
