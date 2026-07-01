@@ -42,7 +42,8 @@ const {
   setKlineRuntimeViewportPan,
   setKlineRuntimeIndicator,
   setKlineRuntimeMainIndicator,
-  buildKlineTrainingRecordPatch
+  buildKlineTrainingRecordPatch,
+  normalizeKlineMindTimeframeKey
 } = require("../../modules/kline-mind/index");
 const {
   buildKlineTradeReviewRecord: buildKlineMirrorRecord
@@ -128,9 +129,10 @@ function buildMirrorReviewFromKline(record = {}, session = {}, assessment = {}) 
 
 function buildForm(record = {}, session = {}) {
   const savedSceneId = String(record.klineSceneId || record.sliceSeed || record.scenarioId || "");
+  const timeframeKey = normalizeKlineMindTimeframeKey(record.timeframeKey, session.timeframeKey || "1d");
   return {
     marketKey: record.marketKey || ((session.market || {}).key) || "cn_equity",
-    timeframeKey: record.timeframeKey || session.timeframeKey || "1d",
+    timeframeKey,
     scenarioId: savedSceneId.indexOf("scene-") === 0 ? savedSceneId : "scene-fast-001",
     chartZoomKey: record.chartZoomKey || session.chartZoomKey || "wide",
     mainIndicatorKey: record.mainIndicatorKey || session.defaultMainIndicatorKey || "ma",
@@ -251,18 +253,20 @@ function buildMindHistorySlice(result) {
 }
 
 function buildHistorySliceCacheKey(record = {}) {
+  const timeframeKey = normalizeKlineMindTimeframeKey(record.timeframeKey);
   return [
     record.marketKey || "cn_equity",
-    record.timeframeKey || "1d",
+    timeframeKey,
     record.scenarioId || "scene-fast-001",
     record.symbol || ""
   ].join("|");
 }
 
 function buildHistorySliceRequestParams(record = {}) {
+  const timeframeKey = normalizeKlineMindTimeframeKey(record.timeframeKey);
   return {
     marketKey: record.marketKey || "cn_equity",
-    timeframeKey: record.timeframeKey || "1d",
+    timeframeKey,
     symbol: record.symbol || "",
     windowSize: KLINE_TRAINING_WINDOW_SIZE,
     mode: "step_replay",
@@ -617,7 +621,7 @@ Page({
   },
 
   prefetchTimeframeSlices(record = {}) {
-    const currentKey = record.timeframeKey || "1d";
+    const currentKey = normalizeKlineMindTimeframeKey(record.timeframeKey);
     ["1d", "60m", "30m"].forEach((timeframeKey) => {
       if (timeframeKey === currentKey) return;
       const nextRecord = Object.assign({}, record, { timeframeKey });
@@ -686,7 +690,7 @@ Page({
   },
 
   selectTimeframe(e) {
-    const timeframeKey = e.currentTarget.dataset.timeframe;
+    const timeframeKey = normalizeKlineMindTimeframeKey(e.currentTarget.dataset.timeframe);
     const form = Object.assign({}, this.data.form, {
       timeframeKey,
       selectedCandleKey: ""

@@ -146,6 +146,31 @@ const TIMEFRAME_CATALOG = [
   { key: "30m", label: "短线", granularity: "intraday", required: true }
 ];
 
+function normalizeKlineMindTimeframeKey(value = "", fallback = "1d") {
+  const fallbackKey = TIMEFRAME_CATALOG.some((item) => item.key === fallback) ? fallback : "1d";
+  const raw = String(value || "").trim().toLowerCase();
+  const aliases = {
+    "1d": "1d",
+    "101": "1d",
+    d: "1d",
+    day: "1d",
+    daily: "1d",
+    "日线": "1d",
+    "长线": "1d",
+    "60": "60m",
+    "60m": "60m",
+    "60min": "60m",
+    "60分钟": "60m",
+    "中线": "60m",
+    "30": "30m",
+    "30m": "30m",
+    "30min": "30m",
+    "30分钟": "30m",
+    "短线": "30m"
+  };
+  return aliases[raw] || fallbackKey;
+}
+
 const CHART_ZOOM_OPTIONS = [
   { key: "overview", label: "总览", hint: "约180根，先看整体趋势", windowSize: 180 },
   { key: "wide", label: "缩小", hint: "约150根，适合盲练", windowSize: 150 },
@@ -1803,7 +1828,7 @@ function buildKlineMindSession({
   const stagePlan = getPersonalityStagePlan(personalityType);
   const scenario = DAY_SCENARIOS[day] || DAY_SCENARIOS[1];
   const marketKey = (record || {}).marketKey || "cn_equity";
-  const timeframeKey = (record || {}).timeframeKey || "1d";
+  const timeframeKey = normalizeKlineMindTimeframeKey((record || {}).timeframeKey);
   const timeframeMeta = TIMEFRAME_CATALOG.find((item) => item.key === timeframeKey) || TIMEFRAME_CATALOG[0];
   const chartZoomKey = (record || {}).chartZoomKey || "wide";
   const chartZoomMeta = getChartZoomMeta(chartZoomKey);
@@ -2202,6 +2227,7 @@ module.exports = {
   buildTrainingBookmark,
   normalizeTrainingBookmark,
   buildBookmarkReplaySliceRequest,
+  normalizeKlineMindTimeframeKey,
   getMarketConfig,
   getNextKlineMindSliceSeed,
   getInitialKlineVisibleCount,

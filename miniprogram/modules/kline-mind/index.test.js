@@ -25,7 +25,8 @@ const {
   buildCustomSessionMeta,
   buildTrainingBookmark,
   normalizeTrainingBookmark,
-  buildBookmarkReplaySliceRequest
+  buildBookmarkReplaySliceRequest,
+  normalizeKlineMindTimeframeKey
 } = require("./index");
 
 assert.strictEqual(SIX_GATE_MAP.length, 6);
@@ -36,6 +37,15 @@ assert.deepStrictEqual(TIMEFRAME_CATALOG.map((item) => item.label), ["长线", "
 assert.deepStrictEqual(INDICATOR_CATALOG.map((item) => item.key), ["ma", "macd", "boll", "vol", "rsi", "kdj"]);
 assert.ok(KLINE_TRAINING_METHODS.find((item) => item.key === "firecracker"));
 assert.ok(getPersonalityKlineDrill("焦虑型").drillAction.includes("固定观察窗口"));
+assert.strictEqual(normalizeKlineMindTimeframeKey("1d"), "1d");
+assert.strictEqual(normalizeKlineMindTimeframeKey("101"), "1d");
+assert.strictEqual(normalizeKlineMindTimeframeKey("60"), "60m");
+assert.strictEqual(normalizeKlineMindTimeframeKey("30m"), "30m");
+assert.strictEqual(normalizeKlineMindTimeframeKey("日线"), "1d");
+assert.strictEqual(normalizeKlineMindTimeframeKey("step_replay"), "1d");
+assert.strictEqual(normalizeKlineMindTimeframeKey("step_replay", "60m"), "60m");
+assert.strictEqual(buildKlineMindSession({ record: { timeframeKey: "step_replay" } }).timeframeKey, "1d");
+assert.strictEqual(buildKlineMindSession({ record: { timeframeKey: "101" } }).timeframeKey, "1d");
 
 const historicalSlice = {
   source: "verified_fixture",
