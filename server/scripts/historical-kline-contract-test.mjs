@@ -127,6 +127,25 @@ test("historical kline preheat warms targeted training slices for hot reads", as
   assert.equal(hot.body.slice.candles.length, 60);
 });
 
+test("historical kline blind hot slices reject distorted relative-price segments", async () => {
+  const req = {
+    method: "GET",
+    url: "/api/v1/kline-history/hot-slice?market=cn_equity&timeframe=1d&window=60&blind=1&mode=firecracker&gate=shi_shang_mo&pool_slot=smoke-k8-1",
+    headers: { host: "127.0.0.1:8787" }
+  };
+  const res = new MockResponse();
+
+  await route(req, res);
+  const result = res.result();
+  const prices = result.body.slice.candles.flatMap((item) => [item.open, item.high, item.low, item.close]);
+
+  assert.equal(result.statusCode, 200);
+  assert.equal(result.body.ok, true);
+  assert.ok(prices.every(Number.isFinite));
+  assert.ok(Math.min(...prices) > 0, "blind relative prices must stay positive");
+  assert.ok(Math.max(...prices) <= 260, "blind relative prices should not explode into distorted training charts");
+});
+
 test("historical kline slice can resample daily cache into week and year cycles", async () => {
   const week = await buildHistoricalKlineSlice({
     marketKey: "cn_equity",

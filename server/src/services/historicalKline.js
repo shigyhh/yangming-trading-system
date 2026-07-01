@@ -14,6 +14,8 @@ const MAX_WINDOW_SIZE = 240;
 const SLICE_TOKEN_VERSION = "kline_slice_v1";
 const HOT_SLICE_CACHE_TTL_MS = 1000 * 60 * 10;
 const HOT_SLICE_CACHE_LIMIT = 160;
+const TRAINING_SEGMENT_MIN_RELATIVE_PRICE = 0.35;
+const TRAINING_SEGMENT_MAX_RELATIVE_PRICE = 2.6;
 const historicalKlineHotSliceCache = new Map();
 
 const TIMEFRAMES = [
@@ -1093,6 +1095,24 @@ function filterCandlesByDate(candles, { startDate = "", endDate = "" } = {}) {
   });
 }
 
+function isTrainablePriceSegment(segment = []) {
+  if (!segment.length) return false;
+  const basePrice = Math.abs(Number(segment[0]?.close || segment[0]?.open || 0));
+  if (!Number.isFinite(basePrice) || basePrice <= 0) return false;
+
+  const prices = segment.flatMap((item) => [
+    Number(item.open),
+    Number(item.high),
+    Number(item.low),
+    Number(item.close)
+  ]);
+  if (!prices.every((value) => Number.isFinite(value) && value > 0)) return false;
+
+  const relativePrices = prices.map((value) => value / basePrice);
+  return Math.min(...relativePrices) >= TRAINING_SEGMENT_MIN_RELATIVE_PRICE &&
+    Math.max(...relativePrices) <= TRAINING_SEGMENT_MAX_RELATIVE_PRICE;
+}
+
 function chooseSliceStartIndex(candles, { windowSize, mode, personality, gate, rng }) {
   const maxStart = candles.length - windowSize;
   if (maxStart <= 0) return 0;
@@ -1102,11 +1122,33 @@ function chooseSliceStartIndex(candles, { windowSize, mode, personality, gate, r
     candidates.add(Math.floor(rng() * (maxStart + 1)));
   }
 
-  return Array.from(candidates)
+  const scoredCandidates = Array.from(candidates)
     .map((startIndex) => ({
       startIndex,
-      score: scoreWindow(candles.slice(startIndex, startIndex + windowSize), { mode, personality, gate })
+      segment: candles.slice(startIndex, startIndex + windowSize)
     }))
+    .map((candidate) => ({
+      startIndex: candidate.startIndex,
+      trainable: isTrainablePriceSegment(candidate.segment),
+      score: scoreWindow(candidate.segment, { mode, personality, gate })
+    }));
+  const trainableCandidates = scoredCandidates.filter((candidate) => candidate.trainable);
+  if (trainableCandidates.length > 0) {
+    return trainableCandidates
+      .sort((a, b) => b.score - a.score)[0].startIndex;
+  }
+
+  const trainableFallbacks = [];
+  for (let startIndex = 0; startIndex <= maxStart; startIndex += 1) {
+    const segment = candles.slice(startIndex, startIndex + windowSize);
+    if (!isTrainablePriceSegment(segment)) continue;
+    trainableFallbacks.push({
+      startIndex,
+      score: scoreWindow(segment, { mode, personality, gate })
+    });
+  }
+  const rankedCandidates = trainableFallbacks.length > 0 ? trainableFallbacks : scoredCandidates;
+  return rankedCandidates
     .sort((a, b) => b.score - a.score)[0].startIndex;
 }
 
