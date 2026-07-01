@@ -174,7 +174,7 @@
           <view class="home-today-state-foot">{{serverTodayStateView.updatedAt || serverTodayStateView.fallbackText}}</view>
         </view>
 
-        <view wx:if="{{homeContinuityVisible}}" class="home-continuity-panel">
+        <view wx:if="{{homeContinuityVisible && homeContinuitySteps.length}}" class="home-continuity-panel">
           <view class="home-continuity-head">
             <view>
               <view class="home-continuity-kicker">今日闭环</view>

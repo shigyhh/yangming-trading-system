@@ -124,8 +124,8 @@ assert.ok(
   "home closure strip should mark completed and current steps"
 );
 assert.ok(
-  homeWxml.includes('wx:if="{{homeContinuityVisible}}" class="home-continuity-panel"'),
-  "home should reveal the closure evidence panel only when there is meaningful progress"
+  homeWxml.includes('wx:if="{{homeContinuityVisible && homeContinuitySteps.length}}" class="home-continuity-panel"'),
+  "home should reveal the closure evidence panel only when there is meaningful progress and compact continuity steps"
 );
 assert.ok(
   homeJs.includes("function buildHomeFlowSteps"),
