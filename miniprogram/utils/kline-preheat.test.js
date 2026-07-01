@@ -37,8 +37,35 @@ global.wx = {
       path: url.pathname,
       windowSize: url.searchParams.get("window"),
       poolSlot: url.searchParams.get("pool_slot"),
+      scenarioId: url.searchParams.get("scenario_id"),
       data: options.data || null
     });
+
+    if (url.pathname === "/api/v1/kline-history/preheat-plan") {
+      const timeframes = String(url.searchParams.get("timeframes") || "1d").split(",");
+      const depth = Number(url.searchParams.get("prefetch_depth") || 1);
+      const scenarioId = url.searchParams.get("scenario_id") || "scene-fast-001";
+      options.success({
+        statusCode: 200,
+        data: {
+          ok: true,
+          scenario_id: scenarioId,
+          items: timeframes.flatMap((timeframe) => (
+            Array.from({ length: depth }, (_, index) => ({
+              market: "cn_equity",
+              timeframe,
+              window: Number(url.searchParams.get("window") || 60),
+              mode: url.searchParams.get("mode") || "step_replay",
+              gate: url.searchParams.get("gate") || "shi_shang_mo",
+              blind: true,
+              seed: `${scenarioId}:${timeframe}:${String(index + 1).padStart(2, "0")}`,
+              pool_slot: `${scenarioId}:${timeframe}:${String(index + 1).padStart(2, "0")}`
+            }))
+          ))
+        }
+      });
+      return;
+    }
 
     if (url.pathname === "/api/v1/kline-history/preheat") {
       options.success({
@@ -83,20 +110,27 @@ const { prefetchKlineTrainingSlices } = require("./api");
     marketKey: "cn",
     timeframes: ["1d"],
     prefetchDepth: 2,
-    windowSize: 60
+    windowSize: 60,
+    scenarioId: "daily-kline-entry"
   });
 
-  assert.strictEqual(requests[0].method, "POST");
-  assert.strictEqual(requests[0].path, "/api/v1/kline-history/preheat");
-  assert.strictEqual(requests[0].data.items.length, 2);
-  assert.ok(requests[0].data.items.every((item) => item.pool_slot));
+  assert.strictEqual(requests[0].method, "GET");
+  assert.strictEqual(requests[0].path, "/api/v1/kline-history/preheat-plan");
+  assert.strictEqual(requests[0].scenarioId, "daily-kline-entry");
+  assert.strictEqual(requests[1].method, "POST");
+  assert.strictEqual(requests[1].path, "/api/v1/kline-history/preheat");
+  assert.strictEqual(requests[1].data.items.length, 2);
   assert.deepStrictEqual(
-    requests.slice(1).map((item) => item.path),
+    requests[1].data.items.map((item) => item.pool_slot),
+    ["daily-kline-entry:1d:01", "daily-kline-entry:1d:02"]
+  );
+  assert.deepStrictEqual(
+    requests.slice(2).map((item) => item.path),
     ["/api/v1/kline-history/hot-slice", "/api/v1/kline-history/hot-slice"]
   );
   assert.deepStrictEqual(
-    requests.slice(1).map((item) => item.poolSlot),
-    requests[0].data.items.map((item) => item.pool_slot),
+    requests.slice(2).map((item) => item.poolSlot),
+    requests[1].data.items.map((item) => item.pool_slot),
     "hot reads should use the same server preheated pool slots"
   );
 

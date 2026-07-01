@@ -127,6 +127,52 @@ test("historical kline preheat warms targeted training slices for hot reads", as
   assert.equal(hot.body.slice.candles.length, 60);
 });
 
+test("historical kline preheat plan returns deterministic training pool slots", async () => {
+  const req = {
+    method: "GET",
+    url: "/api/v1/kline-history/preheat-plan?market=cn_equity&window=60&mode=firecracker&gate=shi_shang_mo&scenario_id=review-focus-r1&timeframes=1d,60m&prefetch_depth=2",
+    headers: { host: "127.0.0.1:8787" }
+  };
+  const firstRes = new MockResponse();
+  const secondRes = new MockResponse();
+
+  await route(req, firstRes);
+  await route(req, secondRes);
+  const first = firstRes.result();
+  const second = secondRes.result();
+
+  assert.equal(first.statusCode, 200);
+  assert.equal(first.body.ok, true);
+  assert.equal(first.body.scenario_id, "review-focus-r1");
+  assert.equal(first.body.items.length, 4);
+  assert.deepEqual(first.body.items, second.body.items);
+  assert.deepEqual(
+    first.body.items.map((item) => item.pool_slot),
+    [
+      "review-focus-r1:1d:01",
+      "review-focus-r1:1d:02",
+      "review-focus-r1:60m:01",
+      "review-focus-r1:60m:02"
+    ]
+  );
+  assert.equal(first.body.items.every((item) => item.mode === "firecracker" && item.gate === "shi_shang_mo"), true);
+});
+
+test("historical kline automatic instrument selection only uses cache with enough candles", async () => {
+  const result = await buildHistoricalKlineSlice({
+    marketKey: "cn_equity",
+    timeframeKey: "1d",
+    windowSize: 180,
+    mode: "firecracker",
+    gateKey: "shi_shang_mo",
+    blind: true,
+    seed: "k10-probe-8"
+  });
+
+  assert.equal(result.slice.visible_count, 180);
+  assert.equal(result.slice.candles.length, 180);
+});
+
 test("historical kline blind hot slices reject distorted relative-price segments", async () => {
   const req = {
     method: "GET",

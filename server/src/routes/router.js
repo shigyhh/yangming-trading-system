@@ -18,7 +18,7 @@ import { consumeWechatAuthCode, createWechatAuthUrl } from "../services/wechatAu
 import { advanceZhixingReplaySession, finishZhixingReplaySession, getZhixingReplaySession, listZhixingReplayResults, startZhixingReplaySession, submitZhixingReplayDecision } from "../services/zhixingReplay.js";
 import { dispatchTrainingPrescriptionBinding, generateShareCardBinding, getAdminUserFromBindings, getDataBindingUserSummary, getInviteSourceStatsBinding, getRetestComparisonBinding, getShareCardBinding, getTrainingPrescriptionBinding, getUserReportBinding, listAdminUsersFromBindings, listTradeReviewBindings, saveAssessmentReportBinding, saveKLineRecordBinding, saveRetestResultBinding, saveTradeReviewBinding, saveTrainingRecordBinding, syncAssistantSummaryToFeishuBinding, updateAssistantHandoffBinding } from "../services/dataBinding.js";
 import { getGlobalReflectionToday, listGlobalReflectionChoices, submitGlobalReflectionVote } from "../services/globalReflection.js";
-import { buildHistoricalKlineHotSlice, buildHistoricalKlineSlice, downloadHistoricalKline, getHistoricalKlineRules, listHistoricalKlineCatalog, listHistoricalKlineInstruments, preheatHistoricalKlineSlices, revealHistoricalKlineSlice } from "../services/historicalKline.js";
+import { buildHistoricalKlineHotSlice, buildHistoricalKlinePreheatPlan, buildHistoricalKlineSlice, downloadHistoricalKline, getHistoricalKlineRules, listHistoricalKlineCatalog, listHistoricalKlineInstruments, preheatHistoricalKlineSlices, revealHistoricalKlineSlice } from "../services/historicalKline.js";
 import { buildTradeReviewOcrDraft } from "../services/tradeReviewOcr.js";
 import { createYmtyLivecode, createYmtyOrder, getYmtyAdminCampaign, getYmtyAfterpayEntrance, getYmtyAuditLogs, getYmtyOrderForPayment, getYmtyOrderStatus, getYmtyPublicCampaign, isYmtyMockPaymentAllowed, listYmtyCourseUsers, listYmtyLivecodeAssignments, listYmtyLivecodes, listYmtyOrders, markYmtyMockPaySuccess, markYmtyOrderPaid, switchYmtyAfterpayLivecode, toggleYmtyLivecodeFull, toggleYmtyLivecodeStatus, updateYmtyCampaign, updateYmtyLivecode, updateYmtyLivecodeByKey } from "../services/ymtyCampaign.js";
 import { getYmtyAnalyticsSummary, recordYmtyFrontendEvent } from "../services/ymtyAnalytics.js";
@@ -80,6 +80,7 @@ export async function route(req, res) {
         kline_history_rules: "GET /api/v1/kline-history/rules?market=cn_equity",
         kline_history_slice: "GET /api/v1/kline-history/slice?market=cn_equity&symbol=600519&timeframe=1d&blind=1",
         kline_history_hot_slice: "GET /api/v1/kline-history/hot-slice?market=cn_equity&timeframe=1d&blind=1",
+        kline_history_preheat_plan: "GET /api/v1/kline-history/preheat-plan?market=cn_equity&timeframes=1d,60m&prefetch_depth=2",
         kline_history_preheat: "POST /api/v1/kline-history/preheat",
         kline_history_reveal: "GET /api/v1/kline-history/reveal?token=xxx",
         kline_history_download: "POST /api/v1/kline-history/download",
@@ -1432,6 +1433,24 @@ export async function route(req, res) {
   if (req.method === "POST" && pathname === "/api/v1/kline-history/preheat") {
     const body = await readJson(req);
     const result = await preheatHistoricalKlineSlices(body);
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (req.method === "GET" && pathname === "/api/v1/kline-history/preheat-plan") {
+    const result = buildHistoricalKlinePreheatPlan({
+      marketKey: url.searchParams.get("market") || url.searchParams.get("market_key") || "",
+      symbol: url.searchParams.get("symbol") || url.searchParams.get("code") || url.searchParams.get("instrument") || "",
+      timeframeKey: url.searchParams.get("timeframe") || url.searchParams.get("timeframe_key") || url.searchParams.get("klt") || "",
+      timeframes: url.searchParams.get("timeframes") || "",
+      adjustmentMode: url.searchParams.get("adjustment") || url.searchParams.get("adjustment_mode") || url.searchParams.get("fq") || "",
+      windowSize: url.searchParams.get("window") || url.searchParams.get("window_size") || "",
+      mode: url.searchParams.get("mode") || "step_replay",
+      personalityType: url.searchParams.get("personality_type") || "",
+      gateKey: url.searchParams.get("gate") || url.searchParams.get("gate_key") || "",
+      blind: getBooleanParam(url, "blind", true),
+      scenarioId: url.searchParams.get("scenario_id") || url.searchParams.get("scenarioId") || "",
+      prefetchDepth: url.searchParams.get("prefetch_depth") || url.searchParams.get("preheat_depth") || ""
+    });
     return sendJson(res, 200, { ok: true, ...result });
   }
 

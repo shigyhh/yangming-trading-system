@@ -411,10 +411,10 @@ export async function buildHistoricalKlineSlice({
   const gate = getGatePractice(gateKey);
   const personality = getPersonalityPractice(personalityType);
   const instruments = await loadInstrumentList(market);
-  const instrument = await resolveInstrument({ market, symbol, instruments, timeframeKey: timeframe.key, seed });
+  const safeWindowSize = clamp(Number(windowSize || DEFAULT_WINDOW_SIZE), MIN_WINDOW_SIZE, MAX_WINDOW_SIZE);
+  const instrument = await resolveInstrument({ market, symbol, instruments, timeframeKey: timeframe.key, windowSize: safeWindowSize, seed });
   const dataset = await loadKlineDataset({ market, symbol: instrument.symbol, timeframeKey: timeframe.key, adjustmentMode: adjustment.key });
   const candles = filterCandlesByDate(dataset.candles, { startDate, endDate });
-  const safeWindowSize = clamp(Number(windowSize || DEFAULT_WINDOW_SIZE), MIN_WINDOW_SIZE, MAX_WINDOW_SIZE);
 
   if (candles.length < safeWindowSize) {
     const error = new Error(`真实历史K线数量不足：${market.label} ${timeframe.label} ${instrument.symbol}`);
@@ -581,6 +581,45 @@ export async function preheatHistoricalKlineSlices(input = {}) {
     preheated,
     total: preheated.length,
     ready: preheated.filter((item) => item.ok).length,
+    cache_ttl_ms: HOT_SLICE_CACHE_TTL_MS
+  };
+}
+
+export function buildHistoricalKlinePreheatPlan(input = {}) {
+  const base = normalizeHistoricalKlineHotParams(input);
+  const scenarioId = normalizePoolSlotText(input.scenarioId || input.scenario_id || input.trainingScenario || input.training_scenario || base.seed || "scene-fast-001");
+  const timeframes = parsePreheatTimeframes(input.timeframes, base.timeframeKey);
+  const depth = Math.max(1, Math.min(12, Number(input.prefetchDepth || input.prefetch_depth || input.preheatDepth || input.preheat_depth || 1)));
+  const items = [];
+
+  timeframes.forEach((timeframeKey) => {
+    for (let index = 0; index < depth; index += 1) {
+      const slot = `${scenarioId}:${timeframeKey}:${String(index + 1).padStart(2, "0")}`;
+      const item = normalizeHistoricalKlineHotParams({
+        ...base,
+        timeframeKey,
+        seed: slot,
+        poolSlot: slot
+      });
+      items.push({
+        market: item.marketKey,
+        timeframe: item.timeframeKey,
+        adjustment: item.adjustmentMode,
+        window: item.windowSize,
+        mode: item.mode,
+        personality_type: item.personalityType,
+        gate: item.gateKey,
+        blind: item.blind,
+        seed: item.seed,
+        pool_slot: item.poolSlot
+      });
+    }
+  });
+
+  return {
+    scenario_id: scenarioId,
+    depth,
+    items: items.slice(0, 36),
     cache_ttl_ms: HOT_SLICE_CACHE_TTL_MS
   };
 }
@@ -886,7 +925,7 @@ function normalizeInstrument(item) {
   };
 }
 
-async function resolveInstrument({ market, symbol, instruments, timeframeKey, seed }) {
+async function resolveInstrument({ market, symbol, instruments, timeframeKey, windowSize = DEFAULT_WINDOW_SIZE, seed }) {
   const requested = String(symbol || "").trim();
   if (requested) {
     const found = instruments.find((item) => item.symbol === requested || item.instrument_key === requested);
@@ -896,7 +935,7 @@ async function resolveInstrument({ market, symbol, instruments, timeframeKey, se
   const ready = [];
   for (const instrument of instruments.slice(0, 800)) {
     const availability = await getInstrumentAvailability(market, instrument.symbol, timeframeKey);
-    if (availability.ready) ready.push(instrument);
+    if (availability.ready && Number(availability.candleCount || 0) >= Number(windowSize || DEFAULT_WINDOW_SIZE)) ready.push(instrument);
   }
   const pool = ready.length ? ready : instruments;
   if (!pool.length) {
@@ -1406,6 +1445,25 @@ function buildHistoricalKlinePreheatItems(input = {}) {
     });
   });
   return items.slice(0, 36);
+}
+
+function parsePreheatTimeframes(value, fallback = DEFAULT_TIMEFRAME) {
+  const rawValues = Array.isArray(value)
+    ? value
+    : String(value || fallback || DEFAULT_TIMEFRAME).split(",");
+  const timeframes = rawValues
+    .map((item) => String(item || "").trim())
+    .filter(Boolean);
+  return Array.from(new Set(timeframes.length ? timeframes : [fallback || DEFAULT_TIMEFRAME])).slice(0, 8);
+}
+
+function normalizePoolSlotText(value = "") {
+  return String(value || "scene-fast-001")
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[^\w:.-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "") || "scene-fast-001";
 }
 
 function createInstrumentKey(symbol = "") {

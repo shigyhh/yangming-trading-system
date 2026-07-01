@@ -1209,6 +1209,104 @@ function buildKlinePreheatItem({
   };
 }
 
+function normalizeKlinePreheatPlanItem(item = {}, fallback = {}) {
+  const timeframeKey = item.timeframeKey || item.timeframe_key || item.timeframe || fallback.timeframeKey || "1d";
+  const hotPoolSlot = item.hotPoolSlot || item.hot_pool_slot || item.pool_slot || item.poolSlot || "";
+  return {
+    timeframeKey,
+    hotPoolSlot,
+    seed: item.seed || hotPoolSlot,
+    marketKey: item.marketKey || item.market_key || item.market || fallback.marketKey || "cn",
+    symbol: item.symbol || fallback.symbol || "",
+    windowSize: item.windowSize || item.window_size || item.window || fallback.windowSize || KLINE_TRAINING_WINDOW_SIZE,
+    mode: item.mode || fallback.mode || "step_replay",
+    gateKey: item.gateKey || item.gate_key || item.gate || fallback.gateKey || "shi_shang_mo",
+    blind: item.blind === undefined ? fallback.blind !== false : Boolean(item.blind)
+  };
+}
+
+function buildLocalKlinePreheatPlan({
+  marketKey = "cn",
+  symbol = "",
+  timeframes = ["1d"],
+  windowSize = KLINE_TRAINING_WINDOW_SIZE,
+  mode = "step_replay",
+  gateKey = "shi_shang_mo",
+  blind = true,
+  scenarioId = "scene-fast-001",
+  prefetchDepth = 1
+} = {}) {
+  const depth = Math.max(1, Math.min(12, Number(prefetchDepth || 1)));
+  return Array.from(new Set(timeframes)).flatMap((timeframeKey) => (
+    Array.from({ length: depth }, (_, index) => {
+      const slot = `${scenarioId || "scene-fast-001"}:${timeframeKey}:${String(index + 1).padStart(2, "0")}`;
+      return {
+        marketKey,
+        symbol,
+        timeframeKey,
+        windowSize,
+        mode,
+        gateKey,
+        blind,
+        seed: slot,
+        hotPoolSlot: slot
+      };
+    })
+  ));
+}
+
+async function fetchKlinePreheatPlan({
+  marketKey = "cn",
+  symbol = "",
+  timeframes = ["1d"],
+  windowSize = KLINE_TRAINING_WINDOW_SIZE,
+  mode = "step_replay",
+  gateKey = "shi_shang_mo",
+  blind = true,
+  scenarioId = "scene-fast-001",
+  prefetchDepth = 1
+} = {}) {
+  const uniqueTimeframes = Array.from(new Set(timeframes));
+  const fallbackContext = { marketKey, symbol, windowSize, mode, gateKey, blind };
+  try {
+    const result = await request({
+      path: [
+        "/api/v1/kline-history/preheat-plan?",
+        `market=${encodeURIComponent(KLINE_MARKET_MAP[marketKey] || "cn_equity")}`,
+        symbol ? `&symbol=${encodeURIComponent(normalizeKlineHistorySymbol(symbol))}` : "",
+        `&timeframes=${encodeURIComponent(uniqueTimeframes.join(","))}`,
+        `&window=${encodeURIComponent(windowSize)}`,
+        `&mode=${encodeURIComponent(mode)}`,
+        `&gate=${encodeURIComponent(gateKey)}`,
+        `&blind=${blind ? "1" : "0"}`,
+        `&scenario_id=${encodeURIComponent(scenarioId || "scene-fast-001")}`,
+        `&prefetch_depth=${encodeURIComponent(prefetchDepth)}`
+      ].join(""),
+      method: "GET",
+      timeout: 15000
+    });
+    const items = Array.isArray(result.items) ? result.items : [];
+    if (items.length) {
+      return items
+        .map((item) => normalizeKlinePreheatPlanItem(item, fallbackContext))
+        .filter((item) => item.hotPoolSlot);
+    }
+  } catch (error) {
+    saveConnectionFallback(error, "K线预热计划暂未完成");
+  }
+  return buildLocalKlinePreheatPlan({
+    marketKey,
+    symbol,
+    timeframes: uniqueTimeframes,
+    windowSize,
+    mode,
+    gateKey,
+    blind,
+    scenarioId,
+    prefetchDepth
+  });
+}
+
 async function preheatKlineTrainingSlices({
   marketKey = "cn",
   symbol = "",
@@ -1473,14 +1571,16 @@ async function prefetchKlineTrainingSlices({
   const useHotPool = shouldUseKlineHotPool({ symbol, blind });
   const hotPoolDepth = Math.max(1, Math.min(12, Number(prefetchDepth || 1)));
   if (useHotPool) {
-    const hotPoolJobs = [];
-    uniqueTimeframes.forEach((timeframeKey) => {
-      for (let index = 0; index < hotPoolDepth; index += 1) {
-        hotPoolJobs.push({
-          timeframeKey,
-          hotPoolSlot: buildHotPoolRequestSlot(`prefetch-${timeframeKey}-${index}`)
-        });
-      }
+    const hotPoolJobs = await fetchKlinePreheatPlan({
+      marketKey,
+      symbol,
+      timeframes: uniqueTimeframes,
+      windowSize,
+      mode,
+      gateKey,
+      blind,
+      scenarioId,
+      prefetchDepth: hotPoolDepth
     });
     await preheatKlineTrainingSlices({
       marketKey,
@@ -1493,13 +1593,14 @@ async function prefetchKlineTrainingSlices({
     }).catch(() => null);
     hotPoolJobs.forEach((job) => {
       requests.push(fetchKlineTrainingSlice({
-        marketKey,
+        marketKey: job.marketKey || marketKey,
         timeframeKey: job.timeframeKey,
-        symbol,
-        windowSize,
-        mode,
-        gateKey,
-        blind,
+        symbol: job.symbol || symbol,
+        windowSize: job.windowSize || windowSize,
+        mode: job.mode || mode,
+        gateKey: job.gateKey || gateKey,
+        blind: job.blind,
+        seed: job.seed || job.hotPoolSlot,
         hotPoolSlot: job.hotPoolSlot,
         useHotPoolQueue: false,
         storeHotPoolResult: true
