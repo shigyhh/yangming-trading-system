@@ -38,6 +38,7 @@ const klineMindJson = readPage("kline-mind", "index.json");
 const tradeReviewWxml = readPage("trade-review", "index.wxml");
 const tradeReviewJs = readPage("trade-review", "index.js");
 const reportWxml = readPage("report", "index.wxml");
+const homeJs = readPage("home", "index.js");
 const profileJs = readPage("profile", "index.js");
 const appJs = readFileSync(join(root, "miniprogram", "app.js"), "utf8");
 const appJsonText = readFileSync(join(root, "miniprogram", "app.json"), "utf8");
@@ -99,6 +100,43 @@ assert.ok(
   homeWxml.includes("{{homeFocusView.done ? '' : 'single-focus'}}"),
   "home incomplete first screen should use the compact single-focus layout"
 );
+assert.equal(
+  homeWxml.includes('class="home-quiet-paths"'),
+  false,
+  "home first screen should not keep a K-line shortcut beside the primary review action"
+);
+assert.equal(
+  homeWxml.includes(">K线观心</button>"),
+  false,
+  "home first screen should not expose K-line training as a competing CTA"
+);
+assert.ok(
+  homeWxml.includes('class="home-flow-strip"'),
+  "home should expose a lightweight visible loop strip after the primary action"
+);
+assert.ok(
+  homeWxml.includes('wx:for="{{homeFlowSteps}}"'),
+  "home closure strip should be driven by loop state, not hard-coded decoration"
+);
+assert.ok(
+  homeWxml.includes("{{item.done ? 'done' : ''}} {{item.current ? 'current' : ''}}"),
+  "home closure strip should mark completed and current steps"
+);
+assert.ok(
+  homeWxml.includes('wx:if="{{homeContinuityVisible}}" class="home-continuity-panel"'),
+  "home should reveal the closure evidence panel only when there is meaningful progress"
+);
+assert.ok(
+  homeJs.includes("function buildHomeFlowSteps"),
+  "home page should derive the visible closure strip from current evidence state"
+);
+assert.ok(
+  homeJs.includes("homeFlowSteps: buildHomeFlowSteps"),
+  "home data should refresh the closure strip whenever entry state is loaded"
+);
+["真实记录", "第一念", "活镜", "今日训练", "心证卡"].forEach((label) => {
+  assert.ok(homeWxml.includes(label) || homeJs.includes(label), `home loop strip should include ${label}`);
+});
 
 const demoSession = buildKlineMindSession({
   record: {
@@ -321,9 +359,11 @@ assert.equal(bottomTabWxml.includes("tab-transition-veil"), false, "bottom tab s
 ].forEach((pageWxml) => {
   assert.equal(pageWxml.includes("<bottom-tab-bar"), false, "native tab pages should not mount a duplicate page-level bottom tab component");
 });
-assert.ok(homeWxml.includes('class="home-quiet-paths"'), "home should expose quiet secondary paths without competing with the main CTA");
-assert.ok(homeWxml.includes("K线观心"), "home should make the core K-line mind training naturally discoverable");
-assert.ok(homeWxml.indexOf("今日只练一件事") < homeWxml.indexOf('class="home-quiet-paths"'), "home should encounter the single daily task before secondary paths");
+assert.ok(homeWxml.includes('class="home-flow-strip"'), "home should expose the closure path without competing with the main CTA");
+assert.equal(homeWxml.includes("K线观心"), false, "home should keep K-line training out of the first-screen dispatch");
+assert.ok(homeWxml.indexOf("今日只练一件事") < homeWxml.indexOf('class="home-flow-strip"'), "home should encounter the single daily task before the closure path");
+assertRuleHas(homeWxss, ".home-flow-step.done text", ["color: rgba(95, 132, 117, 0.86)"], "home closure path should visibly mark completed steps");
+assertRuleHas(homeWxss, ".home-flow-step.current text", ["color: rgba(216, 183, 111, 0.9)"], "home closure path should visibly mark the current step");
 assert.equal(homeWxml.includes("当前状态"), false, "home should not explain the same first-screen task twice");
 assert.ok(trainingWxml.includes("开始K线观心"), "training primary button should name the core K-line mind practice");
 assert.ok(profileWxml.includes("toggleEvidenceChain"), "profile should fold the closure chain behind a quiet disclosure");

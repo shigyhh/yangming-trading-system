@@ -80,9 +80,14 @@
           bindtap="goMiniPrimary"
         >{{miniHomeView.primaryText}}</button>
         <view wx:if="{{miniHomeView.primaryHint}}" class="mini-primary-hint">{{miniHomeView.primaryHint}}</view>
-        <view wx:if="{{!homeFocusView.done}}" class="home-quiet-paths">
-          <button data-noripple="1" class="home-quiet-link" bindtap="goKlineMind">K线观心</button>
-          <text>用真实历史片段，先看第一反应。</text>
+        <view wx:if="{{!homeFocusView.done && homeFlowSteps.length}}" class="home-flow-strip" aria-label="今日闭环路径">
+          <view
+            wx:for="{{homeFlowSteps}}"
+            wx:key="key"
+            class="home-flow-step {{item.done ? 'done' : ''}} {{item.current ? 'current' : ''}}"
+          >
+            <text>{{item.label}}</text>
+          </view>
         </view>
       </view>
 
@@ -169,7 +174,7 @@
           <view class="home-today-state-foot">{{serverTodayStateView.updatedAt || serverTodayStateView.fallbackText}}</view>
         </view>
 
-        <view wx:if="{{false && homeContinuitySteps.length}}" class="home-continuity-panel">
+        <view wx:if="{{homeContinuityVisible}}" class="home-continuity-panel">
           <view class="home-continuity-head">
             <view>
               <view class="home-continuity-kicker">今日闭环</view>

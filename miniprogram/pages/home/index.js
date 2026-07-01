@@ -293,6 +293,33 @@ function buildHomeContinuitySteps(chain = {}) {
   return steps.slice(currentIndex - 1, currentIndex + 2);
 }
 
+function findClosureStep(chain = {}, key = "") {
+  return ((chain || {}).steps || []).find((step) => step && step.key === key) || {};
+}
+
+function buildHomeFlowSteps({ closureEvidenceChain = {}, heroTasks = {}, completionView = {} } = {}) {
+  const reviewStep = findClosureStep(closureEvidenceChain, "review");
+  const thoughtStep = findClosureStep(closureEvidenceChain, "thought");
+  const archiveStep = findClosureStep(closureEvidenceChain, "archive");
+  const cardStep = findClosureStep(closureEvidenceChain, "card");
+  const trainingDone = !!((heroTasks || {}).klineDone || (completionView || {}).done);
+  const steps = [
+    { key: "review", label: "真实记录", done: !!reviewStep.done },
+    { key: "thought", label: "第一念", done: !!thoughtStep.done },
+    { key: "mirror", label: "活镜", done: !!(archiveStep.done || reviewStep.done) },
+    { key: "training", label: "今日训练", done: trainingDone },
+    { key: "card", label: "心证卡", done: !!cardStep.done }
+  ];
+  const firstPending = steps.find((step) => !step.done);
+  return steps.map((step) => Object.assign({}, step, {
+    current: firstPending ? step.key === firstPending.key : step.key === "card"
+  }));
+}
+
+function buildHomeContinuityVisible(chain = {}, completionView = {}) {
+  return Number((chain || {}).completedCount || 0) > 0 || !!(completionView || {}).done;
+}
+
 function buildRitualProgress(checkedCount, ritualState = {}) {
   const ready = checkedCount >= VOWS.length;
   return {
@@ -1071,6 +1098,9 @@ const initialUnifiedJourneyView = getUnifiedJourneyView({
   training7View: initialTraining7View,
   dailyContent: initialDailyContent
 });
+const initialClosureEvidenceChain = getClosureEvidenceChain();
+const initialCompletionView = getTodayCompletionState();
+const initialHeroTasks = buildHeroTasks({ dailyContent: initialDailyContent, training7View: initialTraining7View });
 
 function setNativeTabBarVisible(visible) {
   if (typeof wx === "undefined") return;
@@ -1124,7 +1154,7 @@ Page({
     selectedReactionTag: "",
     reactionDraft: "",
     reactionRecord: null,
-    heroTasks: buildHeroTasks({ dailyContent: initialDailyContent, training7View: initialTraining7View }),
+    heroTasks: initialHeroTasks,
     training7View: initialTraining7View,
     training7Summary: buildTraining7Summary(initialTraining7View),
     threeSeals: getTodayThreeSeals(),
@@ -1136,16 +1166,22 @@ Page({
     journeyState: getJourneySnapshot({ lastPage: "home" }),
     journeyResumeView: buildJourneyResumeView(getJourneySnapshot({ lastPage: "home" })),
     unifiedJourneyView: initialUnifiedJourneyView,
-    completionView: getTodayCompletionState(),
+    completionView: initialCompletionView,
     homeFocusView: buildHomeFocusView({
       primaryAction: { key: "mind", text: "照见今日" },
       miniHomeView: INITIAL_MINI_HOME_VIEW,
       journeyState: getJourneySnapshot({ lastPage: "home" }),
-      completionView: getTodayCompletionState()
+      completionView: initialCompletionView
     }),
     evidenceSummary: getEvidenceSummary({ limit: 4 }),
-    closureEvidenceChain: getClosureEvidenceChain(),
-    homeContinuitySteps: buildHomeContinuitySteps(getClosureEvidenceChain()),
+    closureEvidenceChain: initialClosureEvidenceChain,
+    homeContinuitySteps: buildHomeContinuitySteps(initialClosureEvidenceChain),
+    homeFlowSteps: buildHomeFlowSteps({
+      closureEvidenceChain: initialClosureEvidenceChain,
+      heroTasks: initialHeroTasks,
+      completionView: initialCompletionView
+    }),
+    homeContinuityVisible: buildHomeContinuityVisible(initialClosureEvidenceChain, initialCompletionView),
     serverTodayStateView: buildHomeTodayStateView(),
     serverTodayStateAction: resolveHomeTodayStateAction(buildHomeTodayStateView().nextActionText),
     cardGenerating: false,
@@ -1440,6 +1476,12 @@ Page({
       evidenceSummary,
       closureEvidenceChain,
       homeContinuitySteps: buildHomeContinuitySteps(closureEvidenceChain),
+      homeFlowSteps: buildHomeFlowSteps({
+        closureEvidenceChain,
+        heroTasks: displayHeroTasks,
+        completionView
+      }),
+      homeContinuityVisible: buildHomeContinuityVisible(closureEvidenceChain, completionView),
       userBinding: getUserBinding(),
       dailyContent,
       hasAssessment: !!assessment
