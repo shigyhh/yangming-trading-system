@@ -9,6 +9,7 @@ import {
   listHistoricalKlineInstruments,
   revealHistoricalKlineSlice
 } from "../src/services/historicalKline.js";
+import { route } from "../src/routes/router.js";
 
 test("historical kline catalog exposes markets, cycles and rules", () => {
   const catalog = listHistoricalKlineCatalog();
@@ -63,6 +64,23 @@ test("historical kline slice returns blind real-data practice segment", async ()
   const reveal = revealHistoricalKlineSlice(result.slice.reveal_token);
   assert.equal(reveal.reveal.symbol, "600519");
   assert.equal(reveal.reveal.timeframe_key, "1d");
+});
+
+test("historical kline hot-slice route returns a real slice without a 404 fallback", async () => {
+  const req = {
+    method: "GET",
+    url: "/api/v1/kline-history/hot-slice?market=cn_equity&symbol=600519&timeframe=1d&window=60&blind=1&mode=firecracker",
+    headers: { host: "127.0.0.1:8787" }
+  };
+  const res = new MockResponse();
+
+  await route(req, res);
+  const result = res.result();
+
+  assert.equal(result.statusCode, 200);
+  assert.equal(result.body.ok, true);
+  assert.equal(result.body.slice.hot_pool, true);
+  assert.equal(result.body.slice.candles.length, 60);
 });
 
 test("historical kline slice can resample daily cache into week and year cycles", async () => {
@@ -140,3 +158,28 @@ test("historical kline download normalizes provider data without exposing tokens
   assert.equal(result.job.dry_run, true);
   assert.ok(!JSON.stringify(result).includes("test-token"));
 });
+
+class MockResponse {
+  constructor() {
+    this.statusCode = 0;
+    this.headers = {};
+    this.payload = "";
+  }
+
+  writeHead(statusCode, headers = {}) {
+    this.statusCode = statusCode;
+    this.headers = headers;
+  }
+
+  end(payload = "") {
+    this.payload = String(payload || "");
+  }
+
+  result() {
+    return {
+      statusCode: this.statusCode,
+      headers: this.headers,
+      body: this.payload ? JSON.parse(this.payload) : null
+    };
+  }
+}

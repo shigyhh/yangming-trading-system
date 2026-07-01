@@ -27,10 +27,14 @@ const CLIENT_ID_KEY = "zhixing_client_id";
 const PRODUCTION_API_BASE = "https://xxjyxt.com";
 const DEFAULT_API_BASE = "http://127.0.0.1:8787";
 const KLINE_MIN_CANDLES = 6;
-const KLINE_TRAINING_WINDOW_SIZE = 150;
+const KLINE_TRAINING_WINDOW_SIZE = 180;
+const KLINE_TRAINING_FALLBACK_WINDOWS = [180, 150, 96];
 const SAFE_CONNECTION_MESSAGE = "后端同步：暂未连接";
 const SAFE_FALLBACK_TEXT = "本地档案已保存。可稍后再同步，也可以先继续今日修行。";
 const KLINE_HOT_POOL_QUEUE_LIMIT = 12;
+const KLINE_INSTANT_CACHE_KEY = "ym_kline_training_instant_cache_v1";
+const KLINE_INSTANT_CACHE_LIMIT = 24;
+const KLINE_INSTANT_CACHE_TTL_MS = 1000 * 60 * 60 * 8;
 const klineHotPoolQueues = {};
 
 function getMiniProgramEnvVersion() {
@@ -976,6 +980,23 @@ const KLINE_TIMEFRAME_MAP = {
 const klineSliceCache = {};
 const klineSliceRequests = {};
 
+function getStorageValue(key, fallback = null) {
+  try {
+    const value = wx.getStorageSync(key);
+    return value === undefined || value === "" ? fallback : value;
+  } catch (error) {
+    return fallback;
+  }
+}
+
+function setStorageValue(key, value) {
+  try {
+    wx.setStorageSync(key, value);
+  } catch (error) {
+    // Storage can fail in low-space or restricted runtimes; network fetch still remains the source.
+  }
+}
+
 function normalizeKlineHistorySymbol(symbol = "") {
   const value = String(symbol || "").trim().toUpperCase();
   const match = value.match(/^(\d{6})\.(SZ|SH|BJ)$/);
@@ -1013,6 +1034,89 @@ function buildKlineSliceCacheKey({
     blind ? "blind" : "open",
     String(seed || "")
   ].join("|");
+}
+
+function buildKlineInstantCacheKey({
+  marketKey = "cn",
+  timeframeKey = "101",
+  symbol = "",
+  mode = "step_replay",
+  startDate = "",
+  endDate = "",
+  entryTime = "",
+  personalityType = "",
+  gateKey = "shi_shang_mo",
+  blind = true,
+  seed = "",
+  scenarioId = ""
+} = {}) {
+  const market = KLINE_MARKET_MAP[marketKey] || "cn_equity";
+  const timeframe = KLINE_TIMEFRAME_MAP[timeframeKey] || "101";
+  const safeSymbol = normalizeKlineHistorySymbol(symbol);
+  return [
+    market,
+    timeframe,
+    safeSymbol,
+    String(mode || "step_replay"),
+    String(startDate || ""),
+    String(endDate || ""),
+    String(entryTime || ""),
+    String(personalityType || ""),
+    String(gateKey || ""),
+    blind ? "blind" : "open",
+    String(seed || scenarioId || "")
+  ].join("|");
+}
+
+function readKlineInstantCacheStore() {
+  const value = getStorageValue(KLINE_INSTANT_CACHE_KEY, {});
+  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+}
+
+function writeKlineInstantCacheStore(store = {}) {
+  const entries = Object.entries(store)
+    .sort((a, b) => Number((b[1] || {}).cachedAt || 0) - Number((a[1] || {}).cachedAt || 0))
+    .slice(0, KLINE_INSTANT_CACHE_LIMIT);
+  setStorageValue(KLINE_INSTANT_CACHE_KEY, Object.fromEntries(entries));
+}
+
+function cacheKlineTrainingSliceResult(params = {}, result = {}) {
+  if (!result || result.ok === false || !(result.candles || []).length) return null;
+  if ((result.candles || []).length < KLINE_MIN_CANDLES) return null;
+  const cacheKey = buildKlineInstantCacheKey(params);
+  const store = readKlineInstantCacheStore();
+  const safeResult = JSON.parse(JSON.stringify(result));
+  store[cacheKey] = {
+    cachedAt: Date.now(),
+    result: safeResult
+  };
+  writeKlineInstantCacheStore(store);
+  return safeResult;
+}
+
+function getCachedKlineTrainingSlice(params = {}) {
+  const cacheKey = buildKlineInstantCacheKey(params);
+  const store = readKlineInstantCacheStore();
+  const entry = store[cacheKey];
+  if (!entry || !entry.result) return null;
+  const ageMs = Date.now() - Number(entry.cachedAt || 0);
+  if (!Number.isFinite(ageMs) || ageMs < 0 || ageMs > KLINE_INSTANT_CACHE_TTL_MS) return null;
+  const result = entry.result;
+  if (!result.ok || !(result.candles || []).length || (result.candles || []).length < KLINE_MIN_CANDLES) return null;
+  return Object.assign({}, result, {
+    instantCacheHit: true,
+    instantCacheAgeMs: ageMs
+  });
+}
+
+function buildKlineRequestWindowQueue(requestedWindow) {
+  const safeRequested = Math.max(KLINE_MIN_CANDLES, Math.round(Number(requestedWindow || KLINE_TRAINING_WINDOW_SIZE)));
+  const candidates = [safeRequested].concat(KLINE_TRAINING_FALLBACK_WINDOWS.filter((item) => item < safeRequested));
+  return Array.from(new Set(candidates)).filter((item) => item >= KLINE_MIN_CANDLES);
+}
+
+function isKlineWindowInsufficientError(error) {
+  return /数量不足|insufficient|请求失败：404|404/.test(getTechnicalMessage(error));
 }
 
 function buildKlinePrefetchSeedQueue({ seed = "", scenarioId = "", seedQueue = [], prefetchDepth = 1 } = {}) {
@@ -1138,6 +1242,7 @@ async function fetchKlineTrainingSlice({
   const timeframe = KLINE_TIMEFRAME_MAP[timeframeKey] || "101";
   const safeSymbol = normalizeKlineHistorySymbol(symbol);
   const requestedWindow = trainingLength || windowSize;
+  const requestWindows = buildKlineRequestWindowQueue(requestedWindow);
   const useHotPool = shouldUseKlineHotPool({ symbol: safeSymbol, endDate, entryTime, blind });
   const queueParams = {
     marketKey,
@@ -1150,7 +1255,8 @@ async function fetchKlineTrainingSlice({
     entryTime,
     personalityType,
     gateKey,
-    blind
+    blind,
+    seed
   };
   if (useHotPool && useHotPoolQueue && !storeHotPoolResult) {
     const queuedSlice = takeQueuedKlineHotPoolSlice(queueParams);
@@ -1172,11 +1278,11 @@ async function fetchKlineTrainingSlice({
   });
   if (!useHotPool && klineSliceCache[cacheKey]) return klineSliceCache[cacheKey];
   if (klineSliceRequests[cacheKey]) return klineSliceRequests[cacheKey];
-  const query = [
+  const buildSliceQuery = (actualWindow) => [
     `market=${encodeURIComponent(market)}`,
     safeSymbol ? `symbol=${encodeURIComponent(safeSymbol)}` : "",
     `timeframe=${encodeURIComponent(timeframe)}`,
-    `window=${encodeURIComponent(requestedWindow)}`,
+    `window=${encodeURIComponent(actualWindow)}`,
     startDate ? `start_date=${encodeURIComponent(startDate)}` : "",
     endDate ? `end_date=${encodeURIComponent(endDate)}` : "",
     entryTime ? `entryTime=${encodeURIComponent(entryTime)}` : "",
@@ -1191,20 +1297,37 @@ async function fetchKlineTrainingSlice({
     try {
       const useDefaultDevtoolsBase = !hasConfiguredApiBase() && shouldUseDefaultDevtoolsApiBase();
       const useProductionFallback = !hasConfiguredApiBase() && !useDefaultDevtoolsBase;
-      const requestSlice = async (path) => {
+      const requestSlice = async (path, actualWindow) => {
         const result = await request({
           path,
           apiBaseOverride: useProductionFallback ? PRODUCTION_API_BASE : "",
           allowUnconfigured: useProductionFallback || useDefaultDevtoolsBase,
           timeout: 25000
         });
-        return normalizeKlineTrainingSliceResult(result, { market, timeframe, symbol: safeSymbol, windowSize: requestedWindow });
+        return normalizeKlineTrainingSliceResult(result, { market, timeframe, symbol: safeSymbol, windowSize: actualWindow });
       };
-      const hotPoolPath = `/api/v1/kline-history/hot-slice?${query}`;
-      const normalPath = `/api/v1/kline-history/slice?${query}`;
+      const requestFirstAvailableSlice = async (pathname) => {
+        let lastResult = null;
+        let lastError = null;
+        for (const actualWindow of requestWindows) {
+          try {
+            const normalized = await requestSlice(`${pathname}?${buildSliceQuery(actualWindow)}`, actualWindow);
+            lastResult = normalized;
+            if (normalized.ok && (normalized.candles || []).length >= KLINE_MIN_CANDLES) {
+              cacheKlineTrainingSliceResult(Object.assign({}, queueParams, { windowSize: actualWindow }), normalized);
+              return normalized;
+            }
+          } catch (error) {
+            lastError = error;
+            if (!isKlineWindowInsufficientError(error)) throw error;
+          }
+        }
+        if (lastResult) return lastResult;
+        throw lastError || new Error("历史数据连接未完成");
+      };
       if (useHotPool) {
         try {
-          const hotPoolNormalized = await requestSlice(hotPoolPath);
+          const hotPoolNormalized = await requestFirstAvailableSlice("/api/v1/kline-history/hot-slice");
           if (hotPoolNormalized.ok && (hotPoolNormalized.candles || []).length >= KLINE_MIN_CANDLES) {
             if (storeHotPoolResult) queueKlineHotPoolSlice(queueParams, hotPoolNormalized);
             return hotPoolNormalized;
@@ -1213,7 +1336,7 @@ async function fetchKlineTrainingSlice({
           saveConnectionFallback(hotPoolError, "历史数据热池连接未完成");
         }
       }
-      const normalized = await requestSlice(normalPath);
+      const normalized = await requestFirstAvailableSlice("/api/v1/kline-history/slice");
       if (normalized.ok && (normalized.candles || []).length >= KLINE_MIN_CANDLES) {
         if (useHotPool && storeHotPoolResult) {
           queueKlineHotPoolSlice(queueParams, normalized);
@@ -1520,6 +1643,8 @@ module.exports = {
   syncShareAttribution,
   requestKlineTrainingSample,
   fetchKlineTrainingSlice,
+  getCachedKlineTrainingSlice,
+  cacheKlineTrainingSliceResult,
   fetchTradeReviewMarketContext,
   prefetchKlineTrainingSlices,
   normalizeKlineTrainingSliceResult

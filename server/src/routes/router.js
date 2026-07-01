@@ -1427,7 +1427,7 @@ export async function route(req, res) {
     return sendJson(res, 200, { ok: true, ...result });
   }
 
-  if (req.method === "GET" && pathname === "/api/v1/kline-history/slice") {
+  if (req.method === "GET" && (pathname === "/api/v1/kline-history/slice" || pathname === "/api/v1/kline-history/hot-slice")) {
     const result = await buildHistoricalKlineSlice({
       marketKey: url.searchParams.get("market") || url.searchParams.get("market_key") || "",
       symbol: url.searchParams.get("symbol") || url.searchParams.get("code") || url.searchParams.get("instrument") || "",
@@ -1442,6 +1442,15 @@ export async function route(req, res) {
       startDate: url.searchParams.get("start_date") || url.searchParams.get("start") || "",
       endDate: url.searchParams.get("end_date") || url.searchParams.get("end") || ""
     });
+    if (pathname === "/api/v1/kline-history/hot-slice") {
+      result.slice = {
+        ...result.slice,
+        hot_pool: true,
+        hotPool: true,
+        pool_slot: url.searchParams.get("pool_slot") || "",
+        cache_status: "hot"
+      };
+    }
     return sendJson(res, 200, { ok: true, ...result });
   }
 

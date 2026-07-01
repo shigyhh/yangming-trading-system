@@ -19,6 +19,7 @@ const {
 const {
   buildTradeReviewUrl,
   fetchKlineTrainingSlice,
+  getCachedKlineTrainingSlice,
   KLINE_TRAINING_WINDOW_SIZE,
   retryPendingKlineTrainingSync,
   syncKlineTrainingRecord,
@@ -253,6 +254,19 @@ function buildHistorySliceCacheKey(record = {}) {
     record.scenarioId || "scene-fast-001",
     record.symbol || ""
   ].join("|");
+}
+
+function buildHistorySliceRequestParams(record = {}) {
+  return {
+    marketKey: record.marketKey || "cn_equity",
+    timeframeKey: record.timeframeKey || "1d",
+    symbol: record.symbol || "",
+    windowSize: KLINE_TRAINING_WINDOW_SIZE,
+    mode: "step_replay",
+    gateKey: "shi_shang_mo",
+    blind: true,
+    seed: record.scenarioId || ""
+  };
 }
 
 function shouldCachePageHistorySlice(historySlice = {}) {
@@ -546,7 +560,15 @@ Page({
       this.applyHistorySlice(baseRecord, cachedSlice);
       return;
     }
-    const keepCurrentChart = !!options.keepCurrentChart && !!((this.data.session || {}).hasHistoricalData);
+    const requestParams = buildHistorySliceRequestParams(baseRecord);
+    const instantCachedResult = getCachedKlineTrainingSlice(requestParams);
+    const instantCachedSlice = instantCachedResult ? buildMindHistorySlice(instantCachedResult) : null;
+    const hasInstantCache = shouldCachePageHistorySlice(instantCachedSlice || {});
+    if (hasInstantCache) {
+      this.historySliceCache = Object.assign({}, this.historySliceCache || {}, { [cacheKey]: instantCachedSlice });
+      this.applyHistorySlice(baseRecord, instantCachedSlice);
+    }
+    const keepCurrentChart = (!!options.keepCurrentChart || hasInstantCache) && !!((this.data.session || {}).hasHistoricalData);
     this.setData({
       historyLoading: true,
       historyError: "",
@@ -560,14 +582,7 @@ Page({
         })
     });
     fetchKlineTrainingSlice({
-      marketKey: baseRecord.marketKey || "cn_equity",
-      timeframeKey: baseRecord.timeframeKey || "1d",
-      symbol: baseRecord.symbol || "",
-      windowSize: KLINE_TRAINING_WINDOW_SIZE,
-      mode: "step_replay",
-      gateKey: "shi_shang_mo",
-      blind: true,
-      seed: baseRecord.scenarioId || "",
+      ...requestParams,
       hotPoolSlot: buildSliceRequestSlot("active")
     }).then((result) => {
       if (this.latestHistoryRequestKey !== requestKey) return;
@@ -586,16 +601,10 @@ Page({
       const nextRecord = Object.assign({}, record, { timeframeKey });
       const cacheKey = buildHistorySliceCacheKey(nextRecord);
       if ((this.historySliceCache || {})[cacheKey] || (this.prefetchHistoryRequests || {})[cacheKey]) return;
+      const requestParams = buildHistorySliceRequestParams(nextRecord);
       this.prefetchHistoryRequests = Object.assign({}, this.prefetchHistoryRequests || {}, { [cacheKey]: true });
       fetchKlineTrainingSlice({
-        marketKey: nextRecord.marketKey || "cn_equity",
-        timeframeKey,
-        symbol: nextRecord.symbol || "",
-        windowSize: KLINE_TRAINING_WINDOW_SIZE,
-        mode: "step_replay",
-        gateKey: "shi_shang_mo",
-        blind: true,
-        seed: nextRecord.scenarioId || "",
+        ...requestParams,
         hotPoolSlot: buildSliceRequestSlot(`timeframe-${timeframeKey}`),
         useHotPoolQueue: false,
         storeHotPoolResult: true
@@ -617,16 +626,10 @@ Page({
       const nextRecord = Object.assign({}, record, { scenarioId: nextScenarioId });
       const cacheKey = buildHistorySliceCacheKey(nextRecord);
       if ((this.historySliceCache || {})[cacheKey] || (this.prefetchHistoryRequests || {})[cacheKey]) return;
+      const requestParams = buildHistorySliceRequestParams(nextRecord);
       this.prefetchHistoryRequests = Object.assign({}, this.prefetchHistoryRequests || {}, { [cacheKey]: true });
       fetchKlineTrainingSlice({
-        marketKey: nextRecord.marketKey || "cn_equity",
-        timeframeKey: nextRecord.timeframeKey || "1d",
-        symbol: nextRecord.symbol || "",
-        windowSize: KLINE_TRAINING_WINDOW_SIZE,
-        mode: "step_replay",
-        gateKey: "shi_shang_mo",
-        blind: true,
-        seed: nextScenarioId,
+        ...requestParams,
         hotPoolSlot: buildSliceRequestSlot(`next-${nextScenarioId}`),
         useHotPoolQueue: false,
         storeHotPoolResult: true
