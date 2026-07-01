@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { Readable } from "node:stream";
 import test from "node:test";
 
 import {
@@ -81,6 +82,49 @@ test("historical kline hot-slice route returns a real slice without a 404 fallba
   assert.equal(result.body.ok, true);
   assert.equal(result.body.slice.hot_pool, true);
   assert.equal(result.body.slice.candles.length, 60);
+});
+
+test("historical kline preheat warms targeted training slices for hot reads", async () => {
+  const preheatReq = Readable.from([Buffer.from(JSON.stringify({
+    market: "cn_equity",
+    window: 60,
+    mode: "firecracker",
+    gate: "shi_shang_mo",
+    blind: true,
+    items: [
+      { timeframe: "1d", pool_slot: "review-focus-preheat-1" },
+      { timeframe: "60m", pool_slot: "review-focus-preheat-2" }
+    ]
+  }))]);
+  Object.assign(preheatReq, {
+    method: "POST",
+    url: "/api/v1/kline-history/preheat",
+    headers: { host: "127.0.0.1:8787" }
+  });
+  const preheatRes = new MockResponse();
+
+  await route(preheatReq, preheatRes);
+  const preheated = preheatRes.result();
+
+  assert.equal(preheated.statusCode, 200);
+  assert.equal(preheated.body.ok, true);
+  assert.equal(preheated.body.preheated.length, 2);
+  assert.equal(preheated.body.preheated.every((item) => item.ok && item.candle_count === 60), true);
+
+  const hotReq = {
+    method: "GET",
+    url: "/api/v1/kline-history/hot-slice?market=cn_equity&timeframe=1d&window=60&blind=1&mode=firecracker&gate=shi_shang_mo&pool_slot=review-focus-preheat-1",
+    headers: { host: "127.0.0.1:8787" }
+  };
+  const hotRes = new MockResponse();
+
+  await route(hotReq, hotRes);
+  const hot = hotRes.result();
+
+  assert.equal(hot.statusCode, 200);
+  assert.equal(hot.body.ok, true);
+  assert.equal(hot.body.slice.cache_status, "hot_hit");
+  assert.equal(hot.body.slice.candles.length, 60);
 });
 
 test("historical kline slice can resample daily cache into week and year cycles", async () => {

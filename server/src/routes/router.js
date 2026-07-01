@@ -18,7 +18,7 @@ import { consumeWechatAuthCode, createWechatAuthUrl } from "../services/wechatAu
 import { advanceZhixingReplaySession, finishZhixingReplaySession, getZhixingReplaySession, listZhixingReplayResults, startZhixingReplaySession, submitZhixingReplayDecision } from "../services/zhixingReplay.js";
 import { dispatchTrainingPrescriptionBinding, generateShareCardBinding, getAdminUserFromBindings, getDataBindingUserSummary, getInviteSourceStatsBinding, getRetestComparisonBinding, getShareCardBinding, getTrainingPrescriptionBinding, getUserReportBinding, listAdminUsersFromBindings, listTradeReviewBindings, saveAssessmentReportBinding, saveKLineRecordBinding, saveRetestResultBinding, saveTradeReviewBinding, saveTrainingRecordBinding, syncAssistantSummaryToFeishuBinding, updateAssistantHandoffBinding } from "../services/dataBinding.js";
 import { getGlobalReflectionToday, listGlobalReflectionChoices, submitGlobalReflectionVote } from "../services/globalReflection.js";
-import { buildHistoricalKlineSlice, downloadHistoricalKline, getHistoricalKlineRules, listHistoricalKlineCatalog, listHistoricalKlineInstruments, revealHistoricalKlineSlice } from "../services/historicalKline.js";
+import { buildHistoricalKlineHotSlice, buildHistoricalKlineSlice, downloadHistoricalKline, getHistoricalKlineRules, listHistoricalKlineCatalog, listHistoricalKlineInstruments, preheatHistoricalKlineSlices, revealHistoricalKlineSlice } from "../services/historicalKline.js";
 import { buildTradeReviewOcrDraft } from "../services/tradeReviewOcr.js";
 import { createYmtyLivecode, createYmtyOrder, getYmtyAdminCampaign, getYmtyAfterpayEntrance, getYmtyAuditLogs, getYmtyOrderForPayment, getYmtyOrderStatus, getYmtyPublicCampaign, isYmtyMockPaymentAllowed, listYmtyCourseUsers, listYmtyLivecodeAssignments, listYmtyLivecodes, listYmtyOrders, markYmtyMockPaySuccess, markYmtyOrderPaid, switchYmtyAfterpayLivecode, toggleYmtyLivecodeFull, toggleYmtyLivecodeStatus, updateYmtyCampaign, updateYmtyLivecode, updateYmtyLivecodeByKey } from "../services/ymtyCampaign.js";
 import { getYmtyAnalyticsSummary, recordYmtyFrontendEvent } from "../services/ymtyAnalytics.js";
@@ -79,6 +79,8 @@ export async function route(req, res) {
         kline_history_instruments: "GET /api/v1/kline-history/instruments?market=cn_equity&timeframe=1d",
         kline_history_rules: "GET /api/v1/kline-history/rules?market=cn_equity",
         kline_history_slice: "GET /api/v1/kline-history/slice?market=cn_equity&symbol=600519&timeframe=1d&blind=1",
+        kline_history_hot_slice: "GET /api/v1/kline-history/hot-slice?market=cn_equity&timeframe=1d&blind=1",
+        kline_history_preheat: "POST /api/v1/kline-history/preheat",
         kline_history_reveal: "GET /api/v1/kline-history/reveal?token=xxx",
         kline_history_download: "POST /api/v1/kline-history/download",
         kline_segments: "GET|POST /api/v1/kline-segments",
@@ -1427,8 +1429,16 @@ export async function route(req, res) {
     return sendJson(res, 200, { ok: true, ...result });
   }
 
+  if (req.method === "POST" && pathname === "/api/v1/kline-history/preheat") {
+    const body = await readJson(req);
+    const result = await preheatHistoricalKlineSlices(body);
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
   if (req.method === "GET" && (pathname === "/api/v1/kline-history/slice" || pathname === "/api/v1/kline-history/hot-slice")) {
-    const result = await buildHistoricalKlineSlice({
+    const isHotSlice = pathname === "/api/v1/kline-history/hot-slice";
+    const poolSlot = url.searchParams.get("pool_slot") || "";
+    const sliceParams = {
       marketKey: url.searchParams.get("market") || url.searchParams.get("market_key") || "",
       symbol: url.searchParams.get("symbol") || url.searchParams.get("code") || url.searchParams.get("instrument") || "",
       timeframeKey: url.searchParams.get("timeframe") || url.searchParams.get("timeframe_key") || url.searchParams.get("klt") || "",
@@ -1438,17 +1448,21 @@ export async function route(req, res) {
       personalityType: url.searchParams.get("personality_type") || "",
       gateKey: url.searchParams.get("gate") || url.searchParams.get("gate_key") || "",
       blind: getBooleanParam(url, "blind", true),
-      seed: url.searchParams.get("seed") || "",
+      seed: url.searchParams.get("seed") || (isHotSlice ? poolSlot : ""),
       startDate: url.searchParams.get("start_date") || url.searchParams.get("start") || "",
-      endDate: url.searchParams.get("end_date") || url.searchParams.get("end") || ""
-    });
-    if (pathname === "/api/v1/kline-history/hot-slice") {
+      endDate: url.searchParams.get("end_date") || url.searchParams.get("end") || "",
+      poolSlot
+    };
+    const result = isHotSlice
+      ? await buildHistoricalKlineHotSlice(sliceParams)
+      : await buildHistoricalKlineSlice(sliceParams);
+    if (isHotSlice) {
       result.slice = {
         ...result.slice,
         hot_pool: true,
         hotPool: true,
-        pool_slot: url.searchParams.get("pool_slot") || "",
-        cache_status: "hot"
+        pool_slot: poolSlot,
+        cache_status: result.slice?.cache_status || "hot"
       };
     }
     return sendJson(res, 200, { ok: true, ...result });

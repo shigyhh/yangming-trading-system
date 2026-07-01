@@ -1184,6 +1184,87 @@ function queueKlineHotPoolSlice(params = {}, result = {}) {
   klineHotPoolQueues[queueKey] = queue;
 }
 
+function buildKlinePreheatItem({
+  marketKey = "cn",
+  timeframeKey = "1d",
+  symbol = "",
+  windowSize = KLINE_TRAINING_WINDOW_SIZE,
+  mode = "step_replay",
+  gateKey = "shi_shang_mo",
+  blind = true,
+  seed = "",
+  hotPoolSlot = "",
+  poolSlot = ""
+} = {}) {
+  return {
+    market: KLINE_MARKET_MAP[marketKey] || "cn_equity",
+    timeframe: KLINE_TIMEFRAME_MAP[timeframeKey] || "1d",
+    symbol: normalizeKlineHistorySymbol(symbol),
+    window: windowSize,
+    mode,
+    gate: gateKey,
+    blind: Boolean(blind),
+    seed: seed || hotPoolSlot || poolSlot || "",
+    pool_slot: hotPoolSlot || poolSlot || ""
+  };
+}
+
+async function preheatKlineTrainingSlices({
+  marketKey = "cn",
+  symbol = "",
+  timeframes = ["1d", "60m", "30m"],
+  windowSize = KLINE_TRAINING_WINDOW_SIZE,
+  mode = "step_replay",
+  gateKey = "shi_shang_mo",
+  blind = true,
+  items = []
+} = {}) {
+  const preheatItems = Array.isArray(items) && items.length
+    ? items.map((item) => buildKlinePreheatItem({
+      marketKey,
+      symbol,
+      windowSize,
+      mode,
+      gateKey,
+      blind,
+      ...item
+    }))
+    : Array.from(new Set(timeframes)).map((timeframeKey) => buildKlinePreheatItem({
+      marketKey,
+      timeframeKey,
+      symbol,
+      windowSize,
+      mode,
+      gateKey,
+      blind
+    }));
+  if (!preheatItems.length) return { ok: false, preheated: [] };
+  try {
+    return await request({
+      path: "/api/v1/kline-history/preheat",
+      method: "POST",
+      data: {
+        market: KLINE_MARKET_MAP[marketKey] || "cn_equity",
+        symbol: normalizeKlineHistorySymbol(symbol),
+        window: windowSize,
+        mode,
+        gate: gateKey,
+        blind: Boolean(blind),
+        items: preheatItems
+      },
+      timeout: 25000
+    });
+  } catch (error) {
+    saveConnectionFallback(error, "历史数据预热暂未完成");
+    return {
+      ok: false,
+      preheated: [],
+      reason: "network_error",
+      errorMessage: getTechnicalMessage(error)
+    };
+  }
+}
+
 function buildKlineSamplingPayload(input = {}) {
   const sourceType = String(pickApiValue(input.sourceType, input.source_type) || "").trim();
   const errorType = String(pickApiValue(input.errorType, input.error_type) || "").trim();
@@ -1374,7 +1455,7 @@ async function fetchKlineTrainingSlice({
   return klineSliceRequests[cacheKey];
 }
 
-function prefetchKlineTrainingSlices({
+async function prefetchKlineTrainingSlices({
   marketKey = "cn",
   symbol = "",
   timeframes = ["1d", "60m", "30m"],
@@ -1392,31 +1473,62 @@ function prefetchKlineTrainingSlices({
   const useHotPool = shouldUseKlineHotPool({ symbol, blind });
   const hotPoolDepth = Math.max(1, Math.min(12, Number(prefetchDepth || 1)));
   if (useHotPool) {
+    const hotPoolJobs = [];
     uniqueTimeframes.forEach((timeframeKey) => {
       for (let index = 0; index < hotPoolDepth; index += 1) {
-        requests.push(fetchKlineTrainingSlice({
-          marketKey,
+        hotPoolJobs.push({
           timeframeKey,
-          symbol,
-          windowSize,
-          mode,
-          gateKey,
-          blind,
-          hotPoolSlot: buildHotPoolRequestSlot(`prefetch-${timeframeKey}-${index}`),
-          useHotPoolQueue: false,
-          storeHotPoolResult: true
-        }).catch((error) => ({
-          ok: false,
-          timeframeKey,
-          source: "local_demo",
-          reason: "network_error",
-          errorMessage: getTechnicalMessage(error)
-        })));
+          hotPoolSlot: buildHotPoolRequestSlot(`prefetch-${timeframeKey}-${index}`)
+        });
       }
+    });
+    await preheatKlineTrainingSlices({
+      marketKey,
+      symbol,
+      windowSize,
+      mode,
+      gateKey,
+      blind,
+      items: hotPoolJobs
+    }).catch(() => null);
+    hotPoolJobs.forEach((job) => {
+      requests.push(fetchKlineTrainingSlice({
+        marketKey,
+        timeframeKey: job.timeframeKey,
+        symbol,
+        windowSize,
+        mode,
+        gateKey,
+        blind,
+        hotPoolSlot: job.hotPoolSlot,
+        useHotPoolQueue: false,
+        storeHotPoolResult: true
+      }).catch((error) => ({
+        ok: false,
+        timeframeKey: job.timeframeKey,
+        source: "local_demo",
+        reason: "network_error",
+        errorMessage: getTechnicalMessage(error)
+      })));
     });
     return Promise.all(requests);
   }
   const sliceSeeds = buildKlinePrefetchSeedQueue({ seed, scenarioId, seedQueue, prefetchDepth });
+  const preheatJobs = [];
+  uniqueTimeframes.forEach((timeframeKey) => {
+    sliceSeeds.forEach((sliceSeed) => {
+      preheatJobs.push({ timeframeKey, seed: sliceSeed });
+    });
+  });
+  await preheatKlineTrainingSlices({
+    marketKey,
+    symbol,
+    windowSize,
+    mode,
+    gateKey,
+    blind,
+    items: preheatJobs
+  }).catch(() => null);
   uniqueTimeframes.forEach((timeframeKey) => {
     sliceSeeds.forEach((sliceSeed) => {
       requests.push(fetchKlineTrainingSlice({
@@ -1646,6 +1758,7 @@ module.exports = {
   getCachedKlineTrainingSlice,
   cacheKlineTrainingSliceResult,
   fetchTradeReviewMarketContext,
+  preheatKlineTrainingSlices,
   prefetchKlineTrainingSlices,
   normalizeKlineTrainingSliceResult
 };

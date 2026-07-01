@@ -20,7 +20,7 @@ const {
   saveDailyLoopState,
   todayKey
 } = require("../../utils/store");
-const { syncCheckIn, syncLocalState, syncTrainingProgress } = require("../../utils/api");
+const { prefetchKlineTrainingSlices, syncCheckIn, syncLocalState, syncTrainingProgress } = require("../../utils/api");
 const { promptShareMoment } = require("../../utils/share-moments");
 const { getPersonalityArchive } = require("../../modules/personality/index");
 const { buildCompletionPatch } = require("../../modules/continuity/index");
@@ -47,6 +47,23 @@ function buildTrainingDayFocus(training7View = {}, trainingDay = {}) {
     question: trainingDay.reflectionQuestion || "今天只照见这一念。",
     action: trainingDay.boundaryPractice || trainingDay.action || trainingDay.practice || "完成一次照心记录，再进入真实动作。"
   };
+}
+
+function warmKlineMindTrainingEntry(type = "") {
+  prefetchKlineTrainingSlices({
+    marketKey: "cn",
+    timeframes: ["1d", "60m", "30m"],
+    mode: "firecracker",
+    gateKey: "shi_shang_mo",
+    blind: true,
+    scenarioId: `special-training-${type || "daily"}`,
+    seedQueue: [
+      `special-training-${type || "daily"}-a`,
+      `special-training-${type || "daily"}-b`,
+      `special-training-${type || "daily"}-c`
+    ],
+    prefetchDepth: 3
+  }).catch(() => {});
 }
 
 Page({
@@ -113,6 +130,7 @@ Page({
       trainingDay,
       trainingDayFocus: buildTrainingDayFocus(training7View, trainingDay)
     });
+    warmKlineMindTrainingEntry(type);
   },
 
   toggleTrainingPlan() {
@@ -226,6 +244,7 @@ Page({
   },
 
   goKlineMind() {
+    warmKlineMindTrainingEntry(this.data.type);
     wx.redirectTo({ url: "/pages/kline-mind/index" });
   },
 

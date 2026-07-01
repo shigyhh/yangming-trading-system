@@ -12,6 +12,9 @@ const DEFAULT_WINDOW_SIZE = 96;
 const MIN_WINDOW_SIZE = 12;
 const MAX_WINDOW_SIZE = 240;
 const SLICE_TOKEN_VERSION = "kline_slice_v1";
+const HOT_SLICE_CACHE_TTL_MS = 1000 * 60 * 10;
+const HOT_SLICE_CACHE_LIMIT = 160;
+const historicalKlineHotSliceCache = new Map();
 
 const TIMEFRAMES = [
   { key: "5m", label: "5分钟", granularity: "intraday", minutes: 5 },
@@ -513,6 +516,70 @@ export async function buildHistoricalKlineSlice({
       reveal: Boolean(blind) ? null : descriptor,
       compliance: COMPLIANCE_TEXT
     }
+  };
+}
+
+export async function buildHistoricalKlineHotSlice(input = {}) {
+  const params = normalizeHistoricalKlineHotParams(input);
+  const cacheKey = buildHistoricalKlineHotCacheKey(params);
+  const cached = historicalKlineHotSliceCache.get(cacheKey);
+  const now = Date.now();
+  if (cached && now - cached.cachedAt <= HOT_SLICE_CACHE_TTL_MS) {
+    return withHotSliceMeta(cached.result, {
+      cacheStatus: "hot_hit",
+      cachedAt: cached.cachedAt,
+      poolSlot: params.poolSlot
+    });
+  }
+
+  const result = await buildHistoricalKlineSlice(params);
+  historicalKlineHotSliceCache.set(cacheKey, {
+    cachedAt: now,
+    result: cloneJson(result)
+  });
+  trimHistoricalKlineHotCache(now);
+  return withHotSliceMeta(result, {
+    cacheStatus: "hot_miss",
+    cachedAt: now,
+    poolSlot: params.poolSlot
+  });
+}
+
+export async function preheatHistoricalKlineSlices(input = {}) {
+  const items = buildHistoricalKlinePreheatItems(input);
+  const preheated = [];
+
+  for (const item of items) {
+    try {
+      const result = await buildHistoricalKlineHotSlice(item);
+      preheated.push({
+        ok: true,
+        market: item.marketKey,
+        timeframe: item.timeframeKey,
+        symbol: item.symbol || "",
+        seed: item.seed || "",
+        pool_slot: item.poolSlot || "",
+        cache_status: result.slice?.cache_status || "",
+        candle_count: (result.slice?.candles || []).length
+      });
+    } catch (error) {
+      preheated.push({
+        ok: false,
+        market: item.marketKey,
+        timeframe: item.timeframeKey,
+        symbol: item.symbol || "",
+        seed: item.seed || "",
+        pool_slot: item.poolSlot || "",
+        error: error.message || "preheat failed"
+      });
+    }
+  }
+
+  return {
+    preheated,
+    total: preheated.length,
+    ready: preheated.filter((item) => item.ok).length,
+    cache_ttl_ms: HOT_SLICE_CACHE_TTL_MS
   };
 }
 
@@ -1182,6 +1249,121 @@ function decodeSliceToken(token) {
 
 function getSliceTokenKey() {
   return crypto.createHash("sha256").update(`${config.authCodeSecret}:historical-kline-slice`).digest();
+}
+
+function cloneJson(value) {
+  return JSON.parse(JSON.stringify(value || {}));
+}
+
+function normalizeHotBoolean(value, fallback = true) {
+  if (value === undefined || value === null || value === "") return fallback;
+  if (typeof value === "boolean") return value;
+  const text = String(value).trim().toLowerCase();
+  if (["1", "true", "yes", "y"].includes(text)) return true;
+  if (["0", "false", "no", "n"].includes(text)) return false;
+  return fallback;
+}
+
+function normalizeHistoricalKlineHotParams(input = {}) {
+  const poolSlot = String(input.poolSlot || input.pool_slot || input.hotPoolSlot || input.hot_pool_slot || "").trim();
+  const seed = String(input.seed || input.scenarioId || input.scenario_id || poolSlot || "").trim();
+  return {
+    marketKey: input.marketKey || input.market_key || input.market || DEFAULT_MARKET,
+    symbol: input.symbol || input.code || input.instrument || "",
+    timeframeKey: input.timeframeKey || input.timeframe_key || input.timeframe || input.klt || DEFAULT_TIMEFRAME,
+    adjustmentMode: input.adjustmentMode || input.adjustment_mode || input.adjustment || input.fq || "none",
+    windowSize: input.windowSize || input.window_size || input.window || DEFAULT_WINDOW_SIZE,
+    mode: input.mode || "step_replay",
+    personalityType: input.personalityType || input.personality_type || "",
+    gateKey: input.gateKey || input.gate_key || input.gate || "",
+    blind: normalizeHotBoolean(input.blind, true),
+    seed,
+    startDate: input.startDate || input.start_date || input.start || "",
+    endDate: input.endDate || input.end_date || input.end || "",
+    anchor: input.anchor || "",
+    poolSlot
+  };
+}
+
+function buildHistoricalKlineHotCacheKey(input = {}) {
+  const params = normalizeHistoricalKlineHotParams(input);
+  return [
+    String(params.marketKey || ""),
+    String(params.symbol || "").trim().toUpperCase(),
+    String(params.timeframeKey || ""),
+    String(params.adjustmentMode || ""),
+    String(params.windowSize || ""),
+    String(params.mode || ""),
+    String(params.personalityType || ""),
+    String(params.gateKey || ""),
+    params.blind ? "blind" : "open",
+    String(params.seed || ""),
+    String(params.startDate || ""),
+    String(params.endDate || ""),
+    String(params.anchor || "")
+  ].join("|");
+}
+
+function withHotSliceMeta(result = {}, { cacheStatus = "hot", cachedAt = Date.now(), poolSlot = "" } = {}) {
+  const cloned = cloneJson(result);
+  cloned.slice = {
+    ...(cloned.slice || {}),
+    hot_pool: true,
+    hotPool: true,
+    pool_slot: poolSlot || (cloned.slice || {}).pool_slot || "",
+    cache_status: cacheStatus,
+    cached_at: new Date(cachedAt).toISOString()
+  };
+  return cloned;
+}
+
+function trimHistoricalKlineHotCache(now = Date.now()) {
+  for (const [key, value] of historicalKlineHotSliceCache.entries()) {
+    if (!value || now - Number(value.cachedAt || 0) > HOT_SLICE_CACHE_TTL_MS) {
+      historicalKlineHotSliceCache.delete(key);
+    }
+  }
+  if (historicalKlineHotSliceCache.size <= HOT_SLICE_CACHE_LIMIT) return;
+  const sortedKeys = Array.from(historicalKlineHotSliceCache.entries())
+    .sort((a, b) => Number(a[1]?.cachedAt || 0) - Number(b[1]?.cachedAt || 0))
+    .map(([key]) => key);
+  while (historicalKlineHotSliceCache.size > HOT_SLICE_CACHE_LIMIT) {
+    historicalKlineHotSliceCache.delete(sortedKeys.shift());
+  }
+}
+
+function buildHistoricalKlinePreheatItems(input = {}) {
+  const explicitItems = Array.isArray(input.items) ? input.items : [];
+  const base = normalizeHistoricalKlineHotParams(input);
+  if (explicitItems.length) {
+    return explicitItems.slice(0, 36).map((item = {}) => normalizeHistoricalKlineHotParams({
+      ...base,
+      ...item,
+      marketKey: item.marketKey || item.market_key || item.market || base.marketKey,
+      timeframeKey: item.timeframeKey || item.timeframe_key || item.timeframe || item.klt || base.timeframeKey,
+      poolSlot: item.poolSlot || item.pool_slot || item.hotPoolSlot || item.hot_pool_slot || "",
+      seed: item.seed || item.scenarioId || item.scenario_id || item.poolSlot || item.pool_slot || item.hotPoolSlot || item.hot_pool_slot || ""
+    }));
+  }
+
+  const timeframes = Array.isArray(input.timeframes) && input.timeframes.length
+    ? input.timeframes
+    : [base.timeframeKey || DEFAULT_TIMEFRAME];
+  const seeds = Array.isArray(input.seeds) && input.seeds.length
+    ? input.seeds
+    : Array.from({ length: Math.max(1, Math.min(12, Number(input.preheatDepth || input.prefetchDepth || 1))) }, (_, index) => `preheat-${index + 1}`);
+  const items = [];
+  timeframes.forEach((timeframeKey) => {
+    seeds.forEach((seed) => {
+      items.push(normalizeHistoricalKlineHotParams({
+        ...base,
+        timeframeKey,
+        seed,
+        poolSlot: seed
+      }));
+    });
+  });
+  return items.slice(0, 36);
 }
 
 function createInstrumentKey(symbol = "") {

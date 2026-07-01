@@ -1,8 +1,28 @@
 const { getTradeReviewRecords } = require("../../utils/store");
+const { prefetchKlineTrainingSlices } = require("../../utils/api");
 const {
   buildLiveMirrorReminder,
   buildTradeReviewRecordView
 } = require("../../modules/trade-review/index");
+
+function warmReviewFocusKline(record = {}) {
+  const reviewId = record.id || record.reviewId || "latest";
+  const errorType = record.errorType || record.error_type || record.trainingPrescription || "review";
+  prefetchKlineTrainingSlices({
+    marketKey: "cn",
+    timeframes: ["1d", "60m", "30m"],
+    mode: "firecracker",
+    gateKey: "shi_shang_mo",
+    blind: true,
+    scenarioId: `review-focus-${reviewId}`,
+    seedQueue: [
+      `review-focus-${reviewId}-${errorType}-a`,
+      `review-focus-${reviewId}-${errorType}-b`,
+      `review-focus-${reviewId}-${errorType}-c`
+    ],
+    prefetchDepth: 3
+  }).catch(() => {});
+}
 
 Page({
   data: {
@@ -27,6 +47,7 @@ Page({
       record: target ? buildTradeReviewRecordView(target) : null,
       reminder: buildLiveMirrorReminder(state)
     });
+    if (target) warmReviewFocusKline(target);
   },
 
   previewScreenshot() {
@@ -45,6 +66,7 @@ Page({
 
   goKlineTraining() {
     const reviewId = this.data.reviewId || ((this.data.record || {}).id) || "";
+    warmReviewFocusKline(this.data.record || {});
     const reviewQuery = reviewId
       ? `&sourceReviewId=${encodeURIComponent(reviewId)}&source_review_id=${encodeURIComponent(reviewId)}`
       : "";
