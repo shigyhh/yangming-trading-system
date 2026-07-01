@@ -155,6 +155,7 @@ const { buildKlineTrainingHotPoolSlot, prefetchKlineTrainingSlices } = require("
   const trainingSource = fs.readFileSync(path.join(__dirname, "../pages/training/index.js"), "utf8");
   const reviewDetailSource = fs.readFileSync(path.join(__dirname, "../pages/trade-review-detail/index.js"), "utf8");
   const klinePageSource = fs.readFileSync(path.join(__dirname, "../pages/kline-mind/index.js"), "utf8");
+  const klinePageWxml = fs.readFileSync(path.join(__dirname, "../pages/kline-mind/index.wxml"), "utf8");
   assert.ok(trainingSource.includes("prefetchKlineTrainingSlices"));
   assert.ok(trainingSource.includes("warmKlineMindTrainingEntry"));
   assert.ok(reviewDetailSource.includes("prefetchKlineTrainingSlices"));
@@ -162,6 +163,12 @@ const { buildKlineTrainingHotPoolSlot, prefetchKlineTrainingSlices } = require("
   assert.ok(klinePageSource.includes("prefetchKlineTrainingSlices"));
   assert.ok(klinePageSource.includes("buildKlineTrainingHotPoolSlot"));
   assert.ok(!klinePageSource.includes("buildSliceRequestSlot(\"active\")"));
+  assert.ok(klinePageSource.includes("const SLICE_SWITCH_LIMIT = 9"));
+  assert.ok(klinePageSource.includes("sliceSwitchLimitReached"));
+  assert.ok(klinePageWxml.includes("sliceSwitchLimitReached"));
+  assert.ok(!klinePageSource.includes("SLICE_SWITCH_COOLDOWN_MS"));
+  assert.ok(!klinePageSource.includes("sliceSwitchLocked"));
+  assert.ok(!klinePageWxml.includes("sliceSwitchLocked"));
 
   console.log("kline preheat tests passed");
 })().catch((error) => {

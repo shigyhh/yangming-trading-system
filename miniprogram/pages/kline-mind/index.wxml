@@ -59,8 +59,8 @@
             </button>
           </view>
           <button
-            class="slice-change-btn {{sliceSwitchLocked || historyLoading ? 'disabled' : ''}}"
-            disabled="{{sliceSwitchLocked || historyLoading}}"
+            class="slice-change-btn {{sliceSwitchLimitReached ? 'disabled' : ''}}"
+            disabled="{{sliceSwitchLimitReached}}"
             bindtap="switchSlice"
           >
             换一段

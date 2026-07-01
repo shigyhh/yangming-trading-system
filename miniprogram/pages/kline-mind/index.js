@@ -64,8 +64,7 @@ const DECISION_ACTIONS = [
 ];
 
 const CHART_ZOOM_ORDER = ["overview", "wide", "standard", "focus"];
-const SLICE_SWITCH_LIMIT = 5;
-const SLICE_SWITCH_COOLDOWN_MS = 3000;
+const SLICE_SWITCH_LIMIT = 9;
 const KLINE_CANVAS_METRICS = {
   width: 690,
   mainHeight: 336,
@@ -320,7 +319,7 @@ Page({
     selectedMainIndicatorKey: "ma",
     selectedIndicatorKey: "vol",
     sliceSwitchCount: 0,
-    sliceSwitchLocked: false,
+    sliceSwitchLimitReached: false,
     tradeReviewUrl: "",
     canvasMetrics: KLINE_CANVAS_METRICS,
     chartCrosshair: { visible: false, x: 0, tooltip: null }
@@ -331,11 +330,6 @@ Page({
     this.prefetchHistoryRequests = this.prefetchHistoryRequests || {};
     retryPendingKlineTrainingSync().catch(() => {});
     this.load();
-  },
-
-  onUnload() {
-    clearTimeout(this.sliceSwitchUnlockTimer);
-    this.sliceSwitchUnlockTimer = null;
   },
 
   load() {
@@ -877,12 +871,13 @@ Page({
   },
 
   switchSlice() {
-    if (this.data.historyLoading || this.data.sliceSwitchLocked) {
-      wx.showToast({ title: "稍候再换", icon: "none" });
+    const switchCount = Number(this.data.sliceSwitchCount || 0);
+    if (switchCount >= SLICE_SWITCH_LIMIT || this.data.sliceSwitchLimitReached) {
+      wx.showToast({ title: "本次先练这一段", icon: "none" });
       return;
     }
-    if (Number(this.data.sliceSwitchCount || 0) >= SLICE_SWITCH_LIMIT) {
-      wx.showToast({ title: "本次先练这一段", icon: "none" });
+    if (this.data.historyLoading) {
+      wx.showToast({ title: "正在换段", icon: "none" });
       return;
     }
     this.hideChartCrosshair();
@@ -900,17 +895,14 @@ Page({
       insightLine: ""
     });
     const session = this.buildSession(form);
+    const nextSwitchCount = switchCount + 1;
     this.setData({
       form: Object.assign({}, form, { selectedCandleKey: session.selectedCandleKey }),
       session,
-      sliceSwitchCount: Number(this.data.sliceSwitchCount || 0) + 1,
-      sliceSwitchLocked: true,
+      sliceSwitchCount: nextSwitchCount,
+      sliceSwitchLimitReached: nextSwitchCount >= SLICE_SWITCH_LIMIT,
       showBodySignal: false
     });
-    clearTimeout(this.sliceSwitchUnlockTimer);
-    this.sliceSwitchUnlockTimer = setTimeout(() => {
-      this.setData({ sliceSwitchLocked: false });
-    }, SLICE_SWITCH_COOLDOWN_MS);
     this.loadServerHistorySlice(form, { keepCurrentChart: true });
   },
 
