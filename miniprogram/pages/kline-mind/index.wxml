@@ -106,6 +106,24 @@
                   <text class="crosshair-metric crosshair-metric-wide">量 {{chartCrosshair.tooltip.volume}}</text>
                 </view>
               </view>
+              <view wx:if="{{chartCrosshair.visible}}" class="chart-crosshair-readout {{chartCrosshair.readout.direction}}">
+                <view>
+                  <text>涨跌幅</text>
+                  <view>{{chartCrosshair.readout.changePct}}</view>
+                </view>
+                <view>
+                  <text>涨跌额</text>
+                  <view>{{chartCrosshair.readout.change}}</view>
+                </view>
+                <view>
+                  <text>振幅</text>
+                  <view>{{chartCrosshair.readout.amplitude}}</view>
+                </view>
+                <view>
+                  <text>成交量</text>
+                  <view>{{chartCrosshair.readout.volume}}</view>
+                </view>
+              </view>
               <view class="indicator-strip-spacer"></view>
               <canvas
                 wx:if="{{runtimeView.indicatorPanel.visible}}"

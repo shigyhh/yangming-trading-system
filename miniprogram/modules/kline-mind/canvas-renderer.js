@@ -208,6 +208,20 @@ function formatVolumeLabel(value) {
   return number.toFixed(0);
 }
 
+function formatSignedPriceLabel(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return "0.00";
+  if (Math.abs(number) < 0.005) return "0.00";
+  return `${number > 0 ? "+" : ""}${formatPriceLabel(number)}`;
+}
+
+function formatPercentLabel(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return "0.00%";
+  if (Math.abs(number) < 0.005) return "0.00%";
+  return `${number > 0 ? "+" : ""}${number.toFixed(2)}%`;
+}
+
 function collectPriceValues(candles = []) {
   return candles.reduce((values, candle) => {
     ["open", "high", "low", "close"].forEach((field) => {
@@ -319,6 +333,31 @@ function resolveCloseY(candleCommand = {}) {
   return candleCommand.bodyTop + candleCommand.bodyHeight / 2;
 }
 
+function buildCrosshairReadout(candles = [], index = 0) {
+  const candle = candles[index] || {};
+  const previous = candles[index - 1] || null;
+  const open = Number(candle.open);
+  const high = Number(candle.high);
+  const low = Number(candle.low);
+  const close = Number(candle.close);
+  const previousClose = Number((previous || {}).close);
+  const base = Number.isFinite(previousClose) && previousClose > 0
+    ? previousClose
+    : Number.isFinite(open) && open > 0 ? open : close;
+  const change = Number.isFinite(close) && Number.isFinite(base) ? close - base : 0;
+  const changePct = Number.isFinite(base) && base !== 0 ? change / base * 100 : 0;
+  const amplitude = Number.isFinite(high) && Number.isFinite(low) && Number.isFinite(base) && base !== 0
+    ? (high - low) / base * 100
+    : 0;
+  return {
+    direction: change > 0 ? "up" : change < 0 ? "down" : "flat",
+    change: formatSignedPriceLabel(change),
+    changePct: formatPercentLabel(changePct),
+    amplitude: `${Math.max(0, amplitude).toFixed(2)}%`,
+    volume: formatVolumeLabel(candle.volume)
+  };
+}
+
 function buildCrosshair(candleCommands = [], candles = [], metrics = {}, options = {}) {
   if (!options.crosshairVisible || !candleCommands.length) {
     return { visible: false, commands: [] };
@@ -351,6 +390,7 @@ function buildCrosshair(candleCommands = [], candles = [], metrics = {}, options
       volume: formatVolumeLabel(candle.volume),
       indexText: `${index + 1}/${candles.length}`
     },
+    readout: buildCrosshairReadout(candles, index),
     commands: [
       {
         type: "crosshair-line",

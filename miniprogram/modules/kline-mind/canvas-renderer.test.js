@@ -85,10 +85,17 @@ model.main.timeAxis.labels.forEach((label) => {
 
 assert.ok(crosshairModel.main.crosshair && crosshairModel.main.crosshair.visible, "crosshair should be resolved when requested");
 assert.ok(crosshairModel.main.crosshair.tooltip, "crosshair should expose an OHLCV tooltip payload");
+assert.ok(crosshairModel.main.crosshair.readout, "crosshair should expose a fixed chart readout payload");
 ["date", "open", "high", "low", "close", "volume"].forEach((field) => {
   assert.ok(
     String(crosshairModel.main.crosshair.tooltip[field] || "").length > 0,
     `crosshair tooltip should include ${field}`
+  );
+});
+["change", "changePct", "amplitude", "volume", "direction"].forEach((field) => {
+  assert.ok(
+    String(crosshairModel.main.crosshair.readout[field] || "").length > 0,
+    `crosshair readout should include ${field}`
   );
 });
 assert.ok(

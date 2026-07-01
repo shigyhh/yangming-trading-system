@@ -275,6 +275,10 @@ assert.ok(klineMindWxml.includes("chartCrosshair.tooltip.high"), "kline tooltip 
 assert.ok(klineMindWxml.includes("chartCrosshair.tooltip.low"), "kline tooltip should show the candle low value");
 assert.ok(klineMindWxml.includes("chartCrosshair.tooltip.close"), "kline tooltip should show the candle close value");
 assert.ok(klineMindWxml.includes("chartCrosshair.tooltip.volume"), "kline tooltip should show the candle volume value");
+assert.ok(klineMindWxml.includes('class="chart-crosshair-readout'), "kline chart should render a fixed crosshair readout panel");
+assert.ok(klineMindWxml.includes("chartCrosshair.readout.changePct"), "kline readout should show selected candle change percentage");
+assert.ok(klineMindWxml.includes("chartCrosshair.readout.amplitude"), "kline readout should show selected candle amplitude");
+assert.ok(klineMindWxml.includes("chartCrosshair.readout.volume"), "kline readout should show selected candle volume detail");
 assert.ok(klineMindJs.includes("showChartCrosshair"), "kline page should translate long-press coordinates into a chart crosshair");
 assert.ok(klineMindJs.includes("chartCrosshair"), "kline page should keep crosshair state in page data");
 assert.ok(klineCanvasRendererJs.includes("price-label"), "kline canvas renderer should draw price-axis labels");
