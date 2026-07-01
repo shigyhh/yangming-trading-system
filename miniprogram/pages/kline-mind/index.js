@@ -384,7 +384,12 @@ Page({
     ctx.fillRect(0, 0, width, height);
 
     (board.commands || []).forEach((command) => {
-      if (command.type === "grid-line" || command.type === "line-segment" || command.type === "crosshair-line") {
+      if (
+        command.type === "grid-line"
+        || command.type === "line-segment"
+        || command.type === "crosshair-line"
+        || command.type === "volume-guide"
+      ) {
         ctx.beginPath();
         ctx.setStrokeStyle(command.color || "rgba(244, 235, 221, 0.2)");
         ctx.setLineWidth(command.lineWidth || 1);
@@ -394,10 +399,10 @@ Page({
         return;
       }
 
-      if (command.type === "price-label") {
+      if (command.type === "price-label" || command.type === "time-label") {
         ctx.setFillStyle(command.color || "rgba(244, 235, 221, 0.48)");
         if (ctx.setFontSize) ctx.setFontSize(18);
-        if (ctx.setTextAlign) ctx.setTextAlign("right");
+        if (ctx.setTextAlign) ctx.setTextAlign(command.type === "time-label" ? "center" : "right");
         if (ctx.setTextBaseline) ctx.setTextBaseline("middle");
         ctx.fillText(command.text || "", command.x, command.y);
         if (ctx.setTextAlign) ctx.setTextAlign("left");
@@ -666,6 +671,7 @@ Page({
 
   selectChartZoom(e) {
     const chartZoomKey = e.currentTarget.dataset.zoom;
+    this.hideChartCrosshair();
     this.updateChartZoom(chartZoomKey);
   },
 
@@ -693,6 +699,7 @@ Page({
     const current = ((this.data.session || {}).chartZoomKey) || ((this.data.form || {}).chartZoomKey) || "wide";
     const index = CHART_ZOOM_ORDER.indexOf(current);
     const nextIndex = Math.max(0, index <= 0 ? 0 : index - 1);
+    this.hideChartCrosshair();
     this.updateChartZoom(CHART_ZOOM_ORDER[nextIndex]);
   },
 
@@ -701,6 +708,7 @@ Page({
     const index = CHART_ZOOM_ORDER.indexOf(current);
     const safeIndex = index >= 0 ? index : 0;
     const nextIndex = Math.min(CHART_ZOOM_ORDER.length - 1, safeIndex + 1);
+    this.hideChartCrosshair();
     this.updateChartZoom(CHART_ZOOM_ORDER[nextIndex]);
   },
 
@@ -804,6 +812,7 @@ Page({
       wx.showToast({ title: "本次先练这一段", icon: "none" });
       return;
     }
+    this.hideChartCrosshair();
     const currentForm = this.data.form || {};
     const scenarioId = getNextKlineMindSliceSeed(currentForm.scenarioId || "scene-fast-001");
     const form = Object.assign({}, currentForm, {

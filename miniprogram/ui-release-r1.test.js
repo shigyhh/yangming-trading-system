@@ -275,6 +275,11 @@ assert.ok(klineMindJs.includes("showChartCrosshair"), "kline page should transla
 assert.ok(klineMindJs.includes("chartCrosshair"), "kline page should keep crosshair state in page data");
 assert.ok(klineCanvasRendererJs.includes("price-label"), "kline canvas renderer should draw price-axis labels");
 assert.ok(klineCanvasRendererJs.includes("crosshair-line"), "kline canvas renderer should draw crosshair guide lines");
+assert.ok(klineCanvasRendererJs.includes("time-label"), "kline canvas renderer should draw time-axis labels");
+assert.ok(klineCanvasRendererJs.includes("volume-guide"), "kline canvas renderer should draw a linked volume guide in the indicator panel");
+assert.ok(klineMindJs.includes("hideChartCrosshair();\n    this.updateChartZoom"), "kline zoom should clear crosshair state before changing viewport density");
+assert.ok(klineMindJs.includes("hideChartCrosshair();\n    const currentForm = this.data.form || {};"), "kline slice switching should clear crosshair state before loading a new segment");
+assert.ok(klineMindWxml.includes("chartCrosshair.tooltip.volume"), "kline crosshair tooltip should link the selected candle with volume detail");
 assert.ok(klineMindWxml.indexOf('class="chart-stepper"') < klineMindWxml.indexOf('class="chart-canvas-scroll"'), "kline zoom controls should stay fixed in the visible chart corner, not inside the horizontal candle canvas");
 const klineChartTouchStart = klineMindWxml.indexOf('class="chart-canvas-scroll"');
 const klineIndicatorRailStart = klineMindWxml.indexOf('class="indicator-strip"', klineChartTouchStart);

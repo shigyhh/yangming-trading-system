@@ -76,6 +76,12 @@ model.main.priceAxis.labels.forEach((label) => {
   assert.ok(Number.isFinite(label.y), "price axis label y should be finite");
   assert.ok(String(label.text || "").length > 0, "price axis label text should be readable");
 });
+assert.ok(model.main.timeAxis && model.main.timeAxis.labels.length >= 2, "main chart should expose readable time-axis labels");
+assert.ok(model.main.commands.some((item) => item.type === "time-label"), "main chart should draw time labels through canvas commands");
+model.main.timeAxis.labels.forEach((label) => {
+  assert.ok(Number.isFinite(label.x), "time axis label x should be finite");
+  assert.ok(String(label.text || "").length > 0, "time axis label text should be readable");
+});
 
 assert.ok(crosshairModel.main.crosshair && crosshairModel.main.crosshair.visible, "crosshair should be resolved when requested");
 assert.ok(crosshairModel.main.crosshair.tooltip, "crosshair should expose an OHLCV tooltip payload");
@@ -92,6 +98,14 @@ assert.ok(
 assert.ok(
   crosshairModel.main.commands.some((item) => item.type === "crosshair-line" && item.axis === "horizontal"),
   "crosshair should draw a horizontal guide line"
+);
+assert.ok(
+  crosshairModel.indicator.crosshair && crosshairModel.indicator.crosshair.visible,
+  "indicator panel should receive linked crosshair state"
+);
+assert.ok(
+  crosshairModel.indicator.commands.some((item) => item.type === "volume-guide"),
+  "indicator panel should draw a linked volume guide for the selected candle"
 );
 
 for (const command of model.main.commands.concat(model.indicator.commands)) {

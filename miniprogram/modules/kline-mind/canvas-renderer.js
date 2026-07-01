@@ -251,6 +251,47 @@ function buildPriceAxis(candles = [], metrics = {}) {
   };
 }
 
+function formatTimeLabel(candle = {}) {
+  const raw = String(candle.date || candle.label || candle.time || candle.key || "").trim();
+  if (!raw) return "";
+  const dateMatch = raw.match(/(\d{4})[-/](\d{2})[-/](\d{2})/);
+  if (dateMatch) return `${dateMatch[2]}-${dateMatch[3]}`;
+  const compactMatch = raw.match(/^(\d{4})(\d{2})(\d{2})$/);
+  if (compactMatch) return `${compactMatch[2]}-${compactMatch[3]}`;
+  return raw.length > 8 ? raw.slice(-8) : raw;
+}
+
+function pickTimeAxisIndexes(count) {
+  if (count <= 0) return [];
+  if (count === 1) return [0];
+  const indexes = [0, Math.floor((count - 1) / 2), count - 1];
+  return Array.from(new Set(indexes));
+}
+
+function buildTimeAxis(candles = [], candleCommands = [], metrics = {}) {
+  const labels = pickTimeAxisIndexes(candles.length).map((index) => {
+    const command = candleCommands[index] || {};
+    const text = formatTimeLabel(candles[index]);
+    return {
+      index,
+      text,
+      x: clamp(Number(command.x || 0), metrics.paddingX, metrics.width - metrics.paddingX),
+      y: metrics.mainHeight - 8
+    };
+  }).filter((label) => label.text);
+  return {
+    labels,
+    commands: labels.map((label) => ({
+      type: "time-label",
+      key: `time-${label.index}-${label.text}`,
+      text: label.text,
+      x: label.x,
+      y: label.y,
+      color: "rgba(244, 235, 221, 0.42)"
+    }))
+  };
+}
+
 function findCrosshairIndex(candleCommands = [], options = {}) {
   if (!candleCommands.length) return -1;
   const explicitIndex = Number(options.crosshairIndex);
@@ -335,6 +376,34 @@ function buildCrosshair(candleCommands = [], candles = [], metrics = {}, options
   };
 }
 
+function buildIndicatorCrosshair(crosshair = {}, indicatorCommands = [], metrics = {}) {
+  if (!crosshair.visible) return { visible: false, commands: [] };
+  const bars = indicatorCommands.filter((item) => item.type === "indicator-bar");
+  const bar = bars[crosshair.index] || null;
+  const x = clamp(Number((bar || {}).x || crosshair.x || 0), 0, metrics.width);
+  const volumeTop = Number.isFinite(Number((bar || {}).top)) ? Number(bar.top) : 0;
+  const volumeHeight = Math.max(0, Number((bar || {}).height || 0));
+  return {
+    visible: true,
+    index: crosshair.index,
+    x,
+    commands: [
+      {
+        type: "volume-guide",
+        key: `volume-guide-${crosshair.index}`,
+        x1: x,
+        y1: 0,
+        x2: x,
+        y2: metrics.indicatorHeight,
+        top: volumeTop,
+        height: volumeHeight,
+        color: "rgba(216, 183, 111, 0.5)",
+        lineWidth: 1
+      }
+    ]
+  };
+}
+
 function normalizeMetrics(runtimeView = {}, options = {}) {
   const width = Math.max(240, toFiniteNumber(options.width, 690));
   const mainHeight = Math.max(180, toFiniteNumber(options.mainHeight, 336));
@@ -371,17 +440,19 @@ function buildKlineCanvasDrawModel(runtimeView = {}, options = {}) {
     bodyWidth: metrics.bodyWidth
   });
   const priceAxis = buildPriceAxis(candles, metrics);
+  const timeAxis = buildTimeAxis(candles, candleCommands, metrics);
   const crosshair = buildCrosshair(candleCommands, candles, metrics, options);
   const mainCommands = [
     ...buildGridCommands(metrics.width, metrics.mainHeight, { rows: 8, columns: 14 }),
     ...buildLineCommands(runtimeView.indicatorOverlay || {}, MAIN_OVERLAY_COLORS, metrics.plotTop),
     ...candleCommands,
     ...priceAxis.commands,
+    ...timeAxis.commands,
     ...crosshair.commands
   ];
 
   const indicatorPanel = runtimeView.indicatorPanel || {};
-  const indicatorCommands = indicatorPanel.visible === false
+  const baseIndicatorCommands = indicatorPanel.visible === false
     ? []
     : [
       ...buildGridCommands(metrics.width, metrics.indicatorHeight, { rows: 3, columns: 14 }),
@@ -394,12 +465,15 @@ function buildKlineCanvasDrawModel(runtimeView = {}, options = {}) {
         bodyWidth: metrics.bodyWidth
       })
     ];
+  const indicatorCrosshair = buildIndicatorCrosshair(crosshair, baseIndicatorCommands, metrics);
+  const indicatorCommands = baseIndicatorCommands.concat(indicatorCrosshair.commands);
 
   return {
     main: {
       width: metrics.width,
       height: metrics.mainHeight,
       priceAxis,
+      timeAxis,
       crosshair,
       commands: mainCommands
     },
@@ -409,6 +483,7 @@ function buildKlineCanvasDrawModel(runtimeView = {}, options = {}) {
       type: indicatorPanel.type || "vol",
       label: indicatorPanel.label || "",
       visible: indicatorPanel.visible !== false,
+      crosshair: indicatorCrosshair,
       commands: indicatorCommands
     }
   };
