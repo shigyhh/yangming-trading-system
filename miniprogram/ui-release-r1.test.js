@@ -52,6 +52,7 @@ const complianceNoticeWxml = readFileSync(join(root, "miniprogram", "components"
 const complianceNoticeWxss = readFileSync(join(root, "miniprogram", "components", "compliance-notice", "index.wxss"), "utf8");
 const homeWxss = readPage("home", "index.wxss");
 const klineMindWxss = readPage("kline-mind", "index.wxss");
+const assessmentWxss = readPage("assessment", "index.wxss");
 const tradeReviewWxss = readPage("trade-review", "index.wxss");
 const trainingWxss = readPage("training", "index.wxss");
 const profileWxss = readPage("profile", "index.wxss");
@@ -432,5 +433,14 @@ assertRuleHas(profileWxss, ".sync-actions", ["grid-template-columns: repeat(2, m
 assertRuleHas(profileWxss, ".sync-actions .ghost-btn,\n.sync-actions .secondary-btn,\n.sync-actions .primary-btn", ["width: 100%", "min-width: 0", "box-sizing: border-box"], "profile sync action buttons should shrink inside their grid cells");
 assertRuleHas(profileWxss, ".handoff-actions", ["grid-template-columns: minmax(0, 1fr)", "justify-items: center"], "profile assistant handoff action should align to the card center");
 assertRuleHas(profileWxss, ".handoff-actions button", ["display: flex", "align-items: center", "justify-content: center", "line-height: 1.2", "text-align: center"], "profile assistant handoff button label should be visually centered");
+assertRuleHas(klineMindWxss, ".simulation-console", ["overflow: hidden", "box-sizing: border-box"], "kline runtime training console should clip inner badges inside the card");
+assertRuleHas(klineMindWxss, ".simulation-head", ["min-width: 0", "max-width: 100%", "overflow: hidden", "box-sizing: border-box"], "kline runtime head should not let the emotion badge escape the card");
+assertRuleHas(klineMindWxss, ".emotion-badge", ["max-width: 132rpx", "box-sizing: border-box", "overflow: hidden", "text-overflow: ellipsis", "white-space: nowrap"], "kline runtime emotion badge should stay inside the head row");
+assertRuleHas(klineMindWxss, ".option-grid", ["grid-template-columns: repeat(2, minmax(0, 1fr))", "max-width: 100%", "box-sizing: border-box"], "kline naming option grid should fit two calm columns on mobile");
+assertRuleHas(klineMindWxss, ".option-pill", ["width: 100%", "min-width: 0", "box-sizing: border-box", "overflow-wrap: anywhere"], "kline naming pills should shrink and wrap inside their grid cells");
+assertRuleHas(assessmentWxss, ".mode-card,\n.dynamic-card", ["overflow: hidden", "box-sizing: border-box"], "assessment depth cards should clip internal controls inside the card");
+assertRuleHas(assessmentWxss, ".mode-head", ["min-width: 0", "max-width: 100%", "box-sizing: border-box"], "assessment depth head should stay inside the card width");
+assertRuleHas(assessmentWxss, ".mode-head > view", ["min-width: 0", "overflow-wrap: anywhere", "text-align: right"], "assessment depth head right copy should wrap instead of pushing the card");
+assertRuleHas(assessmentWxss, ".mode-btn", ["width: 100%", "min-width: 0", "margin: 0", "box-sizing: border-box", "overflow: hidden"], "assessment depth option buttons should not inherit native button overflow");
 
 console.log("MiniApp UI release R1 guard passed.");

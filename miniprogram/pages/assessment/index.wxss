@@ -2,14 +2,20 @@
 .dynamic-card {
   margin-top: 26rpx;
   padding: 24rpx;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .mode-head {
   position: relative;
   z-index: 1;
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 18rpx;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
   color: rgba(247, 239, 223, 0.62);
   font-size: 22rpx;
 }
@@ -19,18 +25,32 @@
   font-weight: 800;
 }
 
+.mode-head > view {
+  min-width: 0;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
 .mode-grid {
   position: relative;
   z-index: 1;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14rpx;
+  width: 100%;
+  max-width: 100%;
   margin-top: 20rpx;
+  box-sizing: border-box;
 }
 
 .mode-btn {
+  width: 100%;
+  min-width: 0;
   min-height: 112rpx;
+  margin: 0;
   padding: 16rpx 12rpx;
+  box-sizing: border-box;
+  overflow: hidden;
   border-radius: 18rpx;
   border: 1rpx solid rgba(247, 239, 223, 0.12);
   background: rgba(255, 255, 255, 0.045);
