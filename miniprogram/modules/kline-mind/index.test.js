@@ -13,6 +13,7 @@ const {
   getInitialKlineVisibleCount,
   startKlineTrainingRuntime,
   setKlineRuntimeChartZoom,
+  setKlineRuntimeViewportPan,
   setKlineRuntimeMainIndicator,
   setKlineRuntimeIndicator,
   buildKlineTrainingRecordPatch,
@@ -49,6 +50,25 @@ const historicalSlice = {
     { date: "2024-01-08", open: 9.35, high: 9.42, low: 9.18, close: 9.28, volume: 1400 },
     { date: "2024-01-09", open: 9.3, high: 9.58, low: 9.24, close: 9.52, volume: 2100 }
   ]
+};
+
+const longHistoricalSlice = {
+  source: "verified_long_fixture",
+  symbol: "000001.SZ",
+  start: "2024-02-01",
+  end: "2024-08-30",
+  candles: Array.from({ length: 160 }, (_, index) => {
+    const open = 10 + Math.sin(index / 8) * 0.4 + index * 0.01;
+    const close = open + (index % 5 === 0 ? -0.18 : 0.08);
+    return {
+      date: `2024-02-${String((index % 28) + 1).padStart(2, "0")}`,
+      open: Number(open.toFixed(2)),
+      high: Number((Math.max(open, close) + 0.16 + (index % 7) * 0.01).toFixed(2)),
+      low: Number((Math.min(open, close) - 0.14 - (index % 6) * 0.01).toFixed(2)),
+      close: Number(close.toFixed(2)),
+      volume: 1200 + index * 27 + (index % 9) * 160
+    };
+  })
 };
 
 const session = buildKlineMindSession({
@@ -91,6 +111,35 @@ assert.strictEqual(macdRuntime.indicatorPanel.type, "macd");
 const runtimePatch = buildKlineTrainingRecordPatch(macdRuntime);
 assert.strictEqual(runtimePatch.simulationMode, "blind_step_replay");
 assert.ok(runtimePatch.selectedCandleKey);
+
+const longSession = buildKlineMindSession({
+  assessment: { primary: "冲动型" },
+  trainingDay: { day: 1, title: "观入场冲动" },
+  record: { marketKey: "cn_equity", timeframeKey: "1d", chartZoomKey: "wide" },
+  historyCache: { cn_equity: { "1d": longHistoricalSlice } }
+});
+const blindRuntime = startKlineTrainingRuntime(longSession, {
+  trainingSessionId: "kline-module-runtime-pan-guard",
+  initialVisibleCount: 80,
+  initialMainIndicatorKey: "ma",
+  initialIndicatorKey: "vol"
+});
+assert.strictEqual(blindRuntime.currentIndex, 79);
+const aggressivelyPannedRuntime = setKlineRuntimeViewportPan(blindRuntime, -999);
+assert.ok(
+  Math.max(...aggressivelyPannedRuntime.visibleCandles.map((item) => item.runtimeIndex)) <= aggressivelyPannedRuntime.currentIndex,
+  "panning should never reveal candles beyond the current blind replay index"
+);
+const focusedRuntime = setKlineRuntimeChartZoom(aggressivelyPannedRuntime, "focus");
+assert.strictEqual(
+  focusedRuntime.chartViewport.rightBoundaryIndex,
+  focusedRuntime.currentIndex,
+  "zooming should keep the active revealed candle as the right boundary"
+);
+assert.ok(
+  Math.max(...focusedRuntime.visibleCandles.map((item) => item.runtimeIndex)) <= focusedRuntime.currentIndex,
+  "zooming should not expose unrevealed future candles"
+);
 
 const record = buildKlineMindRecord({
   selectedCandleKey: session.selectedCandleKey,

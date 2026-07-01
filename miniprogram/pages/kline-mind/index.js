@@ -481,6 +481,7 @@ Page({
   },
 
   showChartCrosshair(e) {
+    if (this.chartPanStart || this.chartPinchStart) return;
     const runtimeView = this.data.runtimeView || {};
     if (!runtimeView.visibleCandles || !runtimeView.visibleCandles.length) return;
     const crosshairX = this.getChartTouchX(e);
@@ -712,9 +713,33 @@ Page({
     this.updateChartZoom(CHART_ZOOM_ORDER[nextIndex]);
   },
 
+  getTouchDistance(touches = []) {
+    const first = touches[0] || {};
+    const second = touches[1] || {};
+    const dx = Number(second.clientX || second.x || 0) - Number(first.clientX || first.x || 0);
+    const dy = Number(second.clientY || second.y || 0) - Number(first.clientY || first.y || 0);
+    return Math.sqrt(dx * dx + dy * dy);
+  },
+
+  getCurrentChartZoomIndex() {
+    const current = ((this.data.session || {}).chartZoomKey) || ((this.data.form || {}).chartZoomKey) || "wide";
+    const index = CHART_ZOOM_ORDER.indexOf(current);
+    return index >= 0 ? index : CHART_ZOOM_ORDER.indexOf("wide");
+  },
+
   onChartPanStart(e) {
     this.hideChartCrosshair();
-    const touch = (e.touches || [])[0] || {};
+    const touches = e.touches || [];
+    if (touches.length >= 2) {
+      this.chartPanStart = null;
+      this.chartPinchStart = {
+        distance: this.getTouchDistance(touches),
+        zoomIndex: this.getCurrentChartZoomIndex()
+      };
+      return;
+    }
+    this.chartPinchStart = null;
+    const touch = touches[0] || {};
     const runtime = this.data.trainingRuntime || {};
     this.chartPanStart = {
       x: Number(touch.clientX || 0),
@@ -723,8 +748,26 @@ Page({
   },
 
   onChartPanMove(e) {
+    const touches = e.touches || [];
+    if (this.chartPinchStart && touches.length >= 2) {
+      const distance = this.getTouchDistance(touches);
+      const delta = distance - Number(this.chartPinchStart.distance || 0);
+      if (Math.abs(delta) < 18) return;
+      const direction = delta > 0 ? 1 : -1;
+      const nextIndex = Math.max(0, Math.min(
+        CHART_ZOOM_ORDER.length - 1,
+        Number(this.chartPinchStart.zoomIndex || 0) + direction
+      ));
+      if (nextIndex === this.chartPinchStart.zoomIndex) return;
+      this.chartPinchStart = {
+        distance,
+        zoomIndex: nextIndex
+      };
+      this.updateChartZoom(CHART_ZOOM_ORDER[nextIndex]);
+      return;
+    }
     if (!this.chartPanStart || !this.data.trainingRuntime) return;
-    const touch = (e.touches || [])[0] || {};
+    const touch = touches[0] || {};
     const currentX = Number(touch.clientX || 0);
     const dx = currentX - Number(this.chartPanStart.x || 0);
     const viewport = (this.data.trainingRuntime || {}).chartViewport || {};
@@ -744,6 +787,7 @@ Page({
 
   onChartPanEnd() {
     this.chartPanStart = null;
+    this.chartPinchStart = null;
   },
 
   selectMainIndicator(e) {

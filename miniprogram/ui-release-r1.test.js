@@ -258,6 +258,10 @@ assert.ok(klineMindWxml.includes("点最牵动的一根"), "kline playbook shoul
 assert.ok(klineMindWxml.includes('bindtouchmove="onChartPanMove"'), "kline blind chart should allow touch dragging to review revealed history");
 assert.ok(klineMindJs.includes("setKlineRuntimeViewportPan"), "kline blind chart should clamp touch panning through the training viewport engine");
 assert.ok(klineMindJs.includes("chartPanOffset"), "kline blind chart should keep viewport pan state instead of relying on native scroll position");
+assert.ok(klineMindJs.includes("getTouchDistance"), "kline chart should measure two-finger distance for pinch zoom");
+assert.ok(klineMindJs.includes("chartPinchStart"), "kline chart should keep pinch state separate from pan state");
+assert.ok(klineMindJs.includes("if (this.chartPanStart || this.chartPinchStart) return;"), "kline long-press crosshair should not fire while panning or pinching");
+assert.ok(klineMindJs.includes("this.updateChartZoom(CHART_ZOOM_ORDER[nextIndex]);"), "kline pinch should reuse the same controlled zoom path as the chart corner controls");
 assert.equal(klineMindWxml.includes('bounces="true"'), false, "kline blind chart should not keep native horizontal panning that can reveal unreplayed candles");
 assert.equal(klineMindJs.includes('label: item.key === activeKey ? "当"'), false, "kline chart should not render a text marker on the active candle");
 assert.equal(klineMindWxml.includes('<text wx:if="{{item.label}}"'), false, "kline chart should not render any text labels inside real K-line candles");
