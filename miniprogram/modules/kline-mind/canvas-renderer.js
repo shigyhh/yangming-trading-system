@@ -192,6 +192,149 @@ function buildIndicatorBarCommands(items = [], metrics = {}) {
   });
 }
 
+function formatPriceLabel(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return "";
+  if (Math.abs(number) >= 1000) return number.toFixed(0);
+  if (Math.abs(number) >= 100) return number.toFixed(1);
+  return number.toFixed(2);
+}
+
+function formatVolumeLabel(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return "0";
+  if (Math.abs(number) >= 100000000) return `${(number / 100000000).toFixed(2)}亿`;
+  if (Math.abs(number) >= 10000) return `${(number / 10000).toFixed(1)}万`;
+  return number.toFixed(0);
+}
+
+function collectPriceValues(candles = []) {
+  return candles.reduce((values, candle) => {
+    ["open", "high", "low", "close"].forEach((field) => {
+      const value = Number(candle[field]);
+      if (Number.isFinite(value)) values.push(value);
+    });
+    return values;
+  }, []);
+}
+
+function buildPriceAxis(candles = [], metrics = {}) {
+  const values = collectPriceValues(candles);
+  if (!values.length) return { min: null, max: null, labels: [], commands: [] };
+  const max = Math.max.apply(null, values);
+  const min = Math.min.apply(null, values);
+  const range = Math.max(0.0001, max - min);
+  const labelCount = 4;
+  const labels = Array.from({ length: labelCount }, (_, index) => {
+    const ratio = labelCount === 1 ? 0 : index / (labelCount - 1);
+    const value = max - range * ratio;
+    const y = metrics.plotTop + (metrics.plotBottom - metrics.plotTop) * ratio;
+    return {
+      value,
+      text: formatPriceLabel(value),
+      x: metrics.width - 10,
+      y: clamp(y, 12, metrics.mainHeight - 8)
+    };
+  });
+  return {
+    min,
+    max,
+    labels,
+    commands: labels.map((label) => ({
+      type: "price-label",
+      key: `price-${label.text}-${Math.round(label.y)}`,
+      text: label.text,
+      x: label.x,
+      y: label.y,
+      color: "rgba(244, 235, 221, 0.5)"
+    }))
+  };
+}
+
+function findCrosshairIndex(candleCommands = [], options = {}) {
+  if (!candleCommands.length) return -1;
+  const explicitIndex = Number(options.crosshairIndex);
+  if (Number.isFinite(explicitIndex)) {
+    return Math.max(0, Math.min(candleCommands.length - 1, Math.round(explicitIndex)));
+  }
+  const x = Number(options.crosshairX);
+  if (!Number.isFinite(x)) return candleCommands.length - 1;
+  return candleCommands.reduce((nearestIndex, command, index) => {
+    const nearest = candleCommands[nearestIndex] || {};
+    return Math.abs(Number(command.x || 0) - x) < Math.abs(Number(nearest.x || 0) - x)
+      ? index
+      : nearestIndex;
+  }, 0);
+}
+
+function resolveCloseY(candleCommand = {}) {
+  const close = Number(candleCommand.close);
+  const open = Number(candleCommand.open);
+  if (!Number.isFinite(close) || !Number.isFinite(open)) {
+    return clamp(Number(candleCommand.bodyTop || 0) + Number(candleCommand.bodyHeight || 0) / 2, 0, 9999);
+  }
+  if (close > open) return candleCommand.bodyTop;
+  if (close < open) return candleCommand.bodyTop + candleCommand.bodyHeight;
+  return candleCommand.bodyTop + candleCommand.bodyHeight / 2;
+}
+
+function buildCrosshair(candleCommands = [], candles = [], metrics = {}, options = {}) {
+  if (!options.crosshairVisible || !candleCommands.length) {
+    return { visible: false, commands: [] };
+  }
+  const index = findCrosshairIndex(candleCommands, options);
+  const command = candleCommands[index];
+  const candle = candles[index] || {};
+  if (!command) return { visible: false, commands: [] };
+  const x = clamp(Number(command.x || 0), 0, metrics.width);
+  const y = clamp(resolveCloseY(command), metrics.plotTop, metrics.plotBottom);
+  const tooltipWidth = 232;
+  const tooltipLeft = x > metrics.width * 0.58
+    ? Math.max(14, x - tooltipWidth - 16)
+    : Math.min(metrics.width - tooltipWidth - 14, x + 16);
+  const tooltipTop = y > metrics.mainHeight * 0.55 ? 18 : Math.min(metrics.mainHeight - 138, y + 16);
+  return {
+    visible: true,
+    index,
+    key: command.key || candle.key || `crosshair-${index}`,
+    x,
+    y,
+    tooltipLeft,
+    tooltipTop,
+    tooltip: {
+      date: candle.date || candle.label || candle.key || `第 ${index + 1} 根`,
+      open: formatPriceLabel(candle.open),
+      high: formatPriceLabel(candle.high),
+      low: formatPriceLabel(candle.low),
+      close: formatPriceLabel(candle.close),
+      volume: formatVolumeLabel(candle.volume),
+      indexText: `${index + 1}/${candles.length}`
+    },
+    commands: [
+      {
+        type: "crosshair-line",
+        axis: "vertical",
+        x1: x,
+        y1: metrics.plotTop,
+        x2: x,
+        y2: metrics.plotBottom,
+        color: "rgba(244, 235, 221, 0.42)",
+        lineWidth: 1
+      },
+      {
+        type: "crosshair-line",
+        axis: "horizontal",
+        x1: metrics.paddingX,
+        y1: y,
+        x2: metrics.width - metrics.paddingX,
+        y2: y,
+        color: "rgba(244, 235, 221, 0.34)",
+        lineWidth: 1
+      }
+    ]
+  };
+}
+
 function normalizeMetrics(runtimeView = {}, options = {}) {
   const width = Math.max(240, toFiniteNumber(options.width, 690));
   const mainHeight = Math.max(180, toFiniteNumber(options.mainHeight, 336));
@@ -219,17 +362,22 @@ function normalizeMetrics(runtimeView = {}, options = {}) {
 function buildKlineCanvasDrawModel(runtimeView = {}, options = {}) {
   const metrics = normalizeMetrics(runtimeView, options);
   const candles = Array.isArray(runtimeView.visibleCandles) ? runtimeView.visibleCandles : [];
+  const candleCommands = buildCandleCommands(candles, {
+    width: metrics.width,
+    height: metrics.mainHeight,
+    paddingX: metrics.paddingX,
+    plotTop: metrics.plotTop,
+    plotBottom: metrics.plotBottom,
+    bodyWidth: metrics.bodyWidth
+  });
+  const priceAxis = buildPriceAxis(candles, metrics);
+  const crosshair = buildCrosshair(candleCommands, candles, metrics, options);
   const mainCommands = [
     ...buildGridCommands(metrics.width, metrics.mainHeight, { rows: 8, columns: 14 }),
     ...buildLineCommands(runtimeView.indicatorOverlay || {}, MAIN_OVERLAY_COLORS, metrics.plotTop),
-    ...buildCandleCommands(candles, {
-      width: metrics.width,
-      height: metrics.mainHeight,
-      paddingX: metrics.paddingX,
-      plotTop: metrics.plotTop,
-      plotBottom: metrics.plotBottom,
-      bodyWidth: metrics.bodyWidth
-    })
+    ...candleCommands,
+    ...priceAxis.commands,
+    ...crosshair.commands
   ];
 
   const indicatorPanel = runtimeView.indicatorPanel || {};
@@ -251,6 +399,8 @@ function buildKlineCanvasDrawModel(runtimeView = {}, options = {}) {
     main: {
       width: metrics.width,
       height: metrics.mainHeight,
+      priceAxis,
+      crosshair,
       commands: mainCommands
     },
     indicator: {

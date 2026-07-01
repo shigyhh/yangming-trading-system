@@ -296,7 +296,8 @@ Page({
     sliceSwitchCount: 0,
     sliceSwitchLocked: false,
     tradeReviewUrl: "",
-    canvasMetrics: KLINE_CANVAS_METRICS
+    canvasMetrics: KLINE_CANVAS_METRICS,
+    chartCrosshair: { visible: false, x: 0, tooltip: null }
   },
 
   onShow() {
@@ -383,13 +384,23 @@ Page({
     ctx.fillRect(0, 0, width, height);
 
     (board.commands || []).forEach((command) => {
-      if (command.type === "grid-line" || command.type === "line-segment") {
+      if (command.type === "grid-line" || command.type === "line-segment" || command.type === "crosshair-line") {
         ctx.beginPath();
         ctx.setStrokeStyle(command.color || "rgba(244, 235, 221, 0.2)");
         ctx.setLineWidth(command.lineWidth || 1);
         ctx.moveTo(command.x1, command.y1);
         ctx.lineTo(command.x2, command.y2);
         ctx.stroke();
+        return;
+      }
+
+      if (command.type === "price-label") {
+        ctx.setFillStyle(command.color || "rgba(244, 235, 221, 0.48)");
+        if (ctx.setFontSize) ctx.setFontSize(18);
+        if (ctx.setTextAlign) ctx.setTextAlign("right");
+        if (ctx.setTextBaseline) ctx.setTextBaseline("middle");
+        ctx.fillText(command.text || "", command.x, command.y);
+        if (ctx.setTextAlign) ctx.setTextAlign("left");
         return;
       }
 
@@ -443,11 +454,48 @@ Page({
   drawKlineCanvas() {
     const runtimeView = this.data.runtimeView || {};
     if (!runtimeView.visibleCandles || !runtimeView.visibleCandles.length) return;
-    const model = buildKlineCanvasDrawModel(runtimeView, KLINE_CANVAS_METRICS);
+    const crosshair = this.data.chartCrosshair || {};
+    const model = buildKlineCanvasDrawModel(runtimeView, Object.assign({}, KLINE_CANVAS_METRICS, {
+      crosshairVisible: !!crosshair.visible,
+      crosshairX: crosshair.x,
+      crosshairIndex: crosshair.index
+    }));
     this.drawCanvasCommands("klineMainCanvas", model.main);
     if (model.indicator.visible) {
       this.drawCanvasCommands("klineIndicatorCanvas", model.indicator);
     }
+  },
+
+  getChartTouchX(e = {}) {
+    const touch = (e.touches || [])[0] || (e.changedTouches || [])[0] || {};
+    const detail = e.detail || {};
+    const rawX = Number(detail.x || touch.x || touch.clientX || touch.pageX || KLINE_CANVAS_METRICS.width / 2);
+    const systemInfo = (typeof wx !== "undefined" && wx.getSystemInfoSync) ? wx.getSystemInfoSync() : {};
+    const rpxScale = Math.max(0.2, Number(systemInfo.windowWidth || 375) / 750);
+    return Math.max(0, Math.min(KLINE_CANVAS_METRICS.width, rawX / rpxScale));
+  },
+
+  showChartCrosshair(e) {
+    const runtimeView = this.data.runtimeView || {};
+    if (!runtimeView.visibleCandles || !runtimeView.visibleCandles.length) return;
+    const crosshairX = this.getChartTouchX(e);
+    const model = buildKlineCanvasDrawModel(runtimeView, Object.assign({}, KLINE_CANVAS_METRICS, {
+      crosshairVisible: true,
+      crosshairX
+    }));
+    const crosshair = model.main.crosshair || { visible: false, x: crosshairX, tooltip: null };
+    this.setData({ chartCrosshair: crosshair }, () => {
+      this.drawKlineCanvas();
+    });
+  },
+
+  hideChartCrosshair() {
+    if (!(this.data.chartCrosshair || {}).visible) return;
+    this.setData({
+      chartCrosshair: { visible: false, x: 0, tooltip: null }
+    }, () => {
+      this.drawKlineCanvas();
+    });
   },
 
   applyHistorySlice(record = {}, historySlice = {}) {
@@ -657,6 +705,7 @@ Page({
   },
 
   onChartPanStart(e) {
+    this.hideChartCrosshair();
     const touch = (e.touches || [])[0] || {};
     const runtime = this.data.trainingRuntime || {};
     this.chartPanStart = {

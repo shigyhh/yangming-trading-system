@@ -264,6 +264,17 @@ assert.equal(klineMindWxml.includes('<text wx:if="{{item.label}}"'), false, "kli
 assert.ok(klineMindWxml.includes('class="chart-stepper"'), "kline chart should expose compact -/+ zoom controls in the chart corner");
 assert.ok(klineMindWxml.includes("bindtap=\"decreaseChartZoom\""), "kline chart should let the user zoom out with a minus control");
 assert.ok(klineMindWxml.includes("bindtap=\"increaseChartZoom\""), "kline chart should let the user zoom in with a plus control");
+assert.ok(klineMindWxml.includes('bindlongpress="showChartCrosshair"'), "kline chart should expose a long-press crosshair interaction");
+assert.ok(klineMindWxml.includes('wx:if="{{chartCrosshair.visible}}" class="chart-crosshair-tooltip"'), "kline chart should render an OHLCV tooltip when crosshair is active");
+assert.ok(klineMindWxml.includes("chartCrosshair.tooltip.open"), "kline tooltip should show the candle open value");
+assert.ok(klineMindWxml.includes("chartCrosshair.tooltip.high"), "kline tooltip should show the candle high value");
+assert.ok(klineMindWxml.includes("chartCrosshair.tooltip.low"), "kline tooltip should show the candle low value");
+assert.ok(klineMindWxml.includes("chartCrosshair.tooltip.close"), "kline tooltip should show the candle close value");
+assert.ok(klineMindWxml.includes("chartCrosshair.tooltip.volume"), "kline tooltip should show the candle volume value");
+assert.ok(klineMindJs.includes("showChartCrosshair"), "kline page should translate long-press coordinates into a chart crosshair");
+assert.ok(klineMindJs.includes("chartCrosshair"), "kline page should keep crosshair state in page data");
+assert.ok(klineCanvasRendererJs.includes("price-label"), "kline canvas renderer should draw price-axis labels");
+assert.ok(klineCanvasRendererJs.includes("crosshair-line"), "kline canvas renderer should draw crosshair guide lines");
 assert.ok(klineMindWxml.indexOf('class="chart-stepper"') < klineMindWxml.indexOf('class="chart-canvas-scroll"'), "kline zoom controls should stay fixed in the visible chart corner, not inside the horizontal candle canvas");
 const klineChartTouchStart = klineMindWxml.indexOf('class="chart-canvas-scroll"');
 const klineIndicatorRailStart = klineMindWxml.indexOf('class="indicator-strip"', klineChartTouchStart);

@@ -52,6 +52,13 @@ const model = buildKlineCanvasDrawModel(runtime, {
   mainHeight: 336,
   indicatorHeight: 104
 });
+const crosshairModel = buildKlineCanvasDrawModel(runtime, {
+  width: 690,
+  mainHeight: 336,
+  indicatorHeight: 104,
+  crosshairVisible: true,
+  crosshairX: 345
+});
 
 assert.strictEqual(model.main.width, 690);
 assert.strictEqual(model.main.height, 336);
@@ -63,6 +70,29 @@ assert.ok(model.main.commands.some((item) => item.type === "grid-line"));
 assert.ok(model.main.commands.some((item) => item.type === "line-segment" && item.series === "ma5"));
 assert.ok(model.indicator.commands.some((item) => item.type === "indicator-bar"));
 assert.ok(model.indicator.commands.some((item) => item.type === "line-segment" && item.series === "dif"));
+assert.ok(model.main.priceAxis && model.main.priceAxis.labels.length >= 3, "main chart should expose readable price-axis labels");
+assert.ok(model.main.commands.some((item) => item.type === "price-label"), "main chart should draw price labels through canvas commands");
+model.main.priceAxis.labels.forEach((label) => {
+  assert.ok(Number.isFinite(label.y), "price axis label y should be finite");
+  assert.ok(String(label.text || "").length > 0, "price axis label text should be readable");
+});
+
+assert.ok(crosshairModel.main.crosshair && crosshairModel.main.crosshair.visible, "crosshair should be resolved when requested");
+assert.ok(crosshairModel.main.crosshair.tooltip, "crosshair should expose an OHLCV tooltip payload");
+["date", "open", "high", "low", "close", "volume"].forEach((field) => {
+  assert.ok(
+    String(crosshairModel.main.crosshair.tooltip[field] || "").length > 0,
+    `crosshair tooltip should include ${field}`
+  );
+});
+assert.ok(
+  crosshairModel.main.commands.some((item) => item.type === "crosshair-line" && item.axis === "vertical"),
+  "crosshair should draw a vertical guide line"
+);
+assert.ok(
+  crosshairModel.main.commands.some((item) => item.type === "crosshair-line" && item.axis === "horizontal"),
+  "crosshair should draw a horizontal guide line"
+);
 
 for (const command of model.main.commands.concat(model.indicator.commands)) {
   for (const key of ["x", "x1", "x2", "y", "y1", "y2", "top", "height", "width"]) {

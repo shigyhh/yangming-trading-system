@@ -80,6 +80,7 @@
           bindtouchmove="onChartPanMove"
           bindtouchend="onChartPanEnd"
           bindtouchcancel="onChartPanEnd"
+          bindlongpress="showChartCrosshair"
         >
           <view class="chart-scroll-inner">
             <view class="chart-canvas-stage">
@@ -89,6 +90,22 @@
                 class="kline-main-canvas"
                 disable-scroll="true"
               ></canvas>
+              <view
+                wx:if="{{chartCrosshair.visible}}" class="chart-crosshair-tooltip"
+                style="left: {{chartCrosshair.tooltipLeft}}rpx; top: {{chartCrosshair.tooltipTop}}rpx;"
+              >
+                <view class="crosshair-tooltip-head">
+                  <text>{{chartCrosshair.tooltip.date}}</text>
+                  <text>{{chartCrosshair.tooltip.indexText}}</text>
+                </view>
+                <view class="crosshair-tooltip-grid">
+                  <text class="crosshair-metric">开 {{chartCrosshair.tooltip.open}}</text>
+                  <text class="crosshair-metric">高 {{chartCrosshair.tooltip.high}}</text>
+                  <text class="crosshair-metric">低 {{chartCrosshair.tooltip.low}}</text>
+                  <text class="crosshair-metric">收 {{chartCrosshair.tooltip.close}}</text>
+                  <text class="crosshair-metric crosshair-metric-wide">量 {{chartCrosshair.tooltip.volume}}</text>
+                </view>
+              </view>
               <view class="indicator-strip-spacer"></view>
               <canvas
                 wx:if="{{runtimeView.indicatorPanel.visible}}"
