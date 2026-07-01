@@ -1209,6 +1209,18 @@ function buildKlinePreheatItem({
   };
 }
 
+function buildKlineTrainingHotPoolSlot({
+  scenarioId = "scene-fast-001",
+  timeframeKey = "1d",
+  index = 1
+} = {}) {
+  const safeScenarioId = String(scenarioId || "scene-fast-001").trim() || "scene-fast-001";
+  const safeTimeframeKey = String(timeframeKey || "1d").trim() || "1d";
+  const rawIndex = Number(index || 1);
+  const safeIndex = Number.isFinite(rawIndex) ? Math.max(1, Math.min(99, rawIndex)) : 1;
+  return `${safeScenarioId}:${safeTimeframeKey}:${String(safeIndex).padStart(2, "0")}`;
+}
+
 function normalizeKlinePreheatPlanItem(item = {}, fallback = {}) {
   const timeframeKey = item.timeframeKey || item.timeframe_key || item.timeframe || fallback.timeframeKey || "1d";
   const hotPoolSlot = item.hotPoolSlot || item.hot_pool_slot || item.pool_slot || item.poolSlot || "";
@@ -1239,7 +1251,7 @@ function buildLocalKlinePreheatPlan({
   const depth = Math.max(1, Math.min(12, Number(prefetchDepth || 1)));
   return Array.from(new Set(timeframes)).flatMap((timeframeKey) => (
     Array.from({ length: depth }, (_, index) => {
-      const slot = `${scenarioId || "scene-fast-001"}:${timeframeKey}:${String(index + 1).padStart(2, "0")}`;
+      const slot = buildKlineTrainingHotPoolSlot({ scenarioId, timeframeKey, index: index + 1 });
       return {
         marketKey,
         symbol,
@@ -1861,5 +1873,6 @@ module.exports = {
   fetchTradeReviewMarketContext,
   preheatKlineTrainingSlices,
   prefetchKlineTrainingSlices,
+  buildKlineTrainingHotPoolSlot,
   normalizeKlineTrainingSliceResult
 };

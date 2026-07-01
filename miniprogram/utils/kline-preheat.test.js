@@ -103,7 +103,7 @@ global.wx = {
 
 storage.zhixing_api_base_enabled = true;
 
-const { prefetchKlineTrainingSlices } = require("./api");
+const { buildKlineTrainingHotPoolSlot, prefetchKlineTrainingSlices } = require("./api");
 
 (async () => {
   await prefetchKlineTrainingSlices({
@@ -133,13 +133,35 @@ const { prefetchKlineTrainingSlices } = require("./api");
     requests[1].data.items.map((item) => item.pool_slot),
     "hot reads should use the same server preheated pool slots"
   );
+  assert.strictEqual(
+    buildKlineTrainingHotPoolSlot({
+      scenarioId: "daily-kline-entry",
+      timeframeKey: "1d",
+      index: 2
+    }),
+    "daily-kline-entry:1d:02",
+    "page reads should be able to reuse the same deterministic hot-pool slot contract"
+  );
+  assert.strictEqual(
+    buildKlineTrainingHotPoolSlot({
+      scenarioId: "",
+      timeframeKey: "",
+      index: "bad"
+    }),
+    "scene-fast-001:1d:01",
+    "invalid slot inputs should fall back to the canonical entry slot"
+  );
 
   const trainingSource = fs.readFileSync(path.join(__dirname, "../pages/training/index.js"), "utf8");
   const reviewDetailSource = fs.readFileSync(path.join(__dirname, "../pages/trade-review-detail/index.js"), "utf8");
+  const klinePageSource = fs.readFileSync(path.join(__dirname, "../pages/kline-mind/index.js"), "utf8");
   assert.ok(trainingSource.includes("prefetchKlineTrainingSlices"));
   assert.ok(trainingSource.includes("warmKlineMindTrainingEntry"));
   assert.ok(reviewDetailSource.includes("prefetchKlineTrainingSlices"));
   assert.ok(reviewDetailSource.includes("warmReviewFocusKline"));
+  assert.ok(klinePageSource.includes("prefetchKlineTrainingSlices"));
+  assert.ok(klinePageSource.includes("buildKlineTrainingHotPoolSlot"));
+  assert.ok(!klinePageSource.includes("buildSliceRequestSlot(\"active\")"));
 
   console.log("kline preheat tests passed");
 })().catch((error) => {

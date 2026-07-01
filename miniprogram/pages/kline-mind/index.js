@@ -17,10 +17,12 @@ const {
   todayKey
 } = require("../../utils/store");
 const {
+  buildKlineTrainingHotPoolSlot,
   buildTradeReviewUrl,
   fetchKlineTrainingSlice,
   getCachedKlineTrainingSlice,
   KLINE_TRAINING_WINDOW_SIZE,
+  prefetchKlineTrainingSlices,
   retryPendingKlineTrainingSync,
   syncKlineTrainingRecord,
   syncLocalState,
@@ -275,8 +277,13 @@ function shouldCachePageHistorySlice(historySlice = {}) {
     && !historySlice.hotPool;
 }
 
-function buildSliceRequestSlot(prefix = "page") {
-  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+function buildHistoryHotPoolSlot(record = {}, index = 1) {
+  const requestParams = buildHistorySliceRequestParams(record);
+  return buildKlineTrainingHotPoolSlot({
+    scenarioId: requestParams.seed || record.scenarioId || "scene-fast-001",
+    timeframeKey: requestParams.timeframeKey,
+    index
+  });
 }
 
 function buildFutureSliceSeeds(currentSeed = "scene-fast-001", depth = 3) {
@@ -581,10 +588,26 @@ Page({
           dataStatusText: "正在读取历史练习数据"
         })
     });
-    fetchKlineTrainingSlice({
-      ...requestParams,
-      hotPoolSlot: buildSliceRequestSlot("active")
+    const hotPoolScenarioId = requestParams.seed || baseRecord.scenarioId || "scene-fast-001";
+    const hotPoolSlot = buildHistoryHotPoolSlot(baseRecord, 1);
+    prefetchKlineTrainingSlices({
+      marketKey: requestParams.marketKey,
+      symbol: requestParams.symbol,
+      timeframes: [requestParams.timeframeKey],
+      windowSize: requestParams.windowSize,
+      mode: requestParams.mode,
+      gateKey: requestParams.gateKey,
+      blind: requestParams.blind,
+      scenarioId: hotPoolScenarioId,
+      prefetchDepth: 1
+    }).catch(() => null).then(() => {
+      if (this.latestHistoryRequestKey !== requestKey) return null;
+      return fetchKlineTrainingSlice({
+        ...requestParams,
+        hotPoolSlot
+      });
     }).then((result) => {
+      if (!result) return;
       if (this.latestHistoryRequestKey !== requestKey) return;
       const historySlice = buildMindHistorySlice(result);
       if (shouldCachePageHistorySlice(historySlice)) {
@@ -605,7 +628,7 @@ Page({
       this.prefetchHistoryRequests = Object.assign({}, this.prefetchHistoryRequests || {}, { [cacheKey]: true });
       fetchKlineTrainingSlice({
         ...requestParams,
-        hotPoolSlot: buildSliceRequestSlot(`timeframe-${timeframeKey}`),
+        hotPoolSlot: buildHistoryHotPoolSlot(nextRecord, 1),
         useHotPoolQueue: false,
         storeHotPoolResult: true
       }).then((result) => {
@@ -630,7 +653,7 @@ Page({
       this.prefetchHistoryRequests = Object.assign({}, this.prefetchHistoryRequests || {}, { [cacheKey]: true });
       fetchKlineTrainingSlice({
         ...requestParams,
-        hotPoolSlot: buildSliceRequestSlot(`next-${nextScenarioId}`),
+        hotPoolSlot: buildHistoryHotPoolSlot(nextRecord, 1),
         useHotPoolQueue: false,
         storeHotPoolResult: true
       }).then((result) => {
