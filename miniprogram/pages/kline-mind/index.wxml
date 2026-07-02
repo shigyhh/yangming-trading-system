@@ -336,6 +336,16 @@
         <view>{{savedRecord.insightLine}}</view>
       </view>
       <text>只记录第一反应、守界动作与复盘完整度，不关联外在结果。</text>
+      <view class="bookmark-panel">
+        <view>
+          <text>训练收藏</text>
+          <view>{{bookmarkMessage || bookmarkError || '收藏本局或训练错题卡，之后可在我的页只读回放。'}}</view>
+        </view>
+        <view class="bookmark-actions">
+          <button class="ghost-btn" data-bookmark-type="session" bindtap="saveTrainingBookmark" loading="{{bookmarkSaving}}">收藏本局</button>
+          <button class="secondary-btn" data-bookmark-type="mistake_card" bindtap="saveTrainingBookmark" loading="{{bookmarkSaving}}">收藏错题卡</button>
+        </view>
+      </view>
       <view class="completion-actions">
         <button class="ghost-btn" bindtap="goHome">回今日</button>
         <button class="primary-btn" bindtap="goLivingMirror">看活镜</button>

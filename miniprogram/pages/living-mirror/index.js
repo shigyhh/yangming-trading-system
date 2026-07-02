@@ -299,6 +299,6 @@ Page({
   },
 
   goRecommendedKline() {
-    wx.navigateTo({ url: (this.data.klineRecommendation || {}).path || "/pages/kline-simulator/index" });
+    wx.navigateTo({ url: (this.data.klineRecommendation || {}).path || "/pages/kline-mind/index?sourceType=living_mirror&source_type=living_mirror" });
   }
 });

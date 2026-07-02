@@ -19,6 +19,7 @@ const {
 const {
   buildKlineTrainingHotPoolSlot,
   buildTradeReviewUrl,
+  createTrainingBookmark,
   fetchKlineTrainingSlice,
   getCachedKlineTrainingSlice,
   KLINE_TRAINING_WINDOW_SIZE,
@@ -33,6 +34,7 @@ const {
   buildKlineMindSession,
   buildKlineMindRecord,
   buildOneThoughtEvent,
+  buildTrainingBookmark,
   getNextKlineMindSliceSeed,
   getInitialKlineVisibleCount,
   startKlineTrainingRuntime,
@@ -321,6 +323,9 @@ Page({
     sliceSwitchCount: 0,
     sliceSwitchLimitReached: false,
     tradeReviewUrl: "",
+    bookmarkSaving: false,
+    bookmarkMessage: "",
+    bookmarkError: "",
     canvasMetrics: KLINE_CANVAS_METRICS,
     chartCrosshair: { visible: false, x: 0, tooltip: null }
   },
@@ -1050,6 +1055,45 @@ Page({
     wx.showToast({ title: "已写入活镜", icon: "success" });
     this.setData({ savedRecord: saved, saving: false, tradeReviewUrl: resolveTradeReviewUrl(saved) });
     this.load();
+  },
+
+  async saveTrainingBookmark(e) {
+    if (this.data.bookmarkSaving) return;
+    const bookmarkType = (((e.currentTarget || {}).dataset || {}).bookmarkType) || "session";
+    const savedRecord = this.data.savedRecord || {};
+    if (!savedRecord.completed) {
+      wx.showToast({ title: "先完成一局训练", icon: "none" });
+      return;
+    }
+    const bookmark = buildTrainingBookmark({
+      record: savedRecord,
+      session: this.data.session || {},
+      bookmarkType,
+      title: bookmarkType === "mistake_card" ? "训练错题卡收藏" : "训练整局收藏",
+      note: bookmarkType === "mistake_card" ? "回看本局最明显执行偏离。" : "留作训练回放。"
+    });
+    this.setData({
+      bookmarkSaving: true,
+      bookmarkMessage: "",
+      bookmarkError: ""
+    });
+    try {
+      const result = await createTrainingBookmark(bookmark);
+      const remoteBookmark = result.trainingBookmark || result.training_bookmark || bookmark;
+      this.setData({
+        bookmarkSaving: false,
+        bookmarkMessage: `${remoteBookmark.title || bookmark.title} 已收藏，可到我的页训练收藏查看。`,
+        bookmarkError: ""
+      });
+      wx.showToast({ title: "已收藏", icon: "success" });
+    } catch (error) {
+      this.setData({
+        bookmarkSaving: false,
+        bookmarkMessage: "",
+        bookmarkError: "收藏失败，请检查后端连接后重试。"
+      });
+      wx.showToast({ title: "收藏失败", icon: "none" });
+    }
   },
 
   goTradeReviewH5() {

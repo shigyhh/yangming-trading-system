@@ -1313,6 +1313,35 @@
   line-height: 1.5;
 }
 
+.bookmark-panel {
+  margin-top: 18rpx;
+  padding: 18rpx;
+  border: 1rpx solid rgba(216, 183, 111, 0.15);
+  border-radius: 18rpx;
+  background: rgba(5, 9, 8, 0.26);
+}
+
+.bookmark-panel text {
+  display: block;
+  color: rgba(216, 183, 111, 0.82);
+  font-size: 22rpx;
+  font-weight: 900;
+}
+
+.completion-card .bookmark-panel view view {
+  margin-top: 6rpx;
+  color: rgba(244, 235, 221, 0.58);
+  font-size: 21rpx;
+  line-height: 1.45;
+}
+
+.bookmark-actions {
+  margin-top: 14rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10rpx;
+}
+
 .completion-actions {
   margin-top: 22rpx;
   display: grid;
