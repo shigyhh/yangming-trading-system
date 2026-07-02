@@ -255,12 +255,17 @@
 
 .auth-fallback-actions button {
   min-height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 999rpx;
   border: 1rpx solid rgba(216, 183, 111, 0.16);
   background: rgba(255, 255, 255, 0.035);
   color: rgba(247, 239, 223, 0.82);
   font-size: 23rpx;
   font-weight: 900;
+  line-height: 1.2;
+  text-align: center;
 }
 
 .evidence-account-card,
