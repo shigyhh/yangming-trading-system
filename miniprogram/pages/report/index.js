@@ -69,7 +69,7 @@ function buildMiniReport(result, archive, stagePlan) {
     trigger: (archive || {}).scene || "交易中的情绪触发、念头变化和计划偏离。",
     prescription: TRAINING_7_DAYS.map((day) => ({ day: day.day, title: day.title })),
     todayAction: (stagePlan || {}).training || (archive || {}).dailyAction || "今日只完成一次真实记录。",
-    klineCalibration: "建议先完成一次 K线压力测试，再进入 7 天观心训练，让问卷倾向被真实反应校准。",
+    klineCalibration: "建议先完成一次 K线观心，再进入 7 天观心训练，让问卷倾向被真实反应校准。",
     compliance: COMPLIANCE_TEXT
   };
 }
@@ -129,10 +129,10 @@ function buildEvidenceChain({ result, klineReports, training7State, retestChange
     {
       source: "K线反应",
       weight: "35%",
-      title: kline ? `${kline.marketLabel || "市场"} · ${kline.timeframeLabel || "周期"}` : "待完成压力测试",
+      title: kline ? `${kline.marketLabel || "市场"} · ${kline.timeframeLabel || "周期"}` : "待完成 K线观心",
       detail: kline
         ? `第一反应：${kline.primaryReaction || "待照见"}；第一念：${kline.firstThought || "未记录"}；反应之镜：${kline.relatedMirror || "待照见"}。`
-        : "进入 K线压力测试后，这里会记录真实历史切片里的第一反应。"
+        : "进入 K线观心后，这里会记录真实历史切片里的第一反应。"
     },
     {
       source: "每日训练",
@@ -285,7 +285,7 @@ Page({
 
   goKlineSimulator() {
     const recommendation = this.data.klineRecommendation || {};
-    wx.navigateTo({ url: recommendation.path || "/pages/kline-simulator/index" });
+    wx.navigateTo({ url: recommendation.path || "/pages/kline-mind/index?sourceType=report&source_type=report" });
   },
 
   goTradeReview() {

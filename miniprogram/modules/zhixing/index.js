@@ -265,7 +265,7 @@ function calculateDailyZhixingMvp({ mind, training, review, threeSeals, training
       { key: "awareness", name: "照见度", score: awareness, hint: "来自一念、一惧、一界与开盘照心。" },
       { key: "boundary", name: "守界度", score: boundary, hint: "只看是否写清并守住今日边界。" },
       { key: "execution", name: "执行度", score: execution, hint: "来自今日任务、事上练和计划一致性。" },
-      { key: "delay", name: "延迟度", score: delay, hint: klineReview ? "来自 K线压力测试中的第一反应停顿。" : "完成 K线压力测试后更准确。" },
+      { key: "delay", name: "延迟度", score: delay, hint: klineReview ? "来自 K线观心中的第一反应停顿。" : "完成 K线观心后更准确。" },
       { key: "review", name: "复盘度", score: reviewScore, hint: "来自收盘省察与今日照见一句话。" },
       { key: "stability", name: "稳定度", score: stability, hint: "只看情绪与念头稳定，不看外部结果。" },
       { key: "personalityCalibration", name: "人格校准度", score: personalityCalibration, hint: assessment ? "由问卷、训练记录与 K线复盘共同校准。" : "完成九型照见后生成。" }

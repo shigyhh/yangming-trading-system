@@ -73,12 +73,12 @@ Page({
 
   startScene(e) {
     const sceneId = e.currentTarget.dataset.id;
-    wx.navigateTo({ url: `/pages/kline-session/index?sceneId=${sceneId}&market=${this.data.marketKey}&timeframe=${this.data.timeframeKey}` });
+    wx.navigateTo({ url: `/pages/kline-mind/index?sourceType=legacy_simulator&source_type=legacy_simulator&sceneId=${sceneId}&market=${this.data.marketKey}&timeframe=${this.data.timeframeKey}` });
   },
 
   startRecommended() {
     const recommendation = this.data.recommendation || {};
-    wx.navigateTo({ url: recommendation.path || `/pages/kline-session/index?market=${this.data.marketKey}&timeframe=${this.data.timeframeKey}` });
+    wx.navigateTo({ url: recommendation.path || `/pages/kline-mind/index?sourceType=legacy_simulator&source_type=legacy_simulator&market=${this.data.marketKey}&timeframe=${this.data.timeframeKey}` });
   },
 
   goReport() {

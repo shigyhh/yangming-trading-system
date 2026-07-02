@@ -51,6 +51,6 @@ Page({
   },
 
   goSimulator() {
-    wx.redirectTo({ url: "/pages/kline-simulator/index" });
+    wx.redirectTo({ url: "/pages/kline-mind/index?sourceType=mirror_challenge&source_type=mirror_challenge" });
   }
 });

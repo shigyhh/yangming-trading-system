@@ -49,7 +49,7 @@ Page({
   },
 
   goSimulator() {
-    wx.redirectTo({ url: "/pages/kline-simulator/index" });
+    wx.redirectTo({ url: "/pages/kline-mind/index?sourceType=kline_review&source_type=kline_review" });
   },
 
   goMirror() {

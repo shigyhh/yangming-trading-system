@@ -125,7 +125,7 @@ Page({
     const actions = [];
     if (!mind) actions.push({ label: "先做开盘照心", url: "/pages/mind/index" });
     if (!assessment) actions.push({ label: "完成九型人格", url: "/pages/assessment/index" });
-    if (!klineReview) actions.push({ label: "完成 K线压力测试", url: "/pages/kline-simulator/index" });
+    if (!klineReview) actions.push({ label: "完成 K线观心", url: "/pages/kline-mind/index?sourceType=zhixing&source_type=zhixing" });
     if (!training?.completed) actions.push({ label: "完成今日事上练", url: "/pages/training/index" });
     if (!review) actions.push({ label: "收盘后做省察", url: "/pages/review/index" });
     if (actions.length) return actions;

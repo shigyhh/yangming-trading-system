@@ -203,7 +203,7 @@
         <button class="primary-btn" bindtap="goTraining">开始事上练</button>
       </view>
       <view class="single-action">
-        <button class="primary-btn" bindtap="goKlineSimulator">进入 K线压力测试</button>
+        <button class="primary-btn" bindtap="goKlineSimulator">进入 K线观心</button>
       </view>
       <view class="single-action">
         <button class="ghost-btn" bindtap="goTradeReview">上传真实记录复盘</button>

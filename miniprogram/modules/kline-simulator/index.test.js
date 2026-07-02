@@ -53,6 +53,9 @@ assert.strictEqual(review.trainingDay, 1);
 const recommendation = getKlineRecommendationForMirror("扛单之镜");
 assert.strictEqual(recommendation.sceneId, "scene-boundary-001");
 assert.ok(recommendation.path.includes("scene-boundary-001"));
+assert.ok(recommendation.path.startsWith("/pages/kline-mind/index?"));
+assert.ok(!recommendation.path.includes("/pages/kline-session/index"));
+assert.ok(!recommendation.simulatorPath);
 
 const tradeReviewRecord = buildKlineTradeReviewRecord(review);
 assert.strictEqual(tradeReviewRecord.sourceType, "kline_training");

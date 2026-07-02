@@ -103,7 +103,7 @@
 
     <view wx:else class="empty-card card">
       <view>还没有 K线复盘</view>
-      <text>先完成一段 K线压力测试，再生成复盘。</text>
+      <text>先完成一段 K线观心，再生成复盘。</text>
       <button class="primary-btn" bindtap="goSimulator">开始训练</button>
     </view>
 

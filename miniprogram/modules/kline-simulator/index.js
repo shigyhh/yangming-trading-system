@@ -524,8 +524,7 @@ function getKlineRecommendationForMirror(mirrorName, options = {}) {
     trainingDay: scene.trainingDay || 1,
     mirrorName: mirrorName || options.currentMirror || "待照见",
     actionText: `进入${matched.title}`,
-    path: `/pages/kline-session/index?${query}`,
-    simulatorPath: `/pages/kline-simulator/index?market=${encodeURIComponent(marketKey)}&timeframe=${encodeURIComponent(timeframeKey)}`
+    path: `/pages/kline-mind/index?sourceType=living_mirror&source_type=living_mirror&${query}`
   };
 }
 
@@ -729,7 +728,7 @@ function buildKlineChange(reportsState = {}) {
       ? improvedCount >= 3
         ? "你已经不只是完成练习，而是在同类压力里开始看见变化。"
         : "变化仍需要更多记录，但第一反应已经可以被看见。"
-      : "再完成一次 K线压力测试后，这里会呈现本地变化对比。"
+      : "再完成一次 K线观心后，这里会呈现本地变化对比。"
   };
 }
 

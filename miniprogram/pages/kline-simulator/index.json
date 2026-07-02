@@ -1,5 +1,5 @@
 {
-  "navigationBarTitleText": "K线压力测试",
+  "navigationBarTitleText": "K线观心",
   "usingComponents": {
     "bottom-tab-bar": "/components/bottom-tab-bar/index",
     "compliance-notice": "/components/compliance-notice/index"

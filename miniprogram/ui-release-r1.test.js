@@ -38,6 +38,15 @@ const klineMindJson = readPage("kline-mind", "index.json");
 const tradeReviewWxml = readPage("trade-review", "index.wxml");
 const tradeReviewJs = readPage("trade-review", "index.js");
 const reportWxml = readPage("report", "index.wxml");
+const reportJs = readPage("report", "index.js");
+const zhixingIndexJs = readPage("zhixing-index", "index.js");
+const mirrorChallengeJs = readPage("mirror-challenge", "index.js");
+const klineReviewJs = readPage("kline-review", "index.js");
+const zhixingModuleJs = readFileSync(join(root, "miniprogram", "modules", "zhixing", "index.js"), "utf8");
+const klineReviewWxml = readPage("kline-review", "index.wxml");
+const klineSimulatorJs = readPage("kline-simulator", "index.js");
+const klineSimulatorJson = readPage("kline-simulator", "index.json");
+const klineSimulatorModuleJs = readFileSync(join(root, "miniprogram", "modules", "kline-simulator", "index.js"), "utf8");
 const homeJs = readPage("home", "index.js");
 const profileJs = readPage("profile", "index.js");
 const appJs = readFileSync(join(root, "miniprogram", "app.js"), "utf8");
@@ -211,6 +220,11 @@ assert.ok(tradeReviewWxml.includes('wx:for="{{nextActionOptions}}"'), "trade rev
 assert.ok(tradeReviewWxml.includes("可选补充一句"), "trade review text input should be framed as optional supplement");
 assert.ok(tradeReviewWxml.includes('class="primary-stack quick-actions"'), "trade review should make generated review the only dominant action row");
 assert.ok(tradeReviewWxml.includes("你的第一面活镜"), "trade review should explain the missing-material state as a mirror promise");
+assert.equal(zhixingIndexJs.includes('/pages/kline-simulator/index'), false, "zhixing index should route unfinished K-line work to the current K-line mind page");
+assert.equal(mirrorChallengeJs.includes('/pages/kline-simulator/index'), false, "mirror challenge should not send users back to the legacy K-line simulator");
+assert.equal(klineReviewJs.includes('/pages/kline-simulator/index'), false, "legacy K-line review actions should route to the current K-line mind page");
+assert.equal(klineSimulatorJs.includes('/pages/kline-session/index'), false, "legacy K-line simulator page should not forward users into the old K-line session page");
+assert.equal([reportWxml, reportJs, zhixingIndexJs, zhixingModuleJs, klineReviewWxml, klineSimulatorJson, klineSimulatorModuleJs].join("\n").includes("K线压力测试"), false, "release copy should call the current flow K-line mind practice, not legacy stress testing");
 
 assert.ok(complianceNoticeJs.includes("variant"), "compliance notice should support full/compact/link variants");
 assert.ok(complianceNoticeWxml.includes("resolvedVariant === 'link'"), "compliance notice should render a link-only mode");
