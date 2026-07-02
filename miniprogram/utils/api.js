@@ -910,6 +910,61 @@ async function fetchDashboardWeeklySummary(filters = {}) {
   }
 }
 
+function getArchiveUpdatedAt(result = {}) {
+  const archiveIndex = result.archiveIndex || result.archive_index || (result.mirror_archive || {}).archiveIndex || (result.mirror_archive || {}).archive_index || {};
+  return archiveIndex.updatedAt || archiveIndex.updated_at || "";
+}
+
+async function fetchDataBindingSummary() {
+  try {
+    const auth = await ensureAuth();
+    const state = collectLocalState();
+    const user = buildDataBindingUser(auth, state);
+    const result = await request({
+      path: `/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/summary`,
+      method: "GET",
+      token: auth.access_token
+    });
+    saveSyncStatus({
+      ok: true,
+      syncing: false,
+      message: "心镜档案已同步",
+      userId: user.userId,
+      syncedAt: Date.now(),
+      serverUpdatedAt: getArchiveUpdatedAt(result)
+    });
+    return result;
+  } catch (error) {
+    saveConnectionFallback(error, "心镜档案同步：暂未连接");
+    throw error;
+  }
+}
+
+async function fetchMirrorArchive() {
+  try {
+    const auth = await ensureAuth();
+    const state = collectLocalState();
+    const user = buildDataBindingUser(auth, state);
+    const result = await request({
+      path: `/api/v1/data-binding/users/${encodeURIComponent(user.userId)}/mirror-archive`,
+      method: "GET",
+      token: auth.access_token
+    });
+    saveSyncStatus({
+      ok: true,
+      syncing: false,
+      message: "心镜档案已同步",
+      userId: user.userId,
+      syncedAt: Date.now(),
+      serverUpdatedAt: getArchiveUpdatedAt(result)
+    });
+    return result;
+  } catch (error) {
+    saveConnectionFallback(error, "心镜档案同步：暂未连接");
+    throw error;
+  }
+}
+
 async function pullTrainingPrescription({ silent = true } = {}) {
   try {
     const auth = await ensureAuth();
@@ -1879,6 +1934,8 @@ module.exports = {
   listExecutionPlans,
   fetchDashboardSummary,
   fetchDashboardWeeklySummary,
+  fetchDataBindingSummary,
+  fetchMirrorArchive,
   pullTrainingPrescription,
   syncShareAttribution,
   requestKlineTrainingSample,

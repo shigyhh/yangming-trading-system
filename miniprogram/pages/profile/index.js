@@ -37,7 +37,7 @@ const {
   clearLocalMvpState,
   todayKey
 } = require("../../utils/store");
-const { getApiBase, setApiBase, getAuthSession, pullRemoteState, syncLocalState } = require("../../utils/api");
+const { getApiBase, setApiBase, getAuthSession, pullRemoteState, syncLocalState, fetchDataBindingSummary } = require("../../utils/api");
 const { buildGrowthState } = require("../../modules/growth/index");
 const { buildContinuityState } = require("../../modules/continuity/index");
 const { getTodayContent } = require("../../modules/content365/index");
@@ -75,6 +75,27 @@ const DEBUG_DATA_CHAIN = [
 ];
 
 const TECHNICAL_MESSAGE_RE = /(request:fail|ERR_CONNECTION_REFUSED|ERR_|接口错误|网络连接失败|请求失败|localhost|127\.0\.0\.1)/i;
+
+function safeCount(value) {
+  const number = Number(value || 0);
+  return Number.isFinite(number) ? number : 0;
+}
+
+function buildUserDataChain(summary = null) {
+  if (!summary) return USER_DATA_CHAIN;
+  const archiveIndex = summary.archiveIndex || summary.archive_index || {};
+  const byType = archiveIndex.byType || archiveIndex.by_type || {};
+  const mindCount = safeCount(byType.growth_record || (summary.training_records || []).length);
+  const reviewCount = safeCount(byType.trade_review || (summary.trade_reviews || []).length);
+  const klineCount = safeCount(byType.kline_record || (summary.kline_records || []).length);
+  const bookmarkCount = safeCount(byType.training_bookmark || (summary.training_bookmarks || []).length);
+  return [
+    `心境档案 ${mindCount}`,
+    `真实复盘 ${reviewCount}`,
+    `K线训练 ${klineCount}`,
+    `训练收藏 ${bookmarkCount}`
+  ];
+}
 
 function buildShareMomentEntries() {
   return SHARE_MOMENT_ENTRIES.map((entry) => {
@@ -175,7 +196,8 @@ Page({
     authFallback: buildAuthFallback(getSyncStatus()),
     debugMode: getDebugMode(),
     syncView: buildSyncView(getSyncStatus(), getDebugMode()),
-    userDataChain: USER_DATA_CHAIN,
+    remoteArchiveSummary: null,
+    userDataChain: buildUserDataChain(),
     debugDataChain: DEBUG_DATA_CHAIN,
     shareMoments: buildShareMomentEntries(),
     menu: [],
@@ -267,11 +289,34 @@ Page({
       authFallback: buildAuthFallback(syncStatus),
       debugMode,
       syncView: buildSyncView(syncStatus, debugMode),
-      userDataChain: USER_DATA_CHAIN,
+      userDataChain: buildUserDataChain(this.data.remoteArchiveSummary),
       debugDataChain: DEBUG_DATA_CHAIN,
       shareMoments: buildShareMomentEntries(),
       menu: buildReleaseMenu({ result, growth, profile, trainingDone, debugMode, executionPlanCount })
     });
+    this.refreshRemoteArchiveSummary();
+  },
+
+  refreshRemoteArchiveSummary() {
+    fetchDataBindingSummary()
+      .then((summary) => {
+        const syncStatus = getSyncStatus();
+        this.setData({
+          remoteArchiveSummary: summary,
+          userDataChain: buildUserDataChain(summary),
+          syncStatus,
+          authFallback: buildAuthFallback(syncStatus),
+          syncView: buildSyncView(syncStatus, this.data.debugMode)
+        });
+      })
+      .catch(() => {
+        const syncStatus = getSyncStatus();
+        this.setData({
+          syncStatus,
+          authFallback: buildAuthFallback(syncStatus),
+          syncView: buildSyncView(syncStatus, this.data.debugMode)
+        });
+      });
   },
 
   inputApiBase(e) {

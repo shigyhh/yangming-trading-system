@@ -145,11 +145,8 @@ export async function saveTrainingRecordBinding({ user = {}, record = {}, practi
   const userRecord = ensureUser(profile);
   const now = new Date().toISOString();
   const trainingRecord = normalizeTrainingRecord(record, now);
-  const nextRecords = userRecord.training_records.filter((item) => item.day !== trainingRecord.day);
 
-  nextRecords.push(trainingRecord);
-  nextRecords.sort((a, b) => Number(a.day) - Number(b.day));
-  userRecord.training_records = nextRecords;
+  userRecord.training_records = mergeTrainingRecords(userRecord.training_records, [trainingRecord]);
   userRecord.practice_state = practiceState || userRecord.practice_state;
   refreshLivingMirrorState(userRecord);
   userRecord.updated_at = now;
@@ -173,7 +170,7 @@ export async function saveKLineRecordBinding({ user = {}, record = {}, source = 
   const klineRecord = {
     id: crypto.randomUUID(),
     day: Number(record.day || 0),
-    recorded_at: record.recordedAt || now,
+    recorded_at: record.recordedAt || record.recorded_at || now,
     scene_key: cleanText(record.sceneKey || record.scene_key || "", 40),
     reaction_key: cleanText(record.reactionKey || record.reaction_key || "", 40),
     scene: cleanText(record.scene || "未填写场景", 80),
@@ -1172,15 +1169,19 @@ function chooseEarliestReport(left, right) {
 }
 
 function mergeTrainingRecords(left = [], right = []) {
-  const byDay = new Map();
+  const byId = new Map();
   [...left, ...right].forEach((record) => {
-    const key = String(record.day || record.date_key || record.id);
-    const existing = byDay.get(key);
+    const key = String(record.id || `${record.recorded_at || record.date_key || record.day}-${record.title || ""}`);
+    const existing = byId.get(key);
     if (!existing || new Date(record.recorded_at || 0).getTime() >= new Date(existing.recorded_at || 0).getTime()) {
-      byDay.set(key, record);
+      byId.set(key, record);
     }
   });
-  return Array.from(byDay.values()).sort((a, b) => Number(a.day || 0) - Number(b.day || 0));
+  return Array.from(byId.values()).sort((a, b) => {
+    const dayDelta = Number(a.day || 0) - Number(b.day || 0);
+    if (dayDelta) return dayDelta;
+    return new Date(a.recorded_at || 0).getTime() - new Date(b.recorded_at || 0).getTime();
+  });
 }
 
 function mergeById(left = [], right = []) {
@@ -2585,6 +2586,27 @@ function buildArchiveIndex(record) {
       }
     }));
   }
+
+  (record.training_records || []).forEach((trainingRecord) => {
+    const trainingId = cleanText(trainingRecord.id || crypto.randomUUID(), 120);
+    const createdAt = cleanText(trainingRecord.recorded_at || trainingRecord.recordedAt || record.updated_at || record.created_at, 40);
+    items.push(createArchiveItem({
+      type: "growth_record",
+      sourceId: trainingId,
+      title: cleanText(trainingRecord.title || `今日修行 · Day ${trainingRecord.day || ""}`, 100),
+      summary: cleanText(trainingRecord.cultivation_text || trainingRecord.cultivationText || trainingRecord.note || trainingRecord.check_in || "已完成一次今日修行记录。", 180),
+      sceneTags: normalizeAliasList([trainingRecord.check_in, trainingRecord.status, trainingRecord.date_key].filter(Boolean)),
+      createdAt,
+      updatedAt: readAliasedField(trainingRecord, "updatedAt", "updated_at", [createdAt]),
+      metadata: {
+        day: trainingRecord.day,
+        dateKey: trainingRecord.date_key,
+        status: trainingRecord.status,
+        checkIn: trainingRecord.check_in,
+        sourceType: "training_record"
+      }
+    }));
+  });
 
   (record.trade_reviews || []).forEach((review) => {
     const reviewId = cleanText(review.id || review.reviewId || review.review_id || crypto.randomUUID(), 120);

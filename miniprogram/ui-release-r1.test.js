@@ -183,6 +183,8 @@ assertRuleHas(klineMindWxss, ".chart-canvas-stage", ["position: relative", "back
 assertRuleHas(klineMindWxss, ".kline-main-canvas", ["height: 336rpx"], "kline mind main canvas should keep the blind viewport height");
 
 assert.ok(profileWxml.includes('wx:if="{{debugMode}}" class="debug-release-tools card"'), "profile debug release tools should be hidden behind debugMode");
+assert.ok(profileJs.includes("fetchDataBindingSummary"), "profile should refresh from the shared data-binding summary when opened");
+assert.ok(profileJs.includes("buildUserDataChain(this.data.remoteArchiveSummary)"), "profile data chain should use the latest remote archive summary when available");
 assert.equal(profileWxml.includes('class="danger-clear"'), false, "profile should not expose dangerous clear action in normal page flow");
 assert.ok(profileWxml.includes('wx:if="{{debugMode}}" class="membership-card card"'), "membership system should be hidden for release preview");
 assert.ok(profileWxml.includes('wx:if="{{debugMode}}" class="subscription-card card"'), "subscription proof should be hidden for release preview");

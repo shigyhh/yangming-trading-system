@@ -163,9 +163,26 @@ test("data binding service stores assessment, training, kline and retest in runt
       cultivationText: "今天继续记录同一个手机号下的训练。"
     }
   });
+  const sameDayMiniappTraining = await saveTrainingRecordBinding({
+    user: {
+      userId: "miniapp-local-merge-001",
+      maskedPhone: user.maskedPhone,
+      phoneTail: user.phoneTail,
+      inviteSource: "小程序入口"
+    },
+    record: {
+      id: "miniapp-day-1-kline",
+      day: 1,
+      title: "小程序K线盲练",
+      note: "同一天从小程序补一条K线训练记录，不覆盖网页训练。",
+      checkIn: "kline_blind_training",
+      cultivationText: "这一念先入档，再进入K线训练。"
+    }
+  });
 
   const summary = await getDataBindingUserSummary(user.userId);
   const aliasSummary = await getDataBindingUserSummary("web-local-merge-001");
+  const miniappAliasSummary = await getDataBindingUserSummary("miniapp-local-merge-001");
   const prescription = await getTrainingPrescriptionBinding(user.userId);
   const dispatchedPrescription = await dispatchTrainingPrescriptionBinding(user.userId, {
     source: "web-next"
@@ -187,6 +204,8 @@ test("data binding service stores assessment, training, kline and retest in runt
   assert.ok(training.living_mirror_stats.conscienceGrowth > assessment.living_mirror_stats.conscienceGrowth);
   assert.equal(mergedTraining.user.id, user.userId);
   assert.ok(mergedTraining.user.merged_ids.includes("web-local-merge-001"));
+  assert.equal(sameDayMiniappTraining.user.id, user.userId);
+  assert.ok(sameDayMiniappTraining.user.merged_ids.includes("miniapp-local-merge-001"));
   assert.equal(kline.record.scene, "急拉");
   assert.equal(kline.record.reaction_key, "fear_missing");
   assert.equal(kline.record.feedback, "今天先练写下进场理由。");
@@ -235,9 +254,13 @@ test("data binding service stores assessment, training, kline and retest in runt
   assert.equal(shareCard.share_card.channel, "网页分享卡");
   assert.equal(fetchedShareCard.id, shareCard.share_card.id);
   assert.equal(JSON.stringify(shareCard.share_card).includes(user.maskedPhone), false);
-  assert.equal(summary.training_records.length, 2);
+  assert.equal(summary.training_records.length, 3);
+  assert.equal(summary.training_records.some((record) => record.id === "miniapp-day-1-kline"), true);
+  assert.equal(summary.archive_index.by_type.growth_record, 3);
   assert.equal(aliasSummary.user.id, user.userId);
-  assert.equal(aliasSummary.training_records.length, 2);
+  assert.equal(aliasSummary.training_records.length, 3);
+  assert.equal(miniappAliasSummary.user.id, user.userId);
+  assert.equal(miniappAliasSummary.training_records.length, 3);
   assert.equal(summary.kline_records.length, 1);
   assert.equal(summary.trade_reviews.length, 1);
   assert.equal(summary.trade_reviews[0].crossEndStatusText, "已复测");
@@ -274,7 +297,8 @@ test("data binding service stores assessment, training, kline and retest in runt
   unloadDataBindingForTests();
   const reloadedSummary = await getDataBindingUserSummary(user.userId);
   assert.equal(reloadedSummary.user.id, user.userId);
-  assert.equal(reloadedSummary.training_records.length, 2);
+  assert.equal(reloadedSummary.training_records.length, 3);
+  assert.equal(reloadedSummary.archive_index.by_type.growth_record, 3);
   assert.equal(reloadedSummary.kline_records.length, 1);
   assert.equal(reloadedSummary.trade_reviews.length, 1);
   assert.equal(reloadedSummary.living_mirror_stats.loopRelapseCount, 1);
