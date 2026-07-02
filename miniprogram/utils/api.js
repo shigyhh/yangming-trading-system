@@ -346,10 +346,15 @@ function getClientId() {
   return clientId;
 }
 
+function hasObjectValue(value) {
+  return !!value && typeof value === "object" && !Array.isArray(value) && Object.keys(value).length > 0;
+}
+
 function request({ path, method = "GET", data = null, token = "", apiBaseOverride = "", allowUnconfigured = false, timeout = 8000 }) {
   const apiBase = apiBaseOverride || getApiBase();
+  const allowDefaultDevtoolsBase = shouldUseDefaultDevtoolsApiBase();
   return new Promise((resolve, reject) => {
-    if (!allowUnconfigured && !hasConfiguredApiBase()) {
+    if (!allowUnconfigured && !allowDefaultDevtoolsBase && !hasConfiguredApiBase()) {
       reject(new Error("连接未完成"));
       return;
     }
@@ -377,6 +382,42 @@ function request({ path, method = "GET", data = null, token = "", apiBaseOverrid
       }
     });
   });
+}
+
+async function syncLocalDataBindingEvidence({ auth = null } = {}) {
+  const state = collectLocalState();
+  const tasks = [];
+
+  if (hasObjectValue(state.assessment_result)) {
+    tasks.push({ type: "assessment_report", run: () => syncAssessmentReport(state.assessment_result) });
+  }
+  if (buildTrainingBindingPayload({ auth: auth || {}, state })) {
+    tasks.push({ type: "training_record", run: () => syncTrainingProgress() });
+  }
+  if (buildKLineBindingPayload({ auth: auth || {}, state })) {
+    tasks.push({ type: "kline_record", run: () => syncKlineTrainingRecord(null, { force: true }) });
+  }
+  if (buildTradeReviewBindingPayload({ auth: auth || {}, state })) {
+    tasks.push({ type: "trade_review", run: () => syncTradeReviewRecord() });
+  }
+  if (hasObjectValue((state.share_cards || {}).latest) || Array.isArray((state.share_cards || {}).records)) {
+    tasks.push({ type: "share_card", run: () => syncShareAttribution() });
+  }
+
+  const summary = { ok: true, attempted: 0, synced: 0, skipped: 0, failed: 0, errors: [] };
+  for (const task of tasks) {
+    summary.attempted += 1;
+    try {
+      const result = await task.run();
+      if (result && result.skipped) summary.skipped += 1;
+      else summary.synced += 1;
+    } catch (error) {
+      summary.ok = false;
+      summary.failed += 1;
+      summary.errors.push({ type: task.type, message: getTechnicalMessage(error) });
+    }
+  }
+  return summary;
 }
 
 async function ensureAuth() {
@@ -424,13 +465,20 @@ async function syncLocalState({ silent = true } = {}) {
         state: collectLocalState()
       }
     });
+    const dataBindingSync = await syncLocalDataBindingEvidence({ auth });
+    if (dataBindingSync.failed) {
+      const error = new Error("数据证据同步未完成");
+      error.details = dataBindingSync.errors;
+      throw error;
+    }
     saveSyncStatus({
       ok: true,
       syncing: false,
       message: "已同步",
       userId: auth.user.id,
       syncedAt: Date.now(),
-      serverUpdatedAt: result.state && result.state.updated_at ? result.state.updated_at : ""
+      serverUpdatedAt: result.state && result.state.updated_at ? result.state.updated_at : "",
+      dataBindingSync
     });
     if (!silent) wx.showToast({ title: "已同步到后端", icon: "success" });
     return result.state;
