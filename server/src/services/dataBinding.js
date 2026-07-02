@@ -632,6 +632,94 @@ export async function getRetestComparisonBinding(userId) {
   return latestRetest?.comparison || [];
 }
 
+function buildTodayStateFromRecord(record) {
+  const now = new Date().toISOString();
+  const trainingCount = (record.training_records || []).length + (record.kline_records || []).length;
+  const reviewCount = (record.trade_reviews || []).length;
+  const hasAssessment = !!(record.assessment?.report || record.mirror_report);
+  const mainMirror = record.living_mirror_profile?.dominantMirror ||
+    record.living_mirror_profile?.dominant_mirror ||
+    record.living_mirror_profile?.currentMainMirror ||
+    record.living_mirror_profile?.current_main_mirror ||
+    record.living_mirror_profile?.mainMirror ||
+    record.living_mirror_profile?.main_mirror ||
+    "";
+  let status = "not_seen";
+  let statusText = "待照见";
+  let nextAction = "照见一念";
+  let progress = 0;
+
+  if (hasAssessment && !trainingCount) {
+    status = "not_trained";
+    statusText = "待训练";
+    nextAction = "K线训练";
+    progress = 35;
+  } else if (trainingCount && !reviewCount) {
+    status = "not_reviewed";
+    statusText = "待复盘";
+    nextAction = "轻复盘";
+    progress = 65;
+  } else if (reviewCount) {
+    status = "completed";
+    statusText = "今日已完成";
+    nextAction = "查看活镜";
+    progress = 100;
+  }
+
+  const updatedAt = [
+    record.updated_at,
+    record.living_mirror_profile?.updatedAt,
+    record.living_mirror_profile?.updated_at,
+    record.training_records?.[record.training_records.length - 1]?.updatedAt,
+    record.training_records?.[record.training_records.length - 1]?.updated_at,
+    record.kline_records?.[record.kline_records.length - 1]?.updatedAt,
+    record.kline_records?.[record.kline_records.length - 1]?.updated_at,
+    record.trade_reviews?.[record.trade_reviews.length - 1]?.updatedAt,
+    record.trade_reviews?.[record.trade_reviews.length - 1]?.updated_at,
+    record.trade_reviews?.[record.trade_reviews.length - 1]?.createdAt,
+    record.trade_reviews?.[record.trade_reviews.length - 1]?.created_at
+  ].reduce((latest, value) => latestIso(latest, value), "") || now;
+
+  return {
+    schemaVersion: "today_state_v1",
+    schema_version: "today_state_v1",
+    userId: record.id,
+    user_id: record.id,
+    dateKey: now.slice(0, 10),
+    date_key: now.slice(0, 10),
+    title: "今日心证",
+    stateText: statusText,
+    state_text: statusText,
+    status,
+    statusText,
+    status_text: statusText,
+    summaryText: reviewCount ? "今日真实复盘已写入活镜。" : "先照见今日这一念，再落下一步行动。",
+    summary_text: reviewCount ? "今日真实复盘已写入活镜。" : "先照见今日这一念，再落下一步行动。",
+    todayHeartWitness: mainMirror || "先照见今日这一念",
+    today_heart_witness: mainMirror || "先照见今日这一念",
+    mainMirror,
+    main_mirror: mainMirror,
+    focusText: nextAction,
+    focus_text: nextAction,
+    nextAction,
+    next_action: nextAction,
+    actionText: nextAction,
+    action_text: nextAction,
+    trainingAction: nextAction,
+    training_action: nextAction,
+    progress,
+    updatedAt,
+    updated_at: updatedAt
+  };
+}
+
+export async function getTodayStateBinding(userId) {
+  await ensureDataBindingLoaded();
+  const record = findUserRecord(userId);
+  if (!record) return null;
+  return buildTodayStateFromRecord(record);
+}
+
 export async function getDataBindingUserSummary(userId) {
   await ensureDataBindingLoaded();
   const record = findUserRecord(userId);

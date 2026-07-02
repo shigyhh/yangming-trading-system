@@ -53,6 +53,33 @@ assert.ok(apiSource.includes("sourceType = \"\""), "fetchKlineTrainingSlice shou
 assert.ok(apiSource.includes("source_type=${encodeURIComponent(sourceType)}"), "kline slice query should carry entry source type");
 assert.ok(apiSource.includes("scene_id=${encodeURIComponent(sceneId)}"), "kline slice query should carry entry scene id");
 assert.ok(apiSource.includes("allowDefaultDevtoolsBase"), "default DevTools API base should be allowed for data-binding sync");
+
+function sourceSection(startMarker, endMarker) {
+  const start = apiSource.indexOf(startMarker);
+  const end = apiSource.indexOf(endMarker, start + startMarker.length);
+  assert.ok(start >= 0, `${startMarker} should exist`);
+  assert.ok(end > start, `${endMarker} should appear after ${startMarker}`);
+  return apiSource.slice(start, end);
+}
+
+const livingMirrorProfileSource = sourceSection(
+  "async function fetchLivingMirrorProfile",
+  "function normalizeLivingMirrorGrowthProjectionResult"
+);
+const livingMirrorGrowthSource = sourceSection(
+  "async function fetchLivingMirrorGrowthProjection",
+  "const TODAY_STATE_STATUSES"
+);
+assert.strictEqual(
+  livingMirrorProfileSource.includes("saveConnectionFallback"),
+  false,
+  "living mirror profile side-channel fallback should not overwrite global archive sync status"
+);
+assert.strictEqual(
+  livingMirrorGrowthSource.includes("saveConnectionFallback"),
+  false,
+  "living mirror growth side-channel fallback should not overwrite global archive sync status"
+);
 assert.ok(storageKeysSource.includes("YM_ZHIXING_REMINDER_EVENTS"));
 assert.ok(storeSource.includes("saveZhixingReminderEvent"));
 assert.ok(storeSource.includes("getZhixingReminderEvents"));

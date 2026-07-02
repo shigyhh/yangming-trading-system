@@ -19,7 +19,7 @@
     "kline:backfill": "node scripts/backfill-kline-cache.js",
     "update:ashare": "node scripts/cache-ashare-market-data.mjs --limit all --timeframes 101 --delay 300 --incremental --summary-only",
     "test:smoke": "node scripts/smoke-test.mjs",
-    "test:data-binding": "node --test scripts/data-binding-contract-test.mjs",
+    "test:data-binding": "RUNTIME_DIR=/tmp/ymty-data-binding-contract-runtime node --test scripts/data-binding-contract-test.mjs",
     "test:dashboard-summary": "node --test scripts/dashboard-summary-test.mjs",
     "test:mirror-archive": "node --test scripts/mirror-archive-test.mjs",
     "test:training-bookmarks": "node --test scripts/training-bookmarks-test.mjs",

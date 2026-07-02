@@ -12,6 +12,7 @@ import {
   listTrainingBookmarkBindings,
   getRetestComparisonBinding,
   getShareCardBinding,
+  getTodayStateBinding,
   getTrainingPrescriptionBinding,
   listAdminUsersFromBindings,
   resetDataBindingForTests,
@@ -182,6 +183,7 @@ test("data binding service stores assessment, training, kline and retest in runt
   });
 
   const summary = await getDataBindingUserSummary(user.userId);
+  const todayState = await getTodayStateBinding(user.userId);
   const aliasSummary = await getDataBindingUserSummary("web-local-merge-001");
   const miniappAliasSummary = await getDataBindingUserSummary("miniapp-local-merge-001");
   const prescription = await getTrainingPrescriptionBinding(user.userId);
@@ -195,6 +197,12 @@ test("data binding service stores assessment, training, kline and retest in runt
   const comparison = await getRetestComparisonBinding(user.userId);
 
   assert.equal(assessment.admin_user.phone, "139****8842");
+  assert.equal(todayState.schemaVersion, "today_state_v1");
+  assert.equal(todayState.status, "completed");
+  assert.equal(todayState.nextAction, "查看活镜");
+  assert.equal(todayState.progress, 100);
+  assert.equal(todayState.userId, user.userId);
+  assert.equal(todayState.mainMirror, "追涨之镜");
   assert.equal(assessment.report.schemaVersion, "assessment_report_v1");
   assert.equal(assessment.mirror_report.schemaVersion, "living_mirror_v1");
   assert.equal(assessment.living_mirror_stats.schemaVersion, "living_mirror_v1");

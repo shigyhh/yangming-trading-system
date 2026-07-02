@@ -16,7 +16,7 @@ import { getI18nBundle, listSupportedLocales } from "../services/i18n.js";
 import { getQuestionBankStats } from "../services/questionBank.js";
 import { consumeWechatAuthCode, createWechatAuthUrl } from "../services/wechatAuth.js";
 import { advanceZhixingReplaySession, finishZhixingReplaySession, getZhixingReplaySession, listZhixingReplayResults, startZhixingReplaySession, submitZhixingReplayDecision } from "../services/zhixingReplay.js";
-import { dispatchTrainingPrescriptionBinding, generateShareCardBinding, getAdminUserFromBindings, getDataBindingUserSummary, getInviteSourceStatsBinding, getRetestComparisonBinding, getShareCardBinding, getTrainingPrescriptionBinding, getUserReportBinding, listAdminUsersFromBindings, listTradeReviewBindings, saveAssessmentReportBinding, saveKLineRecordBinding, saveRetestResultBinding, saveTradeReviewBinding, saveTrainingRecordBinding, syncAssistantSummaryToFeishuBinding, updateAssistantHandoffBinding } from "../services/dataBinding.js";
+import { dispatchTrainingPrescriptionBinding, generateShareCardBinding, getAdminUserFromBindings, getDataBindingUserSummary, getInviteSourceStatsBinding, getRetestComparisonBinding, getShareCardBinding, getTodayStateBinding, getTrainingPrescriptionBinding, getUserReportBinding, listAdminUsersFromBindings, listTradeReviewBindings, saveAssessmentReportBinding, saveKLineRecordBinding, saveRetestResultBinding, saveTradeReviewBinding, saveTrainingRecordBinding, syncAssistantSummaryToFeishuBinding, updateAssistantHandoffBinding } from "../services/dataBinding.js";
 import { getGlobalReflectionToday, listGlobalReflectionChoices, submitGlobalReflectionVote } from "../services/globalReflection.js";
 import { buildHistoricalKlineHotSlice, buildHistoricalKlinePreheatPlan, buildHistoricalKlineSlice, downloadHistoricalKline, getHistoricalKlineRules, listHistoricalKlineCatalog, listHistoricalKlineInstruments, preheatHistoricalKlineSlices, revealHistoricalKlineSlice } from "../services/historicalKline.js";
 import { buildTradeReviewOcrDraft } from "../services/tradeReviewOcr.js";
@@ -56,6 +56,7 @@ export async function route(req, res) {
         user_habit: "GET /api/v1/users/:user_id/habit",
         user_assessments: "GET /api/v1/users/:user_id/assessments",
         user_check_in: "POST /api/v1/users/:user_id/check-in",
+        user_today_state: "GET /api/v1/users/:user_id/today/state",
         user_miniprogram_state: "GET|POST /api/v1/users/:user_id/miniprogram-state",
         user_influence: "GET /api/v1/users/:user_id/influence",
         dojo_summary: "GET /api/v1/users/:user_id/dojo/summary",
@@ -1181,6 +1182,18 @@ export async function route(req, res) {
       note: body.note || ""
     });
     return sendJson(res, 200, { ok: true, habit });
+  }
+
+  const todayStateMatch = pathname.match(/^\/api\/v1\/users\/([^/]+)\/today\/state$/);
+  if (req.method === "GET" && todayStateMatch) {
+    const state = await getTodayStateBinding(todayStateMatch[1]);
+    if (!state) return sendJson(res, 404, { ok: false, error: "用户不存在" });
+    return sendJson(res, 200, {
+      ok: true,
+      state,
+      todayState: state,
+      today_state: state
+    });
   }
 
   const miniprogramStateMatch = pathname.match(/^\/api\/v1\/users\/([^/]+)\/miniprogram-state$/);

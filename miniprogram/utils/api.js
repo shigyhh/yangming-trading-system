@@ -178,7 +178,6 @@ async function fetchLivingMirrorProfile(userId = "") {
     });
     return normalizeLivingMirrorProfileResult(result);
   } catch (error) {
-    saveConnectionFallback(error, "活镜成长连接未完成");
     return buildLivingMirrorProfileFallback("network_error", getTechnicalMessage(error) || "活镜成长暂未连接");
   }
 }
@@ -236,7 +235,6 @@ async function fetchLivingMirrorGrowthProjection(userId = "") {
     });
     return normalizeLivingMirrorGrowthProjectionResult(result);
   } catch (error) {
-    saveConnectionFallback(error, "活镜成长投影连接未完成");
     return null;
   }
 }
