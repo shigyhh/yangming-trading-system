@@ -12,6 +12,11 @@ test("user center reads data binding summary with local fallback", async () => {
 
   ;[
     "fetchDataBindingSummary",
+    "dataBindingUserQueryKeys",
+    "getLinkedDataBindingUserId",
+    "normalizeDataBindingUserId",
+    "user_id",
+    "binding_user_id",
     "DataBindingSummaryResponse",
     "dataBindingLastSyncAt",
     "Server API 已绑定",

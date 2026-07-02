@@ -262,14 +262,14 @@ export default function ObservingArchivePage() {
           font-size: clamp(3.2rem, 7.2vw, 7.8rem);
         }
 
-        .archive-next-card,
-        .archive-panel {
+        :global(.archive-next-card),
+        :global(.archive-panel) {
           position: relative;
           overflow: hidden;
         }
 
-        .archive-next-card::before,
-        .archive-panel::before {
+        :global(.archive-next-card)::before,
+        :global(.archive-panel)::before {
           content: "";
           position: absolute;
           inset: 0;
@@ -295,23 +295,23 @@ export default function ObservingArchivePage() {
             align-items: start;
           }
 
-          .archive-user-card {
+          :global(.archive-user-card) {
             grid-column: span 4;
           }
 
-          .archive-proof-card {
+          :global(.archive-proof-card) {
             grid-column: span 8;
           }
 
-          .archive-loop-card {
+          :global(.archive-loop-card) {
             grid-column: span 7;
           }
 
-          .archive-change-card {
+          :global(.archive-change-card) {
             grid-column: span 5;
           }
 
-          .archive-actions-card {
+          :global(.archive-actions-card) {
             grid-column: span 12;
           }
         }
@@ -324,23 +324,23 @@ export default function ObservingArchivePage() {
         }
 
         @media (min-width: 1200px) {
-          .archive-user-card {
+          :global(.archive-user-card) {
             grid-column: span 4;
           }
 
-          .archive-proof-card {
+          :global(.archive-proof-card) {
             grid-column: span 5;
           }
 
-          .archive-actions-card {
+          :global(.archive-actions-card) {
             grid-column: span 3;
           }
 
-          .archive-loop-card {
+          :global(.archive-loop-card) {
             grid-column: span 7;
           }
 
-          .archive-change-card {
+          :global(.archive-change-card) {
             grid-column: span 5;
           }
         }

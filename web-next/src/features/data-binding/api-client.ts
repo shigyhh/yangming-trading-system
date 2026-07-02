@@ -30,6 +30,7 @@ type BindingClientResult<T> =
 export type DataBindingSummaryResponse = DataBindingUserSummaryResponse
 
 const defaultApiBaseUrl = process.env.NEXT_PUBLIC_YM_API_BASE_URL || "http://127.0.0.1:8787"
+const dataBindingUserQueryKeys = ["user_id", "userId", "binding_user_id"]
 
 export function getDataBindingUserProfile(): DataBindingUserProfile {
   const userId = getOrCreateDataBindingUserId()
@@ -247,12 +248,34 @@ async function requestGetJson<TResponse>(path: string): Promise<BindingClientRes
 }
 
 function getOrCreateDataBindingUserId() {
+  const linkedUserId = getLinkedDataBindingUserId()
+  if (linkedUserId) return linkedUserId
+
   const existing = getStorage<string>(assessmentStorageKeys.dataBindingUserId, "")
   if (existing) return existing
 
   const id = `web-${createRandomId()}`
   setStorage(assessmentStorageKeys.dataBindingUserId, id)
   return id
+}
+
+function getLinkedDataBindingUserId() {
+  if (typeof window === "undefined") return ""
+
+  const params = new URLSearchParams(window.location.search)
+  const rawUserId = dataBindingUserQueryKeys.map((key) => params.get(key)).find(Boolean) || ""
+  const userId = normalizeDataBindingUserId(rawUserId)
+  if (!userId) return ""
+
+  setStorage(assessmentStorageKeys.dataBindingUserId, userId)
+  return userId
+}
+
+function normalizeDataBindingUserId(value: string) {
+  const userId = value.trim()
+  if (!userId || userId.length > 96) return ""
+  if (!/^[A-Za-z0-9_-]+$/.test(userId)) return ""
+  return userId
 }
 
 function createRandomId() {
