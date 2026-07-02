@@ -107,6 +107,10 @@ export default function ObservingArchivePage() {
   const assistantBindingLabel = remoteSummary?.assistant_summary ? "助教摘要已生成" : "等待测评后生成"
   const shareCardBindingLabel = remoteSummary?.share_card ? "分享卡已生成" : "未生成分享卡"
   const feishuBindingLabel = remoteSummary?.feishu_sync?.status ? `飞书：${remoteSummary.feishu_sync.status}` : "飞书未同步"
+  const latestArchiveItems = useMemo(() => {
+    const archiveIndex = remoteSummary?.archiveIndex || remoteSummary?.archive_index
+    return (archiveIndex?.latestItems || archiveIndex?.latest_items || []).slice(0, 5)
+  }, [remoteSummary])
 
   if (!loaded) {
     return (
@@ -187,6 +191,27 @@ export default function ObservingArchivePage() {
             <p className="mt-4 font-function text-xs leading-6 text-[rgba(220,212,195,.46)]">
               server 未启动时，本页继续读取本机记录；server 启动后，测评、训练、复测、邀请码、助教摘要与分享卡会进入同一份用户数据绑定结构。
             </p>
+          </GlassPanel>
+
+          <GlassPanel className="archive-panel archive-recent-card">
+            <p className="font-function text-xs font-semibold tracking-[.18em] text-[#b49d5d]">最近记录</p>
+            {latestArchiveItems.length ? (
+              <div className="mt-5 grid gap-3">
+                {latestArchiveItems.map((item) => (
+                  <ArchiveRecentItem
+                    key={item.id || item.sourceId || item.source_id}
+                    type={item.type || item.sourceType || item.source_type}
+                    title={item.title}
+                    summary={item.summary}
+                    createdAt={item.createdAt || item.created_at}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="mt-4 font-function text-sm leading-7 text-[rgba(220,212,195,.55)]">
+                暂无跨端记录。完成测评、训练、复盘或 K 线观心后，会在这里出现最近证据。
+              </p>
+            )}
           </GlassPanel>
 
           <GlassPanel className="archive-panel archive-change-card">
@@ -307,6 +332,10 @@ export default function ObservingArchivePage() {
             grid-column: span 7;
           }
 
+          :global(.archive-recent-card) {
+            grid-column: span 5;
+          }
+
           :global(.archive-change-card) {
             grid-column: span 5;
           }
@@ -340,6 +369,10 @@ export default function ObservingArchivePage() {
             grid-column: span 7;
           }
 
+          :global(.archive-recent-card) {
+            grid-column: span 7;
+          }
+
           :global(.archive-change-card) {
             grid-column: span 5;
           }
@@ -370,6 +403,51 @@ function ArchiveMeta({ label, value }: { label: string; value: string }) {
       <span className="min-w-0 break-words text-left font-function text-sm text-[rgba(242,235,220,.72)] sm:text-right">{value}</span>
     </div>
   )
+}
+
+function ArchiveRecentItem({
+  type,
+  title,
+  summary,
+  createdAt,
+}: {
+  type: string
+  title: string
+  summary: string
+  createdAt: string
+}) {
+  return (
+    <div className="rounded-[8px] border border-[rgba(172,146,83,.12)] bg-black/[.13] px-4 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="font-function text-[11px] font-semibold tracking-[.14em] text-[rgba(180,157,93,.88)]">
+          {getArchiveTypeLabel(type)}
+        </span>
+        <span className="font-function text-[11px] text-[rgba(220,212,195,.42)]">{formatArchiveTime(createdAt)}</span>
+      </div>
+      <h3 className="mt-2 font-story text-lg font-light leading-[1.45] tracking-[.06em] text-[rgba(242,235,220,.82)]">
+        {title}
+      </h3>
+      <p className="mt-2 line-clamp-2 font-function text-xs leading-6 text-[rgba(220,212,195,.5)]">
+        {summary}
+      </p>
+    </div>
+  )
+}
+
+function getArchiveTypeLabel(type: string) {
+  const labels: Record<string, string> = {
+    growth_projection: "活镜摘要",
+    growth_record: "训练记录",
+    trade_review: "真实复盘",
+    mistake_card: "错题卡",
+    kline_record: "K线观心",
+    training_bookmark: "训练收藏",
+    intervention_event: "知行提醒",
+    execution_plan: "执行计划",
+    mirror_report: "心镜报告",
+    weekly_mirror: "周复盘",
+  }
+  return labels[type] || "心证记录"
 }
 
 function formatArchiveTime(value: string) {

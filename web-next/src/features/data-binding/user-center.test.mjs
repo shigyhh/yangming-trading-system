@@ -28,6 +28,10 @@ test("user center reads data binding summary with local fallback", async () => {
     "飞书同步",
     "K 线心念记录",
     "复测雷达",
+    "最近记录",
+    "latestItems",
+    "latest_items",
+    "archive-recent-card",
     "测评、训练、复测、邀请码、助教摘要与分享卡",
   ].forEach((token) => {
     assert.equal(`${apiClient}\n${archivePage}`.includes(token), true, `missing token: ${token}`)
