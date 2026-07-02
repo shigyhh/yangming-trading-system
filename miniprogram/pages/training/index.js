@@ -28,13 +28,20 @@ const { getPersonalityStagePlan } = require("../../core/personality-stage-map");
 const { buildDailyLoopState } = require("../../modules/daily-loop/index");
 const { buildDailyTrainingCard } = require("../../modules/practice/index");
 const { buildTraining7View } = require("../../modules/training7/index");
-const { syncNativeTabBarActive } = require("../../utils/tab-bar");
 
 const STEP_META = [
   { id: "trigger", title: "照见触发场景", subtitle: "先看见今天最容易被牵动的一念" },
   { id: "micro", title: "完成事上练", subtitle: "只克治一个小动作，不追求复杂" },
   { id: "reflection", title: "写下省察一句", subtitle: "记录旧习气如何转成克治动作" }
 ];
+
+function syncPageTabBarActive(page) {
+  if (!page || typeof page.getTabBar !== "function") return;
+  const tabBar = page.getTabBar();
+  if (tabBar && typeof tabBar.syncActiveFromRoute === "function") {
+    tabBar.syncActiveFromRoute();
+  }
+}
 
 function buildSteps(state) {
   return STEP_META.map((item) => Object.assign({}, item, { done: !!(state.steps || {})[item.id] }));
@@ -90,7 +97,7 @@ Page({
   },
 
   onShow() {
-    syncNativeTabBarActive(this);
+    syncPageTabBarActive(this);
     this.load();
   },
 

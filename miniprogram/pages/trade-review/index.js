@@ -43,7 +43,6 @@ const {
   shouldShowAfterReviewRepeatReminder
 } = require("../../modules/zhixing-reminder/index");
 const { normalizeInterventionResources } = require("../../modules/intervention-engine/index");
-const { syncNativeTabBarActive } = require("../../utils/tab-bar");
 
 const FIRST_THOUGHT_OPTIONS = ["怕错过", "不甘心", "想证明", "怕亏", "想扳回"];
 const PLAN_STATE_OPTIONS = [
@@ -57,6 +56,14 @@ const POSITION_STATES = [
   { key: "trapped", label: "被套承压" }
 ];
 const NEXT_ACTION_OPTIONS = ["停十秒", "只按计划", "不追涨", "不扛单", "先记录"];
+
+function syncPageTabBarActive(page) {
+  if (!page || typeof page.getTabBar !== "function") return;
+  const tabBar = page.getTabBar();
+  if (tabBar && typeof tabBar.syncActiveFromRoute === "function") {
+    tabBar.syncActiveFromRoute();
+  }
+}
 
 function defaultForm() {
   return {
@@ -255,7 +262,7 @@ Page({
   },
 
   onShow() {
-    syncNativeTabBarActive(this);
+    syncPageTabBarActive(this);
     this.refreshRecords();
     this.refreshInterventionResources();
   },

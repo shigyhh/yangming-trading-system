@@ -56,7 +56,6 @@ const { buildClassroomView } = require("../../modules/classroom/index");
 const { buildLiveMirrorReminder } = require("../../modules/trade-review/index");
 const { buildHomeTodayStateView, buildMiniHomeView, resolveHomeTodayStateAction } = require("../../modules/mini-loop/index");
 const { getRuntimePixelRatio } = require("../../utils/runtime-info");
-const { syncNativeTabBarActive } = require("../../utils/tab-bar");
 
 const ENTRY_STATE_KEY = "zhixing_ritual_entry";
 const REACTION_TAGS = ["恐惧", "贪念", "证明", "后悔", "急躁", "逃避"];
@@ -70,6 +69,14 @@ const QR_BLOCKS = Array.from({ length: 25 }).map((_, index) => ({
   active: [0, 1, 2, 4, 5, 7, 9, 10, 12, 14, 15, 17, 20, 21, 23, 24].includes(index)
 }));
 const INITIAL_MINI_HOME_VIEW = buildMiniHomeView({});
+
+function syncPageTabBarActive(page) {
+  if (!page || typeof page.getTabBar !== "function") return;
+  const tabBar = page.getTabBar();
+  if (tabBar && typeof tabBar.syncActiveFromRoute === "function") {
+    tabBar.syncActiveFromRoute();
+  }
+}
 
 function getStoredEntryState() {
   try {
@@ -1211,7 +1218,7 @@ Page({
   },
 
   onShow() {
-    syncNativeTabBarActive(this);
+    syncPageTabBarActive(this);
     setNativeTabBarVisible(!this.data.posterMode);
     this.loadEntryState();
     this.loadServerTodayState();

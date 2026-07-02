@@ -44,7 +44,6 @@ const { getTodayContent } = require("../../modules/content365/index");
 const { buildRetentionState } = require("../../modules/retention/index");
 const { SHARE_MOMENTS } = require("../../utils/share-moments");
 const { TYPE_LABELS } = require("../../modules/share-card/index");
-const { syncNativeTabBarActive } = require("../../utils/tab-bar");
 
 const SHARE_MOMENT_ENTRIES = [
   { key: "assessment_completed", label: "测评完成" },
@@ -74,6 +73,14 @@ const DEBUG_DATA_CHAIN = [
   "LivingMirrorStats",
   "AssistantHandoff"
 ];
+
+function syncPageTabBarActive(page) {
+  if (!page || typeof page.getTabBar !== "function") return;
+  const tabBar = page.getTabBar();
+  if (tabBar && typeof tabBar.syncActiveFromRoute === "function") {
+    tabBar.syncActiveFromRoute();
+  }
+}
 
 const TECHNICAL_MESSAGE_RE = /(request:fail|ERR_CONNECTION_REFUSED|ERR_|接口错误|网络连接失败|请求失败|localhost|127\.0\.0\.1)/i;
 
@@ -207,7 +214,7 @@ Page({
   },
 
   onShow() {
-    syncNativeTabBarActive(this);
+    syncPageTabBarActive(this);
     const profile = getProfile();
     const executionPlanLibrary = getExecutionPlanLibrary();
     const executionPlanCount = (executionPlanLibrary.records || []).filter((item) => item.enabled).length;

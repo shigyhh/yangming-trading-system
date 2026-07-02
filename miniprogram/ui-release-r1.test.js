@@ -57,7 +57,6 @@ const appWxss = readFileSync(join(root, "miniprogram", "app.wxss"), "utf8");
 const bottomTabWxss = readFileSync(join(root, "miniprogram", "components", "bottom-tab-bar", "index.wxss"), "utf8");
 const bottomTabJs = readFileSync(join(root, "miniprogram", "components", "bottom-tab-bar", "index.js"), "utf8");
 const bottomTabWxml = readFileSync(join(root, "miniprogram", "components", "bottom-tab-bar", "index.wxml"), "utf8");
-const tabBarUtilJs = readFileSync(join(root, "miniprogram", "utils", "tab-bar.js"), "utf8");
 const complianceNoticeJs = readFileSync(join(root, "miniprogram", "components", "compliance-notice", "index.js"), "utf8");
 const complianceNoticeWxml = readFileSync(join(root, "miniprogram", "components", "compliance-notice", "index.wxml"), "utf8");
 const complianceNoticeWxss = readFileSync(join(root, "miniprogram", "components", "compliance-notice", "index.wxss"), "utf8");
@@ -391,7 +390,8 @@ assert.deepStrictEqual(
   "native tabBar should contain the five main miniapp entries in product order"
 );
 assert.ok(bottomTabJs.includes("wx.switchTab({"), "bottom tab primary navigation should use native switchTab");
-assert.ok(tabBarUtilJs.includes("syncNativeTabBarActive"), "native custom tabBar should have an explicit route sync helper");
+assert.ok(bottomTabJs.includes("success: () => this.setData({ activeKey: normalizeActive(key) })"), "bottom tab should update active state only after switchTab succeeds");
+assert.ok(bottomTabJs.includes("isCurrentRoute(url)"), "bottom tab should guard current-route no-op switches");
 [
   homeJs,
   tradeReviewJs,
@@ -399,7 +399,8 @@ assert.ok(tabBarUtilJs.includes("syncNativeTabBarActive"), "native custom tabBar
   livingMirrorJs,
   profileJs
 ].forEach((pageJs) => {
-  assert.ok(pageJs.includes("syncNativeTabBarActive(this);"), "native tab pages should sync the custom tab active state on show");
+  assert.ok(pageJs.includes("syncPageTabBarActive(this);"), "native tab pages should sync the custom tab active state on show");
+  assert.equal(pageJs.includes('require("../../utils/tab-bar")'), false, "native tab page sync should not depend on an extra runtime helper module");
 });
 assert.equal(bottomTabJs.includes("wx.redirectTo({"), false, "bottom tab should not destroy and recreate tab pages with redirectTo");
 assert.equal(bottomTabJs.includes("wx.reLaunch({"), false, "bottom tab should not fall back to full app relaunch for tab routes");

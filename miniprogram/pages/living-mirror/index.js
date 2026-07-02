@@ -14,7 +14,14 @@ const { fetchLivingMirrorGrowthProjection, fetchLivingMirrorProfile, pullTrainin
 const { buildTraining7View } = require("../../modules/training7/index");
 const { buildKlineDayRetestComparison, getKlineRecommendationForMirror } = require("../../modules/kline-simulator/index");
 const { buildLivingMirrorTree } = require("../../modules/mini-loop/index");
-const { syncNativeTabBarActive } = require("../../utils/tab-bar");
+
+function syncPageTabBarActive(page) {
+  if (!page || typeof page.getTabBar !== "function") return;
+  const tabBar = page.getTabBar();
+  if (tabBar && typeof tabBar.syncActiveFromRoute === "function") {
+    tabBar.syncActiveFromRoute();
+  }
+}
 
 function formatGrowthDate(value = "") {
   const text = String(value || "").trim();
@@ -193,7 +200,7 @@ Page({
   },
 
   onShow() {
-    syncNativeTabBarActive(this);
+    syncPageTabBarActive(this);
     this.refreshStats();
     this.loadServerLivingMirrorProfile();
     this.loadLivingMirrorGrowthSummary();
