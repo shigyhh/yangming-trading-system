@@ -16,7 +16,7 @@ import { getI18nBundle, listSupportedLocales } from "../services/i18n.js";
 import { getQuestionBankStats } from "../services/questionBank.js";
 import { consumeWechatAuthCode, createWechatAuthUrl } from "../services/wechatAuth.js";
 import { advanceZhixingReplaySession, finishZhixingReplaySession, getZhixingReplaySession, listZhixingReplayResults, startZhixingReplaySession, submitZhixingReplayDecision } from "../services/zhixingReplay.js";
-import { dispatchTrainingPrescriptionBinding, generateShareCardBinding, getAdminUserFromBindings, getDataBindingUserSummary, getInviteSourceStatsBinding, getRetestComparisonBinding, getShareCardBinding, getTodayStateBinding, getTrainingPrescriptionBinding, getUserReportBinding, listAdminUsersFromBindings, listTradeReviewBindings, saveAssessmentReportBinding, saveKLineRecordBinding, saveRetestResultBinding, saveTradeReviewBinding, saveTrainingRecordBinding, syncAssistantSummaryToFeishuBinding, updateAssistantHandoffBinding } from "../services/dataBinding.js";
+import { dispatchTrainingPrescriptionBinding, generateShareCardBinding, getAdminUserFromBindings, getDataBindingUserSummary, getInviteSourceStatsBinding, getLivingMirrorGrowthProjectionBinding, getLivingMirrorProfileBinding, getRetestComparisonBinding, getShareCardBinding, getTodayStateBinding, getTrainingPrescriptionBinding, getUserReportBinding, listAdminUsersFromBindings, listTradeReviewBindings, saveAssessmentReportBinding, saveKLineRecordBinding, saveRetestResultBinding, saveTradeReviewBinding, saveTrainingRecordBinding, syncAssistantSummaryToFeishuBinding, updateAssistantHandoffBinding } from "../services/dataBinding.js";
 import { getGlobalReflectionToday, listGlobalReflectionChoices, submitGlobalReflectionVote } from "../services/globalReflection.js";
 import { buildHistoricalKlineHotSlice, buildHistoricalKlinePreheatPlan, buildHistoricalKlineSlice, downloadHistoricalKline, getHistoricalKlineRules, listHistoricalKlineCatalog, listHistoricalKlineInstruments, preheatHistoricalKlineSlices, revealHistoricalKlineSlice } from "../services/historicalKline.js";
 import { buildTradeReviewOcrDraft } from "../services/tradeReviewOcr.js";
@@ -57,6 +57,8 @@ export async function route(req, res) {
         user_assessments: "GET /api/v1/users/:user_id/assessments",
         user_check_in: "POST /api/v1/users/:user_id/check-in",
         user_today_state: "GET /api/v1/users/:user_id/today/state",
+        user_living_mirror_profile: "GET /api/v1/users/:user_id/living-mirror/profile",
+        user_living_mirror_growth: "GET /api/v1/users/:user_id/living-mirror/growth",
         user_miniprogram_state: "GET|POST /api/v1/users/:user_id/miniprogram-state",
         user_influence: "GET /api/v1/users/:user_id/influence",
         dojo_summary: "GET /api/v1/users/:user_id/dojo/summary",
@@ -1194,6 +1196,20 @@ export async function route(req, res) {
       todayState: state,
       today_state: state
     });
+  }
+
+  const livingMirrorProfileMatch = pathname.match(/^\/api\/v1\/users\/([^/]+)\/living-mirror\/profile$/);
+  if (req.method === "GET" && livingMirrorProfileMatch) {
+    const result = await getLivingMirrorProfileBinding(livingMirrorProfileMatch[1]);
+    if (!result) return sendJson(res, 404, { ok: false, error: "用户不存在" });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  const livingMirrorGrowthMatch = pathname.match(/^\/api\/v1\/users\/([^/]+)\/living-mirror\/growth$/);
+  if (req.method === "GET" && livingMirrorGrowthMatch) {
+    const result = await getLivingMirrorGrowthProjectionBinding(livingMirrorGrowthMatch[1]);
+    if (!result) return sendJson(res, 404, { ok: false, error: "用户不存在" });
+    return sendJson(res, 200, { ok: true, ...result });
   }
 
   const miniprogramStateMatch = pathname.match(/^\/api\/v1\/users\/([^/]+)\/miniprogram-state$/);

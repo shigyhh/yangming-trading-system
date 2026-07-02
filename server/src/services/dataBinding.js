@@ -720,6 +720,34 @@ export async function getTodayStateBinding(userId) {
   return buildTodayStateFromRecord(record);
 }
 
+export async function getLivingMirrorProfileBinding(userId) {
+  await ensureDataBindingLoaded();
+  const record = findUserRecord(userId);
+  if (!record) return null;
+
+  const profile = buildLivingMirrorSideChannelProfile(record);
+  return {
+    user: publicUser(record),
+    profile,
+    living_mirror_profile: profile,
+    livingMirrorProfile: profile
+  };
+}
+
+export async function getLivingMirrorGrowthProjectionBinding(userId) {
+  await ensureDataBindingLoaded();
+  const record = findUserRecord(userId);
+  if (!record) return null;
+
+  const projection = buildLivingMirrorGrowthProjection(record);
+  return {
+    user: publicUser(record),
+    projection,
+    growthProjection: projection,
+    livingMirrorGrowthProjection: projection
+  };
+}
+
 export async function getDataBindingUserSummary(userId) {
   await ensureDataBindingLoaded();
   const record = findUserRecord(userId);
@@ -2298,6 +2326,177 @@ function buildLivingMirrorProfile(record = {}) {
     updatedAt: now,
     complianceNotice: "本画像仅用于交易心理觉察、复盘训练与行为管理，不构成投资建议。"
   };
+}
+
+function buildLivingMirrorSideChannelProfile(record = {}) {
+  const stats = record.living_mirror_stats || refreshLivingMirrorState(record, { updateTrend: false }) || {};
+  const profile = record.living_mirror_profile || buildLivingMirrorProfile(record);
+  const repeatedThoughts = collectRepeatedLivingMirrorThoughts(record);
+  const latestReview = getLatestTradeReview(record);
+  const totalEvents = getLivingMirrorEventCount(record);
+  const updatedAt = latestIso(
+    profile.updatedAt || profile.updated_at || stats.lastUpdated || stats.last_updated || "",
+    latestReview.updatedAt || latestReview.updated_at || latestReview.createdAt || latestReview.created_at || latestReview.tradeDate || latestReview.trade_date || record.updated_at || ""
+  );
+  const latestBoundaryState = cleanText(
+    latestReview.nextAction ||
+    latestReview.next_action ||
+    latestReview.nextRule ||
+    latestReview.next_rule ||
+    profile.tripleReflection?.nextCalibration ||
+    profile.trainingFocus ||
+    buildProfileTrainingFocus(profile.currentMainMirror),
+    180
+  );
+
+  return {
+    ...profile,
+    totalEvents,
+    total_events: totalEvents,
+    eventCount: totalEvents,
+    event_count: totalEvents,
+    dominantReaction: profile.currentMainMirror || profile.tripleReflection?.mainMirror || "",
+    dominant_reaction: profile.currentMainMirror || profile.tripleReflection?.mainMirror || "",
+    repeatedThoughts,
+    repeated_thoughts: repeatedThoughts,
+    latestBoundaryState,
+    latest_boundary_state: latestBoundaryState,
+    updatedAt,
+    updated_at: updatedAt,
+    source: "data_binding_living_mirror",
+    complianceNotice: profile.complianceNotice || "本画像仅用于交易心理觉察、复盘训练与行为管理，不构成投资建议。"
+  };
+}
+
+function buildLivingMirrorGrowthProjection(record = {}) {
+  const stats = record.living_mirror_stats || refreshLivingMirrorState(record, { updateTrend: false }) || {};
+  const profile = buildLivingMirrorSideChannelProfile(record);
+  const prescription = record.training_prescription || buildTrainingPrescription(record);
+  const activeDays = countLivingMirrorActiveDays(record);
+  const completedDays = (record.training_records || []).filter((item) => item.status === "completed").length;
+  const totalEvents = profile.totalEvents || 0;
+  const nextAction = cleanText(
+    profile.latestBoundaryState ||
+    prescription.action ||
+    profile.trainingFocus ||
+    "下一次交易前，先照见这一念。",
+    180
+  );
+  const updatedAt = profile.updatedAt || stats.lastUpdated || stats.last_updated || record.updated_at || "";
+
+  return {
+    schemaVersion: "living_mirror_growth_projection_v1",
+    schema_version: "living_mirror_growth_projection_v1",
+    userId: record.id || "",
+    user_id: record.id || "",
+    stage: profile.currentStage || "活镜显影",
+    stageText: profile.currentStage || "活镜显影",
+    stage_text: profile.currentStage || "活镜显影",
+    currentStage: profile.currentStage || "活镜显影",
+    current_stage: profile.currentStage || "活镜显影",
+    mirrorLifeStage: profile.currentStage || "活镜显影",
+    mirror_life_stage: profile.currentStage || "活镜显影",
+    topThought: profile.repeatedThoughts?.[0] || "",
+    topThoughtText: profile.repeatedThoughts?.[0] || "",
+    top_thought_text: profile.repeatedThoughts?.[0] || "",
+    repeatedThoughts: profile.repeatedThoughts || [],
+    repeated_thoughts: profile.repeatedThoughts || [],
+    totalEvents,
+    total_events: totalEvents,
+    activeDays,
+    active_days: activeDays,
+    completedDays,
+    completed_days: completedDays,
+    nextAction,
+    next_action: nextAction,
+    nextActionText: nextAction,
+    next_action_text: nextAction,
+    zhixing: stats.conscienceGrowth || 0,
+    zhixingText: `良知稳定度 ${Math.round(Number(stats.conscienceGrowth || 0))}`,
+    zhixingScoreText: `良知稳定度 ${Math.round(Number(stats.conscienceGrowth || 0))}`,
+    trainingContinuity: {
+      totalEvents,
+      total_events: totalEvents,
+      activeDays,
+      active_days: activeDays,
+      completedDays,
+      completed_days: completedDays,
+      latestRecordedAt: updatedAt,
+      latest_recorded_at: updatedAt
+    },
+    training_continuity: {
+      totalEvents,
+      total_events: totalEvents,
+      activeDays,
+      active_days: activeDays,
+      completedDays,
+      completed_days: completedDays,
+      latestRecordedAt: updatedAt,
+      latest_recorded_at: updatedAt
+    },
+    nextCycleFocus: {
+      title: prescription.title || "下一次只练一件事",
+      action: nextAction
+    },
+    next_cycle_focus: {
+      title: prescription.title || "下一次只练一件事",
+      action: nextAction
+    },
+    zhixingStability: {
+      totalText: `良知稳定度 ${Math.round(Number(stats.conscienceGrowth || 0))}`,
+      total_text: `良知稳定度 ${Math.round(Number(stats.conscienceGrowth || 0))}`,
+      summary: profile.tripleReflection?.conclusion || profile.trainingFocus || "活镜正在根据真实记录显影。"
+    },
+    zhixing_stability: {
+      totalText: `良知稳定度 ${Math.round(Number(stats.conscienceGrowth || 0))}`,
+      total_text: `良知稳定度 ${Math.round(Number(stats.conscienceGrowth || 0))}`,
+      summary: profile.tripleReflection?.conclusion || profile.trainingFocus || "活镜正在根据真实记录显影。"
+    },
+    updatedAt,
+    updated_at: updatedAt,
+    complianceNotice: "本投影仅用于交易心理觉察、复盘训练与行为管理，不构成投资建议。"
+  };
+}
+
+function collectRepeatedLivingMirrorThoughts(record = {}) {
+  const reviewThoughts = (record.trade_reviews || []).flatMap((review) => [
+    review.strongestThought,
+    review.strongest_thought,
+    review.firstThought,
+    review.first_thought
+  ]);
+  const klineThoughts = (record.kline_records || []).flatMap((item) => [
+    item.reaction,
+    item.firstThought,
+    item.first_thought,
+    item.errorType,
+    item.error_type
+  ]);
+  return topCountItems([...reviewThoughts, ...klineThoughts], 3).map((item) => item.label);
+}
+
+function getLatestTradeReview(record = {}) {
+  const reviews = record.trade_reviews || [];
+  return reviews.length ? reviews[reviews.length - 1] : {};
+}
+
+function getLivingMirrorEventCount(record = {}) {
+  return (record.trade_reviews || []).length +
+    (record.kline_records || []).length +
+    (record.training_records || []).length;
+}
+
+function countLivingMirrorActiveDays(record = {}) {
+  const dates = [
+    ...(record.trade_reviews || []).flatMap((item) => [item.tradeDate, item.trade_date, item.createdAt, item.created_at]),
+    ...(record.kline_records || []).flatMap((item) => [item.recorded_at, item.recordedAt, item.createdAt, item.created_at]),
+    ...(record.training_records || []).flatMap((item) => [item.date_key, item.recorded_at, item.recordedAt, item.createdAt, item.created_at])
+  ]
+    .map((value) => cleanText(value, 40))
+    .filter(Boolean)
+    .map((value) => value.includes("T") ? value.slice(0, 10) : value.slice(0, 10))
+    .filter(Boolean);
+  return new Set(dates).size;
 }
 
 function buildProfileSourceRow(key, name, mirror, statusText, sourceId = "") {
