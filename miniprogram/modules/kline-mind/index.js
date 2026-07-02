@@ -966,6 +966,127 @@ function cleanText(value, maxLength = 180) {
   return maxLength > 0 ? text.slice(0, maxLength) : text;
 }
 
+const KLINE_ENTRY_SOURCE_LABELS = {
+  living_mirror: "活镜带入",
+  report: "报告带入",
+  trade_review: "复盘带入",
+  review_focus: "复盘带入",
+  kline_review: "复盘回练",
+  mirror_challenge: "镜像挑战",
+  zhixing: "知行补练",
+  legacy_simulator: "旧入口转入",
+  training: "训练带入"
+};
+
+function normalizeKlineMindMarketKey(value, fallback = "cn_equity") {
+  const raw = cleanText(value || fallback, 40).toLowerCase();
+  if (MARKET_CATALOG[raw]) return raw;
+  if (["a", "a股", "cn", "china", "cn_a", "cn-a", "china_a", "china-a"].includes(raw)) {
+    return "cn_equity";
+  }
+  return MARKET_CATALOG[fallback] ? fallback : "cn_equity";
+}
+
+function normalizeKlineMindSceneId(value = "") {
+  const sceneId = cleanText(value, 80);
+  return sceneId.indexOf("scene-") === 0 ? sceneId : "";
+}
+
+function normalizeKlineMindEntryContext(options = {}, fallback = {}) {
+  const sourceType = cleanText(pickValue(
+    options.sourceType,
+    options.source_type,
+    fallback.sourceType,
+    fallback.source_type
+  ), 80);
+  const fallbackTimeframe = normalizeKlineMindTimeframeKey(pickValue(
+    fallback.timeframeKey,
+    fallback.timeframe,
+    fallback.period
+  ), "1d");
+  const timeframeKey = normalizeKlineMindTimeframeKey(pickValue(
+    options.timeframeKey,
+    options.timeframe_key,
+    options.timeframe,
+    options.period,
+    fallback.timeframeKey,
+    fallback.timeframe_key,
+    fallback.timeframe,
+    fallback.period
+  ), fallbackTimeframe);
+  const marketKey = normalizeKlineMindMarketKey(pickValue(
+    options.marketKey,
+    options.market_key,
+    options.market,
+    fallback.marketKey,
+    fallback.market_key,
+    fallback.market
+  ), normalizeKlineMindMarketKey(pickValue(fallback.marketKey, fallback.market_key, fallback.market), "cn_equity"));
+  const scenarioId = normalizeKlineMindSceneId(pickValue(
+    options.sceneId,
+    options.scene_id,
+    options.scenarioId,
+    options.scenario_id,
+    options.sliceSeed,
+    options.slice_seed,
+    fallback.sceneId,
+    fallback.scene_id,
+    fallback.scenarioId,
+    fallback.scenario_id,
+    fallback.sliceSeed,
+    fallback.slice_seed
+  ));
+  const symbol = cleanText(pickValue(
+    options.symbol,
+    options.code,
+    options.instrument,
+    fallback.symbol,
+    fallback.code,
+    fallback.instrument
+  ), 40);
+
+  return {
+    sourceType,
+    source_type: sourceType,
+    entrySourceLabel: KLINE_ENTRY_SOURCE_LABELS[sourceType] || "",
+    entry_source_label: KLINE_ENTRY_SOURCE_LABELS[sourceType] || "",
+    scenarioId,
+    scenario_id: scenarioId,
+    sliceSeed: scenarioId,
+    slice_seed: scenarioId,
+    marketKey,
+    market_key: marketKey,
+    timeframeKey,
+    timeframe_key: timeframeKey,
+    symbol
+  };
+}
+
+function mergeKlineMindEntryContext(record = {}, entryContext = {}) {
+  const normalized = normalizeKlineMindEntryContext(entryContext, record);
+  const merged = Object.assign({}, record);
+  [
+    "sourceType",
+    "source_type",
+    "entrySourceLabel",
+    "entry_source_label",
+    "marketKey",
+    "market_key",
+    "timeframeKey",
+    "timeframe_key",
+    "symbol"
+  ].forEach((key) => {
+    if (hasValue(normalized[key])) merged[key] = normalized[key];
+  });
+  if (hasValue(normalized.scenarioId)) {
+    merged.scenarioId = normalized.scenarioId;
+    merged.scenario_id = normalized.scenarioId;
+    merged.sliceSeed = normalized.scenarioId;
+    merged.slice_seed = normalized.scenarioId;
+  }
+  return merged;
+}
+
 function cleanEventText(value, maxLength = 180) {
   return cleanText(value, maxLength);
 }
@@ -2228,6 +2349,8 @@ module.exports = {
   normalizeTrainingBookmark,
   buildBookmarkReplaySliceRequest,
   normalizeKlineMindTimeframeKey,
+  normalizeKlineMindEntryContext,
+  mergeKlineMindEntryContext,
   getMarketConfig,
   getNextKlineMindSliceSeed,
   getInitialKlineVisibleCount,

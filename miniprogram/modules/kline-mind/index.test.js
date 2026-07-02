@@ -26,7 +26,9 @@ const {
   buildTrainingBookmark,
   normalizeTrainingBookmark,
   buildBookmarkReplaySliceRequest,
-  normalizeKlineMindTimeframeKey
+  normalizeKlineMindTimeframeKey,
+  normalizeKlineMindEntryContext,
+  mergeKlineMindEntryContext
 } = require("./index");
 
 assert.strictEqual(SIX_GATE_MAP.length, 6);
@@ -46,6 +48,46 @@ assert.strictEqual(normalizeKlineMindTimeframeKey("step_replay"), "1d");
 assert.strictEqual(normalizeKlineMindTimeframeKey("step_replay", "60m"), "60m");
 assert.strictEqual(buildKlineMindSession({ record: { timeframeKey: "step_replay" } }).timeframeKey, "1d");
 assert.strictEqual(buildKlineMindSession({ record: { timeframeKey: "101" } }).timeframeKey, "1d");
+
+const livingMirrorEntry = normalizeKlineMindEntryContext({
+  source_type: "living_mirror",
+  sceneId: "scene-boundary-001",
+  market: "cn_equity",
+  timeframe: "中线",
+  symbol: "000001.SZ"
+});
+assert.strictEqual(livingMirrorEntry.sourceType, "living_mirror");
+assert.strictEqual(livingMirrorEntry.source_type, "living_mirror");
+assert.strictEqual(livingMirrorEntry.entrySourceLabel, "活镜带入");
+assert.strictEqual(livingMirrorEntry.scenarioId, "scene-boundary-001");
+assert.strictEqual(livingMirrorEntry.sliceSeed, "scene-boundary-001");
+assert.strictEqual(livingMirrorEntry.marketKey, "cn_equity");
+assert.strictEqual(livingMirrorEntry.timeframeKey, "60m");
+assert.strictEqual(livingMirrorEntry.symbol, "000001.SZ");
+
+const mergedEntryRecord = mergeKlineMindEntryContext(
+  { timeframeKey: "1d", scenarioId: "scene-fast-001", firstReaction: "想证明" },
+  livingMirrorEntry
+);
+assert.strictEqual(mergedEntryRecord.timeframeKey, "60m");
+assert.strictEqual(mergedEntryRecord.scenarioId, "scene-boundary-001");
+assert.strictEqual(mergedEntryRecord.sliceSeed, "scene-boundary-001");
+assert.strictEqual(mergedEntryRecord.sourceType, "living_mirror");
+assert.strictEqual(mergedEntryRecord.firstReaction, "想证明");
+
+const legacyEntry = normalizeKlineMindEntryContext({
+  sourceType: "legacy_simulator",
+  scene_id: "bad",
+  market_key: "us_equity",
+  timeframeKey: "step_replay",
+  code: "  600000.SH  "
+}, { timeframeKey: "30m" });
+assert.strictEqual(legacyEntry.sourceType, "legacy_simulator");
+assert.strictEqual(legacyEntry.entrySourceLabel, "旧入口转入");
+assert.strictEqual(legacyEntry.scenarioId, "");
+assert.strictEqual(legacyEntry.marketKey, "cn_equity");
+assert.strictEqual(legacyEntry.timeframeKey, "30m");
+assert.strictEqual(legacyEntry.symbol, "600000.SH");
 
 const historicalSlice = {
   source: "verified_fixture",

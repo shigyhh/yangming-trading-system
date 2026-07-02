@@ -1009,11 +1009,17 @@ function buildKlineSliceCacheKey({
   personalityType = "",
   gateKey = "shi_shang_mo",
   blind = true,
-  seed = ""
+  seed = "",
+  sourceType = "",
+  source_type = "",
+  sceneId = "",
+  scene_id = ""
 } = {}) {
   const market = KLINE_MARKET_MAP[marketKey] || "cn_equity";
   const timeframe = KLINE_TIMEFRAME_MAP[timeframeKey] || "101";
   const safeSymbol = normalizeKlineHistorySymbol(symbol);
+  const source = String(sourceType || source_type || "").trim();
+  const scene = String(sceneId || scene_id || "").trim();
   return [
     market,
     timeframe,
@@ -1025,7 +1031,9 @@ function buildKlineSliceCacheKey({
     String(personalityType || ""),
     String(gateKey || ""),
     blind ? "blind" : "open",
-    String(seed || "")
+    String(seed || ""),
+    source,
+    scene
   ].join("|");
 }
 
@@ -1418,6 +1426,10 @@ async function fetchKlineTrainingSlice({
   gateKey = "shi_shang_mo",
   blind = true,
   seed = "",
+  sourceType = "",
+  source_type = "",
+  sceneId = "",
+  scene_id = "",
   hotPoolSlot = "",
   useHotPoolQueue = true,
   storeHotPoolResult = false
@@ -1425,6 +1437,8 @@ async function fetchKlineTrainingSlice({
   const market = KLINE_MARKET_MAP[marketKey] || "cn_equity";
   const timeframe = KLINE_TIMEFRAME_MAP[timeframeKey] || "101";
   const safeSymbol = normalizeKlineHistorySymbol(symbol);
+  sourceType = String(sourceType || source_type || "").trim();
+  sceneId = String(sceneId || scene_id || "").trim();
   const requestedWindow = trainingLength || windowSize;
   const requestWindows = buildKlineRequestWindowQueue(requestedWindow);
   const useHotPool = shouldUseKlineHotPool({ symbol: safeSymbol, endDate, entryTime, blind });
@@ -1440,7 +1454,11 @@ async function fetchKlineTrainingSlice({
     personalityType,
     gateKey,
     blind,
-    seed
+    seed,
+    sourceType,
+    source_type: sourceType,
+    sceneId,
+    scene_id: sceneId
   };
   if (useHotPool && useHotPoolQueue && !storeHotPoolResult) {
     const queuedSlice = takeQueuedKlineHotPoolSlice(queueParams);
@@ -1458,7 +1476,9 @@ async function fetchKlineTrainingSlice({
     personalityType,
     gateKey,
     blind,
-    seed: useHotPool ? (hotPoolSlot || buildHotPoolRequestSlot("fetch")) : seed
+    seed: useHotPool ? (hotPoolSlot || buildHotPoolRequestSlot("fetch")) : seed,
+    sourceType,
+    sceneId
   });
   if (!useHotPool && klineSliceCache[cacheKey]) return klineSliceCache[cacheKey];
   if (klineSliceRequests[cacheKey]) return klineSliceRequests[cacheKey];
@@ -1473,6 +1493,8 @@ async function fetchKlineTrainingSlice({
     `mode=${encodeURIComponent(mode)}`,
     personalityType ? `personality_type=${encodeURIComponent(personalityType)}` : "",
     gateKey ? `gate=${encodeURIComponent(gateKey)}` : "",
+    sourceType ? `source_type=${encodeURIComponent(sourceType)}` : "",
+    sceneId ? `scene_id=${encodeURIComponent(sceneId)}` : "",
     `blind=${blind ? "1" : "0"}`,
     !useHotPool && seed ? `seed=${encodeURIComponent(seed)}` : "",
     useHotPool ? `pool_slot=${encodeURIComponent(hotPoolSlot || buildHotPoolRequestSlot("pool"))}` : ""

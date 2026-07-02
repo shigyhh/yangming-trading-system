@@ -45,7 +45,9 @@ const {
   setKlineRuntimeIndicator,
   setKlineRuntimeMainIndicator,
   buildKlineTrainingRecordPatch,
-  normalizeKlineMindTimeframeKey
+  normalizeKlineMindTimeframeKey,
+  normalizeKlineMindEntryContext,
+  mergeKlineMindEntryContext
 } = require("../../modules/kline-mind/index");
 const {
   buildKlineTradeReviewRecord: buildKlineMirrorRecord
@@ -133,8 +135,18 @@ function buildForm(record = {}, session = {}) {
   const timeframeKey = normalizeKlineMindTimeframeKey(record.timeframeKey, session.timeframeKey || "1d");
   return {
     marketKey: record.marketKey || ((session.market || {}).key) || "cn_equity",
+    market_key: record.market_key || record.marketKey || ((session.market || {}).key) || "cn_equity",
     timeframeKey,
+    timeframe_key: record.timeframe_key || timeframeKey,
     scenarioId: savedSceneId.indexOf("scene-") === 0 ? savedSceneId : "scene-fast-001",
+    scenario_id: savedSceneId.indexOf("scene-") === 0 ? savedSceneId : "scene-fast-001",
+    sliceSeed: savedSceneId.indexOf("scene-") === 0 ? savedSceneId : "scene-fast-001",
+    slice_seed: savedSceneId.indexOf("scene-") === 0 ? savedSceneId : "scene-fast-001",
+    sourceType: record.sourceType || record.source_type || "",
+    source_type: record.source_type || record.sourceType || "",
+    entrySourceLabel: record.entrySourceLabel || record.entry_source_label || "",
+    entry_source_label: record.entry_source_label || record.entrySourceLabel || "",
+    symbol: record.symbol || "",
     chartZoomKey: record.chartZoomKey || session.chartZoomKey || "wide",
     mainIndicatorKey: record.mainIndicatorKey || session.defaultMainIndicatorKey || "ma",
     historySlice: record.historySlice || null,
@@ -259,12 +271,16 @@ function buildHistorySliceCacheKey(record = {}) {
     record.marketKey || "cn_equity",
     timeframeKey,
     record.scenarioId || "scene-fast-001",
-    record.symbol || ""
+    record.symbol || "",
+    record.sourceType || record.source_type || "",
+    record.entrySourceLabel || record.entry_source_label || ""
   ].join("|");
 }
 
 function buildHistorySliceRequestParams(record = {}) {
   const timeframeKey = normalizeKlineMindTimeframeKey(record.timeframeKey);
+  const sourceType = record.sourceType || record.source_type || "";
+  const scenarioId = record.scenarioId || "";
   return {
     marketKey: record.marketKey || "cn_equity",
     timeframeKey,
@@ -273,7 +289,11 @@ function buildHistorySliceRequestParams(record = {}) {
     mode: "step_replay",
     gateKey: "shi_shang_mo",
     blind: true,
-    seed: record.scenarioId || ""
+    seed: scenarioId,
+    sceneId: scenarioId,
+    scene_id: scenarioId,
+    sourceType,
+    source_type: sourceType
   };
 }
 
@@ -323,11 +343,17 @@ Page({
     sliceSwitchCount: 0,
     sliceSwitchLimitReached: false,
     tradeReviewUrl: "",
+    entryContext: normalizeKlineMindEntryContext(),
     bookmarkSaving: false,
     bookmarkMessage: "",
     bookmarkError: "",
     canvasMetrics: KLINE_CANVAS_METRICS,
     chartCrosshair: { visible: false, x: 0, tooltip: null }
+  },
+
+  onLoad(options = {}) {
+    this.entryContext = normalizeKlineMindEntryContext(options);
+    this.setData({ entryContext: this.entryContext });
   },
 
   onShow() {
@@ -350,13 +376,14 @@ Page({
       klineMindRecord
     });
     const trainingDay = training7View.today || {};
+    const recordWithEntryContext = mergeKlineMindEntryContext(klineMindRecord || {}, this.entryContext || this.data.entryContext || {});
     const session = buildKlineMindSession({
       assessment,
       trainingDay,
-      record: klineMindRecord
+      record: recordWithEntryContext
     });
-    const form = buildForm(klineMindRecord, session);
-    const tradeReviewUrl = resolveTradeReviewUrl(klineMindRecord);
+    const form = buildForm(recordWithEntryContext, session);
+    const tradeReviewUrl = resolveTradeReviewUrl(recordWithEntryContext);
 
     this.setData({
       assessment,
