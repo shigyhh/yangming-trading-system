@@ -7,6 +7,7 @@ import {
   generateShareCardBinding,
   getDataBindingUserSummary,
   getInviteSourceStatsBinding,
+  getMirrorArchiveBinding,
   listTradeReviewBindings,
   listTrainingBookmarkBindings,
   getRetestComparisonBinding,
@@ -330,6 +331,7 @@ test("data binding preserves P1 field aliases for miniapp review and kline sync"
   const kline = await saveKLineRecordBinding({
     user,
     record: {
+      id: "p1-kline-record-camel",
       day: 2,
       recordedAt: "2026-06-02T08:00:00.000Z",
       scene: "急拉",
@@ -346,6 +348,7 @@ test("data binding preserves P1 field aliases for miniapp review and kline sync"
     source: "miniprogram"
   });
 
+  assert.equal(kline.record.id, "p1-kline-record-camel");
   assert.equal(kline.record.sourceType, "kline_training");
   assert.equal(kline.record.source_type, "kline_training");
   assert.equal(kline.record.errorType, "chasing");
@@ -462,6 +465,10 @@ test("data binding preserves P1 field aliases for miniapp review and kline sync"
   assert.deepEqual(camelOnlyTradeReview.review.mistake_card, { title: "追涨旧题复现" });
 
   const summary = await getDataBindingUserSummary(user.userId);
+  const archive = await getMirrorArchiveBinding(user.userId);
+  const klineArchiveItem = archive.archive_index.latest_items.find((item) => item.type === "kline_record" && item.source_id === "p1-kline-record-camel");
+  assert.ok(klineArchiveItem);
+  assert.equal(klineArchiveItem.id, "archive_kline_record_p1-kline-record-camel");
   assert.equal(summary.kline_records[0].execution_result, "执行偏离");
   assert.equal(summary.kline_records[0].repeat_count, 2);
   assert.equal(summary.trade_reviews[0].main_error_type, "impulse");

@@ -168,7 +168,7 @@ export async function saveKLineRecordBinding({ user = {}, record = {}, source = 
   const userRecord = ensureUser(profile);
   const now = new Date().toISOString();
   const klineRecord = {
-    id: crypto.randomUUID(),
+    id: cleanText(record.id || record.recordId || record.record_id || crypto.randomUUID(), 120),
     day: Number(record.day || 0),
     recorded_at: record.recordedAt || record.recorded_at || now,
     scene_key: cleanText(record.sceneKey || record.scene_key || "", 40),
