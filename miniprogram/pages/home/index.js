@@ -56,6 +56,7 @@ const { buildClassroomView } = require("../../modules/classroom/index");
 const { buildLiveMirrorReminder } = require("../../modules/trade-review/index");
 const { buildHomeTodayStateView, buildMiniHomeView, resolveHomeTodayStateAction } = require("../../modules/mini-loop/index");
 const { getRuntimePixelRatio } = require("../../utils/runtime-info");
+const { syncNativeTabBarActive } = require("../../utils/tab-bar");
 
 const ENTRY_STATE_KEY = "zhixing_ritual_entry";
 const REACTION_TAGS = ["恐惧", "贪念", "证明", "后悔", "急躁", "逃避"];
@@ -1210,6 +1211,7 @@ Page({
   },
 
   onShow() {
+    syncNativeTabBarActive(this);
     setNativeTabBarVisible(!this.data.posterMode);
     this.loadEntryState();
     this.loadServerTodayState();

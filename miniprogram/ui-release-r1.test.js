@@ -37,6 +37,7 @@ const klineCanvasRendererJs = readFileSync(join(root, "miniprogram", "modules", 
 const klineMindJson = readPage("kline-mind", "index.json");
 const tradeReviewWxml = readPage("trade-review", "index.wxml");
 const tradeReviewJs = readPage("trade-review", "index.js");
+const trainingJs = readPage("training", "index.js");
 const reportWxml = readPage("report", "index.wxml");
 const reportJs = readPage("report", "index.js");
 const zhixingIndexJs = readPage("zhixing-index", "index.js");
@@ -56,6 +57,7 @@ const appWxss = readFileSync(join(root, "miniprogram", "app.wxss"), "utf8");
 const bottomTabWxss = readFileSync(join(root, "miniprogram", "components", "bottom-tab-bar", "index.wxss"), "utf8");
 const bottomTabJs = readFileSync(join(root, "miniprogram", "components", "bottom-tab-bar", "index.js"), "utf8");
 const bottomTabWxml = readFileSync(join(root, "miniprogram", "components", "bottom-tab-bar", "index.wxml"), "utf8");
+const tabBarUtilJs = readFileSync(join(root, "miniprogram", "utils", "tab-bar.js"), "utf8");
 const complianceNoticeJs = readFileSync(join(root, "miniprogram", "components", "compliance-notice", "index.js"), "utf8");
 const complianceNoticeWxml = readFileSync(join(root, "miniprogram", "components", "compliance-notice", "index.wxml"), "utf8");
 const complianceNoticeWxss = readFileSync(join(root, "miniprogram", "components", "compliance-notice", "index.wxss"), "utf8");
@@ -389,6 +391,16 @@ assert.deepStrictEqual(
   "native tabBar should contain the five main miniapp entries in product order"
 );
 assert.ok(bottomTabJs.includes("wx.switchTab({"), "bottom tab primary navigation should use native switchTab");
+assert.ok(tabBarUtilJs.includes("syncNativeTabBarActive"), "native custom tabBar should have an explicit route sync helper");
+[
+  homeJs,
+  tradeReviewJs,
+  trainingJs,
+  livingMirrorJs,
+  profileJs
+].forEach((pageJs) => {
+  assert.ok(pageJs.includes("syncNativeTabBarActive(this);"), "native tab pages should sync the custom tab active state on show");
+});
 assert.equal(bottomTabJs.includes("wx.redirectTo({"), false, "bottom tab should not destroy and recreate tab pages with redirectTo");
 assert.equal(bottomTabJs.includes("wx.reLaunch({"), false, "bottom tab should not fall back to full app relaunch for tab routes");
 assert.equal(bottomTabJs.includes("this.setData({ activeKey: key });"), false, "bottom tab should not visually switch the old page before the route has changed");

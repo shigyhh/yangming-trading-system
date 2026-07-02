@@ -28,6 +28,7 @@ const { getPersonalityStagePlan } = require("../../core/personality-stage-map");
 const { buildDailyLoopState } = require("../../modules/daily-loop/index");
 const { buildDailyTrainingCard } = require("../../modules/practice/index");
 const { buildTraining7View } = require("../../modules/training7/index");
+const { syncNativeTabBarActive } = require("../../utils/tab-bar");
 
 const STEP_META = [
   { id: "trigger", title: "照见触发场景", subtitle: "先看见今天最容易被牵动的一念" },
@@ -89,6 +90,7 @@ Page({
   },
 
   onShow() {
+    syncNativeTabBarActive(this);
     this.load();
   },
 

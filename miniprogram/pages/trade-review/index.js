@@ -43,6 +43,7 @@ const {
   shouldShowAfterReviewRepeatReminder
 } = require("../../modules/zhixing-reminder/index");
 const { normalizeInterventionResources } = require("../../modules/intervention-engine/index");
+const { syncNativeTabBarActive } = require("../../utils/tab-bar");
 
 const FIRST_THOUGHT_OPTIONS = ["怕错过", "不甘心", "想证明", "怕亏", "想扳回"];
 const PLAN_STATE_OPTIONS = [
@@ -254,6 +255,7 @@ Page({
   },
 
   onShow() {
+    syncNativeTabBarActive(this);
     this.refreshRecords();
     this.refreshInterventionResources();
   },

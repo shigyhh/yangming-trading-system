@@ -44,6 +44,7 @@ const { getTodayContent } = require("../../modules/content365/index");
 const { buildRetentionState } = require("../../modules/retention/index");
 const { SHARE_MOMENTS } = require("../../utils/share-moments");
 const { TYPE_LABELS } = require("../../modules/share-card/index");
+const { syncNativeTabBarActive } = require("../../utils/tab-bar");
 
 const SHARE_MOMENT_ENTRIES = [
   { key: "assessment_completed", label: "测评完成" },
@@ -206,6 +207,7 @@ Page({
   },
 
   onShow() {
+    syncNativeTabBarActive(this);
     const profile = getProfile();
     const executionPlanLibrary = getExecutionPlanLibrary();
     const executionPlanCount = (executionPlanLibrary.records || []).filter((item) => item.enabled).length;

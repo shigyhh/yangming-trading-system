@@ -14,6 +14,7 @@ const { fetchLivingMirrorGrowthProjection, fetchLivingMirrorProfile, pullTrainin
 const { buildTraining7View } = require("../../modules/training7/index");
 const { buildKlineDayRetestComparison, getKlineRecommendationForMirror } = require("../../modules/kline-simulator/index");
 const { buildLivingMirrorTree } = require("../../modules/mini-loop/index");
+const { syncNativeTabBarActive } = require("../../utils/tab-bar");
 
 function formatGrowthDate(value = "") {
   const text = String(value || "").trim();
@@ -192,6 +193,7 @@ Page({
   },
 
   onShow() {
+    syncNativeTabBarActive(this);
     this.refreshStats();
     this.loadServerLivingMirrorProfile();
     this.loadLivingMirrorGrowthSummary();
