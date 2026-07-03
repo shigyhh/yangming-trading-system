@@ -639,6 +639,7 @@ Page({
     if (hasInstantCache) {
       this.historySliceCache = Object.assign({}, this.historySliceCache || {}, { [cacheKey]: instantCachedSlice });
       this.applyHistorySlice(baseRecord, instantCachedSlice);
+      return;
     }
     const keepCurrentChart = (!!options.keepCurrentChart || hasInstantCache) && !!((this.data.session || {}).hasHistoricalData);
     this.setData({

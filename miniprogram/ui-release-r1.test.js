@@ -366,6 +366,10 @@ assert.ok(klineMindWxml.includes("正在读取历史数据"), "kline empty state
 assert.ok(klineMindJs.includes("historySliceCache"), "kline style switching should use an in-page history slice cache");
 assert.ok(klineMindJs.includes("prefetchTimeframeSlices"), "kline page should prefetch style slices so switching feels instant");
 assert.ok(klineMindJs.includes("KLINE_TRAINING_WINDOW_SIZE"), "kline page should request the full prewarmed training slice instead of a shorter temporary segment");
+assert.ok(
+  sliceBetween(klineMindJs, "if (hasInstantCache)", "const keepCurrentChart").includes("return;"),
+  "kline instant cache should not fall through into loading timeout that can replace a visible chart with a history-empty state"
+);
 assert.ok(klineMindJs.includes('const CHART_ZOOM_ORDER = ["overview", "wide", "standard", "focus"];'), "kline zoom controls should support one more overview zoom-out step");
 assert.ok(
   sliceBetween(klineMindJs, "switchSlice()", "advanceRuntimeCandle()").includes("this.loadServerHistorySlice(form, { keepCurrentChart: true })"),
