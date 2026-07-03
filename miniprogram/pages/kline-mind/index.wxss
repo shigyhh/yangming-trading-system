@@ -527,17 +527,17 @@
 .chart-stepper {
   position: absolute;
   z-index: 8;
-  right: 16rpx;
+  right: 12rpx;
   top: 14rpx;
   display: inline-flex;
   overflow: hidden;
   border: 1rpx solid rgba(244, 235, 221, 0.16);
-  border-radius: 6rpx;
+  border-radius: 8rpx;
   background: rgba(0, 0, 0, 0.72);
 }
 
 .chart-stepper-control {
-  width: 54rpx;
+  width: 48rpx;
   height: 42rpx;
   margin: 0;
   padding: 0;
@@ -553,6 +553,15 @@
 
 .chart-stepper-control + .chart-stepper-control {
   border-left: 1rpx solid rgba(244, 235, 221, 0.12);
+}
+
+.chart-gesture-hint {
+  margin-top: 10rpx;
+  color: rgba(244, 235, 221, 0.42);
+  font-size: 18rpx;
+  font-weight: 800;
+  line-height: 1.35;
+  text-align: center;
 }
 
 .indicator-strip {

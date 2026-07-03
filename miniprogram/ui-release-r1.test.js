@@ -289,12 +289,17 @@ assert.ok(klineMindJs.includes("getTouchDistance"), "kline chart should measure 
 assert.ok(klineMindJs.includes("chartPinchStart"), "kline chart should keep pinch state separate from pan state");
 assert.ok(klineMindJs.includes("if (this.chartPanStart || this.chartPinchStart) return;"), "kline long-press crosshair should not fire while panning or pinching");
 assert.ok(klineMindJs.includes("this.updateChartZoom(CHART_ZOOM_ORDER[nextIndex]);"), "kline pinch should reuse the same controlled zoom path as the chart corner controls");
+assert.ok(klineMindJs.includes("updateChartPan"), "kline chart pan should use one controlled pan update path for buttons and drag");
+assert.ok(klineMindJs.includes("panOffset: Number(nextRuntime.chartPanOffset || 0)"), "kline touch panning should update its drag anchor after each visible pan step");
 assert.equal(klineMindWxml.includes('bounces="true"'), false, "kline blind chart should not keep native horizontal panning that can reveal unreplayed candles");
 assert.equal(klineMindJs.includes('label: item.key === activeKey ? "当"'), false, "kline chart should not render a text marker on the active candle");
 assert.equal(klineMindWxml.includes('<text wx:if="{{item.label}}"'), false, "kline chart should not render any text labels inside real K-line candles");
 assert.ok(klineMindWxml.includes('class="chart-stepper"'), "kline chart should expose compact -/+ zoom controls in the chart corner");
 assert.ok(klineMindWxml.includes("bindtap=\"decreaseChartZoom\""), "kline chart should let the user zoom out with a minus control");
 assert.ok(klineMindWxml.includes("bindtap=\"increaseChartZoom\""), "kline chart should let the user zoom in with a plus control");
+assert.ok(klineMindWxml.includes('bindtap="panChartLeft"'), "kline chart should expose an explicit left pan control for real-device use");
+assert.ok(klineMindWxml.includes('bindtap="panChartRight"'), "kline chart should expose an explicit right pan control for real-device use");
+assert.ok(klineMindWxml.includes("左右滑动"), "kline chart should explain that the candle board can be panned horizontally");
 assert.ok(klineMindWxml.includes('bindlongpress="showChartCrosshair"'), "kline chart should expose a long-press crosshair interaction");
 assert.ok(klineMindWxml.includes('wx:if="{{chartCrosshair.visible}}" class="chart-crosshair-tooltip"'), "kline chart should render an OHLCV tooltip when crosshair is active");
 assert.ok(klineMindWxml.includes("chartCrosshair.tooltip.open"), "kline tooltip should show the candle open value");
@@ -351,6 +356,11 @@ assert.ok(klineMindJs.includes('const CHART_ZOOM_ORDER = ["overview", "wide", "s
 assert.ok(
   sliceBetween(klineMindJs, "switchSlice()", "advanceRuntimeCandle()").includes("this.loadServerHistorySlice(form, { keepCurrentChart: true })"),
   "kline change-slice action should keep the current chart visible while the next slice loads"
+);
+assert.equal(
+  sliceBetween(klineMindJs, "switchSlice()", "this.loadServerHistorySlice(form, { keepCurrentChart: true })").includes("session,"),
+  false,
+  "kline change-slice should not replace the current visible chart session with an empty pending session before the next slice arrives"
 );
 assert.ok(appJs.includes("prefetchKlineTrainingSlices"), "miniapp launch should warm real historical K-line slices before the user enters training");
 assert.ok(klineMindJs.includes("prefetchNextSlice"), "kline page should keep the next random history slice warm for the change-slice action");

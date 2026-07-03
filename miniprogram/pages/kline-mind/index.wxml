@@ -71,8 +71,10 @@
 
       <view wx:if="{{session.hasHistoricalData}}" class="chart-canvas-wrap">
         <view class="chart-stepper">
+          <view class="chart-stepper-control" bindtap="panChartLeft">‹</view>
           <view class="chart-stepper-control" bindtap="decreaseChartZoom">-</view>
           <view class="chart-stepper-control" bindtap="increaseChartZoom">+</view>
+          <view class="chart-stepper-control" bindtap="panChartRight">›</view>
         </view>
         <view
           class="chart-canvas-scroll"
@@ -158,6 +160,7 @@
             {{subIndicator.label}}
           </view>
         </view>
+        <view class="chart-gesture-hint">左右滑动或点箭头平移 · 双指或 +/- 缩放</view>
       </view>
       <view wx:else class="history-empty">
         <view>{{historyLoading ? '正在读取历史数据' : '历史数据未载入'}}</view>

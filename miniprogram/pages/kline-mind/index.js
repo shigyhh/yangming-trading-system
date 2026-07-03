@@ -810,6 +810,38 @@ Page({
     this.updateChartZoom(CHART_ZOOM_ORDER[nextIndex]);
   },
 
+  getChartPanStep() {
+    const viewport = ((this.data.trainingRuntime || {}).chartViewport) || {};
+    const capacity = Number(viewport.capacity || 0);
+    return Math.max(4, Math.min(12, Math.round((capacity || 24) * 0.2)));
+  },
+
+  updateChartPan(panOffset) {
+    const runtime = this.data.trainingRuntime;
+    if (!runtime) return null;
+    const nextRuntime = setKlineRuntimeViewportPan(runtime, panOffset);
+    if (Number(nextRuntime.chartPanOffset || 0) === Number(runtime.chartPanOffset || 0)) return nextRuntime;
+    this.setData({
+      trainingRuntime: nextRuntime,
+      runtimeView: buildRuntimeView(nextRuntime)
+    }, () => {
+      this.drawKlineCanvas();
+    });
+    return nextRuntime;
+  },
+
+  panChartLeft() {
+    const runtime = this.data.trainingRuntime || {};
+    this.hideChartCrosshair();
+    this.updateChartPan(Number(runtime.chartPanOffset || 0) + this.getChartPanStep());
+  },
+
+  panChartRight() {
+    const runtime = this.data.trainingRuntime || {};
+    this.hideChartCrosshair();
+    this.updateChartPan(Number(runtime.chartPanOffset || 0) - this.getChartPanStep());
+  },
+
   getTouchDistance(touches = []) {
     const first = touches[0] || {};
     const second = touches[1] || {};
@@ -868,18 +900,14 @@ Page({
     const currentX = Number(touch.clientX || 0);
     const dx = currentX - Number(this.chartPanStart.x || 0);
     const viewport = (this.data.trainingRuntime || {}).chartViewport || {};
-    const barStepPx = Math.max(4, Number(viewport.barStepRpx || 8) / 2);
+    const barStepPx = Math.max(4, Number(viewport.barStepRpx || 8) * getRuntimeRpxScale() * 0.75);
     const deltaBars = Math.round(dx / barStepPx);
-    const nextRuntime = setKlineRuntimeViewportPan(
-      this.data.trainingRuntime,
-      Number(this.chartPanStart.panOffset || 0) + deltaBars
-    );
-    this.setData({
-      trainingRuntime: nextRuntime,
-      runtimeView: buildRuntimeView(nextRuntime)
-    }, () => {
-      this.drawKlineCanvas();
-    });
+    if (!deltaBars) return;
+    const nextRuntime = this.updateChartPan(Number(this.chartPanStart.panOffset || 0) + deltaBars);
+    this.chartPanStart = {
+      x: currentX,
+      panOffset: Number(nextRuntime.chartPanOffset || 0)
+    };
   },
 
   onChartPanEnd() {
@@ -968,11 +996,9 @@ Page({
       boundaryChoice: "",
       insightLine: ""
     });
-    const session = this.buildSession(form);
     const nextSwitchCount = switchCount + 1;
     this.setData({
-      form: Object.assign({}, form, { selectedCandleKey: session.selectedCandleKey }),
-      session,
+      form,
       sliceSwitchCount: nextSwitchCount,
       sliceSwitchLimitReached: nextSwitchCount >= SLICE_SWITCH_LIMIT,
       showBodySignal: false
