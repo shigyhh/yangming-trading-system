@@ -55,6 +55,8 @@ assert.ok(apiSource.includes("scene_id=${encodeURIComponent(sceneId)}"), "kline 
 assert.ok(apiSource.includes("allowDefaultDevtoolsBase"), "default DevTools API base should be allowed for data-binding sync");
 assert.ok(apiSource.includes("isPrivateLanApiBase"), "real-device preview should allow configured LAN backend hosts");
 assert.ok(apiSource.includes("return !isPrivateLanApiBase(apiBase)"), "real-device preview should only reject unsafe HTTP hosts");
+assert.ok(apiSource.includes("normalizeApiBaseInput"), "backend address input should be normalized before requests");
+assert.ok(apiSource.includes("replace(/^https:/i, \"http:\")"), "private LAN preview addresses should not accidentally use HTTPS");
 
 function sourceSection(startMarker, endMarker) {
   const start = apiSource.indexOf(startMarker);
@@ -133,6 +135,16 @@ assert.strictEqual(
   loadApiWithWx(buildWxMock({ platform: "ios", apiBase: "http://192.168.1.8:8787" })).getApiBase(),
   "http://192.168.1.8:8787",
   "true-device develop preview should allow LAN HTTP backend"
+);
+assert.strictEqual(
+  loadApiWithWx(buildWxMock({ platform: "ios", apiBase: "https://192.168.1.8:8787" })).getApiBase(),
+  "http://192.168.1.8:8787",
+  "true-device develop preview should coerce LAN HTTPS typo to HTTP"
+);
+assert.strictEqual(
+  loadApiWithWx(buildWxMock({ platform: "ios", apiBase: "192.168.1.8:8787" })).getApiBase(),
+  "http://192.168.1.8:8787",
+  "true-device develop preview should accept host:port without protocol"
 );
 assert.strictEqual(
   loadApiWithWx(buildWxMock({ platform: "ios", apiBase: "http://127.0.0.1:8787" })).getApiBase(),

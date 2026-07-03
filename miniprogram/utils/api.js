@@ -85,9 +85,20 @@ function isUnsafeRealDeviceApiBase(value) {
   return false;
 }
 
+function normalizeApiBaseInput(value) {
+  let next = String(value || "").trim().replace(/\/+$/, "");
+  if (next && !/^https?:\/\//i.test(next) && /^[\w.-]+(:\d+)?(\/|$)/.test(next)) {
+    next = `http://${next}`;
+  }
+  if (/^https:\/\//i.test(next) && isPrivateLanApiBase(next)) {
+    return next.replace(/^https:/i, "http:");
+  }
+  return next;
+}
+
 function getApiBase() {
   if (isReleaseEnv()) return PRODUCTION_API_BASE;
-  const apiBase = wx.getStorageSync(API_BASE_KEY) || DEFAULT_API_BASE;
+  const apiBase = normalizeApiBaseInput(wx.getStorageSync(API_BASE_KEY) || DEFAULT_API_BASE);
   if (isRealDeviceRuntime() && isUnsafeRealDeviceApiBase(apiBase)) return PRODUCTION_API_BASE;
   return apiBase;
 }
@@ -327,7 +338,7 @@ function setApiBase(value) {
     wx.setStorageSync(API_BASE_ENABLED_KEY, true);
     return PRODUCTION_API_BASE;
   }
-  const next = String(value || "").trim().replace(/\/$/, "");
+  const next = normalizeApiBaseInput(value);
   wx.setStorageSync(API_BASE_KEY, next || DEFAULT_API_BASE);
   wx.setStorageSync(API_BASE_ENABLED_KEY, true);
   return getApiBase();
