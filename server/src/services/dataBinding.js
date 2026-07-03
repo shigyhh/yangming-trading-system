@@ -394,8 +394,7 @@ export async function deleteInterventionEventBinding(userId, id) {
 
 export async function listInterventionRuleBindings(userId, options = {}) {
   await ensureDataBindingLoaded();
-  const record = findUserRecord(userId);
-  if (!record) return null;
+  const record = findUserRecord(userId) || buildEmptyDataBindingRecord(userId);
 
   const includeDisabled = parseBooleanOption(options.includeDisabled ?? options.include_disabled);
   const interventionRules = filterInterventionRules(record.intervention_rules || [], {
@@ -405,6 +404,7 @@ export async function listInterventionRuleBindings(userId, options = {}) {
 
   return {
     user: publicUser(record),
+    empty: record.empty === true,
     intervention_rules: interventionRules,
     interventionRules,
     count: interventionRules.length,
@@ -477,8 +477,7 @@ export async function deleteInterventionRuleBinding(userId, id) {
 
 export async function listExecutionPlanBindings(userId, options = {}) {
   await ensureDataBindingLoaded();
-  const record = findUserRecord(userId);
-  if (!record) return null;
+  const record = findUserRecord(userId) || buildEmptyDataBindingRecord(userId);
 
   const includeDisabled = parseBooleanOption(options.includeDisabled ?? options.include_disabled);
   const executionPlans = filterExecutionPlans(record.execution_plans || [], {
@@ -488,6 +487,7 @@ export async function listExecutionPlanBindings(userId, options = {}) {
 
   return {
     user: publicUser(record),
+    empty: record.empty === true,
     execution_plans: executionPlans,
     executionPlans,
     count: executionPlans.length,
@@ -713,21 +713,99 @@ function buildTodayStateFromRecord(record) {
   };
 }
 
+function buildEmptyTodayState(userId = "") {
+  const now = new Date().toISOString();
+  const safeUserId = String(userId || "").trim();
+  return {
+    schemaVersion: "today_state_v1",
+    schema_version: "today_state_v1",
+    userId: safeUserId,
+    user_id: safeUserId,
+    dateKey: now.slice(0, 10),
+    date_key: now.slice(0, 10),
+    title: "今日心证",
+    stateText: "待照见",
+    state_text: "待照见",
+    status: "not_seen",
+    statusText: "待照见",
+    status_text: "待照见",
+    summaryText: "先照见今日这一念，再落下一步行动。",
+    summary_text: "先照见今日这一念，再落下一步行动。",
+    todayHeartWitness: "先照见今日这一念",
+    today_heart_witness: "先照见今日这一念",
+    mainMirror: "",
+    main_mirror: "",
+    focusText: "上传真实记录",
+    focus_text: "上传真实记录",
+    nextAction: "上传真实记录",
+    next_action: "上传真实记录",
+    actionText: "上传真实记录",
+    action_text: "上传真实记录",
+    trainingAction: "上传真实记录",
+    training_action: "上传真实记录",
+    progress: 0,
+    updatedAt: now,
+    updated_at: now,
+    empty: true
+  };
+}
+
+function buildEmptyDataBindingRecord(userId = "") {
+  const now = new Date().toISOString();
+  return {
+    id: String(userId || "").trim(),
+    merged_ids: [],
+    phone: "未留存",
+    phone_tail: "",
+    phone_identity: "",
+    nickname: "修行者",
+    invite_source: "local_pending",
+    source_channel: "miniprogram-local",
+    created_at: now,
+    updated_at: now,
+    assessment: null,
+    baseline_report: null,
+    training_records: [],
+    kline_records: [],
+    training_bookmarks: [],
+    intervention_events: [],
+    intervention_rules: [],
+    execution_plans: [],
+    retests: [],
+    mirror_report: null,
+    trade_reviews: [],
+    living_mirror_stats: null,
+    living_mirror_profile: null,
+    training_prescription: null,
+    practice_state: null,
+    assistant: {
+      status: "待承接",
+      owner: "未分配",
+      handoffAt: "",
+      note: "待助教承接测评报告与七日训练记录。"
+    },
+    assistant_summary: null,
+    feishu_sync: null,
+    share_card: null,
+    empty: true
+  };
+}
+
 export async function getTodayStateBinding(userId) {
   await ensureDataBindingLoaded();
   const record = findUserRecord(userId);
-  if (!record) return null;
+  if (!record) return buildEmptyTodayState(userId);
   return buildTodayStateFromRecord(record);
 }
 
 export async function getLivingMirrorProfileBinding(userId) {
   await ensureDataBindingLoaded();
-  const record = findUserRecord(userId);
-  if (!record) return null;
+  const record = findUserRecord(userId) || buildEmptyDataBindingRecord(userId);
 
   const profile = buildLivingMirrorSideChannelProfile(record);
   return {
     user: publicUser(record),
+    empty: record.empty === true,
     profile,
     living_mirror_profile: profile,
     livingMirrorProfile: profile
@@ -736,12 +814,12 @@ export async function getLivingMirrorProfileBinding(userId) {
 
 export async function getLivingMirrorGrowthProjectionBinding(userId) {
   await ensureDataBindingLoaded();
-  const record = findUserRecord(userId);
-  if (!record) return null;
+  const record = findUserRecord(userId) || buildEmptyDataBindingRecord(userId);
 
   const projection = buildLivingMirrorGrowthProjection(record);
   return {
     user: publicUser(record),
+    empty: record.empty === true,
     projection,
     growthProjection: projection,
     livingMirrorGrowthProjection: projection
@@ -750,13 +828,13 @@ export async function getLivingMirrorGrowthProjectionBinding(userId) {
 
 export async function getDataBindingUserSummary(userId) {
   await ensureDataBindingLoaded();
-  const record = findUserRecord(userId);
-  if (!record) return null;
+  const record = findUserRecord(userId) || buildEmptyDataBindingRecord(userId);
 
   const archiveIndex = buildArchiveIndex(record);
 
   return {
     user: publicUser(record),
+    empty: record.empty === true,
     report: record.assessment?.report || null,
     mirror_report: record.mirror_report || null,
     training_records: record.training_records,
@@ -787,12 +865,12 @@ export async function getDataBindingUserSummary(userId) {
 
 export async function getDashboardSummaryBinding(userId, options = {}) {
   await ensureDataBindingLoaded();
-  const record = findUserRecord(userId);
-  if (!record) return null;
+  const record = findUserRecord(userId) || buildEmptyDataBindingRecord(userId);
 
   const dashboardSummary = buildDashboardSummary(record, options);
   return {
     user: publicUser(record),
+    empty: record.empty === true,
     dashboard_summary: dashboardSummary,
     dashboardSummary
   };
@@ -800,12 +878,12 @@ export async function getDashboardSummaryBinding(userId, options = {}) {
 
 export async function getWeeklyMirrorSummaryBinding(userId, options = {}) {
   await ensureDataBindingLoaded();
-  const record = findUserRecord(userId);
-  if (!record) return null;
+  const record = findUserRecord(userId) || buildEmptyDataBindingRecord(userId);
 
   const weeklyMirrorSummary = buildWeeklyMirrorSummary(record, options);
   return {
     user: publicUser(record),
+    empty: record.empty === true,
     weekly_mirror_summary: weeklyMirrorSummary,
     weeklyMirrorSummary
   };

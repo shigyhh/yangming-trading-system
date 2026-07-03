@@ -6,7 +6,10 @@ import {
   deleteTrainingBookmarkBinding,
   generateShareCardBinding,
   getDataBindingUserSummary,
+  getDashboardSummaryBinding,
   getInviteSourceStatsBinding,
+  getLivingMirrorGrowthProjectionBinding,
+  getLivingMirrorProfileBinding,
   getMirrorArchiveBinding,
   listTradeReviewBindings,
   listTrainingBookmarkBindings,
@@ -14,7 +17,10 @@ import {
   getShareCardBinding,
   getTodayStateBinding,
   getTrainingPrescriptionBinding,
+  getWeeklyMirrorSummaryBinding,
   listAdminUsersFromBindings,
+  listExecutionPlanBindings,
+  listInterventionRuleBindings,
   resetDataBindingForTests,
   saveAssessmentReportBinding,
   saveKLineRecordBinding,
@@ -184,6 +190,18 @@ test("data binding service stores assessment, training, kline and retest in runt
 
   const summary = await getDataBindingUserSummary(user.userId);
   const todayState = await getTodayStateBinding(user.userId);
+  const unknownTodayState = await getTodayStateBinding("invite_ZX406191");
+  const unknownSummary = await getDataBindingUserSummary("invite_ZX406191");
+  const unknownMirrorProfile = await getLivingMirrorProfileBinding("invite_ZX406191");
+  const unknownMirrorGrowth = await getLivingMirrorGrowthProjectionBinding("invite_ZX406191");
+  const unknownInterventionRules = await listInterventionRuleBindings("invite_ZX406191");
+  const unknownExecutionPlans = await listExecutionPlanBindings("invite_ZX406191");
+  const unknownDashboardSummary = await getDashboardSummaryBinding("invite_ZX406191", {
+    range: "30d"
+  });
+  const unknownWeeklySummary = await getWeeklyMirrorSummaryBinding("invite_ZX406191", {
+    week: "current"
+  });
   const aliasSummary = await getDataBindingUserSummary("web-local-merge-001");
   const miniappAliasSummary = await getDataBindingUserSummary("miniapp-local-merge-001");
   const prescription = await getTrainingPrescriptionBinding(user.userId);
@@ -203,6 +221,38 @@ test("data binding service stores assessment, training, kline and retest in runt
   assert.equal(todayState.progress, 100);
   assert.equal(todayState.userId, user.userId);
   assert.equal(todayState.mainMirror, "追涨之镜");
+  assert.equal(unknownTodayState.schemaVersion, "today_state_v1");
+  assert.equal(unknownTodayState.status, "not_seen");
+  assert.equal(unknownTodayState.nextAction, "上传真实记录");
+  assert.equal(unknownTodayState.userId, "invite_ZX406191");
+  assert.equal(unknownTodayState.empty, true);
+  assert.equal(unknownSummary.empty, true);
+  assert.equal(unknownSummary.user.id, "invite_ZX406191");
+  assert.deepEqual(unknownSummary.training_records, []);
+  assert.deepEqual(unknownSummary.trade_reviews, []);
+  assert.equal(unknownSummary.archive_index.totalCount, 0);
+  assert.equal(unknownMirrorProfile.empty, true);
+  assert.equal(unknownMirrorProfile.user.id, "invite_ZX406191");
+  assert.equal(unknownMirrorProfile.profile.userId, "invite_ZX406191");
+  assert.equal(unknownMirrorGrowth.empty, true);
+  assert.equal(unknownMirrorGrowth.user.id, "invite_ZX406191");
+  assert.equal(unknownMirrorGrowth.projection.userId, "invite_ZX406191");
+  assert.equal(unknownInterventionRules.empty, true);
+  assert.equal(unknownInterventionRules.user.id, "invite_ZX406191");
+  assert.deepEqual(unknownInterventionRules.intervention_rules, []);
+  assert.equal(unknownInterventionRules.count, 0);
+  assert.equal(unknownExecutionPlans.empty, true);
+  assert.equal(unknownExecutionPlans.user.id, "invite_ZX406191");
+  assert.deepEqual(unknownExecutionPlans.execution_plans, []);
+  assert.equal(unknownExecutionPlans.count, 0);
+  assert.equal(unknownDashboardSummary.empty, true);
+  assert.equal(unknownDashboardSummary.user.id, "invite_ZX406191");
+  assert.equal(unknownDashboardSummary.dashboard_summary.overview.tradeReviewCount, 0);
+  assert.equal(unknownDashboardSummary.dashboard_summary.overview.klineTrainingCount, 0);
+  assert.equal(unknownWeeklySummary.empty, true);
+  assert.equal(unknownWeeklySummary.user.id, "invite_ZX406191");
+  assert.equal(unknownWeeklySummary.weekly_mirror_summary.tradeReviewCount, 0);
+  assert.equal(unknownWeeklySummary.weekly_mirror_summary.trainingCount, 0);
   assert.equal(assessment.report.schemaVersion, "assessment_report_v1");
   assert.equal(assessment.mirror_report.schemaVersion, "living_mirror_v1");
   assert.equal(assessment.living_mirror_stats.schemaVersion, "living_mirror_v1");
