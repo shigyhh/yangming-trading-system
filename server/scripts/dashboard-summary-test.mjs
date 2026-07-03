@@ -450,7 +450,12 @@ test("weekly mirror summary and route endpoints expose stable dashboard contract
     method: "GET",
     url: "/api/v1/data-binding/users/missing-dashboard/dashboard-summary"
   });
-  assert.equal(missing.statusCode, 404);
+  assert.equal(missing.statusCode, 200);
+  assert.equal(missing.body.ok, true);
+  assert.equal(missing.body.empty, true);
+  assert.equal(missing.body.dashboard_summary.user_id, "missing-dashboard");
+  assert.equal(missing.body.dashboardSummary.overview.tradeReviewCount, 0);
+  assert.equal(missing.body.dashboardSummary.overview.klineTrainingCount, 0);
 
   await resetDataBindingForTests();
 });
