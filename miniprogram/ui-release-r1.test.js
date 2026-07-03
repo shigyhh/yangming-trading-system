@@ -29,6 +29,7 @@ const allPageWxml = collectFiles(join(root, "miniprogram", "pages"))
 const homeWxml = readPage("home", "index.wxml");
 const profileWxml = readPage("profile", "index.wxml");
 const trainingWxml = readPage("training", "index.wxml");
+const stagesWxml = readPage("stages", "index.wxml");
 const livingMirrorWxml = readPage("living-mirror", "index.wxml");
 const livingMirrorJs = readPage("living-mirror", "index.js");
 const klineMindWxml = readPage("kline-mind", "index.wxml");
@@ -67,6 +68,7 @@ const klineMindWxss = readPage("kline-mind", "index.wxss");
 const assessmentWxss = readPage("assessment", "index.wxss");
 const tradeReviewWxss = readPage("trade-review", "index.wxss");
 const trainingWxss = readPage("training", "index.wxss");
+const stagesWxss = readPage("stages", "index.wxss");
 const profileWxss = readPage("profile", "index.wxss");
 
 function sliceBetween(text, startMarker, endMarker) {
@@ -441,6 +443,11 @@ assertRuleHas(klineMindWxss, ".decision-action", ["width: 100%", "box-sizing: bo
 assert.ok(trainingWxml.includes('class="training-subtle-links"'), "training plan/detail entries should sit in a quiet secondary link row");
 assert.ok(trainingWxml.indexOf('class="primary-btn kline-entry-btn"') < trainingWxml.indexOf('class="training-subtle-links"'), "training first screen should visually encounter the single primary action before optional links");
 assertRuleHas(trainingWxss, ".training-subtle-link", ["background: transparent", "border: 0", "box-shadow: none"], "training optional links should be visually quieter than buttons");
+assert.ok(stagesWxml.includes('class="training-seven-list"'), "stages should keep the 7-day training gateway in one dedicated section");
+assertRuleHas(stagesWxss, ".training-seven-card", ["display: grid", "grid-template-columns: 108rpx minmax(0, 1fr)", "width: 100%", "max-width: 100%", "box-sizing: border-box"], "stages 7-day training cards should read as full-width compact rows");
+assertRuleHas(stagesWxss, ".training-seven-main text", ["font-size: 30rpx", "line-height: 1.28"], "stages 7-day training titles should not dominate the mobile viewport");
+assertRuleHas(stagesWxss, ".training-seven-main view", ["font-size: 22rpx", "line-height: 1.42"], "stages 7-day training questions should stay compact in the row layout");
+assertRuleHas(stagesWxss, ".training-seven-foot", ["grid-column: 2 / 3", "margin-top: 8rpx"], "stages 7-day training action copy should sit under the row title instead of making each card tall");
 assert.ok(livingMirrorWxml.includes('wx:if="{{hasRecords}}" class="ghost-btn mirror-depth-toggle"'), "living mirror should show growth details only after at least one record exists");
 assert.equal((appJson.tabBar || {}).custom, true, "five main entries should be owned by native custom tabBar");
 assert.deepStrictEqual(
