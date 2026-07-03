@@ -40,6 +40,8 @@ const tradeReviewJs = readPage("trade-review", "index.js");
 const trainingJs = readPage("training", "index.js");
 const reportWxml = readPage("report", "index.wxml");
 const reportJs = readPage("report", "index.js");
+const shareCardWxml = readPage("share-card", "index.wxml");
+const shareCardJs = readPage("share-card", "index.js");
 const zhixingIndexJs = readPage("zhixing-index", "index.js");
 const mirrorChallengeJs = readPage("mirror-challenge", "index.js");
 const klineReviewJs = readPage("kline-review", "index.js");
@@ -469,6 +471,17 @@ assert.equal(homeWxml.includes("当前状态"), false, "home should not explain 
 assert.ok(trainingWxml.includes("开始K线观心"), "training primary button should name the core K-line mind practice");
 assert.ok(profileWxml.includes("toggleEvidenceChain"), "profile should fold the closure chain behind a quiet disclosure");
 assert.ok(profileWxml.includes('wx:if="{{showEvidenceChain}}" class="closure-chain-list"'), "profile should not expand the full six-step closure chain by default");
+assert.ok(shareCardWxml.includes('open-type="share"'), "share card page should expose a native share action");
+assert.ok(shareCardWxml.includes("分享给同修"), "share card share action should use direct sharing language");
+assert.ok(shareCardJs.includes("ensureShareCardSaved"), "share card page should persist the visible card before share/invite actions");
+assert.ok(
+  sliceBetween(shareCardJs, "inviteCompanion()", "goHome()").includes("this.ensureShareCardSaved"),
+  "share card invite action should first save the card into the album/evidence chain"
+);
+assert.ok(
+  sliceBetween(shareCardJs, "onShareAppMessage()", "});\n  }").includes("this.ensureShareCardSaved"),
+  "share card native share should first save the card into the album/evidence chain"
+);
 
 assert.equal(appWxss.includes("button:active::after {\n  opacity: 1;"), false, "all buttons should not receive the primary light sweep");
 assert.ok(appWxss.includes(".primary-btn:active::after"), "only the primary button should keep the strong pressed light sweep");

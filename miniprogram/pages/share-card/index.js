@@ -38,6 +38,17 @@ const { buildSevenDayChange } = require("../../modules/retest-change/index");
 const { syncShareAttribution } = require("../../utils/api");
 
 const LOAD_TIMEOUT_MS = 6000;
+const ATTRIBUTION_SHARE_TYPES = [
+  "companion_invite",
+  "group_practice",
+  "personality_mirror",
+  "live_reservation",
+  "group_kline_mirror"
+];
+
+function shouldTrackShareAttribution(type) {
+  return ATTRIBUTION_SHARE_TYPES.includes(type);
+}
 
 function cleanLine(value, fallback = "") {
   return String(value || fallback || "").replace(/\s+/g, " ").trim();
@@ -391,34 +402,52 @@ Page({
     });
   },
 
-  saveCard() {
+  ensureShareCardSaved(options = {}) {
+    const card = this.data.card || {};
+    if (!card.type && !card.headline) return null;
+    if (this.data.saved && card.id) return card;
     const saved = saveShareCard(Object.assign({}, this.data.card, {
       source: "share_card_page",
       sourceScene: this.data.sourceScene
     }));
-    const inviteCode = (getUserBinding() || {}).inviteCode || "";
-    if (["companion_invite", "group_practice", "personality_mirror", "live_reservation", "group_kline_mirror"].includes(this.data.card.type)) {
-      const events = saveInviteEvent({
-        sourceScene: this.data.sourceScene,
-        sourcePage: "share_card",
-        shareCardType: this.data.card.type,
-        sourceType: this.data.card.type,
-        sourceId: saved.latest.id,
-        shareCardId: saved.latest.id,
-        inviteCode
-      });
-      syncShareAttribution(events[events.length - 1]).catch(() => {});
-    }
     const evidenceSummary = getEvidenceSummary({ limit: 4 });
+    const nextCard = saved.latest;
+    let posterContext = {};
+    try {
+      posterContext = this.buildContext();
+    } catch (error) {
+      posterContext = {};
+    }
     this.setData({
       album: safeAlbum(),
       evidenceSummary,
       evidenceRows: evidenceSummary.rows || [],
       saved: true,
-      card: saved.latest,
-      posterCard: buildPosterCard(saved.latest, this.buildContext())
+      card: nextCard,
+      posterCard: buildPosterCard(nextCard, posterContext)
     });
-    wx.showToast({ title: "已存入心证卡册", icon: "success" });
+    if (!options.silent) {
+      wx.showToast({ title: "已存入心证卡册", icon: "success" });
+    }
+    return nextCard;
+  },
+
+  saveCard() {
+    const savedCard = this.ensureShareCardSaved({ silent: false });
+    if (!savedCard) return;
+    const inviteCode = (getUserBinding() || {}).inviteCode || "";
+    if (shouldTrackShareAttribution(savedCard.type)) {
+      const events = saveInviteEvent({
+        sourceScene: this.data.sourceScene,
+        sourcePage: "share_card",
+        shareCardType: savedCard.type,
+        sourceType: savedCard.type,
+        sourceId: savedCard.id,
+        shareCardId: savedCard.id,
+        inviteCode
+      });
+      syncShareAttribution(events[events.length - 1]).catch(() => {});
+    }
   },
 
   buildShareText() {
@@ -466,18 +495,19 @@ Page({
   noop() {},
 
   inviteCompanion() {
+    const card = this.ensureShareCardSaved({ silent: true }) || this.data.card || {};
     const inviteCode = (getUserBinding() || {}).inviteCode || "";
     const events = saveInviteEvent({
       sourceScene: this.data.sourceScene,
       sourcePage: "share_card",
-      shareCardType: this.data.card.type,
-      sourceType: this.data.card.type,
-      sourceId: (this.data.card || {}).id,
-      shareCardId: (this.data.card || {}).id,
+      shareCardType: card.type,
+      sourceType: card.type,
+      sourceId: card.id,
+      shareCardId: card.id,
       inviteCode
     });
     syncShareAttribution(events[events.length - 1]).catch(() => {});
-    wx.showToast({ title: "同修邀请已记录", icon: "success" });
+    wx.showToast({ title: "分享已记入卡册", icon: "success" });
   },
 
   goHome() {
@@ -497,15 +527,16 @@ Page({
   },
 
   onShareAppMessage() {
+    const card = this.ensureShareCardSaved({ silent: true }) || this.data.card || {};
     const inviteCode = (getUserBinding() || {}).inviteCode || "";
     const assessment = getAssessmentResult() || {};
     const groupPractice = getGroupPracticeState();
     const query = [
       inviteCode ? `invite=${encodeURIComponent(inviteCode)}` : "",
       `sourceScene=${encodeURIComponent(this.data.sourceScene || "share_card")}`,
-      `shareCardType=${encodeURIComponent((this.data.card || {}).type || this.data.type)}`,
-      `source_type=${encodeURIComponent((this.data.card || {}).type || this.data.type)}`,
-      (this.data.card || {}).id ? `source_id=${encodeURIComponent((this.data.card || {}).id)}` : "",
+      `shareCardType=${encodeURIComponent(card.type || this.data.type)}`,
+      `source_type=${encodeURIComponent(card.type || this.data.type)}`,
+      card.id ? `source_id=${encodeURIComponent(card.id)}` : "",
       assessment.primary ? `sourcePrimary=${encodeURIComponent(assessment.primary)}` : "",
       assessment.secondary ? `sourceSecondary=${encodeURIComponent(assessment.secondary)}` : "",
       groupPractice.groupCode ? `groupCode=${encodeURIComponent(groupPractice.groupCode)}` : ""
@@ -514,16 +545,16 @@ Page({
     const events = saveInviteEvent({
       sourceScene: this.data.sourceScene,
       sourcePage: "share_card",
-      shareCardType: (this.data.card || {}).type,
-      sourceType: (this.data.card || {}).type,
-      sourceId: (this.data.card || {}).id,
-      shareCardId: (this.data.card || {}).id,
+      shareCardType: card.type,
+      sourceType: card.type,
+      sourceId: card.id,
+      shareCardId: card.id,
       channel: "share_message",
       inviteCode
     });
     syncShareAttribution(events[events.length - 1]).catch(() => {});
     return {
-      title: (this.data.card || {}).shareTitle || "邀你一起照见交易里的自己。",
+      title: card.shareTitle || "邀你一起照见交易里的自己。",
       path
     };
   }
