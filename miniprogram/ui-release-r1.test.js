@@ -197,6 +197,7 @@ assert.ok(
 );
 assert.ok(klineMindJs.includes("ym_profile_open_sync_setup"), "kline mind should open profile sync setup directly from history failure");
 assertRuleHas(klineMindWxss, ".chart-canvas-stage", ["position: relative", "background: #030504"], "kline mind canvas stage should own the chart surface");
+assertRuleHas(klineMindWxss, ".chart-canvas-scroll", ["touch-action: none"], "kline chart touch surface should let the chart own pan and pinch gestures");
 assertRuleHas(klineMindWxss, ".kline-main-canvas", ["height: 336rpx"], "kline mind main canvas should keep the blind viewport height");
 
 assert.ok(profileWxml.includes('wx:if="{{debugMode}}" class="debug-release-tools card"'), "profile debug release tools should be hidden behind debugMode");
@@ -298,7 +299,8 @@ assert.ok(klineMindJs.includes("getNextKlineMindSliceSeed"), "kline page should 
 assert.equal(klineMindWxml.includes("session.stageGate.seal"), false, "kline blind practice card should not show unexplained six-gate seal text such as 良");
 assert.ok(klineMindWxml.includes('class="slice-playbook"'), "kline chart should include an immediate concrete playbook for how to train this slice");
 assert.ok(klineMindWxml.includes("点最牵动的一根"), "kline playbook should tell the user exactly what to do with the chart");
-assert.ok(klineMindWxml.includes('bindtouchmove="onChartPanMove"'), "kline blind chart should allow touch dragging to review revealed history");
+assert.ok(klineMindWxml.includes('catchtouchmove="onChartPanMove"'), "kline blind chart should capture touch dragging so real-device horizontal pan is not stolen by page scroll");
+assert.equal(klineMindWxml.includes('bindtouchmove="onChartPanMove"'), false, "kline blind chart should not use bubbling touchmove for chart panning");
 assert.ok(klineMindJs.includes("setKlineRuntimeViewportPan"), "kline blind chart should clamp touch panning through the training viewport engine");
 assert.ok(klineMindJs.includes("chartPanOffset"), "kline blind chart should keep viewport pan state instead of relying on native scroll position");
 assert.ok(klineMindJs.includes("getTouchDistance"), "kline chart should measure two-finger distance for pinch zoom");

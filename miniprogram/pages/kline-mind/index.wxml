@@ -73,7 +73,7 @@
         <view
           class="chart-canvas-scroll"
           bindtouchstart="onChartPanStart"
-          bindtouchmove="onChartPanMove"
+          catchtouchmove="onChartPanMove"
           bindtouchend="onChartPanEnd"
           bindtouchcancel="onChartPanEnd"
           bindlongpress="showChartCrosshair"
