@@ -299,6 +299,10 @@ assert.ok(klineMindWxml.includes("bindtap=\"decreaseChartZoom\""), "kline chart 
 assert.ok(klineMindWxml.includes("bindtap=\"increaseChartZoom\""), "kline chart should let the user zoom in with a plus control");
 assert.ok(klineMindWxml.includes('bindtap="panChartLeft"'), "kline chart should expose an explicit left pan control for real-device use");
 assert.ok(klineMindWxml.includes('bindtap="panChartRight"'), "kline chart should expose an explicit right pan control for real-device use");
+assert.equal(klineMindWxml.includes("‹"), false, "kline chart pan controls should not use bracket-like chevrons on real devices");
+assert.equal(klineMindWxml.includes("›"), false, "kline chart pan controls should not use bracket-like chevrons on real devices");
+assert.ok(klineMindWxml.includes("←"), "kline chart left pan control should use a clear arrow glyph");
+assert.ok(klineMindWxml.includes("→"), "kline chart right pan control should use a clear arrow glyph");
 assert.ok(klineMindWxml.includes("左右滑动"), "kline chart should explain that the candle board can be panned horizontally");
 assert.ok(klineMindWxml.includes('bindlongpress="showChartCrosshair"'), "kline chart should expose a long-press crosshair interaction");
 assert.ok(klineMindWxml.includes('wx:if="{{chartCrosshair.visible}}" class="chart-crosshair-tooltip"'), "kline chart should render an OHLCV tooltip when crosshair is active");

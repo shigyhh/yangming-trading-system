@@ -81,10 +81,10 @@
           <view class="chart-scroll-inner">
             <view class="chart-canvas-stage">
               <cover-view class="chart-stepper">
-                <cover-view class="chart-stepper-control" bindtap="panChartLeft">‹</cover-view>
+                <cover-view class="chart-stepper-control" bindtap="panChartLeft">←</cover-view>
                 <cover-view class="chart-stepper-control" bindtap="decreaseChartZoom">-</cover-view>
                 <cover-view class="chart-stepper-control" bindtap="increaseChartZoom">+</cover-view>
-                <cover-view class="chart-stepper-control" bindtap="panChartRight">›</cover-view>
+                <cover-view class="chart-stepper-control" bindtap="panChartRight">→</cover-view>
               </cover-view>
               <canvas
                 id="klineMainCanvas"
