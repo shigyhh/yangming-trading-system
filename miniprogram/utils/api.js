@@ -55,11 +55,34 @@ function isRealDeviceRuntime() {
   return !!platform && platform !== "devtools";
 }
 
+function getApiBaseHost(value) {
+  const match = String(value || "").trim().match(/^https?:\/\/([^/:?#]+)/i);
+  return match ? match[1].toLowerCase() : "";
+}
+
+function isLoopbackApiBase(value) {
+  const host = getApiBaseHost(value);
+  return host === "localhost" ||
+    host === "0.0.0.0" ||
+    host === "127.0.0.1" ||
+    host === "[::1]" ||
+    /^127\./.test(host);
+}
+
+function isPrivateLanApiBase(value) {
+  const host = getApiBaseHost(value);
+  return /^10\./.test(host) ||
+    /^192\.168\./.test(host) ||
+    /^172\.(1[6-9]|2\d|3[01])\./.test(host) ||
+    /\.local$/.test(host);
+}
+
 function isUnsafeRealDeviceApiBase(value) {
   const apiBase = String(value || "").trim();
-  return !apiBase ||
-    /^http:\/\//i.test(apiBase) ||
-    /^https?:\/\/(127\.0\.0\.1|localhost|0\.0\.0\.0)(:|\/|$)/i.test(apiBase);
+  if (!apiBase) return true;
+  if (isLoopbackApiBase(apiBase)) return true;
+  if (/^http:\/\//i.test(apiBase)) return !isPrivateLanApiBase(apiBase);
+  return false;
 }
 
 function getApiBase() {

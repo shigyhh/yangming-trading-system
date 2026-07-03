@@ -161,7 +161,7 @@
       </view>
       <view wx:else class="history-empty">
         <view>{{historyLoading ? '正在读取历史数据' : '历史数据未载入'}}</view>
-        <text>{{historyLoading ? '正在从服务器读取真实历史片段。' : '请先同步真实历史数据；未载入前不展示占位 K线。'}}</text>
+        <text>{{historyLoading ? '正在从服务器读取真实历史片段。' : (historyError || '请先同步真实历史数据；未载入前不展示占位 K线。')}}</text>
       </view>
 
       <view wx:if="{{trainingRuntime && runtimeView.visibleCandles.length}}" class="simulation-console">

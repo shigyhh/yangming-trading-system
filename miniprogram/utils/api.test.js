@@ -53,6 +53,8 @@ assert.ok(apiSource.includes("sourceType = \"\""), "fetchKlineTrainingSlice shou
 assert.ok(apiSource.includes("source_type=${encodeURIComponent(sourceType)}"), "kline slice query should carry entry source type");
 assert.ok(apiSource.includes("scene_id=${encodeURIComponent(sceneId)}"), "kline slice query should carry entry scene id");
 assert.ok(apiSource.includes("allowDefaultDevtoolsBase"), "default DevTools API base should be allowed for data-binding sync");
+assert.ok(apiSource.includes("isPrivateLanApiBase"), "real-device preview should allow configured LAN backend hosts");
+assert.ok(apiSource.includes("return !isPrivateLanApiBase(apiBase)"), "real-device preview should only reject unsafe HTTP hosts");
 
 function sourceSection(startMarker, endMarker) {
   const start = apiSource.indexOf(startMarker);
@@ -95,5 +97,52 @@ const forbiddenTerms = ["守法", "破法", "守法率"];
 forbiddenTerms.forEach((term) => {
   assert.strictEqual(apiSource.includes(term), false, `api source should not include ${term}`);
 });
+
+function loadApiWithWx(wxMock) {
+  const apiPath = require.resolve("./api");
+  delete require.cache[apiPath];
+  global.wx = wxMock;
+  return require("./api");
+}
+
+function buildWxMock({ envVersion = "develop", platform = "ios", apiBase = "" } = {}) {
+  const storage = {
+    zhixing_api_base: apiBase,
+    zhixing_api_base_enabled: true
+  };
+  return {
+    getAccountInfoSync() {
+      return { miniProgram: { envVersion } };
+    },
+    getSystemInfoSync() {
+      return { platform };
+    },
+    getDeviceInfo() {
+      return { platform };
+    },
+    getStorageSync(key) {
+      return storage[key];
+    },
+    setStorageSync(key, value) {
+      storage[key] = value;
+    }
+  };
+}
+
+assert.strictEqual(
+  loadApiWithWx(buildWxMock({ platform: "ios", apiBase: "http://192.168.1.8:8787" })).getApiBase(),
+  "http://192.168.1.8:8787",
+  "true-device develop preview should allow LAN HTTP backend"
+);
+assert.strictEqual(
+  loadApiWithWx(buildWxMock({ platform: "ios", apiBase: "http://127.0.0.1:8787" })).getApiBase(),
+  "https://xxjyxt.com",
+  "true-device preview should not use loopback backend"
+);
+assert.strictEqual(
+  loadApiWithWx(buildWxMock({ envVersion: "release", platform: "ios", apiBase: "http://192.168.1.8:8787" })).getApiBase(),
+  "https://xxjyxt.com",
+  "release runtime should keep production backend"
+);
 
 console.log("miniprogram api sync tests passed");

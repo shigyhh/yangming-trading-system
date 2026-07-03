@@ -177,9 +177,12 @@ assert.ok(klineMindWxml.includes('wx:if="{{savedRecord && savedRecord.completed}
 assert.ok(klineMindWxml.includes('canvas-id="klineMainCanvas"'), "kline mind should render the main K-line chart through canvas");
 assert.ok(klineMindWxml.includes('canvas-id="klineIndicatorCanvas"'), "kline mind should render indicator panels through canvas");
 assert.equal(klineMindWxml.includes("mind-candle"), false, "kline mind should not render WXML candle decorations");
+assert.ok(klineMindWxml.includes("historyError ||"), "kline mind empty state should surface the actual history load failure");
 assert.ok(klineMindJs.includes("normalizeKlineMindEntryContext"), "kline mind page should normalize URL entry context before loading training data");
 assert.ok(klineMindJs.includes("mergeKlineMindEntryContext"), "kline mind page should merge entry context into session and history slice requests");
 assert.ok(klineMindJs.includes("this.entryContext"), "kline mind page should keep launch context for onShow reloads");
+assert.ok(klineMindJs.includes("HISTORY_LOAD_TIMEOUT_MS"), "kline mind should not leave true-device history loading unresolved");
+assert.ok(klineMindJs.includes("armHistoryLoadTimeout"), "kline mind should settle a stalled history request into an explicit failure state");
 assertRuleHas(klineMindWxss, ".chart-canvas-stage", ["position: relative", "background: #030504"], "kline mind canvas stage should own the chart surface");
 assertRuleHas(klineMindWxss, ".kline-main-canvas", ["height: 336rpx"], "kline mind main canvas should keep the blind viewport height");
 

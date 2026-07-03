@@ -69,6 +69,8 @@ const DECISION_ACTIONS = [
 
 const CHART_ZOOM_ORDER = ["overview", "wide", "standard", "focus"];
 const SLICE_SWITCH_LIMIT = 9;
+const HISTORY_LOAD_TIMEOUT_MS = 8000;
+const HISTORY_LOAD_FAILURE_MESSAGE = "历史数据服务暂未连接。真机预览请在我的页把后端地址改成电脑局域网 IP:8787，并确认服务已启动。";
 const KLINE_CANVAS_METRICS = {
   width: 690,
   mainHeight: 336,
@@ -232,11 +234,13 @@ function buildRuntimeView(runtime = null) {
 }
 
 function buildUnavailableHistorySlice(result = {}) {
+  const slice = (result || {}).slice || {};
   return {
     source: "server_unavailable",
     sliceSource: "server_unavailable",
     klineSource: "server_unavailable",
-    symbol: "",
+    symbol: result.symbol || slice.symbol || "",
+    timeframe: result.timeframe || slice.timeframe || "",
     start: "",
     end: "",
     serverSliceStatus: (result || {}).reason || "server_unavailable",
@@ -262,6 +266,16 @@ function buildMindHistorySlice(result) {
     symbol: result.symbol || ((result.slice || {}).symbol) || "",
     timeframe: result.timeframe || ((result.slice || {}).timeframe) || "",
     candles: result.candles || []
+  });
+}
+
+function buildFailedHistorySlice(record = {}, message = HISTORY_LOAD_FAILURE_MESSAGE) {
+  return buildMindHistorySlice({
+    ok: false,
+    reason: "network_error",
+    errorMessage: message,
+    symbol: record.symbol || "",
+    timeframe: normalizeKlineMindTimeframeKey(record.timeframeKey)
   });
 }
 
@@ -354,6 +368,14 @@ Page({
   onLoad(options = {}) {
     this.entryContext = normalizeKlineMindEntryContext(options);
     this.setData({ entryContext: this.entryContext });
+  },
+
+  onHide() {
+    this.clearHistoryLoadTimer();
+  },
+
+  onUnload() {
+    this.clearHistoryLoadTimer();
   },
 
   onShow() {
@@ -574,6 +596,20 @@ Page({
     }
   },
 
+  clearHistoryLoadTimer() {
+    if (!this.historyLoadTimer) return;
+    clearTimeout(this.historyLoadTimer);
+    this.historyLoadTimer = null;
+  },
+
+  armHistoryLoadTimeout(requestKey, baseRecord) {
+    this.clearHistoryLoadTimer();
+    this.historyLoadTimer = setTimeout(() => {
+      if (this.latestHistoryRequestKey !== requestKey || !this.data.historyLoading) return;
+      this.applyHistorySlice(baseRecord, buildFailedHistorySlice(baseRecord));
+    }, HISTORY_LOAD_TIMEOUT_MS);
+  },
+
   buildPendingHistorySession(record = {}) {
     const nextSession = this.buildSession(record);
     return Object.assign({}, this.data.session || nextSession, {
@@ -617,6 +653,7 @@ Page({
           dataStatusText: "正在读取历史练习数据"
         })
     });
+    this.armHistoryLoadTimeout(requestKey, baseRecord);
     const hotPoolScenarioId = requestParams.seed || baseRecord.scenarioId || "scene-fast-001";
     const hotPoolSlot = buildHistoryHotPoolSlot(baseRecord, 1);
     prefetchKlineTrainingSlices({
@@ -638,11 +675,16 @@ Page({
     }).then((result) => {
       if (!result) return;
       if (this.latestHistoryRequestKey !== requestKey) return;
+      this.clearHistoryLoadTimer();
       const historySlice = buildMindHistorySlice(result);
       if (shouldCachePageHistorySlice(historySlice)) {
         this.historySliceCache = Object.assign({}, this.historySliceCache || {}, { [cacheKey]: historySlice });
       }
       this.applyHistorySlice(baseRecord, historySlice);
+    }).catch(() => {
+      if (this.latestHistoryRequestKey !== requestKey) return;
+      this.clearHistoryLoadTimer();
+      this.applyHistorySlice(baseRecord, buildFailedHistorySlice(baseRecord));
     });
   },
 
