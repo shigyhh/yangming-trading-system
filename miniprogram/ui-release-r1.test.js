@@ -184,6 +184,15 @@ assert.ok(klineMindJs.includes("mergeKlineMindEntryContext"), "kline mind page s
 assert.ok(klineMindJs.includes("this.entryContext"), "kline mind page should keep launch context for onShow reloads");
 assert.ok(klineMindJs.includes("HISTORY_LOAD_TIMEOUT_MS"), "kline mind should not leave true-device history loading unresolved");
 assert.ok(klineMindJs.includes("armHistoryLoadTimeout"), "kline mind should settle a stalled history request into an explicit failure state");
+assert.ok(klineMindJs.includes("historyRequestPending"), "kline mind should separate background slice loading from the visible empty-state loading flag");
+assert.ok(
+  sliceBetween(klineMindJs, "const keepCurrentChart", "this.armHistoryLoadTimeout").includes("historyLoading: !keepCurrentChart"),
+  "kline mind should not show the history empty-state loading copy while an existing chart is kept visible"
+);
+assert.ok(
+  sliceBetween(klineMindJs, "catch(() => {", "selectCandle(e)").includes("if (keepCurrentChart)"),
+  "kline mind should keep the current chart visible if a background slice refresh fails"
+);
 assert.ok(klineMindJs.includes("ym_profile_open_sync_setup"), "kline mind should open profile sync setup directly from history failure");
 assertRuleHas(klineMindWxss, ".chart-canvas-stage", ["position: relative", "background: #030504"], "kline mind canvas stage should own the chart surface");
 assertRuleHas(klineMindWxss, ".kline-main-canvas", ["height: 336rpx"], "kline mind main canvas should keep the blind viewport height");

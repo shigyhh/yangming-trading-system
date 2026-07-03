@@ -350,6 +350,7 @@ Page({
     savedRecord: null,
     saving: false,
     historyLoading: false,
+    historyRequestPending: false,
     historyError: "",
     showBodySignal: false,
     selectedMainIndicatorKey: "ma",
@@ -586,6 +587,7 @@ Page({
       runtimeView: buildRuntimeView(trainingRuntime),
       form: Object.assign({}, this.data.form, recordWithSlice, { selectedCandleKey: session.selectedCandleKey }),
       historyLoading: false,
+      historyRequestPending: false,
       historyError: session.hasHistoricalData ? "" : (historySlice.serverSliceError || "真实历史数据未载入")
     }, () => {
       this.drawKlineCanvas();
@@ -602,10 +604,24 @@ Page({
     this.historyLoadTimer = null;
   },
 
-  armHistoryLoadTimeout(requestKey, baseRecord) {
+  armHistoryLoadTimeout(requestKey, baseRecord, options = {}) {
     this.clearHistoryLoadTimer();
     this.historyLoadTimer = setTimeout(() => {
-      if (this.latestHistoryRequestKey !== requestKey || !this.data.historyLoading) return;
+      if (
+        this.latestHistoryRequestKey !== requestKey
+        || (!this.data.historyLoading && !this.data.historyRequestPending)
+      ) return;
+      if (options.keepCurrentChart && ((this.data.session || {}).hasHistoricalData)) {
+        this.setData({
+          historyLoading: false,
+          historyRequestPending: false,
+          historyError: HISTORY_LOAD_FAILURE_MESSAGE
+        });
+        if (typeof wx !== "undefined" && wx.showToast) {
+          wx.showToast({ title: "新片段暂未载入", icon: "none" });
+        }
+        return;
+      }
       this.applyHistorySlice(baseRecord, buildFailedHistorySlice(baseRecord));
     }, HISTORY_LOAD_TIMEOUT_MS);
   },
@@ -643,7 +659,8 @@ Page({
     }
     const keepCurrentChart = (!!options.keepCurrentChart || hasInstantCache) && !!((this.data.session || {}).hasHistoricalData);
     this.setData({
-      historyLoading: true,
+      historyLoading: !keepCurrentChart,
+      historyRequestPending: true,
       historyError: "",
       form: Object.assign({}, this.data.form, baseRecord),
       trainingRuntime: keepCurrentChart ? this.data.trainingRuntime : null,
@@ -654,7 +671,7 @@ Page({
           dataStatusText: "正在读取历史练习数据"
         })
     });
-    this.armHistoryLoadTimeout(requestKey, baseRecord);
+    this.armHistoryLoadTimeout(requestKey, baseRecord, { keepCurrentChart });
     const hotPoolScenarioId = requestParams.seed || baseRecord.scenarioId || "scene-fast-001";
     const hotPoolSlot = buildHistoryHotPoolSlot(baseRecord, 1);
     prefetchKlineTrainingSlices({
@@ -678,6 +695,17 @@ Page({
       if (this.latestHistoryRequestKey !== requestKey) return;
       this.clearHistoryLoadTimer();
       const historySlice = buildMindHistorySlice(result);
+      if (keepCurrentChart && !shouldCachePageHistorySlice(historySlice)) {
+        this.setData({
+          historyLoading: false,
+          historyRequestPending: false,
+          historyError: historySlice.serverSliceError || HISTORY_LOAD_FAILURE_MESSAGE
+        });
+        if (typeof wx !== "undefined" && wx.showToast) {
+          wx.showToast({ title: "新片段暂未载入", icon: "none" });
+        }
+        return;
+      }
       if (shouldCachePageHistorySlice(historySlice)) {
         this.historySliceCache = Object.assign({}, this.historySliceCache || {}, { [cacheKey]: historySlice });
       }
@@ -685,6 +713,17 @@ Page({
     }).catch(() => {
       if (this.latestHistoryRequestKey !== requestKey) return;
       this.clearHistoryLoadTimer();
+      if (keepCurrentChart) {
+        this.setData({
+          historyLoading: false,
+          historyRequestPending: false,
+          historyError: HISTORY_LOAD_FAILURE_MESSAGE
+        });
+        if (typeof wx !== "undefined" && wx.showToast) {
+          wx.showToast({ title: "新片段暂未载入", icon: "none" });
+        }
+        return;
+      }
       this.applyHistorySlice(baseRecord, buildFailedHistorySlice(baseRecord));
     });
   },
@@ -979,7 +1018,7 @@ Page({
       wx.showToast({ title: "本次先练这一段", icon: "none" });
       return;
     }
-    if (this.data.historyLoading) {
+    if (this.data.historyRequestPending || this.data.historyLoading) {
       wx.showToast({ title: "正在换段", icon: "none" });
       return;
     }
