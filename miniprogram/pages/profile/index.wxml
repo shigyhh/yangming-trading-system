@@ -284,11 +284,11 @@
         <button class="secondary-btn" bindtap="pullNow">拉取档案</button>
         <button class="primary-btn" bindtap="syncNow">重新连接</button>
       </view>
-      <view wx:if="{{debugMode}}" class="debug-sync-panel">
-        <text>开发调试</text>
+      <view class="sync-config-panel">
+        <text>真机预览连接</text>
         <label class="form-label">后端地址</label>
         <input class="input-field" value="{{apiBase}}" bindinput="inputApiBase" placeholder="http://电脑局域网IP:8787" />
-        <view class="debug-sync-actions">
+        <view class="sync-config-actions">
           <button class="ghost-btn" bindtap="saveApiBase">保存地址</button>
           <button class="secondary-btn" bindtap="pullNow">拉取</button>
           <button class="primary-btn" bindtap="syncNow">同步</button>

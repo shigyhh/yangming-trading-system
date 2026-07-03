@@ -178,17 +178,20 @@ assert.ok(klineMindWxml.includes('canvas-id="klineMainCanvas"'), "kline mind sho
 assert.ok(klineMindWxml.includes('canvas-id="klineIndicatorCanvas"'), "kline mind should render indicator panels through canvas");
 assert.equal(klineMindWxml.includes("mind-candle"), false, "kline mind should not render WXML candle decorations");
 assert.ok(klineMindWxml.includes("historyError ||"), "kline mind empty state should surface the actual history load failure");
+assert.ok(klineMindWxml.includes("goBackendSetup"), "kline mind history failure should route users to backend setup");
 assert.ok(klineMindJs.includes("normalizeKlineMindEntryContext"), "kline mind page should normalize URL entry context before loading training data");
 assert.ok(klineMindJs.includes("mergeKlineMindEntryContext"), "kline mind page should merge entry context into session and history slice requests");
 assert.ok(klineMindJs.includes("this.entryContext"), "kline mind page should keep launch context for onShow reloads");
 assert.ok(klineMindJs.includes("HISTORY_LOAD_TIMEOUT_MS"), "kline mind should not leave true-device history loading unresolved");
 assert.ok(klineMindJs.includes("armHistoryLoadTimeout"), "kline mind should settle a stalled history request into an explicit failure state");
+assert.ok(klineMindJs.includes("ym_profile_open_sync_setup"), "kline mind should open profile sync setup directly from history failure");
 assertRuleHas(klineMindWxss, ".chart-canvas-stage", ["position: relative", "background: #030504"], "kline mind canvas stage should own the chart surface");
 assertRuleHas(klineMindWxss, ".kline-main-canvas", ["height: 336rpx"], "kline mind main canvas should keep the blind viewport height");
 
 assert.ok(profileWxml.includes('wx:if="{{debugMode}}" class="debug-release-tools card"'), "profile debug release tools should be hidden behind debugMode");
 assert.ok(profileJs.includes("fetchDataBindingSummary"), "profile should refresh from the shared data-binding summary when opened");
 assert.ok(profileJs.includes("buildUserDataChain(this.data.remoteArchiveSummary)"), "profile data chain should use the latest remote archive summary when available");
+assert.ok(profileWxml.includes('class="sync-config-panel"'), "profile should expose backend setup inside the sync section for true-device preview");
 assert.equal(profileWxml.includes('class="danger-clear"'), false, "profile should not expose dangerous clear action in normal page flow");
 assert.ok(profileWxml.includes('wx:if="{{debugMode}}" class="membership-card card"'), "membership system should be hidden for release preview");
 assert.ok(profileWxml.includes('wx:if="{{debugMode}}" class="subscription-card card"'), "subscription proof should be hidden for release preview");

@@ -980,6 +980,13 @@ Page({
     this.loadServerHistorySlice(form, { keepCurrentChart: true });
   },
 
+  goBackendSetup() {
+    try {
+      wx.setStorageSync("ym_profile_open_sync_setup", true);
+    } catch (error) {}
+    wx.navigateTo({ url: "/pages/profile/index" });
+  },
+
   advanceRuntimeCandle() {
     const runtime = this.data.trainingRuntime;
     if (!runtime) {

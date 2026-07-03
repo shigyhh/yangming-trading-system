@@ -1127,6 +1127,7 @@
 .sync-card input,
 .sync-actions,
 .sync-user-tip,
+.sync-config-panel,
 .debug-sync-panel,
 .sync-tip {
   position: relative;
@@ -1190,6 +1191,7 @@
   line-height: 1.55;
 }
 
+.sync-config-panel,
 .debug-sync-panel {
   margin-top: 18rpx;
   padding: 18rpx;
@@ -1198,6 +1200,7 @@
   background: rgba(255, 255, 255, 0.025);
 }
 
+.sync-config-panel > text:first-child,
 .debug-sync-panel > text:first-child {
   display: block;
   color: rgba(216, 183, 111, 0.78);
@@ -1206,6 +1209,7 @@
   letter-spacing: 0.12em;
 }
 
+.sync-config-actions,
 .debug-sync-actions {
   margin-top: 14rpx;
   display: grid;
@@ -1213,6 +1217,9 @@
   gap: 10rpx;
 }
 
+.sync-config-actions .ghost-btn,
+.sync-config-actions .secondary-btn,
+.sync-config-actions .primary-btn,
 .debug-sync-actions .ghost-btn,
 .debug-sync-actions .secondary-btn,
 .debug-sync-actions .primary-btn {
@@ -1253,6 +1260,7 @@
     grid-template-columns: 1fr;
   }
 
+  .sync-config-actions,
   .debug-sync-actions {
     grid-template-columns: 1fr;
   }

@@ -60,6 +60,8 @@ const SHARE_MOMENT_ENTRIES = [
   { key: "profile_album", label: "心证卡册" }
 ];
 
+const PROFILE_OPEN_SYNC_SETUP_KEY = "ym_profile_open_sync_setup";
+
 const USER_DATA_CHAIN = [
   "训练记录",
   "交易复盘",
@@ -215,6 +217,11 @@ Page({
 
   onShow() {
     syncPageTabBarActive(this);
+    let shouldOpenSyncSetup = false;
+    try {
+      shouldOpenSyncSetup = !!wx.getStorageSync(PROFILE_OPEN_SYNC_SETUP_KEY);
+      if (shouldOpenSyncSetup) wx.removeStorageSync(PROFILE_OPEN_SYNC_SETUP_KEY);
+    } catch (error) {}
     const profile = getProfile();
     const executionPlanLibrary = getExecutionPlanLibrary();
     const executionPlanCount = (executionPlanLibrary.records || []).filter((item) => item.enabled).length;
@@ -301,7 +308,8 @@ Page({
       userDataChain: buildUserDataChain(this.data.remoteArchiveSummary),
       debugDataChain: DEBUG_DATA_CHAIN,
       shareMoments: buildShareMomentEntries(),
-      menu: buildReleaseMenu({ result, growth, profile, trainingDone, debugMode, executionPlanCount })
+      menu: buildReleaseMenu({ result, growth, profile, trainingDone, debugMode, executionPlanCount }),
+      showProfileDepth: shouldOpenSyncSetup ? true : this.data.showProfileDepth
     });
     this.refreshRemoteArchiveSummary();
   },
