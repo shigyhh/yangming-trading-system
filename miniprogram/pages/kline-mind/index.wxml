@@ -92,40 +92,40 @@
                 class="kline-main-canvas"
                 disable-scroll="true"
               ></canvas>
-              <view
+              <cover-view
                 wx:if="{{chartCrosshair.visible}}" class="chart-crosshair-tooltip"
                 style="left: {{chartCrosshair.tooltipLeft}}rpx; top: {{chartCrosshair.tooltipTop}}rpx;"
               >
-                <view class="crosshair-tooltip-head">
-                  <text>{{chartCrosshair.tooltip.date}}</text>
-                  <text>{{chartCrosshair.tooltip.indexText}}</text>
-                </view>
-                <view class="crosshair-tooltip-grid">
-                  <text class="crosshair-metric">开 {{chartCrosshair.tooltip.open}}</text>
-                  <text class="crosshair-metric">高 {{chartCrosshair.tooltip.high}}</text>
-                  <text class="crosshair-metric">低 {{chartCrosshair.tooltip.low}}</text>
-                  <text class="crosshair-metric">收 {{chartCrosshair.tooltip.close}}</text>
-                  <text class="crosshair-metric crosshair-metric-wide">量 {{chartCrosshair.tooltip.volume}}</text>
-                </view>
-              </view>
-              <view wx:if="{{chartCrosshair.visible}}" class="chart-crosshair-readout {{chartCrosshair.readout.direction}}">
-                <view>
-                  <text>涨跌幅</text>
-                  <view>{{chartCrosshair.readout.changePct}}</view>
-                </view>
-                <view>
-                  <text>涨跌额</text>
-                  <view>{{chartCrosshair.readout.change}}</view>
-                </view>
-                <view>
-                  <text>振幅</text>
-                  <view>{{chartCrosshair.readout.amplitude}}</view>
-                </view>
-                <view>
-                  <text>成交量</text>
-                  <view>{{chartCrosshair.readout.volume}}</view>
-                </view>
-              </view>
+                <cover-view class="crosshair-tooltip-head">
+                  <cover-view>{{chartCrosshair.tooltip.date}}</cover-view>
+                  <cover-view>{{chartCrosshair.tooltip.indexText}}</cover-view>
+                </cover-view>
+                <cover-view class="crosshair-tooltip-grid">
+                  <cover-view class="crosshair-metric">开 {{chartCrosshair.tooltip.open}}</cover-view>
+                  <cover-view class="crosshair-metric">高 {{chartCrosshair.tooltip.high}}</cover-view>
+                  <cover-view class="crosshair-metric">低 {{chartCrosshair.tooltip.low}}</cover-view>
+                  <cover-view class="crosshair-metric">收 {{chartCrosshair.tooltip.close}}</cover-view>
+                  <cover-view class="crosshair-metric crosshair-metric-wide">量 {{chartCrosshair.tooltip.volume}}</cover-view>
+                </cover-view>
+              </cover-view>
+              <cover-view wx:if="{{chartCrosshair.visible}}" class="chart-crosshair-readout {{chartCrosshair.readout.direction}}">
+                <cover-view class="crosshair-readout-item">
+                  <cover-view class="crosshair-readout-label">涨跌幅</cover-view>
+                  <cover-view class="crosshair-readout-value">{{chartCrosshair.readout.changePct}}</cover-view>
+                </cover-view>
+                <cover-view class="crosshair-readout-item">
+                  <cover-view class="crosshair-readout-label">涨跌额</cover-view>
+                  <cover-view class="crosshair-readout-value">{{chartCrosshair.readout.change}}</cover-view>
+                </cover-view>
+                <cover-view class="crosshair-readout-item">
+                  <cover-view class="crosshair-readout-label">振幅</cover-view>
+                  <cover-view class="crosshair-readout-value">{{chartCrosshair.readout.amplitude}}</cover-view>
+                </cover-view>
+                <cover-view class="crosshair-readout-item">
+                  <cover-view class="crosshair-readout-label">成交量</cover-view>
+                  <cover-view class="crosshair-readout-value">{{chartCrosshair.readout.volume}}</cover-view>
+                </cover-view>
+              </cover-view>
               <view class="indicator-strip-spacer"></view>
               <canvas
                 wx:if="{{runtimeView.indicatorPanel.visible}}"

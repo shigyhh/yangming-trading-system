@@ -491,13 +491,13 @@
   pointer-events: none;
 }
 
-.chart-crosshair-readout > view {
+.crosshair-readout-item {
   min-width: 0;
   padding: 10rpx 8rpx;
   background: rgba(244, 235, 221, 0.035);
 }
 
-.chart-crosshair-readout text {
+.crosshair-readout-label {
   display: block;
   margin-bottom: 4rpx;
   color: rgba(216, 183, 111, 0.68);
@@ -506,7 +506,7 @@
   line-height: 1.2;
 }
 
-.chart-crosshair-readout view view {
+.crosshair-readout-value {
   color: rgba(244, 235, 221, 0.84);
   font-size: 19rpx;
   font-weight: 900;
@@ -514,13 +514,13 @@
   overflow-wrap: anywhere;
 }
 
-.chart-crosshair-readout.up view:nth-child(1) view,
-.chart-crosshair-readout.up view:nth-child(2) view {
+.chart-crosshair-readout.up .crosshair-readout-item:nth-child(1) .crosshair-readout-value,
+.chart-crosshair-readout.up .crosshair-readout-item:nth-child(2) .crosshair-readout-value {
   color: rgba(225, 62, 56, 0.92);
 }
 
-.chart-crosshair-readout.down view:nth-child(1) view,
-.chart-crosshair-readout.down view:nth-child(2) view {
+.chart-crosshair-readout.down .crosshair-readout-item:nth-child(1) .crosshair-readout-value,
+.chart-crosshair-readout.down .crosshair-readout-item:nth-child(2) .crosshair-readout-value {
   color: rgba(54, 214, 204, 0.9);
 }
 
