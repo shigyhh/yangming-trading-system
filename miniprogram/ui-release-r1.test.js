@@ -305,7 +305,19 @@ assert.ok(klineMindJs.includes("setKlineRuntimeViewportPan"), "kline blind chart
 assert.ok(klineMindJs.includes("chartPanOffset"), "kline blind chart should keep viewport pan state instead of relying on native scroll position");
 assert.ok(klineMindJs.includes("getTouchDistance"), "kline chart should measure two-finger distance for pinch zoom");
 assert.ok(klineMindJs.includes("chartPinchStart"), "kline chart should keep pinch state separate from pan state");
-assert.ok(klineMindJs.includes("if (this.chartPanStart || this.chartPinchStart) return;"), "kline long-press crosshair should not fire while panning or pinching");
+assert.ok(klineMindJs.includes("updateChartCrosshairFromEvent"), "kline crosshair should share one update path for long press and drag");
+assert.ok(
+  sliceBetween(klineMindJs, "showChartCrosshair(e)", "hideChartCrosshair()").includes("this.chartPanStart = null"),
+  "kline long-press crosshair should cancel pan tracking before showing the crosshair"
+);
+assert.ok(
+  sliceBetween(klineMindJs, "onChartPanMove(e)", "onChartPanEnd()").includes("if ((this.data.chartCrosshair || {}).visible)"),
+  "kline chart drag should update crosshair instead of panning after crosshair is visible"
+);
+assert.ok(
+  sliceBetween(klineMindJs, "onChartPanMove(e)", "onChartPanEnd()").includes("this.updateChartCrosshairFromEvent(e)"),
+  "kline chart drag should keep the crosshair tooltip following the finger"
+);
 assert.ok(klineMindJs.includes("this.updateChartZoom(CHART_ZOOM_ORDER[nextIndex]);"), "kline pinch should reuse the same controlled zoom path as the chart corner controls");
 assert.ok(klineMindJs.includes("updateChartPan"), "kline chart pan should use one controlled pan update path for buttons and drag");
 assert.ok(klineMindJs.includes("panOffset: Number(nextRuntime.chartPanOffset || 0)"), "kline touch panning should update its drag anchor after each visible pan step");

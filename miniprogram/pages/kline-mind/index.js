@@ -553,8 +553,7 @@ Page({
     return Math.max(0, Math.min(KLINE_CANVAS_METRICS.width, rawX / rpxScale));
   },
 
-  showChartCrosshair(e) {
-    if (this.chartPanStart || this.chartPinchStart) return;
+  updateChartCrosshairFromEvent(e) {
     const runtimeView = this.data.runtimeView || {};
     if (!runtimeView.visibleCandles || !runtimeView.visibleCandles.length) return;
     const crosshairX = this.getChartTouchX(e);
@@ -566,6 +565,12 @@ Page({
     this.setData({ chartCrosshair: crosshair }, () => {
       this.drawKlineCanvas();
     });
+  },
+
+  showChartCrosshair(e) {
+    if (this.chartPinchStart) return;
+    this.chartPanStart = null;
+    this.updateChartCrosshairFromEvent(e);
   },
 
   hideChartCrosshair() {
@@ -933,6 +938,10 @@ Page({
         zoomIndex: nextIndex
       };
       this.updateChartZoom(CHART_ZOOM_ORDER[nextIndex]);
+      return;
+    }
+    if ((this.data.chartCrosshair || {}).visible) {
+      this.updateChartCrosshairFromEvent(e);
       return;
     }
     if (!this.chartPanStart || !this.data.trainingRuntime) return;
