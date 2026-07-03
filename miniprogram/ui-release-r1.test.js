@@ -203,6 +203,11 @@ assert.ok(profileWxml.includes('wx:if="{{debugMode}}" class="debug-release-tools
 assert.ok(profileJs.includes("fetchDataBindingSummary"), "profile should refresh from the shared data-binding summary when opened");
 assert.ok(profileJs.includes("buildUserDataChain(this.data.remoteArchiveSummary)"), "profile data chain should use the latest remote archive summary when available");
 assert.ok(profileWxml.includes('class="sync-config-panel"'), "profile should expose backend setup inside the sync section for true-device preview");
+assert.ok(profileJs.includes("fetchMirrorArchive"), "profile archive pull should use the shared mirror-archive API");
+assert.ok(
+  sliceBetween(profileJs, "pullNow()", "goContent365()").includes("fetchMirrorArchive()"),
+  "profile pull action should refresh the website-facing mirror archive after pulling local miniapp state"
+);
 assert.equal(profileWxml.includes('class="danger-clear"'), false, "profile should not expose dangerous clear action in normal page flow");
 assert.ok(profileWxml.includes('wx:if="{{debugMode}}" class="membership-card card"'), "membership system should be hidden for release preview");
 assert.ok(profileWxml.includes('wx:if="{{debugMode}}" class="subscription-card card"'), "subscription proof should be hidden for release preview");

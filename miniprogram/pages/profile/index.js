@@ -37,7 +37,7 @@ const {
   clearLocalMvpState,
   todayKey
 } = require("../../utils/store");
-const { getApiBase, setApiBase, getAuthSession, pullRemoteState, syncLocalState, fetchDataBindingSummary } = require("../../utils/api");
+const { getApiBase, setApiBase, getAuthSession, pullRemoteState, syncLocalState, fetchDataBindingSummary, fetchMirrorArchive } = require("../../utils/api");
 const { buildGrowthState } = require("../../modules/growth/index");
 const { buildContinuityState } = require("../../modules/continuity/index");
 const { getTodayContent } = require("../../modules/content365/index");
@@ -434,6 +434,7 @@ Page({
       success: (res) => {
         if (!res.confirm) return;
         pullRemoteState({ silent: false })
+          .then(() => fetchMirrorArchive().catch(() => null))
           .then(() => this.onShow())
           .catch(() => this.onShow());
       }
