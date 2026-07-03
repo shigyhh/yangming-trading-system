@@ -70,12 +70,6 @@
       </view>
 
       <view wx:if="{{session.hasHistoricalData}}" class="chart-canvas-wrap">
-        <view class="chart-stepper">
-          <view class="chart-stepper-control" bindtap="panChartLeft">‹</view>
-          <view class="chart-stepper-control" bindtap="decreaseChartZoom">-</view>
-          <view class="chart-stepper-control" bindtap="increaseChartZoom">+</view>
-          <view class="chart-stepper-control" bindtap="panChartRight">›</view>
-        </view>
         <view
           class="chart-canvas-scroll"
           bindtouchstart="onChartPanStart"
@@ -86,6 +80,12 @@
         >
           <view class="chart-scroll-inner">
             <view class="chart-canvas-stage">
+              <cover-view class="chart-stepper">
+                <cover-view class="chart-stepper-control" bindtap="panChartLeft">‹</cover-view>
+                <cover-view class="chart-stepper-control" bindtap="decreaseChartZoom">-</cover-view>
+                <cover-view class="chart-stepper-control" bindtap="increaseChartZoom">+</cover-view>
+                <cover-view class="chart-stepper-control" bindtap="panChartRight">›</cover-view>
+              </cover-view>
               <canvas
                 id="klineMainCanvas"
                 canvas-id="klineMainCanvas"

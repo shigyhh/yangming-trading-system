@@ -294,7 +294,7 @@ assert.ok(klineMindJs.includes("panOffset: Number(nextRuntime.chartPanOffset || 
 assert.equal(klineMindWxml.includes('bounces="true"'), false, "kline blind chart should not keep native horizontal panning that can reveal unreplayed candles");
 assert.equal(klineMindJs.includes('label: item.key === activeKey ? "当"'), false, "kline chart should not render a text marker on the active candle");
 assert.equal(klineMindWxml.includes('<text wx:if="{{item.label}}"'), false, "kline chart should not render any text labels inside real K-line candles");
-assert.ok(klineMindWxml.includes('class="chart-stepper"'), "kline chart should expose compact -/+ zoom controls in the chart corner");
+assert.ok(klineMindWxml.includes('<cover-view class="chart-stepper"'), "kline chart controls should use cover-view so they stay visible above native canvas on real devices");
 assert.ok(klineMindWxml.includes("bindtap=\"decreaseChartZoom\""), "kline chart should let the user zoom out with a minus control");
 assert.ok(klineMindWxml.includes("bindtap=\"increaseChartZoom\""), "kline chart should let the user zoom in with a plus control");
 assert.ok(klineMindWxml.includes('bindtap="panChartLeft"'), "kline chart should expose an explicit left pan control for real-device use");
@@ -320,7 +320,13 @@ assert.ok(klineCanvasRendererJs.includes("volume-guide"), "kline canvas renderer
 assert.ok(klineMindJs.includes("hideChartCrosshair();\n    this.updateChartZoom"), "kline zoom should clear crosshair state before changing viewport density");
 assert.ok(klineMindJs.includes("hideChartCrosshair();\n    const currentForm = this.data.form || {};"), "kline slice switching should clear crosshair state before loading a new segment");
 assert.ok(klineMindWxml.includes("chartCrosshair.tooltip.volume"), "kline crosshair tooltip should link the selected candle with volume detail");
-assert.ok(klineMindWxml.indexOf('class="chart-stepper"') < klineMindWxml.indexOf('class="chart-canvas-scroll"'), "kline zoom controls should stay fixed in the visible chart corner, not inside the horizontal candle canvas");
+const klineStepperStart = klineMindWxml.indexOf('<cover-view class="chart-stepper"');
+const klineCanvasStageStart = klineMindWxml.indexOf('class="chart-canvas-stage"');
+const klineMainCanvasStart = klineMindWxml.indexOf('class="kline-main-canvas"');
+assert.ok(
+  klineStepperStart > klineCanvasStageStart && klineStepperStart < klineMainCanvasStart,
+  "kline zoom and pan controls should be cover-view overlays inside the canvas stage so real devices keep them above native canvas"
+);
 const klineChartTouchStart = klineMindWxml.indexOf('class="chart-canvas-scroll"');
 const klineIndicatorRailStart = klineMindWxml.indexOf('class="indicator-strip"', klineChartTouchStart);
 assert.ok(klineMindWxml.indexOf('class="indicator-strip-spacer"', klineChartTouchStart) < klineIndicatorRailStart, "kline chart should reserve space for a fixed indicator rail inside the candle canvas");

@@ -526,10 +526,10 @@
 
 .chart-stepper {
   position: absolute;
-  z-index: 8;
+  z-index: 20;
   right: 12rpx;
   top: 14rpx;
-  display: inline-flex;
+  display: flex;
   overflow: hidden;
   border: 1rpx solid rgba(244, 235, 221, 0.16);
   border-radius: 8rpx;
@@ -541,14 +541,14 @@
   height: 42rpx;
   margin: 0;
   padding: 0;
-  display: grid;
-  place-items: center;
+  display: block;
   border-radius: 0;
   color: rgba(244, 235, 221, 0.82);
   background: transparent;
   font-size: 26rpx;
   font-weight: 900;
-  line-height: 1;
+  line-height: 42rpx;
+  text-align: center;
 }
 
 .chart-stepper-control + .chart-stepper-control {
