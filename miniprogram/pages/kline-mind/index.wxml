@@ -81,10 +81,8 @@
           <view class="chart-scroll-inner">
             <view class="chart-canvas-stage">
               <cover-view class="chart-stepper">
-                <cover-view class="chart-stepper-control" bindtap="panChartLeft">←</cover-view>
                 <cover-view class="chart-stepper-control" bindtap="decreaseChartZoom">-</cover-view>
                 <cover-view class="chart-stepper-control" bindtap="increaseChartZoom">+</cover-view>
-                <cover-view class="chart-stepper-control" bindtap="panChartRight">→</cover-view>
               </cover-view>
               <canvas
                 id="klineMainCanvas"
@@ -160,7 +158,7 @@
             {{subIndicator.label}}
           </view>
         </view>
-        <view class="chart-gesture-hint">左右滑动或点箭头平移 · 双指或 +/- 缩放</view>
+        <view class="chart-gesture-hint">左右滑动平移 · 双指或 +/- 缩放</view>
       </view>
       <view wx:else class="history-empty">
         <view>{{historyLoading ? '正在读取历史数据' : '历史数据未载入'}}</view>
