@@ -197,6 +197,21 @@ assert.ok(
   "zooming should not expose unrevealed future candles"
 );
 
+const defaultEntryRuntime = startKlineTrainingRuntime(longSession, {
+  trainingSessionId: "kline-module-runtime-entry-pan",
+  initialVisibleCount: getInitialKlineVisibleCount(longSession),
+  initialMainIndicatorKey: "ma",
+  initialIndicatorKey: "vol"
+});
+assert.ok(
+  defaultEntryRuntime.chartViewport.maxPanOffset >= 12,
+  "default entry should reveal enough historical candles for immediate horizontal panning"
+);
+assert.ok(
+  Math.max(...defaultEntryRuntime.visibleCandles.map((item) => item.runtimeIndex)) <= defaultEntryRuntime.currentIndex,
+  "default entry pan headroom should not expose unrevealed future candles"
+);
+
 function readRpx(style, key) {
   const match = new RegExp(`${key}:\\s*([0-9.]+)rpx`).exec(String(style || ""));
   return match ? Number(match[1]) : null;

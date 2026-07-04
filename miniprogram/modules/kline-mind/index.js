@@ -1149,7 +1149,7 @@ function getInitialKlineVisibleCount(session = {}) {
   if (!candles.length) return 0;
   const windowSize = Number(session.chartWindowSize || DEFAULT_VISIBLE_CANDLES);
   const safeWindowSize = Number.isFinite(windowSize) ? windowSize : DEFAULT_VISIBLE_CANDLES;
-  const target = Math.max(72, Math.min(132, Math.floor(safeWindowSize * 0.8)));
+  const target = Math.max(96, Math.min(180, Math.round(safeWindowSize)));
   return Math.min(candles.length, target);
 }
 
