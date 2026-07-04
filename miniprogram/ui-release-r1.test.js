@@ -491,6 +491,8 @@ assert.equal(bottomTabWxml.includes("tab-transition-veil"), false, "bottom tab s
 });
 assert.ok(homeWxml.includes('class="home-flow-strip"'), "home should expose the closure path without competing with the main CTA");
 assert.equal(homeWxml.includes("K线观心"), false, "home should keep K-line training out of the first-screen dispatch");
+assert.equal(homeWxml.includes('class="kline-mind-entry"'), false, "home should not keep a secondary K-line card in the daily heart-proof flow");
+assert.equal(homeWxml.includes('bindtap="goKlineMind"'), false, "home should not route directly into K-line practice from the home narrative");
 assert.ok(homeWxml.indexOf("今日只练一件事") < homeWxml.indexOf('class="home-flow-strip"'), "home should encounter the single daily task before the closure path");
 assertRuleHas(homeWxss, ".home-flow-step.done text", ["color: rgba(95, 132, 117, 0.86)"], "home closure path should visibly mark completed steps");
 assertRuleHas(homeWxss, ".home-flow-step.current text", ["color: rgba(216, 183, 111, 0.9)"], "home closure path should visibly mark the current step");
