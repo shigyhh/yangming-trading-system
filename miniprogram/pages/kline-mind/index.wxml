@@ -89,6 +89,11 @@
                 canvas-id="klineMainCanvas"
                 class="kline-main-canvas"
                 disable-scroll="true"
+                bindtouchstart="onChartPanStart"
+                catchtouchmove="onChartPanMove"
+                bindtouchend="onChartPanEnd"
+                bindtouchcancel="onChartPanEnd"
+                bindlongpress="showChartCrosshair"
               ></canvas>
               <cover-view
                 wx:if="{{chartCrosshair.visible}}" class="chart-crosshair-tooltip"
@@ -131,6 +136,11 @@
                 canvas-id="klineIndicatorCanvas"
                 class="kline-indicator-canvas {{runtimeView.indicatorPanel.type}}"
                 disable-scroll="true"
+                bindtouchstart="onChartPanStart"
+                catchtouchmove="onChartPanMove"
+                bindtouchend="onChartPanEnd"
+                bindtouchcancel="onChartPanEnd"
+                bindlongpress="showChartCrosshair"
               ></canvas>
             </view>
           </view>

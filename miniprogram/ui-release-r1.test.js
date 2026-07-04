@@ -304,6 +304,18 @@ assert.ok(klineMindWxml.includes('class="slice-playbook"'), "kline chart should 
 assert.ok(klineMindWxml.includes("点最牵动的一根"), "kline playbook should tell the user exactly what to do with the chart");
 assert.ok(klineMindWxml.includes('catchtouchmove="onChartPanMove"'), "kline blind chart should capture touch dragging so real-device horizontal pan is not stolen by page scroll");
 assert.equal(klineMindWxml.includes('bindtouchmove="onChartPanMove"'), false, "kline blind chart should not use bubbling touchmove for chart panning");
+assert.ok(
+  sliceBetween(klineMindWxml, 'id="klineMainCanvas"', '</canvas>').includes('bindtouchstart="onChartPanStart"')
+    && sliceBetween(klineMindWxml, 'id="klineMainCanvas"', '</canvas>').includes('catchtouchmove="onChartPanMove"')
+    && sliceBetween(klineMindWxml, 'id="klineMainCanvas"', '</canvas>').includes('bindtouchend="onChartPanEnd"'),
+  "kline main canvas should bind touch panning directly on real devices"
+);
+assert.ok(
+  sliceBetween(klineMindWxml, 'id="klineIndicatorCanvas"', '</canvas>').includes('bindtouchstart="onChartPanStart"')
+    && sliceBetween(klineMindWxml, 'id="klineIndicatorCanvas"', '</canvas>').includes('catchtouchmove="onChartPanMove"')
+    && sliceBetween(klineMindWxml, 'id="klineIndicatorCanvas"', '</canvas>').includes('bindtouchend="onChartPanEnd"'),
+  "kline indicator canvas should bind touch panning directly on real devices"
+);
 assert.ok(klineMindJs.includes("setKlineRuntimeViewportPan"), "kline blind chart should clamp touch panning through the training viewport engine");
 assert.ok(klineMindJs.includes("chartPanOffset"), "kline blind chart should keep viewport pan state instead of relying on native scroll position");
 assert.ok(klineMindJs.includes("getTouchDistance"), "kline chart should measure two-finger distance for pinch zoom");
