@@ -116,48 +116,54 @@
         </view>
         <view wx:if="{{!homeFocusView.done}}" class="home-narrative-panel" aria-label="今日滚动叙事">
           <view class="home-narrative-kicker">上传之后</view>
-          <text class="home-narrative-title">这条记录，会成为一面活镜。</text>
-          <view class="home-narrative-copy">先留下事实，再照见第一念；系统把它写入活镜，生成心证卡，留进档案，明日继续。</view>
+          <text class="home-narrative-title">这条记录，会一幕一幕落成。</text>
+          <view class="home-narrative-copy">不是填完表就结束。事实留下之后，第一念会浮现，活镜会点亮，心证会落印，最后归入档案。</view>
           <view class="home-narrative-steps">
             <view class="home-narrative-step">
-              <text>01</text>
-              <view>
-                <text>留下真实记录</text>
+              <view class="home-narrative-artifact">事</view>
+              <view class="home-narrative-content">
+                <text class="home-narrative-act">第一幕 · 事实留下</text>
+                <text class="home-narrative-result">留下真实记录</text>
                 <view>只写事实，不急着解释。</view>
               </view>
             </view>
             <view class="home-narrative-step">
-              <text>02</text>
-              <view>
-                <text>看见第一念</text>
+              <view class="home-narrative-artifact">念</view>
+              <view class="home-narrative-content">
+                <text class="home-narrative-act">第二幕 · 第一念浮现</text>
+                <text class="home-narrative-result">看见第一念</text>
                 <view>先照见当时最急的反应。</view>
               </view>
             </view>
             <view class="home-narrative-step">
-              <text>03</text>
-              <view>
-                <text>写入活镜</text>
+              <view class="home-narrative-artifact">镜</view>
+              <view class="home-narrative-content">
+                <text class="home-narrative-act">第三幕 · 活镜点亮</text>
+                <text class="home-narrative-result">写入活镜</text>
                 <view>把重复出现的念头沉淀下来。</view>
               </view>
             </view>
             <view class="home-narrative-step">
-              <text>04</text>
-              <view>
-                <text>生成心证卡</text>
+              <view class="home-narrative-artifact">证</view>
+              <view class="home-narrative-content">
+                <text class="home-narrative-act">第四幕 · 心证落印</text>
+                <text class="home-narrative-result">生成心证卡</text>
                 <view>把今日照见收成可回看的心证。</view>
               </view>
             </view>
             <view class="home-narrative-step">
-              <text>05</text>
-              <view>
-                <text>进入档案</text>
+              <view class="home-narrative-artifact">卷</view>
+              <view class="home-narrative-content">
+                <text class="home-narrative-act">第五幕 · 档案归卷</text>
+                <text class="home-narrative-result">进入档案</text>
                 <view>留作长期训练的证据。</view>
               </view>
             </view>
             <view class="home-narrative-step">
-              <text>06</text>
-              <view>
-                <text>明日继续</text>
+              <view class="home-narrative-artifact">明</view>
+              <view class="home-narrative-content">
+                <text class="home-narrative-act">第六幕 · 明日再练</text>
+                <text class="home-narrative-result">明日继续</text>
                 <view>下一次，只比今天多照见一分。</view>
               </view>
             </view>

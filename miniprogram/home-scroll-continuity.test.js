@@ -21,6 +21,10 @@ assert.ok(homeWxml.indexOf('class="home-narrative-panel"') < homeWxml.indexOf('c
 ;["留下真实记录", "看见第一念", "写入活镜", "生成心证卡", "进入档案", "明日继续"].forEach((label) => {
   assert.ok(homeWxml.includes(label), `home second act should include ${label}`)
 })
+;["第一幕", "第二幕", "第三幕", "第四幕", "第五幕", "第六幕"].forEach((label) => {
+  assert.ok(homeWxml.includes(label), `home second act should read like staged progression with ${label}`)
+})
+assert.ok(homeWxml.includes('class="home-narrative-artifact"'), "home second act should make each generated result feel tangible")
 assert.ok(homeWxml.includes('class="home-today-state-card"'), "home should render a quiet server today-state card")
 assert.ok(homeWxml.includes("今日所照"), "today-state card should use reader-facing copy")
 assert.ok(homeWxml.includes("serverTodayStateView.statusText"), "today-state card should consume normalized status text")
