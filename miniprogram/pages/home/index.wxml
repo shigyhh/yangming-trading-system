@@ -114,6 +114,55 @@
             >{{item.text}}</button>
           </view>
         </view>
+        <view wx:if="{{!homeFocusView.done}}" class="home-narrative-panel" aria-label="今日滚动叙事">
+          <view class="home-narrative-kicker">上传之后</view>
+          <text class="home-narrative-title">这条记录，会成为一面活镜。</text>
+          <view class="home-narrative-copy">先留下事实，再照见第一念；系统把它写入活镜，生成心证卡，留进档案，明日继续。</view>
+          <view class="home-narrative-steps">
+            <view class="home-narrative-step">
+              <text>01</text>
+              <view>
+                <text>留下真实记录</text>
+                <view>只写事实，不急着解释。</view>
+              </view>
+            </view>
+            <view class="home-narrative-step">
+              <text>02</text>
+              <view>
+                <text>看见第一念</text>
+                <view>先照见当时最急的反应。</view>
+              </view>
+            </view>
+            <view class="home-narrative-step">
+              <text>03</text>
+              <view>
+                <text>写入活镜</text>
+                <view>把重复出现的念头沉淀下来。</view>
+              </view>
+            </view>
+            <view class="home-narrative-step">
+              <text>04</text>
+              <view>
+                <text>生成心证卡</text>
+                <view>把今日照见收成可回看的心证。</view>
+              </view>
+            </view>
+            <view class="home-narrative-step">
+              <text>05</text>
+              <view>
+                <text>进入档案</text>
+                <view>留作长期训练的证据。</view>
+              </view>
+            </view>
+            <view class="home-narrative-step">
+              <text>06</text>
+              <view>
+                <text>明日继续</text>
+                <view>下一次，只比今天多照见一分。</view>
+              </view>
+            </view>
+          </view>
+        </view>
         <view wx:if="{{homeFocusView.done}}" class="journey-complete short-complete">
           <view class="completion-brief-head">
             <view class="completion-seal">印</view>
