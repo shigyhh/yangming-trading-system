@@ -311,10 +311,18 @@ assert.ok(
   "kline main canvas should bind touch panning directly on real devices"
 );
 assert.ok(
+  sliceBetween(klineMindWxml, 'id="klineMainCanvas"', '</canvas>').includes('bindtap="showChartCrosshair"'),
+  "kline main canvas should let a direct tap reveal the selected candle tooltip"
+);
+assert.ok(
   sliceBetween(klineMindWxml, 'id="klineIndicatorCanvas"', '</canvas>').includes('bindtouchstart="onChartPanStart"')
     && sliceBetween(klineMindWxml, 'id="klineIndicatorCanvas"', '</canvas>').includes('catchtouchmove="onChartPanMove"')
     && sliceBetween(klineMindWxml, 'id="klineIndicatorCanvas"', '</canvas>').includes('bindtouchend="onChartPanEnd"'),
   "kline indicator canvas should bind touch panning directly on real devices"
+);
+assert.ok(
+  sliceBetween(klineMindWxml, 'id="klineIndicatorCanvas"', '</canvas>').includes('bindtap="showChartCrosshair"'),
+  "kline indicator canvas should let a direct tap reveal the selected candle tooltip"
 );
 assert.ok(klineMindJs.includes("setKlineRuntimeViewportPan"), "kline blind chart should clamp touch panning through the training viewport engine");
 assert.ok(klineMindJs.includes("chartPanOffset"), "kline blind chart should keep viewport pan state instead of relying on native scroll position");

@@ -93,6 +93,7 @@
                 catchtouchmove="onChartPanMove"
                 bindtouchend="onChartPanEnd"
                 bindtouchcancel="onChartPanEnd"
+                bindtap="showChartCrosshair"
                 bindlongpress="showChartCrosshair"
               ></canvas>
               <cover-view
@@ -140,6 +141,7 @@
                 catchtouchmove="onChartPanMove"
                 bindtouchend="onChartPanEnd"
                 bindtouchcancel="onChartPanEnd"
+                bindtap="showChartCrosshair"
                 bindlongpress="showChartCrosshair"
               ></canvas>
             </view>
