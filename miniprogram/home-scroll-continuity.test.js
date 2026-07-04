@@ -25,6 +25,13 @@ assert.ok(homeWxml.indexOf('class="home-narrative-panel"') < homeWxml.indexOf('c
   assert.ok(homeWxml.includes(label), `home second act should read like staged progression with ${label}`)
 })
 assert.ok(homeWxml.includes('class="home-narrative-artifact"'), "home second act should make each generated result feel tangible")
+assert.ok(homeWxml.includes('class="home-evidence-showcase"'), "home second act should show the generated evidence artifacts")
+;["活镜点亮", "心证卡落印", "档案归卷"].forEach((label) => {
+  assert.ok(homeWxml.includes(label), `home evidence showcase should include ${label}`)
+})
+;["待点亮", "待落印", "待归卷"].forEach((label) => {
+  assert.ok(homeWxml.includes(label), `home evidence showcase should show unfinished state ${label}`)
+})
 assert.ok(homeWxml.includes('class="home-today-state-card"'), "home should render a quiet server today-state card")
 assert.ok(homeWxml.includes("今日所照"), "today-state card should use reader-facing copy")
 assert.ok(homeWxml.includes("serverTodayStateView.statusText"), "today-state card should consume normalized status text")
@@ -37,6 +44,7 @@ assert.ok(homeWxml.includes('class="home-bottom-echo"'), "home should fill the p
 assert.ok(homeWxml.indexOf('class="home-bottom-echo"') < homeWxml.indexOf("<compliance-notice"), "closing strip should sit above the compliance notice")
 assert.ok(homeWxss.includes(".home-continuity-panel"), "continuity panel should be styled")
 assert.ok(homeWxss.includes(".home-narrative-panel"), "home second-act narrative panel should be styled")
+assert.ok(homeWxss.includes(".home-evidence-showcase"), "home generated evidence showcase should be styled")
 assert.ok(homeWxss.includes(".home-today-state-card"), "today-state card should be styled")
 assert.ok(homeWxss.includes(".home-bottom-echo"), "closing strip should be styled")
 assert.ok(homeJs.includes("fetchTodayState"), "home should read server TodayState through the API client")

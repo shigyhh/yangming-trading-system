@@ -168,6 +168,38 @@
               </view>
             </view>
           </view>
+          <view class="home-evidence-showcase" aria-label="即将生成的三件证据">
+            <view class="home-evidence-showcase-head">
+              <text>即将生成</text>
+              <view>这不是流程说明，而是今日会留下的三件证据。</view>
+            </view>
+            <view class="home-evidence-artifacts">
+              <view class="home-evidence-item mirror">
+                <view class="home-evidence-seal">镜</view>
+                <view class="home-evidence-copy">
+                  <text>活镜点亮</text>
+                  <view>重复出现的念头，会在这里沉淀。</view>
+                </view>
+                <text class="home-evidence-state">待点亮</text>
+              </view>
+              <view class="home-evidence-item card">
+                <view class="home-evidence-seal">证</view>
+                <view class="home-evidence-copy">
+                  <text>心证卡落印</text>
+                  <view>今日照见，会收成一张可分享的心证。</view>
+                </view>
+                <text class="home-evidence-state">待落印</text>
+              </view>
+              <view class="home-evidence-item archive">
+                <view class="home-evidence-seal">卷</view>
+                <view class="home-evidence-copy">
+                  <text>档案归卷</text>
+                  <view>事实、第一念和行动，会归入长期档案。</view>
+                </view>
+                <text class="home-evidence-state">待归卷</text>
+              </view>
+            </view>
+          </view>
         </view>
         <view wx:if="{{homeFocusView.done}}" class="journey-complete short-complete">
           <view class="completion-brief-head">
