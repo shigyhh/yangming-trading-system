@@ -69,6 +69,7 @@ const assessmentWxss = readPage("assessment", "index.wxss");
 const tradeReviewWxss = readPage("trade-review", "index.wxss");
 const trainingWxss = readPage("training", "index.wxss");
 const stagesWxss = readPage("stages", "index.wxss");
+const shareCardWxss = readPage("share-card", "index.wxss");
 const profileWxss = readPage("profile", "index.wxss");
 
 function sliceBetween(text, startMarker, endMarker) {
@@ -548,6 +549,12 @@ assertRuleHas(profileWxss, ".sync-actions", ["grid-template-columns: repeat(2, m
 assertRuleHas(profileWxss, ".sync-actions .ghost-btn,\n.sync-actions .secondary-btn,\n.sync-actions .primary-btn", ["width: 100%", "min-width: 0", "box-sizing: border-box"], "profile sync action buttons should shrink inside their grid cells");
 assertRuleHas(profileWxss, ".handoff-actions", ["grid-template-columns: minmax(0, 1fr)", "justify-items: center"], "profile assistant handoff action should align to the card center");
 assertRuleHas(profileWxss, ".handoff-actions button", ["display: flex", "align-items: center", "justify-content: center", "line-height: 1.2", "text-align: center"], "profile assistant handoff button label should be visually centered");
+assertRuleHas(shareCardWxss, ".share-content", ["padding: calc(118rpx + env(safe-area-inset-top)) 32rpx 40rpx"], "share card custom navigation content should clear the capsule and safe area on real devices");
+assertRuleHas(shareCardWxss, ".heart-proof-fallback", ["overflow: hidden", "box-sizing: border-box"], "share card fallback panel should clip overflowing mobile controls");
+assertRuleHas(shareCardWxss, ".fallback-actions", ["grid-template-columns: repeat(2, minmax(0, 1fr))", "max-width: 100%", "box-sizing: border-box"], "share card fallback actions should stay inside the card width");
+assertRuleHas(shareCardWxss, ".fallback-actions button", ["width: 100%", "min-width: 0", "box-sizing: border-box", "display: flex", "align-items: center", "justify-content: center", "line-height: 1.2"], "share card fallback action labels should center without overflowing");
+assertRuleHas(shareCardWxss, ".share-actions", ["grid-template-columns: repeat(2, minmax(0, 1fr))", "max-width: 100%", "box-sizing: border-box"], "share card normal actions should stay inside the page width");
+assertRuleHas(shareCardWxss, ".share-actions .primary,\n.share-actions .secondary", ["width: 100%", "min-width: 0", "box-sizing: border-box", "display: flex", "align-items: center", "justify-content: center", "line-height: 1.2"], "share card normal action labels should center without overflowing");
 assertRuleHas(klineMindWxss, ".simulation-console", ["overflow: hidden", "box-sizing: border-box"], "kline runtime training console should clip inner badges inside the card");
 assertRuleHas(klineMindWxss, ".simulation-head", ["min-width: 0", "max-width: 100%", "overflow: hidden", "box-sizing: border-box"], "kline runtime head should not let the emotion badge escape the card");
 assertRuleHas(klineMindWxss, ".emotion-badge", ["max-width: 132rpx", "box-sizing: border-box", "overflow: hidden", "text-overflow: ellipsis", "white-space: nowrap"], "kline runtime emotion badge should stay inside the head row");

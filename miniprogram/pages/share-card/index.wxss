@@ -36,7 +36,7 @@
 .share-content {
   position: relative;
   z-index: 1;
-  padding: calc(22rpx + env(safe-area-inset-top)) 32rpx 40rpx;
+  padding: calc(118rpx + env(safe-area-inset-top)) 32rpx 40rpx;
 }
 
 .nav-head {
@@ -203,6 +203,8 @@
   align-content: center;
   justify-items: center;
   text-align: center;
+  overflow: hidden;
+  box-sizing: border-box;
   border-radius: 30rpx;
   border: 1rpx solid rgba(217, 189, 122, 0.2);
   background:
@@ -245,17 +247,27 @@
 
 .fallback-actions {
   width: 100%;
+  max-width: 100%;
   margin-top: 42rpx;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16rpx;
+  box-sizing: border-box;
 }
 
 .fallback-actions button {
+  width: 100%;
+  min-width: 0;
   min-height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
   border-radius: 999rpx;
   font-size: 25rpx;
   font-weight: 800;
+  line-height: 1.2;
+  text-align: center;
 }
 
 .local-sync-hint {
@@ -389,19 +401,35 @@
 
 .share-actions {
   display: grid;
-  grid-template-columns: 1fr 1.25fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18rpx;
   margin-top: 28rpx;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .share-actions .primary,
 .share-actions .secondary,
 .ghost,
 .poster-action {
+  min-width: 0;
   min-height: 84rpx;
   border-radius: 22rpx;
   font-weight: 650;
   font-size: 26rpx;
+  box-sizing: border-box;
+}
+
+.share-actions .primary,
+.share-actions .secondary {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  line-height: 1.2;
+  text-align: center;
 }
 
 .primary {
