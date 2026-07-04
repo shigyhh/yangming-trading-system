@@ -312,9 +312,13 @@ function buildHistorySliceRequestParams(record = {}) {
 }
 
 function shouldCachePageHistorySlice(historySlice = {}) {
-  return !!(historySlice.candles && historySlice.candles.length)
+  return hasUsablePageHistorySlice(historySlice)
     && !historySlice.hot_pool
     && !historySlice.hotPool;
+}
+
+function hasUsablePageHistorySlice(historySlice = {}) {
+  return !!(historySlice.candles && historySlice.candles.length);
 }
 
 function buildHistoryHotPoolSlot(record = {}, index = 1) {
@@ -700,7 +704,7 @@ Page({
       if (this.latestHistoryRequestKey !== requestKey) return;
       this.clearHistoryLoadTimer();
       const historySlice = buildMindHistorySlice(result);
-      if (keepCurrentChart && !shouldCachePageHistorySlice(historySlice)) {
+      if (keepCurrentChart && !hasUsablePageHistorySlice(historySlice)) {
         this.setData({
           historyLoading: false,
           historyRequestPending: false,

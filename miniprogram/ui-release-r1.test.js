@@ -416,6 +416,12 @@ assert.equal(
 );
 assert.ok(appJs.includes("prefetchKlineTrainingSlices"), "miniapp launch should warm real historical K-line slices before the user enters training");
 assert.ok(klineMindJs.includes("prefetchNextSlice"), "kline page should keep the next random history slice warm for the change-slice action");
+assert.ok(klineMindJs.includes("hasUsablePageHistorySlice"), "kline slice switching should distinguish usable hot-pool data from cacheable page data");
+assert.equal(
+  sliceBetween(klineMindJs, "const historySlice = buildMindHistorySlice(result);", "if (shouldCachePageHistorySlice(historySlice))").includes("keepCurrentChart && !shouldCachePageHistorySlice(historySlice)"),
+  false,
+  "kline slice switching should not reject valid hot-pool candles just because they should not be page-cached"
+);
 assert.equal(klineMindWxml.includes("模拟盈亏"), false, "kline runtime metrics should avoid repeating the simulation caveat in every small label");
 assert.equal(klineMindJs.includes("先做模拟决策"), false, "kline runtime button should say decision directly after the global simulation boundary is present");
 assert.equal(klineMindWxml.includes("toggleIndicatorPicker"), false, "kline indicators should not use a dropdown picker");
