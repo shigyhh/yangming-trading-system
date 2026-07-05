@@ -114,6 +114,13 @@
             >{{item.text}}</button>
           </view>
         </view>
+        <view wx:if="{{!homeFocusView.done}}" class="home-scene-bridge" aria-label="今日下一幕">
+          <view class="home-scene-bridge-line"></view>
+          <view class="home-scene-bridge-copy">
+            <text>下一幕</text>
+            <view>这一条真实记录，会继续生成活镜、心证卡和档案证据。</view>
+          </view>
+        </view>
         <view wx:if="{{!homeFocusView.done}}" class="home-narrative-panel" aria-label="今日滚动叙事">
           <view class="home-narrative-kicker">上传之后</view>
           <text class="home-narrative-title">这条记录，会一幕一幕落成。</text>

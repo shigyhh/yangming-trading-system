@@ -17,6 +17,12 @@ assert.ok(homeWxml.indexOf('class="mini-mirror-card"') < homeWxml.indexOf('class
 assert.ok(homeWxml.indexOf('class="home-focus-card"') < homeWxml.indexOf('class="home-continuity-panel"'), "current action should come before the continuity panel")
 assert.ok(homeWxml.includes('class="home-narrative-panel"'), "home should render a second-act narrative panel after the primary action")
 assert.ok(homeWxml.indexOf('class="home-focus-card"') < homeWxml.indexOf('class="home-narrative-panel"'), "home second act should come after the primary action")
+assert.ok(homeWxml.includes('class="home-scene-bridge"'), "home should bridge the primary action into the second-act narrative")
+assert.ok(homeWxml.indexOf('class="home-focus-card"') < homeWxml.indexOf('class="home-scene-bridge"'), "home scene bridge should come after the primary action")
+assert.ok(homeWxml.indexOf('class="home-scene-bridge"') < homeWxml.indexOf('class="home-narrative-panel"'), "home scene bridge should lead into the second act")
+;["下一幕", "这一条真实记录，会继续生成活镜、心证卡和档案证据。"].forEach((label) => {
+  assert.ok(homeWxml.includes(label), `home scene bridge should include ${label}`)
+})
 assert.ok(homeWxml.indexOf('class="home-narrative-panel"') < homeWxml.indexOf('class="home-continuity-panel"'), "home second act should explain the loop before the evidence panel")
 ;["留下真实记录", "看见第一念", "写入活镜", "生成心证卡", "进入档案", "明日继续"].forEach((label) => {
   assert.ok(homeWxml.includes(label), `home second act should include ${label}`)
@@ -57,6 +63,7 @@ assert.equal(homeWxml.includes('bindtap="goKlineMind"'), false, "home should not
 assert.ok(homeWxml.includes('class="home-bottom-echo"'), "home should fill the pre-tabbar area with a quiet closing strip")
 assert.ok(homeWxml.indexOf('class="home-bottom-echo"') < homeWxml.indexOf("<compliance-notice"), "closing strip should sit above the compliance notice")
 assert.ok(homeWxss.includes(".home-continuity-panel"), "continuity panel should be styled")
+assert.ok(homeWxss.includes(".home-scene-bridge"), "home scene bridge should be styled")
 assert.ok(homeWxss.includes(".home-narrative-panel"), "home second-act narrative panel should be styled")
 assert.ok(homeWxss.includes(".home-evidence-showcase"), "home generated evidence showcase should be styled")
 assert.ok(homeWxss.includes(".home-completion-seal-roll"), "home completed evidence roll should be styled")
