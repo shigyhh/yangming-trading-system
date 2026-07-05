@@ -262,6 +262,38 @@
               </view>
             </view>
           </view>
+          <view class="home-completion-share-node" aria-label="今日证据传播节点">
+            <view class="home-completion-share-head">
+              <text>传播节点</text>
+              <view>这一天不是结束，而是留下可以回看、分享和归档的证据。</view>
+            </view>
+            <view class="home-completion-share-grid">
+              <view class="home-completion-share-card poster">
+                <view class="home-completion-share-seal">证</view>
+                <view class="home-completion-share-copy">
+                  <text>心证卡海报</text>
+                  <view>把今日照见收成一张可带走的心证。</view>
+                </view>
+                <button data-noripple="1" data-type="daily_mantra" bindtap="goShareCard">生成心证卡</button>
+              </view>
+              <view class="home-completion-share-card mirror">
+                <view class="home-completion-share-seal">镜</view>
+                <view class="home-completion-share-copy">
+                  <text>活镜回看</text>
+                  <view>回看这次念头如何反复出现。</view>
+                </view>
+                <button data-noripple="1" bindtap="goLivingMirror">回看活镜</button>
+              </view>
+              <view class="home-completion-share-card archive">
+                <view class="home-completion-share-seal">卷</view>
+                <view class="home-completion-share-copy">
+                  <text>档案证据</text>
+                  <view>把事实、第一念和下一步归入长期档案。</view>
+                </view>
+                <button data-noripple="1" bindtap="goTradeReviewArchive">进入档案</button>
+              </view>
+            </view>
+          </view>
           <view class="home-completion-exit" aria-label="今日封卷出口">
             <view class="home-completion-exit-head">
               <text>封卷出口</text>

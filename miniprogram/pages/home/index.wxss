@@ -2079,6 +2079,142 @@
   line-height: 1.42;
 }
 
+.home-completion-share-node {
+  position: relative;
+  margin-top: 22rpx;
+  padding: 22rpx 20rpx 20rpx;
+  overflow: hidden;
+  border-radius: 26rpx;
+  border: 1rpx solid rgba(95, 132, 117, 0.18);
+  background:
+    radial-gradient(circle at 14% 20%, rgba(95, 132, 117, 0.14), transparent 34%),
+    linear-gradient(145deg, rgba(95, 132, 117, 0.068), rgba(244, 235, 221, 0.014) 58%, rgba(5, 8, 7, 0.2)),
+    rgba(9, 16, 14, 0.46);
+}
+
+.home-completion-share-node::before {
+  content: "";
+  position: absolute;
+  inset: 16rpx;
+  border-radius: 22rpx;
+  border: 1rpx solid rgba(95, 132, 117, 0.055);
+  pointer-events: none;
+}
+
+.home-completion-share-head,
+.home-completion-share-grid {
+  position: relative;
+  z-index: 1;
+}
+
+.home-completion-share-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18rpx;
+}
+
+.home-completion-share-head text {
+  flex: 0 0 auto;
+  color: rgba(216, 183, 111, 0.82);
+  font-size: 21rpx;
+  font-weight: 950;
+  letter-spacing: 0.2em;
+  line-height: 1.3;
+}
+
+.home-completion-share-head view {
+  min-width: 0;
+  color: rgba(244, 235, 221, 0.48);
+  font-size: 20rpx;
+  line-height: 1.45;
+  text-align: right;
+}
+
+.home-completion-share-grid {
+  margin-top: 18rpx;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12rpx;
+}
+
+.home-completion-share-card {
+  min-width: 0;
+  padding: 16rpx;
+  display: grid;
+  grid-template-columns: 54rpx minmax(0, 1fr);
+  gap: 14rpx;
+  align-items: center;
+  border-radius: 22rpx;
+  border: 1rpx solid rgba(217, 189, 122, 0.08);
+  background: rgba(244, 235, 221, 0.02);
+}
+
+.home-completion-share-card.poster {
+  border-color: rgba(216, 183, 111, 0.18);
+  background:
+    radial-gradient(circle at 86% 16%, rgba(216, 183, 111, 0.12), transparent 34%),
+    rgba(244, 235, 221, 0.024);
+}
+
+.home-completion-share-seal {
+  width: 54rpx;
+  height: 54rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 16rpx;
+  color: rgba(255, 241, 210, 0.94);
+  border: 1.5rpx solid rgba(120, 60, 45, 0.42);
+  background: rgba(120, 60, 45, 0.22);
+  font-family: "ZX-LXGW", "LXGW WenKai", "霞鹜文楷", "Songti SC", serif;
+  font-size: 28rpx;
+  font-weight: 800;
+  transform: rotate(-3deg);
+}
+
+.home-completion-share-copy {
+  min-width: 0;
+}
+
+.home-completion-share-copy text {
+  display: block;
+  color: rgba(244, 235, 221, 0.9);
+  font-size: 23rpx;
+  font-weight: 950;
+  line-height: 1.36;
+}
+
+.home-completion-share-copy view {
+  margin-top: 5rpx;
+  color: rgba(244, 235, 221, 0.43);
+  font-size: 18rpx;
+  line-height: 1.42;
+}
+
+.home-completion-share-card button {
+  grid-column: 2;
+  justify-self: stretch;
+  min-height: 60rpx;
+  margin-top: 10rpx;
+  display: grid;
+  place-items: center;
+  border-radius: 999rpx;
+  color: rgba(216, 183, 111, 0.82);
+  border: 1rpx solid rgba(217, 189, 122, 0.14);
+  background: rgba(8, 8, 7, 0.22);
+  font-size: 20rpx;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.home-completion-share-card.poster button {
+  color: #11130d;
+  border-color: rgba(241, 210, 125, 0.48);
+  background:
+    linear-gradient(180deg, rgba(255, 248, 216, 0.3), rgba(255, 255, 255, 0.035) 36%, transparent 52%),
+    linear-gradient(180deg, rgba(240, 211, 118, 0.9), rgba(188, 137, 52, 0.88));
+}
+
 .home-completion-exit {
   position: relative;
   margin-top: 22rpx;
