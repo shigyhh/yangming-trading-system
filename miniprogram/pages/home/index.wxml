@@ -170,7 +170,7 @@
           </view>
           <view class="home-evidence-showcase" aria-label="即将生成的三件证据">
             <view class="home-evidence-showcase-head">
-              <text>即将生成</text>
+              <text>待开卷</text>
               <view>这不是流程说明，而是今日会留下的三件证据。</view>
             </view>
             <view class="home-evidence-artifacts">
@@ -232,6 +232,35 @@
             <text>{{completionView.heartProofText}}</text>
             <text>知行 {{completionView.zhixingChangeText}}</text>
             <text>{{completionView.retestText}}</text>
+          </view>
+          <view class="home-completion-seal-roll" aria-label="今日封卷证据">
+            <view class="home-completion-roll-head">
+              <text>今日封卷</text>
+              <view>这一日已经落印归档，明日只需从这里继续。</view>
+            </view>
+            <view class="home-completion-roll-grid">
+              <view class="home-completion-proof-item mirror">
+                <view class="home-completion-proof-seal">镜</view>
+                <view>
+                  <text>活镜已点亮</text>
+                  <view>重复念头已沉淀为长期可回看的镜像。</view>
+                </view>
+              </view>
+              <view class="home-completion-proof-item card">
+                <view class="home-completion-proof-seal">证</view>
+                <view>
+                  <text>心证已落印</text>
+                  <view>今日照见已生成，可作为分享与复盘的证据。</view>
+                </view>
+              </view>
+              <view class="home-completion-proof-item archive">
+                <view class="home-completion-proof-seal">卷</view>
+                <view>
+                  <text>档案已归卷</text>
+                  <view>事实、第一念和下一步行动已收束入档。</view>
+                </view>
+              </view>
+            </view>
           </view>
           <view class="journey-complete-actions">
             <button
