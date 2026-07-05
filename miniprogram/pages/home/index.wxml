@@ -262,15 +262,25 @@
               </view>
             </view>
           </view>
-          <view class="journey-complete-actions">
-            <button
-              wx:for="{{completionView.actions}}"
-              wx:key="key"
-              data-noripple="1"
-              data-action="{{item.key}}"
-              class="{{item.primary ? 'primary' : ''}}"
-              bindtap="handleCompletionAction"
-            >{{item.text}}</button>
+          <view class="home-completion-exit" aria-label="今日封卷出口">
+            <view class="home-completion-exit-head">
+              <text>封卷出口</text>
+              <view>今日已经落印，接下来只做两件事：回看证据，明日继续。</view>
+            </view>
+            <view class="journey-complete-actions">
+              <button
+                wx:for="{{completionView.actions}}"
+                wx:key="key"
+                data-noripple="1"
+                data-action="{{item.key}}"
+                class="{{item.primary ? 'primary' : ''}}"
+                bindtap="handleCompletionAction"
+              >{{item.key === 'archive' ? '进入档案' : item.text}}</button>
+            </view>
+            <view class="home-completion-tomorrow">
+              <text>明日继续</text>
+              <view>明天打开今日心证，从这一卷继续练。</view>
+            </view>
           </view>
         </view>
 

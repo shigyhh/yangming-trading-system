@@ -2079,6 +2079,99 @@
   line-height: 1.42;
 }
 
+.home-completion-exit {
+  position: relative;
+  margin-top: 22rpx;
+  padding: 20rpx;
+  overflow: hidden;
+  border-radius: 26rpx;
+  border: 1rpx solid rgba(217, 189, 122, 0.13);
+  background:
+    linear-gradient(145deg, rgba(244, 235, 221, 0.042), rgba(244, 235, 221, 0.012) 58%, rgba(5, 8, 7, 0.2)),
+    rgba(8, 12, 11, 0.34);
+}
+
+.home-completion-exit::before {
+  content: "";
+  position: absolute;
+  left: 20rpx;
+  right: 20rpx;
+  top: 20rpx;
+  height: 1rpx;
+  background: linear-gradient(90deg, rgba(216, 183, 111, 0.38), transparent);
+  pointer-events: none;
+}
+
+.home-completion-exit-head,
+.home-completion-tomorrow {
+  position: relative;
+  z-index: 1;
+}
+
+.home-completion-exit-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18rpx;
+}
+
+.home-completion-exit-head text {
+  flex: 0 0 auto;
+  color: rgba(216, 183, 111, 0.8);
+  font-size: 21rpx;
+  font-weight: 950;
+  letter-spacing: 0.2em;
+  line-height: 1.3;
+}
+
+.home-completion-exit-head view {
+  min-width: 0;
+  color: rgba(244, 235, 221, 0.46);
+  font-size: 20rpx;
+  line-height: 1.45;
+  text-align: right;
+}
+
+.home-completion-exit .journey-complete-actions {
+  position: relative;
+  z-index: 1;
+  margin-top: 18rpx;
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+  gap: 12rpx;
+}
+
+.home-completion-exit .journey-complete-actions button {
+  min-height: 76rpx;
+  font-size: 23rpx;
+}
+
+.home-completion-tomorrow {
+  margin-top: 14rpx;
+  padding-top: 14rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16rpx;
+  border-top: 1rpx solid rgba(217, 189, 122, 0.075);
+}
+
+.home-completion-tomorrow text {
+  flex: 0 0 auto;
+  color: rgba(216, 183, 111, 0.76);
+  font-size: 22rpx;
+  font-weight: 950;
+  line-height: 1.3;
+}
+
+.home-completion-tomorrow view {
+  min-width: 0;
+  color: rgba(244, 235, 221, 0.44);
+  font-size: 19rpx;
+  line-height: 1.45;
+  text-align: right;
+}
+
 .journey-complete-actions {
   margin-top: 26rpx;
   display: grid;

@@ -37,6 +37,10 @@ assert.ok(homeWxml.includes('class="home-completion-seal-roll"'), "home complete
 ;["今日封卷", "活镜已点亮", "心证已落印", "档案已归卷"].forEach((label) => {
   assert.ok(homeWxml.includes(label), `home completed state should include ${label}`)
 })
+assert.ok(homeWxml.includes('class="home-completion-exit"'), "home completed state should collect final actions in a sealing exit")
+;["封卷出口", "进入档案", "明日继续"].forEach((label) => {
+  assert.ok(homeWxml.includes(label), `home completion exit should include ${label}`)
+})
 assert.ok(homeWxml.includes('class="home-today-state-card"'), "home should render a quiet server today-state card")
 assert.ok(homeWxml.includes("今日所照"), "today-state card should use reader-facing copy")
 assert.ok(homeWxml.includes("serverTodayStateView.statusText"), "today-state card should consume normalized status text")
@@ -51,6 +55,7 @@ assert.ok(homeWxss.includes(".home-continuity-panel"), "continuity panel should 
 assert.ok(homeWxss.includes(".home-narrative-panel"), "home second-act narrative panel should be styled")
 assert.ok(homeWxss.includes(".home-evidence-showcase"), "home generated evidence showcase should be styled")
 assert.ok(homeWxss.includes(".home-completion-seal-roll"), "home completed evidence roll should be styled")
+assert.ok(homeWxss.includes(".home-completion-exit"), "home completed exit should be styled")
 assert.ok(homeWxss.includes(".home-today-state-card"), "today-state card should be styled")
 assert.ok(homeWxss.includes(".home-bottom-echo"), "closing strip should be styled")
 assert.ok(homeJs.includes("fetchTodayState"), "home should read server TodayState through the API client")
