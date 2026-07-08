@@ -124,11 +124,22 @@ assert.equal(
 assert.equal(
   homeWxml.includes(">K线观心</button>"),
   false,
-  "home first screen should not expose K-line training as a competing CTA"
+  "home first screen should not expose K-line training as a competing secondary CTA"
 );
+assert.ok(homeJs.includes('key: "trade-review"'), "home primary action should keep real trade review as the no-record priority");
+assert.ok(homeJs.includes("上传真实交易记录"), "home primary action should name real trade record as the no-record priority");
 assert.ok(
   homeWxml.includes('class="home-flow-strip"'),
   "home should expose a lightweight visible loop strip after the primary action"
+);
+assert.ok(
+  homeWxml.includes('aria-label="今日闭环进度"'),
+  "home loop strip should read as a non-clickable progress indicator"
+);
+assert.equal(
+  homeWxml.includes('aria-label="今日闭环路径"'),
+  false,
+  "home loop strip should not imply a clickable route path"
 );
 assert.ok(
   homeWxml.includes('wx:for="{{homeFlowSteps}}"'),
@@ -150,9 +161,67 @@ assert.ok(
   homeJs.includes("homeFlowSteps: buildHomeFlowSteps"),
   "home data should refresh the closure strip whenever entry state is loaded"
 );
-["真实记录", "第一念", "活镜", "今日训练", "心证卡"].forEach((label) => {
+const homeFlowBuilder = sliceBetween(homeJs, "function buildHomeFlowSteps", "function buildHomeContinuityVisible");
+assert.ok(
+  homeFlowBuilder.includes('label: "记录/训练"'),
+  "home loop strip should put records before fallback training in the first evidence label"
+);
+assert.equal(
+  homeFlowBuilder.includes('label: "真实记录"'),
+  false,
+  "home loop strip should not make real review look mandatory before training"
+);
+["记录/训练", "第一念", "活镜", "今日训练", "心证卡"].forEach((label) => {
   assert.ok(homeWxml.includes(label) || homeJs.includes(label), `home loop strip should include ${label}`);
 });
+const homePrimaryBuilder = sliceBetween(homeJs, "function buildHomePrimaryAction", "function applyJourneyToMiniHomeView");
+const noRecordPrimaryBranch = sliceBetween(homePrimaryBuilder, "if (!hasReview && !hasTrainingRecord)", "if (shouldUseTrainingClosure");
+assert.ok(
+  noRecordPrimaryBranch.includes('key: "trade-review"'),
+  "home no-record primary branch should route to real trade review"
+);
+assert.ok(
+  noRecordPrimaryBranch.includes("上传真实交易记录"),
+  "home no-record primary branch should make real trade record the visible primary action"
+);
+assert.equal(
+  noRecordPrimaryBranch.includes('key: "training"'),
+  false,
+  "home no-record primary branch should not route to blind practice as the primary action"
+);
+assert.equal(
+  noRecordPrimaryBranch.includes("开始今日通用盲练"),
+  false,
+  "home no-record primary branch should not label blind practice as the primary action"
+);
+assert.ok(
+  homePrimaryBuilder.includes("klineMindRecord"),
+  "home primary action should know whether today's K-line mind practice is completed"
+);
+assert.ok(
+  homePrimaryBuilder.includes("hasTrainingRecord"),
+  "home primary action should treat completed training as today's record before asking for another blind practice"
+);
+assert.ok(
+  homePrimaryBuilder.includes("!hasReview && !hasTrainingRecord"),
+  "home primary action should only show the no-record real-review CTA when neither review nor training exists"
+);
+assert.ok(
+  homePrimaryBuilder.includes("hasTrainingRecord && !hasReview"),
+  "home primary action should advance a completed blind-practice user into closure instead of another pre-step"
+);
+assert.ok(
+  homePrimaryBuilder.includes("if (!mind && !shouldUseTrainingClosure)"),
+  "home primary action should guard the mind-check pre-step behind the post-training closure state"
+);
+assert.ok(
+  homePrimaryBuilder.indexOf("if (shouldUseTrainingClosure && !hasSeal)") < homePrimaryBuilder.indexOf("if (!mind && !shouldUseTrainingClosure)"),
+  "home primary action should prioritize post-training closure before the mind-check pre-step"
+);
+assert.ok(
+  sliceBetween(homeJs, "const primaryAction = buildHomePrimaryAction", "const miniHomeView").includes("klineMindRecord"),
+  "home load should pass today's K-line mind record into the primary action"
+);
 
 const demoSession = buildKlineMindSession({
   record: {
@@ -178,7 +247,8 @@ assert.equal(klineMindWxml.includes('class="sim-meta"'), false, "kline mind shou
 assert.ok(klineMindWxml.includes('class="wave-source-line"'), "kline mind should collapse source/rhythm into quiet metadata");
 assert.ok(klineMindWxml.includes("K线盲练"), "kline mind should frame the session as K-line blind practice");
 assert.equal(klineMindWxml.includes("真实历史盲练"), false, "kline mind should not keep a duplicated blind-practice control block above the chart");
-assert.ok(klineMindWxml.includes('wx:if="{{savedRecord && savedRecord.completed}}" class="path-links"'), "kline mind should show cross-page links only after the record is complete");
+assert.equal(klineMindWxml.includes('class="path-links"'), false, "kline mind completion should not scatter users into multiple cross-page links");
+assert.ok(klineMindWxml.includes("回今日继续闭环"), "kline mind completion should return users to the daily closure as the one next step");
 assert.ok(klineMindWxml.includes('canvas-id="klineMainCanvas"'), "kline mind should render the main K-line chart through canvas");
 assert.ok(klineMindWxml.includes('canvas-id="klineIndicatorCanvas"'), "kline mind should render indicator panels through canvas");
 assert.equal(klineMindWxml.includes("mind-candle"), false, "kline mind should not render WXML candle decorations");
@@ -219,13 +289,17 @@ assert.equal(profileWxml.includes("生成同修身份证明"), false, "profile s
 assert.equal(profileWxml.includes("小程序定位"), false, "profile should not show internal product positioning copy in the normal user center");
 assert.equal(profileWxml.includes('class="mission-card card"'), false, "profile should not render product positioning as a normal card");
 
-assert.ok(trainingWxml.includes('wx:if="{{showTrainingPlan}}" class="seven-day-list quiet-plan-list"'), "training full seven-day list should be opt-in and visually quiet");
+assert.ok(trainingWxml.includes('wx:if="{{trainingContextVisible && showTrainingPlan}}" class="seven-day-list quiet-plan-list"'), "training full seven-day list should be opt-in and require training context");
 assert.ok(trainingWxml.includes("toggleTrainingPlan"), "training should expose a plan toggle instead of dumping every day on first screen");
+assert.ok(trainingWxml.includes('wx:if="{{trainingContextVisible}}" class="training-subtle-links"'), "training plan/detail toggles should stay hidden until training or review context exists");
 assert.ok(trainingWxml.indexOf('class="seven-training-card card"') < trainingWxml.indexOf('class="mind-bridge card"'), "training should lead with the current day instead of an auxiliary bridge card");
 assert.ok(trainingWxml.includes("今日只练一件事"), "training should frame the first screen as a single daily task");
 assert.ok(trainingWxml.includes("开始K线观心"), "training should make the primary daily action clear and connected to the core K-line practice");
+assert.ok(trainingWxml.includes("trainingHeroMetaText"), "training empty state should use a calm hero meta label instead of exposing Day/0-7 state too early");
+assert.ok(trainingWxml.includes('wx:if="{{trainingContextVisible}}" class="seven-training-bar"'), "training should hide the 0/7 progress bar until there is training or review context");
 
 assert.ok(livingMirrorWxml.includes('class="mirror-summary-card card"'), "living mirror should lead with a compact growth summary");
+assert.ok(livingMirrorWxml.includes("真实复盘或观心记录"), "living mirror should acknowledge both real reviews and K-line mind records as evidence");
 assert.ok(livingMirrorWxml.includes("toggleMirrorDepth"), "living mirror should expose depth modules as opt-in");
 assert.ok(livingMirrorWxml.includes('wx:if="{{showMirrorDepth}}" class="reminder-card card"'), "living mirror repeated next-action reminder should stay inside depth mode");
 assert.ok(livingMirrorWxml.includes('wx:if="{{showMirrorDepth}}" class="stability-card card"'), "living mirror stability detail should be folded by default");
@@ -279,11 +353,12 @@ assert.equal(profileWxml.includes("高频陪跑端"), false, "profile should not
 assert.equal(profileWxml.includes("统一档案ID"), false, "profile should not expose internal archive ids in reader-facing copy");
 assert.equal(profileWxml.includes("<text>助教承接</text>"), false, "profile should not present assistant handoff as a first-level product module");
 assert.ok(trainingWxml.includes('bindtap="toggleTrainingDepth"'), "training should expose detailed prescription only after the one-task first screen");
-assert.ok(trainingWxml.includes('wx:if="{{showTrainingDepth}}" class="training-depth"'), "training prescription, checklist, reflection, and completion actions should be folded below the first screen");
+assert.ok(trainingWxml.includes('wx:if="{{trainingContextVisible && showTrainingDepth}}" class="training-depth"'), "training prescription, checklist, reflection, and completion actions should require training context and stay folded below the first screen");
 assert.ok(tradeReviewWxml.includes('wx:if="{{form.screenshotPath || manualAnchorVisible || form.symbol}}" class="quick-review-card card"'), "trade review should reveal first-thought writing after screenshot or manual anchor starts");
 assert.ok(tradeReviewWxml.includes('wx:if="{{form.firstThought}}" class="quick-next-step"'), "trade review should reveal plan/position/next-law fields after the first thought is chosen");
 assert.ok(tradeReviewWxml.includes('wx:if="{{(form.screenshotPath || manualAnchorVisible || form.symbol) && form.firstThought && form.nextAction}}" class="primary-stack quick-actions"'), "trade review should not show the generate action until source, first thought, and next law are present");
-assert.ok(tradeReviewWxml.includes("查看心镜报告"), "trade review completion should reveal a productized H5/report action");
+assert.ok(tradeReviewWxml.includes("进入针对训练"), "trade review completion should make targeted training the primary next step");
+assert.ok(tradeReviewWxml.includes("查看心镜报告"), "trade review completion should keep the productized H5/report action available as a secondary action");
 assert.ok(tradeReviewWxml.includes('class="report-arrival-card card"'), "trade review completion should present the report as a natural result card");
 assert.ok(tradeReviewWxml.includes("复盘完成后，心镜报告会在这里出现"), "trade review should set the expectation that report follows completion");
 assert.ok(reportWxml.includes("复盘心镜<br />报告"), "report page should frame itself as a post-review mirror report");
@@ -516,10 +591,15 @@ assert.equal(bottomTabWxml.includes("tab-transition-veil"), false, "bottom tab s
   assert.equal(pageWxml.includes("<bottom-tab-bar"), false, "native tab pages should not mount a duplicate page-level bottom tab component");
 });
 assert.ok(homeWxml.includes('class="home-flow-strip"'), "home should expose the closure path without competing with the main CTA");
-assert.equal(homeWxml.includes("K线观心"), false, "home should keep K-line training out of the first-screen dispatch");
+assert.equal(homeWxml.includes("K线观心"), false, "home should keep static K-line shortcuts out of the first-screen dispatch");
+assert.ok(homeJs.includes('actionKey === "training"'), "home primary dispatcher should route the general-practice action to K-line mind");
 assert.equal(homeWxml.includes('class="kline-mind-entry"'), false, "home should not keep a secondary K-line card in the daily heart-proof flow");
 assert.equal(homeWxml.includes('bindtap="goKlineMind"'), false, "home should not route directly into K-line practice from the home narrative");
 assert.ok(homeWxml.indexOf("今日只练一件事") < homeWxml.indexOf('class="home-flow-strip"'), "home should encounter the single daily task before the closure path");
+assertRuleHas(homeWxss, ".home-flow-strip", ["padding: 18rpx 4rpx 8rpx", "border-radius: 0", "border: 0", "background: transparent"], "home closure path should not look like a segmented button capsule");
+assertRuleHas(homeWxss, ".home-flow-strip::before", ["content: \"\"", "position: absolute", "left: 8%", "right: 8%", "top: 24rpx", "height: 1rpx"], "home closure path should read as a quiet progress line");
+assertRuleHas(homeWxss, ".home-flow-step::before", ["content: \"\"", "width: 11rpx", "height: 11rpx", "border-radius: 50%"], "home closure path should use status nodes instead of button segments");
+assert.equal(homeWxss.includes(".home-flow-step:not(:last-child)::after"), false, "home closure path should not use dot separators that resemble segmented controls");
 assertRuleHas(homeWxss, ".home-flow-step.done text", ["color: rgba(95, 132, 117, 0.86)"], "home closure path should visibly mark completed steps");
 assertRuleHas(homeWxss, ".home-flow-step.current text", ["color: rgba(216, 183, 111, 0.9)"], "home closure path should visibly mark the current step");
 assert.equal(homeWxml.includes("当前状态"), false, "home should not explain the same first-screen task twice");

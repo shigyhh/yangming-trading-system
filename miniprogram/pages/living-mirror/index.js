@@ -23,6 +23,16 @@ function syncPageTabBarActive(page) {
   }
 }
 
+function switchTabPage(url) {
+  wx.switchTab({
+    url,
+    fail: () => wx.showToast({
+      title: "暂时无法切换",
+      icon: "none"
+    })
+  });
+}
+
 function formatGrowthDate(value = "") {
   const text = String(value || "").trim();
   if (!text) return "待更新";
@@ -290,7 +300,7 @@ Page({
   },
 
   goReview() {
-    wx.redirectTo({ url: "/pages/trade-review/index" });
+    switchTabPage("/pages/trade-review/index");
   },
 
   goArchive() {
@@ -304,7 +314,7 @@ Page({
   },
 
   goAssistant() {
-    wx.navigateTo({ url: "/pages/profile/index?anchor=assistant" });
+    switchTabPage("/pages/profile/index");
   },
 
   goRecommendedKline() {

@@ -80,7 +80,7 @@
           bindtap="goMiniPrimary"
         >{{miniHomeView.primaryText}}</button>
         <view wx:if="{{miniHomeView.primaryHint}}" class="mini-primary-hint">{{miniHomeView.primaryHint}}</view>
-        <view wx:if="{{!homeFocusView.done && homeFlowSteps.length}}" class="home-flow-strip" aria-label="今日闭环路径">
+        <view wx:if="{{!homeFocusView.done && homeFlowSteps.length}}" class="home-flow-strip" aria-label="今日闭环进度">
           <view
             wx:for="{{homeFlowSteps}}"
             wx:key="key"
@@ -118,20 +118,20 @@
           <view class="home-scene-bridge-line"></view>
           <view class="home-scene-bridge-copy">
             <text>下一幕</text>
-            <view>这一条真实记录，会继续生成活镜、心证卡和档案证据。</view>
+            <view>这一条训练或真实记录，会继续生成活镜、心证卡和档案证据。</view>
           </view>
         </view>
         <view wx:if="{{!homeFocusView.done}}" class="home-narrative-panel" aria-label="今日滚动叙事">
-          <view class="home-narrative-kicker">上传之后</view>
+          <view class="home-narrative-kicker">完成之后</view>
           <text class="home-narrative-title">这条记录，会一幕一幕落成。</text>
-          <view class="home-narrative-copy">不是填完表就结束。事实留下之后，第一念会浮现，活镜会点亮，心证会落印，最后归入档案。</view>
+          <view class="home-narrative-copy">不是练完就结束。训练或事实留下之后，第一念会浮现，活镜会点亮，心证会落印，最后归入档案。</view>
           <view class="home-narrative-steps">
             <view class="home-narrative-step">
               <view class="home-narrative-artifact">事</view>
               <view class="home-narrative-content">
-                <text class="home-narrative-act">第一幕 · 事实留下</text>
-                <text class="home-narrative-result">留下真实记录</text>
-                <view>只写事实，不急着解释。</view>
+                <text class="home-narrative-act">第一幕 · 记录留下</text>
+                <text class="home-narrative-result">留下训练记录</text>
+                <view>先留住当时第一念，不急着解释。</view>
               </view>
             </view>
             <view class="home-narrative-step">

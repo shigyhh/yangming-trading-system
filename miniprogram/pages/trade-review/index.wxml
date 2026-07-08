@@ -298,11 +298,11 @@
       </view>
       <view class="split-actions result-actions">
         <button class="ghost-btn" bindtap="goGeneratedDetail">{{closure.detailActionText || '查看复盘详情'}}</button>
-        <button class="primary-btn" bindtap="goLivingMirror">{{closure.primaryActionText || '查看活镜成长'}}</button>
+        <button class="primary-btn" bindtap="goKlineTraining">{{closure.klineActionText || '进入针对训练'}}</button>
       </view>
       <view class="single-action">
         <button class="ghost-btn" bindtap="toggleResultDetail">{{showResultDetail ? '收起复盘细节' : '展开复盘细节'}}</button>
-        <button class="ghost-btn" bindtap="goKlineTraining">{{closure.klineActionText || '进入 K 线观心'}}</button>
+        <button class="ghost-btn" bindtap="goLivingMirror">{{closure.primaryActionText || '查看活镜成长'}}</button>
       </view>
     </view>
 

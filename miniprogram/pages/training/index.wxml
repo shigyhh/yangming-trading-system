@@ -17,11 +17,11 @@
       <view class="seven-training-head">
         <view>
           <text>今日只练一件事</text>
-          <view>Day {{training7View.currentDay}} · {{trainingDay.title}}</view>
+          <view>{{trainingHeroMetaText}}</view>
         </view>
-        <text>{{training7View.progressText}}</text>
+        <text wx:if="{{trainingContextVisible}}">{{training7View.progressText}}</text>
       </view>
-      <view class="seven-training-bar"><view style="width: {{training7View.progressPercent}}%;"></view></view>
+      <view wx:if="{{trainingContextVisible}}" class="seven-training-bar"><view style="width: {{training7View.progressPercent}}%;"></view></view>
       <view class="training-today-focus">
         <text>{{trainingDayFocus.dayText}}</text>
         <view>{{trainingDayFocus.title}}</view>
@@ -35,11 +35,11 @@
         <view>{{trainingDayFocus.action}}</view>
       </view>
       <button class="primary-btn kline-entry-btn" bindtap="goKlineMind">开始K线观心</button>
-      <view class="training-subtle-links">
+      <view wx:if="{{trainingContextVisible}}" class="training-subtle-links">
         <button class="training-subtle-link" bindtap="toggleTrainingPlan">{{showTrainingPlan ? '收起7天计划' : '查看7天计划'}}</button>
         <button class="training-subtle-link" bindtap="toggleTrainingDepth">{{showTrainingDepth ? '收起训练细节' : '查看训练细节'}}</button>
       </view>
-      <view wx:if="{{showTrainingPlan}}" class="seven-day-list quiet-plan-list">
+      <view wx:if="{{trainingContextVisible && showTrainingPlan}}" class="seven-day-list quiet-plan-list">
         <button
           wx:for="{{training7View.days}}"
           wx:key="day"
@@ -52,7 +52,7 @@
           <text>{{item.completed ? '已闭环' : item.active ? '今日' : '待练'}}</text>
         </button>
       </view>
-      <button wx:if="{{training7View.canRetest}}" class="secondary-btn" bindtap="goRetest">开始复测</button>
+      <button wx:if="{{trainingContextVisible && training7View.canRetest}}" class="secondary-btn" bindtap="goRetest">开始复测</button>
     </view>
 
     <view wx:if="{{false}}" class="mind-bridge card" bindtap="goMind">
@@ -72,7 +72,7 @@
       <button class="secondary-btn" bindtap="goAssessment">去照见</button>
     </view>
 
-    <view wx:if="{{showTrainingDepth}}" class="training-depth">
+    <view wx:if="{{trainingContextVisible && showTrainingDepth}}" class="training-depth">
     <view class="training-card card">
       <view class="training-head">
         <view>

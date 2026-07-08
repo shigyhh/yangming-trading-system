@@ -20,11 +20,11 @@ assert.ok(homeWxml.indexOf('class="home-focus-card"') < homeWxml.indexOf('class=
 assert.ok(homeWxml.includes('class="home-scene-bridge"'), "home should bridge the primary action into the second-act narrative")
 assert.ok(homeWxml.indexOf('class="home-focus-card"') < homeWxml.indexOf('class="home-scene-bridge"'), "home scene bridge should come after the primary action")
 assert.ok(homeWxml.indexOf('class="home-scene-bridge"') < homeWxml.indexOf('class="home-narrative-panel"'), "home scene bridge should lead into the second act")
-;["下一幕", "这一条真实记录，会继续生成活镜、心证卡和档案证据。"].forEach((label) => {
+;["下一幕", "这一条训练或真实记录，会继续生成活镜、心证卡和档案证据。"].forEach((label) => {
   assert.ok(homeWxml.includes(label), `home scene bridge should include ${label}`)
 })
 assert.ok(homeWxml.indexOf('class="home-narrative-panel"') < homeWxml.indexOf('class="home-continuity-panel"'), "home second act should explain the loop before the evidence panel")
-;["留下真实记录", "看见第一念", "写入活镜", "生成心证卡", "进入档案", "明日继续"].forEach((label) => {
+;["留下训练记录", "看见第一念", "写入活镜", "生成心证卡", "进入档案", "明日继续"].forEach((label) => {
   assert.ok(homeWxml.includes(label), `home second act should include ${label}`)
 })
 ;["第一幕", "第二幕", "第三幕", "第四幕", "第五幕", "第六幕"].forEach((label) => {

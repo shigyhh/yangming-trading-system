@@ -55,6 +55,16 @@ const {
 const { buildKlineCanvasDrawModel } = require("../../modules/kline-mind/canvas-renderer");
 const { getRuntimeRpxScale } = require("../../utils/runtime-info");
 
+function switchTabPage(url) {
+  wx.switchTab({
+    url,
+    fail: () => wx.showToast({
+      title: "暂时无法切换",
+      icon: "none"
+    })
+  });
+}
+
 const REACTION_DIRECTIONS = [
   { key: "act", label: "想立刻做", detail: "追、急、想证明" },
   { key: "avoid", label: "想躲开", detail: "怕错、怕亏、想退出" },
@@ -1261,7 +1271,7 @@ Page({
   },
 
   goTraining() {
-    wx.redirectTo({ url: "/pages/training/index" });
+    switchTabPage("/pages/training/index");
   },
 
   goReport() {
@@ -1273,10 +1283,10 @@ Page({
   },
 
   goHome() {
-    wx.redirectTo({ url: "/pages/home/index" });
+    switchTabPage("/pages/home/index");
   },
 
   goLivingMirror() {
-    wx.redirectTo({ url: "/pages/living-mirror/index" });
+    switchTabPage("/pages/living-mirror/index");
   }
 });

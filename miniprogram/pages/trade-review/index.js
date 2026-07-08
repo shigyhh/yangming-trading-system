@@ -65,6 +65,16 @@ function syncPageTabBarActive(page) {
   }
 }
 
+function switchTabPage(url) {
+  wx.switchTab({
+    url,
+    fail: () => wx.showToast({
+      title: "暂时无法切换",
+      icon: "none"
+    })
+  });
+}
+
 function defaultForm() {
   return {
     screenshotPath: "",
@@ -739,6 +749,6 @@ Page({
   },
 
   goLivingMirror() {
-    wx.redirectTo({ url: "/pages/living-mirror/index" });
+    switchTabPage("/pages/living-mirror/index");
   }
 });

@@ -15,9 +15,12 @@ const USER_VISIBLE_FILES = [
   "miniprogram/modules/share-card/index.js",
   "miniprogram/modules/zhixing-stability/index.js",
   "miniprogram/modules/kline-simulator/index.js",
+  "miniprogram/modules/mini-loop/index.js",
+  "miniprogram/modules/trade-review/index.js",
   "miniprogram/pages/review/index.js",
   "miniprogram/pages/mind/index.js",
-  "miniprogram/pages/intraday-boundary/index.js"
+  "miniprogram/pages/intraday-boundary/index.js",
+  "miniprogram/pages/living-mirror/index.wxml"
 ];
 
 const FORBIDDEN_VISIBLE_TERMS = [
@@ -38,12 +41,29 @@ const FORBIDDEN_VISIBLE_TERMS = [
   "收益提升",
   "胜率提升"
 ];
+const FORBIDDEN_OLD_FLOW_COPY = [
+  "先留下真实记录",
+  "上传一条真实记录后生成",
+  "先完成一次真实复盘。",
+  "先完成三次真实复盘",
+  "完成两次真实复盘后",
+  "先完成一条真实复盘。",
+  "真实复盘和一次针对训练",
+  "复盘生成主镜",
+  "真实记录长出来的树",
+  "条真实复盘"
+];
 
 const violations = [];
 
 USER_VISIBLE_FILES.forEach((file) => {
   const content = readFileSync(join(root, file), "utf8");
   FORBIDDEN_VISIBLE_TERMS.forEach((term) => {
+    if (content.includes(term)) {
+      violations.push(`${file}: ${term}`);
+    }
+  });
+  FORBIDDEN_OLD_FLOW_COPY.forEach((term) => {
     if (content.includes(term)) {
       violations.push(`${file}: ${term}`);
     }

@@ -2,7 +2,7 @@
   <view class="page-content">
     <text class="eyebrow">LIVING MIRROR · 行为印记</text>
     <view class="page-title">活镜</view>
-    <view class="page-subtitle">把每次真实复盘沉淀成一面镜：看见反复出现的念头，再决定下一步只练什么。</view>
+    <view class="page-subtitle">把每次真实复盘或观心记录沉淀成一面镜：看见反复出现的念头，再决定下一步只练什么。</view>
 
     <view class="mirror-summary-card card">
       <view class="summary-seal">镜</view>
@@ -17,11 +17,11 @@
         </view>
         <view>
           <text>下一步修行</text>
-          <view>{{stats.mainTraining || '先完成一条真实复盘。'}}</view>
+          <view>{{stats.mainTraining || '先完成一条行为记录。'}}</view>
         </view>
         <view>
           <text>最近沉淀</text>
-          <view>{{hasRecords ? stats.totalReviews + ' 条真实复盘' : '待第一条复盘'}}</view>
+          <view>{{hasRecords ? stats.totalReviews + ' 条行为记录' : '待第一条记录'}}</view>
         </view>
       </view>
       <view class="summary-actions">
@@ -31,7 +31,7 @@
     </view>
 
     <view wx:if="{{showMirrorDepth}}" class="mirror-bridge card">
-      <view class="bridge-line">复盘，是你写下事实。活镜，是系统照见反复出现的念头。</view>
+      <view class="bridge-line">复盘与观心，是你写下事实和第一念。活镜，是系统照见反复出现的念头。</view>
       <view class="journey-progress-grid">
         <view>
           <text>今日训练</text>
@@ -91,9 +91,9 @@
 
     <view wx:if="{{showMirrorDepth}}" class="mirror-hero card">
       <view class="lake-glow"></view>
-      <view class="mirror-label">复盘生成主镜</view>
+      <view class="mirror-label">记录生成主镜</view>
       <view class="mirror-name">{{stats.currentMirror || '活镜未点亮'}}</view>
-      <view class="mirror-count">{{hasRecords ? stats.totalReviews + ' 条真实复盘' : '上传第一条记录后生成'}}</view>
+      <view class="mirror-count">{{hasRecords ? stats.totalReviews + ' 条行为记录' : '上传第一条记录后生成'}}</view>
       <view class="thief-line">
         <text>最近高频心贼</text>
         <view>{{stats.topThievesText || '待照见'}}</view>
@@ -189,7 +189,7 @@
       <view class="tree-glow"></view>
       <view class="card-head">
         <text>活镜树</text>
-        <view>真实记录长出来的树</view>
+        <view>行为记录长出来的树</view>
       </view>
       <view class="tree-visual">
         <view class="tree-crown">
@@ -275,7 +275,7 @@
         <text>下一次训练提醒</text>
         <view>今日只练一件事</view>
       </view>
-      <view class="reminder-line">{{stats.todayReminder || '先完成一条真实复盘，让活镜开始记录。'}}</view>
+      <view class="reminder-line">{{stats.todayReminder || '先完成一条行为记录，让活镜开始记录。'}}</view>
       <view class="training-line">{{stats.mainTraining || '把第一念记录下来。'}}</view>
       <button class="primary-btn" bindtap="goReview">{{hasRecords ? '继续记录一笔复盘' : '上传第一条记录'}}</button>
     </view>

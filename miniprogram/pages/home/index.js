@@ -78,6 +78,16 @@ function syncPageTabBarActive(page) {
   }
 }
 
+function switchTabPage(url) {
+  wx.switchTab({
+    url,
+    fail: () => wx.showToast({
+      title: "暂时无法切换",
+      icon: "none"
+    })
+  });
+}
+
 function getStoredEntryState() {
   try {
     return wx.getStorageSync(ENTRY_STATE_KEY) || {};
@@ -313,7 +323,7 @@ function buildHomeFlowSteps({ closureEvidenceChain = {}, heroTasks = {}, complet
   const cardStep = findClosureStep(closureEvidenceChain, "card");
   const trainingDone = !!((heroTasks || {}).klineDone || (completionView || {}).done);
   const steps = [
-    { key: "review", label: "真实记录", done: !!reviewStep.done },
+    { key: "review", label: "记录/训练", done: !!(reviewStep.done || trainingDone) },
     { key: "thought", label: "第一念", done: !!thoughtStep.done },
     { key: "mirror", label: "活镜", done: !!(archiveStep.done || reviewStep.done) },
     { key: "training", label: "今日训练", done: trainingDone },
@@ -776,9 +786,14 @@ function buildHomeFocusView({ primaryAction = {}, miniHomeView = {}, journeyStat
       primaryText: "进入照心"
     },
     "trade-review": {
-      title: "上传一条真实记录",
-      body: "复盘，是你写下事实；活镜，是系统照见反复出现的念头。",
-      primaryText: "上传真实记录"
+      title: "上传一条真实交易记录",
+      body: "真实交易记录最能照见当时的念头；暂无记录时，再去训练页做通用盲练。",
+      primaryText: "上传真实交易记录"
+    },
+    training: {
+      title: "先完成一次通用盲练",
+      body: "无真实记录时先练一段历史片段；有真实复盘后再生成针对训练。",
+      primaryText: "开始今日通用盲练"
     },
     seal: {
       title: "落下今日三印",
@@ -837,23 +852,34 @@ function buildHomeFocusView({ primaryAction = {}, miniHomeView = {}, journeyStat
   };
 }
 
-function buildHomePrimaryAction({ unifiedView = {}, mind = null, evidenceSummary = {} } = {}) {
+function buildHomePrimaryAction({ unifiedView = {}, mind = null, evidenceSummary = {}, training = {}, klineMindRecord = {} } = {}) {
   const todayByType = (evidenceSummary || {}).todayByType || {};
   const hasReview = !!unifiedView.hasReviewToday || Number(todayByType.review_record || 0) > 0;
+  const hasTrainingRecord = !!((training || {}).completed || (klineMindRecord || {}).completed);
+  const shouldUseTrainingClosure = hasTrainingRecord && !hasReview;
   const hasSeal = !!unifiedView.hasSeal;
   const hasHeartProof = !!unifiedView.hasHeartProof;
   const hasArchived = !!unifiedView.hasArchived;
 
-  if (!hasReview) {
+  if (!hasReview && !hasTrainingRecord) {
     return {
       key: "trade-review",
-      text: "上传真实记录",
-      hint: "先留住当时第一念。",
-      stateLabel: "待复盘",
-      stateHint: "把真实动作写入活镜，今天才有可回看的记录。"
+      text: "上传真实交易记录",
+      hint: "真实交易记录优先；暂无记录时，可到训练页做通用盲练。",
+      stateLabel: "待记录",
+      stateHint: "先留下真实行为，系统才能生成更贴近你的针对训练。"
     };
   }
-  if (!mind) {
+  if (shouldUseTrainingClosure && !hasSeal) {
+    return {
+      key: "seal",
+      text: "落下今日之印",
+      hint: "把这次观心收束成一念、一惧、一界。",
+      stateLabel: "已记录",
+      stateHint: "今日观心已写入活镜，下一步落成心证卡。"
+    };
+  }
+  if (!mind && !shouldUseTrainingClosure) {
     return {
       key: "mind",
       text: "照见今日",
@@ -908,7 +934,8 @@ function applyJourneyToMiniHomeView(miniHomeView = {}, journeyState = {}, comple
   const stateHintMap = {
     "未照见": "先看见今日这一念。",
     "待落印": "把一念、一惧、一界落下。",
-    "待复盘": "本次照见已写入活镜，下一步做一次真实复盘。",
+    "待记录": "完成一次观心训练或真实复盘，让今日之印有可回看的记录。",
+    "已记录": "今日观心已写入活镜，下一步落成心证卡。",
     "待入档": "把今日心证沉入活镜档案。",
     "已归卷": "今日照见、复盘与活镜已形成记录。"
   };
@@ -1381,6 +1408,8 @@ Page({
       training7View,
       threeSeals,
       liveMirrorReminder,
+      training,
+      klineMindRecord,
       checkedIn: checkedCount > 0
     });
     const evidenceSummary = getEvidenceSummary({ limit: 4 });
@@ -1423,12 +1452,16 @@ Page({
       training7View: displayTraining7View,
       threeSeals,
       liveMirrorReminder,
+      training,
+      klineMindRecord,
       checkedIn: checkedCount > 0
     });
     const primaryAction = buildHomePrimaryAction({
       unifiedView: unifiedJourneyView,
       mind,
-      evidenceSummary
+      evidenceSummary,
+      training,
+      klineMindRecord
     });
     const miniHomeView = applyJourneyToMiniHomeView(finalRawMiniHomeView, journeyState, completionView, evidenceSummary, unifiedJourneyView, primaryAction);
     const homeFocusView = buildHomeFocusView({
@@ -1934,7 +1967,7 @@ Page({
   },
 
   goProfile() {
-    wx.navigateTo({ url: "/pages/profile/index" });
+    switchTabPage("/pages/profile/index");
   },
 
   goZhixingIndex() {
@@ -1946,7 +1979,7 @@ Page({
   },
 
   goTradeReview() {
-    wx.navigateTo({ url: "/pages/trade-review/index" });
+    switchTabPage("/pages/trade-review/index");
   },
 
   goTradeReviewArchive() {
@@ -1958,7 +1991,7 @@ Page({
       lastPage: "mirror-scroll",
       pendingAction: "等待七日复测"
     });
-    wx.redirectTo({ url: "/pages/living-mirror/index" });
+    switchTabPage("/pages/living-mirror/index");
   },
 
   handleHomeFocusLink(e) {
@@ -2006,6 +2039,10 @@ Page({
     }
     if (actionKey === "trade-review") {
       this.goTradeReview();
+      return;
+    }
+    if (actionKey === "training" || actionKey === "kline") {
+      wx.redirectTo({ url: "/pages/kline-mind/index" });
       return;
     }
     if (actionKey === "seal") {

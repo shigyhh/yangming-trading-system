@@ -118,6 +118,11 @@ function buildMiniHomeView(context = {}) {
   const reminder = context.liveMirrorReminder || {};
   const today = training7View.today || {};
   const tradeReviewCount = Number(loopProgress.tradeReviewCount || 0);
+  const hasTrainingRecord = !!(
+    (context.training || {}).completed ||
+    (context.klineMindRecord || {}).completed ||
+    (context.todayKlineMindRecord || {}).completed
+  );
   const practiceSteps = [
     { key: "checkin", label: "签到", done: !!(context.checkedIn || threeSeals.completed) },
     { key: "observe", label: "观念", done: !!(threeSeals.thought || threeSeals.fear || threeSeals.boundary) },
@@ -126,12 +131,13 @@ function buildMiniHomeView(context = {}) {
   const doneCount = practiceSteps.filter((item) => item.done).length;
   const retestRemaining = Math.max(0, 7 - Number(loopProgress.completedDays || 0));
   const stateLabel = threeSeals.completed
-    ? tradeReviewCount > 0 ? "已归卷" : "待复盘"
+    ? tradeReviewCount > 0 ? "已归卷" : hasTrainingRecord ? "已记录" : "待记录"
     : doneCount > 0 ? "待落印" : "未照见";
   const stateHintMap = {
     "未照见": "先看见今日这一念。",
     "待落印": "把一念、一惧、一界落下。",
-    "待复盘": "本次照见已写入活镜，下一步做一次真实复盘。",
+    "待记录": "完成一次观心训练或真实复盘，让今日之印有可回看的记录。",
+    "已记录": "今日观心已写入活镜，下一步落成心证卡。",
     "已归卷": "今日照见、复盘与活镜已形成记录。"
   };
   return {
@@ -327,12 +333,12 @@ function buildBehaviorLoop(tradeReviewState = {}) {
     return {
       ready: false,
       title: "循环之镜待生成",
-      line: "完成两次真实复盘后，系统会照见重复出现的行为循环。",
+      line: "完成两条行为记录后，系统会照见重复出现的行为循环。",
       trigger: "待记录",
       thought: "待照见",
       mirror: "待照见",
       thieves: "待照见",
-      nextAction: "先完成一条真实复盘。"
+      nextAction: "先完成一条观心记录或真实复盘。"
     };
   }
   const latest = records[records.length - 1] || {};

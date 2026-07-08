@@ -375,7 +375,7 @@ function buildTripleVerificationInsight({ rows = [], state = {}, mainMirror = "�
       matchedSources,
       conflictSources,
       missingSources,
-      nextCalibration: "先完成九镜测评，再做一次K线盲练和一条真实复盘。"
+      nextCalibration: "先完成九镜测评，再做一次K线盲练和一条行为记录。"
     };
   }
 
@@ -403,7 +403,7 @@ function buildTripleVerificationInsight({ rows = [], state = {}, mainMirror = "�
       matchedSources,
       conflictSources,
       missingSources,
-      nextCalibration: missingText ? `下一步补齐${missingText}，验证主镜是否继续同向。` : "下一步补一条真实复盘，继续校准主镜。"
+      nextCalibration: missingText ? `下一步补齐${missingText}，验证主镜是否继续同向。` : "下一步补一条行为记录，继续校准主镜。"
     };
   }
 
@@ -430,7 +430,7 @@ function buildTripleVerificationInsight({ rows = [], state = {}, mainMirror = "�
     matchedSources,
     conflictSources,
     missingSources,
-    nextCalibration: missingText ? `下一步补齐${missingText}。` : "下一步补一条真实复盘或K线盲练。"
+    nextCalibration: missingText ? `下一步补齐${missingText}。` : "下一步补一条行为记录或K线盲练。"
   };
 }
 
@@ -463,7 +463,7 @@ function buildTriplePrescription(mainMirror) {
     "守心之镜": "今日主修：保持每日一省，让稳定继续有根。",
     "良知之镜": "今日主修：保持每日一省，让稳定继续有根。"
   };
-  return actionMap[mainMirror] || "今日主修：先留下真实记录，再让系统校准下一练。";
+  return actionMap[mainMirror] || "今日主修：先留下真实复盘或K线观心记录，再让系统校准下一练。";
 }
 
 module.exports = {

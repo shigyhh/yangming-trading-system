@@ -57,6 +57,30 @@ function buildTrainingDayFocus(training7View = {}, trainingDay = {}) {
   };
 }
 
+function hasTrainingContext({ state = {}, training7State = {}, todayReview = null, klineMindRecord = {} } = {}) {
+  const steps = (state || {}).steps || {};
+  const trainingTouched = !!(
+    (state || {}).completed ||
+    String((state || {}).reflection || "").trim() ||
+    Object.keys(steps).some((key) => !!steps[key])
+  );
+  const records = (training7State || {}).records || {};
+  const training7Touched = Object.keys(records).some((day) => {
+    const record = records[day] || {};
+    const tasks = record.tasks || {};
+    return !!(
+      record.completed ||
+      String(record.reflection || "").trim() ||
+      Object.keys(tasks).some((key) => !!tasks[key])
+    );
+  });
+  const klineTouched = !!(
+    (klineMindRecord || {}).completed ||
+    String((klineMindRecord || {}).firstReaction || "").trim()
+  );
+  return !!todayReview || trainingTouched || training7Touched || klineTouched;
+}
+
 function warmKlineMindTrainingEntry(type = "") {
   prefetchKlineTrainingSlices({
     marketKey: "cn",
@@ -92,6 +116,8 @@ Page({
     training7View: buildTraining7View({}, {}),
     trainingDay: null,
     trainingDayFocus: buildTrainingDayFocus(),
+    trainingHeroMetaText: "今日一练 · 通用盲练",
+    trainingContextVisible: false,
     showTrainingPlan: false,
     showTrainingDepth: false
   },
@@ -108,18 +134,27 @@ Page({
     const archive = getPersonalityArchive(type);
     const stagePlan = getPersonalityStagePlan(type);
     const state = getTodayTraining();
+    const todayReview = getTodayReview();
+    const training7State = getTraining7State();
+    const todayKlineMindRecord = getTodayKlineMindRecord();
     const trainingCard = buildDailyTrainingCard({ dateKey: todayKey(), personalityType: type, mind });
     const steps = buildSteps(state);
     const doneCount = steps.filter((item) => item.done).length;
-    const training7View = buildTraining7View(getTraining7State(), {
+    const training7View = buildTraining7View(training7State, {
       mind,
       reactionRecord: getTodayReaction(),
       intradayBoundaryRecord: getTodayIntradayBoundaryRecord(),
-      review: getTodayReview(),
+      review: todayReview,
       training: state,
-      klineMindRecord: getTodayKlineMindRecord()
+      klineMindRecord: todayKlineMindRecord
     });
     const trainingDay = training7View.today;
+    const trainingContextVisible = hasTrainingContext({
+      state,
+      training7State,
+      todayReview,
+      klineMindRecord: todayKlineMindRecord
+    });
 
     this.setData({
       result,
@@ -137,7 +172,13 @@ Page({
       indexFocus: mind?.indexFocus || state.indexFocus || "知行合一",
       training7View,
       trainingDay,
-      trainingDayFocus: buildTrainingDayFocus(training7View, trainingDay)
+      trainingDayFocus: buildTrainingDayFocus(training7View, trainingDay),
+      trainingHeroMetaText: trainingContextVisible
+        ? `Day ${training7View.currentDay} · ${trainingDay.title}`
+        : "今日一练 · 通用盲练",
+      trainingContextVisible,
+      showTrainingPlan: trainingContextVisible ? this.data.showTrainingPlan : false,
+      showTrainingDepth: trainingContextVisible ? this.data.showTrainingDepth : false
     });
     warmKlineMindTrainingEntry(type);
   },

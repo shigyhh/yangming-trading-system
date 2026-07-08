@@ -75,6 +75,16 @@ assert.strictEqual(home.klineText, "今日 K 线观心");
 assert.ok(home.livingMirrorFeedback.includes("写入活镜"));
 assert.strictEqual(home.practiceSteps.filter((item) => item.done).length, 3);
 
+const homeWithKlineRecord = buildMiniHomeView({
+  loopProgress: Object.assign({}, progress, { tradeReviewCount: 0 }),
+  training7View: { currentDay: 1, today: { title: "观入场冲动", boundaryPractice: "先停十秒。" } },
+  threeSeals: { thought: "怕错过", completed: true },
+  klineMindRecord: { completed: true, insightLine: "看见第一念" }
+});
+assert.strictEqual(homeWithKlineRecord.stateLabel, "已记录");
+assert.ok(homeWithKlineRecord.stateHint.includes("观心"));
+assert.equal(homeWithKlineRecord.stateHint.includes("下一步做一次真实复盘"), false);
+
 const tree = buildLivingMirrorTree({
   assessment: { primary: "冲动型" },
   loopProgress: progress,

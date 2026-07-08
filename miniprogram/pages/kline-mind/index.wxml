@@ -361,16 +361,8 @@
         </view>
       </view>
       <view class="completion-actions">
-        <button class="ghost-btn" bindtap="goHome">回今日</button>
-        <button class="primary-btn" bindtap="goLivingMirror">看活镜</button>
-        <button wx:if="{{tradeReviewUrl}}" class="ghost-btn completion-review-btn" bindtap="goTradeReviewH5">查看本次复盘</button>
+        <button class="primary-btn" bindtap="goHome">回今日继续闭环</button>
       </view>
-    </view>
-
-    <view wx:if="{{savedRecord && savedRecord.completed}}" class="path-links">
-      <button class="ghost-btn" bindtap="goTraining">7 天训练</button>
-      <button wx:if="{{training7View.canRetest}}" class="secondary-btn" bindtap="goRetest">进入复测</button>
-      <button wx:else class="secondary-btn" bindtap="goReport">人格报告</button>
     </view>
 
     <compliance-notice variant="full" />

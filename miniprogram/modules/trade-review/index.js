@@ -59,7 +59,7 @@ const THIEF_TRAINING_MAP = {
   疑: "把计划依据写成一句话，减少临场摇摆。"
 };
 
-const WEEKLY_LIVING_MIRROR_EMPTY_TEXT = "样本不足，先完成一次真实复盘和一次针对训练。";
+const WEEKLY_LIVING_MIRROR_EMPTY_TEXT = "样本不足，先完成一次行为记录和一次针对训练。";
 
 const WEEKLY_TRAINING_PLAN_TEMPLATES = [
   {
@@ -588,7 +588,7 @@ function buildTradeReviewClosure(record = {}, reminder = {}) {
     })),
     primaryActionText: "查看活镜成长",
     detailActionText: "查看复盘详情",
-    klineActionText: "进入 K 线观心"
+    klineActionText: "进入针对训练"
   };
 }
 
@@ -605,7 +605,7 @@ function buildLiveMirrorReminder(tradeReviewState = {}) {
       statusText: "待点亮",
       focusMirror: "活镜未点亮",
       highFrequencyThievesText: "待照见",
-      highFrequencyThievesDetail: "上传一条真实记录后生成",
+      highFrequencyThievesDetail: "完成一条行为记录后生成",
       highFrequencyStage: "待定位",
       stageDetail: "等待历史切片匹配",
       mainTraining: "上传一条真实记录，先照见一次第一念。",
@@ -1140,8 +1140,8 @@ function buildAssistantHandoff({ records = [], stats = {} } = {}) {
     highFrequencyThieves: stats.topThievesText || "待照见",
     recentThought: latest.firstThought || "待记录",
     riskTags: [stats.currentMirror, stats.topThievesText].filter(Boolean).join(" · ") || "待沉淀",
-    suggestedTrainingAction: (stats.reminder || {}).mainTraining || latest.trainingAction || "先完成一次真实复盘。",
-    campSuggestion: records.length >= 3 ? "建议进入连续 7 天观心训练。" : "先完成三次真实复盘，再进入阶段训练。",
+    suggestedTrainingAction: (stats.reminder || {}).mainTraining || latest.trainingAction || "先完成一次观心记录或真实复盘。",
+    campSuggestion: records.length >= 3 ? "建议进入连续 7 天观心训练。" : "先沉淀三条行为记录，再进入阶段训练。",
     scriptSuggestion: `你最近明显是${stats.currentMirror || "某一面心镜"}偏强。今天先不谈行情，只练一件事：${(stats.reminder || {}).mainTraining || "把第一念记录下来。"}`
   };
 }
